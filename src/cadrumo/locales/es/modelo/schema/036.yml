@@ -156,6 +156,122 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Vigencia normativa desde 3 de febrero de 2025
+            x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: null
+              label: Apellidos y nombre o razon social del representante (primer representante,
+                bloque 3.1)
+            x-e9in0c9ecdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: 'Causa de la presentacion: alta, baja o modificacion del representante
+                (primer representante, bloque 3.1)'
+            x-e9in0c9ecdgnasr15lp6as3iclpmarjkc5hmirre:
+              help: null
+              label: Causa de la representacion (primer representante, bloque 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
+              help: null
+              label: Primer apellido de la persona fisica designada (primer representante,
+                bloque 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
+              help: null
+              label: Segundo apellido de la persona fisica designada (primer representante,
+                bloque 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: Causa de la presentacion de la persona fisica designada (primer
+                representante, bloque 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
+              help: null
+              label: Fecha efectiva de la causa de la presentacion de la persona fisica
+                designada (primer representante, bloque 3.1)
+            x-e9in0c9echin6qb7dpgm8o9ddpkmc:
+              help: null
+              label: NIF de la persona fisica designada (primer representante, bloque
+                3.1)
+            x-e9in0c9echin6qb7dpgm8o9ddpnmqojick:
+              help: null
+              label: Nombre de la persona fisica designada (primer representante,
+                bloque 3.1)
+            x-e9in0c9ecpim6q315lhm2tbjc4:
+              help: null
+              label: Fecha efectiva de la causa de la presentacion del representante
+                (primer representante, bloque 3.1)
+            x-e9in0c9edpkmc:
+              help: null
+              label: NIF del representante (primer representante, bloque 3.1)
+            x-e9in0c9ee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
+              help: null
+              label: Clave de la representacion legal (primer representante, bloque
+                3.1)
+            x-e9in0c9ee9in6qb4cln78p8:
+              help: null
+              label: 'El representante es residente: si o no (primer representante,
+                bloque 3.1)'
+            x-e9in0c9eehkn0rpde9in0sj5edimst31cdkmurg:
+              help: null
+              label: Clave del tipo de representacion (primer representante, bloque
+                3.1)
+            x-e9in0c9eehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
+              help: null
+              label: Clave del titulo de representacion (primer representante, bloque
+                3.1)
+            x-e9in0chec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: null
+              label: Apellidos y nombre o razon social del representante (segundo
+                representante, bloque 3.2)
+            x-e9in0checdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: 'Causa de la presentacion: alta, baja o modificacion del representante
+                (segundo representante, bloque 3.2)'
+            x-e9in0checdgnasr15lp6as3iclpmarjkc5hmirre:
+              help: null
+              label: Causa de la representacion (segundo representante, bloque 3.2)
+            x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
+              help: null
+              label: Primer apellido de la persona fisica designada (segundo representante,
+                bloque 3.2)
+            x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
+              help: null
+              label: Segundo apellido de la persona fisica designada (segundo representante,
+                bloque 3.2)
+            x-e9in0chechin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: Causa de la presentacion de la persona fisica designada (segundo
+                representante, bloque 3.2)
+            x-e9in0chechin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
+              help: null
+              label: Fecha efectiva de la causa de la presentacion de la persona fisica
+                designada (segundo representante, bloque 3.2)
+            x-e9in0chechin6qb7dpgm8o9ddpkmc:
+              help: null
+              label: NIF de la persona fisica designada (segundo representante, bloque
+                3.2)
+            x-e9in0chechin6qb7dpgm8o9ddpnmqojick:
+              help: null
+              label: Nombre de la persona fisica designada (segundo representante,
+                bloque 3.2)
+            x-e9in0checpim6q315lhm2tbjc4:
+              help: null
+              label: Fecha efectiva de la causa de la presentacion del representante
+                (segundo representante, bloque 3.2)
+            x-e9in0chedpkmc:
+              help: null
+              label: NIF del representante (segundo representante, bloque 3.2)
+            x-e9in0chee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
+              help: null
+              label: Clave de la representacion legal (segundo representante, bloque
+                3.2)
+            x-e9in0chee9in6qb4cln78p8:
+              help: null
+              label: 'El representante es residente: si o no (segundo representante,
+                bloque 3.2)'
+            x-e9in0cheehkn0rpde9in0sj5edimst31cdkmurg:
+              help: null
+              label: Clave del tipo de representacion (segundo representante, bloque
+                3.2)
+            x-e9in0cheehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
+              help: null
+              label: Clave del titulo de representacion (segundo representante, bloque
+                3.2)
           construct:
             modelo-036-censo-foundation:
               field:

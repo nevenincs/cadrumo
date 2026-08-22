@@ -148,6 +148,117 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Jogszabályi hatály 2025. február 3-tól
+            x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: null
+              label: A kepviselo vezetek- es keresztneve vagy cegneve (elso kepviselo,
+                3.1 blokk)
+            x-e9in0c9ecdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: 'A benyujtas oka: a kepviselo bejegyzese, torlese vagy modositasa
+                (elso kepviselo, 3.1 blokk)'
+            x-e9in0c9ecdgnasr15lp6as3iclpmarjkc5hmirre:
+              help: null
+              label: A kepviselet oka (elso kepviselo, 3.1 blokk)
+            x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
+              help: null
+              label: A kijelolt termeszetes szemely elso vezetekneve (elso kepviselo,
+                3.1 blokk)
+            x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
+              help: null
+              label: A kijelolt termeszetes szemely masodik vezetekneve (elso kepviselo,
+                3.1 blokk)
+            x-e9in0c9echin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: A kijelolt termeszetes szemelyre vonatkozo benyujtas oka (elso
+                kepviselo, 3.1 blokk)
+            x-e9in0c9echin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
+              help: null
+              label: A kijelolt termeszetes szemelyre vonatkozo benyujtasi ok tenyleges
+                datuma (elso kepviselo, 3.1 blokk)
+            x-e9in0c9echin6qb7dpgm8o9ddpkmc:
+              help: null
+              label: A kijelolt termeszetes szemely adoazonosito szama (NIF) (elso
+                kepviselo, 3.1 blokk)
+            x-e9in0c9echin6qb7dpgm8o9ddpnmqojick:
+              help: null
+              label: A kijelolt termeszetes szemely keresztneve (elso kepviselo, 3.1
+                blokk)
+            x-e9in0c9ecpim6q315lhm2tbjc4:
+              help: null
+              label: A kepviselore vonatkozo benyujtasi ok tenyleges datuma (elso
+                kepviselo, 3.1 blokk)
+            x-e9in0c9edpkmc:
+              help: null
+              label: A kepviselo adoazonosito szama (NIF) (elso kepviselo, 3.1 blokk)
+            x-e9in0c9ee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
+              help: null
+              label: A torvenyes kepviselet kodja (elso kepviselo, 3.1 blokk)
+            x-e9in0c9ee9in6qb4cln78p8:
+              help: null
+              label: 'A kepviselo belfoldi illetosegu-e: igen vagy nem (elso kepviselo,
+                3.1 blokk)'
+            x-e9in0c9eehkn0rpde9in0sj5edimst31cdkmurg:
+              help: null
+              label: A kepviselet tipusanak kodja (elso kepviselo, 3.1 blokk)
+            x-e9in0c9eehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
+              help: null
+              label: A kepviseleti jogcim kodja (elso kepviselo, 3.1 blokk)
+            x-e9in0chec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: null
+              label: A kepviselo vezetek- es keresztneve vagy cegneve (masodik kepviselo,
+                3.2 blokk)
+            x-e9in0checdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: 'A benyujtas oka: a kepviselo bejegyzese, torlese vagy modositasa
+                (masodik kepviselo, 3.2 blokk)'
+            x-e9in0checdgnasr15lp6as3iclpmarjkc5hmirre:
+              help: null
+              label: A kepviselet oka (masodik kepviselo, 3.2 blokk)
+            x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
+              help: null
+              label: A kijelolt termeszetes szemely elso vezetekneve (masodik kepviselo,
+                3.2 blokk)
+            x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
+              help: null
+              label: A kijelolt termeszetes szemely masodik vezetekneve (masodik kepviselo,
+                3.2 blokk)
+            x-e9in0chechin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: A kijelolt termeszetes szemelyre vonatkozo benyujtas oka (masodik
+                kepviselo, 3.2 blokk)
+            x-e9in0chechin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
+              help: null
+              label: A kijelolt termeszetes szemelyre vonatkozo benyujtasi ok tenyleges
+                datuma (masodik kepviselo, 3.2 blokk)
+            x-e9in0chechin6qb7dpgm8o9ddpkmc:
+              help: null
+              label: A kijelolt termeszetes szemely adoazonosito szama (NIF) (masodik
+                kepviselo, 3.2 blokk)
+            x-e9in0chechin6qb7dpgm8o9ddpnmqojick:
+              help: null
+              label: A kijelolt termeszetes szemely keresztneve (masodik kepviselo,
+                3.2 blokk)
+            x-e9in0checpim6q315lhm2tbjc4:
+              help: null
+              label: A kepviselore vonatkozo benyujtasi ok tenyleges datuma (masodik
+                kepviselo, 3.2 blokk)
+            x-e9in0chedpkmc:
+              help: null
+              label: A kepviselo adoazonosito szama (NIF) (masodik kepviselo, 3.2
+                blokk)
+            x-e9in0chee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
+              help: null
+              label: A torvenyes kepviselet kodja (masodik kepviselo, 3.2 blokk)
+            x-e9in0chee9in6qb4cln78p8:
+              help: null
+              label: 'A kepviselo belfoldi illetosegu-e: igen vagy nem (masodik kepviselo,
+                3.2 blokk)'
+            x-e9in0cheehkn0rpde9in0sj5edimst31cdkmurg:
+              help: null
+              label: A kepviselet tipusanak kodja (masodik kepviselo, 3.2 blokk)
+            x-e9in0cheehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
+              help: null
+              label: A kepviseleti jogcim kodja (masodik kepviselo, 3.2 blokk)
           construct:
             modelo-036-censo-foundation:
               field:

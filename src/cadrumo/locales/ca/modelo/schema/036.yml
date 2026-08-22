@@ -153,6 +153,116 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Vigència normativa des del 3 de febrer de 2025
+            x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: null
+              label: Cognoms i nom o rao social del representant (primer representant,
+                bloc 3.1)
+            x-e9in0c9ecdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: 'Causa de la presentacio: alta, baixa o modificacio del representant
+                (primer representant, bloc 3.1)'
+            x-e9in0c9ecdgnasr15lp6as3iclpmarjkc5hmirre:
+              help: null
+              label: Causa de la representacio (primer representant, bloc 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
+              help: null
+              label: Primer cognom de la persona fisica designada (primer representant,
+                bloc 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
+              help: null
+              label: Segon cognom de la persona fisica designada (primer representant,
+                bloc 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: Causa de la presentacio de la persona fisica designada (primer
+                representant, bloc 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
+              help: null
+              label: Data efectiva de la causa de la presentacio de la persona fisica
+                designada (primer representant, bloc 3.1)
+            x-e9in0c9echin6qb7dpgm8o9ddpkmc:
+              help: null
+              label: NIF de la persona fisica designada (primer representant, bloc
+                3.1)
+            x-e9in0c9echin6qb7dpgm8o9ddpnmqojick:
+              help: null
+              label: Nom de la persona fisica designada (primer representant, bloc
+                3.1)
+            x-e9in0c9ecpim6q315lhm2tbjc4:
+              help: null
+              label: Data efectiva de la causa de la presentacio del representant
+                (primer representant, bloc 3.1)
+            x-e9in0c9edpkmc:
+              help: null
+              label: NIF del representant (primer representant, bloc 3.1)
+            x-e9in0c9ee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
+              help: null
+              label: Clau de la representacio legal (primer representant, bloc 3.1)
+            x-e9in0c9ee9in6qb4cln78p8:
+              help: null
+              label: 'El representant es resident: si o no (primer representant, bloc
+                3.1)'
+            x-e9in0c9eehkn0rpde9in0sj5edimst31cdkmurg:
+              help: null
+              label: Clau del tipus de representacio (primer representant, bloc 3.1)
+            x-e9in0c9eehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
+              help: null
+              label: Clau del titol de representacio (primer representant, bloc 3.1)
+            x-e9in0chec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: null
+              label: Cognoms i nom o rao social del representant (segon representant,
+                bloc 3.2)
+            x-e9in0checdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: 'Causa de la presentacio: alta, baixa o modificacio del representant
+                (segon representant, bloc 3.2)'
+            x-e9in0checdgnasr15lp6as3iclpmarjkc5hmirre:
+              help: null
+              label: Causa de la representacio (segon representant, bloc 3.2)
+            x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
+              help: null
+              label: Primer cognom de la persona fisica designada (segon representant,
+                bloc 3.2)
+            x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
+              help: null
+              label: Segon cognom de la persona fisica designada (segon representant,
+                bloc 3.2)
+            x-e9in0chechin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
+              help: null
+              label: Causa de la presentacio de la persona fisica designada (segon
+                representant, bloc 3.2)
+            x-e9in0chechin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
+              help: null
+              label: Data efectiva de la causa de la presentacio de la persona fisica
+                designada (segon representant, bloc 3.2)
+            x-e9in0chechin6qb7dpgm8o9ddpkmc:
+              help: null
+              label: NIF de la persona fisica designada (segon representant, bloc
+                3.2)
+            x-e9in0chechin6qb7dpgm8o9ddpnmqojick:
+              help: null
+              label: Nom de la persona fisica designada (segon representant, bloc
+                3.2)
+            x-e9in0checpim6q315lhm2tbjc4:
+              help: null
+              label: Data efectiva de la causa de la presentacio del representant
+                (segon representant, bloc 3.2)
+            x-e9in0chedpkmc:
+              help: null
+              label: NIF del representant (segon representant, bloc 3.2)
+            x-e9in0chee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
+              help: null
+              label: Clau de la representacio legal (segon representant, bloc 3.2)
+            x-e9in0chee9in6qb4cln78p8:
+              help: null
+              label: 'El representant es resident: si o no (segon representant, bloc
+                3.2)'
+            x-e9in0cheehkn0rpde9in0sj5edimst31cdkmurg:
+              help: null
+              label: Clau del tipus de representacio (segon representant, bloc 3.2)
+            x-e9in0cheehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
+              help: null
+              label: Clau del titol de representacio (segon representant, bloc 3.2)
           construct:
             modelo-036-censo-foundation:
               field:
