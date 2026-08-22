@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:e1127da28a570cf6fe8c307c582da306a95391ae18a8f30d40493c43485b9d51'
+body_hash: 'sha256:a27025d2e5845fad80bb8717b555ddaafd0eb2df18dd9335a3983d29bf849281'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6854,3 +6854,38 @@ The reusable diagnostic, now used three times: read HEAD's own content for the f
 names, and check the file's mtime. Committed-clean plus a mtime minutes old means an author is
 in the file right now, and the correct action is to leave it alone -- twice the sweep repaired
 itself within minutes without any intervention.
+
+### An unclassified production `os.open` was blocking the per-push unit lane
+
+With the tree finally quiet, the lanes read 361 integration green and one unit failure:
+`test_production_file_write_inventory_is_reviewed`, in this domain's own sensitive-persistence
+policy tier. It reproduced sequentially, so it was a real red rather than this share's
+parallel-I/O noise. `just test-unit` takes no path argument and therefore runs over
+`testpaths`, so the `cadrumo-unit` CI job was failing for every push while this stood.
+
+The observed-versus-reviewed sets differed by exactly one entry:
+`application/registry/_source_connectivity_authority.py`, function `digest`, call `os.open`.
+The tier catalogues EVERY `os.open` regardless of flags, and that is deliberate rather than
+sloppy: the flags are a runtime value a static scan cannot judge, so the tier lists the call
+and makes a human say what it does. The inventory already carries non-writing entries on the
+same basis (`fsync_parent_dir`: "opens directories, not sensitive data files").
+
+Read before classifying, because a reason invented to make a gate green is worse than the red.
+The call opens `O_RDONLY|O_BINARY|O_NOFOLLOW`, reads through `os.fdopen(..., "rb")` into a
+SHA-256, and writes nothing. Its subject is repository SOURCE files under an explicitly
+injected root -- not operator financial data -- and the descriptor is confined to that root by
+a final-path comparison, an `is_relative_to` check and a regular-file test, which is careful
+TOCTOU-hardened code rather than something to be waved through. Classified with that reason
+stated, per the allowlist discipline that every entry must say why.
+
+Proven load-bearing from outside the repo: a scratchpad plugin popped the new key out of
+`_REVIEWED_PRODUCTION_FILE_WRITES` at configure time and the gate reproduced the identical
+failure, naming the same triple. The entry is required, not decorative, and nothing tracked was
+mutated to prove it.
+
+Two notes for whoever meets this tier next. The red was NOT a defect in the registry code --
+it is a correctly-written read that the tier is designed to surface for classification, which
+is the tier working. And the classification belongs to this domain even though the FILE
+belongs to another campaign: the inventory and the confidentiality rule it enforces are
+storage-owned, so leaving it red for its author to notice would have blocked every push in the
+meantime.
