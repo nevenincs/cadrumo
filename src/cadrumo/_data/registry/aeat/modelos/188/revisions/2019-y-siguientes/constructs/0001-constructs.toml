@@ -1,7 +1,7 @@
 [[revisions."2019-y-siguientes".constructs]]
 id = "modelo-188-calculation-construct"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
-source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-text", "boe-modelo-188-form-layout"]
-casilla_ids = ["01", "02", "03", "04", "05"]
+source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-text", "boe-modelo-188-form-layout", "aeat-dr-188-2023"]
+casilla_ids = ["01", "02", "03", "04", "05", "perc.nif", "perc.nif-representante-legal", "perc.nombre", "perc.provincia", "perc.modalidad", "perc.rendimientos-capital-mobiliario", "perc.informacion-adicional", "perc.reducciones-dt-cuarta", "perc.base-retenciones", "perc.porcentaje-retencion", "perc.retenciones-ingresos-cuenta", "perc.ejercicio-devengo", "perc.clave", "perc.renta-vitalicia-asegurada", "perc.fecha-constitucion-anticipacion", "perc.identificacion-renta-vitalicia", "perc.prima-aportada", "perc.rendimientos-seguros-acreedor-hipotecario"]
 formulas = []
 application_links = ["modelo-188-calculation", "modelo-188-deadline", "modelo-188-filing", "modelo-188-review", "modelo-188-approval", "modelo-188-reconciliation", "modelo-188-workflow"]

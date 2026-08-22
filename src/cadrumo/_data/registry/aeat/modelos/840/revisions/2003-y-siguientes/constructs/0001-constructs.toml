@@ -85,6 +85,11 @@ casilla_ids = [
     "cuota.incremento-importe",
     "cuota.despues-bonificaciones-incrementos",
     "cuota.tarifa-o-importe-minimo",
+    "maquinas.suma",
+    "cuota.maquinas-recreativas-autoventa",
+    "notificacion.lugar",
+    "notificacion.fecha",
+    "notificacion.calidad",
 ]
 workbook_parity_refs = ["modelo-840-dr"]
 live_cross_references = [
