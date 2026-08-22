@@ -658,6 +658,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.persistence.storage.custody._errors.ProfileCustodyRecoverySecretError",
+        ErrorCode(
+            code="REFUSED_STORAGE_PROFILE_CUSTODY_RECOVERY_SECRET",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.persistence.storage.custody._errors.ProfileCustodyRefusedError",
         ErrorCode(
             code="REFUSED_STORAGE_PROFILE_CUSTODY",

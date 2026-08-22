@@ -21,6 +21,7 @@ from ..crypto import KEY_SIZE
 from ._errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
+    ProfileCustodyRecoverySecretError,
     ProfileCustodyRefusal,
     ProfileCustodyRefusedError,
 )
@@ -408,7 +409,7 @@ def unlock_profile_custody_recovery_material(
     except TimeoutError:
         raise _resource_refusal() from None
     if dek is None:
-        raise ProfileCustodyPasswordError("profile recovery secret did not authenticate the custody envelope")
+        raise ProfileCustodyRecoverySecretError("profile recovery secret did not authenticate the custody envelope")
     verify_profile_custody_sentinel(dek=dek, profile_id=profile_id, dek_epoch=dek_epoch, sentinel=sentinel)
     return dek
 

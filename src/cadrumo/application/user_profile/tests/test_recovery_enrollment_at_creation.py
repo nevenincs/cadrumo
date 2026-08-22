@@ -18,7 +18,7 @@ import pytest
 from ....adapters.persistence.storage import generate_recovery_key
 from ....adapters.persistence.storage.custody import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
-    ProfileCustodyPasswordError,
+    ProfileCustodyRecoverySecretError,
     load_committed_profile_password_material,
     parse_profile_custody_recovery_envelope,
     unlock_profile_custody_recovery,
@@ -97,7 +97,7 @@ def test_a_different_minted_mnemonic_does_not_open_the_published_wrapper(tmp_pat
 
         with generate_recovery_key() as impostor:
             assert impostor.mnemonic != handed[0]
-            with pytest.raises(ProfileCustodyPasswordError):
+            with pytest.raises(ProfileCustodyRecoverySecretError):
                 unlock_profile_custody_recovery(envelope, impostor.mnemonic, sentinel=material.sentinel)
 
 

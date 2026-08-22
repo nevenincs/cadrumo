@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .._errors import ProfileCustodyRecordError
+from .._errors import ProfileCustodyRecoverySecretError
 from .._recovery_secret_codec import decode_recovery_secret, encode_recovery_secret
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -30,7 +30,7 @@ def test_recovery_secret_codec_preserves_distinct_unicode_representations() -> N
 
 
 def test_recovery_secret_codec_refuses_malformed_transport() -> None:
-    with pytest.raises(ProfileCustodyRecordError, match="transport is not strict UTF-8"):
+    with pytest.raises(ProfileCustodyRecoverySecretError, match="transport is not strict UTF-8"):
         decode_recovery_secret(b"\xff")
 
 
