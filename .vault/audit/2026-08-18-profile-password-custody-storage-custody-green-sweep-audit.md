@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:c2989d5f5c5f2ffabae3f3165f791fc8bd7a4dc68768341a2dc6cd81d12dae26'
+body_hash: 'sha256:ed567c6454325de5209eddccd418ae36cd15ebeb030f441c8b938f03f9f9408c'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6138,3 +6138,36 @@ bridge modules and no duplicated fixture facades. The remaining named items are 
 rather than defects: the profile-bundle import half, the import-hygiene ratchet at 108 vs 69
 across six peer packages, the five unreachable `dev/packaging` cases, and the twelve
 forwarding wrappers in other owners' surfaces.
+
+### A JSON-contract field that is null 634 times out of 634
+
+Probing the "easy to operate from the CLI" half of the goal led to `ErrorCode.runbook_id`,
+the field that would point an operator at guidance for a refusal. Measured across the live
+registry rather than grepped:
+
+- **634 registered error codes project-wide. Zero carry a `runbook_id`.**
+- 636 source sites pass `runbook_id=None` explicitly -- every registration, without exception.
+- It is declared TWICE, on `ErrorCode` and on `ErrorEnvelope`, and copied between them at
+  `_registry.py:369`, so it is rendered into the machine-readable error document of every
+  command that refuses.
+- Nothing reads it. There is no populate path and no consumer.
+
+The domain measurement that started this is a subset with no separate meaning: all 88
+storage, custody and config-CLI codes lack it because ALL codes do. Reporting it as a
+domain gap would have been wrong, which is why the project-wide count was taken before
+saying anything.
+
+**By the project's own rule this is a design-only shell** -- "ship working behavior,
+executable validation and tests together", not a declared surface awaiting an
+implementation. An operator, or the autonomous agent this CLI is written for, reads
+`runbook_id: null` on every refusal it will ever see.
+
+**Not acted on, deliberately.** The two honest resolutions are to populate it or to remove
+it, and both are wide: removal is a change to the error-document JSON contract that every
+command shares, plus 636 edits across an error registry the whole project writes into;
+population is a documentation programme, not a refactor. Either is a decision about the
+shared error contract rather than a defect inside this domain's boundary, and this campaign
+has already been bounded once for drifting into work like that.
+
+Recorded with the counts so the decision can be made on measurement. **No production change
+this iteration.**
