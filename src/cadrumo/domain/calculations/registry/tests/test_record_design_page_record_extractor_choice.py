@@ -9,10 +9,8 @@ back with the row at ``@132`` missing entirely AND the surviving tail mis-paired
 onto ``@115``, so that position carried casilla ``[654]`` -- which belongs to
 ``@132`` -- while its own ``[523]`` was left stranded as a bare fragment. The
 plain extraction reads the same design whole, nine records, with every casilla
-tag in that run landing where its sibling editions put it. ``[523]`` itself is
-still lost -- the bare bracket is not reattached by any repair -- so the run
-carries four of its five tags rather than five, which the checks below state
-rather than smooth over.
+tag in that run landing where its sibling editions put it -- ``[523]``
+included, since the stranded-tag fold reattaches it.
 
 WHY THE MIS-PAIRING MATTERS MORE THAN THE HOLE. The reversed-column repair's
 docstring states that a wrong pairing "cannot pass quietly: it would place a
@@ -144,30 +142,30 @@ def test_no_position_carries_another_position_s_casilla_tag() -> None:
         )
 
 
-def test_almost_every_contested_position_still_carries_its_own_tag() -> None:
+def test_every_contested_position_carries_its_own_tag() -> None:
     """The subset check above must not pass by the design losing every tag.
 
-    Four of the five positions carry theirs. The fifth, ``@115``, does not: its
-    ``[523]`` is emitted as a bare bracket on its own line and no repair
-    reattaches it, which is a smaller and separate gap from the mis-attribution
-    this module exists for -- and a real one, since a position with no tag
-    contributes no casilla number to coverage.
+    All five positions carry theirs, ``@115`` included. It did not when this
+    module was written: its ``[523]`` was emitted as a bare bracket on its own
+    line that no repair reattached, which is a smaller and separate gap from
+    the mis-attribution this module exists for -- and a real one, since a
+    position with no tag contributes no casilla number to coverage. The fold
+    that closed it is pinned in its own module; asserted here as equality
+    because this run is where the loss was found.
     """
     consensus = _sibling_descriptions()
     extraction = extract_record_design(_MODELO_390 / _REPAIRED_DESIGN)
     sheet = next(s for s in extraction.sheets if s.name == _CONTESTED_SHEET)
     by_offset = {field.offset: (field.description or "") for field in sheet.fields}
 
-    carried = [
-        offset
-        for offset, expected in consensus.items()
-        if _TAG.findall(expected) and set(_TAG.findall(by_offset.get(offset, ""))) == set(_TAG.findall(expected))
-    ]
-    tagged_in_consensus = [offset for offset, expected in consensus.items() if _TAG.findall(expected)]
-
-    assert len(carried) >= len(tagged_in_consensus) - 1, (
-        f"only {sorted(carried)} of {sorted(tagged_in_consensus)} keep their own casilla tag"
-    )
+    for offset, expected in consensus.items():
+        expected_tags = set(_TAG.findall(expected))
+        if not expected_tags:
+            continue
+        assert set(_TAG.findall(by_offset.get(offset, ""))) == expected_tags, (
+            f"@{offset} does not carry the casilla the sibling editions put there: "
+            f"expected {sorted(expected_tags)}"
+        )
 
 
 def test_a_page_record_design_that_reads_whole_keeps_its_own_extractor() -> None:
