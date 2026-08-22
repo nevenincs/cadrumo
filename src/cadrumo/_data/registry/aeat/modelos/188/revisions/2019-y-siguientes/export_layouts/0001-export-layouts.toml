@@ -1,0 +1,27 @@
+# The fichero AEAT for modelo 188, whose two records Orden de 17 de noviembre de
+# 1999, apartado quinto, approves: "a) Hoja resumen ... b) hojas interiores de
+# relacion de perceptores". Both records tile 1..250 in the bundled diseno, so
+# neither needs a declared reserved tail: every position is carried by a binding.
+[[revisions."2019-y-siguientes".export_layouts]]
+id = "modelo-188-fichero-aeat"
+format = "fixed_width"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
+source_refs = ["aeat-dr-188-2023", "boe-modelo-188-form-layout"]
+
+[[revisions."2019-y-siguientes".export_layouts.records]]
+id = "modelo-188-declarante"
+record_type = "declarante"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "crlf"
+binding_record = "declarante"
+
+# One row per perceptor: the hojas interiores repeat, the hoja resumen does not.
+[[revisions."2019-y-siguientes".export_layouts.records]]
+id = "modelo-188-perceptor"
+record_type = "perceptor"
+order = 1
+encoding = "iso-8859-1"
+line_ending = "crlf"
+repeat = "binding_rows"
+binding_record = "perceptor"
