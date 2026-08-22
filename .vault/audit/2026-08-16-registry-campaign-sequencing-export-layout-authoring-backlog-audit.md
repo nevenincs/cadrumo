@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:fffe5577d4973225369ae6ce6f203bcb45584b12bad69ade066ef100c2da0752'
+body_hash: 'sha256:d954062042eb9b4a3c6c301c62325136fa8f7a1954d5d8a477bb558b702b7bc3'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -12028,3 +12028,75 @@ the orden itself is not bundled.
 
 The three span findings still need per-design epoch authoring: modelo 200's
 2024, modelo 322's 2022, modelo 347's 2008 and 2010.
+
+## Tick: modelo 038's design window was its PDF's revision date
+
+Re-measured at tick start: authority CLEAN, registration gate 54 of 218, locale
+catalogue clean, and the period matrix failing on modelo 038 alone -- the one
+failure this campaign has been carrying across several ticks as "pre-existing,
+unrelated, no bundled design".
+
+Two of those three words were wrong.
+
+### It has a design, and the window was the wrong fact
+
+Modelo 038 bundles `01-038-diseno-de-registro-actualizado-28-06-2024.pdf`, and
+it is registered as `enrolled-modelo-038-layout` with
+`applies_from = 2024-06-01`. That date is the PDF's own "actualizado 28/06/2024"
+revision stamp.
+
+The epoch rule already states the distinction in as many words -- a version is
+"which revision of the PDF AEAT published and says nothing about which filings
+it governs" -- and windowing on it left modelo 038 with no diseño for the
+twenty-two years it has been filed monthly. Between "the one published diseño
+governs the modelo's life" and "the modelo had no diseño from 2002 to 2024",
+only the first survives contact with the fact that the modelo was being filed
+throughout.
+
+The window now begins 2002-01-16, the date the companion
+`enrolled-modelo-038-procedure` already carries for Orden HAC/66/2002, which
+approves the modelo. One line, and the period matrix closes.
+
+Proven causal rather than assumed: reverting the date alone reds the gate again
+and restoring it greens it, so the change is what closed the gap and the gate
+is not passing vacuously.
+
+### What could NOT be grounded, and why that mattered less than it looked
+
+Before reaching the window, two other routes were tried and both dead-ended:
+the orden's bundled file yields no applicability clause, and the design PDF
+carries no validity statement of its own -- it is a bare layout diagram. Had
+the fix depended on either, this would have been an operator call about
+widening a claim or narrowing declared capability. It did not: the fix is a
+correction of a fact that was already wrong, not a new claim.
+
+### A thread that turned out to be already owned
+
+Chasing the orden file led to a family of ~1 KB whole-norm corpus files, four
+of them with byte-identical tag counts, which looked like undisclosed
+hand-authored summaries standing in for BOE text. They are not. Each closes
+with its own provenance note naming the BOE URL, the agent web fetch, the
+operator authorization and the words "Pending operator re-verification" -- they
+declare exactly what they are.
+
+Twenty-two files carry that marker and forty-five legal entries are grounded on
+one. That population is ALREADY owned:
+`_validate_layout_authority_content.py` is a registry-build gate written
+against precisely this family, and its docstring names it -- "a family of
+hand-transcribed BOE excerpts ... each closing with its own sentence 'Pending
+operator re-verification'". Checking for the existing authority before building
+is what stopped a second gate over the same population being written.
+
+### Verified
+
+* authority CLEAN.
+* `test_supported_period_matrix_has_applicable_record_design_sources` passes,
+  and the selection that carried it -- catalogue verification plus the
+  generated-tree gates -- is 66 passed, 0 failed.
+* the revert/restore control confirms the single date is what moved it.
+
+### Still open
+
+Fifty-four unregistered design files, all needing a ruling or an acquisition
+rather than a reading. The three span findings still need per-design epoch
+authoring: modelo 200's 2024, modelo 322's 2022, modelo 347's 2008 and 2010.
