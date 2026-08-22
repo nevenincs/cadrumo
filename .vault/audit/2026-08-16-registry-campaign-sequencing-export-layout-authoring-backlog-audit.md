@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:c46d48731b41dc58a1dd2c9d6cda7c09b4191b37b6dc84be2a6cd879b0443f55'
+body_hash: 'sha256:e3d7d2918555c965ed59d8f08aa11645ab01201e32312852ec3a19ba11c10479'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -11623,3 +11623,94 @@ transient. The rest cluster on cross-period clean-state provenance, modelo 721
 (no bundled design at all), modelo 036, modelo 840 and IVA compensation
 prefill, plus a modelo 390 revision gap at year 2026 that queue item 6 will
 meet.
+
+## Tick: modelo 200 measured and refused, and the design-registration gap it exposed
+
+Re-measured at tick start: authority CLEAN, span gate reporting modelo 200, 322
+and 347 at one re-layout each.
+
+### Modelo 200 is not derivable, and the measurement says so plainly
+
+Modelo 200 is an order of magnitude larger than the previous two splits -- 6709
+fields across 74 sheets against 6800 across 76 -- and no key pairs it totally:
+
+    ordinal      contiguous 1..N in ALL 74 sheets, so it is a POSITION
+    offset       6420 of 6709, with 289 unpaired
+    box number   6488 of 6709, with 25-27 collisions per design
+
+The ordinal control is the one that settled it. It is the same control that
+condemned modelo 322's ordinal and cleared modelo 347's, and here it condemns:
+every sheet numbers its fields 1..N with no gaps, so pairing on it would map the
+Nth field of one design onto the Nth of another across a boundary where the gate
+reports 1140 of 3194 shared boxes MOVING and the record set changing from 75 to
+77 records.
+
+Best case leaves 194 fields unpaired. That is per-field authoring of a
+filing-grade byte layout, not a derivation, so the split was NOT attempted. The
+2024 epoch has to be authored against its own design.
+
+### The gap that blocked it, and what was done about it
+
+Modelo 200 bundles designs for ejercicios 2010 through 2023 and registered NONE
+of them: only 2024 and 2025 had `[sources]` entries. An unregistered design
+cannot be loaded, so no epoch can be built from it -- the same wall that stopped
+modelo 322's earliest boundary from even being measured until its 2022 design
+was registered.
+
+Fourteen designs (2010-2023) are now registered, one per ejercicio, every fact
+taken from the corpus manifest the repo already ships and the sha256 and byte
+count re-verified against the file on disk before writing.
+
+The Orden EHA/1338/2010 PDF in the same directory was skipped because its title
+names no ejercicio, and the reason first written here -- that it is the orden's
+text rather than a diseño de registro -- is WRONG. Its extracted text carries
+position tables with box numbers (`12 113 17 N ... Posiciones cortas de valores
+[149]`), which is a design row. AEAT publishes diseños in an orden's anexo, so
+an orden PDF can be a record design and this one is. It stays unregistered only
+because the ejercicio it governs has to be read out of the orden rather than
+guessed from a filename, and that is unfinished work, not a classification.
+
+The same correction applies to the 30 remaining unregistered files whose titles
+name an Orden: they cannot be dismissed as non-designs on the title alone.
+
+Twelve of the fourteen parse cleanly, and their field counts form a coherent
+curve -- 3891 in 2012 rising to 6609 in 2023, meeting 2024's 6709. The 2010 and
+2011 PDFs are PARTIAL reads: the parser reads 40 sheets and refuses 5 that carry
+holes. That is a corpus or parser gap the bundled-design gate already tracks
+independently of registration, and it is reported rather than papered over.
+
+### A count that was overstated, then corrected
+
+The first sweep reported 84 bundled-but-unregistered designs. Six of those are
+format twins -- the same design shipped as both `.xls` and `.xlsx`, with one of
+the pair registered -- and the twin check missed them because it compared
+TITLES, while a locally converted file carries its own filename as its manifest
+title rather than the AEAT one. The real figure is 78 across 16 modelos.
+
+The same distinction explains what the registration gate still reports for
+modelo 200 after this work: twelve entries, all of them `.xlsx` conversions of
+designs now registered in their `.xls` form, plus the orden PDF. Modelo 200's
+genuine design-registration gap is closed; what remains is the question of
+whether a converted format twin is an unregistered design at all, which is a
+corpus-policy judgement rather than a missing entry.
+
+### Verified
+
+* authority CLEAN with the fourteen new sources.
+* the registration gate reports 82 of 218 unregistered, and every modelo 200
+  file it still names is a format twin or the orden text.
+* the bundled-design read gate is unchanged at 10 of 218 partially read: it
+  counts BUNDLED designs, so registration neither helped nor hurt it, and
+  modelo 200's 2010 and 2011 were already in its population.
+
+### Still open
+
+All three span findings now need per-design epoch authoring rather than
+derivation: modelo 200's 2024, modelo 322's 2022, and modelo 347's 2008 and
+2010. That is the campaign's remaining endpoint work on this axis and it is
+measured, not guessed -- each was tested against every key available and each
+failed for a stated reason.
+
+Sixty-four designs across fifteen other modelos remain unregistered, with
+modelo 202 (12) and modelo 111 (7) the largest. The same manifest-grounded
+method applies to each.
