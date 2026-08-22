@@ -1607,6 +1607,32 @@ modelo:
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
               label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
                 (70.Uno.8 cikk). Meghaladta a 10 000 euros kuszoberteket
+            x-ednm6bj3c5qn6o9dcpim6q31:
+              label: Tagok, resztvevok vagy reszesedok. A benyujtasi ok datuma
+            x-ednm6bj3c5qn6o9de1p6asr5dpq62or9dtn0:
+              label: Tagok, resztvevok vagy reszesedok. A benyujtas oka
+            x-ednm6bj3elnn8o9dc5q74qb2elhmirre:
+              label: Tagok, resztvevok vagy reszesedok. Hozzarendelesi hanyad vagy
+                szazalek
+            x-ednm6bj3elnn8o9de1gn4t39cdkn0ob3d5nms:
+              label: Tagok, resztvevok vagy reszesedok. Reszesedesi hanyad vagy szazalek
+            x-ednm6bj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              label: 'Tagok, resztvevok vagy reszesedok. IRPF, egyszerusitett kozvetlen
+                megallapitas: lemondas vagy visszavonas'
+            x-ednm6bj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              label: 'Tagok, resztvevok vagy reszesedok. IRPF, objektiv megallapitas:
+                lemondas vagy visszavonas'
+            x-ednm6bj9epgiqsj5c5jn0:
+              label: 'Tagok, resztvevok vagy reszesedok. AFA, mezogazdasagi kulonleges
+                rendszer: lemondas vagy visszavonas'
+            x-ednm6bj9epgiqsj5ctkmqpbe5lpmirbgdhkmcqb3c5i6u:
+              label: 'Tagok, resztvevok vagy reszesedok. AFA, egyszerusitett rendszer:
+                lemondas vagy visszavonas'
+            x-ednm6bjed5j0:
+              label: Tagok, resztvevok vagy reszesedok. Adoazonosito szam (NIF)
+            x-ednm6bjedtmm4sj55lp62ujfdomn6rr3d5gmo:
+              label: Tagok, resztvevok vagy reszesedok. Vezetek- es keresztnev vagy
+                cegnev
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
               help: null
               label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
@@ -1703,6 +1729,155 @@ modelo:
               help: null
               label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
                 oroklesi szazaleka (13f jogutod)
+            x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
+              label: Tenyleges tulajdonosok. A benyujtasi ok datuma, 14a tenyleges
+                tulajdonos
+            x-ehkn8bj15lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Tenyleges tulajdonosok. A benyujtas oka, 14a tenyleges tulajdonos
+            x-ehkn8bj15lj6aor8c4mmsob3d5mmipbeehng:
+              label: Tenyleges tulajdonosok. Szuletesi datum, 14a tenyleges tulajdonos
+            x-ehkn8bj15lkm8pbeehkmcqb3c5hmirre:
+              label: Tenyleges tulajdonosok. Adoazonosito szam vagy kulfoldi azonosito
+                kod, 14a tenyleges tulajdonos
+            x-ehkn8bj15ln62or9dtn62r39chgm8:
+              label: Tenyleges tulajdonosok. Allampolgarsag, 14a tenyleges tulajdonos
+            x-ehkn8bj15ln6urb2e9ig:
+              label: Tenyleges tulajdonosok. Vezetek- es keresztnev, 14a tenyleges
+                tulajdonos
+            x-ehkn8bj15lo62qbj5lings35chkm6qbfdo:
+              label: Tenyleges tulajdonosok. Az azonosito okmany kiallito orszaga,
+                14a tenyleges tulajdonos
+            x-ehkn8bj15lo62qbj5lp6asr9chimsor9c4:
+              label: Tenyleges tulajdonosok. Az illetoseg szerinti orszag, 14a tenyleges
+                tulajdonos
+            x-ehkn8bj15lq6is3f5li6uorldlimst3f:
+              label: Tenyleges tulajdonosok. Az azonosito okmany tipusa, 14a tenyleges
+                tulajdonos
+            x-ehkn8bj25lhm2tbjc4mmcpb3d1gg:
+              label: Tenyleges tulajdonosok. A benyujtasi ok datuma, 14b tenyleges
+                tulajdonos
+            x-ehkn8bj25lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Tenyleges tulajdonosok. A benyujtas oka, 14b tenyleges tulajdonos
+            x-ehkn8bj25lj6aor8c4mmsob3d5mmipbeehng:
+              label: Tenyleges tulajdonosok. Szuletesi datum, 14b tenyleges tulajdonos
+            x-ehkn8bj25lkm8pbeehkmcqb3c5hmirre:
+              label: Tenyleges tulajdonosok. Adoazonosito szam vagy kulfoldi azonosito
+                kod, 14b tenyleges tulajdonos
+            x-ehkn8bj25ln62or9dtn62r39chgm8:
+              label: Tenyleges tulajdonosok. Allampolgarsag, 14b tenyleges tulajdonos
+            x-ehkn8bj25ln6urb2e9ig:
+              label: Tenyleges tulajdonosok. Vezetek- es keresztnev, 14b tenyleges
+                tulajdonos
+            x-ehkn8bj25lo62qbj5lings35chkm6qbfdo:
+              label: Tenyleges tulajdonosok. Az azonosito okmany kiallito orszaga,
+                14b tenyleges tulajdonos
+            x-ehkn8bj25lo62qbj5lp6asr9chimsor9c4:
+              label: Tenyleges tulajdonosok. Az illetoseg szerinti orszag, 14b tenyleges
+                tulajdonos
+            x-ehkn8bj25lq6is3f5li6uorldlimst3f:
+              label: Tenyleges tulajdonosok. Az azonosito okmany tipusa, 14b tenyleges
+                tulajdonos
+            x-ehkn8bj35lhm2tbjc4mmcpb3d1gg:
+              label: Tenyleges tulajdonosok. A benyujtasi ok datuma, 14c tenyleges
+                tulajdonos
+            x-ehkn8bj35lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Tenyleges tulajdonosok. A benyujtas oka, 14c tenyleges tulajdonos
+            x-ehkn8bj35lj6aor8c4mmsob3d5mmipbeehng:
+              label: Tenyleges tulajdonosok. Szuletesi datum, 14c tenyleges tulajdonos
+            x-ehkn8bj35lkm8pbeehkmcqb3c5hmirre:
+              label: Tenyleges tulajdonosok. Adoazonosito szam vagy kulfoldi azonosito
+                kod, 14c tenyleges tulajdonos
+            x-ehkn8bj35ln62or9dtn62r39chgm8:
+              label: Tenyleges tulajdonosok. Allampolgarsag, 14c tenyleges tulajdonos
+            x-ehkn8bj35ln6urb2e9ig:
+              label: Tenyleges tulajdonosok. Vezetek- es keresztnev, 14c tenyleges
+                tulajdonos
+            x-ehkn8bj35lo62qbj5lings35chkm6qbfdo:
+              label: Tenyleges tulajdonosok. Az azonosito okmany kiallito orszaga,
+                14c tenyleges tulajdonos
+            x-ehkn8bj35lo62qbj5lp6asr9chimsor9c4:
+              label: Tenyleges tulajdonosok. Az illetoseg szerinti orszag, 14c tenyleges
+                tulajdonos
+            x-ehkn8bj35lq6is3f5li6uorldlimst3f:
+              label: Tenyleges tulajdonosok. Az azonosito okmany tipusa, 14c tenyleges
+                tulajdonos
+            x-ehkn8bj45lhm2tbjc4mmcpb3d1gg:
+              label: Tenyleges tulajdonosok. A benyujtasi ok datuma, 14d tenyleges
+                tulajdonos
+            x-ehkn8bj45lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Tenyleges tulajdonosok. A benyujtas oka, 14d tenyleges tulajdonos
+            x-ehkn8bj45lj6aor8c4mmsob3d5mmipbeehng:
+              label: Tenyleges tulajdonosok. Szuletesi datum, 14d tenyleges tulajdonos
+            x-ehkn8bj45lkm8pbeehkmcqb3c5hmirre:
+              label: Tenyleges tulajdonosok. Adoazonosito szam vagy kulfoldi azonosito
+                kod, 14d tenyleges tulajdonos
+            x-ehkn8bj45ln62or9dtn62r39chgm8:
+              label: Tenyleges tulajdonosok. Allampolgarsag, 14d tenyleges tulajdonos
+            x-ehkn8bj45ln6urb2e9ig:
+              label: Tenyleges tulajdonosok. Vezetek- es keresztnev, 14d tenyleges
+                tulajdonos
+            x-ehkn8bj45lo62qbj5lings35chkm6qbfdo:
+              label: Tenyleges tulajdonosok. Az azonosito okmany kiallito orszaga,
+                14d tenyleges tulajdonos
+            x-ehkn8bj45lo62qbj5lp6asr9chimsor9c4:
+              label: Tenyleges tulajdonosok. Az illetoseg szerinti orszag, 14d tenyleges
+                tulajdonos
+            x-ehkn8bj45lq6is3f5li6uorldlimst3f:
+              label: Tenyleges tulajdonosok. Az azonosito okmany tipusa, 14d tenyleges
+                tulajdonos
+            x-ehkn8bj4clhmoobic5hmirre5ln6ubbmc5p6iob3d5nms:
+              label: Tenyleges tulajdonosok. Nyilatkozat az adatok valtozatlansagarol
+            x-ehkn8bj55lhm2tbjc4mmcpb3d1gg:
+              label: Tenyleges tulajdonosok. A benyujtasi ok datuma, 14e tenyleges
+                tulajdonos
+            x-ehkn8bj55lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Tenyleges tulajdonosok. A benyujtas oka, 14e tenyleges tulajdonos
+            x-ehkn8bj55lj6aor8c4mmsob3d5mmipbeehng:
+              label: Tenyleges tulajdonosok. Szuletesi datum, 14e tenyleges tulajdonos
+            x-ehkn8bj55lkm8pbeehkmcqb3c5hmirre:
+              label: Tenyleges tulajdonosok. Adoazonosito szam vagy kulfoldi azonosito
+                kod, 14e tenyleges tulajdonos
+            x-ehkn8bj55ln62or9dtn62r39chgm8:
+              label: Tenyleges tulajdonosok. Allampolgarsag, 14e tenyleges tulajdonos
+            x-ehkn8bj55ln6urb2e9ig:
+              label: Tenyleges tulajdonosok. Vezetek- es keresztnev, 14e tenyleges
+                tulajdonos
+            x-ehkn8bj55lo62qbj5lings35chkm6qbfdo:
+              label: Tenyleges tulajdonosok. Az azonosito okmany kiallito orszaga,
+                14e tenyleges tulajdonos
+            x-ehkn8bj55lo62qbj5lp6asr9chimsor9c4:
+              label: Tenyleges tulajdonosok. Az illetoseg szerinti orszag, 14e tenyleges
+                tulajdonos
+            x-ehkn8bj55lq6is3f5li6uorldlimst3f:
+              label: Tenyleges tulajdonosok. Az azonosito okmany tipusa, 14e tenyleges
+                tulajdonos
+            x-ehkn8bj65lhm2tbjc4mmcpb3d1gg:
+              label: Tenyleges tulajdonosok. A benyujtasi ok datuma, 14f tenyleges
+                tulajdonos
+            x-ehkn8bj65lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Tenyleges tulajdonosok. A benyujtas oka, 14f tenyleges tulajdonos
+            x-ehkn8bj65lj6aor8c4mmsob3d5mmipbeehng:
+              label: Tenyleges tulajdonosok. Szuletesi datum, 14f tenyleges tulajdonos
+            x-ehkn8bj65lkm8pbeehkmcqb3c5hmirre:
+              label: Tenyleges tulajdonosok. Adoazonosito szam vagy kulfoldi azonosito
+                kod, 14f tenyleges tulajdonos
+            x-ehkn8bj65ln62or9dtn62r39chgm8:
+              label: Tenyleges tulajdonosok. Allampolgarsag, 14f tenyleges tulajdonos
+            x-ehkn8bj65ln6urb2e9ig:
+              label: Tenyleges tulajdonosok. Vezetek- es keresztnev, 14f tenyleges
+                tulajdonos
+            x-ehkn8bj65lo62qbj5lings35chkm6qbfdo:
+              label: Tenyleges tulajdonosok. Az azonosito okmany kiallito orszaga,
+                14f tenyleges tulajdonos
+            x-ehkn8bj65lo62qbj5lp6asr9chimsor9c4:
+              label: Tenyleges tulajdonosok. Az illetoseg szerinti orszag, 14f tenyleges
+                tulajdonos
+            x-ehkn8bj65lq6is3f5li6uorldlimst3f:
+              label: Tenyleges tulajdonosok. Az azonosito okmany tipusa, 14f tenyleges
+                tulajdonos
+            x-ehkn8bjjd5n2qrr2dhkmeob3d5nmsbb9chimst39cpkm6obi:
+              label: Tenyleges tulajdonosok. A tenyleges tulajdonos azonositasara
+                nem koteles szervezet
           construct:
             modelo-036-censo-foundation:
               field:

@@ -1676,6 +1676,31 @@ modelo:
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
               label: Servicios de telecomunicaciones, radiodifusion y via electronica
                 (art. 70.Uno.8). Ha superado el umbral de 10.000 euros
+            x-ednm6bj3c5qn6o9dcpim6q31:
+              label: Socios, miembros o participes. Fecha de la causa de la presentacion
+            x-ednm6bj3c5qn6o9de1p6asr5dpq62or9dtn0:
+              label: Socios, miembros o participes. Causa de la presentacion
+            x-ednm6bj3elnn8o9dc5q74qb2elhmirre:
+              label: Socios, miembros o participes. Cuota o porcentaje de atribucion
+            x-ednm6bj3elnn8o9de1gn4t39cdkn0ob3d5nms:
+              label: Socios, miembros o participes. Cuota o porcentaje de participacion
+            x-ednm6bj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              label: 'Socios, miembros o participes. IRPF, estimacion directa simplificada:
+                renuncia o revocacion'
+            x-ednm6bj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              label: 'Socios, miembros o participes. IRPF, estimacion objetiva: renuncia
+                o revocacion'
+            x-ednm6bj9epgiqsj5c5jn0:
+              label: 'Socios, miembros o participes. IVA, regimen especial de agricultura,
+                ganaderia y pesca: renuncia o revocacion'
+            x-ednm6bj9epgiqsj5ctkmqpbe5lpmirbgdhkmcqb3c5i6u:
+              label: 'Socios, miembros o participes. IVA, regimen simplificado: renuncia
+                o revocacion'
+            x-ednm6bjed5j0:
+              label: Socios, miembros o participes. N.I.F.
+            x-ednm6bjedtmm4sj55lp62ujfdomn6rr3d5gmo:
+              label: Socios, miembros o participes. Apellidos y nombre, razon o denominacion
+                social
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
               help: null
               label: Cuota de liquidacion, patrimonio o caudal hereditario del sucesor
@@ -1766,6 +1791,143 @@ modelo:
               help: null
               label: Porcentaje de liquidacion, participacion o herencia del sucesor
                 o beneficiario (sucesor 13f)
+            x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
+              label: Titulares reales. Fecha de la causa de la presentacion, titular
+                real 14a
+            x-ehkn8bj15lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Titulares reales. Causa de la presentacion, titular real 14a
+            x-ehkn8bj15lj6aor8c4mmsob3d5mmipbeehng:
+              label: Titulares reales. Fecha de nacimiento, titular real 14a
+            x-ehkn8bj15lkm8pbeehkmcqb3c5hmirre:
+              label: Titulares reales. N.I.F. o codigo de identificacion extranjero,
+                titular real 14a
+            x-ehkn8bj15ln62or9dtn62r39chgm8:
+              label: Titulares reales. Nacionalidad, titular real 14a
+            x-ehkn8bj15ln6urb2e9ig:
+              label: Titulares reales. Apellidos y nombre, titular real 14a
+            x-ehkn8bj15lo62qbj5lings35chkm6qbfdo:
+              label: Titulares reales. Pais de expedicion del documento de identificacion,
+                titular real 14a
+            x-ehkn8bj15lo62qbj5lp6asr9chimsor9c4:
+              label: Titulares reales. Pais de residencia, titular real 14a
+            x-ehkn8bj15lq6is3f5li6uorldlimst3f:
+              label: Titulares reales. Tipo de documento identificativo, titular real
+                14a
+            x-ehkn8bj25lhm2tbjc4mmcpb3d1gg:
+              label: Titulares reales. Fecha de la causa de la presentacion, titular
+                real 14b
+            x-ehkn8bj25lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Titulares reales. Causa de la presentacion, titular real 14b
+            x-ehkn8bj25lj6aor8c4mmsob3d5mmipbeehng:
+              label: Titulares reales. Fecha de nacimiento, titular real 14b
+            x-ehkn8bj25lkm8pbeehkmcqb3c5hmirre:
+              label: Titulares reales. N.I.F. o codigo de identificacion extranjero,
+                titular real 14b
+            x-ehkn8bj25ln62or9dtn62r39chgm8:
+              label: Titulares reales. Nacionalidad, titular real 14b
+            x-ehkn8bj25ln6urb2e9ig:
+              label: Titulares reales. Apellidos y nombre, titular real 14b
+            x-ehkn8bj25lo62qbj5lings35chkm6qbfdo:
+              label: Titulares reales. Pais de expedicion del documento de identificacion,
+                titular real 14b
+            x-ehkn8bj25lo62qbj5lp6asr9chimsor9c4:
+              label: Titulares reales. Pais de residencia, titular real 14b
+            x-ehkn8bj25lq6is3f5li6uorldlimst3f:
+              label: Titulares reales. Tipo de documento identificativo, titular real
+                14b
+            x-ehkn8bj35lhm2tbjc4mmcpb3d1gg:
+              label: Titulares reales. Fecha de la causa de la presentacion, titular
+                real 14c
+            x-ehkn8bj35lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Titulares reales. Causa de la presentacion, titular real 14c
+            x-ehkn8bj35lj6aor8c4mmsob3d5mmipbeehng:
+              label: Titulares reales. Fecha de nacimiento, titular real 14c
+            x-ehkn8bj35lkm8pbeehkmcqb3c5hmirre:
+              label: Titulares reales. N.I.F. o codigo de identificacion extranjero,
+                titular real 14c
+            x-ehkn8bj35ln62or9dtn62r39chgm8:
+              label: Titulares reales. Nacionalidad, titular real 14c
+            x-ehkn8bj35ln6urb2e9ig:
+              label: Titulares reales. Apellidos y nombre, titular real 14c
+            x-ehkn8bj35lo62qbj5lings35chkm6qbfdo:
+              label: Titulares reales. Pais de expedicion del documento de identificacion,
+                titular real 14c
+            x-ehkn8bj35lo62qbj5lp6asr9chimsor9c4:
+              label: Titulares reales. Pais de residencia, titular real 14c
+            x-ehkn8bj35lq6is3f5li6uorldlimst3f:
+              label: Titulares reales. Tipo de documento identificativo, titular real
+                14c
+            x-ehkn8bj45lhm2tbjc4mmcpb3d1gg:
+              label: Titulares reales. Fecha de la causa de la presentacion, titular
+                real 14d
+            x-ehkn8bj45lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Titulares reales. Causa de la presentacion, titular real 14d
+            x-ehkn8bj45lj6aor8c4mmsob3d5mmipbeehng:
+              label: Titulares reales. Fecha de nacimiento, titular real 14d
+            x-ehkn8bj45lkm8pbeehkmcqb3c5hmirre:
+              label: Titulares reales. N.I.F. o codigo de identificacion extranjero,
+                titular real 14d
+            x-ehkn8bj45ln62or9dtn62r39chgm8:
+              label: Titulares reales. Nacionalidad, titular real 14d
+            x-ehkn8bj45ln6urb2e9ig:
+              label: Titulares reales. Apellidos y nombre, titular real 14d
+            x-ehkn8bj45lo62qbj5lings35chkm6qbfdo:
+              label: Titulares reales. Pais de expedicion del documento de identificacion,
+                titular real 14d
+            x-ehkn8bj45lo62qbj5lp6asr9chimsor9c4:
+              label: Titulares reales. Pais de residencia, titular real 14d
+            x-ehkn8bj45lq6is3f5li6uorldlimst3f:
+              label: Titulares reales. Tipo de documento identificativo, titular real
+                14d
+            x-ehkn8bj4clhmoobic5hmirre5ln6ubbmc5p6iob3d5nms:
+              label: Titulares reales. Declaracion de no variacion de datos
+            x-ehkn8bj55lhm2tbjc4mmcpb3d1gg:
+              label: Titulares reales. Fecha de la causa de la presentacion, titular
+                real 14e
+            x-ehkn8bj55lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Titulares reales. Causa de la presentacion, titular real 14e
+            x-ehkn8bj55lj6aor8c4mmsob3d5mmipbeehng:
+              label: Titulares reales. Fecha de nacimiento, titular real 14e
+            x-ehkn8bj55lkm8pbeehkmcqb3c5hmirre:
+              label: Titulares reales. N.I.F. o codigo de identificacion extranjero,
+                titular real 14e
+            x-ehkn8bj55ln62or9dtn62r39chgm8:
+              label: Titulares reales. Nacionalidad, titular real 14e
+            x-ehkn8bj55ln6urb2e9ig:
+              label: Titulares reales. Apellidos y nombre, titular real 14e
+            x-ehkn8bj55lo62qbj5lings35chkm6qbfdo:
+              label: Titulares reales. Pais de expedicion del documento de identificacion,
+                titular real 14e
+            x-ehkn8bj55lo62qbj5lp6asr9chimsor9c4:
+              label: Titulares reales. Pais de residencia, titular real 14e
+            x-ehkn8bj55lq6is3f5li6uorldlimst3f:
+              label: Titulares reales. Tipo de documento identificativo, titular real
+                14e
+            x-ehkn8bj65lhm2tbjc4mmcpb3d1gg:
+              label: Titulares reales. Fecha de la causa de la presentacion, titular
+                real 14f
+            x-ehkn8bj65lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Titulares reales. Causa de la presentacion, titular real 14f
+            x-ehkn8bj65lj6aor8c4mmsob3d5mmipbeehng:
+              label: Titulares reales. Fecha de nacimiento, titular real 14f
+            x-ehkn8bj65lkm8pbeehkmcqb3c5hmirre:
+              label: Titulares reales. N.I.F. o codigo de identificacion extranjero,
+                titular real 14f
+            x-ehkn8bj65ln62or9dtn62r39chgm8:
+              label: Titulares reales. Nacionalidad, titular real 14f
+            x-ehkn8bj65ln6urb2e9ig:
+              label: Titulares reales. Apellidos y nombre, titular real 14f
+            x-ehkn8bj65lo62qbj5lings35chkm6qbfdo:
+              label: Titulares reales. Pais de expedicion del documento de identificacion,
+                titular real 14f
+            x-ehkn8bj65lo62qbj5lp6asr9chimsor9c4:
+              label: Titulares reales. Pais de residencia, titular real 14f
+            x-ehkn8bj65lq6is3f5li6uorldlimst3f:
+              label: Titulares reales. Tipo de documento identificativo, titular real
+                14f
+            x-ehkn8bjjd5n2qrr2dhkmeob3d5nmsbb9chimst39cpkm6obi:
+              label: Titulares reales. Entidad sin obligacion de identificar al titular
+                real
           construct:
             modelo-036-censo-foundation:
               field:

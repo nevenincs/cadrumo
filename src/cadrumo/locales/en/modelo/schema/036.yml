@@ -1622,6 +1622,32 @@ modelo:
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
               label: Telecommunications, broadcasting and electronic services (art.
                 70.Uno.8). Has exceeded the 10,000 euro threshold
+            x-ednm6bj3c5qn6o9dcpim6q31:
+              label: Partners, members or participants. Date of the reason for filing
+            x-ednm6bj3c5qn6o9de1p6asr5dpq62or9dtn0:
+              label: Partners, members or participants. Reason for filing
+            x-ednm6bj3elnn8o9dc5q74qb2elhmirre:
+              label: Partners, members or participants. Share or percentage of attribution
+            x-ednm6bj3elnn8o9de1gn4t39cdkn0ob3d5nms:
+              label: Partners, members or participants. Share or percentage of participation
+            x-ednm6bj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              label: 'Partners, members or participants. Personal income tax, simplified
+                direct assessment: waiver or revocation'
+            x-ednm6bj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              label: 'Partners, members or participants. Personal income tax, objective
+                assessment: waiver or revocation'
+            x-ednm6bj9epgiqsj5c5jn0:
+              label: 'Partners, members or participants. VAT, special agriculture,
+                livestock and fisheries scheme: waiver or revocation'
+            x-ednm6bj9epgiqsj5ctkmqpbe5lpmirbgdhkmcqb3c5i6u:
+              label: 'Partners, members or participants. VAT, simplified scheme: waiver
+                or revocation'
+            x-ednm6bjed5j0:
+              label: Partners, members or participants. Tax identification number
+                (NIF)
+            x-ednm6bjedtmm4sj55lp62ujfdomn6rr3d5gmo:
+              label: Partners, members or participants. Surnames and forename, or
+                legal name
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
               help: null
               label: Share of liquidation, assets or estate of the successor or beneficiary
@@ -1718,6 +1744,143 @@ modelo:
               help: null
               label: Percentage of liquidation, holding or inheritance of the successor
                 or beneficiary (successor 13f)
+            x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
+              label: Beneficial owners. Date of the reason for filing, beneficial
+                owner 14a
+            x-ehkn8bj15lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Beneficial owners. Reason for filing, beneficial owner 14a
+            x-ehkn8bj15lj6aor8c4mmsob3d5mmipbeehng:
+              label: Beneficial owners. Date of birth, beneficial owner 14a
+            x-ehkn8bj15lkm8pbeehkmcqb3c5hmirre:
+              label: Beneficial owners. Tax identification number or foreign identification
+                code, beneficial owner 14a
+            x-ehkn8bj15ln62or9dtn62r39chgm8:
+              label: Beneficial owners. Nationality, beneficial owner 14a
+            x-ehkn8bj15ln6urb2e9ig:
+              label: Beneficial owners. Surnames and forename, beneficial owner 14a
+            x-ehkn8bj15lo62qbj5lings35chkm6qbfdo:
+              label: Beneficial owners. Country of issue of the identification document,
+                beneficial owner 14a
+            x-ehkn8bj15lo62qbj5lp6asr9chimsor9c4:
+              label: Beneficial owners. Country of residence, beneficial owner 14a
+            x-ehkn8bj15lq6is3f5li6uorldlimst3f:
+              label: Beneficial owners. Type of identification document, beneficial
+                owner 14a
+            x-ehkn8bj25lhm2tbjc4mmcpb3d1gg:
+              label: Beneficial owners. Date of the reason for filing, beneficial
+                owner 14b
+            x-ehkn8bj25lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Beneficial owners. Reason for filing, beneficial owner 14b
+            x-ehkn8bj25lj6aor8c4mmsob3d5mmipbeehng:
+              label: Beneficial owners. Date of birth, beneficial owner 14b
+            x-ehkn8bj25lkm8pbeehkmcqb3c5hmirre:
+              label: Beneficial owners. Tax identification number or foreign identification
+                code, beneficial owner 14b
+            x-ehkn8bj25ln62or9dtn62r39chgm8:
+              label: Beneficial owners. Nationality, beneficial owner 14b
+            x-ehkn8bj25ln6urb2e9ig:
+              label: Beneficial owners. Surnames and forename, beneficial owner 14b
+            x-ehkn8bj25lo62qbj5lings35chkm6qbfdo:
+              label: Beneficial owners. Country of issue of the identification document,
+                beneficial owner 14b
+            x-ehkn8bj25lo62qbj5lp6asr9chimsor9c4:
+              label: Beneficial owners. Country of residence, beneficial owner 14b
+            x-ehkn8bj25lq6is3f5li6uorldlimst3f:
+              label: Beneficial owners. Type of identification document, beneficial
+                owner 14b
+            x-ehkn8bj35lhm2tbjc4mmcpb3d1gg:
+              label: Beneficial owners. Date of the reason for filing, beneficial
+                owner 14c
+            x-ehkn8bj35lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Beneficial owners. Reason for filing, beneficial owner 14c
+            x-ehkn8bj35lj6aor8c4mmsob3d5mmipbeehng:
+              label: Beneficial owners. Date of birth, beneficial owner 14c
+            x-ehkn8bj35lkm8pbeehkmcqb3c5hmirre:
+              label: Beneficial owners. Tax identification number or foreign identification
+                code, beneficial owner 14c
+            x-ehkn8bj35ln62or9dtn62r39chgm8:
+              label: Beneficial owners. Nationality, beneficial owner 14c
+            x-ehkn8bj35ln6urb2e9ig:
+              label: Beneficial owners. Surnames and forename, beneficial owner 14c
+            x-ehkn8bj35lo62qbj5lings35chkm6qbfdo:
+              label: Beneficial owners. Country of issue of the identification document,
+                beneficial owner 14c
+            x-ehkn8bj35lo62qbj5lp6asr9chimsor9c4:
+              label: Beneficial owners. Country of residence, beneficial owner 14c
+            x-ehkn8bj35lq6is3f5li6uorldlimst3f:
+              label: Beneficial owners. Type of identification document, beneficial
+                owner 14c
+            x-ehkn8bj45lhm2tbjc4mmcpb3d1gg:
+              label: Beneficial owners. Date of the reason for filing, beneficial
+                owner 14d
+            x-ehkn8bj45lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Beneficial owners. Reason for filing, beneficial owner 14d
+            x-ehkn8bj45lj6aor8c4mmsob3d5mmipbeehng:
+              label: Beneficial owners. Date of birth, beneficial owner 14d
+            x-ehkn8bj45lkm8pbeehkmcqb3c5hmirre:
+              label: Beneficial owners. Tax identification number or foreign identification
+                code, beneficial owner 14d
+            x-ehkn8bj45ln62or9dtn62r39chgm8:
+              label: Beneficial owners. Nationality, beneficial owner 14d
+            x-ehkn8bj45ln6urb2e9ig:
+              label: Beneficial owners. Surnames and forename, beneficial owner 14d
+            x-ehkn8bj45lo62qbj5lings35chkm6qbfdo:
+              label: Beneficial owners. Country of issue of the identification document,
+                beneficial owner 14d
+            x-ehkn8bj45lo62qbj5lp6asr9chimsor9c4:
+              label: Beneficial owners. Country of residence, beneficial owner 14d
+            x-ehkn8bj45lq6is3f5li6uorldlimst3f:
+              label: Beneficial owners. Type of identification document, beneficial
+                owner 14d
+            x-ehkn8bj4clhmoobic5hmirre5ln6ubbmc5p6iob3d5nms:
+              label: Beneficial owners. Declaration that the data has not changed
+            x-ehkn8bj55lhm2tbjc4mmcpb3d1gg:
+              label: Beneficial owners. Date of the reason for filing, beneficial
+                owner 14e
+            x-ehkn8bj55lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Beneficial owners. Reason for filing, beneficial owner 14e
+            x-ehkn8bj55lj6aor8c4mmsob3d5mmipbeehng:
+              label: Beneficial owners. Date of birth, beneficial owner 14e
+            x-ehkn8bj55lkm8pbeehkmcqb3c5hmirre:
+              label: Beneficial owners. Tax identification number or foreign identification
+                code, beneficial owner 14e
+            x-ehkn8bj55ln62or9dtn62r39chgm8:
+              label: Beneficial owners. Nationality, beneficial owner 14e
+            x-ehkn8bj55ln6urb2e9ig:
+              label: Beneficial owners. Surnames and forename, beneficial owner 14e
+            x-ehkn8bj55lo62qbj5lings35chkm6qbfdo:
+              label: Beneficial owners. Country of issue of the identification document,
+                beneficial owner 14e
+            x-ehkn8bj55lo62qbj5lp6asr9chimsor9c4:
+              label: Beneficial owners. Country of residence, beneficial owner 14e
+            x-ehkn8bj55lq6is3f5li6uorldlimst3f:
+              label: Beneficial owners. Type of identification document, beneficial
+                owner 14e
+            x-ehkn8bj65lhm2tbjc4mmcpb3d1gg:
+              label: Beneficial owners. Date of the reason for filing, beneficial
+                owner 14f
+            x-ehkn8bj65lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Beneficial owners. Reason for filing, beneficial owner 14f
+            x-ehkn8bj65lj6aor8c4mmsob3d5mmipbeehng:
+              label: Beneficial owners. Date of birth, beneficial owner 14f
+            x-ehkn8bj65lkm8pbeehkmcqb3c5hmirre:
+              label: Beneficial owners. Tax identification number or foreign identification
+                code, beneficial owner 14f
+            x-ehkn8bj65ln62or9dtn62r39chgm8:
+              label: Beneficial owners. Nationality, beneficial owner 14f
+            x-ehkn8bj65ln6urb2e9ig:
+              label: Beneficial owners. Surnames and forename, beneficial owner 14f
+            x-ehkn8bj65lo62qbj5lings35chkm6qbfdo:
+              label: Beneficial owners. Country of issue of the identification document,
+                beneficial owner 14f
+            x-ehkn8bj65lo62qbj5lp6asr9chimsor9c4:
+              label: Beneficial owners. Country of residence, beneficial owner 14f
+            x-ehkn8bj65lq6is3f5li6uorldlimst3f:
+              label: Beneficial owners. Type of identification document, beneficial
+                owner 14f
+            x-ehkn8bjjd5n2qrr2dhkmeob3d5nmsbb9chimst39cpkm6obi:
+              label: Beneficial owners. Entity not required to identify the beneficial
+                owner
           construct:
             modelo-036-censo-foundation:
               field:
