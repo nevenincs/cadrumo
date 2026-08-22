@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:22ed991eedd39891e283359b63d60e5d65032a61082f93485981dbfb0f714d0a'
+body_hash: 'sha256:1b395f5755866c0dff30f96915798049b799aa72888e20bfa8aedbe8b0d12129'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6303,3 +6303,40 @@ this campaign does not own.
 (`--to` versus `--output`) against three suspicions that dissolved on measurement. That is a
 sound instrument meeting a sound surface, not a stalled search -- but it is a poor use of
 further iterations. The campaign is complete on its stated goal.
+
+### The bundle export told the operator it had a backup
+
+The profile-bundle import half has been carried as "needs an operator ruling" for many
+iterations. Re-examining it corrected that framing and found a real defect next to it.
+
+**The keep-or-delete decision was already made, in the tree.** `test_no_exported_contract_is_
+never_used` carries a reasoned entry for `register_imported_profile_bundle`: *"the product
+writes passphrase-encrypted bundles and nothing in it reads them back, which the symbols show
+plainly (encrypt_* is live, decrypt_* is not). Kept because deleting it would remove the only
+code that could make those exports restorable."* That is the same finding this campaign kept
+reporting, reached independently and settled. What remains open is only whether to BUILD the
+import verb, which is roadmap rather than a defect.
+
+**The defect is what the export says while that half is missing.** The TUI profile manager's
+export is live -- `_manager_actions.py:518`, reached through a function-local import, which is
+why an earlier symbol sweep here missed it -- and `aeat app maintenance reconcile` cleans up
+its crash orphans. It collects a destination and a passphrase, writes a `PORTABLE_TRANSFER`
+bundle, and reported: **"Encrypted copy written to <path>."** Nothing more.
+
+An operator reads "encrypted copy" as a backup. It is not one. The product has TWO export
+paths and only one is restorable: `config profile archive export` produces a sealed archive
+that `config profile restore` reads back, while this bundle has no reader at all. Nothing
+distinguished them at the moment of use, and the failure mode is silent and delayed -- it
+surfaces when someone tries to restore.
+
+The message now states the limitation and names the path that does work, in all four
+catalogues through the locale CLI. **This needed no ruling**: it neither builds nor deletes
+the import half, it stops the product claiming something it cannot do.
+
+**Method note.** A check of whether the strings had landed reported zero for all four locales
+and was wrong: the catalogue wraps long values, so the searched phrase spanned a line break.
+Reading the committed value directly showed all four present. Same lesson as the truncated
+searches earlier in this campaign -- a pattern that cannot match is indistinguishable from an
+absent value.
+
+Lanes 314 integration / 1592 unit; locale parity and translation-honesty gates green.
