@@ -27,8 +27,9 @@ compatibility paths.
 
 The focused core suite passes 36 tests, the real encrypted source-provenance
 round-trip suite passes 3 tests, and Ruff passes the S136 production and test
-files. The import-hygiene scanner also reports clean when invoked through its
-package entrypoint. No production or test source was modified by this review.
+files. Direct import inspection confirms the owner module depends only on core
+siblings and Python or Pydantic libraries. No production or test source was
+modified by this review.
 
 ## Findings
 
