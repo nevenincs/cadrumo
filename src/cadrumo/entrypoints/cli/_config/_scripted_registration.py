@@ -14,13 +14,14 @@ credentials" by a surface that offered no way to do it.
 The credential channel is resolved in one declared order, and every step of
 it is a channel the operator chose:
 
-1. the hardened no-echo console prompt, when a real console is attached and
+1. the bounded strict-JSON ``--secrets-stdin`` payload for machine callers;
+2. the hardened no-echo console prompt, when a real console is attached and
    the invocation is not already consuming a machine secret channel;
-2. ``CADRUMO_SECRET_PASSPHRASE``, the sanctioned secrets environment surface
+3. ``CADRUMO_SECRET_PASSPHRASE``, the sanctioned secrets environment surface
    that :func:`~cadrumo.application.user_profile.login_profile` already
    resolves the profile passphrase from, so creation and login read one
    variable with one meaning rather than growing a second;
-3. otherwise an instructive refusal naming both, because silently creating a
+4. otherwise an instructive refusal naming the supported channels, because silently creating a
    profile under a passphrase nobody chose is worse than refusing.
 
 The passphrase is never accepted as an ``argv`` value, on this verb or any

@@ -247,7 +247,9 @@ def test_scripted_create_localizes_a_typed_password_refusal_without_leaking(tmp_
     "payload",
     (
         "not-json",
+        json.dumps({"passphrase": _PASSPHRASE}),
         json.dumps({"passphrase": _PASSPHRASE, "passphrase_confirmation": _PASSPHRASE, "extra": "forbidden"}),
+        json.dumps({"passphrase": "x" * 9000, "passphrase_confirmation": "x" * 9000}),
     ),
 )
 def test_scripted_create_rejects_malformed_secret_stdin_without_echo(tmp_path: Path, payload: str) -> None:
@@ -262,6 +264,22 @@ def test_scripted_create_rejects_malformed_secret_stdin_without_echo(tmp_path: P
     assert _PASSPHRASE not in refused.output
     assert "Traceback" not in refused.output
     assert json.loads(listed.stdout)["result"]["profiles"] == []
+
+
+def test_scripted_create_rejects_mismatched_confirmation_without_echo(tmp_path: Path) -> None:
+    with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
+        refused = invoke_cached_cli(
+            ("config", "profile", "create", "Mismatch", "--quiet", "--secrets-stdin"),
+            input=json.dumps({"passphrase": _PASSPHRASE, "passphrase_confirmation": "different-confirmation"}),
+        )
+    assert refused.exit_code != 0
+    assert _PASSPHRASE not in refused.output
+
+
+def test_lazy_create_help_declares_exactly_one_secret_stdin_option() -> None:
+    help_result = invoke_cached_cli(("config", "profile", "create", "--help"))
+    assert help_result.exit_code == 0, help_result.output
+    assert help_result.output.count("--secrets-stdin") == 1
 
 
 def test_scripted_create_refuses_a_blank_name(tmp_path: Path) -> None:
