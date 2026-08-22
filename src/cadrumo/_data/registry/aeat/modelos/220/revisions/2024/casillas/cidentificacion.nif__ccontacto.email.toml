@@ -1,0 +1,895 @@
+# Modelo 220 RECORD T22001000 -- the grupo fiscal declarante record: identificacion
+# of the representante or dominante entity, periodo impositivo, the dominante, the
+# group's CNAE activities, its tipo-de-grupo characters, the INCN tranche, the legal
+# representatives and the incidents contact.
+#
+# THIS IS THE FIRST CASILLA-TO-POSITION MAPPING AUTHORED FOR MODELO 220. Until now
+# the revision declared only two applicability-grade header casillas and its sibling
+# fragment recorded that no position mapping had been authored, so a number was not
+# invented. That is what this fragment supplies, for ONE of the design's 137 records.
+#
+# Grounded in aeat-dr-220-2024, the era-matching bundled Diseno de Registro, whose
+# applies_from/applies_to are 2024-01-01 and 2024-12-31 -- exactly the single
+# ejercicio this revision claims, so no casilla here carries a byte span the design
+# does not evidence for the year it is filed under.
+#
+# VERIFIED BEFORE ANY OFFSET WAS TRUSTED: T22001000 tiles 1..1684 exactly once with
+# NO gap and NO PARTIAL OVERLAP. Both were checked; a gap-only check is insufficient
+# because partial overlap leaves no holes, and the filing-capability worklist names
+# that check by name as the precondition for authoring against this design.
+#
+# NUMBERING. Twelve fields carry a REAL AEAT BRACKET NUMBER -- [007], [012], [016],
+# [020], [006], [065], [066], [067], [068], [069], [070], [083] -- and those casillas
+# carry AEAT's own number. The remaining sixty-five carry none, and take the
+# sheet-qualified byte span already established by modelo 181 ("t22001000.17-25" for
+# a field at offset 17 length 9, a bare offset for a single byte). No number is
+# minted that AEAT prints elsewhere.
+#
+# THE CNAE RUN IS GENERATED FROM A PROVEN STRIDE, not assumed. The design declares
+# fourteen epigrafe/descripcion pairs of 5 and 60 positions; the run starts at 258
+# and steps 65, and 1108+60 lands exactly on 1168 where the caracteres flags begin.
+# The same holds for the three representante legal blocks: 36+9+8+12 = 65 positions,
+# starting at 1196, and 1326+65 = 1391 lands exactly on the contacto block. Each
+# generated offset was cross-checked against the design row it claims.
+#
+# NOT MODELLED, deliberately, and each for a stated reason:
+#   @1+2, @3+3, @6+2, @8+1, @9+2, @11+1 -- the modelo/pagina identifier envelope.
+#   @12+1, @13+3 -- indicador and numero de orden de pagina complementaria. These
+#     are fichero page-repetition mechanics, not taxpayer facts. Borderline, and
+#     recorded as such rather than silently dropped.
+#   @16+1 -- "Tipo de declaracion. RESERVADO PARA LA ADMINISTRACION".
+#   @106+4 -- "Ejercicio. Campana del registro". This is the SAME fact as the
+#     revision's existing `decl.ejercicio` casilla, which a layout will bind to this
+#     position. A second casilla here would double-declare one value.
+#   @1509+1 -- "Inoperatividad de la ayuda al calculo", a filing-program flag.
+#   @1510+150, @1660+13, @1673+12 -- reservado, sello electronico, fin de registro.
+#
+# NOT CLAIMED: 136 of the design's 137 records remain unauthored. This record alone
+# does not make the modelo fileable, and the revision still carries no export layout.
+
+# @17+9. Identificacion de la entidad representante o dominante. N.I.F. de la entidad representante o dominante incluida en el grupo fiscal.
+[[revisions."2024".casillas]]
+id = "identificacion.nif"
+number = "t22001000.17-25"
+section = ["declarante", "identificacion"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @26+60. Identificacion de la entidad representante o dominante. Apellidos o razon social de la entidad representante o dominante.
+[[revisions."2024".casillas]]
+id = "identificacion.apellidos-razon-social"
+number = "t22001000.26-85"
+section = ["declarante", "identificacion"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @86+20. Identificacion de la entidad representante o dominante. Nombre de la entidad representante o dominante.
+[[revisions."2024".casillas]]
+id = "identificacion.nombre"
+number = "t22001000.86-105"
+section = ["declarante", "identificacion"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @110+2. Identificacion de la entidad representante o dominante. Periodo.
+[[revisions."2024".casillas]]
+id = "identificacion.periodo"
+number = "t22001000.110-111"
+section = ["declarante", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @112+1. Identificacion de la entidad representante o dominante. La entidad es representante y no dominante.
+[[revisions."2024".casillas]]
+id = "identificacion.es-representante"
+number = "t22001000.112"
+section = ["declarante", "identificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @113+1. Identificacion de la entidad representante o dominante. La entidad es dominante e incluida en el grupo fiscal.
+[[revisions."2024".casillas]]
+id = "identificacion.es-dominante"
+number = "t22001000.113"
+section = ["declarante", "identificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @114+7. Identificacion de la entidad representante o dominante. Numero del grupo fiscal.
+[[revisions."2024".casillas]]
+id = "identificacion.numero-grupo"
+number = "t22001000.114-120"
+section = ["declarante", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @121+9. Identificacion de la entidad representante o dominante. Telefono de la entidad representante o dominante.
+[[revisions."2024".casillas]]
+id = "identificacion.telefono"
+number = "t22001000.121-129"
+section = ["declarante", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @130+8. Periodo impositivo. Fecha de inicio del periodo impositivo, formato AAAAMMDD.
+[[revisions."2024".casillas]]
+id = "periodo-impositivo.fecha-inicio"
+number = "t22001000.130-137"
+section = ["declarante", "periodo_impositivo"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @138+8. Periodo impositivo. Fecha final del periodo impositivo, formato AAAAMMDD.
+[[revisions."2024".casillas]]
+id = "periodo-impositivo.fecha-final"
+number = "t22001000.138-145"
+section = ["declarante", "periodo_impositivo"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @146+1. Periodo impositivo. Tipo de ejercicio.
+[[revisions."2024".casillas]]
+id = "periodo-impositivo.tipo-ejercicio"
+number = "t22001000.146"
+section = ["declarante", "periodo_impositivo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @147+15. Identificacion de la entidad dominante. Numero de identificacion de la entidad dominante. Fifteen positions rather than a nine-position N.I.F., because a dominante may be non-resident.
+[[revisions."2024".casillas]]
+id = "entidad-dominante.numero-identificacion"
+number = "t22001000.147-161"
+section = ["declarante", "entidad_dominante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @162+60. Identificacion de la entidad dominante. Apellidos o razon social de la entidad dominante.
+[[revisions."2024".casillas]]
+id = "entidad-dominante.apellidos-razon-social"
+number = "t22001000.162-221"
+section = ["declarante", "entidad_dominante"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @222+20. Identificacion de la entidad dominante. Nombre de la entidad dominante.
+[[revisions."2024".casillas]]
+id = "entidad-dominante.nombre"
+number = "t22001000.222-241"
+section = ["declarante", "entidad_dominante"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @242+2. Identificacion de la entidad dominante. Pais o territorio foral de la entidad dominante.
+[[revisions."2024".casillas]]
+id = "entidad-dominante.pais-territorio-foral"
+number = "t22001000.242-243"
+section = ["declarante", "entidad_dominante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @244+1. Autoliquidacion complementaria. La autoliquidacion es complementaria.
+[[revisions."2024".casillas]]
+id = "complementaria.es-complementaria"
+number = "t22001000.244"
+section = ["declarante", "complementaria"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @245+13. Autoliquidacion complementaria. Numero de justificante de la autoliquidacion anterior.
+[[revisions."2024".casillas]]
+id = "complementaria.justificante-anterior"
+number = "t22001000.245-257"
+section = ["declarante", "complementaria"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @258+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 1, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-01"
+number = "t22001000.258-262"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @263+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 1.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-01"
+number = "t22001000.263-322"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @323+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 2, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-02"
+number = "t22001000.323-327"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @328+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 2.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-02"
+number = "t22001000.328-387"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @388+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 3, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-03"
+number = "t22001000.388-392"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @393+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 3.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-03"
+number = "t22001000.393-452"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @453+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 4, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-04"
+number = "t22001000.453-457"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 4.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-04"
+number = "t22001000.458-517"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @518+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 5, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-05"
+number = "t22001000.518-522"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @523+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 5.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-05"
+number = "t22001000.523-582"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @583+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 6, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-06"
+number = "t22001000.583-587"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @588+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 6.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-06"
+number = "t22001000.588-647"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @648+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 7, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-07"
+number = "t22001000.648-652"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @653+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 7.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-07"
+number = "t22001000.653-712"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @713+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 8, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-08"
+number = "t22001000.713-717"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @718+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 8.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-08"
+number = "t22001000.718-777"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @778+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 9, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-09"
+number = "t22001000.778-782"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @783+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 9.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-09"
+number = "t22001000.783-842"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @843+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 10, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-10"
+number = "t22001000.843-847"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @848+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 10.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-10"
+number = "t22001000.848-907"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @908+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 11, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-11"
+number = "t22001000.908-912"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @913+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 11.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-11"
+number = "t22001000.913-972"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @973+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 12, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-12"
+number = "t22001000.973-977"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @978+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 12.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-12"
+number = "t22001000.978-1037"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1038+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 13, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-13"
+number = "t22001000.1038-1042"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1043+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 13.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-13"
+number = "t22001000.1043-1102"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1103+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 14, en orden de mayor a menor importancia.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-14"
+number = "t22001000.1103-1107"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1108+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 14.
+[[revisions."2024".casillas]]
+id = "actividades.cnae-descripcion-14"
+number = "t22001000.1108-1167"
+section = ["declarante", "actividades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1168+1. Tipo de grupo y otros caracteres. Tipo de grupo a efectos de estados de cuentas consolidadas. Grupo general.
+[[revisions."2024".casillas]]
+id = "caracteres-grupo.grupo-general"
+number = "007"
+section = ["declarante", "caracteres_grupo"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1169+1. Tipo de grupo y otros caracteres. Tipo de grupo a efectos de estados de cuentas consolidadas. Grupo de entidades de credito.
+[[revisions."2024".casillas]]
+id = "caracteres-grupo.grupo-entidades-credito"
+number = "012"
+section = ["declarante", "caracteres_grupo"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1170+1. Tipo de grupo y otros caracteres. Tipo de grupo a efectos de estados de cuentas consolidadas. Grupo de entidades aseguradoras.
+[[revisions."2024".casillas]]
+id = "caracteres-grupo.grupo-entidades-aseguradoras"
+number = "016"
+section = ["declarante", "caracteres_grupo"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1171+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo de cooperativas, RD 1345/1992 de 6 de noviembre.
+[[revisions."2024".casillas]]
+id = "caracteres-grupo.grupo-cooperativas"
+number = "020"
+section = ["declarante", "caracteres_grupo"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1172+1. Tipo de grupo y otros caracteres. Otros caracteres. Aplicacion de incentivos de reducida dimension, Titulo VII Capitulo XI LIS.
+[[revisions."2024".casillas]]
+id = "caracteres-grupo.incentivos-reducida-dimension"
+number = "006"
+section = ["declarante", "caracteres_grupo"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1173+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo foral, tributacion conforme a normativa foral.
+[[revisions."2024".casillas]]
+id = "caracteres-grupo.grupo-foral"
+number = "065"
+section = ["declarante", "caracteres_grupo"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1174+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo con entidad dominante no residente o sometida a normativa foral, constituido por entidades dependientes.
+[[revisions."2024".casillas]]
+id = "caracteres-grupo.dominante-no-residente-o-foral"
+number = "066"
+section = ["declarante", "caracteres_grupo"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1175+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo sometido a normativa comun con alguna entidad sometida a la normativa foral de Navarra, DT 19a Ley Foral 26/2016 de 28 de diciembre.
+[[revisions."2024".casillas]]
+id = "caracteres-grupo.normativa-comun-con-foral-navarra"
+number = "067"
+section = ["declarante", "caracteres_grupo"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1176+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo que aplica las reglas del art. 74.3 LIS.
+[[revisions."2024".casillas]]
+id = "caracteres-grupo.reglas-art-74-3-lis"
+number = "068"
+section = ["declarante", "caracteres_grupo"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1177+1. Tipo de grupo y otros caracteres. Otros caracteres. Opcion del 0,7 por ciento de la cuota integra para fines sociales.
+[[revisions."2024".casillas]]
+id = "caracteres-grupo.opcion-fines-sociales"
+number = "069"
+section = ["declarante", "caracteres_grupo"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1178+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo con entidad o entidades navieras que aplican el regimen especial de tributacion en funcion del tonelaje.
+[[revisions."2024".casillas]]
+id = "caracteres-grupo.regimen-tonelaje"
+number = "070"
+section = ["declarante", "caracteres_grupo"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1179+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo de empresas emergentes.
+[[revisions."2024".casillas]]
+id = "caracteres-grupo.empresas-emergentes"
+number = "083"
+section = ["declarante", "caracteres_grupo"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1180+13. Autoliquidacion complementaria. Numero de justificante identificativo de la autoliquidacion de la prestacion patrimonial por conversion de activos, DA 13a LIS.
+[[revisions."2024".casillas]]
+id = "complementaria.justificante-prestacion-patrimonial"
+number = "t22001000.1180-1192"
+section = ["declarante", "complementaria"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1193+1. Importe neto de la cifra de negocios de los doce meses anteriores. INCN total del grupo inferior a 20 millones de euros.
+[[revisions."2024".casillas]]
+id = "cifra-negocios.tramo-inferior-20-millones"
+number = "t22001000.1193"
+section = ["declarante", "cifra_negocios"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1194+1. Importe neto de la cifra de negocios de los doce meses anteriores. INCN total del grupo de al menos 20 millones y inferior a 60 millones de euros.
+[[revisions."2024".casillas]]
+id = "cifra-negocios.tramo-20-a-60-millones"
+number = "t22001000.1194"
+section = ["declarante", "cifra_negocios"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1195+1. Importe neto de la cifra de negocios de los doce meses anteriores. INCN total del grupo de al menos 60 millones de euros.
+[[revisions."2024".casillas]]
+id = "cifra-negocios.tramo-desde-60-millones"
+number = "t22001000.1195"
+section = ["declarante", "cifra_negocios"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1196+36. Declaracion de los representantes legales. Representante legal 1. Nombre y apellidos.
+[[revisions."2024".casillas]]
+id = "representantes-legales.rl1-nombre"
+number = "t22001000.1196-1231"
+section = ["declarante", "representantes_legales"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1232+9. Declaracion de los representantes legales. Representante legal 1. N.I.F.
+[[revisions."2024".casillas]]
+id = "representantes-legales.rl1-nif"
+number = "t22001000.1232-1240"
+section = ["declarante", "representantes_legales"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1241+8. Declaracion de los representantes legales. Representante legal 1. Fecha del poder, formato AAAAMMDD.
+[[revisions."2024".casillas]]
+id = "representantes-legales.rl1-fecha-poder"
+number = "t22001000.1241-1248"
+section = ["declarante", "representantes_legales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1249+12. Declaracion de los representantes legales. Representante legal 1. Notaria.
+[[revisions."2024".casillas]]
+id = "representantes-legales.rl1-notaria"
+number = "t22001000.1249-1260"
+section = ["declarante", "representantes_legales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1261+36. Declaracion de los representantes legales. Representante legal 2. Nombre y apellidos.
+[[revisions."2024".casillas]]
+id = "representantes-legales.rl2-nombre"
+number = "t22001000.1261-1296"
+section = ["declarante", "representantes_legales"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1297+9. Declaracion de los representantes legales. Representante legal 2. N.I.F.
+[[revisions."2024".casillas]]
+id = "representantes-legales.rl2-nif"
+number = "t22001000.1297-1305"
+section = ["declarante", "representantes_legales"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1306+8. Declaracion de los representantes legales. Representante legal 2. Fecha del poder, formato AAAAMMDD.
+[[revisions."2024".casillas]]
+id = "representantes-legales.rl2-fecha-poder"
+number = "t22001000.1306-1313"
+section = ["declarante", "representantes_legales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1314+12. Declaracion de los representantes legales. Representante legal 2. Notaria.
+[[revisions."2024".casillas]]
+id = "representantes-legales.rl2-notaria"
+number = "t22001000.1314-1325"
+section = ["declarante", "representantes_legales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1326+36. Declaracion de los representantes legales. Representante legal 3. Nombre y apellidos.
+[[revisions."2024".casillas]]
+id = "representantes-legales.rl3-nombre"
+number = "t22001000.1326-1361"
+section = ["declarante", "representantes_legales"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1362+9. Declaracion de los representantes legales. Representante legal 3. N.I.F.
+[[revisions."2024".casillas]]
+id = "representantes-legales.rl3-nif"
+number = "t22001000.1362-1370"
+section = ["declarante", "representantes_legales"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1371+8. Declaracion de los representantes legales. Representante legal 3. Fecha del poder, formato AAAAMMDD.
+[[revisions."2024".casillas]]
+id = "representantes-legales.rl3-fecha-poder"
+number = "t22001000.1371-1378"
+section = ["declarante", "representantes_legales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1379+12. Declaracion de los representantes legales. Representante legal 3. Notaria.
+[[revisions."2024".casillas]]
+id = "representantes-legales.rl3-notaria"
+number = "t22001000.1379-1390"
+section = ["declarante", "representantes_legales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1391+50. Persona de contacto para incidencias. Nombre y apellidos de la persona de contacto para incidencias.
+[[revisions."2024".casillas]]
+id = "contacto.nombre"
+number = "t22001000.1391-1440"
+section = ["declarante", "contacto"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1441+9. Persona de contacto para incidencias. Telefono fijo de contacto para incidencias.
+[[revisions."2024".casillas]]
+id = "contacto.telefono-fijo"
+number = "t22001000.1441-1449"
+section = ["declarante", "contacto"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1450+9. Persona de contacto para incidencias. Telefono movil de contacto para incidencias.
+[[revisions."2024".casillas]]
+id = "contacto.telefono-movil"
+number = "t22001000.1450-1458"
+section = ["declarante", "contacto"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1459+50. Persona de contacto para incidencias. Direccion de correo electronico para incidencias.
+[[revisions."2024".casillas]]
+id = "contacto.email"
+number = "t22001000.1459-1508"
+section = ["declarante", "contacto"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
