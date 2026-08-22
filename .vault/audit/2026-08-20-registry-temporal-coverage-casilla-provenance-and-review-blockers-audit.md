@@ -2611,3 +2611,62 @@ from a design that does not cover the revision's claimed years is a TRADE, not p
 one gate goes green, another goes red, and the byte offsets are wrong for the uncovered
 years. Modelo 181 already carries this defect. The tell named in the rules is
 oscillation between two gates, and it applies here.
+
+## 2026-08-22 — modelo 036: re-grounding, and two defects the diseño itself carries
+
+Coverage 29 -> 59 of 288 across two units (PÁGINA 1 completed, PÁGINA 3 authored).
+
+### The re-grounding: two sources, and they do not support the same things
+
+The causa-110..150 fragment claimed its numbers AND labels were "transcribed verbatim
+from the AEAT Instrucciones Modelo 036, Anexo 3, PÁGINA 1" and cited a bundled file.
+That file is a **5.4 KB navigation shell with no casilla table**, and across all six
+bundled modelo 036 instruction files the numbers 101, 103, 141, 151 and 152 appear in
+none. The file's own title names Anexo 3, so **the capture dropped the table** rather
+than the source lacking one — the same class as the m038 corrupt design and the m604
+abridged excerpt.
+
+Re-grounded by SPLITTING the claim rather than swapping the citation:
+
+- **Numbers and sections → the diseño, and they check out.** The best part: the TIPO
+  axis the fragment maps onto `section` is carried by the diseño itself — every
+  description opens `"Alta."`, `"Modificación."` or `"Baja."`. The alta/modificación/baja
+  mapping was grounded all along, just attributed to the wrong source.
+- **Labels are NOT re-derived from the diseño, deliberately.** They are richer and in
+  places better. The diseño carries AEAT's own typo at [130] (`"Solicitud de ata/baja"`),
+  renders [142] and [143] unaccented and lowercase, and abbreviates throughout.
+  Re-grounding labels on it would have DEGRADED them.
+
+The labels diverge in ways a rendering of the diseño could not produce — [124] and [142]
+carry "y baja", [129] says "alta/baja" where the diseño says "inscripción/baja", [145]
+carries a page reference the diseño does not print. That divergence is itself the
+evidence they came from instruction prose.
+
+**One label corrected on that evidence:** [137] read "otros Impuestos", dropping the
+"y registros" the diseño states. A narrowing of what the box covers; fixed in all four
+catalogues. The other four divergences are recorded, not changed — each is plausible and
+none is contradicted by the diseño. Adjudicating them needs the real Anexo 3 table.
+
+### Two defects the diseño carries, both recorded not corrected
+
+**A bracket with TWO numbers in it, invisible to the extractor.** PÁGINA 3's
+causa-de-la-representación fields at @480+1 and @956+1 are labelled `[330 332]` and
+`[380 382]`. The derived-casilla regex matches a SINGLE number inside a bracket, so
+**none of 330, 332, 380 or 382 is in the derived set** — confirmed by enumerating it,
+not inferred. Declaring one as `number` would claim a box the coverage report cannot
+see, so both take slugs. If that regex is ever widened, these two are the first places
+to re-check.
+
+**A block mislabel.** The field at @480 is described `"3.2.- Causa de la representación"`
+but sits inside block 3.1 — 3.2 does not open until @487, and its own neighbours at
+@481/@483/@485 read `"3.1.-"`. The offsets are unambiguous, so the file follows the
+offsets. Same judgement m840's non-monotonic numbering forced: **trust the position, not
+the prose.**
+
+### The convention keeps transferring
+
+Boxes [141], [152], [303], [313], [353] and [363] are each ONE `date` casilla over three
+component fields — the m840 convention now applied six times across two modelos without
+adjustment. m036's construct is deliberately left alone: it is a censo-foundation
+construct listing only profile-bound facts, and all the transcribed form boxes sit
+outside it. Copying m840's construct shape here would have been wrong.
