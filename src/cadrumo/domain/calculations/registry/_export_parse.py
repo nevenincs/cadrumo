@@ -412,7 +412,11 @@ def _matches_record_start(record: ExportRecordDefinition | None, payload: bytes,
             continue
         matched_literal = True
         raw = record_text[field.offset - 1 : field.offset - 1 + field.length]
-        if _parse_field_value(field, raw) != field.literal:
+        try:
+            parsed_literal = _parse_field_value(field, raw)
+        except RegistryValidationError:
+            return False
+        if parsed_literal != field.literal:
             return False
     if record.discriminator is not None:
         slice_start = record.discriminator.offset - 1

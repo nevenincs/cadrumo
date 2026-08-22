@@ -167,6 +167,7 @@ def _m369_invoice(
     base_amount: Decimal,
     iva_amount: Decimal,
     operation_date: date | None = None,
+    regime: OssIossRegime = OssIossRegime.UNION_SCHEME,
 ) -> Invoice:
     line = InvoiceLine(
         description=f"OSS supply {invoice_number}",
@@ -199,11 +200,110 @@ def _m369_invoice(
         currency="EUR",
         lines=(line,),
         payment_status=PaymentStatus.PAID,
-        oss_ioss_regime=OssIossRegime.UNION_SCHEME,
+        oss_ioss_regime=regime,
         oss_transaction_kind=transaction_kind,
         operation_date=operation_date,
         operation_date_role=(None if operation_date is None else InvoiceOperationDateRole.OPERATION_PERFORMED),
     )
+
+
+@pytest.mark.parametrize(
+    ("period_token", "operation_date", "expected_wire_period"),
+    (
+        ("EXT-1T", date(2026, 2, 15), b"01"),
+        ("EXT-2T", date(2026, 5, 15), b"02"),
+        ("EXT-3T", date(2026, 8, 15), b"03"),
+        ("EXT-4T", date(2026, 11, 15), b"04"),
+    ),
+)
+def test_m369_exterior_period_calculate_review_export_e2e(
+    m369_objects: SecureObjectRepository,
+    tmp_path: Path,
+    period_token: str,
+    operation_date: date,
+    expected_wire_period: bytes,
+) -> None:
+    """Every Exterior quarter retains its token and renders the official ordinal."""
+    wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=m369_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
+    invoice_repo = InvoiceCatalogueRepository(objects=m369_objects)
+    invoice_repo.save(
+        InvoiceCatalogue.from_invoices(
+            (
+                _m369_invoice(
+                    invoice_number=f"OSS-EXT-{period_token}",
+                    issued_at=operation_date,
+                    operation_date=operation_date,
+                    counterparty_name="DE Exterior Consumer",
+                    counterparty_tax_id=f"DE{period_token[-2]}23456789",
+                    counterparty_country="DE",
+                    transaction_kind=TransactionKind.EXTERNAL_SCHEME_SERVICES,
+                    base_amount=Decimal("100.00"),
+                    iva_amount=Decimal("19.00"),
+                    regime=OssIossRegime.EXTERNAL_SCHEME,
+                ),
+            ),
+        ),
+    )
+    period = Period.from_year_and_code(_M369_YEAR, period_token)
+    work_unit = create_work_unit(
+        bucket_id=_M369_BUCKET,
+        modelo="369",
+        filing_year=_M369_YEAR,
+        period=period,
+        revision_id="esquema-exterior",
+        repository=wu_repo,
+        clock=_T0,
+    )
+    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        work_unit.work_unit_id,
+        binding_values={
+            "modelo-369-exterior-fichero.223-227.3-prestaciones-de-servicios-tipo-de-iva-1": Decimal("19.00"),
+            "modelo-369-exterior-fichero.229-245.3-prestaciones-de-servicios-base-imponible-1": Decimal("100.00"),
+            "modelo-369-exterior-fichero.246-262.3-prestaciones-de-servicios-cuota-iva-1": Decimal("19.00"),
+        },
+        enum_binding_values={
+            "modelo-369-exterior-fichero.221-222.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1": "DE",
+            "modelo-369-exterior-fichero.228-228.3-prestaciones-de-servicios-tipo-iva-1": "G",
+        },
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+        clock=_T1,
+    )
+    period_casilla = validated_casilla_id("decl.periodo")
+    exterior_cuota = validated_casilla_id("iva.exterior.de.services-cuota")
+    assert result.revision.input_values_by_casilla_id[period_casilla] == period_token
+    assert Decimal(result.revision.casilla_values[exterior_cuota]) == Decimal("19.00")
+
+    report = verify_modelo_revision(
+        result.revision.calculation_revision_id,
+        actor="m369-exterior-reviewer",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        transaction_repository=tx_repo,
+        clock=_T1,
+    )
+    assert report.granted_verificado_completo is True, report.findings
+
+    output_path = tmp_path / f"modelo-369-{period_token}.txt"
+    receipt = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=result.revision.calculation_revision_id,
+            output_path=output_path,
+            actor="m369-exterior-exporter",
+        ),
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+    )
+    assert receipt.period.registry_token == period_token
+    wire = output_path.read_bytes()
+    assert wire[10:12] == expected_wire_period
+    assert period_token.encode("ascii") not in wire
 
 
 def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(

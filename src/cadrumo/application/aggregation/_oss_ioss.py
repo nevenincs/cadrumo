@@ -354,7 +354,13 @@ def project_oss_ioss_invoices_from_repositories(
         The candidates for the period beside the invoices they were projected
         from.
     """
-    if not period.has_date_span():
+    projection_period = period
+    if period.registry_token.startswith("EXT-"):
+        projection_period = Period.from_year_and_code(
+            period.filing_year,
+            period.registry_token.removeprefix("EXT-"),
+        )
+    if not projection_period.has_date_span():
         return OssIossInvoiceProjection()
     repo = invoice_repository if invoice_repository is not None else InvoiceCatalogueRepository(bucket_id=bucket_id)
     candidates: list[OssIossLedgerCandidate] = []
@@ -362,7 +368,7 @@ def project_oss_ioss_invoices_from_repositories(
     for invoice in repo.load():
         if invoice.kind is not InvoiceKind.ISSUED:
             continue
-        if not invoice_devengo_in_period(invoice, period=period):
+        if not invoice_devengo_in_period(invoice, period=projection_period):
             continue
         devengo_date = resolve_invoice_devengo(invoice).devengo_date
         projected = [

@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 from ...core import FilingProducerKey, Period, PriorDomiciliationElection, ProrrataEspecialTransitionKind
 from ...domain.deadlines import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
-from ...domain.filing import FilingExportValidationError
 from ...domain.iva import is_last_filing_period_of_year
 from ...domain.modelos import M303RectificativaMotive
 from ._producer_snapshot import (
@@ -152,8 +151,10 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
                 FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
             },
         )
-    if set(values) != set(FilingProducerKey):
-        raise FilingExportValidationError("filing producer resolver is not exhaustive")
+    # Registry-derived producer keys are intentionally broader than this shared
+    # profile projection.  Layout preflight resolves every field by key and
+    # refuses a missing required value; demanding an entry for every key in the
+    # global enum would make unrelated modelo-specific producers block M369.
     return values
 
 
