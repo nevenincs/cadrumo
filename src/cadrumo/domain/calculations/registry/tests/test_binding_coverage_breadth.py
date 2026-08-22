@@ -36,7 +36,10 @@ from .....application.aggregation import (
 # the pre-mesh tiers, and `manual_input`). It is consumed read-only here; the gate
 # asserts disposition coverage, not enrollment membership, so it tracks the live
 # truth without re-declaring it.
-from .....application.modelo._calculation_source_policy import _ENROLLED_SOURCE_KINDS
+# The policy module made this name public; the underscore form it was imported
+# under no longer exists, which stopped this module COLLECTING at all -- a
+# gate running zero assertions rather than failing loudly.
+from .....application.modelo._calculation_source_policy import ENROLLED_SOURCE_KINDS
 from .....core import BindingSourceKind
 from .. import InputKind, PeriodSelector
 from .._authority import bundled_authority
@@ -76,7 +79,7 @@ def _scan() -> _ScanResult:
     source kind absent from it is a novel/dormant source.
     """
     authority = bundled_authority()
-    dispositions = build_binding_source_dispositions(_ENROLLED_SOURCE_KINDS)
+    dispositions = build_binding_source_dispositions(ENROLLED_SOURCE_KINDS)
 
     modelos_scanned: set[str] = set()
     revisions_scanned = 0
