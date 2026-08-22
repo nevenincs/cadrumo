@@ -3198,3 +3198,71 @@ This iteration's fragments were absorbed by a peer's bare commit before my own p
 commit ran — the accepted scenario, and the reason every real claim lives in the
 fragment header and the `reviewed_by` stamp rather than in a commit message. Nothing
 was lost; the commit message simply never existed.
+
+## 2026-08-22 — Pagina 6 authored, a second false-positive class, and one number over a whole block
+
+### What landed
+
+Modelo 036 Pag. 6: **47 casillas over its 88 fields** — 25 numbered, 22 slugs. Revision
+now **598 casillas**. It carries the IRPF obligations and rendimiento method, the
+Impuesto sobre Sociedades obligations and exenciones, the IRNR establecimiento
+permanente modalidad, and the Ley 49/2002 special-regime election.
+
+Zero mismatches, zero invented, zero missed; all 88 fields authored, collapsed, or
+explicitly excluded. Tiles 1..400 exactly once, no gap, no partial overlap. Suite:
+**13 failures, zero new, zero gone.**
+
+### A second false-positive class, larger than the first
+
+Pag. 4 established that a token which merely *looks* like a box number is not one —
+`(m2)` in "Superficie (m2)" was counted as a box called `m2`. This record carries a
+bigger instance of the same error:
+
+**Twenty-four fields** open `IRPF. (1) Si determinaba el rendimiento neto…` or
+`(2) Si determinaba…`, where `(1)` and `(2)` are **footnote markers** keyed to notes
+printed below the form. Both matched a parenthesised-number pattern and were counted as
+boxes `1` and `2` in every denominator reported for this modelo.
+
+**Corrected: 670** (seven-form set, less the three noise tokens `m2`, `1`, `2`).
+
+Seven denominators now: 288 → 348 → 659 → 667 → 669 → 672 → **670**. **The two most
+recent moved in opposite directions**, and that is the substantive point rather than any
+single figure: a pattern applied to prose mis-measures in *both* directions. No count
+derived this way is the design's true box total — it is what a stated pattern, less
+stated noise, finds.
+
+### One number over a whole repeating block — a shape not previously met
+
+AEAT prints `[613]` over **all twelve fields** of the estimación objetiva activity block
+and `[614]` over all twelve of the modalidad simplificada block. Each block is four
+activity rows of sección I.A.E. / grupo o epígrafe / tipo de actividad.
+
+No single field owns either number, so all sixteen casillas take slugs, and 613/614 join
+the numbers covered by a modelled *field* without being individually addressable — the
+same state as a list bracket.
+
+Both rejected alternatives are worth stating, because both are plausible:
+
+- splitting one number across four rows would **assert four boxes AEAT does not print**;
+- collapsing four rows into one casilla would **lose four distinct declared activities**.
+
+Within each row, sección + grupo o epígrafe become one casilla and tipo de actividad
+another — the same split Pag. 4's design declares explicitly for `[402]` and `[403]`.
+
+### `[640]` is a two-component date, not a truncated triple
+
+The design declares only `@129+2` día and `@131+2` mes for *fecha de cierre del
+ejercicio económico*, with **no año component** — an annual closing date being a day and
+a month. The casilla spans four positions, not eight. Recorded explicitly so a later
+reader does not "restore" a year field that was never there.
+
+### Coverage, three ways
+
+| state | count |
+|---|---|
+| directly modelled | **492** |
+| behind a slug casilla | **82** — Pag. 5: 55, Pag. 6: 25, Pag. 2B: 2 |
+| no casilla at all | **96** — Pag. 7 (42), Pag. 10 (24), Pag. 8 (16), Pag. 3 (14) |
+
+Authored: Pag. 1, 2A, 2B, 2C, 4, 5, 6, 9 and most of 3. Pag. 0 is the envelope.
+Three records remain plus the Pag. 3 remainder.
