@@ -288,16 +288,35 @@ def _administration_reserved(field: RecordDesignField) -> bool:
     [103]`` rows, which carry no contenido at all, are the population that
     depends on that fallback.
 
-    Measured over the bundled corpus: 3,919 rows carry the word, and exactly one
-    position -- Modelo 111 ``@552+1``, in the 2016-2018 and 2019-y-siguientes
-    designs -- is reclassified as a datum by the second signal.
+    Measured over the bundled corpus: 2,953 rows carry the word, and exactly one
+    POSITION is reclassified as a datum by the second signal -- Modelo 111's
+    Colegio Concertado tick, in all three editions that print it. Two are xlsx
+    and declare it in ``Contenido`` at ``@552+1``; the third is the 2012 PDF,
+    recovered from chart geometry with no content column, which states the same
+    tick in its description at ``@732+1``. Widening to that description-only
+    fallback reclassifies exactly that one row and nothing else in the corpus.
     """
     description = field.description or ""
     if not _RESERVED_WORD.search(description):
         return False
     if _RESERVED_FOR_ADMINISTRATION.search(description):
         return True
-    return not _FILER_MARK.search(field.content or "")
+    content = field.content or ""
+    if not content.strip():
+        # A design recovered from PDF chart geometry has no separate Contenido
+        # column, so AEAT's declaration arrives merged into the description --
+        # the 2012 Modelo 111 edition prints the identical row as ``Reservado.
+        # Administración presentando declaración de Colegio Concertado (CC) "X"
+        # o blanco``. Reading only the content cell made ONE position a filer
+        # datum in the 2016 and 2019 xlsx editions and reserved space in the
+        # 2012 PDF one, which is the same internal inconsistency this predicate
+        # was written to remove, reappearing along the extraction axis.
+        #
+        # The fallback is bounded to a field with NO content cell at all, so a
+        # row that declares a contenido keeps being judged on it and cannot be
+        # handed to the filer by a stray tick in its prose.
+        return not _FILER_MARK.search(description)
+    return not _FILER_MARK.search(content)
 
 
 #: A ``Nota N`` citation inside a field's own naming cell.
