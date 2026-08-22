@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:699fb9ba1679e1584fa772311d01164a3d084d4bce85b3972af23d78b593f6e7'
+body_hash: 'sha256:1e932d0f64bbaab1b49ad63e5432217f33bd7d8a0cedf25b57fb36f3240a678c'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -228,3 +228,69 @@ The remediation changes only the owned custody record test and S05 execution evi
 Ruff, formatting, and commit diff hygiene pass, and all 13 focused record tests pass.
 The MEDIUM is closed. No unresolved HIGH, CRITICAL, or MEDIUM finding remains from the
 S02-S05 reviews, and S06 may proceed.
+
+### s06-worker-policy-independence-bite | medium | Policy-free recovery is not exercised across the parent-worker boundary
+
+The mandatory S06 review grounded commits `021a90c1be` and `f8ca508b46` against
+the accepted ADR, research, incident reference, live plan, current source, execution
+record, commit history, and overlapping shared-worktree state. The current implementation
+is functionally correct: `_recovery_secret_codec.py:9-22` is strict, exact UTF-8 with
+typed malformed-transport errors and no normalization or password assessment;
+`_kdf_supervision.py:303-380` preserves canonical password validation while lines
+383-428 use the recovery codec; `_kdf_worker_supervision.py:99-147` emits distinct
+password/recovery wrap and unwrap tokens; and `_kdf_worker.py:55-64` accepts only those
+closed tokens before choosing the corresponding decoder at lines 116-140. Exact search
+finds no recovery caller of the profile-password codec and no old generic material API,
+alias, or shim. Existing real recovery tests preserve mnemonic, Argon2id, DEK, envelope,
+artifact, and isolation behavior, and the complete serial default custody lane passes
+217 tests with 10 expected marker deselections.
+
+The new S06 bite does not prove the load-bearing separation through the supervised child.
+`test_recovery_secret_roundtrip_is_byte_exact_and_not_password_shaped` at
+`tests/test_recovery_secret_codec.py:14-20` sends empty, short, and over-256-scalar
+secrets only through the direct codec. The negative-space scan at lines 37-46 reads
+`_recovery.py`, `_recovery_artifact.py`, and `_recovery_secret_codec.py`, but omits the
+two exact routing owners, `_kdf_supervision.py` and `_kdf_worker.py`. Existing real
+worker-backed recovery tests use the current 24-word mnemonic, which already satisfies
+profile-password policy. Consequently, a regression that sends a recovery operation
+through `_encode_profile_password` or `_decode_profile_password` would keep both the
+new tests and existing worker roundtrips green.
+
+Add a real parent-to-worker recovery wrap and unwrap using a deliberately non-password-
+shaped but valid recovery secret, such as `short`, and prove the exact DEK returns under
+the unchanged KDF/AAD/sentinel contract. Pair it with a password operation using the same
+secret that must refuse, so the test proves operation-token and decoder separation rather
+than only cryptographic roundtrip. The same test should assert composed/decomposed byte
+identity if practical. This is a MEDIUM regression-coverage defect, not a current
+production-policy coupling.
+
+### s06-format-evidence | medium | Three modified production modules fail the formatter gate
+
+The S06 execution record says the custody surface remains lint-clean, and Ruff lint does
+pass, but `ruff format --check` reports that
+`src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py`,
+`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py`, and
+`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py` would be
+reformatted. The diff shows the newly inserted regions carrying inconsistent line
+endings/layout relative to their surrounding files. This is current production quality
+debt and contradicts the Step evidence; run the repository formatter over exactly those
+owned modules, verify no semantic diff, rerun Ruff and the focused/full serial custody
+tests, and amend the execution evidence honestly.
+
+No HIGH or CRITICAL defect was found. These two MEDIUM findings block review-clean S06
+closure and therefore block dispatching S07 until remediated; the complete serial custody
+result itself is green and does not reproduce the earlier xdist infrastructure failure.
+
+#### S06 remediation resolution
+
+Commit `672b342a17` closes both MEDIUM findings. A real parent-to-isolated-worker test now
+wraps and unwraps the exact DEK with the non-password-shaped `short` recovery candidate,
+distinctive recovery AAD, and the persisted sentinel proof. The paired password operation
+uses the same candidate and must refuse with canonical `too_few_scalars`. The negative-space
+bite reads both routing owners and requires the recovery decoder in both worker branches,
+so redirecting recovery through either profile-password codec turns the suite red.
+
+The formatter was applied only to the owned production modules and tests. Ruff check and
+format-check are clean; the focused worker/codec lane passes 28 tests, and the complete
+serial default custody lane passes 218 tests with 10 expected marker deselections. Both
+MEDIUM findings are closed, with no remaining HIGH or CRITICAL S06 defect.
