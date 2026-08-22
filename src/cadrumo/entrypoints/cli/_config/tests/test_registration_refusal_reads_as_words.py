@@ -15,6 +15,11 @@ four catalogues the whole time; nothing asked for them.
 
 The existing screen tests assert a refusal is SHOWN and never what it says, so
 a key satisfied them exactly as prose would. This asserts the content.
+
+The rendering itself belongs to ``resolve_error_message``, which the sibling
+login seam already used: besides the key it also drops non-identifier context
+entries, and falls back to ``args[0]`` and then to the registered code's own
+``message_key``, so a refusal carrying no key still reaches the screen as words.
 """
 
 from __future__ import annotations

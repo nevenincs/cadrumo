@@ -1607,3 +1607,199 @@ required_text = [
     "cifra de negocios del período impositivo inmediato anterior",
     "1 millón de euros",
 ]
+
+[sources."aeat-dr-200-2010"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2010"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/02-200-ejercicio-2010-472-kb-pdf.pdf"
+sha256 = "cba4c97ac0f0540f9c5bc7a83ff6061bd41fcfc1abfe8918afedbc389a019144"
+bytes = 483803
+retrieved_at = 2026-05-03
+applies_from = 2010-01-01
+applies_to = 2010-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200_2010.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2011"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2011"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/03-200-ejercicio-2011-522-kb-pdf.pdf"
+sha256 = "481ca062674904111075c2b3679bc96c5937f784db3bd019120e39985b98d683"
+bytes = 534391
+retrieved_at = 2026-05-03
+applies_from = 2011-01-01
+applies_to = 2011-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2011.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2012"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2012"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/04-200-ejercicio-2012-actualizado-a-28-06-2013-539-kb-pdf.pdf"
+sha256 = "ee37e8e3777c494c064defd5fa8e1a344d034eb2cb587b3d4818c787f0ade5aa"
+bytes = 552085
+retrieved_at = 2026-05-03
+applies_from = 2012-01-01
+applies_to = 2012-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2012.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2013"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2013"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/05-200-ejercicio-2013-actualizado-a-27-06-2014-548-kb-pdf.pdf"
+sha256 = "e6e13ae029bc8f73659351c0cf828b86a6035fe1a04cb23dd59c09a46009edfe"
+bytes = 562137
+retrieved_at = 2026-05-03
+applies_from = 2013-01-01
+applies_to = 2013-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2013.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2014"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2014"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/06-200-ejercicio-2014-588-kb-pdf.pdf"
+sha256 = "0733d9fdd39249b8b933aef2ed465b6824aa04dc1d7e4d52dbf3e821eddd4405"
+bytes = 602645
+retrieved_at = 2026-05-03
+applies_from = 2014-01-01
+applies_to = 2014-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2014.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/07-200-ejercicio-2015-actualizado-a-05-07-2016-7-71-mb-xls.xls"
+sha256 = "74317cacd60e96d863a1f30c1f3cef5b06da4ef81a6f00f93f1007e417b68fe5"
+bytes = 8093696
+retrieved_at = 2026-05-03
+applies_from = 2015-01-01
+applies_to = 2015-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2015.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/08-200-ejercicio-2016-8-22-mb-xls.xls"
+sha256 = "041b6f9fbb9cc6e79b38b3b19973e03b2228085bfdaf0d3009c2b6f2629f86df"
+bytes = 8621568
+retrieved_at = 2026-05-03
+applies_from = 2016-01-01
+applies_to = 2016-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2016.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2017"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2017"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/09-200-ejercicio-2017-8-40-mb-xls.xls"
+sha256 = "4e11acb94c3cae59248c954860e2c35cf33dfd93976f9494344c3136b610da4e"
+bytes = 8818176
+retrieved_at = 2026-05-03
+applies_from = 2017-01-01
+applies_to = 2017-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2017-1_00.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2018"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2018"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/10-200-ejercicio-2018-actualizado-28-11-2019-8-69-mb-xls.xls"
+sha256 = "c561bc77e6525adac94bb5f5c8e69974fc0e20151506706b1376725effdd3625"
+bytes = 9119744
+retrieved_at = 2026-05-03
+applies_from = 2018-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2018.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2019"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/11-200-ejercicio-2019-actualizado-10-06-2020-9-43-mb-xls.xls"
+sha256 = "ce43a011a3cd0774aed54cb08379724f7077fd423ed94026dc58a590798d4797"
+bytes = 9892864
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2019-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2019.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2020"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2020"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/12-200-ejercicio-2020-actualizado-28-07-2021-9-56-mb-xls.xls"
+sha256 = "1754e834411536c05ed25ebd4e0395e1330806c91c69154614c6178acf0e80de"
+bytes = 10033152
+retrieved_at = 2026-05-03
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_20/DR200-2020.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2021"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2021"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/13-200-ejercicio-2021-actualizado-22-06-2022-11-1-mb-xls.xls"
+sha256 = "3db076b4c6b604cce9dc2f1550a1b8ce792c48981149bf2e9f732970555a2620"
+bytes = 10387456
+retrieved_at = 2026-05-03
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_21/DR200-2021.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2022"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls"
+sha256 = "a69d73692c40f8be07005e2df8add251f9949a2d6780f3816189372bdd98f69d"
+bytes = 10753536
+retrieved_at = 2026-05-03
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/DR200-2022.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls"
+sha256 = "07ab6b44ac6b46317d965ef59680aeb0a3380f197f55f94af824383d228190b6"
+bytes = 10930176
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR200-2023.xls"
+review_status = "reviewed"
