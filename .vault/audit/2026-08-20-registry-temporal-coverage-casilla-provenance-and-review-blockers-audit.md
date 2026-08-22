@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:0374fa4c7528c6c91055d07dff937549891ac2514c74385155b751fba8675279'
+body_hash: 'sha256:dcd074e7ac982673ec96696d6707b93ff9ef97d5333330fae3631e68ed111c41'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1887,6 +1887,49 @@ what a revision split drags behind it: stale fragment names (fixable mechanicall
 done), committed baselines that shift by exactly the duplicated-casilla count, bindings
 and export records that move relative to their revision, and a layout gate that the split
 does not satisfy at all.
+
+
+### the-m347-binding-failure-is-the-test-not-the-data | medium | and a false content-loss finding was caught mid-diagnosis
+
+The last undiagnosed split-fallout failure,
+``test_committed_modelo_347_declares_counterpart_source_summary_bindings``, reports a
+binding's ``legal_refs`` missing ``orden-hac-1431-2025:art-1``.
+
+**The data is correct; the test is mis-targeted.**
+
+| m347 half | cites ``orden-hac-1431-2025`` | correct |
+|---|---|---|
+| 2008-2024 | no | **yes** -- a span ending in 2024 must not cite an orden applying from 2025 |
+| 2025-y-siguientes | yes | **yes** -- that is the half the orden governs |
+
+The split placed the reference exactly where it belongs. The test's
+``_modelo_347_revision()`` helper returns ``revisions["2008-2024"]`` -- the FIRST half --
+and then asserts that half cites the 2025 orden. The helper was repointed at a concrete
+revision id when the split landed, and this particular assertion travelled with it
+without being re-read against what the new span means.
+
+That is the same shape as the fragment names and the ratchet: **a split moves data
+correctly and leaves an artefact pointing at the old shape.** Here the artefact is a test
+expectation rather than a filename or a baseline.
+
+**A false finding was caught mid-diagnosis and is worth recording.** An initial grep
+returned zero hits for the orden in BOTH halves' binding files, which read as the split
+having dropped a legal reference outright -- a content-loss finding about to be written
+down. Counting occurrences across the whole modelo before and after the split gave 118
+before and **119** after: nothing was lost, and one was added. The zero-for-both reading
+was a bad grep, not a bad split. Re-measuring at the modelo level rather than trusting
+the first negative is what caught it.
+
+Not fixed here. The remedy is a test change on a helper the split's author repointed one
+commit ago, and there are two defensible shapes -- retarget that one assertion at
+``2025-y-siguientes``, or split the test to assert the pre-2025 and post-2025 refs
+separately. Which they want is a statement about what the test is for.
+
+With this the split-fallout map is complete: stale fragment names (fixed), a ratchet
+baseline shifted by exactly the duplicated-casilla count (diagnosed, branch identified),
+a layout gate the split cannot satisfy (recorded), and a test expectation that followed a
+revision id but not its semantics.
+
 
 ## Recommendations
 
