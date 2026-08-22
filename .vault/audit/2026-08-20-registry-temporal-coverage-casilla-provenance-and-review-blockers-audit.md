@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:2e92e4715f054436dce26c6c5fed8d90ea2491c274230ba8b3b1c6d0032b5ea7'
+body_hash: 'sha256:f1662dff83aa3076668567c3dad738af95e76f845f52f1a72a098e113c825548'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -2167,4 +2167,3 @@ years; the residue needs older designs acquired from AEAT.
 
 **840 first** — fully design-covered, tiles clean, 381 fields, 2 casillas — then 036, then
 220/2024. Not 038 (corrupt), and not the small informative returns (year gaps).
-
