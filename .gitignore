@@ -84,10 +84,8 @@ docs/_static/cli-tree.json
 # the docs deploy (dev/deploy/docs_static_site.py) right before the site build;
 # it is a per-release runtime payload, never committed, so it cannot drift.
 docs/_static/download-latest.json
-# Compiled Pagefind search index (ADR D5: uncommitted, regenerated every docs
-# build like docs/_build). The canonical output lives under docs/_build/html/
-# pagefind/; a root-level pagefind/ from an ad-hoc build run is never committed.
-pagefind/
+# The compiled Pagefind search index is uncommitted and regenerated with the
+# documentation site under docs/_build/, which is ignored above.
 # Gettext POT message templates for docs localization (`just docs-gettext`),
 # extracted fresh from the user-scope pages on every run. The per-language .po
 # catalogues under docs/locales/<lang>/ ARE committed; only these templates are
