@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:f80ae8d92e15afe57b17250a28833e2893b885202d66844ec6cdd548562c4615'
+body_hash: 'sha256:0ed7fc9f9b15d607e28e3fe2be29a7257dfe9dcc3eca1c04ae3c8d14ca084e76'
 related: []
 ---
 
@@ -121,3 +121,30 @@ Focused producer-vocabulary, M369, filing-renderer and fixed-width parser covera
 forbids the already-present `m303.annual_volume_nonzero` typed key; the corrective diff did
 not introduce or alter that key. Ruff and structural checks remained clean. The new
 `exterior-vat-kind-wire-token` HIGH keeps issue 625 unsafe to integrate or close.
+
+## Final resolution verification
+
+Final corrective commit `6b06bf981aa200a290bd11270b69087c7a2997d8` resolves
+`exterior-vat-kind-wire-token`. The Exterior detail projector now maps the internal
+general/estándar tier to official wire token `S` and the reduced tier to official wire
+token `R`. A source sweep found no remaining `G` branch in the M369 projector or its E2E
+authority. The map contains only those two admitted typed keys.
+
+Before grouping, binding handoff, calculation persistence, review or export, every Exterior
+services observation whose typed `IvaRateKind` is not `GENERAL` or `REDUCED` now raises
+`AggregationValidationError`. The refusal context carries both the stable ledger id and
+the unsupported typed rate-kind value. This covers `SUPER_REDUCED`, `ZERO`, `EXEMPT`, and
+any future closed-enum member by the fail-closed complement rather than guessing an `R` or
+`S` collapse. Targeted negative cases independently construct super-reduced and zero
+observations and prove the typed refusal. The production resolver invokes the same helper
+before returning any decimal or enum binding values, so no unsupported row can reach the
+export boundary.
+
+The four-quarter real-invoice E2E remains free of caller-supplied economic or enum values,
+continues to force operation-date devengo against a later invoice date, and now independently
+parses the emitted general-rate token as official `S`. Its mandatory T36901/T36903,
+optional-absent T36902, and malformed-optional refusal assertions remain intact. Focused
+M369 source, vocabulary, filing-renderer, and fixed-width parser coverage passed: 158 tests.
+Ruff, `git diff --check`, and the scoped Vaultspec document gates passed. No new findings
+were identified. All findings in this audit are resolved; issue 625 is safe to integrate
+and close.
