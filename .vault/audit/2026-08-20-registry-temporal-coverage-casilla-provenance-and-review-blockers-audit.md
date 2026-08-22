@@ -2167,3 +2167,40 @@ years; the residue needs older designs acquired from AEAT.
 
 **840 first** — fully design-covered, tiles clean, 381 fields, 2 casillas — then 036, then
 220/2024. Not 038 (corrupt), and not the small informative returns (year gaps).
+
+### Correction, same day: "reasoned absence" is NOT a third filter — it is the failure mode
+
+Opening the first authoring iteration on modelo 840, its revision header reads "administered
+municipally and is not a return this application emits", and its stamp says the missing layout
+"is what the applicability rung asserts". Modelo 036 has the same shape, with a *production*
+docstring in `_authority.py` stating it "is filed on AEAT's sede and produces no fichero here".
+The obvious inference — that these are deliberate end-states rather than backlog, and should be
+filtered out of the queue — is wrong, and the worklist gate says so in its own docstring:
+
+> every modelo that could not emit a filing artifact carried a decision record declaring its
+> layout withdrawn, each individually grounded and defensible, and nothing ever summed them.
+> The tree stayed green while the application quietly could not file IVA, sociedades or
+> retenciones. Converting "we cannot file this" into a declared, gate-satisfying state is
+> precisely what let that go unnoticed for the whole of the project's history.
+
+It then forbids, without exception, narrowing to a subset, adding an allowlist, or excusing
+"informative" modelos, and states: "The one legitimate way to change this test's result is to
+build an export layout." The gate is operator-sanctioned to fail permanently.
+
+So a per-modelo justification for having no layout is not evidence the entry is illegitimate —
+it is the artefact the gate exists to stop treating as sufficient. **Filters 1 and 2 (tiling,
+year coverage) remain valid: they say a layout cannot be authored HONESTLY today. A reasoned
+absence says only that someone previously decided not to, which is not the same thing and
+must not be used to shorten the queue.**
+
+**A contradiction found while checking this.** Modelo 840's revision prose says it "is not a
+return this application emits", yet the revision DECLARES an export application link
+(`surface = "export"`, `consumer = "cadrumo.application.filing.export_draft"`). One of the two
+is wrong. Structured intent is declared for export; the prose denies it. Recorded, not
+resolved — resolving it by authoring a layout would settle a product question by side effect.
+
+**Export-surface declaration across the 13** (a structured signal the worklist gate does not
+consult): 038, 220/2024, 220/2025-y-siguientes, 763 and 840 declare an `export` link; 036, 136,
+182, 185, 187, 188, 194 and 721 do not. That asymmetry is worth an operator ruling — but note
+the gate deliberately ignores it, for the reason quoted above.
+
