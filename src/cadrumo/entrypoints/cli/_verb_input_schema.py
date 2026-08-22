@@ -340,6 +340,19 @@ def _naive_cli_path(command_key: str) -> tuple[str, ...]:
     return _symbolic_cli_path(command_key)
 
 
+def cli_path_for_command_key(command_key: str) -> tuple[str, ...]:
+    """Return the declared CLI path for a schema key without loading handlers.
+
+    This is the metadata-only half of command-policy resolution.  It reads the
+    existing schema-key/path declaration and never walks or materialises the
+    command tree; the live resolver subsequently validates the path against
+    Click and reads policy from the reached callback.
+    """
+    if not command_key or command_key.strip() != command_key:
+        raise ValueError("command key must be a non-empty normalized string")
+    return _naive_cli_path(command_key)
+
+
 def _resolve_command(
     root: ClickCommand,
     command_key: str,

@@ -56,9 +56,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.application.operator_surface import (
     OperatorMutability,
     build_operator_surface_manifest,
-    command_classification,
 )
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
+
+from ._command_policy import command_policy
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -285,7 +286,7 @@ def is_handoff_denied(*, persona: AgentPersona, command_key: str) -> bool:
         return False
     if _family_token_for_command_key(command_key) != _HANDOFF_FAMILY:
         return False
-    return command_classification(command_key).handoff
+    return command_policy(command_key).handoff
 
 
 def handoff_denial_message(*, persona: AgentPersona, command_key: str) -> str:

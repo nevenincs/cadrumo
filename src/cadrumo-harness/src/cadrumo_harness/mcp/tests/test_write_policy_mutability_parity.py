@@ -19,9 +19,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.operator_surface import command_classification, declared_risk
 from cadrumo.application.storage_write_policy import PROFILE_BOUND_WRITE_VERB_PATHS
 
+from .._command_policy import command_policy
 from .._tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -33,8 +33,8 @@ def test_a_submit_present_send_leaf_must_declare_live_write() -> None:
     for descriptor in build_tool_descriptors():
         leaf = descriptor.command_key.rsplit(".", 1)[-1]
         if leaf in _LIVE_WRITE_LEAVES:
-            row = declared_risk(descriptor.command_key)
-            assert row is not None and row.live_write, (
+            policy = command_policy(descriptor.command_key)
+            assert policy.live_write, (
                 f"{descriptor.command_key} has a live-write leaf but does not declare live_write - "
                 "the never-live-submit block would not fire"
             )
@@ -56,9 +56,9 @@ def test_the_destructive_axis_separates_a_status_verb_from_its_destructive_sibli
     either direction - if status became destructive, or if start and resume
     stopped being.
     """
-    status = command_classification("config.reset.status")
-    start = command_classification("config.reset.start")
-    resume = command_classification("config.reset.resume")
+    status = command_policy("config.reset.status")
+    start = command_policy("config.reset.start")
+    resume = command_policy("config.reset.resume")
 
     # The read-only flag does NOT separate them, which is why it must not be read as if it did.
     assert (status.read_only, start.read_only, resume.read_only) == (False, False, False)
@@ -68,10 +68,6 @@ def test_the_destructive_axis_separates_a_status_verb_from_its_destructive_sibli
     assert start.destructive is True
     assert resume.destructive is True
 
-    # Every one of them carries a declared row, so the flags above are declared
-    # facts rather than the all-false default an unclassified key would report.
-    for key in ("config.reset.status", "config.reset.start", "config.reset.resume"):
-        assert declared_risk(key) is not None, f"{key} has no declared risk row"
 
 
 def _path_to_command_key(path: str) -> str:
@@ -96,13 +92,13 @@ def test_every_write_policy_verb_is_in_a_mutating_family() -> None:
     # manifest classifies its family read-only, so were it mislabelled a write
     # verb this screen would surface it. This proves the screen is not vacuously
     # empty because nothing at all can classify read-only.
-    assert command_classification("registry.inspect").read_only, (
+    assert command_policy("registry.inspect").read_only, (
         "registry.inspect no longer classifies read-only, so the discrimination probe below is void"
     )
     injected = sorted(
         key
         for path in (*PROFILE_BOUND_WRITE_VERB_PATHS, "app registry inspect")
-        if command_classification(key := _path_to_command_key(path)).read_only
+        if command_policy(key := _path_to_command_key(path)).read_only
     )
     assert injected == ["registry.inspect"], (
         "the read-only screen failed to flag a read-only command injected into the write set, so it "
@@ -112,7 +108,7 @@ def test_every_write_policy_verb_is_in_a_mutating_family() -> None:
     read_only_writers = sorted(
         key
         for path in PROFILE_BOUND_WRITE_VERB_PATHS
-        if command_classification(key := _path_to_command_key(path)).read_only
+        if command_policy(key := _path_to_command_key(path)).read_only
     )
     assert read_only_writers == [], (
         f"commands the write guard treats as writes but the manifest classifies read-only: {read_only_writers}"

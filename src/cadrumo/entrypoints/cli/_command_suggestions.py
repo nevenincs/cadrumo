@@ -230,6 +230,42 @@ def walk_live_command_tree(app: typer.Typer) -> tuple[LiveCommandNode, ...]:
     return tuple(sorted(nodes, key=lambda node: node.path))
 
 
+def execution_policy_for_cli_path(
+    app: typer.Typer,
+    cli_path: tuple[str, ...],
+) -> CommandExecutionPolicy:
+    """Resolve one CLI path and return its callback-attached execution policy.
+
+    Resolution follows Click's real ``get_command`` protocol one token at a
+    time.  It therefore materialises only the selected ancestry: asking for a
+    config policy cannot load an app command family, and asking for one lazy
+    leaf cannot enumerate or load its siblings.
+
+    ``cli_path`` excludes the executable token (for example
+    ``("config", "profile", "list")``).  Missing paths, traversal through a
+    leaf, and unclassified callbacks fail closed instead of manufacturing a
+    safe default.
+    """
+    command = _typer_get_command(app)
+    resolved: list[str] = []
+    for token in cli_path:
+        if not _is_command_group(command):
+            raise LookupError(f"CLI path traverses through a leaf at {' '.join(resolved)!r}")
+        context = TyContext(command, info_name=resolved[-1] if resolved else command.name)
+        try:
+            child = cast(Any, command).get_command(context, token)
+        finally:
+            context.close()
+        if child is None:
+            raise LookupError(f"unknown CLI path: {' '.join(cli_path)!r}")
+        command = child
+        resolved.append(token)
+    policy = execution_policy_for(getattr(command, "callback", None))
+    if policy is None:
+        raise LookupError(f"CLI path has no execution policy: {' '.join(cli_path)!r}")
+    return policy
+
+
 #: Lazy-subcommand registry keyed by the owning group's command
 #: ``name``. Typer materializes the Click
 #: :class:`CadrumoTyperGroup`
@@ -431,6 +467,7 @@ __all__ = [
     "CadrumoTyperGroup",
     "LazySubcommand",
     "LiveCommandNode",
+    "execution_policy_for_cli_path",
     "materialise_lazy_subcommands",
     "register_lazy_subcommand",
     "walk_live_command_tree",

@@ -32,6 +32,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 import typer
+from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -46,7 +47,15 @@ if TYPE_CHECKING:
     from ....application.user_profile import ProfileRecoveryEnrollment
 
 
-def resolve_creation_passphrase() -> str:
+class _CreationSecrets(BaseModel):
+    """Strict machine-channel payload for profile creation."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    passphrase: SecretStr
+    passphrase_confirmation: SecretStr
+
+
+def resolve_creation_passphrase(*, secrets_stdin: bool = False) -> str:
     """Return the passphrase for a scripted registration, or refuse.
 
     Ordered console-first so an operator running the verb by hand on a
@@ -55,7 +64,16 @@ def resolve_creation_passphrase() -> str:
     the advertised interface.
     """
     from .. import _headless_secret_channel_active
-    from ._secure_input import prompt_secret_no_echo, terminal_can_prompt_for_secrets
+    from ._secure_input import prompt_secret_no_echo, read_secrets_stdin, terminal_can_prompt_for_secrets
+
+    if secrets_stdin:
+        secrets = read_secrets_stdin(_CreationSecrets)
+        first = secrets.passphrase.get_secret_value()
+        if first != secrets.passphrase_confirmation.get_secret_value():
+            raise CliRefusedBoundaryError(
+                translated_message="cli.config.profile.create_passphrase_mismatch",
+            )
+        return first
 
     if not _headless_secret_channel_active() and terminal_can_prompt_for_secrets():
         first = prompt_secret_no_echo(tr("cli.config.profile.create_passphrase_prompt"))
@@ -134,7 +152,7 @@ def register_profile_from_scripted_invocation(
     # transaction, which already holds the record session, rather than being
     # written through a second unlock once registration has closed it.
     facts = scripted_profile_facts(get_setup_flow(), kwargs)
-    passphrase = resolve_creation_passphrase()
+    passphrase = resolve_creation_passphrase(secrets_stdin=bool(kwargs.get("secrets_stdin")))
     try:
         outcome = register_profile_with_credentials(
             label=label,

@@ -70,6 +70,7 @@ from ._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
 from ._command_suggestions import (
     LazySubcommand as _LazySubcommand,
 )
+from ._command_suggestions import execution_policy_for_cli_path as _execution_policy_for_cli_path
 from ._command_suggestions import (
     register_lazy_subcommand as _register_lazy_subcommand,
 )
@@ -1257,6 +1258,16 @@ def full_command_tree() -> click.Command:
     return root
 
 
+def command_execution_policy_for_cli_path(cli_path: tuple[str, ...]) -> object:
+    """Return callback-attached policy for one live path, loading only that path.
+
+    The concrete policy type remains owned by the CLI metadata module.  This
+    facade keeps cross-distribution consumers on the public entrypoint boundary
+    without importing the complete command tree.
+    """
+    return _execution_policy_for_cli_path(app, cli_path)
+
+
 #: The per-verb input-schema projection re-exported from this facade. The module
 #: walks the live command tree and pulls in the operator-action catalogue, so it
 #: stays off the eager import path with the other lazy re-exports below.
@@ -1274,6 +1285,7 @@ _VERB_INPUT_SCHEMA_EXPORTS: frozenset[str] = frozenset(
         "assert_schema_coverage",
         "build_verb_input_schemas",
         "cli_argv_for",
+        "cli_path_for_command_key",
         "is_exposable_command",
     }
 )
@@ -1456,6 +1468,8 @@ __all__ = [
     "calculation_revision_lines",
     "calculation_revision_payload",
     "cli_argv_for",
+    "cli_path_for_command_key",
+    "command_execution_policy_for_cli_path",
     "command_schema_refs",
     "full_command_tree",
     "is_exposable_command",

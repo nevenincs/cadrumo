@@ -12,9 +12,9 @@ import pytest
 
 from cadrumo.core import PRODUCT_IDENTITY
 from cadrumo.entrypoints.cli import VerbInputSchema, command_schema_refs
-from cadrumo.tests.declared_command_risk import declared_live_write
 
 from .._annotations import McpAnnotations
+from .._command_policy import CommandPolicyProjection
 from .._meta_tools import (
     MetaDescribeResult,
     ToolRunOutcome,
@@ -47,6 +47,15 @@ def _blocked_descriptor() -> McpToolDescriptor:
         output_schema={"type": "object"},
         annotations=McpAnnotations(
             title="x submit", read_only_hint=False, destructive_hint=False, idempotent_hint=False
+        ),
+        execution_policy=CommandPolicyProjection(
+            command_key="x.submit",
+            read_only=False,
+            destructive=False,
+            idempotent=False,
+            handoff=False,
+            live_write=True,
+            open_world=True,
         ),
         verb_schema=VerbInputSchema(command_key="x.submit", cli_path=("app", "x", "submit"), parameters=()),
     )
@@ -103,10 +112,9 @@ def test_gate_refusal_matches_the_direct_path_for_every_scoped_refusal() -> None
 
 
 def test_gate_refusal_blocks_a_declared_live_write_command() -> None:
-    with declared_live_write("x.submit"):
-        assert gate_refusal(persona=None, descriptor=_blocked_descriptor()) == (
-            "refused: AEAT live-write is permanently forbidden"
-        )
+    assert gate_refusal(persona=None, descriptor=_blocked_descriptor()) == (
+        "refused: AEAT live-write is permanently forbidden"
+    )
 
 
 def test_meta_execute_never_reaches_the_runner_on_a_blocked_command() -> None:
@@ -114,8 +122,7 @@ def test_meta_execute_never_reaches_the_runner_on_a_blocked_command() -> None:
         raise AssertionError("the runner must not be reached for a blocked command")
 
     blocked = _blocked_descriptor()
-    with declared_live_write("x.submit"):
-        outcome = meta_execute("x.submit", {}, descriptors=(blocked,), persona=None, run=boom)
+    outcome = meta_execute("x.submit", {}, descriptors=(blocked,), persona=None, run=boom)
     assert outcome.refused == "refused: AEAT live-write is permanently forbidden"
     assert outcome.envelope is None
 
@@ -198,8 +205,8 @@ def test_describe_command_returns_the_full_descriptor_for_a_known_key() -> None:
     # modelo-lifecycle toolset, and confirms rather than auto-approves.
     assert described.owning_toolset == "modelo-lifecycle"
     assert described.confirmation_tier == "confirm"
-    assert described.risk_handoff is True
-    assert described.risk_live_write is False
+    assert described.handoff is True
+    assert described.live_write is False
     # The schema rides along so the caller can build the argument form in one hop.
     by_key = {descriptor.command_key: descriptor for descriptor in descriptors}
     assert described.input_schema == by_key["modelo.export"].input_schema

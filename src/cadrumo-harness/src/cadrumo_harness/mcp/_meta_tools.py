@@ -34,11 +34,10 @@ from cadrumo.application.command_search import CommandDoc, CommandIndex, build_c
 from cadrumo.application.operator_surface import (
     OperatorSurfaceManifest,
     build_operator_surface_manifest,
-    declared_risk,
 )
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 
-from ._hitl import ConfirmationPolicy, confirmation_for_tool
+from ._hitl import ConfirmationPolicy, confirmation_for_policy
 from ._persona_scope import AgentPersona, handoff_denial_message, is_handoff_denied, is_tool_in_persona_scope
 from ._tools import McpToolDescriptor
 from ._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, _family_domain_map, build_toolsets, toolset_for_command
@@ -268,9 +267,8 @@ class MetaDescribeResult(BaseModel):
     idempotent: bool
     open_world: bool
     confirmation_tier: str = Field(min_length=1)
-    risk_destructive: bool
-    risk_handoff: bool
-    risk_live_write: bool
+    handoff: bool
+    live_write: bool
     owning_toolset: str | None = None
     reachable_personas: tuple[str, ...] = ()
 
@@ -283,10 +281,8 @@ def describe_command(
     """Return one command's full descriptor by key, or ``None`` when unexposed.
 
     Resolves everything from the live descriptor set and the real classifiers -
-    the annotation hints from the descriptor, the confirmation tier from
-    :func:`~cadrumo_harness.mcp._hitl.confirmation_for_tool`, the declared risk from
-    :func:`~application.operator_surface.declared_risk` (all-false for a read-only
-    command with no row), the owning toolset from
+    the annotation hints and callback-attached execution policy from the
+    descriptor, the confirmation tier from the same policy, the owning toolset from
     :func:`~cadrumo_harness.mcp._toolsets.toolset_for_command`, and the reachable
     personas from the same scope + handoff-deny gates the call path enforces. A
     key that names no exposed descriptor returns ``None``.
@@ -297,7 +293,7 @@ def describe_command(
     descriptor = next((candidate for candidate in descriptors if candidate.command_key == command_key), None)
     if descriptor is None:
         return None
-    risk = declared_risk(command_key)
+    policy = descriptor.execution_policy
     toolset = toolset_for_command(command_key, family_map=_family_domain_map())
     reachable = tuple(
         sorted(
@@ -316,10 +312,9 @@ def describe_command(
         destructive=descriptor.annotations.destructive_hint,
         idempotent=descriptor.annotations.idempotent_hint,
         open_world=descriptor.annotations.open_world_hint,
-        confirmation_tier=confirmation_for_tool(command_key=command_key).value,
-        risk_destructive=risk.destructive if risk is not None else False,
-        risk_handoff=risk.handoff if risk is not None else False,
-        risk_live_write=risk.live_write if risk is not None else False,
+        confirmation_tier=confirmation_for_policy(descriptor.execution_policy).value,
+        handoff=policy.handoff,
+        live_write=policy.live_write,
         owning_toolset=toolset.value if toolset is not None else None,
         reachable_personas=reachable,
     )
@@ -365,7 +360,7 @@ def gate_refusal(*, persona: AgentPersona | None, descriptor: McpToolDescriptor)
         return f"refused: {descriptor.command_key!r} is outside the active persona {persona.value!r}'s tool scope"
     if persona is not None and is_handoff_denied(persona=persona, command_key=descriptor.command_key):
         return handoff_denial_message(persona=persona, command_key=descriptor.command_key)
-    if confirmation_for_tool(command_key=descriptor.command_key) is ConfirmationPolicy.BLOCK:
+    if confirmation_for_policy(descriptor.execution_policy) is ConfirmationPolicy.BLOCK:
         return "refused: AEAT live-write is permanently forbidden"
     return None
 

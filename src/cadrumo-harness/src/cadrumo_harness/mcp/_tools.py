@@ -29,6 +29,7 @@ from cadrumo.entrypoints.cli import VerbInputSchema, is_exposable_command
 
 from ._action_capabilities import build_mcp_action_input_schemas
 from ._annotations import McpAnnotations, annotations_for_command
+from ._command_policy import CommandPolicyProjection, command_policy
 from ._dispatch import tool_name_for_command
 from ._result_thinning import thin_output_schema
 
@@ -53,6 +54,7 @@ class McpToolDescriptor(BaseModel):
     input_schema: dict[str, Any]
     output_schema: dict[str, Any]
     annotations: McpAnnotations
+    execution_policy: CommandPolicyProjection
     verb_schema: VerbInputSchema
 
 
@@ -166,7 +168,13 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
         # instead, so discovery gains the verb vocabulary without a Spanish
         # string on the model-facing surface.
         description = f"Run `{cli_form}`." + (f" {intent}." if intent else "")
-        annotations = annotations_for_command(command_key=key, mutability=mutability, title=cli_form)
+        execution_policy = command_policy(key)
+        annotations = annotations_for_command(
+            command_key=key,
+            mutability=mutability,
+            title=cli_form,
+            policy=execution_policy,
+        )
         descriptors.append(
             McpToolDescriptor(
                 name=tool_name_for_command(key),
@@ -175,6 +183,7 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
                 input_schema=verb_schema.json_schema(),
                 output_schema=_output_schema_for(key),
                 annotations=annotations,
+                execution_policy=execution_policy,
                 verb_schema=verb_schema,
             ),
         )

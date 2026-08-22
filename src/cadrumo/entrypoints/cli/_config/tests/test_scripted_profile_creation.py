@@ -189,8 +189,11 @@ def test_scripted_create_refuses_when_no_passphrase_channel_is_available(tmp_pat
 def test_scripted_create_localizes_a_typed_password_refusal_without_leaking(tmp_path: Path) -> None:
     """The machine credential channel reaches the same prospective refusal as the TUI."""
     candidate = "a" * 14
-    with override_settings(**_storage_overrides(tmp_path, passphrase=candidate)):
-        refused = invoke_cached_cli(("--format", "json", "config", "profile", "create", "Boundary Refusal", "--quiet"))
+    with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
+        refused = invoke_cached_cli(
+            ("--format", "json", "config", "profile", "create", "Boundary Refusal", "--quiet", "--secrets-stdin"),
+            input=json.dumps({"passphrase": candidate, "passphrase_confirmation": candidate}),
+        )
         listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
 
     combined = refused.stdout + refused.stderr
@@ -237,6 +240,27 @@ def test_scripted_create_localizes_a_typed_password_refusal_without_leaking(tmp_
     assert "Traceback" not in combined
     assert "INTERNAL" not in combined.upper()
     assert candidate not in combined
+    assert json.loads(listed.stdout)["result"]["profiles"] == []
+
+
+@pytest.mark.parametrize(
+    "payload",
+    (
+        "not-json",
+        json.dumps({"passphrase": _PASSPHRASE, "passphrase_confirmation": _PASSPHRASE, "extra": "forbidden"}),
+    ),
+)
+def test_scripted_create_rejects_malformed_secret_stdin_without_echo(tmp_path: Path, payload: str) -> None:
+    with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
+        refused = invoke_cached_cli(
+            ("config", "profile", "create", "Malformed Secret", "--quiet", "--secrets-stdin"),
+            input=payload,
+        )
+        listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
+
+    assert refused.exit_code != 0
+    assert _PASSPHRASE not in refused.output
+    assert "Traceback" not in refused.output
     assert json.loads(listed.stdout)["result"]["profiles"] == []
 
 

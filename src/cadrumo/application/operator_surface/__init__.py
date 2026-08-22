@@ -47,12 +47,6 @@ from ._action_resolution import (
     resolve_catalogue_action,
     resolve_notice_action,
 )
-from ._classification import (
-    CommandClassification,
-    classification_is_coherent,
-    classify_command,
-    command_classification,
-)
 from ._contract import (
     ACCEPTED_ROOTS,
     MOUNTED_COMMAND_FAMILIES,
@@ -124,18 +118,14 @@ from ._models import (
     ServiceOwner,
     SourceKindAlias,
 )
-from ._risk_table import COMMAND_RISK, CommandRiskDeclaration, declared_risk
 
 __all__ = [
     "ACCEPTED_ROOTS",
     "BUILTIN_CRUD_CATALOGUE",
     "CANONICAL_CRUD_VERBS",
-    "COMMAND_RISK",
     "MOUNTED_COMMAND_FAMILIES",
     "SOURCE_KIND_ALIASES",
     "BucketEventSuffix",
-    "CommandClassification",
-    "CommandRiskDeclaration",
     "CommandSchemaRef",
     "CrudContractCatalogue",
     "CrudVerb",
@@ -182,10 +172,6 @@ __all__ = [
     "build_operator_surface_contract",
     "build_operator_surface_manifest",
     "build_root_landing_report",
-    "classification_is_coherent",
-    "classify_command",
-    "command_classification",
-    "declared_risk",
     "event_suffix_for",
     "get_builtin_catalogue",
     "get_operator_surface_contract",
