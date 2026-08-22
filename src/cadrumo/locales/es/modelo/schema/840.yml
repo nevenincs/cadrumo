@@ -14,6 +14,45 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (alta / variación / baja)
+            x-edqmkpbkdsn62s35dhm6ip3fecmn4obqdtn2qsrfcdkm2r0:
+              help: null
+              label: Apellidos y nombre o razón social del sujeto pasivo
+            x-edqmkpbkdsn68rrdd5hmir39dsmm6rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Código postal del domicilio del sujeto pasivo
+            x-edqmkpbkdsn68rrdd5hmir39dsmmasr3c5m6asj1:
+              help: null
+              label: Escalera del domicilio del sujeto pasivo
+            x-edqmkpbkdsn68rrdd5hmir39dsmmmqbcdtmmat3ids:
+              help: null
+              label: Kilómetro del domicilio del sujeto pasivo
+            x-edqmkpbkdsn68rrdd5hmir39dsmmqtbed5hmis39ds:
+              help: null
+              label: Código de municipio del domicilio del sujeto pasivo
+            x-edqmkpbkdsn68rrdd5hmir39dsmmstbdclp6u:
+              help: null
+              label: Número del domicilio del sujeto pasivo
+            x-edqmkpbkdsn68rrdd5hmir39dsmn0qbjds:
+              help: null
+              label: Piso del domicilio del sujeto pasivo
+            x-edqmkpbkdsn68rrdd5hmir39dsmn0sjfepkmsor9c4:
+              help: null
+              label: Código de provincia del domicilio del sujeto pasivo
+            x-edqmkpbkdsn68rrdd5hmir39dsmn0tb5e9q62:
+              help: null
+              label: Puerta del domicilio del sujeto pasivo
+            x-edqmkpbkdsn68rrdd5hmir39dsmn6qb7dhgiqtj9c4:
+              help: null
+              label: Sigla de la vía pública del domicilio del sujeto pasivo
+            x-edqmkpbkdsn68rrdd5hmir39dsmncqb15lo7aojcd5hm2:
+              help: null
+              label: Nombre de la vía pública del domicilio del sujeto pasivo
+            x-edqmkpbkdsn6sqb6:
+              help: null
+              label: NIF del sujeto pasivo
+            x-edqmkpbkdsn78pbcclj6urjf5lhmurjkc5hn8ro:
+              help: null
+              label: Teléfono de contacto del sujeto pasivo, prefijo incluido
           construct:
             modelo-840-iae-declaration:
               field:

@@ -13,6 +13,45 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (alta / variació / baixa)
+            x-edqmkpbkdsn62s35dhm6ip3fecmn4obqdtn2qsrfcdkm2r0:
+              help: null
+              label: Cognoms i nom o raó social del subjecte passiu
+            x-edqmkpbkdsn68rrdd5hmir39dsmm6rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Codi postal del domicili del subjecte passiu
+            x-edqmkpbkdsn68rrdd5hmir39dsmmasr3c5m6asj1:
+              help: null
+              label: Escala del domicili del subjecte passiu
+            x-edqmkpbkdsn68rrdd5hmir39dsmmmqbcdtmmat3ids:
+              help: null
+              label: Quilòmetre del domicili del subjecte passiu
+            x-edqmkpbkdsn68rrdd5hmir39dsmmqtbed5hmis39ds:
+              help: null
+              label: Codi de municipi del domicili del subjecte passiu
+            x-edqmkpbkdsn68rrdd5hmir39dsmmstbdclp6u:
+              help: null
+              label: Número del domicili del subjecte passiu
+            x-edqmkpbkdsn68rrdd5hmir39dsmn0qbjds:
+              help: null
+              label: Pis del domicili del subjecte passiu
+            x-edqmkpbkdsn68rrdd5hmir39dsmn0sjfepkmsor9c4:
+              help: null
+              label: Codi de província del domicili del subjecte passiu
+            x-edqmkpbkdsn68rrdd5hmir39dsmn0tb5e9q62:
+              help: null
+              label: Porta del domicili del subjecte passiu
+            x-edqmkpbkdsn68rrdd5hmir39dsmn6qb7dhgiqtj9c4:
+              help: null
+              label: Sigla de la via pública del domicili del subjecte passiu
+            x-edqmkpbkdsn68rrdd5hmir39dsmncqb15lo7aojcd5hm2:
+              help: null
+              label: Nom de la via pública del domicili del subjecte passiu
+            x-edqmkpbkdsn6sqb6:
+              help: null
+              label: NIF del subjecte passiu
+            x-edqmkpbkdsn78pbcclj6urjf5lhmurjkc5hn8ro:
+              help: null
+              label: Telèfon de contacte del subjecte passiu, prefix inclòs
           construct:
             modelo-840-iae-declaration:
               field:

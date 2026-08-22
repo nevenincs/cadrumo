@@ -13,6 +13,46 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (registration / change / deregistration)
+            x-edqmkpbkdsn62s35dhm6ip3fecmn4obqdtn2qsrfcdkm2r0:
+              help: null
+              label: Surnames and forename, or legal name, of the taxable person
+            x-edqmkpbkdsn68rrdd5hmir39dsmm6rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Postal code of the taxable person's address
+            x-edqmkpbkdsn68rrdd5hmir39dsmmasr3c5m6asj1:
+              help: null
+              label: Stairwell of the taxable person's address
+            x-edqmkpbkdsn68rrdd5hmir39dsmmmqbcdtmmat3ids:
+              help: null
+              label: Kilometre marker of the taxable person's address
+            x-edqmkpbkdsn68rrdd5hmir39dsmmqtbed5hmis39ds:
+              help: null
+              label: Municipality code of the taxable person's address
+            x-edqmkpbkdsn68rrdd5hmir39dsmmstbdclp6u:
+              help: null
+              label: Street number of the taxable person's address
+            x-edqmkpbkdsn68rrdd5hmir39dsmn0qbjds:
+              help: null
+              label: Floor of the taxable person's address
+            x-edqmkpbkdsn68rrdd5hmir39dsmn0sjfepkmsor9c4:
+              help: null
+              label: Province code of the taxable person's address
+            x-edqmkpbkdsn68rrdd5hmir39dsmn0tb5e9q62:
+              help: null
+              label: Door of the taxable person's address
+            x-edqmkpbkdsn68rrdd5hmir39dsmn6qb7dhgiqtj9c4:
+              help: null
+              label: Street-type abbreviation of the taxable person's address
+            x-edqmkpbkdsn68rrdd5hmir39dsmncqb15lo7aojcd5hm2:
+              help: null
+              label: Street name of the taxable person's address
+            x-edqmkpbkdsn6sqb6:
+              help: null
+              label: Tax identification number (NIF) of the taxable person
+            x-edqmkpbkdsn78pbcclj6urjf5lhmurjkc5hn8ro:
+              help: null
+              label: Contact telephone number of the taxable person, dialling code
+                included
           construct:
             modelo-840-iae-declaration:
               field:

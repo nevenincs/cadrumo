@@ -13,6 +13,45 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (bejegyzés / módosítás / törlés)
+            x-edqmkpbkdsn62s35dhm6ip3fecmn4obqdtn2qsrfcdkm2r0:
+              help: null
+              label: Az adóalany vezeték- és keresztneve vagy cégneve
+            x-edqmkpbkdsn68rrdd5hmir39dsmm6rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Az adóalany címének irányítószáma
+            x-edqmkpbkdsn68rrdd5hmir39dsmmasr3c5m6asj1:
+              help: null
+              label: Az adóalany címének lépcsőháza
+            x-edqmkpbkdsn68rrdd5hmir39dsmmmqbcdtmmat3ids:
+              help: null
+              label: Az adóalany címének kilométerjelzése
+            x-edqmkpbkdsn68rrdd5hmir39dsmmqtbed5hmis39ds:
+              help: null
+              label: Az adóalany címének településkódja
+            x-edqmkpbkdsn68rrdd5hmir39dsmmstbdclp6u:
+              help: null
+              label: Az adóalany címének házszáma
+            x-edqmkpbkdsn68rrdd5hmir39dsmn0qbjds:
+              help: null
+              label: Az adóalany címének emelete
+            x-edqmkpbkdsn68rrdd5hmir39dsmn0sjfepkmsor9c4:
+              help: null
+              label: Az adóalany címének tartománykódja
+            x-edqmkpbkdsn68rrdd5hmir39dsmn0tb5e9q62:
+              help: null
+              label: Az adóalany címének ajtaja
+            x-edqmkpbkdsn68rrdd5hmir39dsmn6qb7dhgiqtj9c4:
+              help: null
+              label: Az adóalany címében szereplő közterület jellegének rövidítése
+            x-edqmkpbkdsn68rrdd5hmir39dsmncqb15lo7aojcd5hm2:
+              help: null
+              label: Az adóalany címének közterületneve
+            x-edqmkpbkdsn6sqb6:
+              help: null
+              label: Az adóalany adóazonosító száma (NIF)
+            x-edqmkpbkdsn78pbcclj6urjf5lhmurjkc5hn8ro:
+              help: null
+              label: Az adóalany kapcsolattartási telefonszáma, körzetszámmal
           construct:
             modelo-840-iae-declaration:
               field:
