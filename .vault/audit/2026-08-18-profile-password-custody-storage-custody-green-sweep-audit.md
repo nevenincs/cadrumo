@@ -5705,3 +5705,43 @@ here define no fixtures at all, and a line-87 scan of both trees finds no match,
 originates in the census's own manifest set.
 
 Lanes 314 integration / 1587 unit, unchanged.
+
+### A refusal that would not say where
+
+The fixture census refuses any fixture whose effective name it cannot state statically --
+correctly, because inventing one would make the ownership manifest a guess. It reported
+that refusal as `fixture name at line 87 is dynamic`, with no file.
+
+**How much that costs was measured rather than asserted: six probes, and still no answer.**
+A text scan of line 87 across every root the census scans found nothing, because the census
+reports the FUNCTION's line while the decorator sits one line above it. A subtree bisect
+reported nothing at all -- and that one is the instructive failure. The census refuses a
+root carrying no `conftest.py`, so nearly every subtree raised THAT error instead, and the
+probe's `if "is dynamic" in str(exc)` filter swallowed each one. **A clean sweep and an
+instrument that never ran produced identical output**, which is the exact discipline this
+campaign keeps writing down and, here, failed to apply to its own probe.
+
+With the module named, the same run answers in one line:
+
+    src/cadrumo/tests/seeded_isolated_backend_fixture.py:87: fixture name is dynamic
+
+**The refusal turns out to be right, which is worth stating.** That factory derives its
+fixture name from its own parameter -- `origin_name = f"{name}_origin"` -- so the effective
+value genuinely is a call-site fact. The census DEFERS a bare parameter name and refuses
+this, deliberately: its own docstring warns that "treating any non-literal as deferred would
+hide genuinely unmeasurable expressions, so only a bare parameter name qualifies." Whether a
+name DERIVED from a parameter deserves the same deferral is a real question about the
+census's model -- the value is equally not-yet-known -- but widening the carve-out is how a
+narrow rule becomes a broad one, so it is left open here rather than decided in passing.
+
+The gate is still red, for the reason it was already red. What changed is that its verdict
+can now be acted on, and the deferral carve-out is pinned by its own test so that locating a
+refusal cannot quietly become refusing everything.
+
+**Placement follows the same rule as the previous entry**: the tests live in
+`dev/quality/tests/`, beside the module they exercise, so reaching its private helpers is an
+intra-package import rather than a new cross-package private reach — and that directory is
+in the per-push lane, unlike `dev/tests`.
+
+Lanes 314 integration / 1587 unit, unchanged. The two standing `dev/quality` failures are
+the ones attributed in the previous entry and are unchanged by this work.
