@@ -36,14 +36,18 @@ def test_recovery_secret_codec_refuses_malformed_transport() -> None:
 
 def test_recovery_paths_have_no_profile_password_policy_dependency() -> None:
     custody_root = Path(__file__).parents[1]
-    sources = "\n".join(
+    recovery_sources = "\n".join(
         (custody_root / name).read_text(encoding="utf-8")
         for name in ("_recovery.py", "_recovery_artifact.py", "_recovery_secret_codec.py")
     )
+    supervision = (custody_root / "_kdf_supervision.py").read_text(encoding="utf-8")
+    recovery_supervision = supervision[supervision.index("def unlock_profile_custody_recovery_material") :]
+    worker = (custody_root / "_kdf_worker.py").read_text(encoding="utf-8")
 
-    assert "assess_profile_password" not in sources
-    assert "_encode_profile_password" not in sources
-    assert "_decode_profile_password" not in sources
+    assert "assess_profile_password" not in recovery_sources + recovery_supervision + worker
+    assert "_encode_profile_password" not in recovery_sources + recovery_supervision
+    assert "_decode_profile_password" not in recovery_sources + recovery_supervision
+    assert worker.count("decode_recovery_secret(encoded) if recovery else _decode_profile_password(encoded)") == 2
 
 
 def test_obsolete_conflated_material_entry_points_are_absent() -> None:

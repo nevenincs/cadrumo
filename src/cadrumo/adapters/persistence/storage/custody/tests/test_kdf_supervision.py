@@ -34,6 +34,9 @@ from .. import (
     profile_kdf_lease,
     propose_profile_kdf_ratchet,
     unlock_profile_custody,
+    unlock_profile_custody_recovery_material,
+    wrap_profile_custody_password_material,
+    wrap_profile_custody_recovery_material,
 )
 from .._kdf_process import terminate_process_tree as _terminate_process_tree
 from .._kdf_supervision import (
@@ -401,6 +404,41 @@ def test_real_child_unwrap_returns_only_a_parent_sentinel_proven_dek(tmp_path: P
     assert unlock.profile_id == _PROFILE_ID
     assert unlock.dek == _DEK
     assert unlock.envelope_digest == envelope.self_digest
+
+
+def test_real_worker_keeps_short_recovery_secret_outside_password_policy(tmp_path: Path) -> None:
+    envelope, sentinel = _unlock_inputs()
+    recovery_candidate = "short"
+    recovery_aad = b"profile-recovery-policy-independence/v1"
+    settings = _settings(tmp_path)
+
+    wrapped = wrap_profile_custody_recovery_material(
+        secret=recovery_candidate,
+        dek=_DEK,
+        kdf=envelope.kdf,
+        associated_data=recovery_aad,
+        settings=settings,
+    )
+    recovered = unlock_profile_custody_recovery_material(
+        profile_id=envelope.profile_id,
+        dek_epoch=envelope.dek_epoch,
+        kdf=envelope.kdf,
+        wrapped_dek=wrapped,
+        secret=recovery_candidate,
+        associated_data=recovery_aad,
+        sentinel=sentinel,
+        settings=settings,
+    )
+
+    assert recovered == _DEK
+    with pytest.raises(ProfileCustodyPasswordError, match="too_few_scalars"):
+        wrap_profile_custody_password_material(
+            secret=recovery_candidate,
+            dek=_DEK,
+            kdf=envelope.kdf,
+            associated_data=recovery_aad,
+            settings=settings,
+        )
 
 
 def test_wrong_password_and_canonical_sentinel_substitution_do_not_release_a_dek(tmp_path: Path) -> None:

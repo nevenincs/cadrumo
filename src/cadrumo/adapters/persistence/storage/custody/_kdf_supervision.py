@@ -381,9 +381,15 @@ def wrap_profile_custody_password_material(
 
 
 def unlock_profile_custody_recovery_material(
-    *, profile_id: UUID, dek_epoch: str, kdf: ProfileCustodyKdfParameters,
-    wrapped_dek: ProfileCustodyWrappedDek, secret: str, associated_data: bytes,
-    sentinel: ProfileCustodySentinelRecord, settings: Settings | None = None,
+    *,
+    profile_id: UUID,
+    dek_epoch: str,
+    kdf: ProfileCustodyKdfParameters,
+    wrapped_dek: ProfileCustodyWrappedDek,
+    secret: str,
+    associated_data: bytes,
+    sentinel: ProfileCustodySentinelRecord,
+    settings: Settings | None = None,
     timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
 ) -> bytes:
     if timeout_seconds <= 0:
@@ -408,7 +414,11 @@ def unlock_profile_custody_recovery_material(
 
 
 def wrap_profile_custody_recovery_material(
-    *, secret: str, dek: bytes, kdf: ProfileCustodyKdfParameters, associated_data: bytes,
+    *,
+    secret: str,
+    dek: bytes,
+    kdf: ProfileCustodyKdfParameters,
+    associated_data: bytes,
     settings: Settings | None = None,
     timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
 ) -> ProfileCustodyWrappedDek:
