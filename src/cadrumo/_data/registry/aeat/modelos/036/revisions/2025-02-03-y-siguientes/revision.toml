@@ -26,62 +26,53 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the censal alta/modificacion/baja declaration. \
 DISCLOSURE -- self-review: the same agent authored the casillas being reviewed. VERIFIED \
--- PAGINA 2B IS AUTHORED, 119 casillas covering 96 of the 98 box numbers it prints, plus \
-23 slugs. Revision total 391 casillas. This completes the modelo's THREE IDENTITY RECORDS: \
-Pag. 2A persona fisica, Pag. 2B persona juridica o entidad, Pag. 2C establecimiento \
-permanente de una entidad no residente. Every offset, length and number was cross-checked \
-back against the design row it came from -- zero missing, zero invented, zero length \
-mismatches -- and every one of the record's 137 fields is either authored, a collapsed \
-date component, or explicitly excluded with a stated reason, so nothing is unaccounted \
-for. Pag. 2B tiles 1..2100 exactly once with NO gap and NO PARTIAL OVERLAP, both checked. \
-VERIFIED -- AEAT PRINTS [B72], [B74] AND [B76] TWICE EACH IN THIS ONE RECORD. This is a \
-real collision in the published spreadsheet, not a parsing artefact; the raw cell text was \
-read directly to confirm it. The two homes are the domicilio social block, where B71 to \
-B85 form a COMPLETE and coherent run, and the personalidad juridica block at @1734, @1737 \
-and @1740, whose surrounding numbers are PLAIN digits (70, 71, 73, 75, 77) so the three \
-B-prefixed entries interrupt an unbroken plain sequence. The domicilio social fields KEEP \
-those numbers because their run is unambiguous; the three personalidad juridica fields \
-take slugs, following the modelo 604 precedent that a field naming ANOTHER box's number \
-keeps a slug, and revision-wide (segmento, number) uniqueness made duplication unavailable \
-in any case. NOT CLAIMED, AND DELIBERATELY SO -- the plain run strongly suggests AEAT \
-meant [72], [74] and [76] at those three positions. That reading is an INFERENCE, not a \
-transcription, so those numbers are NOT adopted; the registry does not assert a box number \
-AEAT did not print. If AEAT's instructions or a later design confirm it, the slugs can be \
-replaced with a recorded reason. CORRECTED IN THIS REVIEW, and recorded because it was my \
-own error -- @11+1 prints \"[B1,B2]\", a LIST bracket: one selecting code byte behind two \
-printed tick boxes. My extraction's fallback pattern matched the trailing \"B2]\" and I \
-first adopted B2 as the number. That is exactly the mistake this modelo's Pag. 3 fragment \
-already warns about, a rule I had written down before breaking it. It now takes a slug, \
-and B1 and B2 are BOTH unmodelled as numbers -- correct rather than a gap, since neither \
-names the field alone. The tell is field width against number count. It was caught by \
-re-measuring coverage per record after authoring rather than trusting the authoring pass, \
-which is worth keeping as a step. VERIFIED -- COVERAGE 322 of 667 real boxes, 48 percent, \
-up from 226. The 667 denominator keeps the caveat recorded in earlier stamps: it is what a \
-pattern admitting five bracket forms finds, and nothing establishes a sixth does not \
-exist. Four denominators have been reported for this modelo -- 288, 348, 659, 667 -- and \
-every one before the last was a floor presented as a total. VERIFIED -- FOUR NUMBERS \
-COLLAPSE THREE COMPONENTS EACH on this record: B8 fecha del acuerdo de voluntades, B9 \
-fecha de constitucion, B10 fecha de inscripcion registral and B3B fecha de efectos de \
-residencia fiscal. Each becomes ONE date casilla, matching A10 and A3B on Pag. 2A and C70 \
-and C71 on Pag. 2C. @1943 prints its number lowercase and parenthesised, \"(b40)\", and is \
-transcribed as printed rather than normalised. VERIFIED -- THIS RECORD IS THE ONE IDENTITY \
-RECORD THE DERIVED SET CAN PARTLY SEE, because its personalidad juridica block carries \
-plain-digit boxes (65, 68, 69, 70, 71, 73, 75, 77, 78, 79) alongside the lettered B \
-series. Pag. 2A and 2C are wholly lettered and moved the derived report by zero. NOTED -- \
-casilla ids cap at 64 characters and this record's section names overflow it, so its ids \
-use a short token per section while the section PATH keeps its full name. Pag. 2A and 2C \
-did not need this, so the three identity records are internally consistent but not \
-identical in id shape. NOT CLAIMED -- 345 OF THE 667 REAL BOXES REMAIN UNMODELLED, \
-exactly: Pag. 5 107, Pag. 4 88, Pag. 6 52, Pag. 7 42, Pag. 10 24, Pag. 8 16, 14 still open \
-on Pag. 3, and B1/B2 on Pag. 2B which are correctly unmodelled. Pag. 0 is the envelope and \
-has none. NOT CLAIMED -- the B series skips B56 to B58, B65 to B67, B70 and B86 to B89, \
-and the plain run skips 66 and 67; none was invented. NOT CLAIMED -- NO EXPORT LAYOUT AND \
-NO CONSTRUCT MEMBERSHIP CHANGE. model_law_authority_scope remains inspection_only, so this \
-stamp is made under the LOWER inspection bar and MUST be re-made if a layout lands and \
-lifts the derived scope to filing. NOT CLAIMED -- LABELS ARE UNACCENTED ASCII across all \
-four catalogues, matching the pre-existing modelo 036 labels; a known presentation \
-limitation. All 391 label keys carry non-null values in es/en/ca/hu, verified by counting \
-VALUES rather than keys; the translations were not audited. NOT CLAIMED -- \
+-- PAGINA 5 IS AUTHORED, 68 casillas over its 115 design fields, 54 carrying an AEAT \
+number and 14 slugs. Revision total 459 casillas. Pag. 5 is the IVA record: obligaciones, \
+comunicacion de inicio de actividad, regimenes, registros, prorrata y sectores \
+diferenciados, ingreso del IVA a la importacion, llevanza de libros y facturacion por \
+terceros. Every offset, length and number was cross-checked back against the design row it \
+came from -- zero missing, zero invented, zero length mismatches -- and every one of the \
+115 fields is authored, a collapsed date component, or explicitly excluded with a stated \
+reason, so nothing is unaccounted for. Pag. 5 tiles 1..380 exactly once with NO gap and NO \
+PARTIAL OVERLAP, both checked. A SIXTH BRACKET FORM WAS FOUND, AND IT VINDICATES THE \
+CAVEAT THE PREVIOUS STAMP CARRIED. That stamp said the 667 denominator was what a pattern \
+admitting five bracket forms finds, and that nothing established a sixth did not exist. \
+One does. @273+1 prints its numbers as a PARENTHESISED list, \"(532,737)\", where every \
+other multi-number field on this modelo uses a SQUARE-bracketed one; none of the five \
+earlier patterns could see it, so 532 and 737 were absent from every count taken. THE \
+DENOMINATOR IS NOW 669. Five denominators have now been reported for this modelo -- 288, \
+348, 659, 667, 669 -- and each correction came from widening the pattern rather than from \
+reading the design differently. Two numbers is trivial in magnitude; the pattern is not, \
+and the caveat stands unchanged for a seventh form. VERIFIED -- COVERAGE, AND IT IS \
+REPORTED IN THREE PARTS BECAUSE A SINGLE \"REMAINING\" FIGURE WOULD OVERSTATE THE GAP. 376 \
+of 669 numbers are DIRECTLY MODELLED, each on its own casilla. A further 57 sit BEHIND A \
+SLUG CASILLA -- 55 on Pag. 5 and B1/B2 on Pag. 2B -- where the FIELD is modelled but the \
+number is not individually addressable, because AEAT prints several numbers on one byte. \
+Only 236 boxes have NO CASILLA AT ALL. Reporting \"293 remaining\" would conflate a \
+modelled field with an unmodelled one. VERIFIED -- LIST BRACKETS TAKE SLUGS, and Pag. 5 \
+carries more than any other record: 19 fields hold a bracket listing several numbers, 53 \
+numbers between them. The regimenes de agricultura, simplificado and criterio de caja each \
+print FIVE numbers on ONE byte, because the printed form has five tick boxes -- alta, \
+baja, renuncia, revocacion, inclusion -- that the fichero collapses into a single \
+selecting code byte. No single number describes such a field. Those numbers are \
+deliberately NOT modelled individually and the fragment says so, so that a later reader \
+does not split one byte into five casillas. The tell is field width against number count. \
+VERIFIED -- TWENTY-ONE DATE TRIPLES on this record collapse to one date casilla each, \
+three of them under a list bracket, matching the convention used across this modelo's \
+other records. NOT CLAIMED -- 236 BOXES HAVE NO CASILLA AT ALL, exactly: Pag. 4 88, Pag. 6 \
+52, Pag. 7 42, Pag. 10 24, Pag. 8 16, and 14 still open on Pag. 3. Pag. 0 is the envelope \
+and has none. Authored so far: Pag. 1, 2A, 2B, 2C, 5, 9 and most of 3. NOT CLAIMED -- THE \
+CAUSA FRAGMENT'S LABELS on Pag. 3 remain underivable from any bundled source; its cited \
+instructions file is a 5.4 KB navigation shell with no casilla table. Numbers and section \
+mapping ARE grounded on the diseno. NOT CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT \
+MEMBERSHIP CHANGE. model_law_authority_scope remains inspection_only, so this stamp is \
+made under the LOWER inspection bar and MUST be re-made if a layout lands and lifts the \
+derived scope to filing. NOT CLAIMED -- the IVA casillas here record REGIME ELECTIONS on a \
+censal declaration; nothing on this record computes or reports an IVA amount, and none of \
+it supports a liquidacion. NOT CLAIMED -- LABELS ARE UNACCENTED ASCII across all four \
+catalogues, matching the pre-existing modelo 036 labels; a known presentation limitation. \
+All 459 label keys carry non-null values in es/en/ca/hu, verified by counting VALUES \
+rather than keys; the translations were not audited by a second party. NOT CLAIMED -- \
 independent_check_coverage is n/a: NO CLAIM, not zero."""
 reviewed_at = 2026-08-22
 

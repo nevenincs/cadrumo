@@ -3068,3 +3068,69 @@ previous run is gone, confirming it was a parallel flake. A collection ERROR in
 `test_binding_coverage_breadth` was a peer's in-flight rename
 (`_ENROLLED_SOURCE_KINDS` → `ENROLLED_SOURCE_KINDS`), already fixed uncommitted in their
 working tree and passing; left for them.
+
+## 2026-08-22 — Pagina 5 (IVA) authored, a sixth bracket form found, and coverage split three ways
+
+### What landed
+
+Modelo 036 Pag. 5: **68 casillas over its 115 fields** — 54 carrying an AEAT number,
+14 slugs. Revision now **459 casillas**. It is the IVA record: obligaciones, inicio de
+actividad, regímenes, registros, prorrata y sectores diferenciados, ingreso del IVA a
+la importación, llevanza de libros, facturación por terceros.
+
+Zero mismatches, zero invented, zero missed; all 115 fields authored, a collapsed date
+component, or explicitly excluded. Tiles 1..380 exactly once, no gap, no partial
+overlap. Suite: **13 failures, zero new, zero gone, no collection errors.**
+
+### The sixth bracket form — the previous stamp's caveat came true
+
+The last stamp said 667 was "what a pattern admitting five bracket forms finds, and
+nothing establishes a sixth does not exist." One exists.
+
+`@273+1` prints its numbers as a **parenthesised list** — `(532,737)` — where every
+other multi-number field on this modelo uses a square-bracketed one. None of the five
+patterns could see it. **Denominator: 667 → 669.**
+
+| # | denominator | what the correction added |
+|---|---|---|
+| 1 | 288 | `[NNN]` only |
+| 2 | 348 | malformed + multi-number brackets |
+| 3 | 659 | lettered boxes (the largest class) |
+| 4 | 667 | parenthesised single `(a28)` |
+| 5 | **669** | **parenthesised LIST `(532,737)`** |
+
+Every correction came from widening the pattern, never from reading the design
+differently. Two numbers is trivial in magnitude; the pattern is not. **The caveat
+stands unchanged for a seventh form.**
+
+### Coverage now needs THREE numbers, not one
+
+A single "remaining" figure conflates an unmodelled field with a modelled one, and
+overstates the gap by 57:
+
+| state | count | meaning |
+|---|---|---|
+| directly modelled | **376** | each number on its own casilla |
+| behind a slug casilla | **57** | Pag. 5: 55, Pag. 2B: 2 — **the FIELD is modelled**; the number is not individually addressable because AEAT prints several on one byte |
+| no casilla at all | **236** | Pag. 4 (88), Pag. 6 (52), Pag. 7 (42), Pag. 10 (24), Pag. 8 (16), Pag. 3 (14) |
+
+Reporting "293 remaining" would be true arithmetic and a false picture. **This split is
+worth carrying to any modelo whose design collapses several printed tick boxes onto one
+selecting byte.**
+
+### List brackets: Pag. 5 has more than any other record
+
+19 fields carry a bracket listing several numbers, 53 numbers between them. The
+regímenes de agricultura, simplificado and criterio de caja each print **five numbers on
+one byte** — alta, baja, renuncia, revocación, inclusión — collapsed into a single
+selecting code byte. No single number describes such a field, so each takes a slug.
+
+Those numbers are deliberately not modelled individually, and the fragment says so
+explicitly, so a later reader does not split one byte into five casillas. **The tell is
+field width against number count** — one byte cannot hold five independent values.
+
+### Remaining modelo 036 work
+
+236 boxes with no casilla: Pag. 4 (88), Pag. 6 (52), Pag. 7 (42), Pag. 10 (24), Pag. 8
+(16), Pag. 3 (14). Authored: Pag. 1, 2A, 2B, 2C, 5, 9 and most of 3. Pag. 0 is the
+envelope.
