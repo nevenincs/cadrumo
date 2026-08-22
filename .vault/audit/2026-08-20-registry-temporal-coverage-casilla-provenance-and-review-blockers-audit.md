@@ -3317,3 +3317,78 @@ and should always be stated as "what a stated pattern, less stated noise, finds"
 
 Authored: Pag. 1, 2A, 2B, 2C, 4, 5, 6, 7, 9 and most of 3. Pag. 0 is the envelope.
 **Two records remain plus the Pag. 3 remainder.**
+
+## 2026-08-23 — Paginas 8 and 10 authored: every record of modelo 036 now has a casilla set
+
+### The milestone, stated carefully
+
+Modelo 036 revision `2025-02-03-y-siguientes` now carries **706 casillas across all
+thirteen records**. Coverage:
+
+| state | count |
+|---|---|
+| directly modelled | **541** |
+| behind a slug casilla (field modelled, number not individually addressable) | **133** |
+| **no casilla at all** | **0** |
+
+Zero is the milestone, and it means exactly one thing: **no field of any record is
+undeclared**. It does *not* mean every number is individually addressable, and it does
+*not* mean the modelo can be filed. A complete casilla set is the **prerequisite** for a
+layout, which is what this loop exists to build — not a substitute for one.
+
+Suite: **13 failures, zero new, zero gone.**
+
+### Two repeating records, modelled differently — the number set decides, not the shape
+
+This is the reusable finding.
+
+| record | blocks | numbers | modelled as |
+|---|---|---|---|
+| Pag. 8 socios | 4 × 13 fields, stride 357 | **identical across blocks** — every block's N.I.F. is `[800]`, every fecha `[805]` | **ONE row**, 10 casillas |
+| Pag. 10 titulares | 6 × 13 fields, stride 284 | **distinct per block** — 1000-1003, 1004-1007 … 1020-1023 | **six blocks**, 54 casillas |
+| Pag. 9 sucesores | 6 blocks | distinct — 920-943 | six blocks (earlier iteration) |
+
+Verified rather than assumed: Pag. 8's four per-block number sets were compared directly
+and found identical.
+
+The reasoning: a casilla is **offset-free** — it carries a number, never a position — so
+when four blocks share one number set, those numbers describe a *row*, and one row is
+the complete description of what the taxpayer declares. The four physical blocks are a
+**layout** concern, for the repeat mechanism, exactly as modelo 720's `binding_record`
+handles its repeating rows.
+
+**Both rejected alternatives are recorded in the fragment, because both are tempting:**
+
+- authoring four blocks needs three sets of **invented** slug numbers, asserting twelve
+  boxes AEAT does not print;
+- giving 12a the real numbers while 12b–d take slugs **privileges one block** over three
+  identical ones, which the design does not do.
+
+**A warning is written into the fragment for whoever authors the layout:** mapping
+Pag. 8's ten casillas once, at offsets 11–167, leaves blocks 12b, 12c and 12d unfilled.
+The repeat is required — stride 357, count 4.
+
+### The completeness complement earned its keep
+
+Reading Pag. 10 block-by-block accounted for 88 of its 90 fields. Asserting the
+complement — every field either authored or explicitly excluded — surfaced **two
+record-level fields sitting after the six blocks**: "declaración de no variación de
+datos" (`@1715+1`) and "entidad sin obligación de identificar al titular real"
+(`@1716+1`). Both are filer-supplied and carry no printed number.
+
+A block-shaped reading would have dropped both silently, and nothing else in the process
+would have caught them. This is the second time the complement has found something the
+primary reading missed.
+
+### The denominator remains a measurement
+
+674: what a pattern admitting **eight** bracket forms finds, less the three known noise
+tokens (`m2`, `1`, `2`). Across the campaign: 288 → 348 → 659 → 667 → 669 → 672 → 670 →
+674. The last three corrections each found a *different kind* of error, so the error is
+not converging on a residual of one type. **A ninth form may exist.**
+
+### What modelo 036 still needs
+
+A semantic map and an export layout. The filing-capability worklist has reported it
+AUTHORABLE since the casilla count passed 272; the casilla work is now finished, and the
+remaining 133 non-addressable numbers are a property of AEAT's numbering, not a gap.
