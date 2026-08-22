@@ -1,4 +1,8 @@
-# Modelo 220 annual deadline windows, grounded in the general IS declaration
+# Modelo 220 annual deadline window for the 2025 era. Orden HAC/529/2026 art 6.3
+# is the modelo-220-specific plazo: the group declaration is filed "dentro del
+# plazo correspondiente a la declaracion en regimen de tributacion individual de
+# la entidad representante del grupo fiscal", which LIS art 75.2 routes to the
+# representante's own m200 plazo. That plazo is the general IS declaration
 # plazo of art. 124.1 LIS: "La declaración se presentará en el plazo de los 25
 # días naturales siguientes a los 6 meses posteriores a la conclusión del período
 # impositivo." The windows below assume a calendar-year período impositivo
@@ -19,5 +23,5 @@ period_kind = "annual"
 opens_on = 2026-07-01
 closes_on = 2026-07-25
 payment_cutoff_on = 2026-07-22
-legal_refs = ["ley-27-2014:art-124"]
+legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 source_refs = ["boe-modelo-220-2026-form", "aeat-modelo-200-manual-2025"]
