@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-22'
 body_schema: body-v1
-body_hash: 'sha256:efaf632ab158488d50ed6a2c65b81270c39f26ba577f647235d79ed13b139c44'
+body_hash: 'sha256:d8344cca69e60e53650061e37a70265bca5251dd2599f9eb02888636aa4fc09b'
 ---
 
 # `source-casilla-integration` plan
@@ -35,7 +35,7 @@ Define the typed candidate identity, evidence, ownership, disposition, expiry, a
 
 - [x] `W01.P01.S01` - define the closed connectivity disposition taxonomy and candidate identity model; `src/cadrumo/core/source_connectivity.py`.
 - [x] `W01.P01.S02` - define grounding, ownership, review-condition, expiry, and bounded-follow-up fields; `src/cadrumo/core/source_connectivity.py`.
-- [ ] `W01.P01.S03` - define the connected-slice proof contract for resolver ownership, revision persistence, and operator reachability; `src/cadrumo/core/source_connectivity.py`.
+- [x] `W01.P01.S03` - define the connected-slice proof contract for resolver ownership, revision persistence, and operator reachability; `src/cadrumo/core/source_connectivity.py`.
 - [ ] `W01.P01.S04` - expose the canonical connectivity models through the core public surface; `src/cadrumo/core/__init__.py`.
 - [ ] `W01.P01.S05` - verify invalid dispositions, incomplete blocked rows, expired review conditions, and unsupported connected claims are refused; `src/cadrumo/core/tests/test_source_connectivity.py`.
 

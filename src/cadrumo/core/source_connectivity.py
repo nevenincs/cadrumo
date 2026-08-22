@@ -19,22 +19,27 @@ from __future__ import annotations
 
 from datetime import date
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ._models import STRICT_FROZEN_CONFIG
+from .aggregation import BindingSourceKind
 
 __all__ = [
     "SourceConnectivityCandidateId",
     "SourceConnectivityCandidateIdentity",
     "SourceConnectivityCensusRow",
+    "SourceConnectivityConnectedProof",
     "SourceConnectivityDisposition",
+    "SourceConnectivityEncryptedRevisionProof",
     "SourceConnectivityExpiryPosture",
     "SourceConnectivityFollowUp",
     "SourceConnectivityGrounding",
     "SourceConnectivityGroundingLocatorKind",
+    "SourceConnectivityOperatorReachabilityProof",
+    "SourceConnectivityResolverOwnershipProof",
 ]
 
 _BoundedText = Annotated[
@@ -180,6 +185,50 @@ class SourceConnectivityExpiryPosture(StrEnum):
     EXPIRED = "expired"
 
 
+class SourceConnectivityResolverOwnershipProof(BaseModel):
+    """Evidence that one canonical resolver owns the candidate source."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_kind: BindingSourceKind
+    resolver_id: _StableToken
+    owner: _BoundedText
+    enrollment_evidence: tuple[SourceConnectivityGrounding, ...] = Field(min_length=1)
+
+
+class SourceConnectivityEncryptedRevisionProof(BaseModel):
+    """Evidence that source provenance survives encrypted revision storage."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    calculation_revision_proof_id: _StableToken
+    strict_round_trip: Literal[True]
+    encrypted_at_rest: Literal[True]
+    anti_tautology_mutation: Literal[True]
+    evidence: tuple[SourceConnectivityGrounding, ...] = Field(min_length=1)
+
+
+class SourceConnectivityOperatorReachabilityProof(BaseModel):
+    """Evidence that a supported operator workflow reaches the resolver."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    entrypoint_id: _StableToken
+    command: _BoundedText
+    resolver_observed: Literal[True]
+    evidence: tuple[SourceConnectivityGrounding, ...] = Field(min_length=1)
+
+
+class SourceConnectivityConnectedProof(BaseModel):
+    """Complete production proof required by a ``connected`` census claim."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    resolver_ownership: SourceConnectivityResolverOwnershipProof
+    encrypted_revision: SourceConnectivityEncryptedRevisionProof
+    operator_reachability: SourceConnectivityOperatorReachabilityProof
+
+
 _BLOCKED_DISPOSITIONS = frozenset(
     {
         SourceConnectivityDisposition.GROUNDING_BLOCKED,
@@ -203,6 +252,7 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
     review_condition: _BoundedText | None = None
     expires_on: date | None = None
     bounded_follow_up: SourceConnectivityFollowUp | None = None
+    connected_proof: SourceConnectivityConnectedProof | None = None
 
     @model_validator(mode="after")
     def _require_actionable_unresolved_state(self) -> SourceConnectivityCensusRow:
@@ -230,6 +280,11 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
             and self.review_condition is None
         ):
             raise ValueError("manual-by-design connectivity row requires review_condition")
+        if self.disposition is SourceConnectivityDisposition.CONNECTED:
+            if self.connected_proof is None:
+                raise ValueError("connected connectivity row requires complete connected_proof")
+        elif self.connected_proof is not None:
+            raise ValueError("only a connected connectivity row may carry connected_proof")
         if (
             self.expires_on is not None
             and self.bounded_follow_up is not None
