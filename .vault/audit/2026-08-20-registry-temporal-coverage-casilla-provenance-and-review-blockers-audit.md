@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-20'
-modified: '2026-08-21'
+modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:149162ed48feb74b00ced9ed5d3825f109b2f3768b9ce3bee3f83445ef971263'
+body_hash: 'sha256:e6eafff87da0bf3e736924547354b0bb97ddc96106c884db8b296c7cec11ead5'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1678,6 +1678,57 @@ reaching it. Ten minutes of actually attempting the edit produced a single error
 that settled it. The attempt was cheap, fully reverted -- ``git checkout`` on the modelo
 directory, 24 m714 tests passing again -- and it is now recorded so nobody else spends
 four iterations on the same reasoning.
+
+
+### RESOLVED-design-source-windows-are-ejercicio-scoped-so-the-gate-measures-the-wrong-axis | high | the registry states this in its own authoring comment
+
+The previous finding left three candidate resolutions for the rule conflict. The registry
+settles it in its own recorded reasoning, beside the value:
+
+> ``applies_from = 2024-01-01``
+> *"Closed at its own ejercicio. AEAT publishes modelo 714 one edition PER EJERCICIO (its
+> index titles read "714 - Ejercicio 2024"), and this source's ``record_design_epoch`` and
+> corpus filename both name 2024. All five 714 editions previously declared
+> ``applies_from`` with no ``applies_to``, so five designs simultaneously claimed 2025
+> onward and revision resolution ..."*
+> ``applies_to = 2024-12-31``
+
+So a ``record_design`` source's window is **its ejercicio**, deliberately closed there,
+with ``record_design_epoch`` and the corpus filename agreeing. That was an explicit
+authoring decision taken to stop five editions all claiming 2025 onward -- not an
+accident of bounds.
+
+**The layout-coverage gate's premise contradicts it.** Its docstring states that *"a
+design source's ``applies_from`` / ``applies_to`` are the calendar DATES a norm took legal
+effect"* and compares them against the PRESENTATION calendar year. For an ejercicio-scoped
+window that comparison is off by one presentation lag by construction: a design closed at
+ejercicio N can never cover a filing presented in N+1, no matter how correct the registry
+is.
+
+**Resolution three is therefore the right one.** A diseño published for ejercicio 2024 IS
+the layout a 2024 filing is written in, whenever it is presented. The registry validation
+that refused the successor citation is correct, and the gate is measuring the wrong axis
+for arrears-filed returns.
+
+**But only for the off-by-one cases -- this does not clear the list.** The 25 divergences
+split again on the size of the gap:
+
+| shape | assessment |
+|---|---|
+| uncovered year is exactly the presentation lag (m180, m210, m232, m303, m390 x3, m714 x4) | gate false positive on the ejercicio/presentation axis |
+| uncovered years span many years before the design exists (m165 12y, m181 13y, m309 19y, m341 16y, m347 16y, m322 16y, m353 13y, m308 10y, m270 10y, m184 9y, m126, m128, m576) | genuine -- no design of any vintage covers them |
+
+The first group is the gate's own docstring problem repeating: it records having already
+removed one false-positive class on this axis by reading presentation windows instead of
+assuming an offset, and this is the same axis biting from the other side. The second group
+is real and unaffected.
+
+**What this campaign can say and cannot.** It can say the two rules conflict, that the
+registry's ejercicio-scoping is deliberate and documented, and that roughly ten of the
+twenty-five entries are consequences of the mismatch rather than data defects. It cannot
+unilaterally narrow a shipped gate -- that is a decision about what the check is for, and
+the gate's author reasoned carefully enough on the adjacent axis that the change belongs
+with them.
 
 
 ## Recommendations
