@@ -41,7 +41,7 @@ _PROFILE_ID = "operator"
 _MODELO = "347"
 _FILING_YEAR = 2024
 _PERIOD = "0A"
-_REVISION = "2008-y-siguientes"
+_REVISION = "2008-2024"
 
 _CONFIRMATION_COMMAND = "config.profile.status"
 # Command keys this scenario treats as a mutating attempt on the active profile's

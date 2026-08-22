@@ -920,7 +920,7 @@ class TestTypoTwinWarning:
             _casilla(cid=f"q{index}", semantic_role=f"importe_transmisiones_q{index}", data_type="money")
             for index in (1, 2, 3, 4)
         ]
-        m = _registry_modelo("347", "2008-y-siguientes", quarters)
+        m = _registry_modelo("347", "2008-2024", quarters)
 
         assert _validate_semantic_role_typo_twins([m]) == ()
 
@@ -934,7 +934,7 @@ class TestTypoTwinWarning:
         typo = _casilla(cid="a", semantic_role="importe_transmisionse_q1", data_type="money")
         canonical_a = _casilla(cid="b", semantic_role="importe_transmisiones_q1", data_type="money")
         canonical_b = _casilla(cid="c", semantic_role="importe_transmisiones_q1", data_type="money")
-        m = _registry_modelo("347", "2008-y-siguientes", [typo, canonical_a, canonical_b])
+        m = _registry_modelo("347", "2008-2024", [typo, canonical_a, canonical_b])
 
         failures = _validate_semantic_role_typo_twins([m])
 

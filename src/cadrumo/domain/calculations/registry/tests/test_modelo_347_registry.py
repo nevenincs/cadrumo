@@ -41,7 +41,7 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
 def test_committed_modelo_347_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_347()
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
-    assert set(modelo.revisions) == {"2008-y-siguientes"}
+    assert set(modelo.revisions) == {"2008-2024"}
 
 
 @pytest.mark.parametrize("filing_year", [2008, 2018, 2024, 2026])
@@ -54,7 +54,7 @@ def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int)
         filing_year=filing_year,
         period="0A",
     )
-    assert snapshot.revision.id == "2008-y-siguientes"
+    assert snapshot.revision.id == "2008-2024"
     assert snapshot.revision.orden_aplicabilidad == (
         "orden-eha-3012-2008:art-1",
         "orden-hac-1431-2025:art-1",

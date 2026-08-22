@@ -44,10 +44,28 @@ _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
         # and still await their split. Each is recorded in the export-layout
         # authoring backlog audit with the boundary it crosses.
         ("200", "2024-y-siguientes"),
-        ("322", "2008-2025"),
-        ("347", "2008-y-siguientes"),
+        ("322", "2008-2023"),
+        ("347", "2008-2024"),
     },
 )
+#: `("347", "2008-y-siguientes")` became `("347", "2008-2024")`: the 2024/2025
+#: boundary was split and the revision keeps reporting for the earlier two.
+#: The 2011 epoch was derivable on the printed ordinal, which for these PDFs
+#: is a real box identity -- 52 of 54 paired fields agree on a normalised
+#: description and 51 share a length. The 2008 and 2010 designs are NOT
+#: derivable: their box numbers agree with 2010's on 11 of 43, so a derivation
+#: would carry semantics onto the wrong boxes.
+#:
+#: `("322", "2008-2025")` became `("322", "2008-2023")`: the LATER of its two
+#: boundaries was split -- the 2024 design adds nine fields and revives
+#: DR32201 offset 1311 out of reserved space -- and the revision keeps
+#: reporting for the earlier 2022/2023 boundary, which is the honest state.
+#: That boundary is not split because no key pairs the two designs totally:
+#: the printed ordinal is a contiguous 1..N sequence (pairing on it maps the
+#: Nth field of one design onto the Nth of another), offset pairs only 163 of
+#: 217, and box-number-plus-description leaves seven unpaired while colliding
+#: six times per design.
+#:
 #: `("184", "2015-y-siguientes")` removed: the revision was partitioned into
 #: `2015-2024` and `2025-y-siguientes` at the boundary Orden HAC/1430/2025 sets
 #: for itself -- art. cuarto Uno introduces NUMERO TOTAL DE REGISTROS DE ENTIDAD

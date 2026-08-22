@@ -599,7 +599,7 @@ class Modelo347ContraparteRow(BaseModel):
     """One contraparte declarada row for Modelo 347.
 
     Fields mirror the per-counterparty Tipo-2 record layout declared in
-    ``347/revisions/2008-y-siguientes``.
+    ``347/revisions/2008-2024``.
 
     One row per counterparty. The annual total importe (sum of Q1-Q4)
     must exceed €3,005.06 per RD 1065/2007 art. 33.1.
