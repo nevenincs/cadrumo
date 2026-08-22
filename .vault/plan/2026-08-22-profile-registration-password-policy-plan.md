@@ -9,7 +9,7 @@ related:
   - '[[2026-08-22-profile-registration-password-policy-holistic-credential-capability-research]]'
   - '[[2026-08-22-profile-registration-password-policy-tui-custody-validation-mismatch-reference]]'
 modified: '2026-08-22'
-body_hash: 'sha256:aa184477adde1fa2af48830b0ae61ffe5787c2c1e4672e19f5892a673c19c723'
+body_hash: 'sha256:00abca27217698fdc170c9c2521e2473f0c4fabb177a49e013983395e7fffb1e'
 ---
 
 <!-- RETIRED: S01 -->
@@ -86,7 +86,7 @@ Align TUI, scripted CLI, locale ownership, and cross-surface regression behavior
 
 Deliver localized typed live feedback and submission without INTERNAL handling for expected credential refusals.
 
-- [ ] `W03.P06.S09` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then align TUI assessment, registration attempts, and expected-error rendering with localized secret-safe application outcomes; `src/cadrumo/adapters/inbound/tui`.
+- [x] `W03.P06.S09` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then align TUI assessment, registration attempts, and expected-error rendering with localized secret-safe application outcomes; `src/cadrumo/adapters/inbound/tui`.
 
 ### Phase `W03.P07` - align scripted CLI and locale ownership
 
