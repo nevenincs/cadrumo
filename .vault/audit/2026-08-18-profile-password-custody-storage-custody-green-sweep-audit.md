@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:2321ddeaed92daa99be4b808343c60cb596baa35d767bd0e20fd9c2148c985c3'
+body_hash: 'sha256:849d8d06510fc9437dc366e23e8e159d4c8c2fa03ff89d83cede59e39cb6406b'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6077,3 +6077,32 @@ facade in two places each; three test modules inside the owning package were alr
 bypassing the port they were supposed to use. A forwarding layer does not fail loudly -- it
 decays into a second name that some callers use and others do not, and the only signal is a
 gate counting them.
+
+### The same rule written as assignments
+
+Removing the forwarding FUNCTIONS did not finish the job, because the module carried the
+identical shape as module-level bindings: four capsule ceilings and one warning type bound
+as `PROFILE_CAPSULE_* = custody.PROFILE_CUSTODY_*`. One decision, two names, and a
+vocabulary split between CAPSULE and CUSTODY for the same value.
+
+**This is the milder shape and worth distinguishing from the one already gated.** An alias
+cannot diverge in VALUE the way the duplicated ceiling definitions in
+`test_custody_ceilings_have_one_home` did -- that gate's whole finding was two independent
+definitions agreeing until someone raised one. A reference binding cannot drift like that.
+What it costs is a second import path and two names for one contract, which is what the
+no-re-export rule forbids on its own terms rather than because of a divergence risk.
+
+**One of the five was public vocabulary nobody asked for.**
+`ProfileRecoveryArtifactWarning` was exported from the `user_profile` package facade in two
+places, and no consumer outside that package used it. The package was publishing a renamed
+adapter type into its own public surface for its own internal use.
+
+**A scan of the whole domain found only these five.** The other eleven module-level
+`NAME = other.ATTR` bindings are a different shape entirely -- destructuring fields off a
+namespace record (`...STORAGE_NAMESPACE.schema_version`), a sentinel bound to `date.min`, and
+SQLAlchemy's `metadata = Base.metadata`. Reading each rather than counting the pattern is
+what separated them; a rule applied to the AST shape alone would have "fixed" eleven things
+that were not aliases.
+
+`application/user_profile` and `adapters/persistence/storage` now carry neither a forwarding
+wrapper nor a re-export alias. Lanes 314 integration / 1589 unit.
