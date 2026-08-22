@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:af06f7cbbb3bac32d4381019fbe660e476023f19822b9ef066c9edd8f4440454'
+body_hash: 'sha256:b65044cacb20f33c73e1e37e8e8446bf485e1f6581391874336886e0b46f22f9'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -5298,3 +5298,44 @@ debt accumulated by other campaigns, and closing it is the broad mechanical swee
 campaign's directive excludes.
 
 Lanes 314 integration / 1586 unit -- down exactly two, the deleted `TestSafeSubpath` cases.
+
+### The storage facade has no more orphans, and its best candidate is protective
+
+`safe_subpath` was orphaned when the rotation surface was deleted, which raises the obvious
+question: what else did a deletion leave behind? Answered by measurement rather than
+suspicion -- all 260 names in the storage facade's `__all__`, each checked for a production
+consumer outside its defining module.
+
+**Twenty-five names have no such consumer, and none of them is dead.** The distinction that
+matters is the one the safe_subpath case established: a name used only inside its own
+package is OVER-EXPORTED, which is a different finding from a name used nowhere at all.
+Facade narrowing was already declined for this campaign as broad mechanical work, and
+nothing here changes that judgement.
+
+**The strongest candidate is protective, and deleting it would have removed a proof.**
+`BUCKET_MANIFEST_FILENAME` has no production consumer and a retired module behind it --
+`3fa483d89b` retired the bucket manifest -- so it reads exactly like the `safe_subpath`
+residue. It is the opposite. `test_namespace_registry.py:560` uses it to assert the
+retirement: `path_by_key("bucket_manifest")` must raise, and the filename must not appear as
+any registry segment. Its own docstring says why -- *"A member that simply stops being
+declared is indistinguishable from one nobody got around to declaring -- which is the
+confusion that let this manifest sit half-retired, its reader deleted while the hierarchy
+still declared it as a live format."* The constant carries a comment saying it is kept to
+recognise the retired format on a pre-cutover bucket.
+
+This is precisely the classification the standing lead asks for before any deletion, and it
+generalises: **a legacy NAME with no production consumer is evidence of nothing.** The
+`safe_subpath` case and this one are indistinguishable by consumer count, by naming, and by
+having a deleted module behind them. What separates them is that one was cited by a live
+assertion and the other by a docstring describing a contract it no longer had. Only reading
+the references tells them apart.
+
+**The vacuity question was asked and answered.** A negative assertion can pass for free, so
+the anchor was checked rather than assumed: no `StorageCategory` has an empty subpath (all
+64 measured), and `BUCKET_MANIFEST` resolves to `'manifest.toml'`, so the retirement test
+asserts something real today. The sibling taxonomy test binds each constant to its
+declaration, which catches a future hand-copied literal.
+
+**No production change this iteration**, so the lanes were not re-run. The remaining named
+items are unchanged: the profile-bundle import half needs an operator ruling, and the
+over-export inventory is deferred by scope, not by ignorance of it.
