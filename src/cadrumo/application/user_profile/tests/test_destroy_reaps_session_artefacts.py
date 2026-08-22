@@ -32,6 +32,7 @@ from uuid import UUID
 
 import pytest
 
+from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.custody import profile_session_path
 from ....adapters.persistence.storage.master_key import (
     BucketSession,
@@ -43,7 +44,7 @@ from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...evidence import LegalHoldCaseAuthority
 from ...filing import FilingRetentionAuthority
-from .. import profile_current_bucket_session, profile_record_login_failure
+from .. import profile_current_bucket_session
 from .._custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
 from .._lifecycle import ProfileCapsuleLifecycle
 from .._login_session import (
@@ -138,7 +139,7 @@ def test_destroying_a_profile_clears_its_durable_failed_login_backoff(tmp_path: 
             outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
             profile_id = UUID(outcome.profile_id)
             _authorise_clear_hold(storage_root, profile_id)
-            profile_record_login_failure(storage_root=storage_root, bucket_id=outcome.profile_id, now=_now())
+            master_key.record_login_failure(storage_root=storage_root, bucket_id=outcome.profile_id, now=_now())
             throttle_path = login_throttle_path(storage_root=storage_root, bucket_id=outcome.profile_id)
             assert throttle_path.is_file(), "the backoff must exist, or its removal proves nothing"
 

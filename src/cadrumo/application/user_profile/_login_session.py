@@ -58,6 +58,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError, model_validator
 
+from ...adapters.persistence.storage import custody, master_key
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     BucketPointer,
@@ -95,17 +96,13 @@ from ._custody_ports import (
     profile_close_bucket_session,
     profile_current_bucket_session,
     profile_delete_session,
-    profile_evaluate_login_throttle,
     profile_is_keyring_unavailable,
     profile_is_password_authentication_failure,
     profile_is_persisted_session,
     profile_mint_session,
-    profile_record_login_failure,
-    profile_reset_login_throttle,
     profile_resume_session,
     profile_session_path,
     profile_session_serves_bucket,
-    profile_zeroise,
     refuse_profile_login_without_password_channel,
     unlock_profile_custody_password,
 )
@@ -621,7 +618,7 @@ def _revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> 
         bucket_id: Identifier of the profile whose stored session to revoke.
     """
     profile_delete_session(storage_root=storage_root, profile_id=UUID(bucket_id))
-    profile_reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
+    master_key.reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
 
 
 def close_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
@@ -777,7 +774,7 @@ def bind_resumed_profile_session(
             storage_root=storage_root,
         )
     finally:
-        profile_zeroise(dek)
+        custody.zeroise(dek)
 
     session.touch(instant)
     profile_bind_bucket_session(session)
@@ -1079,7 +1076,7 @@ def _authenticate_login_candidate(
     passphrase_callback: Callable[[], str] | None,
 ) -> _CandidateProfileLogin:
     """Apply the throttle gate before authenticating the candidate profile."""
-    evaluation = profile_evaluate_login_throttle(
+    evaluation = master_key.evaluate_login_throttle(
         storage_root=attempt.storage_root,
         bucket_id=attempt.target.bucket_id,
         now=now,
@@ -1104,7 +1101,7 @@ def _finish_candidate_login(
         # Resetting an online-control cache must never turn an already
         # authenticated candidate into an A teardown. It is performed
         # while B is still only transaction-local.
-        profile_reset_login_throttle(storage_root=attempt.storage_root, bucket_id=attempt.target.bucket_id)
+        master_key.reset_login_throttle(storage_root=attempt.storage_root, bucket_id=attempt.target.bucket_id)
         return _promote_candidate_login(
             candidate=candidate,
             target_label=attempt.target.label,
@@ -1134,7 +1131,7 @@ def _authenticate_candidate_or_record_failure(
         unlocked = unlock_profile_custody_password(material, password=password)
     except BaseException as exc:
         if profile_is_password_authentication_failure(exc):
-            profile_record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
+            master_key.record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
         raise
 
     dek_buffer = bytearray(unlocked.dek)
@@ -1156,7 +1153,7 @@ def _authenticate_candidate_or_record_failure(
             session.close()
             raise
     finally:
-        profile_zeroise(dek_buffer)
+        custody.zeroise(dek_buffer)
     return _CandidateProfileLogin(
         bucket_id=bucket_id,
         session=session,

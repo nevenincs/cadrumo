@@ -1157,11 +1157,6 @@ def profile_close_bucket_session() -> None:
     master_key.close_active_bucket_session()
 
 
-def profile_zeroise(buffer: object) -> None:
-    """Zeroise one custody-owned mutable key buffer."""
-    custody.zeroise(buffer)
-
-
 def profile_is_authentication_failure(error: BaseException) -> bool:
     """Recognise the typed authentication refusals without leaking adapter types."""
     return isinstance(
@@ -1176,26 +1171,6 @@ def profile_is_authentication_failure(error: BaseException) -> bool:
 def profile_is_keyring_unavailable(error: BaseException) -> bool:
     """Recognise a keychain persistence refusal for the process-scoped fallback."""
     return isinstance(error, KeyringUnavailableError)
-
-
-def profile_evaluate_login_throttle(
-    *,
-    storage_root: Path,
-    bucket_id: str,
-    now: datetime,
-) -> ProfileLoginThrottleEvaluationPort:
-    """Evaluate the shared failed-login backoff."""
-    return master_key.evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now)
-
-
-def profile_record_login_failure(*, storage_root: Path, bucket_id: str, now: datetime) -> None:
-    """Record one failed authentication attempt in the shared backoff."""
-    master_key.record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
-
-
-def profile_reset_login_throttle(*, storage_root: Path, bucket_id: str) -> None:
-    """Clear the failed-login backoff after successful authentication."""
-    master_key.reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
 
 
 def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
@@ -1408,18 +1383,14 @@ __all__ = [
     "profile_custody_secure_object_namespace",
     "profile_custody_secure_object_repository",
     "profile_delete_session",
-    "profile_evaluate_login_throttle",
     "profile_is_authentication_failure",
     "profile_is_keyring_unavailable",
     "profile_is_password_authentication_failure",
     "profile_is_persisted_session",
     "profile_mint_session",
-    "profile_record_login_failure",
-    "profile_reset_login_throttle",
     "profile_resume_session",
     "profile_session_path",
     "profile_session_serves_bucket",
-    "profile_zeroise",
     "prove_profile_recovery_artifact",
     "refuse_profile_login_without_password_channel",
     "replace_profile_custody_envelope",

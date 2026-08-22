@@ -29,13 +29,13 @@ from uuid import UUID
 
 import pytest
 
+from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.master_key import current_active_bucket_session, login_throttle_path
 from ....core import ProfileSessionRefusalReason, read_pointer
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import (
     profile_current_bucket_session,
-    profile_record_login_failure,
     profile_session_path,
 )
 from .._login_session import bind_resumed_profile_session, login_profile, logout_active_profile
@@ -129,7 +129,7 @@ def test_logout_clears_the_failed_login_backoff(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             profile_id = _register_and_login(storage_root)
-            profile_record_login_failure(storage_root=storage_root, bucket_id=profile_id, now=_now())
+            master_key.record_login_failure(storage_root=storage_root, bucket_id=profile_id, now=_now())
             throttle_path = login_throttle_path(storage_root=storage_root, bucket_id=profile_id)
             assert throttle_path.is_file(), "the backoff must exist, or its removal proves nothing"
 

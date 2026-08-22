@@ -509,9 +509,6 @@ if TYPE_CHECKING:
         profile_delete_session as profile_delete_session,
     )
     from ._custody_ports import (
-        profile_evaluate_login_throttle as profile_evaluate_login_throttle,
-    )
-    from ._custody_ports import (
         profile_is_authentication_failure as profile_is_authentication_failure,
     )
     from ._custody_ports import (
@@ -527,12 +524,6 @@ if TYPE_CHECKING:
         profile_mint_session as profile_mint_session,
     )
     from ._custody_ports import (
-        profile_record_login_failure as profile_record_login_failure,
-    )
-    from ._custody_ports import (
-        profile_reset_login_throttle as profile_reset_login_throttle,
-    )
-    from ._custody_ports import (
         profile_resume_session as profile_resume_session,
     )
     from ._custody_ports import (
@@ -540,9 +531,6 @@ if TYPE_CHECKING:
     )
     from ._custody_ports import (
         profile_session_serves_bucket as profile_session_serves_bucket,
-    )
-    from ._custody_ports import (
-        profile_zeroise as profile_zeroise,
     )
     from ._custody_ports import (
         prove_profile_recovery_artifact as prove_profile_recovery_artifact,
@@ -872,16 +860,13 @@ _LAZY_EXPORTS: dict[str, str] = {
     "profile_custody_secure_object_namespace": "._custody_ports",
     "profile_custody_secure_object_repository": "._custody_ports",
     "profile_delete_session": "._custody_ports",
-    "profile_evaluate_login_throttle": "._custody_ports",
     "profile_is_authentication_failure": "._custody_ports",
     "profile_is_keyring_unavailable": "._custody_ports",
     "profile_is_password_authentication_failure": "._custody_ports",
     "profile_is_persisted_session": "._custody_ports",
     "profile_mint_session": "._custody_ports",
-    "profile_reset_login_throttle": "._custody_ports",
     "profile_resume_session": "._custody_ports",
     "profile_session_serves_bucket": "._custody_ports",
-    "profile_zeroise": "._custody_ports",
     "prove_profile_recovery_artifact": "._custody_ports",
     "refuse_profile_login_without_password_channel": "._custody_ports",
     "replace_profile_custody_envelope": "._custody_ports",
@@ -902,7 +887,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "profile_close_bucket_session": "._custody_ports",
     "profile_current_bucket_session": "._custody_ports",
     "profile_session_path": "._custody_ports",
-    "profile_record_login_failure": "._custody_ports",
     "profile_bind_bucket_session": "._custody_ports",
     "profile_bucket_session_open_resumed": "._custody_ports",
     "CENSAL_ADOPTABLE_PATHS": "._censo_sync",
