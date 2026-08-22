@@ -6,7 +6,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b42c847b04de79574f8b2f278fbef3e52578e940b71cb847a01251122e47420'
+body_hash: 'sha256:1657718ccde93bd1c169e5528788cb97fdc015c04cca8fde3075b0762ea1ce87'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S49]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S50]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S51]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S52]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
@@ -26,6 +27,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s49-ledger-policy-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s50-modelo-policy-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s51-remaining-app-policy-review-audit]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s52-implementation-review-audit]]'
 ---
 
 # `secure-storage-performance-hardening` feature index
@@ -47,6 +49,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s49-ledger-policy-review-audit` - `secure-storage-performance-hardening` audit: `W01.P01.S49 ledger execution-policy review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s50-modelo-policy-review-audit` - `secure-storage-performance-hardening` audit: `W01 P01 S50 modelo policy review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s51-remaining-app-policy-review-audit` - `secure-storage-performance-hardening` audit: `W01.P01.S51 remaining application execution policy review`
+- `2026-08-22-secure-storage-performance-hardening-w01-p01-s52-implementation-review-audit` - `secure-storage-performance-hardening` audit: `W01.P01.S52 implementation review`
 
 ### exec
 
@@ -57,6 +60,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S49` - Attach execution policy to every ledger subtree callback and group while retaining legacy risk rows until mandatory S52 consumer migration and deletion
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S50` - Attach execution policy to modelo subtree callbacks and remove modelo risk path declarations
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S51` - Attach execution policy to live, diagnostics, maintenance, review, overview, registry, and quickfile callbacks
+- `2026-08-22-secure-storage-performance-hardening-W01-P01-S52` - Migrate operator-surface and MCP HITL consumers to live-node execution policy, remove all legacy risk rows, and delete the keyed risk table
 
 ### plan
 
