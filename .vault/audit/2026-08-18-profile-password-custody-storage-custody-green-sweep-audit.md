@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:284ee947754ca1b910153807599fc50749df57115b28c884a376ec1e221cfebd'
+body_hash: 'sha256:953766a7d33e05e55abe66685181fc425b03d73111fd0866624268419a61e030'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6760,3 +6760,57 @@ honest `retryable`, whichever value it picks. The tell is a message that asserts
 ("on this host") while the raise sites support both. Check the shipped MESSAGE against the
 raise sites before concluding a classification is wrong -- the message is where the original
 author recorded which cause they meant.
+
+### The standing multiuser-safety lead is closed on evidence, not impression
+
+Both halves of the lead carried in the campaign directive are now answered against the tree.
+
+*Concurrent access, locking, session isolation.* Real separate-process coverage already exists
+across the domain: `bucket/tests/test_lockfile.py`,
+`user_profile/tests/test_concurrent_registration_cannot_duplicate_a_label.py`,
+`test_custody_transactions.py`, `test_login_handover.py`,
+`test_registration_retires_displaced_profile.py`, `test_capsule_lifecycle.py`, plus the lock
+ORDER proof this campaign added. Session isolation is covered in its own right --
+`test_active_session_thread_isolation.py`, `test_adverse_sessions.py`,
+`test_live_session_registry.py`, `test_custody_isolation_matrix.py`,
+`test_every_unsecured_session_open_runs_the_canary.py`. This is not a thin surface.
+
+*The canary named in the lead.* `refuse_unsecured_bucket_with_real_profile` is protective code
+and is properly gated in BOTH directions. The permissive branch ("is admitted") is
+assertion-free by design -- admission means no refusal -- but the refusing branch is real:
+`test_the_unsecured_provider_refuses_a_real_tax_id` raises `UnsecuredModeRefusedError`, the
+classifier is asserted directly in both directions, and a whitespace-smuggling case proves a
+padded real tax id cannot slip past. A deletion of the canary would red that half immediately.
+
+### A vacuity scan over the domain, and the scan's own blind spot
+
+Selection-order item 5 asks for cases that never reach their subject. Scanned all 1,675 test
+functions in the three domain paths for any function with no `assert`, no `pytest.raises` and
+no assertion call: 15 flagged, and every one inspected is legitimate -- "does not raise" cases
+(idempotent clears, admitted canary branches, clean refusals) where absence of an exception IS
+the assertion.
+
+One flag was my instrument's fault and is worth recording. `test_archive_bundle_round_trips_
+three_rows` looked assertion-free and would have been a serious finding, since the quality
+rule requires strict equality at every persistence boundary. It asserts through
+`_assert_raw_bundle_is_ciphertext` and `_assert_rows_load_back_through_natural_keys`; the scan
+matched call names starting with `assert` and those start with an underscore. A detector whose
+misses look exactly like clean results is the failure mode this campaign has hit repeatedly --
+here it produced a false POSITIVE, which is the survivable direction, but the same blind spot
+run as an exclusion filter would have hidden real vacuity.
+
+### The domain lanes are currently unreadable, and HEAD is not the reason
+
+Two consecutive iterations could not obtain a clean lane reading. The lanes collapsed from
+361 collected to 166 with collection errors, and every error traces to one class:
+`SyntaxError: keyword argument repeated`, from another campaign's in-flight multi-file sweep
+adding `binding_source=` and then `source_provenance=` keyword arguments. Four files were
+observed broken across the two iterations; one broke, self-healed, and a sibling broke the
+same way minutes later.
+
+The diagnostic that separates this from a real regression, and which is worth reusing:
+`git show HEAD:<path>` parses clean while the working tree does not, and the file's mtime is
+minutes old. Committed state is sound; the working tree is mid-edit. No fix belongs to this
+campaign, and none was attempted -- editing a peer's file during a sweep that is repairing
+itself would collide with an author who is actively in it. The last trustworthy reading for
+this domain remains 361 integration and 1,644 unit.
