@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:f99de73d3830aab4c2d3884ceb465aca2a82af529ad6fe6470fe7d1e84d375cb'
+body_hash: 'sha256:4e45e2afd6a1560fa1bac1ea97a46019c81dd59017d6258b7710e824b29123f9'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -2062,4 +2062,44 @@ revision that cannot say when it is due does not meet its own grade — the less
 of the five eras would land with none, and splitting without them would convert one honest
 pending revision into five unstampable ones. The acquisition is done and durable; the partition
 is the next step, specified above rather than half-started.
+
+## 2026-08-22 (later) — m763's blocker is a first-application date, not a split
+
+The partition was not the obstacle. Registering modelo 763's earliest bundled design
+surfaced a disagreement that blocks it upstream.
+
+**AEAT's index title for the artefact reads "ejercicios 2T-3T 2012, 2013 y 2014" — first
+covered period 2T 2012. The revision claims `valid_from 2011-01-01`.** Five quarters are
+claimed that AEAT's own design does not cover, and nothing bundled resolves it:
+
+- The founding orden EHA/1881/2011 is *de 5 de julio de 2011*, in force the day after
+  publication, and carries **no disposición transitoria and no first-application clause**
+  (re-checked against BOE on 2026-08-22). Its 1T 2011 plazo would have run in April 2011,
+  before the orden existed; its 2T plazo ran in July 2011, straddling entry into force.
+- **Ley 13/2011, which created the tax, is in neither the corpus nor the legal catalogue.**
+
+**Why this blocks the split rather than accompanying it.** Every one of this registry's 99
+revisions carries at least one deadline window — measured across the whole tree, no
+exceptions. There is no precedent for an era that cannot say when it is due, so each new era
+needs its own trimestral windows, and the earliest era's cannot be authored without knowing
+which trimestre was first. Deriving them from the art. 4 cadence alone would fabricate up to
+five deadlines for periods the modelo may never have covered — the same trap orden
+HAC/510/2021's disposición transitoria set for modelo 604, caught there only by reading the
+orden before generating.
+
+**Ley 13/2011 art. 48 could not be retrieved.** Three BOE surfaces were tried —
+`buscar/act.php`, the ELI consolidated URL, and `buscar/doc.php` — and all three truncate in
+Título V (around arts. 21–24), well before Título VII where the Régimen Fiscal sits; the
+open-data block endpoint returned HTTP 400. The provision is not reachable with a
+text-fetching tool at this document size. Whoever resumes this needs a browser tool, the
+per-block API with a correct block id, or the BOE PDF.
+
+**Recorded rather than resolved, deliberately.** `applies_from = 2012-04-01` on the new
+`aeat-dr-763-2012` source records what the artefact evidences; it is NOT a ruling on when the
+modelo first applied, and the revision's own prose says so. Dating an era of a filing-grade
+authority off a filename is not the standard, however plausible the date.
+
+Side effect worth keeping: the registration gate's unregistered-design population went
+**49 → 48**. The remaining 48 span modelos 036, 100, 111, 115, 123 and others — a real
+inventory backlog, not m763-specific.
 
