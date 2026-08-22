@@ -2714,10 +2714,21 @@ moved coverage by **zero**, because the derived set cannot see those numbers. Ca
 counts track positions, coverage tracks regex-visible boxes, and the gap between them is
 now explained by two distinct causes rather than one.
 
-### Where else to look
+### Scoped, not left as a worry: it is modelo 036's design only
 
-The malformed-bracket scan was run only against `aeat-dr-036-2025`. **Modelo 840's design
-was never checked for it** — its 108-number derived set may be a floor too, and the same
-is true of every design this loop has measured against. The scan is three lines: match
-`(?<!\[)\b(\d{3,4})\]` and `\[(\d+)[\s,]+(\d+)\]` beside the normal `\[(\d+)\]` and diff
-the sets.
+The obvious next question is whether every design this loop has measured against carries
+the same undercount. Measured, and it does not:
+
+| design | regex-visible | real | undercount |
+|---|---|---|---|
+| `aeat-dr-036-2025` | 288 | **348** | **60** |
+| `aeat-dr-840` | 108 | 108 | 0 |
+| `aeat-dr-220-2024` | 7604 | 7604 | 0 |
+
+So modelo 840's "108 of 108" IS the true box set, and the stamps claiming it stand. The
+defect belongs to the modelo 036 diseno, which is also the modelo whose instructions
+capture dropped its table -- two independent transcription problems in one corpus entry.
+
+The scan is cheap and worth re-running on any newly registered design: match a closing
+bracket with no opening one, and a bracket holding two numbers separated by whitespace or
+a comma, beside the normal well-formed form, then diff the sets.
