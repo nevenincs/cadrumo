@@ -63,18 +63,15 @@ _MINIMUM_COMPOSED_REVISIONS = 60
 _GROUNDED_MODELO = "303"
 _MULTI_REVISION_MODELO = "100"
 
-# Independent census captured from the bundled year-specific AEAT dictionaries
-# and the current registry declarations. These anchors make the comparator test
-# a measured divergence rather than deriving every expected value from the
-# production parser at assertion time.
-_M100_REGISTRY_CASILLA_COUNTS = {
-    2020: 1531,
-    2021: 1693,
-    2022: 1852,
-    2023: 1929,
-    2024: 2093,
-    2025: 2238,
-}
+# Independent census captured from the bundled year-specific AEAT dictionaries.
+# This anchor is a fact about the AEAT ARTEFACT, so it is pinned as a number: a
+# change here means the bundled corpus moved and is worth failing on.
+#
+# The registry-side counterpart used to be pinned the same way and was deleted.
+# It is a tally over declarations this project AUTHORS, so it drifted every time
+# a casilla was legitimately added, trained everyone to re-baseline it, and
+# detected nothing in between. What it was standing in for is asserted below as
+# a property instead.
 _M100_DICTIONARY_CASILLA_COUNTS = {
     2020: 1531,
     2021: 1693,
@@ -83,15 +80,6 @@ _M100_DICTIONARY_CASILLA_COUNTS = {
     2024: 2072,
     2025: 2215,
 }
-_M100_IDENTITY_DIVERGENCE_COUNTS = {
-    2020: 0,
-    2021: 0,
-    2022: 0,
-    2023: 0,
-    2024: 41,
-    2025: 43,
-}
-
 
 @pytest.fixture(scope="module")
 def tree_modelos() -> tuple[ModeloDefinition, ...]:
@@ -501,9 +489,31 @@ def test_annual_casilla_comparison_uses_the_selected_year_dictionary(
     assert layout_comparison.dictionary_source_ref == f"aeat-dr-100-{filing_year}-dictionary"
     assert layout_comparison.parser_exposed_attributes == ("field_id", "path", "data_type", "casilla_id")
     assert "data_type" in layout_comparison.unmeasured_attributes
-    assert layout_comparison.registry_casilla_count == _M100_REGISTRY_CASILLA_COUNTS[filing_year]
     assert layout_comparison.dictionary_casilla_count == _M100_DICTIONARY_CASILLA_COUNTS[filing_year]
-    assert comparison.identity_divergence_count == _M100_IDENTITY_DIVERGENCE_COUNTS[filing_year]
+
+    # Every casilla AEAT declares for this year is declared by the registry.
+    assert layout_comparison.extra_casilla_ids == ()
+
+    # And every registry casilla carrying an AEAT NUMBER appears in that year's
+    # dictionary. Boxes AEAT does not number -- the ``*NN`` datos-identificativos
+    # series, the unnumbered ``###`` rows, and app-internal values -- carry
+    # descriptive ids and are legitimately absent, so they are excluded by shape
+    # rather than by being counted.
+    #
+    # This bites: modelo 100 declared casilla ``0058`` for 2024 and ``0059`` for
+    # 2025, both for the LIRPF art. 7.h exempt INSS benefit, and neither number
+    # appears in ANY bundled AEAT source for its year -- not the dictionary it
+    # cited, not the input dictionary, not the XSD, not the Renta manual. Both
+    # now carry a descriptive id.
+    fabricated = sorted(
+        casilla_id
+        for casilla_id in (layout_comparison.missing_casilla_ids or ())
+        if casilla_id.isdigit()
+    )
+    assert not fabricated, (
+        f"{filing_year} declares AEAT-numbered casilla(s) {fabricated} that its own dictionary "
+        "does not contain"
+    )
 
     entries = xml_dictionary_entries(
         dictionary_layout,

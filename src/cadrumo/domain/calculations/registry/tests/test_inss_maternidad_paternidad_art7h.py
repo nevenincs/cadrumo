@@ -63,20 +63,32 @@ def _negated_casillas(formula: FormulaDefinition) -> set[str]:
     }
 
 
+#: The Art. 7.h exempt-INSS box, identified by what it MEANS rather than by
+#: whichever id the revision currently gives it.
+_INSS_EXENTA_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
+
+
 class TestInssExentaCasillaRegistered:
     """The INSS exempt casilla is declared in the registry with correct provenance."""
 
     def test_casilla_registered_in_revision(self) -> None:
-        """M100 revisions must declare the Art. 7.h exempt-INSS semantic role."""
-        for filing_year, casilla_id in ((2024, "0058"), (2025, "0059")):
+        """M100 revisions must declare the Art. 7.h exempt-INSS semantic role.
+
+        Resolved by SEMANTIC ROLE rather than by casilla id. The role is the
+        invariant; the id is incidental and has already moved once. These
+        revisions declared ``0058`` and ``0059`` for this box, and no bundled
+        AEAT source assigns either number to it in its year -- AEAT numbers no
+        box for it at all -- so it now carries a descriptive id like every other
+        non-AEAT box here. Pinning the id would have re-broken on that fix while
+        proving nothing the role does not.
+        """
+        for filing_year in (2024, 2025):
             rev = _m100_revision(filing_year)
-            casillas_by_id = {c.id: c for c in rev.casillas}
-            casilla = casillas_by_id.get(casilla_id)
-            assert casilla is not None, f"casilla {casilla_id} must be declared in M100 {filing_year} revision"
-            assert casilla.semantic_role == "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta", (
-                filing_year
+            matching = [c for c in rev.casillas if c.semantic_role == _INSS_EXENTA_ROLE]
+            assert len(matching) == 1, (
+                f"M100 {filing_year} must declare exactly one Art. 7.h exempt-INSS casilla, found {len(matching)}"
             )
-            assert "ley-35-2006:art-7-h" in casilla.legal_refs, filing_year
+            assert "ley-35-2006:art-7-h" in matching[0].legal_refs, filing_year
 
 
 class TestFormulaStructure:
@@ -89,7 +101,9 @@ class TestFormulaStructure:
         return formulas_by_id.get(formula_id)
 
     def test_formula_negates_exempt_inss_casilla(self) -> None:
-        for filing_year, casilla_id in ((2024, "0058"), (2025, "0059")):
+        for filing_year in (2024, 2025):
+            rev = _m100_revision(filing_year)
+            casilla_id = next(c.id for c in rev.casillas if c.semantic_role == _INSS_EXENTA_ROLE)
             formula = self._get_total_ingresos_formula(filing_year)
             formula_id = f"renta-{filing_year}-trabajo-total-ingresos-integros-computables"
             assert formula is not None, f"{formula_id} must be declared"
