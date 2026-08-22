@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:4f587a553680d921dd0ecb08ab798abfd1b7b2a2e6b6c8ac78a772c86d6721ba'
+body_hash: 'sha256:5512512c5597706a06f232eb0e70af113e50b66d819d068580ee4eed4a4cca10'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -16907,3 +16907,83 @@ modelo 347 (39 casillas, pairing now proved), modelo 322 (212 casillas, whose
 own recorded blocker -- "no key pairs the two designs totally" -- deserves the
 same byte-level re-examination this tick gave 347), and modelo 200 (3462, only
 its 2024 side needing re-rendering).
+
+## Tick: the 347 method tested on modelo 322, and it does NOT generalise
+
+Re-measured at tick start: authority CLEAN at `fb30ca2549`.
+
+### The 347 split was scoped to a file list and still not started
+
+The intent was again to author modelo 347's `2008-2009` revision. Scoping it
+properly stopped it, and the scope is now concrete rather than a guess:
+
+* the revision tree is 23 files;
+* the export tree is GENERATED, and the generator's inputs are per design epoch
+  -- `dev/registry/mappings/modelo_347/` holds `2011` and `2025` and **no
+  2008**, so the split needs a new semantic mapping (~883 lines across three
+  record fragments, each entry anchored to a `source_row` in the design) and a
+  new render profile (~705 lines);
+* the existing revision must also be RENAMED `2008-2024` -> `2010-2024`, which
+  reaches eight files outside the registry tree;
+* the fields that SPLIT across the boundary need new casillas, and every new
+  casilla needs locale keys in all four catalogues.
+
+Landing the mapping alone was considered and rejected: 883 lines of generator
+input that no revision consumes is dead weight if the next tick does not follow,
+and mis-authored `legal_refs` in it would be worse than nothing.
+
+### The useful question instead: does last tick's result generalise?
+
+Last tick showed modelo 347's designs NEST -- no field of either partially
+overlaps a field of the other -- which is what makes its semantics carryable
+without reading every box. Modelo 322's recorded blocker reads similarly ("no
+key pairs the two designs totally"), so the obvious move was to re-examine it
+the same way.
+
+**It does not generalise, and that is the finding.** Modelo 322's 2022 and 2023
+designs straddle: AEAT inserted fields into `DR32201` (84 becoming 99) and
+displaced the survivors five bytes, so `Liquidación. IVA DEVENGADO` at 267-283
+in 2022 sits at 272-288 in 2023 -- overlapping with neither containing the
+other. 82 straddles on that sheet, 3 more on `DR32202`.
+
+So modelo 322's blocker is CORRECT and, unlike modelo 347's, is not an artefact
+of the pairing key. Where two fields straddle, each covers bytes the other does
+not and position asserts nothing about their relationship; the only route left
+is reading AEAT's prose box by box.
+
+The re-layout is localised, which is the actionable part: `DR32200`, `DR32203`
+and `DR32204` nest cleanly and are untouched. Two of five sheets need the manual
+reading.
+
+### What was landed
+
+`test_modelo_322_designs_straddle.py` pins both halves -- the two re-laid sheets
+straddle, the three untouched ones nest -- plus a check that the straddling is a
+DISPLACEMENT rather than merely added fields, since fields added into reserved
+space would change the count while leaving survivors in place and would not
+straddle.
+
+Straddling is asserted as PRESENCE, not as a count of 82: the exact number is an
+artefact of how many fields sit after the insertion point, and pinning it would
+make an unrelated design correction read as a regression.
+
+The split-progress record now carries this beside modelo 322's row, as last
+tick's correction sits beside modelo 347's. The two rows now say different
+things for different reasons, which is the point -- a reader who takes the 347
+result as a general method would mis-plan this one.
+
+### Verified
+
+* the new module: 7 passed; 18 passed across it, the 347 companion and the
+  split-progress module after both amendments.
+* it bites: making the 2023 design identical to 2022 reds all three straddling
+  assertions while the three nesting assertions stay green.
+* authority loads CLEAN; ruff clean.
+
+### Still open
+
+Three splits, now with their blockers correctly characterised:
+
+* **347** -- pairing proved, blocked only on the authoring volume above;
+* **322** -- genuinely blocked on a per-box reading of two sheets;
+* **200** -- 3462 casillas, its 2025 side already correct.
