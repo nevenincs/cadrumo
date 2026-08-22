@@ -1949,3 +1949,88 @@ revision id but not its semantics.
   report.** `dev.registry.conformance report` is a screen: it stayed green at 95
   revision rows through four commits while eight tests pinning the deleted formulas
   were red.
+
+## 2026-08-22 — the three standing blockers, worked to ground
+
+The blockers were treated as in-scope rather than reported. All three moved; two of the
+three "known" descriptions of them turned out to be wrong.
+
+### A transitional provision would have made five fabricated deadlines look correct
+
+Modelo 604's 2021-2023 era carried no deadline windows, and its own prose defended the
+absence: "No window is fabricated for a past year." The premise was wrong on both halves.
+This registry already carries historical windows on closed spans — m232/2016-2017 declares
+windows for exactly its own two years, m184/2015-2024 and m347/2008-2024 likewise — so the
+absence was an omission, and the plazo is a fixed monthly rule the orden states verbatim,
+so nothing needed inventing.
+
+What *did* need care is that the general rule does not govern the whole span. Orden
+HAC/510/2021 was published **27 May 2021**, after the tax's first four liquidation periods
+had already closed, and its **disposición transitoria única** folds enero–abril 2021 into
+the mayo-2021 plazo. Periods 2021-01 through 2021-05 therefore share ONE window, 10–20 June
+2021. Generating twelve ordinary 2021 windows — the obvious move — would have fabricated
+five deadlines AEAT never set, and every one would have looked plausible.
+
+The transitional provision was **not in the bundled corpus at all**. The bundled art. 3 was
+also an abridgement carrying a verbatim provenance claim: it dropped the first paragraph
+(periodo de liquidación = mes natural, Ley 5/2020 art. 8.3), the RD 366/2021 preamble, and
+the words «según corresponda». Both were corrected against two BOE surfaces that agree.
+
+**Generalise:** when a modelo's approving orden post-dates periods it governs, look for the
+transitional clause before deriving any window from the general rule. The gap between a
+tax's entry into force and its modelo's approval is where fabricated deadlines hide.
+
+### A ratchet that forbade its own remedy
+
+Enrolling three new legal references pushed the unverified-anchor ratchet from 89 to 92 and
+was refused. The cause is structural: a hand-authored excerpt **cannot** produce an anchored
+unit. The segmenter splits on `<h[1-6] class="articulo">` and reads the anchor from a
+preceding `[Bloque N: #x]` marker, so an excerpt written as `<div id="a3"><h2>` — the shape
+several bundled excerpts use — extracts as one anchorless unit against which *any* anchor
+resolves, including a wrong one. Every new hand-authored citation therefore joined the
+unverified population by construction, and the ratchet forbade the enrollment.
+
+Re-shaping the excerpts to real BOE markup made the new entries verified on arrival and
+pulled two pre-existing ones along, so the ceiling **tightened 89 → 87** instead of being
+raised. The docstring already recorded a prior hand doing exactly this on Orden
+EHA/1274/2007 — reading it first would have saved the rediscovery.
+
+### A tally that detected nothing
+
+`test_modelo_490_604_763_registry` pinned a total window count per modelo, its docstring
+claiming "the orden fixes how many filing windows the tax has". It does not: an orden fixes
+the **cadence**. 490 and 763 read 8 because two years of quarters happened to be enumerated;
+604 read 12 for one year of months. Authoring a legitimate new era reddened a test that had
+detected nothing about the new windows. Replaced with per-year cadence completeness, proven
+to red on both a dropped and a doubled window — which a total cannot tell apart from a
+legitimately added year.
+
+### Two blocker descriptions were wrong
+
+- **m763 does not need a three-way split at 2015 and Q4 2018.** The corpus-evidenced
+  boundary is **2012/2015**, and the split gate does not flag this revision at all — it
+  carries no export layout, so there are no byte offsets for a re-layout to write wrongly.
+  What it needed was the amending orden: HAP/2373/2014 disposición final primera, which
+  substitutes its anexo I "con efectos para los periodos de liquidación que se inicien a
+  partir del 1 de enero de 2015" — the measured boundary exactly. Cited; the NO-LEGAL-
+  EVIDENCE verdict is cleared. The 2018-4T layout's own orden remains unbundled.
+- **m220's blocker was one acquisition, and it landed.** Orden HAC/529/2026 approves the
+  2025 IS models; its art 6.3 is the modelo-220-specific plazo (LIS art 75.2) and is
+  stronger grounding than the 2024 era's, whose only bundled provision naming 220 is art 3's
+  *domiciliación bancaria* heading. The span is now split at 2024/2025 and no longer reports
+  a spanned re-layout.
+
+**Article 1 of HAC/529/2026 is deliberately NOT bundled.** No fetch returned its enumerated
+list without elision, and bundling an abridged provision as verbatim is the exact defect
+corrected in orden-hac-510-2021 the same day. Recorded in the excerpt's own provenance note.
+
+### Still open
+
+- m604 declares **no windows for filing year 2024** at all, though 2024-y-siguientes claims
+  `valid_from 2024-01-01` and enumerates only 2025. A real hole, reported not closed.
+- m763 still spans its 2012/2015 re-layout; the citation cleared the legal-evidence half,
+  the split remains.
+- HAC/529/2026 art. 1 and the m763 2018-4T orden remain to be bundled.
+- Peers captured this work by bare commit **twice in one session**. The `reviewed_by` scope
+  statement is what survived both times; commit messages did not.
+
