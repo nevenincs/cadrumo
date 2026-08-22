@@ -2,8 +2,12 @@
 
 A repeatable section's rows live at ``section.INDEX.field``, and the write
 door judges a whole fact batch at once: every required field of a row must
-arrive together or none of it lands
-(:meth:`~cadrumo.application.user_profile.ProfileCapsuleLifecycle.edit_fields`).
+arrive together or none of it lands. That judgement is
+:func:`~cadrumo.application.user_profile.reject_invalid_profile_facts`, which
+every door shares and which judges "the whole resulting fact sequence rather
+than the incoming change alone, so a patch is never left half-applied by a
+later field's refusal"; row writes reach it through
+:func:`~cadrumo.application.user_profile.apply_profile_fact_changes`.
 That makes row creation a batch operation rather than a sequence of field
 edits, so what a surface needs is the index a new row may occupy and the
 facts that fill it -- both derived from the schema's own

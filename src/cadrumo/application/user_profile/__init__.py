@@ -101,6 +101,7 @@ if TYPE_CHECKING:
         UserProfileRecord as UserProfileRecord,
     )
     from ._aggregate import (
+        CommittedProfileView as CommittedProfileView,
         ProfileRestoreAuthority as ProfileRestoreAuthority,
     )
     from ._bundle import (
@@ -1053,6 +1054,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileCapsuleArchiveReceipt": "._capsule_archive",
     "ProfileCapsuleSource": "._capsule_restore",
     "ProfileCapsuleSourceError": "._capsule_restore",
+    "CommittedProfileView": "._aggregate",
     "ProfileRestoreAuthority": "._aggregate",
     "ProfileRestoreOutcome": "._capsule_restore",
     "export_profile_capsule_archive": "._capsule_archive",
@@ -1113,6 +1115,7 @@ __all__ = [
     "CENSO_SOURCE_TAG",
     "CENSO_UNADOPTED_EVIDENCE_FIELDS",
     "COMPLETENESS_ISSUE_CODES",
+    "CommittedProfileView",
     "MASKED_PLACEHOLDER",
     "PASSPHRASE_MINIMUM_LENGTH",
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",

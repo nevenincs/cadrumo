@@ -1,9 +1,9 @@
 """Tests for the shared trash-rename-then-remove primitive.
 
 :func:`~cadrumo.adapters.persistence.storage.bucket.trash_rename_and_remove`
-converges the two hand-rolled bucket-directory removal implementations found
-in :mod:`cadrumo.application.user_profile._orchestration` and
-:mod:`cadrumo.application.user_profile._profile_repository`. These tests
+converges the two hand-rolled bucket-directory removal implementations that
+prompted it: one in :mod:`cadrumo.application.user_profile._profile_repository`,
+and one in a ``_orchestration`` module that has since been removed. These tests
 pin both the rename-succeeds and rename-fails branches, and both
 ``on_trash_cleanup_error`` policies, against a real filesystem — no mocks.
 
