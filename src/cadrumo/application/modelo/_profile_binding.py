@@ -1476,6 +1476,7 @@ def resolve_profile_sourced_bindings(
         provenance=tuple(
             CalculationSourceProvenance(
                 resolver_id=_PROFILE_RESOLVER_ID,
+                binding_source=BindingSourceKind.PROFILE,
                 source_kind=BindingSourceKind.PROFILE.value,
                 source_ref=f"profile:{bucket_id}:binding:{binding_id}",
                 fingerprint=fingerprint,

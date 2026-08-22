@@ -128,3 +128,34 @@ def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -
     assert not authority.encrypted_revision_matches(
         cast(Any, proof(connection.model_copy(update={"resolver_id": "wrong-resolver"}))),
     )
+
+    rival = persisted.model_copy(update={"resolver_id": "rival-resolver"})
+    ambiguous_revision = SimpleNamespace(
+        calculation_revision_id=revision_id,
+        source_provenance=(persisted, rival),
+    )
+    ambiguous_authority = LiveSourceConnectivityProofAuthority(
+        source_resolvers=cast(Any, object()),
+        workflows=cast(Any, object()),
+        calculation_revisions=cast(Any, _RevisionRepository(ambiguous_revision)),
+        evidence_verifier=cast(Any, object()),
+    )
+    assert not ambiguous_authority.encrypted_revision_matches(cast(Any, proof(connection)))
+
+    incoherent = CalculationSourceRef.model_construct(
+        **{
+            **persisted.model_dump(),
+            "source_kind": BindingSourceKind.PAYABLE_INVOICE.value,
+        },
+    )
+    incoherent_revision = SimpleNamespace(
+        calculation_revision_id=revision_id,
+        source_provenance=(incoherent,),
+    )
+    incoherent_authority = LiveSourceConnectivityProofAuthority(
+        source_resolvers=cast(Any, object()),
+        workflows=cast(Any, object()),
+        calculation_revisions=cast(Any, _RevisionRepository(incoherent_revision)),
+        evidence_verifier=cast(Any, object()),
+    )
+    assert not incoherent_authority.encrypted_revision_matches(cast(Any, proof(connection)))

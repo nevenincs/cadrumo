@@ -144,14 +144,18 @@ class LiveSourceConnectivityProofAuthority:
         revision = catalogue.revisions.get(connection.calculation_revision_id)
         if revision is None or revision.calculation_revision_id != connection.calculation_revision_id:
             return False
-        identity_rows = tuple(
+        source_identity_rows = tuple(
             row
             for row in revision.source_provenance
-            if row.resolver_id == connection.resolver_id
-            and row.binding_source is connection.source_kind
+            if row.binding_source is connection.source_kind
             and row.source_ref == proof.persisted_source_identity
         )
-        return len(identity_rows) == 1 and identity_rows[0].fingerprint == proof.persisted_source_fingerprint
+        return (
+            len(source_identity_rows) == 1
+            and source_identity_rows[0].resolver_id == connection.resolver_id
+            and source_identity_rows[0].source_kind == connection.source_kind.value
+            and source_identity_rows[0].fingerprint == proof.persisted_source_fingerprint
+        )
 
     def executable_evidence_digest(
         self,

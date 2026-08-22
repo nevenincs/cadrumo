@@ -621,6 +621,7 @@ def _current_year_values_provenance(
     period_ref = ",".join(periods)
     return CalculationSourceProvenance(
         resolver_id=ProrrataRegularizacionSourceResolver.resolver_id,
+        binding_source=_SOURCE_KIND,
         source_kind=_SOURCE_KIND.value,
         source_ref=f"{Modelo.M303.value}:{context.filing_year}:{period_ref}:prorrata-current-year-values",
         source_modelo=Modelo.M303.value,
@@ -660,6 +661,7 @@ def _register_provenance(
         suffix = f"{provenance_token}:{entry.authorisation_reference}"
     return CalculationSourceProvenance(
         resolver_id=ProrrataRegularizacionSourceResolver.resolver_id,
+        binding_source=_SOURCE_KIND,
         source_kind=_SOURCE_KIND.value,
         source_ref=f"prorrata-register:{context.filing_year}:{suffix}",
         source_filing_year=context.filing_year,
@@ -675,6 +677,7 @@ def _prior_definitiva_provenance(
 ) -> CalculationSourceProvenance:
     return CalculationSourceProvenance(
         resolver_id=ProrrataRegularizacionSourceResolver.resolver_id,
+        binding_source=_SOURCE_KIND,
         source_kind=_SOURCE_KIND.value,
         source_ref=f"{Modelo.M303.value}:{carry.source_filing_year}:{carry.source_period}:{_PORCENTAJE_ID}",
         source_modelo=Modelo.M303.value,

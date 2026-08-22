@@ -11,7 +11,7 @@ See Also:
     :class:`~domain.modelos.CalculationSourceRef`
         Domain provenance row whose non-default fields are round-tripped here.
     :func:`~domain.modelos.derive_calculation_revision_id`
-        Content-addressed id derivation that deliberately excludes provenance.
+        Content-addressed id derivation over complete canonical provenance.
     :class:`~adapters.persistence.profile.modelos_calculation.CalculationRevisionCatalogueRepository`
         Encrypted catalogue repository exercised by the save/load cycle.
     :class:`~adapters.persistence.storage.SecureObjectRepository`
@@ -39,6 +39,7 @@ from .....domain.modelos import (
     CalculationRevisionState,
     CalculationSourceRef,
     derive_calculation_revision_id,
+    derive_calculation_revision_id_from_revision,
     derive_work_unit_id,
 )
 from .....tests.secure_objects_fixture import secure_objects
@@ -108,6 +109,7 @@ def _revision(source_provenance: tuple[CalculationSourceRef, ...]) -> Calculatio
         binding_overrides={},
         casilla_values={_CASILLA: Decimal("140000.00")},
         source_transaction_ids=(_TX_ID,),
+        source_provenance=source_provenance,
         filing_instance_evidence=None,
     )
     return CalculationRevision(
@@ -154,10 +156,10 @@ def test_source_provenance_roundtrips_through_encrypted_revision(secure_objects:
     assert loaded.source_provenance[1].dependency_treatment == "factual_evidence"
     assert loaded.casilla_values == original.casilla_values
 
-    # source_provenance is additive and NOT part of the content-addressed id.
+    # Source provenance is a complete identity axis and is order-independent.
     stripped = original.model_copy(update={"source_provenance": ()})
     assert stripped != original
-    assert stripped.calculation_revision_id == original.calculation_revision_id
+    assert stripped.calculation_revision_id != derive_calculation_revision_id_from_revision(stripped)
     resolver_changed = original.model_copy(
         update={
             "source_provenance": (
@@ -167,11 +169,33 @@ def test_source_provenance_roundtrips_through_encrypted_revision(secure_objects:
         },
     )
     assert resolver_changed != original
-    assert resolver_changed.calculation_revision_id == original.calculation_revision_id
+    assert resolver_changed.calculation_revision_id != derive_calculation_revision_id_from_revision(resolver_changed)
+    fingerprint_changed = original.model_copy(
+        update={
+            "source_provenance": (
+                original.source_provenance[0].model_copy(update={"fingerprint": "sha256:" + "f" * 64}),
+                *original.source_provenance[1:],
+            ),
+        },
+    )
+    assert fingerprint_changed.calculation_revision_id != derive_calculation_revision_id_from_revision(
+        fingerprint_changed,
+    )
+    reordered = _revision(tuple(reversed(provenance)))
+    assert reordered.calculation_revision_id == original.calculation_revision_id
 
 
-def test_legacy_source_provenance_without_resolver_id_is_rejected_at_encrypted_load(
+@pytest.mark.parametrize(
+    ("missing_field", "expected_value"),
+    [
+        ("resolver_id", "invoice_catalogue"),
+        ("binding_source", BindingSourceKind.COLLECTIBLE_INVOICE.value),
+    ],
+)
+def test_legacy_source_provenance_without_required_identity_is_rejected_at_encrypted_load(
     secure_objects: SecureObjectRepository,
+    missing_field: str,
+    expected_value: str,
 ) -> None:
     import json as _json
 
@@ -194,7 +218,7 @@ def test_legacy_source_provenance_without_resolver_id_is_rejected_at_encrypted_l
     assert record is not None
     envelope = _json.loads(record.payload.decode("utf-8"))
     row = envelope["payload"]["revisions"][original.calculation_revision_id]["source_provenance"][0]
-    assert row.pop("resolver_id") == "invoice_catalogue"
+    assert row.pop(missing_field) == expected_value
     secure_objects.save(
         namespace=_CALCULATION_NAMESPACE,
         object_key=_CALCULATION_OBJECT_KEY,
@@ -259,18 +283,15 @@ def test_source_provenance_blank_source_ref_payload_rejected_at_load(secure_obje
         CalculationRevisionCatalogueRepository(objects=secure_objects).load()
 
 
-def test_source_provenance_dropped_dependency_treatment_is_detected_not_masked(
+def test_source_provenance_dropped_dependency_treatment_breaks_content_identity(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """Anti-tautology proof: a silently dropped ``dependency_treatment`` is detectable.
 
     Unlike ``source_ref``, ``dependency_treatment`` is optional and defaults to
     the empty string, so a load path that dropped the persisted field on the
-    way back would not raise: it would silently re-default to ``""``. Delete the
-    on-disk key entirely (rather than blank it, which would coincide with an
-    undeclared carry) and prove the reload surfaces STRICT INEQUALITY against
-    the original persisted row, so a real save-drops-field regression on this
-    field would be caught rather than masked by the default.
+    way back would otherwise re-default to ``""``. Delete the on-disk key
+    entirely and prove the persisted content-address check rejects the row.
     """
 
     import json as _json
@@ -309,11 +330,5 @@ def test_source_provenance_dropped_dependency_treatment_is_detected_not_masked(
         payload=_json.dumps(envelope).encode("utf-8"),
     )
 
-    reloaded = (
-        CalculationRevisionCatalogueRepository(objects=secure_objects).load().get(original.calculation_revision_id)
-    )
-    assert reloaded is not None
-    assert reloaded.source_provenance[0].dependency_treatment != original.source_provenance[0].dependency_treatment
-    assert reloaded.source_provenance[0].dependency_treatment == ""
-    # Dropping the treatment field must never disturb the casilla value it accompanies.
-    assert reloaded.casilla_values == original.casilla_values
+    with pytest.raises(ValidationError, match="does not match the derived id"):
+        CalculationRevisionCatalogueRepository(objects=secure_objects).load()

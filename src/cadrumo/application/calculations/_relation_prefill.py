@@ -1198,6 +1198,7 @@ class RelationPrefillSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
+                    binding_source=BindingSourceKind.RELATION_PREFILL,
                     source_kind="relation_prefill",
                     source_ref=_relation_provenance_ref(item),
                     relation_id=item.relation,

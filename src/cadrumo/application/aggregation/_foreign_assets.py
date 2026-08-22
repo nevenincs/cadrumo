@@ -343,6 +343,7 @@ class ForeignAssetsAggregationSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
+                    binding_source=observation.source_kind,
                     source_kind=observation.source_kind.value,
                     source_ref=f"{observation.source_kind.value}:{observation.source_object_id}",
                 )

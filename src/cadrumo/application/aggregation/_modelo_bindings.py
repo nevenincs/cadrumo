@@ -428,6 +428,7 @@ class LedgerIvaAggregationSourceResolver:
                     aggregation.observations,
                     lambda observation: CalculationSourceProvenance(
                         resolver_id=self.resolver_id,
+                        binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
                         source_kind="ledger_iva_aggregation",
                         source_ref=f"transaction:{observation.ledger_id}",
                     ),
@@ -436,6 +437,7 @@ class LedgerIvaAggregationSourceResolver:
                     aggregation.prorrata_references,
                     lambda reference: CalculationSourceProvenance(
                         resolver_id=self.resolver_id,
+                        binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
                         source_kind="ledger_iva_aggregation",
                         source_ref=f"prorrata:{reference.transaction_id}",
                     ),
@@ -699,6 +701,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 aggregation.observations,
                 lambda observation: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
+                    binding_source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
                     source_kind="ledger_renta_income_aggregation",
                     source_ref=f"transaction:{observation.transaction_id}",
                 ),
@@ -911,6 +914,7 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
                 aggregation.observations,
                 lambda observation: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
+                    binding_source=BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
                     source_kind="ledger_impatriado_income_aggregation",
                     source_ref=f"transaction:{observation.transaction_id}",
                 ),
@@ -1029,6 +1033,7 @@ class LedgerIrnrIncomeAggregationSourceResolver:
                 aggregation.observations,
                 lambda observation: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
+                    binding_source=BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
                     source_kind="ledger_irnr_income_aggregation",
                     source_ref=f"transaction:{observation.transaction_id}",
                 ),
@@ -1148,6 +1153,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 aggregation.observations,
                 lambda observation: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
+                    binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
                     source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
                     source_ref=f"transaction:{observation.transaction_id}",
                 ),
@@ -2486,6 +2492,7 @@ def _iva_prorrata_apportionment_provenance(
     return (
         CalculationSourceProvenance(
             resolver_id=LedgerIvaAggregationSourceResolver.resolver_id,
+            binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
             source_kind="ledger_iva_aggregation",
             source_ref=_iva_prorrata_apportionment_source_ref(period, apportionment),
             legal_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.legal_refs)),
@@ -2648,6 +2655,7 @@ class RetencionesAggregationSourceResolver:
                 aggregation.rollups,
                 lambda rollup: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
+                    binding_source=BindingSourceKind.RETENCIONES_AGGREGATION,
                     source_kind="retenciones_aggregation",
                     source_ref=f"perceptor:{rollup.perceptor_nif}",
                 ),
@@ -2661,6 +2669,7 @@ def _renta_observation_provenance(
     provenance = [
         CalculationSourceProvenance(
             resolver_id=LedgerRentaGastosEstimacionDirectaAggregationSourceResolver.resolver_id,
+            binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
             source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
             source_ref=f"transaction:{observation.transaction_id}",
         ),
@@ -2669,6 +2678,7 @@ def _renta_observation_provenance(
         provenance.append(
             CalculationSourceProvenance(
                 resolver_id=LedgerRentaGastosEstimacionDirectaAggregationSourceResolver.resolver_id,
+                binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
                 source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
                 source_ref=f"purchase-invoice-evidence:{observation.invoice_id}",
             ),

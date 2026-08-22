@@ -306,6 +306,28 @@ def _source_issues_revision_id_payload(
     return {}
 
 
+def _source_provenance_revision_id_payload(
+    source_provenance: Sequence[CalculationSourceRef],
+) -> dict[str, object]:
+    """Build the complete order-independent persisted source identity payload."""
+    canonical_source_provenance = tuple(
+        sorted(
+            (
+                ref.resolver_id,
+                ref.binding_source.value if ref.binding_source is not None else "",
+                ref.source_kind,
+                ref.source_ref,
+                ref.fingerprint or "",
+                ref.dependency_treatment,
+            )
+            for ref in source_provenance
+        )
+    )
+    if canonical_source_provenance:
+        return {"source_provenance": canonical_source_provenance}
+    return {}
+
+
 def _filing_instance_evidence_revision_id_payload(
     evidence: FilingInstanceEvidence | None,
 ) -> dict[str, object]:
@@ -340,6 +362,7 @@ class CalculationRevisionIdentityInputs(TypedDict):
     bindings_sourced_from_borrador: Sequence[BindingId]
     detail_rows: Sequence[ModeloDetailRow]
     source_issues: Sequence[CalculationSourceIssue]
+    source_provenance: Sequence[CalculationSourceRef]
     filing_instance_evidence: FilingInstanceEvidence | None
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None
     amendment_identity: CalculationRevisionAmendmentIdentity | None
@@ -360,6 +383,7 @@ def calculation_revision_identity_inputs(
     bindings_sourced_from_borrador: Sequence[BindingId] = (),
     detail_rows: Sequence[ModeloDetailRow] = (),
     source_issues: Sequence[CalculationSourceIssue] = (),
+    source_provenance: Sequence[CalculationSourceRef] = (),
     filing_instance_evidence: FilingInstanceEvidence | None,
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
@@ -385,6 +409,7 @@ def calculation_revision_identity_inputs(
         "bindings_sourced_from_borrador": bindings_sourced_from_borrador,
         "detail_rows": detail_rows,
         "source_issues": source_issues,
+        "source_provenance": source_provenance,
         "filing_instance_evidence": filing_instance_evidence,
         "m303_regimen_simplificado_annual_summary_handoff": (m303_regimen_simplificado_annual_summary_handoff),
         "amendment_identity": amendment_identity,
@@ -406,6 +431,7 @@ def derive_calculation_revision_id(
     bindings_sourced_from_borrador: Sequence[BindingId] = (),
     detail_rows: Sequence[ModeloDetailRow] = (),
     source_issues: Sequence[CalculationSourceIssue] = (),
+    source_provenance: Sequence[CalculationSourceRef] = (),
     filing_instance_evidence: FilingInstanceEvidence | None,
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
@@ -426,6 +452,7 @@ def derive_calculation_revision_id(
             bindings_sourced_from_borrador=bindings_sourced_from_borrador,
             detail_rows=detail_rows,
             source_issues=source_issues,
+            source_provenance=source_provenance,
             filing_instance_evidence=filing_instance_evidence,
             m303_regimen_simplificado_annual_summary_handoff=(m303_regimen_simplificado_annual_summary_handoff),
             amendment_identity=amendment_identity,
@@ -472,6 +499,7 @@ def _derive_calculation_revision_id_from_identity_inputs(
     bindings_sourced_from_borrador = identity_inputs["bindings_sourced_from_borrador"]
     detail_rows = identity_inputs["detail_rows"]
     source_issues = identity_inputs["source_issues"]
+    source_provenance = identity_inputs["source_provenance"]
     filing_instance_evidence = identity_inputs["filing_instance_evidence"]
     m303_regimen_simplificado_annual_summary_handoff = identity_inputs[
         "m303_regimen_simplificado_annual_summary_handoff"
@@ -510,6 +538,7 @@ def _derive_calculation_revision_id_from_identity_inputs(
     if canonical_rows:
         payload["detail_rows"] = canonical_rows
     payload.update(_source_issues_revision_id_payload(source_issues))
+    payload.update(_source_provenance_revision_id_payload(source_provenance))
     payload.update(_filing_instance_evidence_revision_id_payload(filing_instance_evidence))
     payload.update(
         _m303_regimen_simplificado_annual_summary_handoff_revision_id_payload(
@@ -610,10 +639,23 @@ class CalculationSourceRef(BaseModel):
 
     resolver_id: str = Field(min_length=1, max_length=128)
     source_kind: str = Field(min_length=1, max_length=64)
-    binding_source: BindingSourceKind | None = None
+    binding_source: BindingSourceKind | None
     source_ref: str = Field(min_length=1, max_length=256)
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
     dependency_treatment: str = ""
+
+    @model_validator(mode="after")
+    def _require_coherent_binding_source(self) -> CalculationSourceRef:
+        try:
+            source_kind = BindingSourceKind(self.source_kind)
+        except ValueError:
+            source_kind = None
+        if self.binding_source is None:
+            if source_kind is not None:
+                raise ModeloValidationError("source provenance binding_source is required for a binding source kind")
+        elif source_kind is not self.binding_source:
+            raise ModeloValidationError("source provenance binding_source must equal source_kind")
+        return self
 
 
 class CalculationSourceIssue(BaseModel):
@@ -936,11 +978,9 @@ class CalculationRevision(BaseModel):
     # time. Where ``observations`` carry the per-casilla legal/source grounding,
     # this carries WHICH resolver mesh and WHICH upstream source objects produced
     # the revision, and their content fingerprints, so an audit can trace source
-    # connectivity and detect upstream drift. Defaults to () so existing persisted
-    # revisions load without migration. Deliberately NOT threaded into
-    # ``derive_calculation_revision_id`` (it is derived from the same inputs the id
-    # already content-addresses, not an independent identity axis) — mirroring
-    # ``ledger_filing_snapshot`` / ``ledger_filing_evidence``.
+    # connectivity and detect upstream drift. The complete canonical trace is an
+    # immutable identity axis in ``derive_calculation_revision_id`` so rival source
+    # facts cannot collide under first-write-wins catalogue persistence.
     source_provenance: tuple[CalculationSourceRef, ...] = Field(default_factory=tuple)
     # Durable source-resolution conditions that prevented an observation from
     # reaching any declared binding.  These are distinct from provenance: an
@@ -1091,6 +1131,7 @@ def calculation_revision_identity_inputs_from_revision(
         bindings_sourced_from_borrador=revision.bindings_sourced_from_borrador,
         detail_rows=revision.detail_rows,
         source_issues=revision.source_issues,
+        source_provenance=revision.source_provenance,
         filing_instance_evidence=revision.filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=(revision.m303_regimen_simplificado_annual_summary_handoff),
         amendment_identity=revision.amendment_identity,

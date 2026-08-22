@@ -42,7 +42,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry import (
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
     RegistryModeloObservation,
@@ -53,7 +53,7 @@ from ....tests import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution
+from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution, merge_source_resolutions
 from ...calculations import CalculationObservationRepository
 from .. import (
     APP_FILING_SOURCE_KIND,
@@ -609,20 +609,31 @@ def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate()
     snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
     reused_binding_id = MODELO_303_IVA_COMPENSATION_BINDING_ID
     reused_relation_id = "modelo-303-rel-self-compensacion-anteriores"
-    resolution = CalculationSourceResolution(
-        resolver_id="reused-binding-regression",
-        binding_values={reused_binding_id: Decimal("42.00")},
-        relation_values={reused_relation_id: Decimal("17.00")},
-        provenance=(
-            CalculationSourceProvenance(
+    resolution = merge_source_resolutions(
+        (
+            CalculationSourceResolution(
                 resolver_id="previous_filing",
-                source_kind="previous_filing",
-                source_ref=f"100:2025:0A:{reused_binding_id}",
+                binding_values={reused_binding_id: Decimal("42.00")},
+                provenance=(
+                    CalculationSourceProvenance(
+                        resolver_id="previous_filing",
+                        binding_source=BindingSourceKind.PREVIOUS_FILING,
+                        source_kind="previous_filing",
+                        source_ref=f"100:2025:0A:{reused_binding_id}",
+                    ),
+                ),
             ),
-            CalculationSourceProvenance(
+            CalculationSourceResolution(
                 resolver_id="relation_prefill",
-                source_kind="relation_prefill",
-                source_ref=f"{reused_relation_id}:100:2025:0A",
+                relation_values={reused_relation_id: Decimal("17.00")},
+                provenance=(
+                    CalculationSourceProvenance(
+                        resolver_id="relation_prefill",
+                        binding_source=BindingSourceKind.RELATION_PREFILL,
+                        source_kind="relation_prefill",
+                        source_ref=f"{reused_relation_id}:100:2025:0A",
+                    ),
+                ),
             ),
         ),
     )

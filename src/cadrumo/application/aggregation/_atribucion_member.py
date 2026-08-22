@@ -94,6 +94,7 @@ class AtribucionMemberSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
+                    binding_source=BindingSourceKind.ATRIBUCION_MEMBER,
                     source_kind=BindingSourceKind.ATRIBUCION_MEMBER.value,
                     source_ref=f"profile:{context.bucket_id}:attribution_entity_socios:{socio.index}",
                     fingerprint=fingerprint,

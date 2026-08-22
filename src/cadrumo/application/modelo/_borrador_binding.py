@@ -217,6 +217,7 @@ def resolve_modelo_100_borrador_bindings(
         provenance=tuple(
             CalculationSourceProvenance(
                 resolver_id="modelo_100_borrador",
+                binding_source=BindingSourceKind.BORRADOR,
                 source_kind="borrador",
                 source_ref=f"borrador:{snapshot.snapshot_id}:binding:{binding_id}",
                 fingerprint=snapshot_fingerprint,

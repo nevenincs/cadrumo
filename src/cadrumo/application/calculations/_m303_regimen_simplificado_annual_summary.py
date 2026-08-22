@@ -113,8 +113,8 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             provenance=(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
-                    source_kind=_SOURCE_KIND.value,
                     binding_source=_SOURCE_KIND,
+                    source_kind=_SOURCE_KIND.value,
                     source_ref=(
                         "m303-regimen-simplificado-annual-summary:"
                         f"{source.work_unit_id}:{source_revision.calculation_revision_id}"

@@ -7,6 +7,198 @@ modelo:
       revision:
         2025-02-03-y-siguientes:
           casilla:
+            x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:
+              label: Activitat. Descripcio de l'activitat
+            x-c5hn8bj1cdq6itj9chgm8bb9c5iiqsr5cdhmirre5ljn4tbgds:
+              label: Activitat. Seccio de l'I.A.E. i grup o epigraf
+            x-c5hn8bj1cdq6itj9chgm8bbkd5o6ubb1cdq6itj9chgm8:
+              label: Activitat. Tipus d'activitat
+            x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmm8qbiclhn8rpd64:
+              label: Indicadors de referencia cadastral. Indicador del primer local
+                directament afecte
+            x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmm8qbiclhn8rpd68:
+              label: Indicadors de referencia cadastral. Indicador del segon local
+                directament afecte
+            x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmmirj4d5p6aorkdsmj2:
+              label: Indicadors de referencia cadastral. Indicador del primer local
+                indirectament afecte
+            x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmmirj4d5p6aorkdsmj4:
+              label: Indicadors de referencia cadastral. Indicador del segon local
+                indirectament afecte
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc5m78o8:
+              label: Local directament afecte (primer). Alta
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc5m78o9dcpim6q31:
+              label: Local directament afecte (primer). Data d'alta
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc9gmko8:
+              label: Local directament afecte (primer). Baixa
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc9gmko9dcpim6q31:
+              label: Local directament afecte (primer). Data de baixa
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0rrjehgmo:
+              label: Local directament afecte (primer). Codi postal
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0sjfepkmsor9c4:
+              label: Local directament afecte (primer). Codi de provincia
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dctp62p3f5lgmcpb3ehgm6qbfdo:
+              label: Local directament afecte (primer). Grau d'afectacio
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddlqmsqb3d5o6iro:
+              label: Local directament afecte (primer). Municipi
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpnmqojickmncqb1:
+              label: Local directament afecte (primer). Nom de la via publica
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbids:
+              label: Local directament afecte (primer). Numero
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
+              label: Local directament afecte (primer). Numero de referencia d'alta
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1kn6ro:
+              label: Local directament afecte (primer). Pis
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1qmasjkc4:
+              label: Local directament afecte (primer). Porta
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de9imcpbicln66qb15lhm2t31edq74obc:
+              label: Local directament afecte (primer). Referencia cadastral
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dedim6or9dtn2qpric5j6ior1:
+              label: Local directament afecte (primer). Seccio grafica cadastral
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dedqn0pbicpkm6qb5:
+              label: Local directament afecte (primer). Superficie en metres quadrats
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurg:
+              label: Local directament afecte (primer). Variacio
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhdcpim6q31:
+              label: Local directament afecte (primer). Data de variacio
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
+              label: Local directament afecte (primer). Numero de referencia de la
+                variacio
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o8:
+              label: Local directament afecte (segon). Alta
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o9dcpim6q31:
+              label: Local directament afecte (segon). Data d'alta
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc9gmko8:
+              label: Local directament afecte (segon). Baixa
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc9gmko9dcpim6q31:
+              label: Local directament afecte (segon). Data de baixa
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0rrjehgmo:
+              label: Local directament afecte (segon). Codi postal
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0sjfepkmsor9c4:
+              label: Local directament afecte (segon). Codi de provincia
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdctp62p3f5lgmcpb3ehgm6qbfdo:
+              label: Local directament afecte (segon). Grau d'afectacio
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddlqmsqb3d5o6iro:
+              label: Local directament afecte (segon). Municipi
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpnmqojickmncqb1:
+              label: Local directament afecte (segon). Nom de la via publica
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbids:
+              label: Local directament afecte (segon). Numero
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
+              label: Local directament afecte (segon). Numero de referencia d'alta
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1kn6ro:
+              label: Local directament afecte (segon). Pis
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1qmasjkc4:
+              label: Local directament afecte (segon). Porta
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde9imcpbicln66qb15lhm2t31edq74obc:
+              label: Local directament afecte (segon). Referencia cadastral
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdedim6or9dtn2qpric5j6ior1:
+              label: Local directament afecte (segon). Seccio grafica cadastral
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdedqn0pbicpkm6qb5:
+              label: Local directament afecte (segon). Superficie en metres quadrats
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurg:
+              label: Local directament afecte (segon). Variacio
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhdcpim6q31:
+              label: Local directament afecte (segon). Data de variacio
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
+              label: Local directament afecte (segon). Numero de referencia de la
+                variacio
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4:
+              label: Local indirectament afecte (primer). Alta
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4mmcpb3d1gg:
+              label: Local indirectament afecte (primer). Data d'alta
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm4obac4:
+              label: Local indirectament afecte (primer). Baixa
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm4obac4mmcpb3d1gg:
+              label: Local indirectament afecte (primer). Data de baixa
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbgdtpn8obc:
+              label: Local indirectament afecte (primer). Codi postal
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbge9nncqbecdkm2:
+              label: Local indirectament afecte (primer). Codi de provincia
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmesj1chniqob6clhn8ob3d5nms:
+              label: Local indirectament afecte (primer). Grau d'afectacio
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmqtbed5hmis39ds:
+              label: Local indirectament afecte (primer). Municipi
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmsrrdc9p6abbmd5gg:
+              label: Local indirectament afecte (primer). Nom de la via publica
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6u:
+              label: Local indirectament afecte (primer). Numero
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
+              label: Local indirectament afecte (primer). Numero de referencia d'alta
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0qbjds:
+              label: Local indirectament afecte (primer). Pis
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0tb5e9q62:
+              label: Local indirectament afecte (primer). Porta
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn4pb6clp6arj3d5giqor1ehgn6t3ic5m0:
+              label: Local indirectament afecte (primer). Referencia cadastral
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn6pb3cdkmurhdctp62pj9cdgg:
+              label: Local indirectament afecte (primer). Seccio grafica cadastral
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn6tbgclp6cqb3d5ig:
+              label: Local indirectament afecte (primer). Superficie en metres quadrats
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mnasrf5li6asrkd5n6u:
+              label: Local indirectament afecte (primer). Us o desti
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdo:
+              label: Local indirectament afecte (primer). Variacio
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommcpb3d1gg:
+              label: Local indirectament afecte (primer). Data de variacio
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
+              label: Local indirectament afecte (primer). Numero de referencia de
+                la variacio
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4:
+              label: Local indirectament afecte (segon). Alta
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4mmcpb3d1gg:
+              label: Local indirectament afecte (segon). Data d'alta
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm4obac4:
+              label: Local indirectament afecte (segon). Baixa
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm4obac4mmcpb3d1gg:
+              label: Local indirectament afecte (segon). Data de baixa
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbgdtpn8obc:
+              label: Local indirectament afecte (segon). Codi postal
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbge9nncqbecdkm2:
+              label: Local indirectament afecte (segon). Codi de provincia
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmesj1chniqob6clhn8ob3d5nms:
+              label: Local indirectament afecte (segon). Grau d'afectacio
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmqtbed5hmis39ds:
+              label: Local indirectament afecte (segon). Municipi
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmsrrdc9p6abbmd5gg:
+              label: Local indirectament afecte (segon). Nom de la via publica
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6u:
+              label: Local indirectament afecte (segon). Numero
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
+              label: Local indirectament afecte (segon). Numero de referencia d'alta
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0qbjds:
+              label: Local indirectament afecte (segon). Pis
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0tb5e9q62:
+              label: Local indirectament afecte (segon). Porta
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn4pb6clp6arj3d5giqor1ehgn6t3ic5m0:
+              label: Local indirectament afecte (segon). Referencia cadastral
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn6pb3cdkmurhdctp62pj9cdgg:
+              label: Local indirectament afecte (segon). Seccio grafica cadastral
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn6tbgclp6cqb3d5ig:
+              label: Local indirectament afecte (segon). Superficie en metres quadrats
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mnasrf5li6asrkd5n6u:
+              label: Local indirectament afecte (segon). Us o desti
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdo:
+              label: Local indirectament afecte (segon). Variacio
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommcpb3d1gg:
+              label: Local indirectament afecte (segon). Data de variacio
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
+              label: Local indirectament afecte (segon). Numero de referencia de la
+                variacio
+            x-c5hn8bjjd5n2qr3fcdgmobb1dhq62:
+              label: Activitat fora de local determinat. Alta
+            x-c5hn8bjjd5n2qr3fcdgmobb1dhq62bb6clhmgo8:
+              label: Activitat fora de local determinat. Data d'alta
+            x-c5hn8bjjd5n2qr3fcdgmobb2c5l62:
+              label: Activitat fora de local determinat. Baixa
+            x-c5hn8bjjd5n2qr3fcdgmobb2c5l62bb6clhmgo8:
+              label: Activitat fora de local determinat. Data de baixa
+            x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:
+              label: Activitat fora de local determinat. Codi de provincia
+            x-c5hn8bjjd5n2qr3fcdgmobbdeln6ior9e1kmu:
+              label: Activitat fora de local determinat. Municipi
+            x-c5hn8bjjd5n2qr3fcdgmobbeelmmasjf5lp6apj5e9imsor9c4:
+              label: Activitat fora de local determinat. Numero de referencia
             x-chim6r1ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
               label: Cognoms si es persona fisica, o rao social o denominacio si es

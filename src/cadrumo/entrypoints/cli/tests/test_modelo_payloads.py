@@ -19,7 +19,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId, validated_casilla_id
+from ....core import BindingSourceKind, CasillaId, validated_casilla_id
 from ....domain.calculations.registry import (
     CasillaObservation,
     RelationId,
@@ -467,12 +467,29 @@ def test_calculation_revision_projection_carries_dependency_treatment_without_di
     value so the projection cannot silently special-case either one.
     """
     casilla_values = {_PAYLOAD_CASILLA: Decimal("500.00")}
+    source_provenance = (
+        CalculationSourceRef(
+            resolver_id="previous_filing",
+            binding_source=BindingSourceKind.PREVIOUS_FILING,
+            source_kind="previous_filing",
+            source_ref="193:2024:0A:withholding-total",
+            dependency_treatment="factual_evidence",
+        ),
+        CalculationSourceRef(
+            resolver_id="relation_prefill",
+            binding_source=BindingSourceKind.RELATION_PREFILL,
+            source_kind="relation_prefill",
+            source_ref="modelo-130-rel-100-previous-year:100:2024:0A",
+            dependency_treatment="direct_annual_settlement",
+        ),
+    )
     revision = CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=_WORK_UNIT_ID,
             input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values=casilla_values,
+            source_provenance=source_provenance,
             filing_instance_evidence=None,
         ),
         work_unit_id=_WORK_UNIT_ID,
@@ -486,20 +503,7 @@ def test_calculation_revision_projection_carries_dependency_treatment_without_di
                 source_refs=("libro-1",),
             ),
         ),
-        source_provenance=(
-            CalculationSourceRef(
-                resolver_id="previous_filing",
-                source_kind="previous_filing",
-                source_ref="193:2024:0A:withholding-total",
-                dependency_treatment="factual_evidence",
-            ),
-            CalculationSourceRef(
-                resolver_id="relation_prefill",
-                source_kind="relation_prefill",
-                source_ref="modelo-130-rel-100-previous-year:100:2024:0A",
-                dependency_treatment="direct_annual_settlement",
-            ),
-        ),
+        source_provenance=source_provenance,
         created_at=_REVISION_TIMESTAMP,
         updated_at=_REVISION_TIMESTAMP,
         filing_instance_evidence=None,

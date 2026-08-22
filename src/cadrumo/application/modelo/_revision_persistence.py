@@ -316,6 +316,7 @@ def persist_calculation_revision(
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         detail_rows=detail_rows,
         source_issues=source_issues,
+        source_provenance=source_provenance,
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
     )

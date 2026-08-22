@@ -1,0 +1,686 @@
+# Modelo 036 PAGINA 4, continued -- locales indirectamente afectos a la actividad
+# (dos bloques) y los indicadores de referencia catastral.
+#
+# Second half of Pag. 4, split from the first only to stay within the registry
+# reviewability line budget. The two files share one design, one grounding and one set
+# of caveats, recorded in full in the sibling fragment whose stem begins
+# "cact.actividad-descripcion".
+#
+# THE CAVEATS THAT BEAR ON THIS HALF, restated because they govern casillas declared
+# here rather than merely cross-referenced:
+#
+#   * A SEVENTH NUMBER FORM lives here. The indicators at @835 to @838 print "NNNbis"
+#     -- [412bis], [433bis], [454bis], [4774bis] -- which every earlier pattern missed,
+#     because all of them allowed at most one trailing letter.
+#   * [4774bis] IS TRANSCRIBED AS PRINTED and is very likely AEAT's typo for "477bis":
+#     the other three indicators pair with their own block's referencia catastral, and
+#     this block's is [477]. That is an inference, not a transcription, and is NOT
+#     adopted.
+#
+# Grounded in aeat-dr-036-2025. Pag. 4 tiles 1..900 exactly once with no gap and no
+# partial overlap, and every number, offset, length and type was read from its own
+# field description. The two indirect blocks share one 20-field shape, generated from
+# it and then cross-checked row by row against the design.
+#
+# NOT MODELLED here: the "Codigo de Municipio. Reservado" fields at @590 and @764, the
+# reservado run at @839+52, and the end-of-record identifier at @891+10.
+
+# @487+20. Local indirectamente afecto a la actividad (primero). Referencia catastral.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-referencia-catastral"
+number = "454"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @507+17. Local indirectamente afecto a la actividad (primero). Seccion grafica catastral (S.G.).
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-seccion-grafica"
+number = "455"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @524+25. Local indirectamente afecto a la actividad (primero). Nombre de la via publica.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-nombre-via"
+number = "456"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @549+5. Local indirectamente afecto a la actividad (primero). Numero.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-numero"
+number = "457"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @554+2. Local indirectamente afecto a la actividad (primero). Piso.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-piso"
+number = "458"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @556+2. Local indirectamente afecto a la actividad (primero). Puerta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-puerta"
+number = "459"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @558+5. Local indirectamente afecto a la actividad (primero). Codigo postal.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-codigo-postal"
+number = "460"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @563+25. Local indirectamente afecto a la actividad (primero). Municipio.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-municipio"
+number = "461"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @588+2. Local indirectamente afecto a la actividad (primero). Codigo de provincia.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-codigo-provincia"
+number = "462"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @596+7. Local indirectamente afecto a la actividad (primero). Superficie en metros cuadrados.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-superficie"
+number = "464"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @603+3. Local indirectamente afecto a la actividad (primero). Grado de afectacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-grado-afectacion"
+number = "465"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @606+2. Local indirectamente afecto a la actividad (primero). Uso o destino.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-uso-destino"
+number = "466"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @608+1. Local indirectamente afecto a la actividad (primero). Alta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-alta"
+number = "468"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @609+8. Local indirectamente afecto a la actividad (primero). Fecha de alta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-alta-fecha"
+number = "469"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @617+1. Local indirectamente afecto a la actividad (primero). Baja.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-baja"
+number = "471"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @618+8. Local indirectamente afecto a la actividad (primero). Fecha de baja.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-baja-fecha"
+number = "472"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @626+13. Local indirectamente afecto a la actividad (primero). Numero de referencia de alta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-numero-referencia-alta"
+number = "473"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @639+1. Local indirectamente afecto a la actividad (primero). Variacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-variacion"
+number = "474"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @640+8. Local indirectamente afecto a la actividad (primero). Fecha de variacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-variacion-fecha"
+number = "475"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @648+13. Local indirectamente afecto a la actividad (primero). Numero de referencia de la variacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-1-variacion-numero-referencia"
+number = "476"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @661+20. Local indirectamente afecto a la actividad (segundo). Referencia catastral.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-referencia-catastral"
+number = "477"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @681+17. Local indirectamente afecto a la actividad (segundo). Seccion grafica catastral (S.G.).
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-seccion-grafica"
+number = "478"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @698+25. Local indirectamente afecto a la actividad (segundo). Nombre de la via publica.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-nombre-via"
+number = "479"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @723+5. Local indirectamente afecto a la actividad (segundo). Numero.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-numero"
+number = "480"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @728+2. Local indirectamente afecto a la actividad (segundo). Piso.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-piso"
+number = "481"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @730+2. Local indirectamente afecto a la actividad (segundo). Puerta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-puerta"
+number = "482"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @732+5. Local indirectamente afecto a la actividad (segundo). Codigo postal.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-codigo-postal"
+number = "483"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @737+25. Local indirectamente afecto a la actividad (segundo). Municipio.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-municipio"
+number = "484"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @762+2. Local indirectamente afecto a la actividad (segundo). Codigo de provincia.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-codigo-provincia"
+number = "485"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @770+7. Local indirectamente afecto a la actividad (segundo). Superficie en metros cuadrados.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-superficie"
+number = "487"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @777+3. Local indirectamente afecto a la actividad (segundo). Grado de afectacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-grado-afectacion"
+number = "488"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @780+2. Local indirectamente afecto a la actividad (segundo). Uso o destino.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-uso-destino"
+number = "489"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @782+1. Local indirectamente afecto a la actividad (segundo). Alta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-alta"
+number = "491"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @783+8. Local indirectamente afecto a la actividad (segundo). Fecha de alta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-alta-fecha"
+number = "492"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @791+1. Local indirectamente afecto a la actividad (segundo). Baja.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-baja"
+number = "494"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @792+8. Local indirectamente afecto a la actividad (segundo). Fecha de baja.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-baja-fecha"
+number = "495"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @800+13. Local indirectamente afecto a la actividad (segundo). Numero de referencia de alta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-numero-referencia-alta"
+number = "496"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @813+1. Local indirectamente afecto a la actividad (segundo). Variacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-variacion"
+number = "497"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @814+8. Local indirectamente afecto a la actividad (segundo). Fecha de variacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-variacion-fecha"
+number = "498"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @822+13. Local indirectamente afecto a la actividad (segundo). Numero de referencia de la variacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.local-indirecto-2-variacion-numero-referencia"
+number = "499"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @835+1. Indicadores de referencia catastral. Indicador de referencia catastral del primer local directamente afecto.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.indicadores-local-directo-1"
+number = "412bis"
+section = ["declaracion", "actividades", "indicadores"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @836+1. Indicadores de referencia catastral. Indicador de referencia catastral del segundo local directamente afecto.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.indicadores-local-directo-2"
+number = "433bis"
+section = ["declaracion", "actividades", "indicadores"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @837+1. Indicadores de referencia catastral. Indicador de referencia catastral del primer local indirectamente afecto.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.indicadores-local-indirecto-1"
+number = "454bis"
+section = ["declaracion", "actividades", "indicadores"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @838+1. Indicadores de referencia catastral. Indicador de referencia catastral del segundo local indirectamente afecto. AEAT prints "[4774bis]"; transcribed as printed, see the fragment header.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "act.indicadores-local-indirecto-2"
+number = "4774bis"
+section = ["declaracion", "actividades", "indicadores"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]

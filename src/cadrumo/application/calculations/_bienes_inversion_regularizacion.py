@@ -416,6 +416,7 @@ class BienesInversionRegularizacionSourceResolver:
             provenance = (
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
+                    binding_source=_SOURCE_KIND,
                     source_kind=_SOURCE_KIND.value,
                     source_ref=f"bienes-inversion-register:{context.filing_year}",
                     legal_refs=(

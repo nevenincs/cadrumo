@@ -55,6 +55,7 @@ def _provenance(observations: tuple[WithholdingObservation, ...]) -> tuple[Calcu
     return tuple(
         CalculationSourceProvenance(
             resolver_id=WithholdingSourceResolver.resolver_id,
+            binding_source=BindingSourceKind.WITHHOLDING,
             source_kind=_WITHHOLDING_SOURCE,
             source_ref=f"percepcion:{observation.perceptor_tax_id}:{observation.clave}:{observation.subclave or '-'}",
         )

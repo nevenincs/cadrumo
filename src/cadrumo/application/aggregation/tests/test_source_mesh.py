@@ -15,6 +15,7 @@ from .. import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    CompositeSourceResolverId,
     collect_unhandled_source_diagnostics,
     merge_source_resolutions,
     storage_degradation_resolution,
@@ -52,6 +53,7 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
         provenance=(
             CalculationSourceProvenance(
                 resolver_id="ledger-iva",
+                binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
                 source_kind="ledger_iva_aggregation",
                 source_ref="transaction:tx-1",
                 fingerprint="sha256:abc",
@@ -247,7 +249,8 @@ def test_source_diagnostic_rejects_reversed_out_of_window_summary_span() -> None
 def test_source_provenance_projects_canonical_binding_source() -> None:
     provenance = CalculationSourceProvenance(
         resolver_id="relation_prefill",
-        source_kind=BindingSourceKind.RELATION_PREFILL,
+        binding_source=BindingSourceKind.RELATION_PREFILL,
+        source_kind=BindingSourceKind.RELATION_PREFILL.value,
         source_ref="relation:modelo-100-rel-130",
         relation_id="modelo-100-rel-130-pagos-fraccionados",
         source_modelo="130",
@@ -269,12 +272,14 @@ def test_source_provenance_requires_resolver_identity_and_resolution_refuses_mis
         CalculationSourceProvenance.model_validate(
             {
                 "source_kind": "collectible_invoice",
+                "binding_source": BindingSourceKind.COLLECTIBLE_INVOICE,
                 "source_ref": "collectible_invoice:inv-0001",
             },
         )
 
     provenance = CalculationSourceProvenance(
         resolver_id="invoice_catalogue",
+        binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
         source_kind="collectible_invoice",
         source_ref="collectible_invoice:inv-0001",
     )
@@ -287,11 +292,44 @@ def test_source_provenance_requires_resolver_identity_and_resolution_refuses_mis
     assert "provenance_resolver_mismatch" in str(exc_info.value)
 
 
+def test_source_provenance_refuses_binding_source_contradictions_and_marks_non_binding_rows() -> None:
+    with pytest.raises(ValidationError, match="provenance_binding_source_mismatch"):
+        CalculationSourceProvenance(
+            resolver_id="invoice_catalogue",
+            binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+            source_kind=BindingSourceKind.PAYABLE_INVOICE.value,
+            source_ref="payable_invoice:inv-0001",
+        )
+    with pytest.raises(ValidationError, match="provenance_binding_source_missing"):
+        CalculationSourceProvenance(
+            resolver_id="invoice_catalogue",
+            binding_source=None,
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+            source_ref="collectible_invoice:inv-0001",
+        )
+
+    non_binding = CalculationSourceProvenance(
+        resolver_id="iva_wallet_decision",
+        binding_source=None,
+        source_kind="filed-revision-authority",
+        source_ref="revision:abc",
+    )
+    assert non_binding.binding_source is None
+
+
+def test_reserved_composite_owner_ids_require_the_closed_typed_identity() -> None:
+    with pytest.raises(ValidationError, match="reserved_composite_resolver_id"):
+        CalculationSourceResolution(resolver_id="source_mesh")
+    merged = merge_source_resolutions(())
+    assert merged.resolver_id is CompositeSourceResolverId.EXCLUSIVE_MESH
+
+
 def test_relation_source_provenance_rejects_incomplete_typed_trace() -> None:
     with pytest.raises(ValidationError) as exc_info:
         CalculationSourceProvenance(
             resolver_id="relation_prefill",
-            source_kind=BindingSourceKind.RELATION_PREFILL,
+            binding_source=BindingSourceKind.RELATION_PREFILL,
+            source_kind=BindingSourceKind.RELATION_PREFILL.value,
             source_ref="relation:modelo-100-rel-130",
             relation_id="modelo-100-rel-130-pagos-fraccionados",
         )
@@ -524,6 +562,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
     )
     provenance = CalculationSourceProvenance(
         resolver_id="ledger-iva",
+        binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
         source_kind="ledger_iva_aggregation",
         source_ref="transaction:tx-1",
         fingerprint="sha256:abc",

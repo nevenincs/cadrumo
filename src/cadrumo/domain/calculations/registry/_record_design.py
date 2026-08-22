@@ -677,6 +677,95 @@ def _collapse_stuttered_row_prefix(lines: tuple[str, ...]) -> tuple[str, ...]:
     )
 
 
+#: The TRUE ordinal and position of a damaged row, restated on a line of its
+#: own: ``54 827 Ajustes por valoracion [380]``. The line is not itself a row --
+#: it carries no length and no naturaleza -- so it can only be read together
+#: with the half that does.
+_COORDINATE_STUTTER_RE = re.compile(
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<rest>\S.*)$",
+)
+
+#: The other half: length, naturaleza and description with no coordinates at
+#: all, which is what a row whose coordinate column was lost leaves behind.
+_ORPHAN_MEASURE_RE = re.compile(
+    r"^\s*(?P<length>\d+)\s+(?P<naturaleza>An|Num|N|A)\.?\s+(?P<description>\S.*)$",
+    re.IGNORECASE,
+)
+
+#: A casilla reference anywhere in a line.
+_ANY_CASILLA_TAG_RE = re.compile(r"\[\d+\]")
+
+
+def _recover_coordinate_stutter_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Rebuild a row whose coordinate column was damaged, from the stutter restating it.
+
+    Modelo 200's 2010 and 2011 editions lose the coordinate column on some rows
+    and then restate it. The damage takes two forms: the coordinates vanish
+    entirely, leaving ``17 N <description>``; or they survive mangled, so
+    ``54 827`` arrives as ``4 82`` and parses as a real but WRONG row at
+    ordinal 4, position 82. Either way a following line states the true pair.
+
+    Both halves are required, and that is the whole guard. The coordinates are
+    admitted only when they are OVER-DETERMINED against the last undamaged row
+    -- the ordinal must follow by one AND the position must resume where that
+    row ended, the same two independent facts :func:`_continues` checks
+    everywhere else. The length and naturaleza are never inferred: they must be
+    stated by the donor half. Where no donor exists the site is left alone,
+    which is why this declines the three sites in these same two editions that
+    state coordinates and a casilla tag but nothing else -- recovering those
+    would mean inventing a naturaleza and truncating a description.
+    """
+    parsed = tuple(_parse_pdf_row(line, index + 1) for index, line in enumerate(lines))
+
+    def _anchor(before: int) -> _PdfRow | None:
+        for index in range(before - 1, -1, -1):
+            if parsed[index] is not None:
+                return parsed[index]
+        return None
+
+    rebuilt: dict[int, str] = {}
+    dropped: set[int] = set()
+    for index, line in enumerate(lines):
+        if parsed[index] is not None or index == 0:
+            continue
+        stutter = _COORDINATE_STUTTER_RE.match(line)
+        if stutter is None or not _ANY_CASILLA_TAG_RE.search(line):
+            continue
+        donor_index = index - 1
+        if donor_index in dropped or donor_index in rebuilt:
+            continue
+        anchor = _anchor(donor_index)
+        donor_row = parsed[donor_index]
+        if donor_row is None:
+            measure = _ORPHAN_MEASURE_RE.match(lines[donor_index])
+            if measure is None:
+                continue
+            length = measure.group("length")
+            naturaleza = measure.group("naturaleza")
+            description = measure.group("description")
+        else:
+            if _continues(anchor, donor_row.ordinal or "", donor_row.offset):
+                continue  # the neighbour is a healthy row, not a damaged half
+            length = str(donor_row.length)
+            naturaleza = donor_row.type_code
+            description = donor_row.description
+        ordinal = stutter.group("ordinal")
+        offset = int(stutter.group("offset"))
+        if not _continues(anchor, ordinal, offset):
+            continue
+        rebuilt[donor_index] = (
+            f"{ordinal} {offset} {length} {naturaleza} {description} {stutter.group('rest')}"
+        )
+        dropped.add(index)
+
+    if not rebuilt:
+        return lines
+    return tuple(
+        rebuilt.get(index, line)
+        for index, line in enumerate(lines)
+        if index not in dropped
+    )
+
 #: A field row whose four tokens are complete but whose DESCRIPTION wrapped onto
 #: the next line. AEAT does this often enough to matter: modelo 202 writes
 #: ``15 80 1 Num`` and puts "Datos adicionales (3) - Cooperativa fiscalmente
@@ -1199,13 +1288,15 @@ def _read_with_reversed_column_repair(
     first = _extract_pdf_lines(lines, source_label=source_label, corrections=corrections)
     if not first.skipped:
         return first
-    repaired_lines = _reattach_stranded_casilla_tags(
-        _collapse_stuttered_row_prefix(
-            _join_wrapped_row_descriptions(
-            _rejoin_reversed_column_rows(
-                _split_tail_from_leading_fragment(_undouble_struck_rows(lines)),
+    repaired_lines = _recover_coordinate_stutter_rows(
+        _reattach_stranded_casilla_tags(
+            _collapse_stuttered_row_prefix(
+                _join_wrapped_row_descriptions(
+                    _rejoin_reversed_column_rows(
+                        _split_tail_from_leading_fragment(_undouble_struck_rows(lines)),
+                    ),
+                ),
             ),
-        ),
         ),
     )
     try:

@@ -558,6 +558,7 @@ class OssIossLedgerSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
+                    binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
                     source_kind="ledger_oss_aggregation",
                     source_ref=f"transaction:{observation.ledger_id}",
                 )

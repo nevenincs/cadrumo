@@ -7,6 +7,211 @@ modelo:
       revision:
         2025-02-03-y-siguientes:
           casilla:
+            x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:
+              label: Tevekenyseg. A tevekenyseg leirasa
+            x-c5hn8bj1cdq6itj9chgm8bb9c5iiqsr5cdhmirre5ljn4tbgds:
+              label: Tevekenyseg. I.A.E. szakasz es csoport vagy tetel
+            x-c5hn8bj1cdq6itj9chgm8bbkd5o6ubb1cdq6itj9chgm8:
+              label: Tevekenyseg. A tevekenyseg tipusa
+            x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmm8qbiclhn8rpd64:
+              label: Ingatlan-nyilvantartasi jelzok. Az elso kozvetlenul erintett
+                helyiseg jelzoje
+            x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmm8qbiclhn8rpd68:
+              label: Ingatlan-nyilvantartasi jelzok. A masodik kozvetlenul erintett
+                helyiseg jelzoje
+            x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmmirj4d5p6aorkdsmj2:
+              label: Ingatlan-nyilvantartasi jelzok. Az elso kozvetve erintett helyiseg
+                jelzoje
+            x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmmirj4d5p6aorkdsmj4:
+              label: Ingatlan-nyilvantartasi jelzok. A masodik kozvetve erintett helyiseg
+                jelzoje
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc5m78o8:
+              label: Kozvetlenul erintett helyiseg (elso). Bejegyzes
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc5m78o9dcpim6q31:
+              label: Kozvetlenul erintett helyiseg (elso). A bejegyzes datuma
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc9gmko8:
+              label: Kozvetlenul erintett helyiseg (elso). Torles
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc9gmko9dcpim6q31:
+              label: Kozvetlenul erintett helyiseg (elso). A torles datuma
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0rrjehgmo:
+              label: Kozvetlenul erintett helyiseg (elso). Iranyitoszam
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0sjfepkmsor9c4:
+              label: Kozvetlenul erintett helyiseg (elso). Tartomanykod
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dctp62p3f5lgmcpb3ehgm6qbfdo:
+              label: Kozvetlenul erintett helyiseg (elso). A tevekenyseghez rendeles
+                merteke
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddlqmsqb3d5o6iro:
+              label: Kozvetlenul erintett helyiseg (elso). Telepules
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpnmqojickmncqb1:
+              label: Kozvetlenul erintett helyiseg (elso). Kozterulet neve
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbids:
+              label: Kozvetlenul erintett helyiseg (elso). Hazszam
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
+              label: Kozvetlenul erintett helyiseg (elso). A bejegyzes hivatkozasi
+                szama
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1kn6ro:
+              label: Kozvetlenul erintett helyiseg (elso). Emelet
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1qmasjkc4:
+              label: Kozvetlenul erintett helyiseg (elso). Ajto
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de9imcpbicln66qb15lhm2t31edq74obc:
+              label: Kozvetlenul erintett helyiseg (elso). Ingatlan-nyilvantartasi
+                hivatkozas
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dedim6or9dtn2qpric5j6ior1:
+              label: Kozvetlenul erintett helyiseg (elso). Ingatlan-nyilvantartasi
+                grafikus szakasz
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dedqn0pbicpkm6qb5:
+              label: Kozvetlenul erintett helyiseg (elso). Alapterulet negyzetmeterben
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurg:
+              label: Kozvetlenul erintett helyiseg (elso). Valtozas
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhdcpim6q31:
+              label: Kozvetlenul erintett helyiseg (elso). A valtozas datuma
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
+              label: Kozvetlenul erintett helyiseg (elso). A valtozas hivatkozasi
+                szama
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o8:
+              label: Kozvetlenul erintett helyiseg (masodik). Bejegyzes
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o9dcpim6q31:
+              label: Kozvetlenul erintett helyiseg (masodik). A bejegyzes datuma
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc9gmko8:
+              label: Kozvetlenul erintett helyiseg (masodik). Torles
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc9gmko9dcpim6q31:
+              label: Kozvetlenul erintett helyiseg (masodik). A torles datuma
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0rrjehgmo:
+              label: Kozvetlenul erintett helyiseg (masodik). Iranyitoszam
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0sjfepkmsor9c4:
+              label: Kozvetlenul erintett helyiseg (masodik). Tartomanykod
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdctp62p3f5lgmcpb3ehgm6qbfdo:
+              label: Kozvetlenul erintett helyiseg (masodik). A tevekenyseghez rendeles
+                merteke
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddlqmsqb3d5o6iro:
+              label: Kozvetlenul erintett helyiseg (masodik). Telepules
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpnmqojickmncqb1:
+              label: Kozvetlenul erintett helyiseg (masodik). Kozterulet neve
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbids:
+              label: Kozvetlenul erintett helyiseg (masodik). Hazszam
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
+              label: Kozvetlenul erintett helyiseg (masodik). A bejegyzes hivatkozasi
+                szama
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1kn6ro:
+              label: Kozvetlenul erintett helyiseg (masodik). Emelet
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1qmasjkc4:
+              label: Kozvetlenul erintett helyiseg (masodik). Ajto
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde9imcpbicln66qb15lhm2t31edq74obc:
+              label: Kozvetlenul erintett helyiseg (masodik). Ingatlan-nyilvantartasi
+                hivatkozas
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdedim6or9dtn2qpric5j6ior1:
+              label: Kozvetlenul erintett helyiseg (masodik). Ingatlan-nyilvantartasi
+                grafikus szakasz
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdedqn0pbicpkm6qb5:
+              label: Kozvetlenul erintett helyiseg (masodik). Alapterulet negyzetmeterben
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurg:
+              label: Kozvetlenul erintett helyiseg (masodik). Valtozas
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhdcpim6q31:
+              label: Kozvetlenul erintett helyiseg (masodik). A valtozas datuma
+            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
+              label: Kozvetlenul erintett helyiseg (masodik). A valtozas hivatkozasi
+                szama
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4:
+              label: Kozvetve erintett helyiseg (elso). Bejegyzes
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4mmcpb3d1gg:
+              label: Kozvetve erintett helyiseg (elso). A bejegyzes datuma
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm4obac4:
+              label: Kozvetve erintett helyiseg (elso). Torles
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm4obac4mmcpb3d1gg:
+              label: Kozvetve erintett helyiseg (elso). A torles datuma
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbgdtpn8obc:
+              label: Kozvetve erintett helyiseg (elso). Iranyitoszam
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbge9nncqbecdkm2:
+              label: Kozvetve erintett helyiseg (elso). Tartomanykod
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmesj1chniqob6clhn8ob3d5nms:
+              label: Kozvetve erintett helyiseg (elso). A tevekenyseghez rendeles
+                merteke
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmqtbed5hmis39ds:
+              label: Kozvetve erintett helyiseg (elso). Telepules
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmsrrdc9p6abbmd5gg:
+              label: Kozvetve erintett helyiseg (elso). Kozterulet neve
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6u:
+              label: Kozvetve erintett helyiseg (elso). Hazszam
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
+              label: Kozvetve erintett helyiseg (elso). A bejegyzes hivatkozasi szama
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0qbjds:
+              label: Kozvetve erintett helyiseg (elso). Emelet
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0tb5e9q62:
+              label: Kozvetve erintett helyiseg (elso). Ajto
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn4pb6clp6arj3d5giqor1ehgn6t3ic5m0:
+              label: Kozvetve erintett helyiseg (elso). Ingatlan-nyilvantartasi hivatkozas
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn6pb3cdkmurhdctp62pj9cdgg:
+              label: Kozvetve erintett helyiseg (elso). Ingatlan-nyilvantartasi grafikus
+                szakasz
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn6tbgclp6cqb3d5ig:
+              label: Kozvetve erintett helyiseg (elso). Alapterulet negyzetmeterben
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mnasrf5li6asrkd5n6u:
+              label: Kozvetve erintett helyiseg (elso). Hasznalat vagy rendeltetes
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdo:
+              label: Kozvetve erintett helyiseg (elso). Valtozas
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommcpb3d1gg:
+              label: Kozvetve erintett helyiseg (elso). A valtozas datuma
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
+              label: Kozvetve erintett helyiseg (elso). A valtozas hivatkozasi szama
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4:
+              label: Kozvetve erintett helyiseg (masodik). Bejegyzes
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4mmcpb3d1gg:
+              label: Kozvetve erintett helyiseg (masodik). A bejegyzes datuma
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm4obac4:
+              label: Kozvetve erintett helyiseg (masodik). Torles
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm4obac4mmcpb3d1gg:
+              label: Kozvetve erintett helyiseg (masodik). A torles datuma
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbgdtpn8obc:
+              label: Kozvetve erintett helyiseg (masodik). Iranyitoszam
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbge9nncqbecdkm2:
+              label: Kozvetve erintett helyiseg (masodik). Tartomanykod
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmesj1chniqob6clhn8ob3d5nms:
+              label: Kozvetve erintett helyiseg (masodik). A tevekenyseghez rendeles
+                merteke
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmqtbed5hmis39ds:
+              label: Kozvetve erintett helyiseg (masodik). Telepules
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmsrrdc9p6abbmd5gg:
+              label: Kozvetve erintett helyiseg (masodik). Kozterulet neve
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6u:
+              label: Kozvetve erintett helyiseg (masodik). Hazszam
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
+              label: Kozvetve erintett helyiseg (masodik). A bejegyzes hivatkozasi
+                szama
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0qbjds:
+              label: Kozvetve erintett helyiseg (masodik). Emelet
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0tb5e9q62:
+              label: Kozvetve erintett helyiseg (masodik). Ajto
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn4pb6clp6arj3d5giqor1ehgn6t3ic5m0:
+              label: Kozvetve erintett helyiseg (masodik). Ingatlan-nyilvantartasi
+                hivatkozas
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn6pb3cdkmurhdctp62pj9cdgg:
+              label: Kozvetve erintett helyiseg (masodik). Ingatlan-nyilvantartasi
+                grafikus szakasz
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn6tbgclp6cqb3d5ig:
+              label: Kozvetve erintett helyiseg (masodik). Alapterulet negyzetmeterben
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mnasrf5li6asrkd5n6u:
+              label: Kozvetve erintett helyiseg (masodik). Hasznalat vagy rendeltetes
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdo:
+              label: Kozvetve erintett helyiseg (masodik). Valtozas
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommcpb3d1gg:
+              label: Kozvetve erintett helyiseg (masodik). A valtozas datuma
+            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
+              label: Kozvetve erintett helyiseg (masodik). A valtozas hivatkozasi
+                szama
+            x-c5hn8bjjd5n2qr3fcdgmobb1dhq62:
+              label: Allando helyisegen kivul vegzett tevekenyseg. Bejegyzes
+            x-c5hn8bjjd5n2qr3fcdgmobb1dhq62bb6clhmgo8:
+              label: Allando helyisegen kivul vegzett tevekenyseg. A bejegyzes datuma
+            x-c5hn8bjjd5n2qr3fcdgmobb2c5l62:
+              label: Allando helyisegen kivul vegzett tevekenyseg. Torles
+            x-c5hn8bjjd5n2qr3fcdgmobb2c5l62bb6clhmgo8:
+              label: Allando helyisegen kivul vegzett tevekenyseg. A torles datuma
+            x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:
+              label: Allando helyisegen kivul vegzett tevekenyseg. Tartomanykod
+            x-c5hn8bjjd5n2qr3fcdgmobbdeln6ior9e1kmu:
+              label: Allando helyisegen kivul vegzett tevekenyseg. Telepules
+            x-c5hn8bjjd5n2qr3fcdgmobbeelmmasjf5lp6apj5e9imsor9c4:
+              label: Allando helyisegen kivul vegzett tevekenyseg. Hivatkozasi szam
             x-chim6r1ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
               label: Vezeteknev termeszetes szemely eseten, vagy cegnev jogi szemely

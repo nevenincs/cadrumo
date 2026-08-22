@@ -763,6 +763,7 @@ def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> Ca
     source_kind = _invoice_source_kind(invoice)
     return CalculationSourceProvenance(
         resolver_id=InvoiceCatalogueSourceResolver.resolver_id,
+        binding_source=BindingSourceKind(source_kind),
         source_kind=source_kind,
         source_ref=f"{source_kind}:{observation.invoice_id}",
         fingerprint=f"sha256:{sha256_hex(payload.encode('utf-8'))}",
