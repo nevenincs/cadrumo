@@ -9,7 +9,7 @@ related:
   - '[[2026-08-22-profile-registration-password-policy-holistic-credential-capability-research]]'
   - '[[2026-08-22-profile-registration-password-policy-tui-custody-validation-mismatch-reference]]'
 modified: '2026-08-22'
-body_hash: 'sha256:00abca27217698fdc170c9c2521e2473f0c4fabb177a49e013983395e7fffb1e'
+body_hash: 'sha256:a7ac9cfc52a3d8562d163e806ab05cf08b78e3a703627d89c6c12cc9251da163'
 ---
 
 <!-- RETIRED: S01 -->
@@ -92,7 +92,7 @@ Deliver localized typed live feedback and submission without INTERNAL handling f
 
 Deliver scripted creation parity and complete real translations maintained only through the locale CLI.
 
-- [ ] `W03.P07.S10` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then align scripted CLI and typed error registration, then manage complete real translations exclusively through dev.locales; `src/cadrumo/entrypoints/cli/_config`.
+- [x] `W03.P07.S10` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then align scripted CLI and typed error registration, then manage complete real translations exclusively through dev.locales; `src/cadrumo/entrypoints/cli/_config`.
 
 ### Phase `W03.P08` - prove cross-surface and language parity
 
