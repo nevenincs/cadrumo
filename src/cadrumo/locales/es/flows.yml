@@ -77,7 +77,8 @@ flows:
       certificate_done: 'Identificación: %{provider}; certificado activo: %{name}.'
       export: Exportar copia
       export_destination: Ruta del archivo de destino
-      export_done: Copia cifrada escrita en %{destination}.
+      export_done: Copia cifrada escrita en %{destination}. Este producto no puede
+        reimportarla; usa 'aeat config profile archive export' para una copia restaurable.
       export_passphrase: Contraseña que protegerá la copia
       failed: La operación no se completó.
       filed_history_pull_all: Traer historial de declaraciones de la AEAT

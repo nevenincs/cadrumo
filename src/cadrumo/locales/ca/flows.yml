@@ -76,7 +76,9 @@ flows:
       certificate_done: 'Identificació: %{provider}; certificat actiu: %{name}.'
       export: Exportar còpia
       export_destination: Ruta del fitxer de destinació
-      export_done: Còpia xifrada escrita a %{destination}.
+      export_done: Còpia xifrada escrita a %{destination}. Aquest producte no la pot
+        reimportar; utilitza 'aeat config profile archive export' per a una còpia
+        restaurable.
       export_passphrase: Contrasenya que protegirà la còpia
       failed: L'operació no s'ha completat.
       filed_history_pull_all: Recollir l'historial de declaracions de l'AEAT
