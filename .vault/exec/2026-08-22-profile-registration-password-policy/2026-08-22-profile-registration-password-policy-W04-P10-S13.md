@@ -72,9 +72,9 @@ related:
   unrelated warnings/errors: seven generated casilla-200 markup warnings and
   six stale filing/modelo CLI-sequence frame counts.
 - `just docs-check 4` was stopped safely after more than ten minutes at roughly
-  93 percent with many failures/errors and no final count; the bounded gates
-  above preserve exact actionable failures. No orphaned process from that run
-  remained.
+  93 percent with many failures/errors and no final count. The exact elapsed
+  duration, individual diagnostics, and exit status were not captured. No
+  orphaned process from that run remained.
 - The prescribed full corpus harness stopped at collectability after 142.20
   seconds: five unrelated agent-evaluation/harness modules import concurrent
   symbols that are absent from current HEAD. Consequently the harness-protected
@@ -130,25 +130,34 @@ Ruff check exited 0. Format check identified only the then-unformatted
 `_recovery_artifact.py` plus unrelated custody tests
 `test_custody_ceilings_have_one_home.py` and
 `test_local_record_witness_contract.py`; formatting the production file and
-re-running its three bounded commands above exited 0. The two unrelated files
+re-running the artifact Ruff-check, Ruff-format-check, and seven-test commands
+in this transcript exited 0. The two unrelated files
 were not changed. The repository-wide diagnostic commands were `uv run ruff
 check .` and `uv run ruff format --check .`; they exited non-zero with the
-unrelated paths and 94-file format count recorded above.
+following captured Ruff-check paths/codes:
+`dev/locales/tests/test_row_table_tr_argument_discovery.py` (SIM300),
+`dev/quality/facade_export_scan.py` (E501), and
+`src/cadrumo/domain/calculations/registry/__init__.py` (RUF022). The complete
+Ruff-check diagnostic list and duration were not captured. Ruff format reported
+94 files would be reformatted and 6,786 already formatted; its duration was not
+captured.
 
 The exact negative-space searches were:
 
 ```text
 rg -n --glob '!*.md' --glob '!*.json' --glob '!*.yml' --glob '!*.yaml' --glob '!*.po' --glob '!*.pot' 'NIST_PASSPHRASE_MIN_LENGTH|PROFILE_CUSTODY_PASSWORD_MIN|validate_profile_password|map_profile_password_proof_failure' src dev
-rg -n 'assess_profile_password|ProfilePasswordAssessment|PROFILE_PASSWORD_(MIN|MAX)' src/cadrumo/adapters/persistence/storage/custody/*recovery* src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py
+rg -n --glob '*recovery*.py' --glob '!**/tests/**' 'assess_profile_password|ProfilePasswordAssessment|PROFILE_PASSWORD_(MIN|MAX)' src/cadrumo/adapters/persistence/storage/custody
+rg -n 'assess_profile_password|ProfilePasswordAssessment|PROFILE_PASSWORD_(MIN|MAX)' src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py
 ```
 
-The first search exited 0 solely because it found the intentional
-obsolete-symbol string assertions in `custody/tests/test_records.py`; the
-second exited 1 with no recovery/profile-policy coupling matches. The feature
-Vault command was `uv run vaultspec-core vault
-check all --feature profile-registration-password-policy`; exit 0 with all
-behavioral checks clean and the feature-index/lifecycle warnings recorded
-above.
+The obsolete-symbol search exited 0 solely because it found the intentional
+string assertions in `custody/tests/test_records.py`. Both corrected recovery
+searches were executed successfully by PowerShell on the repair HEAD and exited
+1 with no matches in 0.26 seconds combined. The feature Vault command was `uv
+run vaultspec-core vault check all --feature
+profile-registration-password-policy`; exit 0 with all behavioral checks clean
+and one exact warning: the feature index had 4 related links for 17 feature
+documents. Its duration was not captured.
 
 The structural, registry, and documentation commands were:
 
@@ -165,20 +174,50 @@ just test-harness
 just docs-check 4
 ```
 
-`lint-imports` exited 1 with 9 contracts kept and the existing layered contract
-broken. Locale scaffold/audit and API scaffold/audit exited non-zero with the
-unrelated Modelo and 4-missing/2-orphan/4-stale drift above. The bounded API
-suite exited 1 after 10 passed and the stub-completeness failure. Documented
-command conformance exited 1 after 337 passed on
-`docs/_sequences/contracts/workstation-setup/install-agent-harness.seq`.
-Nitpicky user scope exited 1 after 67.98 seconds with the exact 13 diagnostics
-already listed. `just test-harness` exited 1 at collectability after 142.20
-seconds on `dev/agent_eval/tests/test_active_profile_confirmation_golden.py`,
-`dev/agent_eval/tests/test_confirmation_gate_golden.py`,
-`dev/agent_eval/tests/test_identity_switch_scoring_golden.py`, and
-`src/cadrumo-harness/src/cadrumo_harness/tests/test_harness_delivery.py`; its
-fifth corpus-provenance report was transient and the narrowed direct collection
-later collected those two tests. `just docs-check 4` was manually interrupted
+`lint-imports` exited 1 with 9 contracts kept and one broken `AEAT layered
+architecture` contract; the full edge list and duration were not captured.
+Locale scaffold/audit exited non-zero; the captured output included `ca.yml
+missing=275` and missing Modelo 036, 220, and 390 schema leaves. The complete
+locale diagnostic list, per-command exit status, and durations were not
+captured. API scaffold/audit reported these exact 4 missing stubs:
+`cadrumo.application.modelo._calculation_route`,
+`cadrumo.application.operator_surface._calculation_workflows`,
+`cadrumo.application.registry._source_connectivity_authority`, and
+`cadrumo.core.source_connectivity`; 2 exact orphan stubs:
+`cadrumo.application.operator_surface._classification` and
+`cadrumo.application.operator_surface._risk_table`; and 4 stale parents:
+`cadrumo.application.modelo`, `cadrumo.application.operator_surface`,
+`cadrumo.application.registry`, and `cadrumo.core`. Their durations were not
+captured. The bounded API suite exited 1 after 10 passed at
+`test_every_source_module_has_a_stub`, reporting the same 4/2/4 set; duration
+not captured.
+
+Documented-command conformance exited 1 after 337 passed because
+`docs/_sequences/contracts/workstation-setup/install-agent-harness.seq` cites
+`@result aeat --format json app agent --output ./operator-workspace`: `--output`
+is not an `aeat app` or global option and `agent` is not an `aeat app`
+subcommand. It completed in 5.77 seconds. Nitpicky user scope exited 1 after
+67.98 seconds with these exact 13 diagnostics: generated
+`_generated/casillas/200.rst` markup warnings at lines 6684, 112222, 112255,
+112288, 112428, 112461, and 112494; golden/directive frame mismatches at
+`how-to/filing-spine.md:83` (7 versus 9), `:211` (6 versus 8), `:225` (6 versus
+8), and `:239` (6 versus 8); `how-to/modelo-303.md:164` (6 versus 8); and
+`how-to/verification-reports.md:202` (7 versus 9).
+
+`just test-harness` exited 1 at collectability after 142.20 seconds on
+`dev/agent_eval/tests/test_active_profile_confirmation_golden.py` (missing
+`command_classification`),
+`dev/agent_eval/tests/test_confirmation_gate_golden.py` (missing
+`connected_server_and_client_session`),
+`dev/agent_eval/tests/test_identity_switch_scoring_golden.py` (missing
+`command_classification`), and
+`src/cadrumo-harness/src/cadrumo_harness/tests/test_harness_delivery.py`
+(missing `profile_bucket_session_open_resumed`). The harness also reported a
+fifth corpus-provenance collection failure; its exact original path/message was
+not captured. A direct follow-up collected the corpus-provenance module's two
+tests, but the literal direct-collection command and duration were not captured
+and are therefore not reconstructed here. `just docs-check 4` was manually interrupted
 with Ctrl-C only after more than ten minutes, no output movement for several
 minutes, approximately 93 percent progress, and many visible failures/errors;
-there is deliberately no invented exit code, terminal count, or duration.
+the exact duration, diagnostic list, terminal count, and exit status were not
+captured.
