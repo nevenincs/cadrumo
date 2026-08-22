@@ -5252,3 +5252,49 @@ Gate: `bucket/tests/test_keystore_path_components.py`, five tests. Proven to bit
 restoring the pre-fix joins from a scratchpad plugin: both refusals fail independently.
 Lanes 314 integration / 1588 unit (+5). Swept into peer commit `4d08cf20c4`, verified
 complete by reading all three files back out of HEAD.
+
+### A second layer left standing after its only consumer was deleted
+
+Following the twins heuristic to the storage domain's other path validators found
+`_path_safety.safe_repository_id`, which is stricter than the join validator hardened last
+iteration -- it refuses any dot-PREFIXED token, not just a bare dot segment. It is sound.
+What was not sound was the contract its docstring described.
+
+It called itself "the early-rejection half of the substrate's two-layer path contract" and
+named the second half: `safe_subpath`, re-resolving a token against the real filesystem,
+"the only layer that can catch a symlinked store directory". Both halves were said to be
+necessary -- "neither layer subsumes the other".
+
+`safe_subpath` had no production caller. Searched across the whole repository without
+truncation, it appeared in exactly four places: its own definition, its own `__all__`, three
+export entries in the storage facade, and tests. The field the docstring named as needing
+it -- a rotation entry's `target_filename` -- is nowhere in the tree.
+
+The history explains it exactly: `6bee98b0be` *"storage: delete the dead rotation surface
+and its tests"* removed the module that owned `target_filename`, and left the second layer
+behind. A stale `_rotation.cpython-313.pyc` was what first pointed at it.
+
+**The prose was the live part of the defect.** Dead code is inert; a docstring asserting
+that real-filename cases are covered by another layer is not. Someone adding a token that
+becomes a filename would have read that sentence and believed the guarantee existed
+somewhere. It exists nowhere. `safe_repository_id` now states that shape rejection is the
+whole contract, and that containment must be added back AT THE JOIN if a token ever becomes
+a filename -- the same conclusion the last three iterations reached from three other
+directions.
+
+No capability was lost: `core.paths.resolve_relative_subpath` is untouched and still has a
+live consumer in `domain/manuals`. Two tests used `safe_subpath` only as a convenient way to
+raise a `PathContainmentError`; they now raise through `safe_repository_id` and keep what
+they actually assert -- the registered code, the localized operator message, and
+`ValueError` inheritance.
+
+**One measured non-finding, recorded so it is not re-attributed.** `dev/tests/test_import_
+hygiene_gate.py` is red with 6 failures: the test-only cross-package private-import count
+regressed from a documented 69 to 108, across the TUI, invoices, modelo, filing, live and
+aggregation packages. Every listed site was checked against the four files changed here and
+none of them is one; the single storage entry names
+`bucket/tests/test_sealed_archive_member_bound.py`, untouched by this work. It is tree-wide
+debt accumulated by other campaigns, and closing it is the broad mechanical sweep this
+campaign's directive excludes.
+
+Lanes 314 integration / 1586 unit -- down exactly two, the deleted `TestSafeSubpath` cases.
