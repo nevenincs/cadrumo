@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:d138e98400a9183afee42ad7340bdd510a57ec4a6057e0ad58535672145f051a'
+body_hash: 'sha256:63f5b68642c1f6bad97ae4017f306a9a9461bfe9d8dd04b8667abdfc232a7ee5'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -11823,13 +11823,30 @@ this is the part worth keeping:
   BACKWARDS. There is no start year to write, and choosing one would assert a
   window AEAT never stated.
 * `Ejercicio 2008 (Trimestre 2º, 3º y 4º)` and `Ejercicio 2007 y 2008 (Primer
-  Trimestre)` are SUB-YEAR. So is all of modelo 202's unregistered set, which
-  is why that modelo was set aside entirely: its titles carry `1P`, `2P` and
-  `3P` qualifiers, and one of them would overlap the already-registered
-  2019-2022 window. The sources schema expresses a window as DATES, so
-  encoding a pagos-fraccionados period means deciding where a trimester starts
-  and how two designs sharing one year are ordered. That is schema semantics to
-  be decided, not a fact to be copied out of a manifest.
+  Trimestre)` are SUB-YEAR, and the registrar refuses them.
+
+Modelo 202 was set aside on that same reasoning and the reasoning was WRONG.
+The claim was that encoding a `1P`/`2P`/`3P` design requires deciding where a
+trimester starts, because the schema expresses a window as dates. The tree
+already answered it: modelo 303 ships two designs inside one ejercicio and both
+carry the SAME whole-year window, with the period distinction living in the
+source id. Nothing about a trimester boundary has to be decided.
+
+Seven modelo 202 designs are therefore registered, spanning ejercicios 2008 to
+2018, each with the whole ejercicio it governs as its window and its AEAT
+period qualifier copied verbatim into the id. Two of them share 2016, and the
+epoch rule is stricter than the id: an epoch is a four-digit ejercicio with at
+most a lower-case ALPHABETIC sub-year label, so `2016-1p` is refused. The
+validator names the remedy it wants -- `2016-early` / `2016-late` -- and that
+is what they carry. Omitting the epoch also loads, and modelo 303's 2018 and
+2021 pairs do exactly that, but it leaves a design unresolvable by epoch, so
+the labelled form is the better of the two.
+
+Four modelo 202 titles remain unregistered because no ejercicio can be read off
+them at all (`Orden HAP/2055/2012 (v3.2)`, `Orden HAP/636/2013 (v3.3)`, `Orden
+EHA/664/2010`), and one because it is an updated `Ejercicios 2019 y siguientes`
+design competing with the already-registered file for that window -- a currency
+question, not a gap.
 
 The registrar also refuses any window overlapping one already registered for
 the same modelo, and updates its own running window set as it plans, so two
@@ -11837,8 +11854,13 @@ candidates cannot both claim a year within a single run.
 
 ### Verified
 
-* authority CLEAN with the ten new sources.
-* the registration gate moved 82 -> 72, exactly the ten.
+* authority CLEAN with all seventeen new sources.
+* the registration gate moved 82 -> 65: ten range-titled designs plus seven for
+  modelo 202.
+* regression: 65 passed with one failure, `modelo 038` uncovered periods, which
+  names no modelo touched here and is the known no-bundled-design case. An
+  earlier run of the same selection failed 8 times, all of them the transient
+  duplicate-epoch state before the sub-year labels were applied.
 * nine of ten resolve through `load_record_design_intermediate` with plausible
   field counts (22 to 56 fields for these small withholding and pago
   fraccionado designs).
@@ -11856,6 +11878,80 @@ understood rather than merely counted:
   trimester or an unbounded past maps to a date window;
 * the remaining orden-titled files need the ejercicio read out of the orden
   text rather than inferred from a filename.
+
+The three span findings still need per-design epoch authoring: modelo 200's
+2024, modelo 322's 2022, modelo 347's 2008 and 2010.
+
+## Tick: five orden-titled designs registered, with each ejercicio read from its orden
+
+Re-measured at tick start: authority CLEAN, locale catalogue clean, registration
+gate at 65 of 218.
+
+### The window came from the norm, not the filename
+
+These are the files the previous tick set aside because their titles name an
+updating Orden and no ejercicio. Every orden needed was already bundled under
+`corpus/normatives/html`, and each states its own reach:
+
+* Orden EHA/3377/2011 -- applicable to declarations presented from 1 January
+  2012 "referidas a información del ejercicio 2011 y siguientes";
+* Orden HFP/1822/2016 -- "por primera vez, a las declaraciones informativas
+  correspondientes a 2016 que se presentarán en 2017";
+* Orden HAC/1276/2019 -- "por primera vez, para las declaraciones
+  correspondientes a 2019 que se presenten en 2020";
+* Orden HAC/1285/2020 -- "por primera vez para las presentaciones de los
+  modelos 231 y 190 cuyo plazo de presentación se inicie a partir del 1 de
+  enero de 2021", which is the ejercicio 2020 declaration.
+
+That gives modelo 193 a complete chain -- 2011-2015, 2016-2018, 2019-2022,
+2023 -- closing exactly where the already-registered 2024 design begins, and
+modelo 190 its 2020 design. All five parse, and modelo 193's field count moves
+71, 74, 74, 76 across the four epochs, meeting the shape of the later ones.
+
+### Two refused, for different reasons
+
+* Modelo 193's Orden HAC/1504/2024 file states ejercicio 2024, which
+  `aeat-dr-193-2024` already claims from the Orden HAC/56/2024 design. Two
+  designs competing for one ejercicio is a CURRENCY question -- which of two
+  2024 ordenes AEAT means to govern that filing -- and choosing here would
+  answer it by assertion.
+* Modelo 190's Orden HFP/1286/2023 file cannot be grounded at all: that orden
+  is NOT bundled, so there is no applicability clause to read and the ejercicio
+  would be inferred from the orden's own year. Because of it, modelo 190's 2020
+  design is closed at 2022 rather than run up to the registered 2024 -- leaving
+  2023 to the design that actually governs it rather than crediting it to a
+  design that does not.
+
+### Verified
+
+* authority CLEAN; registration gate 65 -> 58.
+* all five resolve through `load_record_design_intermediate`.
+* two further modelo 345 designs registered on the same footing: its
+  `Ejercicio 2023 y siguientes` design closes where the 2024 update begins, and
+  that where the already-registered 2025 does. Both parse at 41 fields. Its
+  third unregistered file, `Orden de actualización del ejercicio 2023`, is left
+  alone: the title names an orden rather than a diseño and nothing establishes
+  which it is -- the same ambiguity recorded for modelo 200's orden PDF, where
+  reading the content proved the title wrong.
+* an independent window sweep across every modelo with registered designs finds
+  five overlapping pairs and every one is the intentional sub-year shape: three
+  pre-existing modelo 303 mid-ejercicio pairs, and the two modelo 202 pairs
+  registered last tick (2016's 1P against its 2P/3P, and 2017-plus-1P-2018
+  against 2018's 2P/3P). No unintended overlap was introduced.
+
+### Still open
+
+Sixty files. What remains is now sorted by what each needs rather than by
+count:
+
+* 22 encoding twins -- an operator ruling on whether locally converted
+  derivatives belong in the corpus;
+* open-backwards and trimester-only titles -- a ruling on how an unbounded past
+  or a bare trimester maps to a window;
+* modelo 193's HAC/1504/2024 and modelo 202's `Ejercicios 2019 y siguientes`
+  update -- currency rulings between two designs claiming one period;
+* modelo 190's HFP/1286/2023 and the remaining orden-titled files -- the orden
+  itself is not bundled, so this is a corpus acquisition, not a reading.
 
 The three span findings still need per-design epoch authoring: modelo 200's
 2024, modelo 322's 2022, modelo 347's 2008 and 2010.
