@@ -7,6 +7,9 @@ modelo:
       revision:
         2025-02-03-y-siguientes:
           casilla:
+            x-chim6r1ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: null
+              label: Surnames if a natural person, or legal name if a legal entity
             x-chim6r1ecdgnasr15koj2c0:
               help: null
               label: Application for a Tax Identification Number (NIF)
@@ -112,9 +115,37 @@ modelo:
               help: null
               label: Deregistration from the census of entrepreneurs, professionals
                 and withholders
+            x-chim6r1ecdgnasr15lh62qj1:
+              help: null
+              label: Reason for deregistration from the census of traders, professionals
+                and withholders
             x-chim6r1eclr6arjk5llmirj4:
               help: null
               label: Census return type
+            x-chim6r1ecpim6q315limcpb3ehknco9dc9gmko8:
+              help: null
+              label: Effective date of deregistration from the census
+            x-chim6r1ecpim6q315limcpb3ehknco9dcdin6p8:
+              help: null
+              label: Effective date of cessation of all business or professional activities
+            x-chim6r1ecpkn4rb15lhm2r39chgm8:
+              help: null
+              label: Capacity in which the return is signed
+            x-chim6r1ecpkn4rb15lj6aor8c4:
+              help: null
+              label: Date on which the return is signed
+            x-chim6r1ecpkn4rb15lj6isjdc5n78p8:
+              help: null
+              label: Forename and surnames of the person signing the return
+            x-chim6r1ecpkn4rb15lm7apr1e8:
+              help: null
+              label: Place where the return is signed
+            x-chim6r1edpkmc:
+              help: null
+              label: Tax identification number (NIF) of the declarant
+            x-chim6r1edpnmqojick:
+              help: null
+              label: Forename, for natural persons
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Regulation in force from 3 February 2025

@@ -1,0 +1,174 @@
+# Modelo 036 PAGINA 1 -- the identificativos, cese/baja dates and firma block that
+# the causa-de-presentacion fragment beside this one does not cover. With these,
+# every box number AEAT prints on Pag. 1 is modelled.
+#
+# PROVENANCE NOTE, and it differs from the sibling fragment on purpose. The
+# causa-110..150 fragment states its numbers and labels are "transcribed verbatim
+# from the AEAT-published Instrucciones Modelo 036, Anexo 3, PAGINA 1, table
+# columns TIPO / CASILLA / CAUSA DE PRESENTACION" and cites
+# corpus/aeat_official/instructions/modelo_036/files/instrucciones-cumplimentacion-pagina-1.html.
+# That bundled file is a 5.4 KB navigation shell and contains no casilla table:
+# searched across ALL six bundled modelo 036 instruction files, the numbers 101,
+# 103, 141, 151 and 152 do not appear at all. The claim cannot be checked against
+# what is bundled.
+#
+# So this fragment grounds its numbers and offsets in aeat-dr-036-2025, the bundled
+# diseno de registro, which IS verifiable: Pag. 1 tiles 1..500 exactly once with no
+# gap and no overlap, and every number below was read from its own field
+# description. Labels are a light editorial rendering of those descriptions -- the
+# section prefix ("Alta.", "Modificacion.", "Baja.") is dropped because the section
+# path already carries it, matching how the sibling fragment reads.
+#
+# [141] AND [152] ARE EACH ONE DATE, not three integers. The diseno splits each
+# into dia, mes and ano component fields (@189/@191/@193 and @199/@201/@203), and a
+# composite component is not a casilla of its own -- the same treatment modelo 840
+# gives its [62] and [109].
+#
+# THE FIRMA BLOCK CARRIES NO BOX NUMBERS and takes slugs. Lugar @207+40, the fecha
+# components @247/@249/@251 as ONE date, the calidad flag @255+1 and the firmante
+# name @256+125 are all real filer-supplied facts, so they are casillas; AEAT simply
+# prints no number on them. A slug-numbered casilla does not count toward diseno
+# coverage, which is correct -- coverage measures AEAT's printed boxes.
+#
+# NOT MODELLED, deliberately: the envelope identifiers at @1+9 and @491+10, the
+# complementaria indicator @10+1, the VERSION AAAMMDD constant @11+8, the reserved
+# justificante slot @153+13 and the three "Reservado para la Agencia Tributaria"
+# runs at @411, @489 and @490. None carries a box number and none is filer-supplied.
+
+# @19+9. Datos identificativos. NIF. [101].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.nif"
+number = "101"
+section = ["declaracion", "identificativos"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @28+125. Datos identificativos. Apellidos sin nombre si persona fisica, razon
+# social o denominacion si persona juridica. [102].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.apellidos-razon-social"
+number = "102"
+section = ["declaracion", "identificativos"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @383+25. Datos identificativos. Nombre, en el caso de personas fisicas. [103].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.nombre"
+number = "103"
+section = ["declaracion", "identificativos"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @189+2 dia, @191+2 mes, @193+4 ano. Modificacion. Fecha efectiva del cese. [141].
+# ONE date casilla: the three fields are composite components of a single fecha.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.fecha-efectiva-cese"
+number = "141"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @198+1. Baja. Causa. [151].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-baja"
+number = "151"
+section = ["declaracion", "causas", "baja"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @199+2 dia, @201+2 mes, @203+4 ano. Baja. Fecha efectiva de la baja. [152].
+# ONE date casilla, as [141] above.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.fecha-efectiva-baja"
+number = "152"
+section = ["declaracion", "causas", "baja"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @207+40. Lugar, fecha y firma. Lugar. No box number in the diseno; slug.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.firma-lugar"
+number = "decl-firma-lugar"
+section = ["declaracion", "firma"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-1274-2007:art-1", "orden-hac-1526-2024:art-1"]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @247+2 dia, @249+2 mes, @251+4 ano. Lugar, fecha y firma. Fecha. ONE date
+# casilla; no box number in the diseno, so a slug.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.firma-fecha"
+number = "decl-firma-fecha"
+section = ["declaracion", "firma"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-1274-2007:art-1", "orden-hac-1526-2024:art-1"]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @255+1. Lugar, fecha y firma. Firma en calidad de. No box number; slug.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.firma-calidad"
+number = "decl-firma-calidad"
+section = ["declaracion", "firma"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-1274-2007:art-1", "orden-hac-1526-2024:art-1"]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @256+125. Lugar, fecha y firma. Firmado, nombre y apellidos. No box number; slug.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.firma-firmante"
+number = "decl-firma-firmante"
+section = ["declaracion", "firma"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-1274-2007:art-1", "orden-hac-1526-2024:art-1"]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
