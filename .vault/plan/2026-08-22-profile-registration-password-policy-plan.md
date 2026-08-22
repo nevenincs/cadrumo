@@ -3,13 +3,13 @@ tags:
   - '#plan'
   - '#profile-registration-password-policy'
 date: '2026-08-22'
-modified: '2026-08-22'
-body_hash: 'sha256:55cac38c2c65b1a0d20715e87352cae0c265c56423a97b9ded8557ff68c59e01'
 tier: L3
 related:
   - '[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]'
   - '[[2026-08-22-profile-registration-password-policy-holistic-credential-capability-research]]'
   - '[[2026-08-22-profile-registration-password-policy-tui-custody-validation-mismatch-reference]]'
+modified: '2026-08-22'
+body_hash: 'sha256:dcb7acf37140afd3cf336d21c537b5f12d22929027b7528492982b41deadb91f'
 ---
 
 <!-- RETIRED: S01 -->
@@ -70,7 +70,7 @@ Map prospective and proof operations through typed application outcomes before a
 
 Deliver typed prospective-password refusals before KDF, locking, staging, journaling, re-heading, or publication.
 
-- [ ] `W02.P04.S07` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then map canonical prospective refusals through registration and rotation before mutation, delete stale application policy paths, and prove exact no-mutation behavior; `src/cadrumo/application/user_profile`.
+- [x] `W02.P04.S07` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then map canonical prospective refusals through registration and rotation before mutation, delete stale application policy paths, and prove exact no-mutation behavior; `src/cadrumo/application/user_profile`.
 
 ### Phase `W02.P05` - collapse authentication failures without hiding operational faults
 

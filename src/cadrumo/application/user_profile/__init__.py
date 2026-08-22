@@ -691,6 +691,9 @@ if TYPE_CHECKING:
     from ._projections import (
         snapshot_to_values as snapshot_to_values,
     )
+    from ._prospective_password import (
+        ProspectiveProfilePasswordRefusal as ProspectiveProfilePasswordRefusal,
+    )
     from ._recovery_custody import (
         ProfileRecoveryArtifactReceipt as ProfileRecoveryArtifactReceipt,
     )
@@ -879,6 +882,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfilePreflightReport": "._commands",
     "ProfilePreflightRequirement": "._commands",
     "ProfilePreflightService": "._preflight",
+    "ProspectiveProfilePasswordRefusal": "._prospective_password",
     "ProfilePassphraseRotationError": "._passphrase_rotation",
     "ProfilePassphraseRotationOutcome": "._passphrase_rotation",
     "ProfileRecordRepository": "._profile_record_repository",
@@ -1107,6 +1111,7 @@ __all__ = [
     "ProfileValidationIssue",
     "ProfileValidationReport",
     "ProfileValidationService",
+    "ProspectiveProfilePasswordRefusal",
     "UnsupportedBundleSchemaVersionError",
     "UserProfileFact",
     "UserProfileFactValue",
