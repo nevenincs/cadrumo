@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:34046a5a61af445411a5f937793f374d598a3affcad95bb906413e23f0625d90'
+body_hash: 'sha256:fec6f5f9405d4e7d05e28bf7065beaea318eea1d21cfa81bd43613086480d458'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -3134,3 +3134,67 @@ field width against number count** — one byte cannot hold five independent val
 236 boxes with no casilla: Pag. 4 (88), Pag. 6 (52), Pag. 7 (42), Pag. 10 (24), Pag. 8
 (16), Pag. 3 (14). Authored: Pag. 1, 2A, 2B, 2C, 5, 9 and most of 3. Pag. 0 is the
 envelope.
+
+## 2026-08-22 — Pagina 4 authored, and the box count moves in BOTH directions for the first time
+
+### What landed
+
+Modelo 036 Pag. 4: **92 casillas over its 130 fields** — 91 numbered, 1 slug. Revision
+now **551 casillas**. Pag. 4 is actividades y locales: the declared activity, its
+I.A.E. classification, activity outside a fixed local, two locales directly affected
+and two indirectly.
+
+Zero mismatches, zero invented, zero missed; all 130 fields authored, collapsed, or
+explicitly excluded. Tiles 1..900 exactly once, no gap, no partial overlap. Suite:
+**13 failures, zero new, zero gone.**
+
+### The measurement is noisy in BOTH directions — this is new
+
+Five previous corrections to this modelo's denominator all **added** numbers a narrower
+pattern had missed, and could be read as monotone progress toward a true value. This
+record breaks that reading:
+
+| direction | finding | effect |
+|---|---|---|
+| **added** | a **seventh number form**: `NNNbis` — `[412bis]`, `[433bis]`, `[454bis]`, `[4774bis]`. Every pattern so far allowed at most ONE trailing letter | **+4** |
+| **removed** | a **false positive**, the first found: the four "Superficie **(m2)**" fields print the UNIT in parentheses, and `(m2)` matches a bracketed-number pattern exactly as a real box would. `m2` was counted as a box in **every** denominator reported for this modelo | **−1** |
+
+**669 − 1 + 4 = 672.**
+
+The sharper lesson: widening a pattern does not only reveal undercounting, **it also
+admits noise**. A token that merely *looks* like a box number is not one. Any
+pattern-derived count over prose carries error in both directions, and the honest form
+of the claim remains "a pattern admitting N forms, less known unit strings, finds X".
+
+Full history: 288 → 348 → 659 → 667 → 669 → **672**.
+
+### `[4774bis]` is AEAT's typo, transcribed as printed
+
+The other three indicators each pair with their own block's referencia catastral —
+412bis/[412], 433bis/[433], 454bis/[454] — and the second indirect block's is **[477]**,
+so the pattern points at `477bis`. That is an **inference, not a transcription**, and is
+not adopted, exactly as the `[B72]`/`[B74]`/`[B76]` collision on Pag. 2B was left as
+printed. Third time this distinction has decided an authoring choice on this modelo.
+
+### One number over two adjacent fields
+
+`[402]` is printed on **both** `@71+1` (sección del I.A.E.) and `@72+4` (grupo o
+epígrafe) — contiguous fields that together form the single classification the box
+names. One casilla of five positions, same convention as the date triples.
+
+### Coverage, three ways
+
+| state | count |
+|---|---|
+| directly modelled | **467** |
+| behind a slug casilla (field modelled, number not individually addressable) | **57** — Pag. 5: 55, Pag. 2B: 2 |
+| no casilla at all | **148** — Pag. 6 (52), Pag. 7 (42), Pag. 10 (24), Pag. 8 (16), Pag. 3 (14) |
+
+Authored: Pag. 1, 2A, 2B, 2C, 4, 5, 9 and most of 3. Pag. 0 is the envelope.
+
+### Note on capture
+
+This iteration's fragments were absorbed by a peer's bare commit before my own pathspec
+commit ran — the accepted scenario, and the reason every real claim lives in the
+fragment header and the `reviewed_by` stamp rather than in a commit message. Nothing
+was lost; the commit message simply never existed.
