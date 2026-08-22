@@ -14249,3 +14249,84 @@ The eight standing gates remain declared inventories. Modelo 840 still needs
 `bindings` and `export_layouts`, `projection_endpoints` decided once a layout
 exists, and 108 casillas whose Catalan and Hungarian labels this session cannot
 ground.
+
+## Tick: five gates that had stopped measuring, and one that cannot be settled alone
+
+Re-measured at tick start: authority loads CLEAN, which is the gate that
+adjudicates coverage for ALL SIX queue items, so the queue is confirmed
+finished rather than remembered as finished. Fourteen gates failed against a
+standing eight. The six new ones were last tick's recorded peer-campaign
+fallout; this tick went into them.
+
+### Four were stale contracts, not defects
+
+Each had the same shape: a peer implemented something, and the gate encoding the
+OLD contract was left behind. None was fixed by weakening it.
+
+* **Semantic map, raw projection refs.** A raw mapping is now COMPILED rather
+  than refused, deliberately: the provenance manifest is JSON, and from JSON a
+  reference can only arrive as a mapping, so demanding an already-typed model
+  made read-back impossible. Controlled before accepting -- hydration is
+  idempotent and an unknown kind, a missing `casilla_id`, a non-integer slot and
+  an unknown field all still refuse. Replaced with the pair that makes it a
+  guarantee: well-formed arrives typed, malformed still bites.
+
+* **dp30302 endpoint multiplicity.** Five revisions all reported 109 endpoints
+  where the gate expected five DIFFERENT counts. Five distinct revisions
+  collapsing to one figure is not a data change, and the cause was a file-shape
+  assumption: `73c5c90c7a` split multi-casilla fragments into per-casilla files,
+  and the test read only `0001-`. Merging the fragments reproduces **146/208/204/
+  214/216/216 exactly**, every revision matching. The data never moved. This is
+  the fragmentation trap the registry rule names, caught here reporting a loss
+  that had not happened.
+
+* **The two variable-envelope gates.** Generation no longer refuses a design
+  carrying a variable envelope -- it composes one through the reviewed contract,
+  which is why modelos 151 and 202, both envelope-bearing, are generated trees.
+  Driven onto the AUTHORED mapping and render profile against the whole parsed
+  design, m200 renders 136 files, and the invariant the old refusal stood in for
+  is pinned directly instead: the manifest carries a typed contract naming
+  `DP200000`, its `body_record_ids` equal the layout's 76 fixed records IN ORDER,
+  and the envelope identity is never itself emitted as a fixed record.
+
+  Modelo 220 has no authored mapping or render profile, so it cannot take that
+  route. What protects it today is the join refusing an envelope with no
+  reviewed contract, and that refusal is now what the gate asserts. It will fail
+  loudly when modelo 220's mapping is authored rather than passing vacuously,
+  which is what forces the upgrade.
+
+Two incidental corrections fell out of the m200 rewrite: it injected a literal
+`revision_id="2025-y-siguientes"` where the law-determined resolution is
+`2024-y-siguientes`, and it carried a placeholder design digest. Both now come
+from the resolution and the parsed source.
+
+### One is a genuine conflict between two ratified positions
+
+Six runtime modules reference the static-inspection API. The S86 audit closed
+with no unresolved findings on exactly this boundary, stating the census "proves
+that inspection authority cannot enter filing, calculations outside the registry
+owner, handoff surfaces, adapters, or entrypoints". Against that, the
+amendment-evidence runtime is built on it deliberately, with docstrings and a
+`RegistrySnapshot | RegistryRevisionInspection` union.
+
+That is the oscillation tell: two documented positions, neither simply wrong, so
+neither ripping out the runtime nor relaxing the census is defensible alone.
+**Recommendation:** keep inspection static-only and give runtime its non-filing
+read through the graded authority (`grade=APPLICABILITY`) this campaign already
+introduced for precisely that need -- the third shape. Recorded rather than
+actioned because deciding it unilaterally would either break filing-grade
+rectificativa evidence or reach around a ratified gate.
+
+### Verified
+
+* dev/registry: 654 passed with only the boundary gate failing.
+* registry package plus generated-tree gates: **9 failed, 5877 passed**, from 14.
+  The nine are the eight declared inventories plus the boundary conflict above.
+* authority loads CLEAN; ruff clean across all four touched test modules.
+
+### Worth recording about the shared tree
+
+The semantic-map edit was clobbered mid-tick -- the file returned to HEAD with
+the old test back -- and was only caught because the suite re-reported a failure
+under a name that no longer existed in my working copy. A green module is not
+evidence the edit is still there; the re-run is.

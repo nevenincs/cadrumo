@@ -2305,4 +2305,3 @@ executed on any of the 13. The prerequisite work is casilla and binding authorin
 bundled designs — which is exactly the "NEEDS CASILLA AUTHORING AT SCALE" category the previous
 campaign had already identified and set aside. That category was never a separate backlog from
 this one; it IS this one.
-
