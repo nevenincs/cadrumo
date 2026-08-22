@@ -72,11 +72,36 @@ def _resolves(target: str) -> bool:
         except Exception:
             continue
         for attr in parts[cut:]:
-            obj = getattr(obj, attr, None)
-            if obj is None:
+            resolved = _member(obj, attr)
+            if resolved is None:
                 return False
+            obj = resolved
         return True
     return False
+
+
+def _member(owner: object, attr: str) -> object | None:
+    """Return ``owner.attr``, counting declared fields as present.
+
+    A pydantic v2 field is NOT a class attribute -- it lives in
+    ``model_fields`` and ``getattr`` on the class returns nothing -- so a plain
+    attribute walk calls every ``:attr:`SomeModel.some_field``` reference
+    dangling. That would make this gate fail on correct docstrings, which is a
+    worse outcome than the staleness it exists to catch: a gate that cries wolf
+    gets its scope narrowed until it stops meaning anything.
+
+    Declared-but-unset annotations are accepted for the same reason.
+    """
+    found = getattr(owner, attr, None)
+    if found is not None:
+        return found
+    fields = getattr(owner, "model_fields", None)
+    if isinstance(fields, dict) and attr in fields:
+        return fields[attr]
+    annotations = getattr(owner, "__annotations__", None)
+    if isinstance(annotations, dict) and attr in annotations:
+        return annotations[attr]
+    return None
 
 
 def _references() -> list[tuple[str, int, str]]:
@@ -129,6 +154,18 @@ def test_the_resolver_reports_a_missing_target() -> None:
     assert _resolves("cadrumo.application.user_profile.ProfileCapsuleLifecycle.edit_fields") is False
     assert _resolves("cadrumo.domain.submission.SubmissionRepository") is False
     assert _resolves("cadrumo.this.module.does.not.exist") is False
+
+
+def test_the_resolver_counts_a_pydantic_field_as_present() -> None:
+    """A model field is declared, not attributed, and must not read as dangling.
+
+    ``getattr(Invoice, "operation_date")`` is nothing in pydantic v2 -- the
+    field lives in ``model_fields``. Without this the gate would report every
+    correct ``:attr:`Model.field``` reference in the tree as stale, and the
+    honest response to that would be to delete the gate.
+    """
+    assert _resolves("cadrumo.domain.invoices.Invoice.operation_date") is True
+    assert _resolves("cadrumo.domain.invoices.Invoice.no_such_field_at_all") is False
 
 
 def test_the_resolver_accepts_real_targets_including_lazy_ones() -> None:
