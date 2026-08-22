@@ -312,6 +312,195 @@ modelo:
               label: Allando telephely. Azonositas. Cegnev
             x-clo2sqb4cln78qb6d5hm2or9dtn2qt39e1niqpbjehgm4r35cdkmqqb5dpq6u:
               label: Allando telephely. Azonositas. Az allando telephely tipusa
+            x-d5r62bj6c5hn8tbic5hmirre5lj62orkelp62bbgdtp2qp35edq6irj1ehgn4qbfec:
+              label: AFA. Szamlazas. A szamlakiallitasi kotelezettseget a cimzettek
+                vagy harmadik felek teljesitik
+            x-d5r62bj6c5hn8tbic5hmirre5lj62orkelp62bbgdtp2qp35edq6irj1ehgn4qbfecmmcpb3d1gg:
+              label: AFA. Szamlazas. Szamlazas cimzettek vagy harmadik felek altal.
+                Datum
+            x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdc5i6qrre5lo7aojcd5hm2bbge9in6tbgelin6t3f:
+              label: Nagyvallalat es kozigazgatasi szervek. Olyan kozigazgatasi szerv,
+                amelynek utolso jovahagyott eves koltsegvetese meghaladja a 6 millio
+                eurot
+            x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdctp62rhdclmn0sj5edgg:
+              label: Nagyvallalat es kozigazgatasi szervek. Nagyvallalati minosegu-e
+            x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqob4dlnmsbbgelh6oqb3c4mn0sj5edqn0tb5edq6u:
+              label: Nagyvallalat es kozigazgatasi szervek. A 6 millio eurot meghalado
+                koltsegvetesu kozigazgatasi minoseg datuma
+            x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqpric5n2qpbde1p6asr1:
+              label: Nagyvallalat es kozigazgatasi szervek. A nagyvallalati minoseg
+                datuma
+            x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurg:
+              label: AFA. Import. Kulon jogallasu teruletek. Import AFA megfizetese.
+                Valasztas vagy lemondas
+            x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurhdcpim6q31:
+              label: AFA. Import. Kulon jogallasu teruletek. Import AFA megfizetese.
+                Datum
+            x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurg:
+              label: AFA. Import. Import AFA megfizetese. Valasztas, lemondas, visszavonas
+                vagy torles
+            x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurhdcpim6q31:
+              label: AFA. Import. Import AFA megfizetese. Datum
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lhmurb9cln7krpdd1gm4qbkelgmo:
+              label: AFA. Tevekenyseg megkezdese. Termekertekesites vagy szolgaltatasnyujtas
+                szokasos megkezdese
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45limst3icljm2spde1nn6t35e9kmusg:
+              label: AFA. Tevekenyseg megkezdese. A beszerzest koveto termekertekesites
+                vagy szolgaltatasnyujtas
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45limst3icljm2spde1p6atj9c4mmubbjd5mnar3kc5n6ao8:
+              label: AFA. Tevekenyseg megkezdese. A beszerzest megelozo vagy azzal
+                egyidejuleg torteno termekertekesites vagy szolgaltatasnyujtas
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mm6rrdd5imsujf5lk62oj9ehqm2r0:
+              label: AFA. Tevekenyseg megkezdese. Az ertekesitesek szokasos megkezdesenek
+                datuma
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mmarjke9imeobj5lo6usrkclp6irri:
+              label: AFA. Tevekenyseg megkezdese. A kesobbi ertekesitesek datuma
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mmarjke9imeobj5lo74pbmd5giqrpdedkmqtbcehgmspb1:
+              label: AFA. Tevekenyseg megkezdese. A megelozo vagy egyidejuleg torteno
+                ertekesitesek datuma
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mn6pb3ehnn4bb4d5j6asj5dphmiob4ds:
+              label: AFA. Tevekenyseg megkezdese. Az elkulonult agazatot kepezo tevekenyseg
+                megkezdesenek datuma
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lpmaorkdtp2qp39cpin4pbecdkm2p3f:
+              label: AFA. Tevekenyseg megkezdese. Elkulonult agazatot kepezo uj tevekenyseg
+                megkezdese
+            x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior1:
+              label: AFA. Nyilvantartasi konyvek. A nyilvantartasi konyvek vezetese
+                az AEAT elektronikus felueleten
+            x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior15lj6aor8c4:
+              label: AFA. Nyilvantartasi konyvek. A nyilvantartasi konyvek elektronikus
+                vezetese. Datum
+            x-d5r62bjfc9m6ipr1cdkmurj5ecmmasrkc5h6opb3d5i6ubb5domn8ob9:
+              label: AFA. Kotelezettsegek. Az ado alkalmazasi teruleten letelepedett,
+                vagy ott allando telephellyel rendelkezik
+            x-d5r62bjfc9m6ipr1cdkmurj5ecmn4pbmcln68pb4dtp2qp39edo6usr9ehkncrrj:
+              label: AFA. Kotelezettsegek. Mobiltelefonok, jatekkonzolok, hordozhato
+                szamitogepek es tablagepek viszontelado minosege
+            x-d5r62bjfc9m6ipr1cdkmurj5ecmn6rrcdsmmus35e9gm6qbfdpin6bbjd5n2qoblehnmoqbhelkm8ob3d5nms:
+              label: AFA. Kotelezettsegek. Kizarolag olyan nem adokoteles vagy mentes
+                ugyleteket vegez, amelyek nem tesznek szuksegesse idoszaki onadozast
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6abbge9nncqbjd5nmsobc:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. Ideiglenes levonasi
+                szazalek javaslata
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj2:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. I. agazat. C.N.A.E.
+                kod (elso)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj4:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. I. agazat. C.N.A.E.
+                kod (masodik)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj6:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. I. agazat. C.N.A.E.
+                kod (harmadik)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mn0sjfe9p62t315lin6s35cdkm2r0:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. I. agazat. Kulonleges
+                levonasi hanyad valasztasa
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj2:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. II. agazat. C.N.A.E.
+                kod (elso)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj4:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. II. agazat. C.N.A.E.
+                kod (masodik)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj6:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. II. agazat. C.N.A.E.
+                kod (harmadik)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mn0sjfe9p62t315lin6s35cdkm2r0:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. II. agazat. Kulonleges
+                levonasi hanyad valasztasa
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj2:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. III. agazat. C.N.A.E.
+                kod (elso)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj4:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. III. agazat. C.N.A.E.
+                kod (masodik)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj6:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. III. agazat. C.N.A.E.
+                kod (harmadik)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmn0sjfe9p62t315lin6s35cdkm2r0:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. III. agazat. Kulonleges
+                levonasi hanyad valasztasa
+            x-d5r62bjge9nn4sj1ehgiqsr9domn6pb3ehnn4pbj5li6ipj5e9imsor9c5i6uso:
+              label: AFA. Levonasi hanyad es elkulonult agazatok. Nincsenek elkulonult
+                agazatai
+            x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aso:
+              label: AFA. Adozasi rendszerek. Utazasi irodak kulonleges rendszere,
+                ugyletenkent
+            x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aspdcpim6q31:
+              label: AFA. Adozasi rendszerek. Utazasi irodak. Datum
+            x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aspdd5gma:
+              label: AFA. Adozasi rendszerek. Utazasi irodak. I.A.E. csoport vagy
+                tetel, illetve tevekenysegi kod
+            x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4:
+              label: AFA. Adozasi rendszerek. Mezogazdasagi, allattenyesztesi es halaszati
+                kulonleges rendszer
+            x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmcpb3d1gg:
+              label: AFA. Adozasi rendszerek. Mezogazdasag, allattenyesztes es halaszat.
+                Datum
+            x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmiob5:
+              label: AFA. Adozasi rendszerek. Mezogazdasag, allattenyesztes es halaszat.
+                I.A.E. csoport vagy tetel, illetve tevekenysegi kod
+            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dg:
+              label: AFA. Adozasi rendszerek. Hasznalt cikkek kulonleges rendszere,
+                globalis arreskulonbozet
+            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dgmmcpb3d1gg:
+              label: AFA. Adozasi rendszerek. Hasznalt cikkek globalis arreskulonbozet.
+                Datum
+            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dgmmiob5:
+              label: AFA. Adozasi rendszerek. Hasznalt cikkek globalis arreskulonbozet.
+                I.A.E. csoport vagy tetel, illetve tevekenysegi kod
+            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn0:
+              label: AFA. Adozasi rendszerek. Hasznalt cikkek kulonleges rendszere,
+                ugyletenkent
+            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn2qpj5cdk62:
+              label: AFA. Adozasi rendszerek. Hasznalt cikkek ugyletenkent. Datum
+            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn2qqb1ck:
+              label: AFA. Adozasi rendszerek. Hasznalt cikkek ugyletenkent. I.A.E.
+                csoport vagy tetel, illetve tevekenysegi kod
+            x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9gg:
+              label: AFA. Adozasi rendszerek. Penzforgalmi elszamolas kulonleges rendszere
+            x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqpj5cdk62:
+              label: AFA. Adozasi rendszerek. Penzforgalmi elszamolas. Datum
+            x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqqb1ck:
+              label: AFA. Adozasi rendszerek. Penzforgalmi elszamolas. I.A.E. csoport
+                vagy tetel, illetve tevekenysegi kod
+            x-d5r62bjicljmirb5dpin6bb7cln6asj1dg:
+              label: AFA. Adozasi rendszerek. Altalanos rendszer
+            x-d5r62bjicljmirb5dpin6bb7cln6asj1dgmmcpb3d1gg:
+              label: AFA. Adozasi rendszerek. Altalanos rendszer. Datum
+            x-d5r62bjicljmirb5dpin6bb7cln6asj1dgmmiob5:
+              label: AFA. Adozasi rendszerek. Altalanos rendszer. I.A.E. csoport vagy
+                tetel, illetve tevekenysegi kod
+            x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn0:
+              label: AFA. Adozasi rendszerek. Befektetesi arany kulonleges rendszere
+            x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn2qpj5cdk62:
+              label: AFA. Adozasi rendszerek. Befektetesi arany. Datum
+            x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn2qqb1ck:
+              label: AFA. Adozasi rendszerek. Befektetesi arany. I.A.E. csoport vagy
+                tetel, illetve tevekenysegi kod
+            x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio8:
+              label: AFA. Adozasi rendszerek. Egyenertekusegi felar kulonleges rendszere
+            x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio9dcpim6q31:
+              label: AFA. Adozasi rendszerek. Egyenertekusegi felar. Datum
+            x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio9dd5gma:
+              label: AFA. Adozasi rendszerek. Egyenertekusegi felar. I.A.E. csoport
+                vagy tetel, illetve tevekenysegi kod
+            x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4ds:
+              label: AFA. Adozasi rendszerek. Egyszerusitett kulonleges rendszer
+            x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmcpb3d1gg:
+              label: AFA. Adozasi rendszerek. Egyszerusitett rendszer. Datum
+            x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmiob5:
+              label: AFA. Adozasi rendszerek. Egyszerusitett rendszer. I.A.E. csoport
+                vagy tetel, illetve tevekenysegi kod
+            x-d5r62bjicljmisrke9nn6bb4clr6ur3lcdkmurhddlimssrlc5m0:
+              label: AFA. Nyilvantartasok. Kerelem a havi visszateritesi nyilvantartasba
+                valo felvetelre vagy torlesre
+            x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpg:
+              label: AFA. Nyilvantartasok. Kerelem a kozossegi adoalanyok nyilvantartasaba
+                valo felvetelre vagy torlesre
+            x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpiqpj5cdk62:
+              label: AFA. Nyilvantartasok. Kozossegi adoalanyok nyilvantartasa. Datum
+            x-d5r62bjiclr6arj4cli6usj5ecmm2r3kc4mm4obac4mmcpb3d1gg:
+              label: AFA. Eszkoz-viszontelado. Viszontelado bejegyzese vagy torlese.
+                Datum
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
               label: Ertesitesek. AEAT-ertesitesek bejegyzese
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:

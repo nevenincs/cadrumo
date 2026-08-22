@@ -1,0 +1,1060 @@
+# Modelo 036 PAGINA 5 -- IVA: obligaciones, comunicacion de inicio de actividad,
+# regimenes, registros, prorrata y sectores diferenciados, ingreso del IVA a la
+# importacion, llevanza de libros y facturacion por terceros.
+#
+# 68 casillas over 115 design fields. Grounded in aeat-dr-036-2025. Pag. 5 tiles
+# 1..380 exactly once with NO gap and NO PARTIAL OVERLAP -- both checked, since a
+# gap-only check passes over overlapping fields -- and every number, offset, length
+# and type below was read from its own field description.
+#
+# THIS RECORD FOUND A SIXTH BRACKET FORM, and it is worth stating because four
+# earlier stamps on this revision reported a box-count denominator that was wrong
+# each time for exactly this reason. @273+1 prints its numbers as a PARENTHESISED
+# list -- "(532,737)" -- where every other multi-number field on this modelo uses a
+# SQUARE-bracketed list. The five patterns used until now could not see it, so 532
+# and 737 were absent from every count taken so far. The measured denominator moves
+# from 667 to 669.
+#
+# The lesson is not the two numbers. It is that each widening of the pattern has
+# found more, and that the honest form of a coverage claim over this design is "a
+# pattern admitting N forms finds X", never "the design has X boxes".
+#
+# LIST BRACKETS TAKE SLUGS, and this record has more of them than any other: 19
+# fields carry a bracket listing several numbers, holding 53 numbers between them.
+# The regimenes de agricultura, simplificado and criterio de caja each print FIVE
+# numbers on one byte, because the printed form has five tick boxes -- one per
+# alta/baja/renuncia/revocacion variant -- that the fichero collapses into a single
+# selecting code byte. No single number describes such a field, so each takes a
+# descriptive slug. The tell is field width against number count.
+#
+# The numbers behind those slugs are therefore NOT modelled individually and that is
+# correct rather than a gap: 534, 538, 542, 546, 570 and their siblings do not each
+# name a field. Do not "fix" this by splitting one byte into five casillas.
+#
+# EIGHTEEN SINGLE-NUMBER DATE TRIPLES collapse to one date casilla each, and three
+# more collapse under a list bracket, matching the convention used across this
+# modelo's other records.
+#
+# NOT MODELLED, deliberately: the envelope identifiers at @1+9 and @371+10, the
+# record-level "Tipo declaracion" at @10+1, and the two "Reservado para la Agencia
+# Tributaria" runs at @142+15 and @308+63. None is filer-supplied.
+
+# @11+1. Sujeto pasivo gran empresa y administraciones publicas. Tiene la condicion de gran empresa.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.gran-empresa-es-gran-empresa"
+number = "541"
+section = ["declaracion", "iva", "gran_empresa"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @12+8. Sujeto pasivo gran empresa y administraciones publicas. Fecha de la condicion de gran empresa. ONE casilla over three design components at @12+2 dia, @14+2 mes and @16+4 ano, all printed under the single number 545.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.gran-empresa-fecha-gran-empresa"
+number = "545"
+section = ["declaracion", "iva", "gran_empresa"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @20+1. Sujeto pasivo gran empresa y administraciones publicas. Es administracion publica cuyo ultimo presupuesto anual aprobado supera 6 millones de euros.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.gran-empresa-es-admon-publica-presupuesto"
+number = "577"
+section = ["declaracion", "iva", "gran_empresa"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @21+8. Sujeto pasivo gran empresa y administraciones publicas. Fecha de la condicion de administracion publica con presupuesto superior a 6 millones de euros. ONE casilla over @21+2 dia, @23+2 mes and @25+4 ano, all printed under the single number 578.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.gran-empresa-fecha-admon-publica-presupuesto"
+number = "578"
+section = ["declaracion", "iva", "gran_empresa"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @29+1. IVA. Informacion de obligaciones. Esta establecido en el territorio de aplicacion del impuesto o tiene en el un establecimiento permanente.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.obligaciones-establecido-en-tai"
+number = "500"
+section = ["declaracion", "iva", "obligaciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @30+1. IVA. Informacion de obligaciones. Realiza exclusivamente operaciones no sujetas o exentas que no obligan a presentar autoliquidacion periodica.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.obligaciones-solo-operaciones-sin-autoliquidacion"
+number = "501"
+section = ["declaracion", "iva", "obligaciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @31+1. IVA. Comunicacion de inicio de actividad. Inicio de actividad. Entregas de bienes o prestaciones de servicios previa o simultanea a la adquisicion de bienes o servicios.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.inicio-actividad-entregas-previa-o-simultanea"
+number = "502"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @32+8. IVA. Comunicacion de inicio de actividad. Fecha del inicio de entregas previas o simultaneas. ONE casilla over @32+2 dia, @34+2 mes and @36+4 ano, all printed under the single number 503.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.inicio-actividad-fecha-entregas-previa-o-simultanea"
+number = "503"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @40+1. IVA. Comunicacion de inicio de actividad. Inicio de actividad. Entregas de bienes o prestaciones de servicios posterior a la adquisicion de bienes o servicios.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.inicio-actividad-entregas-posterior"
+number = "504"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @41+8. IVA. Comunicacion de inicio de actividad. Fecha del inicio de entregas posteriores. ONE casilla over @41+2 dia, @43+2 mes and @45+4 ano, all printed under the single number 505.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.inicio-actividad-fecha-entregas-posterior"
+number = "505"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @49+1. IVA. Comunicacion de inicio de actividad. Inicio de nueva actividad que constituya un sector diferenciado.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.inicio-actividad-sector-diferenciado"
+number = "506"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @50+8. IVA. Comunicacion de inicio de actividad. Fecha del inicio de la nueva actividad que constituye sector diferenciado. ONE casilla over @50+2 dia, @52+2 mes and @54+4 ano, all printed under the single number 507.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.inicio-actividad-fecha-sector-diferenciado"
+number = "507"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @58+1. IVA. Comunicacion de inicio de actividad. Comunicacion del comienzo habitual de entregas de bienes o prestaciones de servicios.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.inicio-actividad-comienzo-habitual"
+number = "508"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @59+8. IVA. Comunicacion de inicio de actividad. Fecha del comienzo habitual de entregas o prestaciones. ONE casilla over @59+2 dia, @61+2 mes and @63+4 ano, all printed under the single number 509.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.inicio-actividad-fecha-comienzo-habitual"
+number = "509"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @67+1. IVA. Regimenes. Regimen general.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-general"
+number = "510"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @68+6. IVA. Regimenes. Regimen general. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-general-iae"
+number = "511"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @74+8. IVA. Regimenes. Regimen general. Fecha. ONE casilla over @74+2 dia, @76+2 mes and @78+4 ano, all printed under the single number 512.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-general-fecha"
+number = "512"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @82+1. IVA. Regimenes. Regimen especial del recargo de equivalencia.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-recargo-equivalencia"
+number = "514"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @83+6. IVA. Regimenes. Regimen especial del recargo de equivalencia. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-recargo-equivalencia-iae"
+number = "515"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @89+8. IVA. Regimenes. Regimen especial del recargo de equivalencia. Fecha. ONE casilla over @89+2 dia, @91+2 mes and @93+4 ano, all printed under the single number 516.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-recargo-equivalencia-fecha"
+number = "516"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @97+1. IVA. Regimenes. Regimen especial de bienes usados, determinacion operacion por operacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-bienes-usados-operacion"
+number = "518"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @98+6. IVA. Regimenes. Regimen especial de bienes usados operacion por operacion. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-bienes-usados-operacion-iae"
+number = "519"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @104+8. IVA. Regimenes. Regimen especial de bienes usados operacion por operacion. Fecha. ONE casilla over @104+2 dia, @106+2 mes and @108+4 ano, all printed under the single number 520.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-bienes-usados-operacion-fecha"
+number = "520"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @112+1. IVA. Regimenes. Regimen especial de bienes usados, margen de beneficio global.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-bienes-usados-margen-global"
+number = "522"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @113+6. IVA. Regimenes. Regimen especial de bienes usados margen de beneficio global. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-bienes-usados-margen-global-iae"
+number = "523"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @119+8. IVA. Regimenes. Regimen especial de bienes usados margen de beneficio global. Fecha. ONE casilla over @119+2 dia, @121+2 mes and @123+4 ano, all printed under the single number 524.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-bienes-usados-margen-global-fecha"
+number = "524"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @127+1. IVA. Regimenes. Regimen especial de agencias de viajes, determinacion operacion por operacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-agencias-viajes"
+number = "526"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @128+6. IVA. Regimenes. Regimen especial de agencias de viajes. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-agencias-viajes-iae"
+number = "527"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @134+8. IVA. Regimenes. Regimen especial de agencias de viajes. Fecha. ONE casilla over @134+2 dia, @136+2 mes and @138+4 ano, all printed under the single number 528.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-agencias-viajes-fecha"
+number = "528"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @157+1. IVA. Regimenes. Regimen especial de agricultura, ganaderia y pesca. AEAT prints the LIST bracket [534,538,542,546,570] on this single byte, so no one number describes the field.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-agricultura-ganaderia-pesca"
+number = "iva-regimenes-agricultura-ganaderia-pesca"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @158+6. IVA. Regimenes. Regimen especial de agricultura, ganaderia y pesca. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad. LIST bracket [535,539,543,547,571].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-agricultura-ganaderia-pesca-iae"
+number = "iva-regimenes-agricultura-ganaderia-pesca-iae"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @164+8. IVA. Regimenes. Regimen especial de agricultura, ganaderia y pesca. Fecha. ONE casilla over @164+2 dia, @166+2 mes and @168+4 ano, all carrying the LIST bracket [536,540,544,548,572].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-agricultura-ganaderia-pesca-fecha"
+number = "iva-regimenes-agricultura-ganaderia-pesca-fecha"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @172+1. IVA. Regimenes. Regimen especial simplificado. LIST bracket [550,554,558,562,566].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-simplificado"
+number = "iva-regimenes-simplificado"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @173+6. IVA. Regimenes. Regimen especial simplificado. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad. LIST bracket [551,555,559,563,567].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-simplificado-iae"
+number = "iva-regimenes-simplificado-iae"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @179+8. IVA. Regimenes. Regimen especial simplificado. Fecha. ONE casilla over @179+2 dia, @181+2 mes and @183+4 ano, all carrying the LIST bracket [552,556,560,564,568].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-simplificado-fecha"
+number = "iva-regimenes-simplificado-fecha"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @187+1. IVA. Regimenes. Regimen especial del oro de inversion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-oro-inversion"
+number = "574"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @188+6. IVA. Regimenes. Regimen especial del oro de inversion. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-oro-inversion-iae"
+number = "575"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @194+8. IVA. Regimenes. Regimen especial del oro de inversion. Fecha. ONE casilla over @194+2 dia, @196+2 mes and @198+4 ano, all printed under the single number 576.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-oro-inversion-fecha"
+number = "576"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @202+1. IVA. Registros. Solicita alta o baja en el registro de devolucion mensual. LIST bracket [579, 580], one selecting byte behind two printed tick boxes.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.registros-devolucion-mensual"
+number = "iva-registros-devolucion-mensual"
+section = ["declaracion", "iva", "registros"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @203+1. IVA. Registros. Solicita alta o baja en el registro de operadores intracomunitarios. LIST bracket [582,583].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.registros-operadores-intracomunitarios"
+number = "iva-registros-operadores-intracomunitarios"
+section = ["declaracion", "iva", "registros"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @204+8. IVA. Registros. Registro de operadores intracomunitarios. Fecha. ONE casilla over @204+2 dia, @206+2 mes and @208+4 ano, all printed under the single number 584.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.registros-operadores-intracomunitarios-fecha"
+number = "584"
+section = ["declaracion", "iva", "registros"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @212+5. IVA. Porcentaje de deduccion y sectores diferenciados. Propone porcentaje provisional de deduccion, 3 enteros y 2 decimales.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-porcentaje-provisional"
+number = "586"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "decimal"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @217+1. IVA. Porcentaje de deduccion y sectores diferenciados. No tiene sectores diferenciados.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sin-sectores-diferenciados"
+number = "587"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @218+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector I. Codigo C.N.A.E.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sector-1-cnae-1"
+number = "588"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @221+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector I. Codigo C.N.A.E.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sector-1-cnae-2"
+number = "589"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @224+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector I. Codigo C.N.A.E.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sector-1-cnae-3"
+number = "590"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @227+1. IVA. Porcentaje de deduccion y sectores diferenciados. Sector I. Opcion por la prorrata especial.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sector-1-prorrata-especial"
+number = "591"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @228+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector II. Codigo C.N.A.E.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sector-2-cnae-1"
+number = "592"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @231+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector II. Codigo C.N.A.E.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sector-2-cnae-2"
+number = "593"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @234+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector II. Codigo C.N.A.E.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sector-2-cnae-3"
+number = "594"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @237+1. IVA. Porcentaje de deduccion y sectores diferenciados. Sector II. Opcion por la prorrata especial.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sector-2-prorrata-especial"
+number = "595"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @238+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector III. Codigo C.N.A.E.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sector-3-cnae-1"
+number = "596"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @241+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector III. Codigo C.N.A.E.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sector-3-cnae-2"
+number = "597"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @244+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector III. Codigo C.N.A.E.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sector-3-cnae-3"
+number = "598"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @247+1. IVA. Porcentaje de deduccion y sectores diferenciados. Sector III. Opcion por la prorrata especial.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.prorrata-sector-3-prorrata-especial"
+number = "599"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @248+1. IVA. Regimenes. Regimen especial del criterio de caja. LIST bracket [517,529,549,573,561].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-criterio-caja"
+number = "iva-regimenes-criterio-caja"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @249+6. IVA. Regimenes. Regimen especial del criterio de caja. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad. LIST bracket [521,533,553,581,565].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-criterio-caja-iae"
+number = "iva-regimenes-criterio-caja-iae"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @255+8. IVA. Regimenes. Regimen especial del criterio de caja. Fecha. ONE casilla over @255+2 dia, @257+2 mes and @259+4 ano, all carrying the LIST bracket [525,537,557,585,569].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.regimenes-criterio-caja-fecha"
+number = "iva-regimenes-criterio-caja-fecha"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @263+1. IVA. Informacion de obligaciones. Tiene la condicion de revendedor de telefonos moviles, consolas de videojuegos, ordenadores portatiles y tabletas digitales de acuerdo con el art. 84 Uno 2 LIVA.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.obligaciones-revendedor-dispositivos"
+number = "513"
+section = ["declaracion", "iva", "obligaciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @264+1. IVA. Ingreso del IVA a la importacion. Ingreso del IVA a la importacion. Opcion, renuncia, revocacion o baja. LIST bracket [530,531].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.importacion-ingreso-iva-importacion"
+number = "iva-importacion-ingreso-iva-importacion"
+section = ["declaracion", "iva", "importacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @265+8. IVA. Ingreso del IVA a la importacion. Ingreso del IVA a la importacion. Fecha. ONE casilla over @265+2 dia, @267+2 mes and @269+4 ano, all printed under the single number 736.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.importacion-ingreso-iva-importacion-fecha"
+number = "736"
+section = ["declaracion", "iva", "importacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @273+1. IVA. Llevanza de los libros de registro. Llevanza de los libros de registro del IVA a traves de la sede electronica de la AEAT. AEAT prints a PARENTHESISED list here, "(532,737)", not a bracketed one; see the fragment header.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.libros-registro-llevanza-sede-electronica"
+number = "iva-libros-registro-llevanza-sede-electronica"
+section = ["declaracion", "iva", "libros_registro"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @274+8. IVA. Llevanza de los libros de registro. Llevanza de los libros de registro a traves de la sede electronica. Fecha. ONE casilla over @274+2 dia, @276+2 mes and @278+4 ano, all printed under the single number 738.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.libros-registro-llevanza-sede-electronica-fecha"
+number = "738"
+section = ["declaracion", "iva", "libros_registro"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @282+1. IVA. Facturacion por destinatarios o terceros. Comunicacion de que el cumplimiento de la obligacion de expedir factura se realiza por los destinatarios o por terceros.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.facturacion-factura-por-destinatarios"
+number = "740"
+section = ["declaracion", "iva", "facturacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @283+8. IVA. Facturacion por destinatarios o terceros. Facturacion por destinatarios o terceros. Fecha. ONE casilla over @283+2 dia, @285+2 mes and @287+4 ano, all printed under the single number 739.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.facturacion-factura-por-destinatarios-fecha"
+number = "739"
+section = ["declaracion", "iva", "facturacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @291+1. IVA. Ingreso del IVA a la importacion. Forales. Ingreso del IVA a la importacion. Opcion o renuncia. LIST bracket [741,742].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.importacion-forales-iva-importacion"
+number = "iva-importacion-forales-iva-importacion"
+section = ["declaracion", "iva", "importacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @292+8. IVA. Ingreso del IVA a la importacion. Forales. Ingreso del IVA a la importacion. Fecha. ONE casilla over @292+2 dia, @294+2 mes and @296+4 ano, all printed under the single number 743.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.importacion-forales-iva-importacion-fecha"
+number = "743"
+section = ["declaracion", "iva", "importacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @300+8. IVA. Revendedores de telefonos moviles y dispositivos. Alta o baja de revendedores de telefonos moviles y consolas. Fecha. ONE casilla over @300+2 dia, @302+2 mes and @304+4 ano, all printed under the single number 744.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "iva.revendedores-alta-baja-fecha"
+number = "744"
+section = ["declaracion", "iva", "revendedores"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]

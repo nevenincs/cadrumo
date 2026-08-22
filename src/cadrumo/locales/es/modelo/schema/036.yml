@@ -357,6 +357,191 @@ modelo:
             x-clo2sqb4cln78qb6d5hm2or9dtn2qt39e1niqpbjehgm4r35cdkmqqb5dpq6u:
               label: Establecimiento permanente. Identificacion. Tipo de establecimiento
                 permanente
+            x-d5r62bj6c5hn8tbic5hmirre5lj62orkelp62bbgdtp2qp35edq6irj1ehgn4qbfec:
+              label: IVA. Facturacion. La obligacion de expedir factura se cumple
+                por los destinatarios o por terceros
+            x-d5r62bj6c5hn8tbic5hmirre5lj62orkelp62bbgdtp2qp35edq6irj1ehgn4qbfecmmcpb3d1gg:
+              label: IVA. Facturacion. Facturacion por destinatarios o terceros. Fecha
+            x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdc5i6qrre5lo7aojcd5hm2bbge9in6tbgelin6t3f:
+              label: Gran empresa y administraciones publicas. Es administracion publica
+                cuyo ultimo presupuesto anual aprobado supera 6 millones de euros
+            x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdctp62rhdclmn0sj5edgg:
+              label: Gran empresa y administraciones publicas. Tiene la condicion
+                de gran empresa
+            x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqob4dlnmsbbgelh6oqb3c4mn0sj5edqn0tb5edq6u:
+              label: Gran empresa y administraciones publicas. Fecha de la condicion
+                de administracion publica con presupuesto superior a 6 millones de
+                euros
+            x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqpric5n2qpbde1p6asr1:
+              label: Gran empresa y administraciones publicas. Fecha de la condicion
+                de gran empresa
+            x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurg:
+              label: IVA. Importacion. Forales. Ingreso del IVA a la importacion.
+                Opcion o renuncia
+            x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurhdcpim6q31:
+              label: IVA. Importacion. Forales. Ingreso del IVA a la importacion.
+                Fecha
+            x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurg:
+              label: IVA. Importacion. Ingreso del IVA a la importacion. Opcion, renuncia,
+                revocacion o baja
+            x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurhdcpim6q31:
+              label: IVA. Importacion. Ingreso del IVA a la importacion. Fecha
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lhmurb9cln7krpdd1gm4qbkelgmo:
+              label: IVA. Inicio de actividad. Comienzo habitual de entregas de bienes
+                o prestaciones de servicios
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45limst3icljm2spde1nn6t35e9kmusg:
+              label: IVA. Inicio de actividad. Entregas de bienes o prestaciones de
+                servicios posterior a la adquisicion
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45limst3icljm2spde1p6atj9c4mmubbjd5mnar3kc5n6ao8:
+              label: IVA. Inicio de actividad. Entregas de bienes o prestaciones de
+                servicios previa o simultanea a la adquisicion
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mm6rrdd5imsujf5lk62oj9ehqm2r0:
+              label: IVA. Inicio de actividad. Fecha del comienzo habitual de entregas
+                o prestaciones
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mmarjke9imeobj5lo6usrkclp6irri:
+              label: IVA. Inicio de actividad. Fecha de las entregas posteriores
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mmarjke9imeobj5lo74pbmd5giqrpdedkmqtbcehgmspb1:
+              label: IVA. Inicio de actividad. Fecha de las entregas previas o simultaneas
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mn6pb3ehnn4bb4d5j6asj5dphmiob4ds:
+              label: IVA. Inicio de actividad. Fecha del inicio de la actividad que
+                constituye sector diferenciado
+            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lpmaorkdtp2qp39cpin4pbecdkm2p3f:
+              label: IVA. Inicio de actividad. Inicio de nueva actividad que constituya
+                un sector diferenciado
+            x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior1:
+              label: IVA. Libros de registro. Llevanza de los libros de registro a
+                traves de la sede electronica de la AEAT
+            x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior15lj6aor8c4:
+              label: IVA. Libros de registro. Llevanza de los libros de registro a
+                traves de la sede electronica. Fecha
+            x-d5r62bjfc9m6ipr1cdkmurj5ecmmasrkc5h6opb3d5i6ubb5domn8ob9:
+              label: IVA. Obligaciones. Esta establecido en el territorio de aplicacion
+                del impuesto o tiene en el un establecimiento permanente
+            x-d5r62bjfc9m6ipr1cdkmurj5ecmn4pbmcln68pb4dtp2qp39edo6usr9ehkncrrj:
+              label: IVA. Obligaciones. Tiene la condicion de revendedor de telefonos
+                moviles, consolas, ordenadores portatiles y tabletas
+            x-d5r62bjfc9m6ipr1cdkmurj5ecmn6rrcdsmmus35e9gm6qbfdpin6bbjd5n2qoblehnmoqbhelkm8ob3d5nms:
+              label: IVA. Obligaciones. Realiza exclusivamente operaciones no sujetas
+                o exentas que no obligan a presentar autoliquidacion periodica
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6abbge9nncqbjd5nmsobc:
+              label: IVA. Prorrata y sectores diferenciados. Propone porcentaje provisional
+                de deduccion
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj2:
+              label: IVA. Prorrata y sectores diferenciados. Sector I. Codigo C.N.A.E.
+                (primero)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj4:
+              label: IVA. Prorrata y sectores diferenciados. Sector I. Codigo C.N.A.E.
+                (segundo)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj6:
+              label: IVA. Prorrata y sectores diferenciados. Sector I. Codigo C.N.A.E.
+                (tercero)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mn0sjfe9p62t315lin6s35cdkm2r0:
+              label: IVA. Prorrata y sectores diferenciados. Sector I. Opcion por
+                la prorrata especial
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj2:
+              label: IVA. Prorrata y sectores diferenciados. Sector II. Codigo C.N.A.E.
+                (primero)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj4:
+              label: IVA. Prorrata y sectores diferenciados. Sector II. Codigo C.N.A.E.
+                (segundo)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj6:
+              label: IVA. Prorrata y sectores diferenciados. Sector II. Codigo C.N.A.E.
+                (tercero)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mn0sjfe9p62t315lin6s35cdkm2r0:
+              label: IVA. Prorrata y sectores diferenciados. Sector II. Opcion por
+                la prorrata especial
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj2:
+              label: IVA. Prorrata y sectores diferenciados. Sector III. Codigo C.N.A.E.
+                (primero)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj4:
+              label: IVA. Prorrata y sectores diferenciados. Sector III. Codigo C.N.A.E.
+                (segundo)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj6:
+              label: IVA. Prorrata y sectores diferenciados. Sector III. Codigo C.N.A.E.
+                (tercero)
+            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmn0sjfe9p62t315lin6s35cdkm2r0:
+              label: IVA. Prorrata y sectores diferenciados. Sector III. Opcion por
+                la prorrata especial
+            x-d5r62bjge9nn4sj1ehgiqsr9domn6pb3ehnn4pbj5li6ipj5e9imsor9c5i6uso:
+              label: IVA. Prorrata y sectores diferenciados. No tiene sectores diferenciados
+            x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aso:
+              label: IVA. Regimenes. Regimen especial de agencias de viajes, operacion
+                por operacion
+            x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aspdcpim6q31:
+              label: IVA. Regimenes. Agencias de viajes. Fecha
+            x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aspdd5gma:
+              label: IVA. Regimenes. Agencias de viajes. Grupo o epigrafe del I.A.E.
+                o codigo de actividad
+            x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4:
+              label: IVA. Regimenes. Regimen especial de agricultura, ganaderia y
+                pesca
+            x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmcpb3d1gg:
+              label: IVA. Regimenes. Agricultura, ganaderia y pesca. Fecha
+            x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmiob5:
+              label: IVA. Regimenes. Agricultura, ganaderia y pesca. Grupo o epigrafe
+                del I.A.E. o codigo de actividad
+            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dg:
+              label: IVA. Regimenes. Regimen especial de bienes usados, margen de
+                beneficio global
+            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dgmmcpb3d1gg:
+              label: IVA. Regimenes. Bienes usados margen de beneficio global. Fecha
+            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dgmmiob5:
+              label: IVA. Regimenes. Bienes usados margen de beneficio global. Grupo
+                o epigrafe del I.A.E. o codigo de actividad
+            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn0:
+              label: IVA. Regimenes. Regimen especial de bienes usados, operacion
+                por operacion
+            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn2qpj5cdk62:
+              label: IVA. Regimenes. Bienes usados operacion por operacion. Fecha
+            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn2qqb1ck:
+              label: IVA. Regimenes. Bienes usados operacion por operacion. Grupo
+                o epigrafe del I.A.E. o codigo de actividad
+            x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9gg:
+              label: IVA. Regimenes. Regimen especial del criterio de caja
+            x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqpj5cdk62:
+              label: IVA. Regimenes. Criterio de caja. Fecha
+            x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqqb1ck:
+              label: IVA. Regimenes. Criterio de caja. Grupo o epigrafe del I.A.E.
+                o codigo de actividad
+            x-d5r62bjicljmirb5dpin6bb7cln6asj1dg:
+              label: IVA. Regimenes. Regimen general
+            x-d5r62bjicljmirb5dpin6bb7cln6asj1dgmmcpb3d1gg:
+              label: IVA. Regimenes. Regimen general. Fecha
+            x-d5r62bjicljmirb5dpin6bb7cln6asj1dgmmiob5:
+              label: IVA. Regimenes. Regimen general. Grupo o epigrafe del I.A.E.
+                o codigo de actividad
+            x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn0:
+              label: IVA. Regimenes. Regimen especial del oro de inversion
+            x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn2qpj5cdk62:
+              label: IVA. Regimenes. Oro de inversion. Fecha
+            x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn2qqb1ck:
+              label: IVA. Regimenes. Oro de inversion. Grupo o epigrafe del I.A.E.
+                o codigo de actividad
+            x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio8:
+              label: IVA. Regimenes. Regimen especial del recargo de equivalencia
+            x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio9dcpim6q31:
+              label: IVA. Regimenes. Recargo de equivalencia. Fecha
+            x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio9dd5gma:
+              label: IVA. Regimenes. Recargo de equivalencia. Grupo o epigrafe del
+                I.A.E. o codigo de actividad
+            x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4ds:
+              label: IVA. Regimenes. Regimen especial simplificado
+            x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmcpb3d1gg:
+              label: IVA. Regimenes. Regimen simplificado. Fecha
+            x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmiob5:
+              label: IVA. Regimenes. Regimen simplificado. Grupo o epigrafe del I.A.E.
+                o codigo de actividad
+            x-d5r62bjicljmisrke9nn6bb4clr6ur3lcdkmurhddlimssrlc5m0:
+              label: IVA. Registros. Solicita alta o baja en el registro de devolucion
+                mensual
+            x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpg:
+              label: IVA. Registros. Solicita alta o baja en el registro de operadores
+                intracomunitarios
+            x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpiqpj5cdk62:
+              label: IVA. Registros. Registro de operadores intracomunitarios. Fecha
+            x-d5r62bjiclr6arj4cli6usj5ecmm2r3kc4mm4obac4mmcpb3d1gg:
+              label: IVA. Revendedores de dispositivos. Alta o baja de revendedores.
+                Fecha
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
               label: Avisos. Alta de avisos de la AEAT
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
