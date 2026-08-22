@@ -1394,7 +1394,10 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         iva_compensation_decision=iva_compensation_decision,
         iva_compensation_decision_repository=iva_compensation_decision_repository,
         ledger_preflight_transaction_repository=transaction_reads,
-        enum_binding_values=enum_binding_values,
+        enum_binding_values={
+            **dict(channels.source_resolution.enum_binding_values),
+            **dict(enum_binding_values or {}),
+        },
         borrador_snapshot_id=borrador_snapshot_id,
         relation_values=channels.reconciliation.merged_relation_values,
         unresolved_relation_ids=channels.reconciliation.unresolved_relation_ids,

@@ -1,0 +1,198 @@
+# Modelo 036 PAGINA 8 -- relacion de socios, miembros o participes.
+#
+# THIS FRAGMENT DECLARES ONE ROW, NOT FOUR, AND THAT IS THE WHOLE DESIGN DECISION
+# WORTH READING BEFORE CHANGING IT.
+#
+# The record physically carries FOUR blocks -- 12a, 12b, 12c and 12d -- of thirteen
+# fields each, at offsets 11, 368, 725 and 1082, a stride of 357 positions. But all
+# four blocks print THE SAME NUMBERS: every block's N.I.F. is [800], every block's
+# fecha is [805], every block's cuota de participacion is [818]. AEAT's numbers here
+# identify a FIELD WITHIN A ROW, not a unique box on the form.
+#
+# So the sixteen numbers this record prints describe one row, and the record repeats
+# that row four times. The casilla set is offset-free -- a casilla carries a number,
+# never a position -- so one row of casillas is the correct and complete description
+# of what the taxpayer declares. The four physical blocks are a LAYOUT concern, to be
+# materialised by the repeat mechanism when an export layout is authored, exactly as
+# modelo 720's binding_record does for its repeating rows.
+#
+# THE TWO REJECTED ALTERNATIVES, stated because both are tempting:
+#   * Authoring four blocks would need three sets of invented slug numbers, since
+#     (segmento, number) uniqueness forbids using 800 four times. That asserts twelve
+#     boxes AEAT does not print.
+#   * Giving block 12a the real numbers and 12b to 12d slugs would privilege one
+#     block over three identical ones, which the design does not do.
+#
+# CONTRAST PAGINA 9 AND PAGINA 10, both of which ARE authored block by block. Their
+# designs give each block its OWN numbers -- Pag. 9's sucesores run 920 to 943 across
+# six blocks, Pag. 10's titulares run 1000 to 1023 across six -- so there the numbers
+# identify distinct boxes and one row would lose them. The rule is not "repeating
+# records get one row"; it is that the number set tells you whether AEAT considers
+# the rows distinct.
+#
+# A LAYOUT AUTHOR MUST NOT MISS THIS: writing a layout that maps these ten casillas
+# once, at offsets 11 to 167, leaves blocks 12b, 12c and 12d unfilled. The repeat is
+# required, with a stride of 357 and a count of four.
+#
+# Grounded in aeat-dr-036-2025. Pag. 8 tiles 1..1800 exactly once with NO gap and NO
+# PARTIAL OVERLAP -- both checked -- and every number, length and type below was read
+# from its own field description in block 12a.
+#
+# SIX FIELDS CARRY LIST BRACKETS and take slugs: the causa de la presentacion and the
+# four renuncia/revocacion selectors, each one byte behind two or three printed tick
+# boxes. Their numbers -- 802, 803, 804, 819 to 826 -- are covered by a modelled FIELD
+# without being individually addressable.
+#
+# NOT MODELLED, deliberately: the envelope identifiers at @1+9 and @1791+10, the
+# record-level "Tipo declaracion" at @10+1, and the four "Reservado para la Agencia
+# Tributaria" runs. None is filer-supplied.
+
+# Causa de la presentacion. LIST bracket [802,803,804]: one selecting byte behind three printed tick boxes.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "soc.causa-presentacion"
+number = "soc-causa-presentacion"
+section = ["declaracion", "socios"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# Fecha de la causa de la presentacion. ONE casilla over the dia, mes and ano components, all printed under the single number 805.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "soc.causa-fecha"
+number = "805"
+section = ["declaracion", "socios"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# N.I.F. del socio, miembro o participe.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "soc.nif"
+number = "800"
+section = ["declaracion", "socios"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# Apellidos y nombre, razon o denominacion social del socio, miembro o participe.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "soc.nombre-razon-social"
+number = "801"
+section = ["declaracion", "socios"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# Domicilio fiscal en el Estado de residencia. IRPF, estimacion objetiva: renuncia o revocacion. LIST bracket [819,820].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "soc.irpf-estimacion-objetiva"
+number = "soc-irpf-estimacion-objetiva"
+section = ["declaracion", "socios"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# Domicilio fiscal en el Estado de residencia. IRPF, estimacion directa simplificada: renuncia o revocacion. LIST bracket [821,822].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "soc.irpf-estimacion-directa-simplificada"
+number = "soc-irpf-estimacion-directa-simplificada"
+section = ["declaracion", "socios"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# Domicilio fiscal en el Estado de residencia. IVA, regimen simplificado: renuncia o revocacion. LIST bracket [823,824].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "soc.iva-regimen-simplificado"
+number = "soc-iva-regimen-simplificado"
+section = ["declaracion", "socios"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# Domicilio fiscal en el Estado de residencia. IVA, regimen especial de agricultura, ganaderia y pesca: renuncia o revocacion. LIST bracket [825,826].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "soc.iva-reagp"
+number = "soc-iva-reagp"
+section = ["declaracion", "socios"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# Cuota o porcentaje de participacion, 3 enteros y 2 decimales.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "soc.cuota-participacion"
+number = "818"
+section = ["declaracion", "socios"]
+data_type = "decimal"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# Cuota o porcentaje de atribucion, 3 enteros y 2 decimales.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "soc.cuota-atribucion"
+number = "859"
+section = ["declaracion", "socios"]
+data_type = "decimal"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]

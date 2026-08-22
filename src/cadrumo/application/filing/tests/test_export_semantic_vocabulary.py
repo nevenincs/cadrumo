@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ast
 import inspect
 from hashlib import sha256
 
@@ -26,32 +25,16 @@ from .. import (
     render_filing_envelope,
 )
 from .. import _export as export_module
+from .. import _export_producer as export_producer_module
 from .. import _record_renderer as record_renderer_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _resolver_enum_keys() -> set[FilingProducerKey]:
-    source = inspect.getsource(export_module._filing_producer_values)
-    tree = ast.parse(source)
-    resolver = next(
-        node
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef) and node.name == export_module._filing_producer_values.__name__
-    )
-    members: set[FilingProducerKey] = set()
-    for node in ast.walk(resolver):
-        if (
-            isinstance(node, ast.Attribute)
-            and isinstance(node.value, ast.Name)
-            and node.value.id == "FilingProducerKey"
-        ):
-            members.add(FilingProducerKey[node.attr])
-    return members
-
-
 def test_snapshot_resolver_is_exhaustive_over_the_core_producer_vocabulary() -> None:
-    assert _resolver_enum_keys() == set(FilingProducerKey)
+    ownership = export_producer_module.filing_producer_ownership()
+    assert set(ownership) == set(FilingProducerKey)
+    assert all(owner.strip() for owner in ownership.values())
 
 
 def test_legacy_header_surfaces_are_deleted_instead_of_normalised() -> None:

@@ -344,6 +344,7 @@ record_type = "t36902-ext"
 order = 3
 encoding = "latin-1"
 line_ending = "none"
+required = false
 binding_record = "modelo-369-exterior-t36902"
 [[revisions."esquema-exterior".export_layouts.records.fields]]
 id = "modelo-369-exterior-t36902-1-inicio-del-identificador-de-modelo-y-pag"
@@ -533,4 +534,3 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-

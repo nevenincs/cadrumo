@@ -799,6 +799,8 @@ cli:
         filing_record_id_help: Identificador estable de un filing record
         import_casilla_help: Valor de casilla importado con sintaxis CASILLA_ID=DECIMAL
           (repetible; al menos uno requerido)
+        import_file_help: Ruta a un manifiesto de casillas CSV o XLSX exportado desde
+          la fuente de la declaración externa
         import_help: Persistir una declaración presentada externamente como filing
           record base con evidencia oficial importada de la AEAT
         import_set_required: --set es obligatorio al menos una vez para una importación.

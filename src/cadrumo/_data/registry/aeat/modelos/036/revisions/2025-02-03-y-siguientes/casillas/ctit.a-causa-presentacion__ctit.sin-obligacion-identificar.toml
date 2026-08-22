@@ -1,0 +1,877 @@
+# Modelo 036 PAGINA 10 -- relacion de titulares reales, six blocks 14a to 14f.
+#
+# 54 casillas over 90 design fields, 6 carrying an AEAT number and 48 slugs. Grounded
+# in aeat-dr-036-2025. Pag. 10 tiles 1..1750 exactly once with NO gap and NO PARTIAL
+# OVERLAP -- both checked -- and every number, offset, length and type below was read
+# from its own field description.
+#
+# THIS RECORD IS AUTHORED BLOCK BY BLOCK, unlike its sibling Pagina 8, and the reason
+# is in the numbers rather than in the shape. Both records repeat a thirteen-field row
+# several times. But Pag. 8's four blocks all print THE SAME numbers, so those numbers
+# describe a row and the record is declared once; Pag. 10's six blocks print DISTINCT
+# numbers -- 1000 to 1003 for 14a, 1004 to 1007 for 14b, and so on to 1020 to 1023 for
+# 14f -- so each block is a distinct set of boxes and collapsing them would lose
+# eighteen numbers. The number set, not the repetition, decides.
+#
+# ONLY THE CAUSA AND ITS FECHA ARE NUMBERED. Each block prints a LIST bracket on the
+# causa de la presentacion byte and a single number on its fecha. The nine identity
+# fields -- tipo de documento, N.I.F. or foreign identification code, apellidos y
+# nombre, pais de expedicion, fecha de nacimiento, pais de residencia and
+# nacionalidad -- carry NO printed number at all and take descriptive slugs. That is
+# the design's own division, not a gap in the transcription.
+#
+# The record header notes a maximum of 40 titulares across 7 pages, with space for 42;
+# this file declares the six blocks of ONE page, which is what the bundled design
+# describes.
+#
+# TWO RECORD-LEVEL FIELDS SIT AFTER THE SIX BLOCKS and belong to no titular: the
+# "declaracion de no variacion de datos" at @1715+1 and "entidad sin obligacion de
+# identificar al titular real" at @1716+1. Neither carries a printed number, and both
+# are filer-supplied, so both are declared here under slugs. They were found by
+# asserting that every one of the record's 90 fields is either authored or explicitly
+# excluded -- the block-shaped reading of this record would have missed them, which is
+# exactly what that completeness check exists to catch.
+#
+# NOT MODELLED, deliberately: the envelope identifiers at @1+9 and @1741+10, the
+# record-level "Tipo declaracion" at @10+1, and the six "Reservado para la Agencia
+# Tributaria" runs. None is filer-supplied.
+
+# @11+1. Titular real 14a. Causa de la presentacion. LIST bracket, one selecting byte behind three printed tick boxes Numbers [1000,1001,1002].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.a-causa-presentacion"
+number = "tit-a-causa-presentacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @12+8. Titular real 14a. Fecha de la causa de la presentacion. ONE casilla over the dia, mes and ano components.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.a-causa-fecha"
+number = "1003"
+section = ["declaracion", "titulares_reales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @20+4. Titular real 14a. Tipo de documento identificativo. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.a-tipo-documento"
+number = "tit-a-tipo-documento"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @24+102. Titular real 14a. N.I.F. o codigo de identificacion extranjero. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.a-identificacion"
+number = "tit-a-identificacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @126+125. Titular real 14a. Apellidos y nombre. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.a-nombre"
+number = "tit-a-nombre"
+section = ["declaracion", "titulares_reales"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @251+2. Titular real 14a. Pais de expedicion del documento de identificacion. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.a-pais-expedicion"
+number = "tit-a-pais-expedicion"
+section = ["declaracion", "titulares_reales"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @253+8. Titular real 14a. Fecha de nacimiento. ONE casilla over the dia, mes and ano components. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.a-fecha-nacimiento"
+number = "tit-a-fecha-nacimiento"
+section = ["declaracion", "titulares_reales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @261+2. Titular real 14a. Pais de residencia. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.a-pais-residencia"
+number = "tit-a-pais-residencia"
+section = ["declaracion", "titulares_reales"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @263+2. Titular real 14a. Nacionalidad. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.a-nacionalidad"
+number = "tit-a-nacionalidad"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @295+1. Titular real 14b. Causa de la presentacion. LIST bracket, one selecting byte behind three printed tick boxes Numbers [1004,1005,1006].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.b-causa-presentacion"
+number = "tit-b-causa-presentacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @296+8. Titular real 14b. Fecha de la causa de la presentacion. ONE casilla over the dia, mes and ano components.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.b-causa-fecha"
+number = "1007"
+section = ["declaracion", "titulares_reales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @304+4. Titular real 14b. Tipo de documento identificativo. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.b-tipo-documento"
+number = "tit-b-tipo-documento"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @308+102. Titular real 14b. N.I.F. o codigo de identificacion extranjero. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.b-identificacion"
+number = "tit-b-identificacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @410+125. Titular real 14b. Apellidos y nombre. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.b-nombre"
+number = "tit-b-nombre"
+section = ["declaracion", "titulares_reales"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @535+2. Titular real 14b. Pais de expedicion del documento de identificacion. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.b-pais-expedicion"
+number = "tit-b-pais-expedicion"
+section = ["declaracion", "titulares_reales"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @537+8. Titular real 14b. Fecha de nacimiento. ONE casilla over the dia, mes and ano components. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.b-fecha-nacimiento"
+number = "tit-b-fecha-nacimiento"
+section = ["declaracion", "titulares_reales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @545+2. Titular real 14b. Pais de residencia. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.b-pais-residencia"
+number = "tit-b-pais-residencia"
+section = ["declaracion", "titulares_reales"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @547+2. Titular real 14b. Nacionalidad. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.b-nacionalidad"
+number = "tit-b-nacionalidad"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @579+1. Titular real 14c. Causa de la presentacion. LIST bracket, one selecting byte behind three printed tick boxes Numbers [1008,1009,1010].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.c-causa-presentacion"
+number = "tit-c-causa-presentacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @580+8. Titular real 14c. Fecha de la causa de la presentacion. ONE casilla over the dia, mes and ano components.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.c-causa-fecha"
+number = "1011"
+section = ["declaracion", "titulares_reales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @588+4. Titular real 14c. Tipo de documento identificativo. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.c-tipo-documento"
+number = "tit-c-tipo-documento"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @592+102. Titular real 14c. N.I.F. o codigo de identificacion extranjero. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.c-identificacion"
+number = "tit-c-identificacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @694+125. Titular real 14c. Apellidos y nombre. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.c-nombre"
+number = "tit-c-nombre"
+section = ["declaracion", "titulares_reales"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @819+2. Titular real 14c. Pais de expedicion del documento de identificacion. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.c-pais-expedicion"
+number = "tit-c-pais-expedicion"
+section = ["declaracion", "titulares_reales"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @821+8. Titular real 14c. Fecha de nacimiento. ONE casilla over the dia, mes and ano components. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.c-fecha-nacimiento"
+number = "tit-c-fecha-nacimiento"
+section = ["declaracion", "titulares_reales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @829+2. Titular real 14c. Pais de residencia. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.c-pais-residencia"
+number = "tit-c-pais-residencia"
+section = ["declaracion", "titulares_reales"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @831+2. Titular real 14c. Nacionalidad. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.c-nacionalidad"
+number = "tit-c-nacionalidad"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @863+1. Titular real 14d. Causa de la presentacion. LIST bracket, one selecting byte behind three printed tick boxes Numbers [1012,1013,1014].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.d-causa-presentacion"
+number = "tit-d-causa-presentacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @864+8. Titular real 14d. Fecha de la causa de la presentacion. ONE casilla over the dia, mes and ano components.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.d-causa-fecha"
+number = "1015"
+section = ["declaracion", "titulares_reales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @872+4. Titular real 14d. Tipo de documento identificativo. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.d-tipo-documento"
+number = "tit-d-tipo-documento"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @876+102. Titular real 14d. N.I.F. o codigo de identificacion extranjero. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.d-identificacion"
+number = "tit-d-identificacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @978+125. Titular real 14d. Apellidos y nombre. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.d-nombre"
+number = "tit-d-nombre"
+section = ["declaracion", "titulares_reales"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1103+2. Titular real 14d. Pais de expedicion del documento de identificacion. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.d-pais-expedicion"
+number = "tit-d-pais-expedicion"
+section = ["declaracion", "titulares_reales"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1105+8. Titular real 14d. Fecha de nacimiento. ONE casilla over the dia, mes and ano components. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.d-fecha-nacimiento"
+number = "tit-d-fecha-nacimiento"
+section = ["declaracion", "titulares_reales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1113+2. Titular real 14d. Pais de residencia. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.d-pais-residencia"
+number = "tit-d-pais-residencia"
+section = ["declaracion", "titulares_reales"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1115+2. Titular real 14d. Nacionalidad. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.d-nacionalidad"
+number = "tit-d-nacionalidad"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1147+1. Titular real 14e. Causa de la presentacion. LIST bracket, one selecting byte behind three printed tick boxes Numbers [1016,1017,1018].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.e-causa-presentacion"
+number = "tit-e-causa-presentacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1148+8. Titular real 14e. Fecha de la causa de la presentacion. ONE casilla over the dia, mes and ano components.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.e-causa-fecha"
+number = "1019"
+section = ["declaracion", "titulares_reales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1156+4. Titular real 14e. Tipo de documento identificativo. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.e-tipo-documento"
+number = "tit-e-tipo-documento"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1160+102. Titular real 14e. N.I.F. o codigo de identificacion extranjero. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.e-identificacion"
+number = "tit-e-identificacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1262+125. Titular real 14e. Apellidos y nombre. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.e-nombre"
+number = "tit-e-nombre"
+section = ["declaracion", "titulares_reales"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1387+2. Titular real 14e. Pais de expedicion del documento de identificacion. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.e-pais-expedicion"
+number = "tit-e-pais-expedicion"
+section = ["declaracion", "titulares_reales"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1389+8. Titular real 14e. Fecha de nacimiento. ONE casilla over the dia, mes and ano components. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.e-fecha-nacimiento"
+number = "tit-e-fecha-nacimiento"
+section = ["declaracion", "titulares_reales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1397+2. Titular real 14e. Pais de residencia. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.e-pais-residencia"
+number = "tit-e-pais-residencia"
+section = ["declaracion", "titulares_reales"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1399+2. Titular real 14e. Nacionalidad. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.e-nacionalidad"
+number = "tit-e-nacionalidad"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1431+1. Titular real 14f. Causa de la presentacion. LIST bracket, one selecting byte behind three printed tick boxes Numbers [1020,1021,1022].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.f-causa-presentacion"
+number = "tit-f-causa-presentacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1432+8. Titular real 14f. Fecha de la causa de la presentacion. ONE casilla over the dia, mes and ano components.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.f-causa-fecha"
+number = "1023"
+section = ["declaracion", "titulares_reales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1440+4. Titular real 14f. Tipo de documento identificativo. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.f-tipo-documento"
+number = "tit-f-tipo-documento"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1444+102. Titular real 14f. N.I.F. o codigo de identificacion extranjero. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.f-identificacion"
+number = "tit-f-identificacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1546+125. Titular real 14f. Apellidos y nombre. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.f-nombre"
+number = "tit-f-nombre"
+section = ["declaracion", "titulares_reales"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1671+2. Titular real 14f. Pais de expedicion del documento de identificacion. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.f-pais-expedicion"
+number = "tit-f-pais-expedicion"
+section = ["declaracion", "titulares_reales"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1673+8. Titular real 14f. Fecha de nacimiento. ONE casilla over the dia, mes and ano components. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.f-fecha-nacimiento"
+number = "tit-f-fecha-nacimiento"
+section = ["declaracion", "titulares_reales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1681+2. Titular real 14f. Pais de residencia. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.f-pais-residencia"
+number = "tit-f-pais-residencia"
+section = ["declaracion", "titulares_reales"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1683+2. Titular real 14f. Nacionalidad. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.f-nacionalidad"
+number = "tit-f-nacionalidad"
+section = ["declaracion", "titulares_reales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1715+1. Declaracion de no variacion de datos. A RECORD-LEVEL field, not part of any titular block, and carrying no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.declaracion-no-variacion"
+number = "tit-declaracion-no-variacion"
+section = ["declaracion", "titulares_reales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1716+1. Entidad sin obligacion de identificar al titular real. A RECORD-LEVEL field, not part of any titular block, and carrying no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "tit.sin-obligacion-identificar"
+number = "tit-sin-obligacion-identificar"
+section = ["declaracion", "titulares_reales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]

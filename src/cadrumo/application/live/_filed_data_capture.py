@@ -100,6 +100,7 @@ from ._filed_data import (
 from ._filed_observation_persistence import (
     enroll_filed_justificante_evidence,
     filed_observation_identity_key,
+    import_complete_filed_observation_baseline,
 )
 from ._remote_state_models import (
     BulkFiledDataCaptureReport,
@@ -490,6 +491,13 @@ class _CaptureAccumulator:
         # never merged -- because two distinguishable dead ends folded into one
         # notice recreates the collapse the reasons exist to undo.
         self.evidence_notices.extend(enrollment.notices)
+        imported_baseline = import_complete_filed_observation_baseline(
+            observation,
+            bucket_id=bucket_id,
+            justificante_csvs=enrollment.justificante_csvs,
+        )
+        if imported_baseline is not None:
+            self.filing_record_ids.append(imported_baseline.filing_record_id)
         self.casilla_count += len(observation.casillas)
         self.observations_for_calculation.append(observation)
 

@@ -6,9 +6,9 @@ evidence, and the enrolment is appended through
 :class:`BucketEventHistoryRepository`.
 
 The module treats AEAT live captures as official external evidence only after
-the captured justificante matches the filed observation and an existing current
-:class:`ModeloRecord`. It never creates the filing record itself and refuses to
-overwrite conflicting :class:`ExternalEvidence`.
+the captured justificante matches the filed observation. A complete all-numeric
+casilla manifest can create its own amendable external baseline; justificante
+metadata alone remains a scaffold and never claims casilla completeness.
 
 See Also:
     :class:`cadrumo.domain.modelos.ExternalEvidenceKind`
@@ -46,6 +46,7 @@ from ...application.calculations import (
     observation_key,
     persist_observation_envelope_and_iva_history,
 )
+from ...application.modelo import ExternalFilingBaselineSource, import_external_filing_source
 from ...core import IvaCompensationStateProvenance, Modelo, Period, PeriodKind, normalise_aeat_csv
 from ...core.hashing import sha256_hex
 from ...core.identity import same_tax_identifier
@@ -105,6 +106,52 @@ class FiledJustificanteUnreachedReason(StrEnum):
     CSV_UNRESOLVABLE = "csv_unresolvable"
     CSV_MISMATCH = "csv_mismatch"
     FILING_TARGET_MISMATCH = "filing_target_mismatch"
+
+
+def import_complete_filed_observation_baseline(
+    observation: FiledDeclaracionObservation,
+    *,
+    bucket_id: str,
+    justificante_csvs: tuple[str, ...],
+) -> ModeloRecord | None:
+    """Persist an amendable baseline when live capture carries complete content.
+
+    A justificante-only observation is intentionally a metadata scaffold. The
+    current baseline model is numeric, so any observed non-numeric casilla also
+    leaves the capture on the observation path rather than silently dropping
+    source content. Modelo 303 keeps its dedicated filing-evidence policy.
+    """
+    if (
+        not justificante_csvs
+        or not observation.casillas
+        or observation.modelo == Modelo.M303
+        or any(casilla.value_kind.value != "numeric" for casilla in observation.casillas)
+    ):
+        return None
+    lexicals = {casilla.casilla_id: casilla.value for casilla in observation.casillas}
+    if len(lexicals) != len(observation.casillas):
+        raise LiveApplicationInputError(
+            translated_message="application.live.filed_observations.errors.duplicate_casilla",
+            context={
+                "modelo": observation.modelo,
+                "ejercicio": observation.ejercicio,
+                "period": observation.period.registry_token,
+            },
+        )
+    return import_external_filing_source(
+        ExternalFilingBaselineSource(
+            modelo=observation.modelo,
+            filing_year=observation.ejercicio,
+            period=observation.period,
+            evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+            evidence_reference_id=justificante_csvs[0],
+            tax_id=observation.authenticated_identity,
+            casilla_lexicals=lexicals,
+        ),
+        bucket_id=bucket_id,
+        actor="aeat-live-filed-pull",
+        clock=observation.presented_at,
+    )
 
 
 #: Notice code for an artefact that was present but yielded no evidence.

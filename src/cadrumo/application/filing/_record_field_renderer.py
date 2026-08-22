@@ -202,6 +202,9 @@ def _field_value(
     render_context: FilingRecordRenderContext | None,
     projection_values: Mapping[ProjectionAddress, object],
 ) -> object:
+    m369_period_value = _m369_period_binding_value(field, draft)
+    if m369_period_value is not None:
+        return m369_period_value
     match field.kind:
         case CasillaFieldKind.LITERAL:
             return field.literal
@@ -221,6 +224,19 @@ def _field_value(
             return _computed_field_value(field, draft, producer_snapshot)
         case _:
             raise FilingExportError(f"unsupported export field kind {field.kind!r}")
+
+
+def _m369_period_binding_value(field: ExportFieldDefinition, draft: ModeloDraft) -> object | None:
+    """Project the typed Exterior period into the three official detail fields."""
+    if draft.modelo != "369" or not draft.period.registry_token.startswith("EXT-"):
+        return None
+    if "2-ejercicio-y-periodo-ejercicio" in field.id:
+        return draft.period.filing_year
+    if "2-ejercicio-y-periodo-tipo-de-periodo" in field.id:
+        return "T"
+    if "2-ejercicio-y-periodo-periodo" in field.id:
+        return int(_draft_period_code(draft))
+    return None
 
 
 def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[CasillaId, object]) -> object:
@@ -269,7 +285,7 @@ def _header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingPro
 def _envelope_closing_tag(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
     del snapshot
     year = str(draft.period.filing_year)
-    period_code = draft.period.registry_token
+    period_code = _draft_period_code(draft)
     return f"</T{draft.modelo}0{year}{period_code}0000>"
 
 
@@ -278,7 +294,10 @@ def _draft_filing_year(draft: ModeloDraft) -> str:
 
 
 def _draft_period_code(draft: ModeloDraft) -> str:
-    return draft.period.registry_token
+    registry_token = draft.period.registry_token
+    if draft.modelo == "369" and registry_token.startswith("EXT-") and registry_token.endswith("T"):
+        return registry_token.removeprefix("EXT-").removesuffix("T").zfill(2)
+    return registry_token
 
 
 def _draft_period_start_date(draft: ModeloDraft) -> str:

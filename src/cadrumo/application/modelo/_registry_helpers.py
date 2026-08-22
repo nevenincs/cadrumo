@@ -570,10 +570,12 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
     for obs in revision.observations:
         stored = revision.casilla_values.get(obs.casilla_id)
         if stored is None:
+            stored = revision.input_values_by_casilla_id.get(obs.casilla_id)
+        if stored is None:
             raise StoredCalculationDriftError(
                 f"calculation revision {revision.calculation_revision_id!r} provenance drift: "
-                f"observation for casilla {obs.casilla_id!r} is present but casilla_values "
-                f"has no entry for it; the provenance envelope may have been tampered with",
+                f"observation for casilla {obs.casilla_id!r} is present but neither casilla_values nor "
+                f"input_values_by_casilla_id has an entry for it; the provenance envelope may have been tampered with",
             )
         if obs.value != stored:
             raise StoredCalculationDriftError(

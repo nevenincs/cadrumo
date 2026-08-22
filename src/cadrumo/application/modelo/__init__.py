@@ -173,7 +173,11 @@ from ._export import (
     ModeloExportUnsupportedError,
     export_modelo_revision,
 )
-from ._external_import_actions import import_external_filing_evidence
+from ._external_import_actions import (
+    ExternalFilingBaselineSource,
+    import_external_filing_evidence,
+    import_external_filing_source,
+)
 from ._filed_revision_observation import (
     APP_FILING_SOURCE_KIND,
     persist_filed_revision_observation,
@@ -213,7 +217,7 @@ from ._local_observation_actions import (
     ModeloLocalObservationResult,
     record_operator_local_observation,
 )
-from ._local_observation_spreadsheet import parse_casilla_value_spreadsheet
+from ._local_observation_spreadsheet import parse_casilla_lexical_spreadsheet, parse_casilla_value_spreadsheet
 from ._m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
@@ -628,6 +632,7 @@ __all__ = [
     "DataInventoryCasilla",
     "DataInventoryChecklist",
     "DeclarationPeriodInputs",
+    "ExternalFilingBaselineSource",
     "ExternalModeloImportError",
     "FeedbackCounterSignatureInvalidError",
     "FeedbackPackage",
@@ -887,6 +892,7 @@ __all__ = [
     "get_work_unit",
     "guard_active_profile_foral_ccaa",
     "import_external_filing_evidence",
+    "import_external_filing_source",
     "import_feedback_package",
     "is_detail_casilla_override_key",
     "lifecycle_continuation_for_work_history",
@@ -920,6 +926,7 @@ __all__ = [
     "modelo_work_profile_preflight_report",
     "natural_target_work_units",
     "open_review_only_workspace",
+    "parse_casilla_lexical_spreadsheet",
     "parse_casilla_value_spreadsheet",
     "persist_filed_revision",
     "persist_filed_revision_observation",

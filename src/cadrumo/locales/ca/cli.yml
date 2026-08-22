@@ -783,6 +783,8 @@ cli:
         filing_record_id_help: Identificador estable d'un filing record
         import_casilla_help: Valor de casella importat amb sintaxi CASILLA_ID=DECIMAL
           (repetible; almenys un requerit)
+        import_file_help: Camí a un manifest de caselles CSV o XLSX exportat des de
+          la font de la declaració externa
         import_help: Persistir una declaració presentada externament com a filing
           record base amb evidència oficial importada de l'AEAT
         import_set_required: --set és obligatori almenys una vegada per a una importació.

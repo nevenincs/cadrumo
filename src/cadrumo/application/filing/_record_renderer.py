@@ -185,6 +185,8 @@ def _single_record_render_row(
     otherwise-empty page carrying only its own identifier constants is exactly
     the page this suppression exists to leave out of the fichero.
     """
+    if record.record_type == "t3690-estruc-gral":
+        return (RecordRenderRow(row_index=None, active_binding_ids=frozenset()),)
     if (
         record.binding_record is not None
         and not _record_has_binding_value(record, binding_values)
