@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:1b395f5755866c0dff30f96915798049b799aa72888e20bfa8aedbe8b0d12129'
+body_hash: 'sha256:d43b7da2b32675c33d4cea31045e27b3c2e4e9ac7d92fc3812384c09d018eb79'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6340,3 +6340,41 @@ searches earlier in this campaign -- a pattern that cannot match is indistinguis
 absent value.
 
 Lanes 314 integration / 1592 unit; locale parity and translation-honesty gates green.
+
+### The recovery instruction points at a file nothing can write
+
+Reading the rest of the unused-export register -- the same source that settled the bundle
+question last iteration -- surfaced the MIRROR of that defect, on a safety-critical path.
+
+`config profile restore --artifact <file>` documents itself to the operator as:
+*"Archivo de artefacto de recuperación; úselo cuando se haya perdido la contraseña del
+perfil."* -- use this when the profile password has been lost. That is the last-resort route
+for a locked-out operator.
+
+**Nothing in the product writes that file.** Traced end to end rather than assumed:
+
+- `application.user_profile.export_profile_recovery_artifact` -- three test modules, no
+  shipped caller.
+- The adapter it delegates to, `custody.export_profile_custody_recovery_artifact` -- one test
+  module plus facade re-exports, no production caller.
+- The READER is live: `prove_profile_recovery_artifact` sits on the restore path, and the
+  register states the format is sound -- *"a missing export door, not a dead format."*
+
+So this is the exact inverse of the bundle gap fixed last iteration. There, the product WRITES
+a file it cannot read, and an operator believes they have a backup. Here it READS a file it
+cannot write, and an operator following the CLI's own recovery instruction has nowhere to
+obtain one. The 24-word phrase shown at enrolment does not close it: the help says the phrase
+is used WITH `--artifact`, so the words alone are not a route.
+
+**Deliberately not fixed here.** The obvious move -- make the `--artifact` help honest about
+the missing door -- would edit operator-facing text on a surface the register says "another
+owner is rebuilding", and the two restore entry points are recorded as part of that same
+rebuild. Correcting help that an in-flight rebuild is about to change would collide with
+their work, and unlike the bundle warning there IS active work here to collide with.
+
+**What the rebuild owner needs to know**, and may not: `restore --artifact` currently
+advertises a recovery route with no producer, on the path an operator reaches only after
+losing their password. If the rebuild lands the export door, the gap closes on its own. If it
+does not, the help is a promise the product cannot keep.
+
+No production change this iteration.
