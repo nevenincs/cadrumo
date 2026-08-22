@@ -18,15 +18,13 @@ from cadrumo.domain.calculations.registry import (
 from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from ..pipeline._record_design_ir import load_record_design_intermediate
 from ..pipeline._render_profile import (
-    RenderProfile,
-    RenderProfileDesignIdentity,
     RenderProfileSourceEvidence,
     load_render_profile,
     load_render_profile_source_evidence,
 )
 from ..pipeline._semantic_map import SemanticMap
-from ..pipeline._semantic_map_loader import load_semantic_map
 from ..pipeline._semantic_map_join import join_record_design_semantics
+from ..pipeline._semantic_map_loader import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -91,15 +89,21 @@ def test_static_generator_exposes_no_filing_instance_channels() -> None:
     assert "variable_envelope_contract" not in RenderedExportTree.model_fields
 
 
-def test_real_m200_variable_envelope_survives_join_and_refuses_fixed_generation(tmp_path: Path) -> None:
-    """The parsed DP200000 composition cannot disappear before rendering.
+def test_real_m200_variable_envelope_is_composed_rather_than_truncated(tmp_path: Path) -> None:
+    """The parsed DP200000 composition survives the join AND reaches the output.
 
-    Driven with the AUTHORED mapping against the whole parsed design rather
-    than a focused synthetic map. A design whose parser owns a variable
-    envelope must carry a reviewed contract for it AND declare its revision's
-    projection endpoints, so a hand-built one-record map can no longer reach
-    the refusal under test -- and the authored map is the better witness
-    anyway, being the artefact generation actually consumes.
+    Generation used to REFUSE a design carrying a variable envelope, and this
+    gate asserted that refusal. It now composes one through the reviewed
+    contract -- which is why modelos 151 and 202, both envelope-bearing, are
+    generated trees. The concern the refusal stood in for is unchanged and is
+    what is pinned here: the wrapper must not vanish, and must not be flattened
+    into one more fixed record.
+
+    Driven with the AUTHORED mapping and render profile against the whole
+    parsed design. A design whose parser owns an envelope must now carry a
+    reviewed contract for it and declare its revision's projection endpoints,
+    so a focused synthetic map cannot reach generation at all -- and the
+    authored artefacts are the better witness, being what generation consumes.
     """
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
@@ -115,36 +119,57 @@ def test_real_m200_variable_envelope_survives_join_and_refuses_fixed_generation(
     render_profile, evidence = _real_render_profile("200", "2025", "aeat-dr-200-2025", catalogues)
 
     joined = join_record_design_semantics(semantic_map, parsed, inspection)
-    target = tmp_path / "export"
 
     assert joined.variable_envelopes == parsed.variable_envelopes
     assert joined.variable_envelopes[0].record_identity == "DP200000"
-    with pytest.raises(RegistryValidationError, match="refuses variable envelopes"):
-        render_complete_export_tree(
-            target,
-            revision_id=inspection.revision_id,
-            joined=joined,
-            semantic_map=semantic_map,
-            transport_profile=ExportTreeTransportProfile(
-                modelo="200",
-                design_epoch="2025",
-                source_ref="aeat-dr-200-2025",
-                source_sha256=parsed.source.source_sha256,
-                layout_id="m200-envelope-gate",
-                format="fixed_width",
-                encoding=ExportEncoding.LATIN_1,
-                line_ending="crlf",
-                serializer_convention="rtoml-pretty-v1",
-            ),
-            render_profile=render_profile,
-            render_profile_source_evidence=evidence,
-        )
 
-    assert not target.exists()
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id=inspection.revision_id,
+        joined=joined,
+        semantic_map=semantic_map,
+        transport_profile=ExportTreeTransportProfile(
+            modelo="200",
+            design_epoch="2025",
+            source_ref="aeat-dr-200-2025",
+            source_sha256=parsed.source.source_sha256,
+            layout_id="m200-envelope-gate",
+            format="fixed_width",
+            encoding=ExportEncoding.LATIN_1,
+            line_ending="crlf",
+            serializer_convention="rtoml-pretty-v1",
+        ),
+        render_profile=render_profile,
+        render_profile_source_evidence=evidence,
+    )
+
+    contract = rendered.provenance_manifest.variable_envelope_contract
+    assert contract is not None, "the composition disappeared between join and output"
+    assert contract.envelope.record_identity == "DP200000"
+
+    layout_record_ids = tuple(record.id for record in rendered.layout.records)
+    assert contract.envelope.body_record_ids == layout_record_ids, (
+        "the envelope must wrap exactly the fixed body records the layout emits, in order"
+    )
+    assert "DP200000" not in layout_record_ids, (
+        "the wrapper was flattened into a fixed record, which is the truncation this gate exists for"
+    )
 
 
-def test_real_m220_composite_envelope_survives_join_and_refuses_fixed_generation(tmp_path: Path) -> None:
-    """The six typed closing rows cannot be truncated into a fixed M220 record."""
+def test_real_m220_composite_envelope_refuses_the_join_without_a_reviewed_contract() -> None:
+    """The six typed closing rows cannot be truncated into a fixed M220 record.
+
+    Modelo 220 has no authored mapping, so what protects it today is the join
+    itself: a parser envelope with no reviewed semantic contract refuses, and
+    the design cannot be generated into a fixed tree by omission. That refusal
+    IS the protection this gate was written for, expressed in the mechanism
+    that now carries it.
+
+    When modelo 220's mapping is authored, this becomes the composed-rather-
+    than-truncated assertion its m200 sibling makes, and the refusal below will
+    fail loudly rather than passing vacuously -- which is what forces the
+    upgrade instead of leaving a stale gate behind.
+    """
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
     inspection = bundled_revision_inspection("220", filing_year=2025, period="0A")
@@ -155,8 +180,13 @@ def test_real_m220_composite_envelope_survives_join_and_refuses_fixed_generation
         filing_year=2025,
         design_epoch="2025",
     )
+
+    assert parsed.variable_envelopes[0].record_identity == "T220000000"
+
     real_sheet = parsed.sheets[0]
     real_field = real_sheet.fields[0]
+    # Focused to one sheet and one field so the exact-bijection check, which
+    # runs first, is satisfied and the envelope refusal is what this reaches.
     focused = parsed.model_copy(
         update={
             "sheets": (
@@ -194,56 +224,12 @@ def test_real_m220_composite_envelope_survives_join_and_refuses_fixed_generation
                     },
                     "export_field_id": "m220-envelope-gate-field",
                     "kind": "filler",
-                    "legal_refs": ("ley-27-2014:art-124",),
+                    "legal_refs": ("ley-27-2014:art-40",),
                     "source_refs": ("aeat-dr-220-2025",),
                 },
             ),
         },
     )
 
-    joined = join_record_design_semantics(semantic_map, focused, inspection)
-    target = tmp_path / "export"
-
-    assert joined.variable_envelopes == parsed.variable_envelopes
-    assert joined.variable_envelopes[0].record_identity == "T220000000"
-    with pytest.raises(RegistryValidationError, match="refuses variable envelopes"):
-        render_complete_export_tree(
-            target,
-            revision_id="2024-y-siguientes",
-            joined=joined,
-            semantic_map=semantic_map,
-            transport_profile=ExportTreeTransportProfile(
-                modelo="220",
-                design_epoch="2025",
-                source_ref="aeat-dr-220-2025",
-                source_sha256=parsed.source.source_sha256,
-                layout_id="m220-envelope-gate",
-                format="fixed_width",
-                encoding=ExportEncoding.LATIN_1,
-                line_ending="crlf",
-                serializer_convention="rtoml-pretty-v1",
-            ),
-            render_profile=RenderProfile(
-                schema_version=1,
-                design_identity=RenderProfileDesignIdentity(
-                    modelo="220",
-                    design_epoch="2025",
-                    source_ref="aeat-dr-220-2025",
-                    source_sha256=parsed.source.source_sha256,
-                ),
-                fragment_ids=(),
-                width_17_rules=(),
-                singleton_rules=(),
-            ),
-            render_profile_source_evidence=RenderProfileSourceEvidence(
-                design_identity=RenderProfileDesignIdentity(
-                    modelo="220",
-                    design_epoch="2025",
-                    source_ref="aeat-dr-220-2025",
-                    source_sha256=parsed.source.source_sha256,
-                ),
-                entries=(),
-            ),
-        )
-
-    assert not target.exists()
+    with pytest.raises(RegistryValidationError, match="requires exactly one reviewed variable-envelope"):
+        join_record_design_semantics(semantic_map, focused, inspection)

@@ -210,16 +210,46 @@ def test_semantic_map_rejects_parser_coordinates_and_renderer_shape() -> None:
         )
 
 
-def test_semantic_map_refuses_raw_projection_refs_outside_the_toml_loader() -> None:
-    """A semantic map accepts the core union only after its canonical hydration."""
-    with pytest.raises(ValidationError, match="typed FilingProjectionRef hydrated by load_semantic_map"):
+def test_semantic_map_compiles_a_raw_projection_ref_through_the_canonical_compiler() -> None:
+    """A raw mapping is COMPILED here, not refused, and never stored raw.
+
+    This entry is embedded in the export provenance manifest, which is written
+    as JSON and read back by design, and from JSON a reference can only arrive
+    as a mapping. Demanding an already-typed model made that read-back
+    impossible. The invariant boundaries actually need is "every reference was
+    produced by the one canonical compiler", which compiling here satisfies for
+    TOML and JSON through a single path.
+
+    Pinned as the pair that makes it a real guarantee rather than a widening:
+    a well-formed mapping arrives typed, and a malformed one still refuses.
+    """
+    entry = SemanticMapEntry.model_validate(
+        _entry_payload(
+            "projection",
+            projection_ref={
+                "projection_kind": "m303_prorrata_activity",
+                "slot": 1,
+                "field": "cnae",
+                "casilla_id": "500",
+            },
+        ),
+    )
+
+    assert isinstance(entry.projection_ref, M303ProrrataActivityProjectionRef)
+    assert entry.projection_ref.field is M303ProrrataActivityProjectionField.CNAE
+    assert entry.projection_ref.casilla_id == validated_casilla_id("500")
+
+
+def test_semantic_map_still_refuses_a_malformed_projection_ref() -> None:
+    """The compiler is what makes the mapping path safe, so it must still bite."""
+    with pytest.raises(ValidationError):
         SemanticMapEntry.model_validate(
             _entry_payload(
                 "projection",
                 projection_ref={
                     "projection_kind": "m303_prorrata_activity",
                     "slot": 1,
-                    "field": "cnae",
+                    "field": "not_a_projection_field",
                     "casilla_id": "500",
                 },
             ),
