@@ -5081,3 +5081,38 @@ worth stating why the well is running dry rather than treating it as a temporary
 the domain's remaining named items are not defects but DECISIONS (the profile-bundle import
 half, the over-exported `user_profile` names), and a decision cannot be closed by testing
 harder at it.
+
+### Auditing the previous iteration's own completeness claims
+
+The truncated-search error recorded above has an implication worth acting on rather than
+noting: every earlier sweep in this campaign was read through `head`, so the CONCLUSIONS
+rest on windows, not on result sets. Re-run without a cut:
+
+- The explicit `str(exc)` sweep yields **11 matches in 9 files**. The window was 14 lines
+  and showed all 11. That claim was sound.
+- The f-string sweep yields **27 matches**. The window showed 20. **Seven were hidden, in
+  two files never seen at all** -- `storage/master_key/_master_key_derivation.py` and
+  `storage/sql/repository.py`. Read in full, all seven interpolate a third-party exception
+  (keyring, argon2, SQLAlchemy's `exc.orig`), so the conclusion "no Cadrumo error is
+  rendered by implicit `str()`" survives. But it survived by luck of the sort order: either
+  unseen file could have carried the defect, and nothing about the truncated read would
+  have looked different.
+
+The distinction worth keeping is between a claim that is TRUE and a claim that is
+JUSTIFIED. Last iteration's was true. It was not justified, and it was published in the
+same entry that warned against exactly this.
+
+**One observation from the newly-visible lines, recorded rather than acted on.**
+`sql/repository.py:47` wraps an `IntegrityError` as
+`RepositoryError(f"... {exc.orig}")`. Using `.orig` rather than `exc` is load-bearing:
+SQLAlchemy's `StatementError.__str__` appends `[SQL: ...] [parameters: ...]`, embedding row
+values into the text, while the DBAPI original does not. The choice is undocumented, so
+nothing tells a future editor that widening it to `exc` would push row values into an
+operator-facing message. It is not a live defect -- the redaction funnel scrubs the record,
+and the sibling `_log.warning(..., exc_info=True)` is covered because the filter formats and
+scrubs the traceback into `exc_text` (`core/logging.py:396`), which `logging.Formatter`
+prefers over re-formatting; the tree contains exactly one `Formatter`, so no sink bypasses
+it. Redaction base composition is already verified sound and is not re-probed here. The
+residue is a silent invariant, not an open hole.
+
+**No production change this iteration.** The lanes were not re-run, because nothing ran.
