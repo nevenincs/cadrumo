@@ -40,6 +40,7 @@ _ZERO = Decimal("0")
 def materialise_observations(
     *,
     values: Mapping[CasillaId, Decimal],
+    text_values: Mapping[CasillaId, str] | None = None,
     computed_provenance: Mapping[CasillaId, CasillaObservation],
     casillas_by_id: Mapping[CasillaId, CasillaDefinition],
     absent_by_design_casilla_ids: frozenset[CasillaId] = frozenset(),
@@ -52,8 +53,9 @@ def materialise_observations(
     :class:`~cadrumo.domain.calculations.registry.CasillaDefinition` legal/source
     reference set.
     """
+    resolved_text_values = text_values or {}
     materialised: list[CasillaObservation] = []
-    for casilla_id in sorted(values):
+    for casilla_id in sorted(values.keys() | resolved_text_values.keys()):
         computed = computed_provenance.get(casilla_id)
         if computed is not None:
             materialised.append(computed)
@@ -74,7 +76,8 @@ def materialise_observations(
         materialised.append(
             CasillaObservation(
                 casilla_id=casilla_id,
-                value=values[casilla_id],
+                value_kind="text" if casilla_id in resolved_text_values else "decimal",
+                value=(resolved_text_values[casilla_id] if casilla_id in resolved_text_values else values[casilla_id]),
                 legal_refs=legal_refs,
                 source_refs=source_refs,
                 absent_by_design=casilla_id in absent_by_design_casilla_ids,

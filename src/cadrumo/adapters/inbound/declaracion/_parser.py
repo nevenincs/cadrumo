@@ -28,7 +28,13 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from ....core import CasillaId, Period, fold_diacritics, is_administrative_period_token
+from ....core import (
+    CasillaId,
+    Period,
+    RegistryAuthorityGrade,
+    fold_diacritics,
+    is_administrative_period_token,
+)
 from ....core.decimal import european_thousands_reading_is_ambiguous
 from ....core.hashing import sha256_hex
 from ....core.identity import IdentityError, validate_spanish_tax_id
@@ -483,6 +489,7 @@ def _load_registry_snapshot(
             template.modelo,
             filing_year=template.año,
             period=period,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
         )
     except RegistrySnapshotError as exc:
         raise DeclaracionParseError(

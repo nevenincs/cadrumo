@@ -1,0 +1,7 @@
+[[revisions."2021".application_links]]
+id = "modelo-390-extractor"
+surface = "extractor"
+consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2021", "aeat-modelo-390-procedure"]
