@@ -9,17 +9,36 @@ authority_grade = "applicability"
 # (enrolled-modelo-763-layout, re-pointed 2026-08-15) but no casilla-to-
 # position mapping has been authored from it yet, so no numbered form
 # casilla is fabricated here.
+#
+# AMENDING ORDEN CITED (2026-08-22). AEAT's bundled record designs for this
+# modelo change shape across this span -- the 2012-2014 PDF design, then
+# aeat-dr-763-2015 (applies_from 2015-01-01), then the 2018-4T design -- and the
+# corpus-evidence gate measured the 2012/2015 boundary as 54 of 64 shared boxes
+# moved with the record set going 2 -> 4. Until now this modelo's entire
+# revision history cited only the founding orden, so a re-layout crossed the
+# span with no legal evidence that any revision had occurred. Orden HAP/2373/2014
+# disposición final primera is that evidence: it substitutes this modelo's anexo
+# I with effect for liquidation periods beginning 1 January 2015, which is the
+# measured boundary exactly.
+#
+# NOT SPLIT, deliberately: the split gate (test_no_revision_spans_a_design_relayout)
+# does not flag this revision, because it carries no export layout -- there are no
+# byte offsets here for a re-layout to write wrongly. The 2018-4T layout's own
+# amending orden is not yet bundled and remains open.
 valid_from = 2011-01-01
 period_selector = { year_from = 2011, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-eha-1881-2011:art-1"]
 legal_refs = [
     "orden-eha-1881-2011:art-1",
     "orden-eha-1881-2011:art-4",
+    "orden-hap-2373-2014:df-primera",
     "ley-58-2003:art-93",
 ]
 source_refs = [
     "enrolled-modelo-763-procedure",
     "enrolled-modelo-763-layout",
+    "aeat-dr-763-2015",
+    "boe-modelo-763-2015-amendment",
 ]
 
 
