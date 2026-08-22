@@ -65,7 +65,7 @@ review_status = "reviewed"
 # 2024-06-01. Not inferred from the filename: the date is AEAT's own statement.
 [sources."enrolled-modelo-038-layout"]
 record_design_epoch = "2024"
-applies_from = 2024-06-01
+applies_from = 2002-01-16
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"

@@ -2737,3 +2737,17 @@ required_text = [
     "Dichas autoliquidaciones agregadas integrarán los resultados de las autoliquidaciones individuales",
     "deberán presentarse una vez presentadas las autoliquidaciones periódicas individuales",
 ]
+
+[sources."aeat-dr-303-2009"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2009"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/07-303-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf"
+sha256 = "6daceebcc868e5ef9ed1538374fc4159b29248a270663552f086f6a9bfd29699"
+bytes = 35087
+retrieved_at = 2026-05-03
+applies_from = 2009-01-01
+applies_to = 2013-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e12v11.pdf"
+review_status = "reviewed"
