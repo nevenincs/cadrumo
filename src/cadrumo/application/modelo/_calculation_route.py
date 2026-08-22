@@ -65,46 +65,69 @@ def _resolver_ownership(
     )
 
 
+_CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteStage, type[_ResolverClass]], ...] = (
+    ("pre_mesh", ProfileSourceResolver),
+    ("pre_mesh", Modelo100BorradorSourceResolver),
+    ("pre_mesh", IvaWalletDecisionSourceResolver),
+    ("mesh", LedgerIvaAggregationSourceResolver),
+    ("mesh", LedgerRentaGastosEstimacionDirectaAggregationSourceResolver),
+    ("mesh", LedgerRentaIncomeAggregationSourceResolver),
+    ("mesh", LedgerRentaGastosPagoFraccionadoAggregationSourceResolver),
+    ("mesh", LedgerImpatriadoIncomeAggregationSourceResolver),
+    ("mesh", LedgerIrnrIncomeAggregationSourceResolver),
+    ("mesh", OssIossLedgerSourceResolver),
+    ("mesh", RetencionesAggregationSourceResolver),
+    ("mesh", WithholdingSourceResolver),
+    ("mesh", InvoiceCatalogueSourceResolver),
+    ("mesh", ForeignAssetsAggregationSourceResolver),
+    ("mesh", AtribucionMemberSourceResolver),
+    ("mesh", PreviousFilingSourceResolver),
+    ("mesh", RelationPrefillSourceResolver),
+    ("mesh", IvaCompensationAnnualPartitionSourceResolver),
+    ("conditional", M303RegimenSimplificadoAnnualSummarySourceResolver),
+    ("post_mesh", ProrrataRegularizacionSourceResolver),
+    ("post_mesh", BienesInversionRegularizacionSourceResolver),
+)
+_MANUAL_INPUT_OWNER = CalculationRouteResolverOwnership(
+    stage="manual",
+    resolver_type=None,
+    resolver_id="manual_input",
+    owned_sources=(BindingSourceKind.MANUAL_INPUT,),
+)
+
 CALCULATION_ROUTE_RESOLVER_OWNERSHIP: tuple[CalculationRouteResolverOwnership, ...] = (
-    _resolver_ownership("pre_mesh", ProfileSourceResolver),
-    _resolver_ownership("pre_mesh", Modelo100BorradorSourceResolver),
-    _resolver_ownership("pre_mesh", IvaWalletDecisionSourceResolver),
-    _resolver_ownership("mesh", LedgerIvaAggregationSourceResolver),
-    _resolver_ownership("mesh", LedgerRentaGastosEstimacionDirectaAggregationSourceResolver),
-    _resolver_ownership("mesh", LedgerRentaIncomeAggregationSourceResolver),
-    _resolver_ownership("mesh", LedgerRentaGastosPagoFraccionadoAggregationSourceResolver),
-    _resolver_ownership("mesh", LedgerImpatriadoIncomeAggregationSourceResolver),
-    _resolver_ownership("mesh", LedgerIrnrIncomeAggregationSourceResolver),
-    _resolver_ownership("mesh", OssIossLedgerSourceResolver),
-    _resolver_ownership("mesh", RetencionesAggregationSourceResolver),
-    _resolver_ownership("mesh", WithholdingSourceResolver),
-    _resolver_ownership("mesh", InvoiceCatalogueSourceResolver),
-    _resolver_ownership("mesh", ForeignAssetsAggregationSourceResolver),
-    _resolver_ownership("mesh", AtribucionMemberSourceResolver),
-    _resolver_ownership("mesh", PreviousFilingSourceResolver),
-    _resolver_ownership("mesh", RelationPrefillSourceResolver),
-    _resolver_ownership("mesh", IvaCompensationAnnualPartitionSourceResolver),
-    _resolver_ownership("conditional", M303RegimenSimplificadoAnnualSummarySourceResolver),
-    _resolver_ownership("post_mesh", ProrrataRegularizacionSourceResolver),
-    _resolver_ownership("post_mesh", BienesInversionRegularizacionSourceResolver),
-    CalculationRouteResolverOwnership(
-        stage="manual",
-        resolver_type=None,
-        resolver_id="manual_input",
-        owned_sources=(BindingSourceKind.MANUAL_INPUT,),
-    ),
+    *(_resolver_ownership(stage, resolver_type) for stage, resolver_type in _CANONICAL_RESOLVER_STAGES),
+    _MANUAL_INPUT_OWNER,
 )
 
 
 def validate_calculation_route_resolver_ownership(
     ownership: tuple[CalculationRouteResolverOwnership, ...],
 ) -> None:
-    """Refuse duplicate, missing, or disposition-inventing route ownership."""
+    """Refuse identity, stage, pseudo-owner, and source-disposition drift."""
+    canonical_stages = {resolver_type: stage for stage, resolver_type in _CANONICAL_RESOLVER_STAGES}
+    if len(canonical_stages) != len(_CANONICAL_RESOLVER_STAGES):
+        raise RuntimeError("canonical calculation route repeats a resolver type")
     resolver_ids = tuple(row.resolver_id for row in ownership)
     if len(set(resolver_ids)) != len(resolver_ids):
         raise RuntimeError("calculation route resolver ids must be unique")
     source_owners: dict[BindingSourceKind, str] = {}
     for row in ownership:
+        if row.resolver_type is None:
+            if row != _MANUAL_INPUT_OWNER:
+                raise RuntimeError("calculation route permits only the canonical manual-input pseudo-owner")
+        else:
+            expected_stage = canonical_stages.get(row.resolver_type)
+            if expected_stage is None:
+                raise RuntimeError(f"calculation route contains an invented resolver: {row.resolver_type!r}")
+            if row.stage != expected_stage:
+                raise RuntimeError(
+                    f"calculation route resolver {row.resolver_id!r} must use stage {expected_stage!r}",
+                )
+            if row.resolver_id != row.resolver_type.resolver_id:
+                raise RuntimeError(f"calculation route resolver id drifted: {row.resolver_type.__name__}")
+            if row.owned_sources != row.resolver_type.owned_sources:
+                raise RuntimeError(f"calculation route resolver sources drifted: {row.resolver_type.__name__}")
         if not row.owned_sources:
             raise RuntimeError(f"calculation route resolver {row.resolver_id!r} owns no source")
         for source_kind in row.owned_sources:

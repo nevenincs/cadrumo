@@ -69,7 +69,7 @@ def test_route_refuses_duplicate_ids_duplicate_sources_omission_and_invented_own
         validate_calculation_route_resolver_ownership(
             (first, replace(second, resolver_id=first.resolver_id), *remaining),
         )
-    with pytest.raises(RuntimeError, match="duplicate owners"):
+    with pytest.raises(RuntimeError, match="resolver sources drifted"):
         validate_calculation_route_resolver_ownership(
             (first, replace(second, owned_sources=first.owned_sources), *remaining),
         )
@@ -81,5 +81,56 @@ def test_route_refuses_duplicate_ids_duplicate_sources_omission_and_invented_own
         resolver_id="invented-deferred-owner",
         owned_sources=(BindingSourceKind.RELATED_PARTY_OPERATION,),
     )
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership((*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, invented))
+
+
+def test_route_refuses_resolver_class_identity_mutations() -> None:
+    profile, *remaining = CALCULATION_ROUTE_RESOLVER_OWNERSHIP
+    with pytest.raises(RuntimeError, match="resolver id drifted"):
+        validate_calculation_route_resolver_ownership(
+            (replace(profile, resolver_id="renamed-profile"), *remaining),
+        )
+    with pytest.raises(RuntimeError, match="resolver sources drifted"):
+        validate_calculation_route_resolver_ownership(
+            (replace(profile, owned_sources=(BindingSourceKind.RELATED_PARTY_OPERATION,)), *remaining),
+        )
+    with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
+        validate_calculation_route_resolver_ownership(
+            (replace(profile, resolver_type=None), *remaining),
+        )
+
+
+def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
+    manual = CALCULATION_ROUTE_RESOLVER_OWNERSHIP[-1]
+    invented_pseudo_owner = replace(manual, resolver_id="second-manual-owner")
+    with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
+        validate_calculation_route_resolver_ownership(
+            (*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, invented_pseudo_owner),
+        )
+    with pytest.raises(RuntimeError, match="resolver ids must be unique"):
+        validate_calculation_route_resolver_ownership((*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, manual))
+
+    profile = CALCULATION_ROUTE_RESOLVER_OWNERSHIP[0]
+    with pytest.raises(RuntimeError, match="must use stage 'pre_mesh'"):
+        validate_calculation_route_resolver_ownership(
+            (
+                *CALCULATION_ROUTE_RESOLVER_OWNERSHIP[:-1],
+                replace(manual, resolver_type=profile.resolver_type),
+            ),
+        )
+
+
+@pytest.mark.parametrize(
+    ("index", "wrong_stage"),
+    tuple(
+        (index, next(stage for stage in ("pre_mesh", "mesh", "conditional", "post_mesh") if stage != row.stage))
+        for index, row in enumerate(CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
+        if row.resolver_type is not None
+    ),
+)
+def test_route_refuses_each_resolver_moved_from_its_canonical_stage(index: int, wrong_stage: str) -> None:
+    mutated = list(CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
+    mutated[index] = replace(mutated[index], stage=wrong_stage)  # type: ignore[arg-type]
+    with pytest.raises(RuntimeError, match="must use stage"):
+        validate_calculation_route_resolver_ownership(tuple(mutated))
