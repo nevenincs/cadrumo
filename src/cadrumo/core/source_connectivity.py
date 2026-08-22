@@ -19,21 +19,24 @@ from __future__ import annotations
 
 from datetime import date
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ._models import STRICT_FROZEN_CONFIG
 from .aggregation import BindingSourceKind
+from .identity import CalculationRevisionId
 
 __all__ = [
     "SourceConnectivityCandidateId",
     "SourceConnectivityCandidateIdentity",
     "SourceConnectivityCensusRow",
     "SourceConnectivityConnectedProof",
+    "SourceConnectivityConnectionIdentity",
     "SourceConnectivityDisposition",
     "SourceConnectivityEncryptedRevisionProof",
+    "SourceConnectivityExecutableEvidence",
     "SourceConnectivityExpiryPosture",
     "SourceConnectivityFollowUp",
     "SourceConnectivityGrounding",
@@ -54,6 +57,7 @@ _StableToken = Annotated[
     str,
     Field(min_length=1, max_length=160, pattern=r"^[a-z0-9][a-z0-9._:-]*$"),
 ]
+_StrictBoolean = Annotated[bool, Field(strict=True)]
 
 
 type SourceConnectivityCandidateId = Annotated[
@@ -185,15 +189,49 @@ class SourceConnectivityExpiryPosture(StrEnum):
     EXPIRED = "expired"
 
 
+class SourceConnectivityConnectionIdentity(SourceConnectivityCandidateIdentity):
+    """Shared identity of one source-to-revision production connection."""
+
+    source_kind: BindingSourceKind
+    source_object_id: _StableToken
+    resolver_id: _StableToken
+    calculation_revision_id: CalculationRevisionId
+
+
+class SourceConnectivityExecutableEvidence(BaseModel):
+    """Stable executable proof tied to one exact production connection."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    evidence_id: _StableToken
+    connection: SourceConnectivityConnectionIdentity
+    locator: SourceConnectivityGrounding
+
+    @model_validator(mode="after")
+    def _require_test_evidence(self) -> SourceConnectivityExecutableEvidence:
+        """Refuse prose, implementation, or non-executable evidence locators."""
+        if self.locator.locator_kind is not SourceConnectivityGroundingLocatorKind.REPOSITORY:
+            raise ValueError("connected proof requires repository-backed executable evidence")
+        path = self.locator.reference.partition(":")[0]
+        if "/tests/" not in path or not path.rsplit("/", maxsplit=1)[-1].startswith("test_"):
+            raise ValueError("connected proof evidence must identify a test module")
+        return self
+
+
 class SourceConnectivityResolverOwnershipProof(BaseModel):
     """Evidence that one canonical resolver owns the candidate source."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    source_kind: BindingSourceKind
-    resolver_id: _StableToken
+    connection: SourceConnectivityConnectionIdentity
     owner: _BoundedText
-    enrollment_evidence: tuple[SourceConnectivityGrounding, ...] = Field(min_length=1)
+    enrollment_evidence: tuple[SourceConnectivityExecutableEvidence, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _bind_enrollment_evidence(self) -> SourceConnectivityResolverOwnershipProof:
+        """Require every enrollment proof to name this exact connection."""
+        _require_matching_evidence(self.connection, self.enrollment_evidence)
+        return self
 
 
 class SourceConnectivityEncryptedRevisionProof(BaseModel):
@@ -201,11 +239,21 @@ class SourceConnectivityEncryptedRevisionProof(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    calculation_revision_proof_id: _StableToken
-    strict_round_trip: Literal[True]
-    encrypted_at_rest: Literal[True]
-    anti_tautology_mutation: Literal[True]
-    evidence: tuple[SourceConnectivityGrounding, ...] = Field(min_length=1)
+    connection: SourceConnectivityConnectionIdentity
+    persisted_source_identity: _StableToken
+    persisted_source_fingerprint: _StableToken
+    strict_round_trip: _StrictBoolean
+    encrypted_at_rest: _StrictBoolean
+    anti_tautology_mutation: _StrictBoolean
+    evidence: tuple[SourceConnectivityExecutableEvidence, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _require_strict_revision_proof(self) -> SourceConnectivityEncryptedRevisionProof:
+        """Require true strict-storage claims tied to this exact connection."""
+        if not (self.strict_round_trip and self.encrypted_at_rest and self.anti_tautology_mutation):
+            raise ValueError("encrypted revision proof requires every strict proof assertion")
+        _require_matching_evidence(self.connection, self.evidence)
+        return self
 
 
 class SourceConnectivityOperatorReachabilityProof(BaseModel):
@@ -213,10 +261,19 @@ class SourceConnectivityOperatorReachabilityProof(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
+    connection: SourceConnectivityConnectionIdentity
     entrypoint_id: _StableToken
-    command: _BoundedText
-    resolver_observed: Literal[True]
-    evidence: tuple[SourceConnectivityGrounding, ...] = Field(min_length=1)
+    command_id: _StableToken
+    resolver_observed: _StrictBoolean
+    evidence: tuple[SourceConnectivityExecutableEvidence, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _require_observed_connection(self) -> SourceConnectivityOperatorReachabilityProof:
+        """Require executable observation of this exact resolver and source."""
+        if not self.resolver_observed:
+            raise ValueError("operator reachability proof requires an observed resolver")
+        _require_matching_evidence(self.connection, self.evidence)
+        return self
 
 
 class SourceConnectivityConnectedProof(BaseModel):
@@ -227,6 +284,28 @@ class SourceConnectivityConnectedProof(BaseModel):
     resolver_ownership: SourceConnectivityResolverOwnershipProof
     encrypted_revision: SourceConnectivityEncryptedRevisionProof
     operator_reachability: SourceConnectivityOperatorReachabilityProof
+
+    @model_validator(mode="after")
+    def _require_one_connection(self) -> SourceConnectivityConnectedProof:
+        """Refuse proof components describing different production paths."""
+        identity = self.resolver_ownership.connection
+        if self.encrypted_revision.connection != identity or self.operator_reachability.connection != identity:
+            raise ValueError("connected proof components must identify the same connection")
+        return self
+
+    @property
+    def connection(self) -> SourceConnectivityConnectionIdentity:
+        """Return the connection identity shared by every proof component."""
+        return self.resolver_ownership.connection
+
+
+def _require_matching_evidence(
+    connection: SourceConnectivityConnectionIdentity,
+    evidence: tuple[SourceConnectivityExecutableEvidence, ...],
+) -> None:
+    """Refuse executable evidence for another candidate or source path."""
+    if any(item.connection != connection for item in evidence):
+        raise ValueError("connected proof evidence must identify the asserted connection")
 
 
 _BLOCKED_DISPOSITIONS = frozenset(
@@ -241,9 +320,9 @@ _BLOCKED_DISPOSITIONS = frozenset(
 class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
     """Governed adjudication record for one stable connectivity candidate.
 
-    Connected-slice proof is intentionally absent until its separate contract
-    is introduced.  This row establishes only the evidence and accountability
-    needed for every disposition, including fail-closed blocked states.
+    Every disposition carries evidence and accountability. A ``connected`` row
+    additionally carries relational proof that one candidate and source path
+    owns resolution, encrypted revision persistence, and operator reachability.
     """
 
     disposition: SourceConnectivityDisposition
@@ -283,6 +362,8 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
         if self.disposition is SourceConnectivityDisposition.CONNECTED:
             if self.connected_proof is None:
                 raise ValueError("connected connectivity row requires complete connected_proof")
+            if self.connected_proof.connection.candidate_id != self.candidate_id:
+                raise ValueError("connected proof candidate_id must match the census row")
         elif self.connected_proof is not None:
             raise ValueError("only a connected connectivity row may carry connected_proof")
         if (
