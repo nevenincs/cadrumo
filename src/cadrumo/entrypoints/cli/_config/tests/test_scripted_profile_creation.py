@@ -17,6 +17,7 @@ import pytest
 from .....core.config import override_settings
 from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli
+from ..._verb_input_schema import build_verb_input_schemas
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -261,25 +262,36 @@ def test_scripted_create_rejects_malformed_secret_stdin_without_echo(tmp_path: P
         listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
 
     assert refused.exit_code != 0
-    assert _PASSPHRASE not in refused.output
-    assert "Traceback" not in refused.output
+    combined = refused.stdout + refused.stderr
+    assert _PASSPHRASE not in combined
+    assert "x" * 9000 not in combined
+    assert "Traceback" not in combined
     assert json.loads(listed.stdout)["result"]["profiles"] == []
 
 
 def test_scripted_create_rejects_mismatched_confirmation_without_echo(tmp_path: Path) -> None:
+    confirmation = "distinctive-confirmation-value"
     with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
         refused = invoke_cached_cli(
             ("config", "profile", "create", "Mismatch", "--quiet", "--secrets-stdin"),
-            input=json.dumps({"passphrase": _PASSPHRASE, "passphrase_confirmation": "different-confirmation"}),
+            input=json.dumps({"passphrase": _PASSPHRASE, "passphrase_confirmation": confirmation}),
         )
+        listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
+    combined = refused.stdout + refused.stderr
     assert refused.exit_code != 0
-    assert _PASSPHRASE not in refused.output
+    assert _PASSPHRASE not in combined
+    assert confirmation not in combined
+    assert json.loads(listed.stdout)["result"]["profiles"] == []
 
 
 def test_lazy_create_help_declares_exactly_one_secret_stdin_option() -> None:
     help_result = invoke_cached_cli(("config", "profile", "create", "--help"))
     assert help_result.exit_code == 0, help_result.output
     assert help_result.output.count("--secrets-stdin") == 1
+    schema = build_verb_input_schemas(("config.profile.create",))["config.profile.create"]
+    parameters = [parameter for parameter in schema.parameters if parameter.name == "secrets_stdin"]
+    assert len(parameters) == 1
+    assert parameters[0].cli_flag == "--secrets-stdin"
 
 
 def test_scripted_create_refuses_a_blank_name(tmp_path: Path) -> None:

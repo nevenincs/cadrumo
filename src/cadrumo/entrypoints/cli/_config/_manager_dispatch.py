@@ -49,7 +49,7 @@ from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_policy import command_execution_policy as _command_execution_policy
 from .._command_suggestions import LazySubcommand as _LazySubcommand
 from .._command_suggestions import register_lazy_subcommand as _register_lazy_subcommand
-from .._common import _emit_envelope, active_profile_label
+from .._common import _emit_envelope, activate_subcommand_output_language, active_profile_label
 from .._errors import command_error_boundary as _command_error_boundary
 from .._errors import decorate_typer_app as _decorate_typer_app
 from ._execution_policies import BOOTSTRAP_WRITE as _BOOTSTRAP_WRITE
@@ -119,6 +119,7 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
             if mode == "create" and isinstance(scripted_ctx, _TyperClickContext):
                 from ._scripted_registration import register_profile_from_scripted_invocation
 
+                activate_subcommand_output_language(scripted_ctx, kwargs.get("output_language"))
                 return register_profile_from_scripted_invocation(scripted_ctx, kwargs)
             return wizard_command(*args, **kwargs)
 

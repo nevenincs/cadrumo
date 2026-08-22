@@ -237,9 +237,9 @@ def execution_policy_for_cli_path(
     """Resolve one CLI path and return its callback-attached execution policy.
 
     Resolution follows Click's real ``get_command`` protocol one token at a
-    time.  It therefore materialises only the selected ancestry: asking for a
-    config policy cannot load an app command family, and asking for one lazy
-    leaf cannot enumerate or load its siblings.
+    time without calling ``list_commands``. Registered lazy loaders still own
+    their module import boundaries; nested eager registrars remain visible as
+    import cost until the command-loading campaign converts them.
 
     ``cli_path`` excludes the executable token (for example
     ``("config", "profile", "list")``).  Missing paths, traversal through a

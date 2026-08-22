@@ -16,6 +16,7 @@ from .....adapters.persistence.storage.custody import (
 )
 from .....application.workflow import list_profile_buckets
 from .....core.config import override_settings
+from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -74,10 +75,41 @@ def test_scripted_refusal_boundaries_are_localized_secret_safe_and_mutation_free
 def test_original_fourteen_scalar_refusal_is_real_in_every_language(tmp_path: Path, locale: str) -> None:
     candidate = "x" * 14
     refused = _invoke_create(tmp_path, candidate, locale=locale)
-    message = json.loads(refused.stderr)["error"]["message"]
-    assert message and candidate not in message
-    assert "application.user_profile.errors" not in message
-    assert "profile password must contain 15 to 256 Unicode scalars" not in message
+    combined = refused.stdout + refused.stderr
+    error = json.loads(refused.stderr)["error"]
+    context = {
+        "minimum_scalars": "15",
+        "reason": "too_few_scalars",
+        "scalar_count": "14",
+        "utf8_byte_count": "14",
+    }
+    translations = {
+        language: tr(
+            "application.user_profile.errors.profile_password_too_few_scalars",
+            locale=language,
+            **context,
+        )
+        for language in ("en", "es", "ca", "hu")
+    }
+
+    assert error == {
+        "action": None,
+        "category": "REFUSED",
+        "code": "REFUSED_PROFILE_REGISTRATION",
+        "context": context,
+        "message": translations[locale],
+        "retryable": False,
+        "runbook_id": None,
+        "trace_id": None,
+    }
+    assert all(message not in combined for language, message in translations.items() if language != locale)
+    assert candidate not in combined
+    assert "application.user_profile.errors" not in combined
+    assert "ProspectiveProfilePasswordRefusal" not in combined
+    assert "profile password must contain 15 to 256 Unicode scalars" not in combined
+    assert "Traceback" not in combined
+    assert "INTERNAL" not in combined.upper()
+    assert not list((tmp_path / "storage").glob("*/capsule.current.json"))
 
 
 @pytest.mark.parametrize(
