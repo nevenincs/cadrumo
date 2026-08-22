@@ -1,0 +1,331 @@
+# Modelo 840 Pag. 2 -- Apartado VI (elementos tributarios) and Apartado VII (cuota),
+# boxes [84] to [108]. Transcribed from the bundled aeat-dr-840 design; Pag. 2 tiles
+# 1..1165 exactly once with no gap and no overlap.
+#
+# data_type COMES FROM THE DESIGN type_code, never from reading the label. Every
+# Reservado box here is An (alfanumerico) and every taxpayer-supplied figure is Num;
+# the Num ones carry no ent+dec hint in their descriptions, unlike the repeating A)
+# rows which say 7ent + 2dec explicitly, so they are integer counts and surfaces
+# rather than money. Calling [84] money because it is named Cuota would contradict
+# the design, which types it An.
+#
+# ONLY 24 OF THE 110 FIELDS ON THIS RECORD ARE CASILLAS, and that is the shape of the
+# record rather than an omission. The A) and B) blocks of Apartado VI are REPEATING
+# GROUPS -- the same four fields (2Cod+30Descrip, Numero 7ent+2dec, Importe unitario,
+# Cuota) restated for A) 1., A) 2., A) 3. and so on -- and AEAT prints no box number
+# on any of them. They are repeating detail rows, the shape modelo 720 models with
+# binding_record / repeat = binding_rows, not 86 flat casillas. Minting a byte-span
+# number for each would model a repeating structure as fixed positions and invent a
+# distinct concept per repetition.
+#
+# TWO NUMBERED BOXES ARE DELIBERATELY EXCLUDED, for the reason Apartado IV of Pag. 1
+# is also unauthored: [86] labels TWO unrelated concepts -- B) Suma of maquinas
+# recreativas at @672 and Cuota maquinas recreativas o autoventa at @1044 -- and
+# [109] labels FIVE positions of one notification block (Lugar, Dia, Mes, Ano and the
+# titular or representante capacity). Each collapses to ONE derived casilla, so
+# declaring one casilla per number would make the coverage report read covered while
+# five real positions stay unmodelled. They need the distinguishing convention that
+# Apartado IV is waiting on.
+
+# @11+13, type_code An. Cuota consignada directamente en las tarifas. [84].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.cuota-consignada-tarifas"
+number = "84"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "elem_trib_cuota_consignada_tarifas"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @560+13, type_code An. A) Suma de elementos tributarios del grupo o epigrafe. [85].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.grupo-epigrafe-suma"
+number = "85"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "elem_trib_grupo_epigrafe_suma"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @850+7, type_code Num. C) Suma de Total. [87].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-suma-total"
+number = "87"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_municipal_suma_total"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @857+7, type_code Num. C) Suma de Rectificada. [88].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-suma-rectificada"
+number = "88"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_municipal_suma_rectificada"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @864+7, type_code Num. C) Suma de Computable. [89].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-suma-computable"
+number = "89"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_municipal_suma_computable"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @871+5, type_code Num. C) Superficie deducible. [90].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-superficie-deducible"
+number = "90"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_municipal_superficie_deducible"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @876+7, type_code Num. C) Superficie computable. [91].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-superficie-computable"
+number = "91"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_municipal_superficie_computable"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @883+13, type_code An. C) Valor elemento tributario. [92].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-valor-elemento"
+number = "92"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "elem_trib_municipal_valor_elemento"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @896+5, type_code An. C) Coeficiente corrector. [93].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-coeficiente-corrector"
+number = "93"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "elem_trib_municipal_coeficiente_corrector"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @901+13, type_code An. C) Cuota elemento tributario. [94].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-cuota-elemento"
+number = "94"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "elem_trib_municipal_cuota_elemento"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @914+5, type_code Num. D) Locales, numero de locales. [95].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.provincial-nacional-numero"
+number = "95"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_provincial_nacional_numero"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @919+8, type_code Num. D) Locales, Total. [96].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.provincial-nacional-total"
+number = "96"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_provincial_nacional_total"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @927+8, type_code Num. D) Locales, Rectificada. [97].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.provincial-nacional-rectificada"
+number = "97"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_provincial_nacional_rectificada"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @935+8, type_code Num. D) Locales, Computable. [98].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.provincial-nacional-computable"
+number = "98"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_provincial_nacional_computable"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @943+13, type_code An. D) Locales, Cuota elemento tributario. [99].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.provincial-nacional-cuota-elemento"
+number = "99"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "elem_trib_provincial_nacional_cuota_elemento"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @956+13, type_code An. Cuota antes de bonificaciones o incrementos. [100].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.antes-bonificaciones-incrementos"
+number = "100"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_antes_bonificaciones_incrementos"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @969+5, type_code An. Bonificacion. [101].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.bonificacion-clave"
+number = "101"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_bonificacion_clave"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @974+13, type_code An. Bonificacion, porcentaje sobre. [102].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.bonificacion-porcentaje"
+number = "102"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_bonificacion_porcentaje"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @987+13, type_code An. Bonificacion, cuota. [103].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.bonificacion-importe"
+number = "103"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_bonificacion_importe"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1000+5, type_code An. Incremento. [104].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.incremento-clave"
+number = "104"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_incremento_clave"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1005+13, type_code An. Incremento, porcentaje sobre. [105].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.incremento-porcentaje"
+number = "105"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_incremento_porcentaje"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1018+13, type_code An. Incremento, cuota. [106].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.incremento-importe"
+number = "106"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_incremento_importe"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1031+13, type_code An. Cuota despues de bonificaciones o incrementos. [107].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.despues-bonificaciones-incrementos"
+number = "107"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_despues_bonificaciones_incrementos"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1057+13, type_code An. Cuota de tarifa o importe minimo. [108].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.tarifa-o-importe-minimo"
+number = "108"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_tarifa_o_importe_minimo"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]

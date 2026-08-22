@@ -8,6 +8,33 @@ modelo:
       revision:
         2003-y-siguientes:
           casilla:
+            x-cdqmut315pgmst35ecmm4rred5j6ior1cdkmurj5ecmmirj3e9imqpbeehnn6:
+              help: null
+              label: Cuota antes de bonificaciones o incrementos (reservado a la Administracion)
+            x-cdqmut315ph6urj9cpkm6ob3d5nmsbb3dhgncp8:
+              help: null
+              label: Clave de bonificacion aplicada (reservado a la Administracion)
+            x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
+              help: null
+              label: null
+            x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
+              help: null
+              label: null
+            x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
+              help: null
+              label: null
+            x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
+              help: null
+              label: null
+            x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
+              help: null
+              label: null
+            x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
+              help: null
+              label: null
+            x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
+              help: null
+              label: null
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio fiscal al que se refiere la declaración
@@ -17,6 +44,56 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (alta / variación / baja)
+            x-clm6ar9dehp6iohecdqmut315lhmurjjd5jmsob4c4mn8obid5j62so:
+              help: null
+              label: Cuota consignada directamente en las tarifas (reservado a la
+                Administracion)
+            x-clm6ar9dehp6iohectp7as3f5lin0qb7e9gmcp9dedqmqo8:
+              help: null
+              label: Suma de los elementos tributarios del grupo o epigrafe (reservado
+                a la Administracion)
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdnmapj9cdkmarjkckmm6rrie9im6t3fe8:
+              help: null
+              label: 'Cuota municipal: coeficiente corrector (reservado a la Administracion)'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdqmut315limopbdcln78ro:
+              help: null
+              label: 'Cuota municipal: cuota del elemento tributario (reservado a
+                la Administracion)'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
+              help: null
+              label: 'Cuota municipal: suma de la superficie computable de los locales'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9de9im6t39cpkm6ob4c4:
+              help: null
+              label: 'Cuota municipal: suma de la superficie rectificada de los locales'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dehnn8obc:
+              help: null
+              label: 'Cuota municipal: suma de la superficie total de los locales'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55lhmurbgelq62ojcck:
+              help: null
+              label: 'Cuota municipal: superficie computable'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55li6ap3lcdkm4r35:
+              help: null
+              label: 'Cuota municipal: superficie deducible'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1depgmorri5limopbdcln78ro:
+              help: null
+              label: 'Cuota municipal: valor del elemento tributario (reservado a
+                la Administracion)'
+            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdnmqs3lehgm4r35:
+              help: null
+              label: 'Cuota provincial o nacional: superficie computable de los locales'
+            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdqmut315limopbdcln78ro:
+              help: null
+              label: 'Cuota provincial o nacional: cuota del elemento tributario (reservado
+                a la Administracion)'
+            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1ddpqmqpbids:
+              help: null
+              label: 'Cuota provincial o nacional: numero de locales'
+            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1de9im6t39cpkm6ob4c4:
+              help: null
+              label: 'Cuota provincial o nacional: superficie rectificada de los locales'
+            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dehnn8obc:
+              help: null
+              label: 'Cuota provincial o nacional: superficie total de los locales'
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqrbldpkm6qbgd5ng:
               help: null
               label: Código de municipio del local afecto indirectamente a la actividad

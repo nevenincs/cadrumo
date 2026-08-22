@@ -7,6 +7,34 @@ modelo:
       revision:
         2003-y-siguientes:
           casilla:
+            x-cdqmut315pgmst35ecmm4rred5j6ior1cdkmurj5ecmmirj3e9imqpbeehnn6:
+              help: null
+              label: Kvota a kedvezmenyek es novelesek elott (az adohatosag tolti
+                ki)
+            x-cdqmut315ph6urj9cpkm6ob3d5nmsbb3dhgncp8:
+              help: null
+              label: Az alkalmazott kedvezmeny kodja (az adohatosag tolti ki)
+            x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
+              help: null
+              label: null
+            x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
+              help: null
+              label: null
+            x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
+              help: null
+              label: null
+            x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
+              help: null
+              label: null
+            x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
+              help: null
+              label: null
+            x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
+              help: null
+              label: null
+            x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
+              help: null
+              label: null
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: A bevallás vonatkozási adóéve
@@ -16,6 +44,59 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (bejegyzés / módosítás / törlés)
+            x-clm6ar9dehp6iohecdqmut315lhmurjjd5jmsob4c4mn8obid5j62so:
+              help: null
+              label: A tarifakban kozvetlenul feltuntetett osszeg (az adohatosag tolti
+                ki)
+            x-clm6ar9dehp6iohectp7as3f5lin0qb7e9gmcp9dedqmqo8:
+              help: null
+              label: A csoport vagy tetel adozasi elemeinek osszege (az adohatosag
+                tolti ki)
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdnmapj9cdkmarjkckmm6rrie9im6t3fe8:
+              help: null
+              label: 'Onkormanyzati kvota: korrekcios egyutthato (az adohatosag tolti
+                ki)'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdqmut315limopbdcln78ro:
+              help: null
+              label: 'Onkormanyzati kvota: az adozasi elem kvotaja (az adohatosag
+                tolti ki)'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
+              help: null
+              label: 'Onkormanyzati kvota: a helyisegek beszamithato alapteruletenek
+                osszege'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9de9im6t39cpkm6ob4c4:
+              help: null
+              label: 'Onkormanyzati kvota: a helyisegek helyesbitett alapteruletenek
+                osszege'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dehnn8obc:
+              help: null
+              label: 'Onkormanyzati kvota: a helyisegek teljes alapteruletenek osszege'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55lhmurbgelq62ojcck:
+              help: null
+              label: 'Onkormanyzati kvota: beszamithato alapterulet'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55li6ap3lcdkm4r35:
+              help: null
+              label: 'Onkormanyzati kvota: levonhato alapterulet'
+            x-clm6ar9dehp6iohedlqmsqb3d5o62r1depgmorri5limopbdcln78ro:
+              help: null
+              label: 'Onkormanyzati kvota: az adozasi elem erteke (az adohatosag tolti
+                ki)'
+            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdnmqs3lehgm4r35:
+              help: null
+              label: 'Tartomanyi vagy orszagos kvota: a helyisegek beszamithato alapterulete'
+            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdqmut315limopbdcln78ro:
+              help: null
+              label: 'Tartomanyi vagy orszagos kvota: az adozasi elem kvotaja (az
+                adohatosag tolti ki)'
+            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1ddpqmqpbids:
+              help: null
+              label: 'Tartomanyi vagy orszagos kvota: helyisegek szama'
+            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1de9im6t39cpkm6ob4c4:
+              help: null
+              label: 'Tartomanyi vagy orszagos kvota: a helyisegek helyesbitett alapterulete'
+            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dehnn8obc:
+              help: null
+              label: 'Tartomanyi vagy orszagos kvota: a helyisegek teljes alapterulete'
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqrbldpkm6qbgd5ng:
               help: null
               label: a tevékenységhez közvetve kapcsolódó helyiség településkódja
