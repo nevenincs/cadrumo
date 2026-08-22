@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:1032d0e572cc61ab21cc1f797b2c6db0382957e1f38934490e027a27e35d0d87'
+body_hash: 'sha256:82cee8925d7a7c5f93a47482c658b51ec48013aed05ced485f83e83a4153d5ae'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -13134,3 +13134,96 @@ mechanical fill, and guessing it would be inventing a contract.
 
 Modelo 840 still needs seven more families before the filing rung, and its 381
 design fields need casilla schemas before a layout can anchor to anything.
+
+## Tick: a reason that misdescribed five modelos, and two review budgets my own work broke
+
+Re-measured at tick start: authority loads CLEAN, modelo 840 still blocked on
+seven families.
+
+### The defect modelo 840's own reviewer had already written down
+
+840's revision note carried a KNOWN LIMIT: its `family_dispositions.formulas`
+reason called it "an informational declaration reporting third-party data to
+AEAT", which misstates the modelo -- an IAE declaration reports the taxpayer's
+OWN actividad -- and the note recorded that the same sentence sat verbatim on
+other revisions. The conclusion those dispositions reach is right; only the
+reason is wrong, which is exactly why it survived: nothing downstream reads the
+prose, so only a reader catches it, and the reader who caught it left it.
+
+Ten revisions carried the sentence. Judged against each modelo's OFFICIAL NAME
+rather than from memory, it splits cleanly:
+
+* accurate on four -- 189 (valores, seguros y rentas), 280 (Planes de Ahorro a
+  Largo Plazo), 345 (planes y fondos de pensiones, partícipes) and 347
+  (Operaciones con terceras personas). A financial entity or declarant files
+  these about its clients or counterparties;
+* wrong on five revisions of four modelos -- 145, 232 (two revisions), 720 and
+  840 -- where the declarant reports its own facts. Modelo 145 is doubly wrong:
+  it is not filed with AEAT at all, being the comunicación the perceptor hands
+  to the PAGADOR.
+
+All five now state what their own declarant actually reports, keeping the
+conclusion and the citations. Modelo 840's reason cites TRLRHL art. 90, which
+puts the liquidación with the administration -- that is why no formula family
+applies, and it is a fact about the IAE rather than a sentence borrowed from a
+different kind of return. The reviewer note is swept to match, and now records
+which four revisions keep the sentence and why.
+
+A gate pins the claim to the four modelos it describes. It is an allowlist
+because the judgement is a reading of each modelo's nature, so every entry
+carries the official name that justifies it and re-checks that the name still
+holds -- an allowlist that outlives the modelo it was written for is the failure
+this repo keeps meeting. Bite proof: re-pasting the claim onto modelo 720 reds
+both the set assertion and the by-name one, and the file restored byte-exactly.
+
+### An ordinal used as an identity, again
+
+`test_modelo_100_retention_credit_formulas_do_not_cite_fractional_payment_article`
+anchored on the fragment path `0068-renta-2025-retenciones-arrendamientos-urbanos.toml`
+and broke when the same fragment became `0069-`. The prefix is a POSITION within
+its directory and renumbers whenever a sibling is added or removed; the stem is
+the identity. The anchor now strips the ordinal, so it survives renumbering and
+still fails if the formula itself disappears. This is the third time in this
+campaign that an ordinal has been read as an identity.
+
+### Two review budgets broken by my own work, both repaid rather than raised
+
+The full registry package surfaced four failures that were MINE, not standing
+red:
+
+* the modelo 840 applicability rule was authored as two very long single lines,
+  and its 856-character row broke the registry TOML review baselines (600 and
+  520). Rewrapped with continuations in the style modelo 036 already uses;
+* `_validate_export_layout_coverage.py` had grown to 1082 lines against a 1063
+  baseline. Git settles the attribution rather than a guess: the file measured
+  exactly 1063 at the commit before last tick's filer-tick fix, so all 19 lines
+  were mine.
+
+The budget was repaid by compressing my own additions back to the baseline
+figure -- the fallback is now one expression reading ``Contenido`` or, where
+there is none, the description, with the explanation folded into the docstring
+bullet that already covered the signal. Raising the baseline would have been the
+easy move and would have retired a ratchet to accommodate one comment. The
+coverage module's own 22 tests still pass, so the compression is faithful rather
+than merely shorter.
+
+### Verified
+
+* the new disposition gate: 4 passed, with the re-paste bite proof.
+* modelo 840 applicability after rewrapping: 6 passed.
+* reviewability, loader-directory-mode and export-layout coverage: 55 passed.
+* full registry package: 18 failed, 5194 passed, from 22 failed / 5190 passed.
+  The four that disappeared are exactly the four this tick caused and repaid;
+  every other failure is unchanged.
+* authority loads CLEAN.
+
+### Still open
+
+The remaining 18 are the standing-red inventories -- the filing-capability
+worklist, the four span-gate rows, the unregistered-design list, the
+layout-design-applies divergences -- plus the formula-parity and continuidad
+ratchet entries carried from before this tick, none of which moved.
+
+Modelo 840 still needs six more families beyond the applicability rule authored
+last tick, and its 381 design fields need casilla schemas before a layout can
+anchor to anything.
