@@ -4,7 +4,7 @@ tags:
   - '#profile-registration-password-policy'
 date: '2026-08-22'
 modified: '2026-08-22'
-body_hash: 'sha256:8efda28a3c6c33d8670da81335bbcb3d4c1283489fde7aa06a0bd1f6c560bbcd'
+body_hash: 'sha256:07142f1d0fa33c64f2ba10b92df7027c3329bd2eb15050817376169b413a2431'
 tier: L3
 related:
   - '[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]'
@@ -54,7 +54,7 @@ Deliver one pure typed exact-sequence assessment and retire the obsolete eight-c
 
 Deliver defense-in-depth custody validation consuming core authority without owning operator prose or duplicate limits.
 
-- [ ] `W01.P02.S05` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then make custody consume the canonical contract, remove duplicate constants and exports, and prove strict defense-in-depth boundaries plus obsolete-symbol absence; `src/cadrumo/adapters/persistence/storage/custody`.
+- [x] `W01.P02.S05` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then make custody consume the canonical contract, remove duplicate constants and exports, and prove strict defense-in-depth boundaries plus obsolete-symbol absence; `src/cadrumo/adapters/persistence/storage/custody`.
 
 ### Phase `W01.P03` - separate recovery-secret encoding
 

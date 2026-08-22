@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:591c3db028074a4f0b93e1d52ef46a671fc210dedd03021859f9dfc9999bf303'
+body_hash: 'sha256:699fb9ba1679e1584fa772311d01164a3d084d4bce85b3972af23d78b593f6e7'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -174,3 +174,57 @@ formatting, and commit diff hygiene pass; the focused serial core unit module pa
 12 cases; and the execution record reports the same amended count. The MEDIUM is closed.
 No unresolved HIGH, CRITICAL, or MEDIUM finding remains from the S02-S04 core-contract
 reviews.
+
+### s05-secret-free-error-bite | medium | The safe-error test does not prove the candidate and measurements are absent
+
+The mandatory S05 review grounded commit `c92641e881` against the accepted ADR,
+research, incident reference, live plan, current source, execution record, commit history,
+and overlapping shared-worktree state. `src/cadrumo/adapters/persistence/storage/custody/_records.py:75-82`
+delegates validity exclusively to the public core assessment, maps only the finite
+`reason.value` into an internal `ProfileCustodyPasswordError`, and returns the exact
+strict UTF-8 encoding. Lines 85-92 strictly decode transport bytes, reapply the same
+canonical assessment, and return the submitted sequence without normalization. The
+duplicate custody bounds and old validators are absent from `_records.__all__`, both
+custody facades, and exact repository consumers; direct facade probes confirm there are
+no aliases or shims. The accepted 15/256 scalar and 1,024-byte boundaries,
+1,025-byte-over-scalar precedence, every typed reason, malformed UTF-8, and
+composed/decomposed exact roundtrips are exercised in
+`src/cadrumo/adapters/persistence/storage/custody/tests/test_records.py:132-177`.
+
+The generic parent and worker wrap operation still routes recovery secrets through the
+same private password codec at `_kdf_supervision.py:362` and `_kdf_worker.py:130`. This
+is the explicit ordered S06 dependency documented in the S05 execution record, changes
+no recovery bytes, and introduces no parallel policy. The commit is limited to the two
+facades, records codec, parent and worker consumers, focused tests, and its execution
+record. Ruff, formatting, and diff hygiene pass; the 13 focused record tests pass; the
+20 focused supervision/import-graph tests pass; and the repository-default custody lane
+reproduces the recorded 207 passed and 10 marker-deselected result.
+
+However, the test named
+`test_password_contract_maps_every_canonical_reason_to_a_safe_custody_error` at
+`src/cadrumo/adapters/persistence/storage/custody/tests/test_records.py:167-172` checks
+only that `reason.value` occurs in the exception string. It would remain green if a
+future diagnostic appended `candidate`, `scalar_count`, `utf8_byte_count`, or the
+assessment representation, contradicting both the ADR and the execution record's
+secret-free claim. Capture the exception, assert its exact finite diagnostic text (or
+otherwise explicitly assert absence of a distinctive candidate and numeric facts) for
+every refusal reason, and keep the expectation independent of the production formatter.
+This is a MEDIUM regression-coverage defect, not a current secret leak. No HIGH or
+CRITICAL finding blocks S06, and S06's recovery split may proceed, but S05 should not be
+treated as review-clean until this secret-safety bite is added.
+
+### s05-secret-free-error-bite-closure | low | Exact diagnostics and independent exclusions now guard every refusal
+
+Commit `05f3070c85` closes `s05-secret-free-error-bite` after fresh semantic ADR and
+code grounding, exact-symbol confirmation, and current-diff inspection. The amended
+matrix at `src/cadrumo/adapters/persistence/storage/custody/tests/test_records.py:156-184`
+uses distinctive candidates for all four canonical reasons, captures each custody
+exception, and requires the exact finite `reason.value` diagnostic. It also independently
+excludes the complete candidate, scalar and UTF-8 field names, complete assessment
+representation, and both numeric measurements. Appending any of the previously untested
+secret or measurement material now turns the test red.
+
+The remediation changes only the owned custody record test and S05 execution evidence.
+Ruff, formatting, and commit diff hygiene pass, and all 13 focused record tests pass.
+The MEDIUM is closed. No unresolved HIGH, CRITICAL, or MEDIUM finding remains from the
+S02-S05 reviews, and S06 may proceed.

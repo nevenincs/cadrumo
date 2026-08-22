@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:4b7e196f6052a409bfc38a90322a11f49aa117ff8540bc7b5089d159578b12c6'
+body_hash: 'sha256:a824503def040c9194dec6d78b91faea3fe8246639bef4990585ebaf9723f3ef'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15194,3 +15194,70 @@ is now known to be blocked behind a design-extraction defect; 036 and 840 are
 under active peer authoring; 220/2024 is the untested one. Whether modelo 038
 becomes authorable at all depends on repairing that extraction, which is
 record-design parser work rather than registry authoring.
+
+## Tick: modelo 038's diseño is a form DIAGRAM, and the worklist now says so
+
+Re-measured at tick start: authority CLEAN, the qualified classifier holding.
+This tick ran the design-integrity check BEFORE authoring rather than after,
+which is the discipline the last two withdrawals cost.
+
+### Checking first changed the answer for both candidates
+
+Modelo 220/2024 was the one untested AUTHORABLE line. Its design passes
+integrity outright -- **137 sheets, zero partial overlaps** -- so the check that
+sank modelo 038 does not apply. What stops it is scale: **16,079 fields**. It is
+the Impuesto sobre Sociedades consolidated return, an order of magnitude beyond
+the 58-field and 46-field records authored earlier, and not a tick.
+
+With modelos 036 and 840 under active peer authoring, no line was authorable
+this tick. So the tick went to the blocker instead.
+
+### Why modelo 038 cannot be repaired by fixing the parser
+
+Last tick recorded 038 as "blocked behind a design-extraction defect" and
+assumed that meant parser work. Reading the extraction disproves the assumption.
+The bundled artefact yields:
+
+* a position RULER -- `66 67 68 69 70 71 72 ...`, `131 132 133 ...`
+* free-floating labels -- `PERSONA CON QUIÉN`, `RELACIONARSE`, `TELÉFONO`,
+  `DEC. COMPLEMENTARIA`
+* reversed text where the form prints vertically -- `AIRATNEMELPMOC`,
+  `AVITUTITSUS`, `ODOIREP`
+
+and no `ordinal / offset / length / type` rows anywhere. It is a picture of the
+form with a byte ruler along the top, not a field table. The parser infers
+coordinates by associating labels with ruler positions, which is why `@68
+'BLANCOS.'` carries length 40 -- the same length as the `PERSONA` field beside
+it -- and why eight pairs overlap partially.
+
+So no parser repair makes this design authorable. Closing it needs AEAT's
+tabular diseño for modelo 038, or a hand transcription of filing-grade byte
+coordinates from a diagram, which is an acquisition decision rather than
+authoring work.
+
+### What was landed
+
+The worklist said "AUTHORABLE on era" for modelo 038 and thereby invited the
+attempt that had to be withdrawn. It now reads **BLOCKED on design extraction**
+and states why, citing the sibling gate's own
+`_KNOWN_SELF_CONTRADICTING_DESIGN` anchor by import rather than copying the
+string -- so if the corpus changes, that gate's "re-anchor" failure moves both
+in one place instead of leaving a stale duplicate here.
+
+AUTHORABLE on era now stands at three: modelos 036, 220/2024 and 840.
+
+### Verified
+
+* modelo 220's design integrity measured directly (137 sheets, 0 overlaps)
+  rather than assumed from its size.
+* registry + generated-tree + application/registry: **8 failed, 5957 passed** --
+  the eight declared inventories and nothing else, tree quiescent (0/0/0).
+* ruff clean.
+
+### Still open
+
+The eight inventories. The capability worklist's three remaining AUTHORABLE
+lines are all large or peer-owned, so the next real progress on it is either
+modelo 220's 16,079 fields -- which wants the generator pipeline, not
+hand-authored bindings -- or an operator decision on acquiring modelo 038's
+tabular diseño.
