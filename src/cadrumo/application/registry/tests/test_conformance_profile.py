@@ -41,7 +41,11 @@ from .. import (
     RegistryConformanceProfile,
     build_registry_conformance_profile,
 )
-from .._conformance import AnnualCasillaPopulationComparison, compare_annual_casilla_population
+from .._conformance import (
+    AnnualCasillaPopulationComparison,
+    compare_annual_casilla_population,
+    compare_annual_casilla_population_for_revision,
+)
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -548,11 +552,12 @@ def test_annual_casilla_comparison_accepts_typed_inspection_without_snapshot(
     inspection = registry_authority.inspect_revision("100", filing_year=2025, period="0A")
     revision = registry_authority.modelo("100").revisions[inspection.revision_id]
 
-    comparison = compare_annual_casilla_population(
-        inspection,
+    comparison = compare_annual_casilla_population_for_revision(
+        modelo=inspection.modelo_id,
+        revision=revision,
         filing_year=2025,
         period="0A",
-        revision=revision,
+        sources=inspection.sources,
         source_root=registry_authority.source_root,
     )
 

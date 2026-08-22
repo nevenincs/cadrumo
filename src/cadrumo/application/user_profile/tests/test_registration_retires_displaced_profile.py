@@ -30,9 +30,9 @@ from uuid import UUID
 
 import pytest
 
+from ....adapters.persistence.storage.custody import profile_session_path
 from ....core import read_pointer
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import profile_session_path
 from .._registration import ProfileRegistrationError, register_profile_with_credentials
 from .test_login_handover import (
     _assert_no_resumable_material,

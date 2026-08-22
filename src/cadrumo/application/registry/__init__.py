@@ -115,6 +115,7 @@ from ._conformance import (
     audit_bundled_registry_conformance,
     build_registry_conformance_profile,
     compare_annual_casilla_population,
+    compare_annual_casilla_population_for_revision,
 )
 from ._corpus import (
     RegistryCitationArticleProjection,
@@ -587,6 +588,7 @@ __all__ = [
     "audit_bundled_registry_conformance",
     "build_registry_conformance_profile",
     "compare_annual_casilla_population",
+    "compare_annual_casilla_population_for_revision",
     "diff_registry_revisions",
     "inspect_registry_tree",
     "list_registry_citations",

@@ -133,7 +133,6 @@ from ...domain.calculations.registry import RegistryClassificationAudit as _Regi
 from ...domain.calculations.registry import RegistryConstructEvidenceAudit as _RegistryConstructEvidenceAudit
 from ...domain.calculations.registry import RegistryCoverageAudit as _RegistryCoverageAudit
 from ...domain.calculations.registry import RegistryExternalGroundingAudit as _RegistryExternalGroundingAudit
-from ...domain.calculations.registry import RegistryRevisionInspection as _RegistryRevisionInspection
 from ...domain.calculations.registry import RegistrySnapshot as _RegistrySnapshot
 from ...domain.calculations.registry import RegistryValidationError as _RegistryValidationError
 from ...domain.calculations.registry import RelationId as _RelationId
@@ -186,6 +185,7 @@ __all__ = [
     "audit_bundled_registry_conformance",
     "build_registry_conformance_profile",
     "compare_annual_casilla_population",
+    "compare_annual_casilla_population_for_revision",
 ]
 
 
@@ -308,63 +308,23 @@ class _AnnualPopulationContext:
     authority_scope: CoverageAuthorityScope
 
 
-def _annual_population_context(
-    authority: _RegistrySnapshot | _RegistryRevisionInspection,
-    *,
-    filing_year: int | None,
-    period: str | None,
-    revision: _ModeloRevision | None,
-) -> _AnnualPopulationContext:
-    """Select one explicit filing or static-inspection comparison context."""
-    if isinstance(authority, _RegistrySnapshot):
-        selected_revision = authority.revision
-        return _AnnualPopulationContext(
-            revision=selected_revision,
-            layouts=selected_revision.export_layouts,
-            modelo=authority.modelo.id,
-            filing_year=authority.filing_year,
-            period=authority.period,
-            sources=authority.sources,
-            authority_scope="filing",
-        )
-    if filing_year is None or period is None:
-        raise RegistryApplicationInputError(
-            "annual casilla comparison requires filing_year and period for a static inspection",
-            context={"modelo": authority.modelo_id, "revision_id": authority.revision_id},
-        )
-    if revision is None or revision.id != authority.revision_id:
-        raise RegistryApplicationInputError(
-            "annual casilla comparison requires the compiled revision selected by the static inspection",
-            context={"modelo": authority.modelo_id, "revision_id": authority.revision_id},
-        )
-    return _AnnualPopulationContext(
-        revision=revision,
-        layouts=_derive_export_layouts_from_bindings(revision),
-        modelo=authority.modelo_id,
-        filing_year=filing_year,
-        period=period,
-        sources=authority.sources,
-        authority_scope="inspection_only",
-    )
-
-
 def compare_annual_casilla_population(
-    authority: _RegistrySnapshot | _RegistryRevisionInspection,
+    snapshot: _RegistrySnapshot,
     *,
     source_root: Path | None = None,
-    filing_year: int | None = None,
-    period: str | None = None,
-    revision: _ModeloRevision | None = None,
 ) -> AnnualCasillaPopulationComparison:
-    """Compare one law-selected registry read to its declared XML dictionaries.
+    """Compare one law-selected filing snapshot to its declared XML dictionaries.
 
-    A filing snapshot carries its temporal boundary and revision directly.  A
-    :class:`RegistryRevisionInspection` intentionally carries neither filing
-    context nor export layouts, so inspection callers provide the exact
-    coordinate and the already-selected compiled revision from the same
-    :class:`ValidatedRegistryAuthority`.  The revision is used only to project
-    its declared layouts and casilla flags; no second selector or snapshot is
-    constructed here.
+    A filing snapshot carries its temporal boundary, its selected revision and
+    its declared export layouts directly, so nothing else need be supplied.
+
+    Static compiler consumers, which read through a non-filing revision
+    projection rather than a snapshot, call
+    :func:`compare_annual_casilla_population_for_revision` and pass that
+    projection's facts explicitly. That split is deliberate: inspection
+    authority is static-only and must not reach an application boundary, so
+    this module names no inspection type and the dependency direction is
+    inverted rather than the boundary census being widened to admit one.
 
     The identity comparison delegates source reading to the existing
     :func:`xml_dictionary_entries` parser.  It compares unique non-null
@@ -373,29 +333,61 @@ def compare_annual_casilla_population(
     by ``dictionary_entry_count`` but are not fabricated into identities.
 
     Args:
-        authority: Validated filing snapshot or typed non-filing inspection for
-            one ``modelo``/year/period.
+        snapshot: Validated filing snapshot for one ``modelo``/year/period.
         source_root: Repository root containing the bundled official source
             corpus.  Omitting it leaves dictionary measurement explicitly
             ``unmeasured`` because the parser cannot resolve its source.
-        filing_year: Required with an inspection because that projection does
-            not retain filing context. Ignored for a snapshot.
-        period: Required with an inspection because that projection does not
-            retain filing context. Ignored for a snapshot.
-        revision: The compiled revision selected by the same authority,
-            required with an inspection because the inspection projection does
-            not expose export layouts. Its id must match ``revision_id``.
-
-    Raises:
-        RegistryApplicationInputError: If an inspection is supplied without
-            its exact coordinate or matching compiled revision.
     """
-    selected = _annual_population_context(
-        authority,
-        filing_year=filing_year,
-        period=period,
-        revision=revision,
+    return _compare_annual_population(
+        _AnnualPopulationContext(
+            revision=snapshot.revision,
+            layouts=snapshot.revision.export_layouts,
+            modelo=snapshot.modelo.id,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+            sources=snapshot.sources,
+            authority_scope="filing",
+        ),
+        source_root=source_root,
     )
+
+
+def compare_annual_casilla_population_for_revision(
+    *,
+    modelo: _ModeloId,
+    revision: _ModeloRevision,
+    filing_year: int,
+    period: str,
+    sources: Mapping[str, _SourceReference],
+    source_root: Path | None = None,
+) -> AnnualCasillaPopulationComparison:
+    """Compare an explicitly-supplied revision read to its XML dictionaries.
+
+    The entry point for static compiler consumers. Their revision projection
+    retains no filing context and exposes no export layouts, so the coordinate
+    and the already-selected compiled revision arrive as values from the same
+    ``ValidatedRegistryAuthority``. Layouts are projected from the revision's
+    bindings; no second selector or snapshot is constructed here.
+    """
+    return _compare_annual_population(
+        _AnnualPopulationContext(
+            revision=revision,
+            layouts=_derive_export_layouts_from_bindings(revision),
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            sources=sources,
+            authority_scope="inspection_only",
+        ),
+        source_root=source_root,
+    )
+
+
+def _compare_annual_population(
+    selected: _AnnualPopulationContext,
+    *,
+    source_root: Path | None,
+) -> AnnualCasillaPopulationComparison:
 
     registry_casillas = tuple(casilla for casilla in selected.revision.casillas if not casilla.internal_only)
     registry_ids = frozenset(str(casilla.id) for casilla in registry_casillas)

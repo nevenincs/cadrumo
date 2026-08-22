@@ -464,12 +464,6 @@ if TYPE_CHECKING:
         profile_bind_bucket_session as profile_bind_bucket_session,
     )
     from ._custody_ports import (
-        profile_close_bucket_session as profile_close_bucket_session,
-    )
-    from ._custody_ports import (
-        profile_current_bucket_session as profile_current_bucket_session,
-    )
-    from ._custody_ports import (
         profile_custody_owner_root as profile_custody_owner_root,
     )
     from ._custody_ports import (
@@ -495,9 +489,6 @@ if TYPE_CHECKING:
     )
     from ._custody_ports import (
         profile_is_persisted_session as profile_is_persisted_session,
-    )
-    from ._custody_ports import (
-        profile_session_path as profile_session_path,
     )
     from ._custody_ports import (
         profile_session_serves_bucket as profile_session_serves_bucket,
@@ -841,9 +832,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "profile_custody_owner_root": "._custody_ports",
     "default_profile_bucket_storage": "._custody_ports",
     "default_profile_secure_object_inventory": "._custody_ports",
-    "profile_close_bucket_session": "._custody_ports",
-    "profile_current_bucket_session": "._custody_ports",
-    "profile_session_path": "._custody_ports",
     "profile_bind_bucket_session": "._custody_ports",
     "CENSAL_ADOPTABLE_PATHS": "._censo_sync",
     "CENSO_CERTIFICATE_AXIS_PREFIX": "._cotejo_apply",

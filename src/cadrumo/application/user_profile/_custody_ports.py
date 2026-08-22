@@ -1038,11 +1038,6 @@ def profile_custody_record_session_material(
     return ProfileCustodyRecordSessionMaterial(envelope=material.envelope, dek=session.dek)
 
 
-def profile_current_bucket_session() -> ProfileBucketSessionPort | None:
-    """Return the process's current live bucket session, if any."""
-    return master_key.current_active_bucket_session()
-
-
 def profile_session_serves_bucket(session: ProfileBucketSessionPort | None, bucket_id: str) -> bool:
     """Return whether a live bucket session serves the exact profile UUID."""
     resolved = None if session is None else _substrate_handle(session, master_key.BucketSession, "bucket session")
@@ -1052,11 +1047,6 @@ def profile_session_serves_bucket(session: ProfileBucketSessionPort | None, buck
 def profile_bind_bucket_session(session: ProfileBucketSessionPort) -> None:
     """Bind one authenticated bucket session to the process context."""
     master_key.bind_active_bucket_session(_substrate_handle(session, master_key.BucketSession, "bucket session"))
-
-
-def profile_close_bucket_session() -> None:
-    """Close and clear the current live bucket session."""
-    master_key.close_active_bucket_session()
 
 
 def profile_is_authentication_failure(error: BaseException) -> bool:
@@ -1073,11 +1063,6 @@ def profile_is_authentication_failure(error: BaseException) -> bool:
 def profile_is_keyring_unavailable(error: BaseException) -> bool:
     """Recognise a keychain persistence refusal for the process-scoped fallback."""
     return isinstance(error, KeyringUnavailableError)
-
-
-def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
-    """Return the persisted profile-session sidecar path."""
-    return custody.profile_session_path(storage_root=storage_root, profile_id=profile_id)
 
 
 def profile_advance_session_idle_deadline(
@@ -1214,8 +1199,6 @@ __all__ = [
     "export_profile_recovery_artifact",
     "profile_advance_session_idle_deadline",
     "profile_bind_bucket_session",
-    "profile_close_bucket_session",
-    "profile_current_bucket_session",
     "profile_custody_owner_root",
     "profile_custody_record_session_material",
     "profile_custody_recovery_envelope_path",
@@ -1225,7 +1208,6 @@ __all__ = [
     "profile_is_keyring_unavailable",
     "profile_is_password_authentication_failure",
     "profile_is_persisted_session",
-    "profile_session_path",
     "profile_session_serves_bucket",
     "prove_profile_recovery_artifact",
     "refuse_profile_login_without_password_channel",

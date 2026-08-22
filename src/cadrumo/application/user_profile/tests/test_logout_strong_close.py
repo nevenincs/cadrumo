@@ -30,14 +30,11 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage import master_key
+from ....adapters.persistence.storage.custody import profile_session_path
 from ....adapters.persistence.storage.master_key import current_active_bucket_session, login_throttle_path
 from ....core import ProfileSessionRefusalReason, read_pointer
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import (
-    profile_current_bucket_session,
-    profile_session_path,
-)
 from .._login_session import bind_resumed_profile_session, login_profile, logout_active_profile
 from .._profile_record_repository import close_active_profile_record_session
 from .._registration import register_profile_with_credentials
@@ -50,17 +47,16 @@ _LABEL = "Logout operator"
 
 def _close_live_login() -> None:
     """Release both process-local authorities without asserting anything."""
-    from .. import profile_close_bucket_session
 
     close_active_profile_record_session()
-    profile_close_bucket_session()
+    master_key.close_active_bucket_session()
 
 
 def _register_and_login(storage_root: Path) -> str:
     """Register one real profile and leave it authenticated in this process."""
     outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
     login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PASSWORD)
-    assert profile_current_bucket_session() is not None
+    assert master_key.current_active_bucket_session() is not None
     assert read_pointer(storage_root) is not None
     return outcome.profile_id
 
@@ -85,11 +81,11 @@ def test_logout_clears_the_live_session_the_pointer_and_the_persisted_accelerati
             signed_out = logout_active_profile()
 
             assert signed_out == profile_id
-            assert profile_current_bucket_session() is None
+            assert master_key.current_active_bucket_session() is None
             assert not session_path.exists()
             assert read_pointer(storage_root) is None
             assert bind_resumed_profile_session(bucket_id=profile_id) is ProfileSessionRefusalReason.ABSENT
-            assert profile_current_bucket_session() is None
+            assert master_key.current_active_bucket_session() is None
         finally:
             _close_live_login()
 
@@ -155,7 +151,7 @@ def test_second_logout_is_a_clean_no_op(tmp_path: Path) -> None:
 
             assert logout_active_profile() is None
 
-            assert profile_current_bucket_session() is None
+            assert master_key.current_active_bucket_session() is None
             assert read_pointer(storage_root) is None
             assert not session_path.exists()
         finally:
@@ -166,7 +162,7 @@ def test_logout_without_any_session_is_a_no_op(tmp_path: Path) -> None:
     """Signing out of a storage root that never had a session reports ``None``."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         assert logout_active_profile() is None
-        assert profile_current_bucket_session() is None
+        assert master_key.current_active_bucket_session() is None
 
 
 def test_login_after_logout_is_a_fresh_authentication_not_a_resume(tmp_path: Path) -> None:
@@ -181,7 +177,7 @@ def test_login_after_logout_is_a_fresh_authentication_not_a_resume(tmp_path: Pat
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             profile_id = _register_and_login(storage_root)
-            first = profile_current_bucket_session()
+            first = master_key.current_active_bucket_session()
             assert first is not None
             logout_active_profile()
 
@@ -189,7 +185,7 @@ def test_login_after_logout_is_a_fresh_authentication_not_a_resume(tmp_path: Pat
 
             assert outcome.already_authenticated is False
             assert outcome.bucket_id == profile_id
-            assert profile_current_bucket_session() is not first
+            assert master_key.current_active_bucket_session() is not first
             assert read_pointer(storage_root) is not None
         finally:
             _close_live_login()

@@ -44,7 +44,6 @@ from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...evidence import LegalHoldCaseAuthority
 from ...filing import FilingRetentionAuthority
-from .. import profile_current_bucket_session
 from .._custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
 from .._lifecycle import ProfileCapsuleLifecycle
 from .._login_session import (
@@ -64,10 +63,9 @@ _INSTANT = datetime(2026, 8, 15, 10, 15, 0, tzinfo=UTC)
 
 def _close_live_login() -> None:
     """Release both process-local authorities without asserting anything."""
-    from .. import profile_close_bucket_session
 
     close_active_profile_record_session()
-    profile_close_bucket_session()
+    master_key.close_active_bucket_session()
 
 
 def _register_with_a_live_process_secret(storage_root: Path) -> tuple[UUID, BucketSession]:
@@ -172,7 +170,7 @@ def test_destroying_a_profile_revokes_its_live_process_secret_and_clears_the_poi
             _destroy(storage_root, profile_id)
 
             assert live.sealed is True
-            assert profile_current_bucket_session() is None
+            assert master_key.current_active_bucket_session() is None
             assert capture_pointer(storage_root) is None
         finally:
             _close_live_login()
@@ -242,6 +240,6 @@ def test_the_process_secret_revocation_spares_an_unrelated_live_session(tmp_path
 
             assert effect is ProfileCustodySessionOwnerEffect.VERIFIED_ABSENT
             assert unrelated.sealed is False
-            assert profile_current_bucket_session() is unrelated
+            assert master_key.current_active_bucket_session() is unrelated
         finally:
             _close_live_login()
