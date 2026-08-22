@@ -66,6 +66,23 @@ class BucketPaths(BaseModel):
 def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
     """Resolve the typed paths for ``<root>/buckets/<bucket_id>/`` without IO.
 
+    A dot segment is refused for the same reason a separator is. ``".."``
+    carries no separator, so the check below it passes, and the join then
+    resolves to the storage root -- one level ABOVE the ``buckets/`` directory
+    this function exists to address. ``"."`` addresses ``buckets/`` itself.
+    Neither is a bucket, and both would hand a caller paths over a tree the
+    layout never meant to expose.
+
+    Nothing reaches this with a dot segment today: a restored archive's
+    ``bucket_id`` must equal the custody envelope's ``profile_id``, which is a
+    UUID, and the system-scoped ids in the tree are ``system``, ``unsecured``
+    and ``diagnostic-probe``. But that containment lives upstream, in an
+    identity cross-check written for a different purpose, while
+    :data:`BucketId` itself is a 1-128 character string
+    that admits ``".."`` happily. Refusing it HERE puts the guarantee at the
+    boundary that owns the join, so a future caller resolving an id from an
+    untrusted source inherits the refusal rather than the traversal.
+
     Args:
         root: Cadrumo storage root (the parent of ``buckets/``).
         bucket_id: The bucket identifier; must be non-empty.
@@ -74,12 +91,15 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
         A :class:`BucketPaths` record carrying every resolved subpath.
 
     Raises:
-        BucketValidationError: When ``bucket_id`` is empty or contains a path separator.
+        BucketValidationError: When ``bucket_id`` is empty, is a dot segment, or
+            contains a path separator.
     """
     if not bucket_id:
         raise BucketValidationError("bucket_id must be non-empty")
     if "/" in bucket_id or "\\" in bucket_id:
         raise BucketValidationError("bucket_id must not contain a path separator")
+    if set(bucket_id) == {"."}:
+        raise BucketValidationError("bucket_id must not be a dot segment")
 
     bucket_dir = root / storage_location(StorageCategory.BUCKETS).relative_path() / bucket_id
     return BucketPaths(
