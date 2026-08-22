@@ -1,23 +1,23 @@
 """Typed path-containment helpers for the persistence substrate.
 
-The wider project ships :func:`core.paths.resolve_relative_subpath`, which
-raises a plain :class:`ValueError` on traversal violations. New persistence
-code uses the typed wrappers in this module instead so:
+Shape rejection for the free-string ids persistence repositories are keyed by.
+The failure carries the registered ``PathContainmentError`` code
+(``INTEGRITY_STORAGE_PATH_CONTAINMENT``) so it lands in the standard CLI error
+envelope, callers can write a narrow ``except PathContainmentError`` rather
+than a broad ``except ValueError``, and the error still inherits from
+:class:`ValueError` so existing path-shape handlers remain correct.
 
-- the failure carries the registered ``PathContainmentError`` code
-  (``INTEGRITY_STORAGE_PATH_CONTAINMENT``) and lands in the standard
-  CLI error envelope;
-- callers can write narrow ``except PathContainmentError`` clauses
-  rather than broad ``except ValueError``;
-- :class:`PathContainmentError` still inherits from :class:`ValueError`
-  so callers that handle Python path-shape errors remain correct.
+This module once also wrapped :func:`core.paths.resolve_relative_subpath` as
+``safe_subpath``, the containment half of a two-layer contract. Nothing called
+it, and the one field it was written for -- a rotation entry's
+``target_filename`` -- is no longer in the tree, so the wrapper was removed
+rather than left standing as the second layer of a contract with one layer.
+The core primitive it wrapped is unaffected and still has a live consumer; a
+filesystem-backed store that needs containment again wraps it in one line.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
-
-from ....core.paths import resolve_relative_subpath
 from .errors import PathContainmentError
 
 
@@ -31,36 +31,6 @@ def _containment_error(message: str, *, context: str, violation: str) -> PathCon
     )
 
 
-def safe_subpath(root: Path, relative_path: str, *, context: str) -> Path:
-    """Resolve ``relative_path`` under ``root`` and enforce containment.
-
-    Wraps :func:`core.paths.resolve_relative_subpath`. Any
-    :class:`ValueError` raised by the wrapped helper is re-raised as a
-    localized :class:`PathContainmentError` with the same diagnostic
-    ``args`` message and ``__cause__``.
-
-    Args:
-        root: Configured root directory the path must stay under.
-        relative_path: Forward-slash-separated relative path.
-        context: Stable label embedded in the error message; used for
-            log diagnostics.
-
-    Returns:
-        The resolved absolute :class:`Path` known to live under ``root``.
-
-    Raises:
-        PathContainmentError: On any traversal or shape violation.
-    """
-    try:
-        return resolve_relative_subpath(root, relative_path, context=context)
-    except ValueError as exc:
-        raise _containment_error(
-            str(exc),
-            context=context,
-            violation="relative_subpath",
-        ) from exc
-
-
 def safe_repository_id(token: str, *, context: str) -> str:
     """Reject repository-id tokens that would compose into an unsafe filename.
 
@@ -69,16 +39,19 @@ def safe_repository_id(token: str, *, context: str) -> str:
     directory or collide with a hidden file, so this helper rejects the
     token's SHAPE at the public-method boundary.
 
-    It is the early-rejection half of the substrate's two-layer path
-    contract, and which layer follows depends on the backend. The
-    secure-object substrate is SQL-backed: it keys rows by
-    ``(namespace, identifier)`` and composes only ``db://`` logical markers
-    for diagnostics, so no filesystem path is derived from the token and
-    shape rejection is the whole of it. Where a token does become a real
-    filename -- the rotation entry's ``target_filename`` -- the second layer
-    is :func:`safe_subpath`, which re-resolves it against the real
-    filesystem at enumeration and is the only layer that can catch a
-    symlinked store directory. Neither layer subsumes the other.
+    Shape rejection is currently the WHOLE contract, which it was not always
+    described as. The substrate behind every caller is SQL-backed: rows are
+    keyed by ``(namespace, identifier)`` and only ``db://`` logical markers are
+    composed for diagnostics, so no filesystem path is derived from a token.
+
+    This once documented a second layer -- ``safe_subpath``, re-resolving a
+    token against the real filesystem, said to be the only layer that could
+    catch a symlinked store directory. That layer had no callers, and the one
+    field named as needing it, a rotation entry's ``target_filename``, is no
+    longer in the tree. It has been removed. A reader who needs that guarantee
+    should know it is absent rather than believe it is somewhere else: if a
+    token ever does become a real filename, containment has to be added back
+    at that join, and this check will not supply it.
 
     The validation is intentionally minimal — non-empty, no path
     separator, no dot-token. It does not claim knowledge of any
@@ -123,7 +96,4 @@ def safe_repository_id(token: str, *, context: str) -> str:
     return token
 
 
-__all__ = [
-    "safe_repository_id",
-    "safe_subpath",
-]
+__all__ = ["safe_repository_id"]

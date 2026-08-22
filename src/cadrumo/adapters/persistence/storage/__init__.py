@@ -188,7 +188,7 @@ if TYPE_CHECKING:
         secure_object_logical_path,
         secure_object_namespace_logical_path,
     )
-    from ._path_safety import safe_repository_id, safe_subpath
+    from ._path_safety import safe_repository_id
     from ._recovery_key import (
         RecoveryKey,
         decode_mnemonic,
@@ -605,7 +605,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "refuse_unsecured_with_real_nif": ".master_key",
     "resolve_attachment_store": ".attachment",
     "safe_repository_id": "._path_safety",
-    "safe_subpath": "._path_safety",
     "save_corpus_manifest": "....core.corpus_manifest",
     "save_encrypted_envelope": ".envelope",
     "save_envelope": ".envelope",
@@ -900,7 +899,6 @@ __all__ = [
     "refuse_unsecured_with_real_nif",
     "resolve_attachment_store",
     "safe_repository_id",
-    "safe_subpath",
     "save_corpus_manifest",
     "save_encrypted_envelope",
     "save_envelope",
