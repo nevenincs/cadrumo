@@ -24,6 +24,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, model_validator
 
+from ._calculation_route import ModeloCalculationRouteId
 from ._models import STRICT_FROZEN_CONFIG
 from .aggregation import BindingSourceKind
 from .identity import CalculationRevisionId, ContentDigest
@@ -315,6 +316,8 @@ class SourceConnectivityOperatorReachabilityProof(BaseModel):
     connection: SourceConnectivityConnectionIdentity
     entrypoint_id: _StableToken
     command_id: _StableToken
+    route_id: ModeloCalculationRouteId
+    canonical_cli_path: tuple[_StableToken, ...] = Field(min_length=1)
     resolver_observed: _StrictBoolean
     evidence: tuple[SourceConnectivityExecutableEvidence, ...] = Field(min_length=1)
 

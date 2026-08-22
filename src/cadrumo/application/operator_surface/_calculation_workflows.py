@@ -43,6 +43,16 @@ class SupportedModeloCalculationWorkflow(BaseModel):
             raise ValueError("calculation workflow requires canonical CLI path tokens")
         return value
 
+    @model_validator(mode="after")
+    def _require_canonical_command_route_path(self) -> SupportedModeloCalculationWorkflow:
+        """Refuse directly authored command/path or route cross-pairs."""
+        expected_path = _CALCULATION_WORKFLOW_PATHS[self.command_id]
+        if self.canonical_cli_path != expected_path:
+            raise ValueError("calculation workflow command and canonical path must agree")
+        if self.route_id is not ModeloCalculationRouteId.MODELO_WORK_CALCULATION:
+            raise ValueError("calculation workflow must invoke the canonical modelo-work route")
+        return self
+
 
 class SupportedModeloCalculationWorkflowCatalogue(BaseModel):
     """Deterministic application-owned catalogue projected from live reconciliation."""

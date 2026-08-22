@@ -161,6 +161,8 @@ def _connected_proof(
             connection=connection,
             entrypoint_id=_ENTRYPOINT_ID,
             command_id=command_id,
+            route_id=core.ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
+            canonical_cli_path=("app", "modelo", "work", "calculate"),
             resolver_observed=True,
             evidence=(operator_evidence,),
         ),
@@ -443,6 +445,8 @@ def test_role_specific_proof_refuses_unrelated_or_wrong_role_evidence() -> None:
             connection=connection,
             entrypoint_id=_ENTRYPOINT_ID,
             command_id=_COMMAND_ID,
+            route_id=core.ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
+            canonical_cli_path=("app", "modelo", "work", "calculate"),
             resolver_observed=True,
             evidence=(evidence,),
         )
