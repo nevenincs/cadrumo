@@ -6332,3 +6332,101 @@ applies_from = 2015-01-01
 applies_to = 2018-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR131e2015_v1.02.pdf"
 review_status = "reviewed"
+
+[sources."aeat-dr-193-2011"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2011"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/07-193-orden-eha-3377-2011-de-1-de-diciembre-512-kb-pdf.pdf"
+sha256 = "8eb07b68c5942fa49ccd941442344198f0784fb4075c80f598ad6f587a11d415"
+bytes = 520718
+retrieved_at = 2026-05-03
+applies_from = 2011-01-01
+applies_to = 2015-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/Disenyos_registro_193.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-193-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/06-193-orden-eha-3377-2011-actualizado-por-orden-hfp-1822-2016-185-kb-pdf.pdf"
+sha256 = "ce8b26f2e42a31a6242639ecc86afc44801c326253452505d5608148ce0504e2"
+bytes = 189508
+retrieved_at = 2026-05-03
+applies_from = 2016-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR193_2016.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-193-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2019"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/05-193-orden-eha-3377-2011-actualizado-por-orden-hac-1276-2019-406-kb-pdf.pdf"
+sha256 = "bd38312bbe1583f8196f2fcf967ae8e93f10356edd71f93bf4c82d2a3059de69"
+bytes = 415415
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_17/DR193_2017.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-193-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/04-193-diseno-de-registro-modelo-193-2023-866-kb-pdf.pdf"
+sha256 = "f0faf5a627e4601f6d7277ae13a969e11945fcabada9947fb4b98abf66d74cf1"
+bytes = 886562
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_193_2023.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-190-2020"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2020"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_190/files/02-190-orden-eha-3127-2009-actualizada-por-orden-hac-1285-2020-814-kb-pdf.pdf"
+sha256 = "4cefd924a7dda3ac5159582f728a72f6f162d3344b8e87f2d17900e6fdcf3b32"
+bytes = 834371
+retrieved_at = 2026-05-03
+applies_from = 2020-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/Dr_190_2020.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-115-2008"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2008"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_115/files/02-115-orden-eha-3435-2007-ejercicios-2014-y-anteriores-30-kb-pdf.pdf"
+sha256 = "8f16874b9dc55a6ab9c558a8f574384a81b1c5128bf9d7f8a053bdb3b9b1cd2d"
+bytes = 37297
+retrieved_at = 2026-05-03
+applies_from = 2008-01-01
+applies_to = 2014-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/115_2008.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-123-2008"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2008"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/03-123-orden-eha-3435-2007-ejercicios-2014-y-anteriores-40-kb-pdf.pdf"
+sha256 = "172c238f5b06c4360c9e47e13092ef6703fe0c8f04bd4b7a279017694087f3c5"
+bytes = 41229
+retrieved_at = 2026-05-03
+applies_from = 2008-01-01
+applies_to = 2014-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/123_2008.pdf"
+review_status = "reviewed"
