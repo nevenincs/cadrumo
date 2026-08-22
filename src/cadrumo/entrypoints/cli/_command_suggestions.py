@@ -38,7 +38,7 @@ from __future__ import annotations
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Literal, override
+from typing import Any, Literal, cast, override
 
 import typer
 from typer._click.core import Command as TyCommand
@@ -53,6 +53,7 @@ from typer.core import TyperGroup
 from typer.main import get_command as _typer_get_command
 
 from ...core.i18n import tr
+from ._command_policy import CommandExecutionPolicy, execution_policy_for
 
 #: Per-group synonym tables keyed by the group's command ``name``.
 #: Each inner mapping projects an unknown command token onto the
@@ -141,12 +142,17 @@ class LiveCommandNode:
     across fresh processes. ``loader_owner`` is ``None`` for an eagerly
     registered node because no runtime loader exists; it never aliases handler
     ownership to conceal that distinction.
+
+    ``execution_policy`` comes only from the node's registered callback.  It is
+    ``None`` for an unannotated callback or a non-executing group; the census
+    never invents a state-free default or joins a path-keyed policy table.
     """
 
     path: tuple[str, ...]
     kind: CommandNodeKind
     loader_owner: str | None
     handler_owner: str
+    execution_policy: CommandExecutionPolicy | None
 
 
 def _callable_owner(callback: object | None) -> str:
@@ -200,6 +206,7 @@ def walk_live_command_tree(app: typer.Typer) -> tuple[LiveCommandNode, ...]:
                 kind="root" if len(path) == 1 else "group" if is_group else "leaf",
                 loader_owner=loader_owner,
                 handler_owner=_callable_owner(getattr(command, "callback", None)),
+                execution_policy=execution_policy_for(getattr(command, "callback", None)),
             )
         )
         if not is_group:
@@ -208,9 +215,10 @@ def walk_live_command_tree(app: typer.Typer) -> tuple[LiveCommandNode, ...]:
         context = TyContext(command, info_name=path[-1])
         try:
             lazy_table = _LAZY_REGISTRY.get(command.name or "", {})
-            for child_name in command.list_commands(context):
+            group = cast(Any, command)
+            for child_name in group.list_commands(context):
                 lazy = lazy_table.get(child_name)
-                child = command.get_command(context, child_name)
+                child = group.get_command(context, child_name)
                 if child is None:
                     continue
                 owner = lazy.loader_owner if lazy is not None else None
