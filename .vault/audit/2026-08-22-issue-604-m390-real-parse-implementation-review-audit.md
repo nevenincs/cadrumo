@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:a0dc02ef38fab3c7549b963132d67714e61a1b3d9fbf3b2866357bff5777c92d'
+body_hash: 'sha256:4e66e968d9174f94b21da9ea6635d6f0e97b8abb95a79c8bad2fca1309ecd87d'
 related: []
 ---
 
@@ -81,3 +81,30 @@ also matches its tracked canonical artifact.
   capability. Do not solve it by adding a non-authoritative 2021 export layout.
 - Do not integrate the commit or close issue 604 until the two focused test regressions are
   green and the contradictory filing-surface declaration is removed or formally resolved.
+
+## Resolution verification
+
+Corrective commit `87510861e781abb46d451a6fa2a95adc72b2038b` resolves all settled
+findings. The reproduced-render helper now explicitly requests applicability-grade
+authority, and the entire formerly failing real/reproduced-render module passes. Its M390
+2021 absent-set now uses the exact `iva.anual.aic.bienes.tipo-21.cuota` identity. The
+2021 registry revision no longer declares a filing link or filing consumer; its only
+application surface is `extractor`, it remains applicability-grade, and it still carries
+no export layout. The closure validator now recognizes an applicability-grade extractor
+as the lifecycle owner for observation-only casillas, removing the prior need for a false
+filing declaration.
+
+The additionally exposed blank-box defect is also closed. Box 662 now uses a geometric
+`bbox_anchored` target that reads only to the right of the printed box number, so a blank
+box remains absent instead of being fabricated as `662.00`. The end-to-end blank-box guard
+confirms the fixture contains the printed `662` marker and that no value is extracted.
+
+Verification at current HEAD:
+
+- Formerly failing real/reproduced-render coverage, M390 verification chain, temporal
+  epochs, and capability-probe parity: 76 passed.
+- M390 parser boundary, application-link/schema closure, and enrolled-source grounding:
+  43 passed.
+- No new severity-ranked findings were identified in the corrective diff.
+
+The implementation is now safe to integrate, and issue 604 is safe to close.
