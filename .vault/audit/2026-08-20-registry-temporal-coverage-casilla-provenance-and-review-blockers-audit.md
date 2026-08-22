@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:9392ae3624420729208f5cccc97b574e28961c0fea98062c0e325a4113327152'
+body_hash: 'sha256:054055f884073bf67583792354f68190cd673c8b46e5877b20e0e1accb79a5f3'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1806,6 +1806,46 @@ Modelo 720 case it records.
 Recorded here because the splits are landing now and the next natural step after them --
 re-running this gate and expecting improvement -- will show none, which reads as the work
 having failed when it did not.
+
+
+### split-fallout-leaves-casilla-fragment-names-lying | medium | second piece of feedback for the split work in flight
+
+A regression check after 19 peer commits: the registry suite reads **21 failed / 5171
+passed**, against 19 / 5089 at the earlier baseline. The suite grew by 82 tests and four
+failures are new. None belongs to this campaign's changes; all four are fallout from the
+revision splits landing now.
+
+The most directly fixable is fragment naming. A casilla fragment file is named for the
+FIRST and LAST casilla id it contains, and splitting a revision changes which casillas
+land in each fragment without renaming the file:
+
+```
+modelos/184/revisions/2015-2024/casillas/cdecl.tipo-soporte__cdecl.total-registros-entidad.toml
+  expected stem: cdecl.tipo-soporte__cdecl.representante-nombre
+
+modelos/347/revisions/2008-2024/casillas/ccontraparte.representante-legal-nif__ccontraparte.numero-convocatoria-bdns.toml
+  expected stem: ccontraparte.representante-legal-nif__ccontraparte.nif-operador-comunitario
+```
+
+The gate states the remedy itself -- *"rename the file to the expected stem (or fix its
+content) so the name keeps telling the truth"* -- and both expected stems are printed, so
+this is a rename with the target already computed.
+
+The other three new failures are the same shape: the continuidad completeness ratchet's
+committed baseline no longer matches, m347's counterpart-source-summary bindings no
+longer resolve, and an export-layout record-coverage assertion about a colegio-concertado
+row fires. Each is a downstream artefact that a split moved out from under.
+
+**Pattern worth naming, alongside the earlier note that splitting does not clear the
+layout-coverage gate.** A revision split is not a self-contained edit: it re-partitions
+casilla fragments, invalidates committed baselines, and moves bindings and export records
+relative to their revision. The splits themselves are correct and are the right
+remediation -- this records what travels with them, so the trailing failures are read as
+known fallout with named fixes rather than as the split having gone wrong.
+
+Nothing here was changed by this campaign; the two named renames belong to whoever owns
+the splits.
+
 
 ## Recommendations
 
