@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:116fdcc328424f760fe7c9dea817d71e3cfc57a685ed16018cf2244e6e459414'
+body_hash: 'sha256:f7a62c102a9249f15e3c9f4e879f9ae92ceb7897ea3da22010f9ab79a8f4a44c'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -4957,3 +4957,43 @@ was wrong: pytest prints `16/29704 tests collected`, and the pattern matched the
 rather than the selection. Every "no tests collected" in the same census was accurate,
 which is what made the one wrong figure easy to accept — a census is only as good as its
 least-checked line.
+
+### The registration screen showed an operator a message key
+
+Found by following this campaign's own retryability split through to the HUMAN surface.
+The split gave an agent operator the right answer; the question was whether the screen
+inherited it. It had a worse problem, and one that predates the split.
+
+`attempt_registration` is the seam between the application layer, which classifies a
+refusal, and the screen, which displays it. **Its docstring says translating between the
+two is this seam's job.** It returned `str(refusal)`. On a translated error `str()` yields
+the message KEY -- the constructor passes `translated_message` to `Exception.__init__` as a
+fallback, which the base class documents as "readable text" and which a dotted key is not.
+
+Measured by driving the real path twice with one label:
+
+    OPERATOR SEES: 'application.user_profile.errors.profile_already_exists'
+
+The rendered message existed in all four catalogues the whole time, and it is markedly
+better than the key: it names the profile AND tells the operator to run `aeat config login`
+or `config profile delete`. Nothing asked for it. Fixed by rendering
+`tr(translated_message, **context)`, the pattern already used elsewhere in the entrypoints
+layer.
+
+**Nothing could have caught this.** The screen deliberately treats the refusal as opaque
+text -- "a refusal arrives as text the screen displays, not as an exception it has to
+recognise" -- and every existing screen test asserts a refusal is SHOWN, never what it says.
+A key satisfied them exactly as prose would. The new gate asserts the content: the refusal
+must not match a message-key shape and must carry its context by naming the profile.
+
+**Attribution was measured, not inferred.** The TUI package reports 92 failures, and six of
+them name registration or refusal, which is uncomfortably close to a change in the
+registration refusal path. Running those modules with the change reverted and again with it
+restored gives **29 failures either way** -- identical, so none is this change's. The
+dominant signatures are 53 "requires the target's active bucket session" and 33 "profile
+facts require an authenticated session", which is the credential-store class the standing
+context already excludes, plus a handful of theme colour assertions.
+
+The lesson is the one this campaign keeps meeting from a new direction: a fallback that
+makes a value *printable* is not the same as making it *readable*, and a test that asserts
+something was displayed says nothing about whether it could be understood.
