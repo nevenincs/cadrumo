@@ -17,7 +17,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistryValidationError, parse_export_payload
+from ....domain.calculations.registry import OssIossLedgerObservation, RegistryValidationError, parse_export_payload
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.invoices import (
     Invoice,
@@ -40,11 +40,13 @@ from ....domain.modelos import (
 )
 from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
 from ...aggregation import (
+    AggregationValidationError,
     CalculationSourceContext,
     OssIossLedgerCandidate,
     OssIossLedgerSourceResolver,
     aggregate_oss_ioss_bindings,
 )
+from ...aggregation import _oss_ioss as oss_ioss_module
 from .. import (
     BucketAggregationCalculationResult,
     CalculationRevisionStateError,
@@ -316,7 +318,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     assert detail_value(".218-219.") == int(period_token[-2])
     assert detail_value(".221-222.") == "DE"
     assert detail_value(".223-227.") == Decimal("19")
-    assert detail_value(".228-228.") == "G"
+    assert detail_value(".228-228.") == "S"
     assert detail_value(".229-245.") == Decimal("100")
     assert detail_value(".246-262.") == Decimal("19")
     record_ids = {field.record_id for field in parsed.fields}
@@ -326,6 +328,34 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     malformed_optional = wire[:closure_start] + b"<T36902>" + wire[closure_start:]
     with pytest.raises(RegistryValidationError):
         parse_export_payload(layout, malformed_optional)
+
+
+@pytest.mark.parametrize("unsupported_rate_kind", (IvaRateKind.SUPER_REDUCED, IvaRateKind.ZERO))
+def test_m369_exterior_refuses_rate_kinds_outside_official_standard_reduced_vocabulary(
+    unsupported_rate_kind: IvaRateKind,
+) -> None:
+    """Exterior never guesses an R/S wire token for an unsupported classification."""
+    observation = OssIossLedgerObservation(
+        ledger_id=f"unsupported-{unsupported_rate_kind.value}",
+        transaction_date=date(2026, 2, 15),
+        regime=OssIossRegime.EXTERNAL_SCHEME,
+        destination_member_state=EUMemberState.DE,
+        rate_kind=unsupported_rate_kind,
+        invoice_direction=InvoiceKind.ISSUED,
+        transaction_kind=TransactionKind.EXTERNAL_SCHEME_SERVICES,
+        base_amount=Decimal("100"),
+        iva_amount=Decimal("0"),
+    )
+
+    with pytest.raises(AggregationValidationError) as exc_info:
+        oss_ioss_module._exterior_detail_binding_values(
+            _revision("369", "esquema-exterior"),
+            (observation,),
+        )
+
+    assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["rate_kind"] == unsupported_rate_kind.value
 
 
 def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(

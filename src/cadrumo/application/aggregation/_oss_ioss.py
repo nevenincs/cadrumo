@@ -263,13 +263,20 @@ def _exterior_detail_binding_values(
             observation.regime is OssIossRegime.EXTERNAL_SCHEME
             and observation.transaction_kind is TransactionKind.EXTERNAL_SCHEME_SERVICES
         ):
+            if observation.rate_kind not in {IvaRateKind.GENERAL, IvaRateKind.REDUCED}:
+                raise AggregationValidationError(
+                    t("aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"),
+                    context={
+                        "ledger_id": observation.ledger_id,
+                        "rate_kind": observation.rate_kind.value,
+                    },
+                )
             grouped[(observation.destination_member_state, observation.rate_kind)].append(observation)
     decimal_values: dict[BindingId, Decimal] = {}
     enum_values: dict[BindingId, str] = {}
     rate_codes = {
-        IvaRateKind.GENERAL: "G",
+        IvaRateKind.GENERAL: "S",
         IvaRateKind.REDUCED: "R",
-        IvaRateKind.SUPER_REDUCED: "S",
     }
     for row, ((country, rate_kind), rows) in enumerate(sorted(grouped.items(), key=lambda item: item[0]), start=1):
         rate = lookup_rate(country, rate_kind, rows[0].transaction_date).pct
