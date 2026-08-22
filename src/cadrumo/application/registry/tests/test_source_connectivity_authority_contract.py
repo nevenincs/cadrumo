@@ -3,15 +3,28 @@
 from __future__ import annotations
 
 from hashlib import sha256
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
 
-from ....core import BindingSourceKind, SourceConnectivityConnectionIdentity
+from ....core import (
+    BindingSourceKind,
+    SourceConnectivityConnectionIdentity,
+    SourceConnectivityExecutableEvidence,
+    SourceConnectivityExecutableEvidenceRole,
+    SourceConnectivityGrounding,
+    SourceConnectivityGroundingLocatorKind,
+    SourceConnectivityOperatorReachabilityProof,
+)
 from ....domain.modelos import CalculationSourceRef
 from ...aggregation import BindingSourceDisposition
+from ...operator_surface import (
+    SupportedModeloCalculationWorkflow,
+    SupportedModeloCalculationWorkflowCatalogue,
+)
 from .. import (
     LiveSourceConnectivityProofAuthority,
     LiveSourceResolverCatalogue,
@@ -91,6 +104,60 @@ class _RevisionRepository:
 
     def load(self) -> object:
         return SimpleNamespace(revisions={self._revision.calculation_revision_id: self._revision})
+
+
+def test_live_workflow_authority_refuses_cross_connection_proof(tmp_path: Path) -> None:
+    connection = SourceConnectivityConnectionIdentity(
+        candidate_id="invoice.collectible",
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        source_ref="collectible_invoice:inv-0001",
+        resolver_id="invoice-source-resolver",
+        calculation_revision_id="a" * 64,
+    )
+    rival_connection = connection.model_copy(update={"source_ref": "collectible_invoice:inv-0002"})
+    authority = LiveSourceConnectivityProofAuthority(
+        source_resolvers=LiveSourceResolverCatalogue(
+            enrollments=(
+                _enrollment(BindingSourceKind.COLLECTIBLE_INVOICE, "invoice-source-resolver"),
+            ),
+        ),
+        workflows=SupportedModeloCalculationWorkflowCatalogue(
+            workflows=(
+                SupportedModeloCalculationWorkflow(
+                    command_id="modelo.work.calculate",
+                    canonical_cli_path=("modelo", "work", "calculate"),
+                ),
+            ),
+        ),
+        calculation_revisions=cast(
+            Any,
+            _RevisionRepository(
+                SimpleNamespace(calculation_revision_id=connection.calculation_revision_id),
+            ),
+        ),
+        evidence_verifier=RepositoryRootEvidenceDigestVerifier(repository_root=tmp_path),
+    )
+    grounding = SourceConnectivityGrounding(
+        locator_kind=SourceConnectivityGroundingLocatorKind.REPOSITORY,
+        reference="src/cadrumo/application/registry/tests/test_source_connectivity_authority_contract.py:1",
+        summary="Executable cross-connection authority refusal.",
+    )
+    evidence = SourceConnectivityExecutableEvidence(
+        evidence_id="operator-reachability",
+        role=SourceConnectivityExecutableEvidenceRole.OPERATOR_REACHABILITY,
+        connection=rival_connection,
+        locator=grounding,
+        content_digest="b" * 64,
+    )
+    workflow_proof = SourceConnectivityOperatorReachabilityProof(
+        connection=rival_connection,
+        entrypoint_id="cli",
+        command_id="modelo.work.calculate",
+        resolver_observed=True,
+        evidence=(evidence,),
+    )
+
+    assert not authority.operator_workflow_reaches_source(connection, workflow_proof)
 
 
 def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -> None:

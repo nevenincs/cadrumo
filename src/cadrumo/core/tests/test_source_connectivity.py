@@ -41,15 +41,12 @@ class _ProofAuthority:
     def source_is_enrolled(self, connection: core.SourceConnectivityConnectionIdentity) -> bool:
         return connection.source_kind in self._enrolled
 
-    def operator_workflow_is_supported(
+    def operator_workflow_reaches_source(
         self,
         connection: core.SourceConnectivityConnectionIdentity,
-        *,
-        entrypoint_id: str,
-        command_id: str,
+        proof: core.SourceConnectivityOperatorReachabilityProof,
     ) -> bool:
-        del connection
-        return (entrypoint_id, command_id) in self._workflows
+        return proof.connection == connection and (proof.entrypoint_id, proof.command_id) in self._workflows
 
     def executable_evidence_digest(
         self,
@@ -65,6 +62,16 @@ class _ProofAuthority:
             proof.persisted_source_identity == proof.connection.source_ref
             and proof.persisted_source_fingerprint == _FINGERPRINT
         )
+
+
+class _WorkflowAuthorityWithoutConnection(_ProofAuthority):
+    """Deliberately stale implementation of the pre-S141 workflow seam."""
+
+    def operator_workflow_reaches_source(  # type: ignore[override]
+        self,
+        proof: core.SourceConnectivityOperatorReachabilityProof,
+    ) -> bool:
+        return (proof.entrypoint_id, proof.command_id) in self._workflows
 
 
 def _grounding(
@@ -207,6 +214,23 @@ def test_core_facade_exposes_every_connectivity_owner() -> None:
     }
     assert expected <= set(dir(core))
     assert isinstance(_ProofAuthority(), core.SourceConnectivityProofAuthority)
+
+
+def test_workflow_authority_without_connection_fails_at_protocol_usage() -> None:
+    with pytest.raises(TypeError, match="positional argument"):
+        core.SourceConnectivityCensusRow.validate_with_authority(
+            _connected_payload(),
+            authority=_WorkflowAuthorityWithoutConnection(),
+        )
+
+
+def test_workflow_authority_can_refuse_a_cross_connection_proof() -> None:
+    authority = _ProofAuthority()
+    connection = _connection()
+    rival_connection = _connection(source_ref="collectible_invoice:inv-0002")
+    rival_proof = _connected_proof(rival_connection).operator_reachability
+
+    assert not authority.operator_workflow_reaches_source(connection, rival_proof)
 
 
 @pytest.mark.parametrize("candidate_id", ["", "Inventory", "inventory stock", "inventory/stock"])

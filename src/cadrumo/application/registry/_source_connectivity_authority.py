@@ -15,6 +15,7 @@ from ...core import (
     SourceConnectivityEncryptedRevisionProof,
     SourceConnectivityExecutableEvidence,
     SourceConnectivityGroundingLocatorKind,
+    SourceConnectivityOperatorReachabilityProof,
 )
 from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
 from ..aggregation import BindingSourceDisposition
@@ -119,17 +120,15 @@ class LiveSourceConnectivityProofAuthority:
             and enrollment.resolver_id == connection.resolver_id
         )
 
-    def operator_workflow_is_supported(
+    def operator_workflow_reaches_source(
         self,
         connection: SourceConnectivityConnectionIdentity,
-        *,
-        entrypoint_id: str,
-        command_id: str,
+        proof: SourceConnectivityOperatorReachabilityProof,
     ) -> bool:
         """Require the exact reviewed live workflow beside exact source enrollment."""
-        return self.source_is_enrolled(connection) and self.workflows.supports(
-            entrypoint_id=entrypoint_id,
-            command_id=command_id,
+        return proof.connection == connection and self.source_is_enrolled(connection) and self.workflows.supports(
+            entrypoint_id=proof.entrypoint_id,
+            command_id=proof.command_id,
         )
 
     def encrypted_revision_matches(self, proof: SourceConnectivityEncryptedRevisionProof) -> bool:
