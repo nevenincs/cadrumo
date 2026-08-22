@@ -9,8 +9,6 @@ body_hash: 'sha256:80c8c1270047661def5e564d9a084f54cfa9734e538fa7244f4a290dcce8f
 related: []
 ---
 
-
-
 # `issue-623-python-patch-pin` audit: `Exact Python patch pin implementation review`
 
 ## Scope

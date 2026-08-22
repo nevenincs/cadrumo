@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:002ccf395bdf671a0bd0bfbf7824d4f268580f8775e3cb935d60511944847aca'
+body_hash: 'sha256:43b31747aeb0e5d3924a9a238ac4a1b13ad1e4121baebbd3f81139eb543f5e7f'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -16299,3 +16299,163 @@ encoding this defect as the contract would bury it behind a green name.
   premise; injecting a segmento onto a design-less 151 casilla from outside the
   tree reds the property test with the exact casilla named.
 * authority loads CLEAN; ruff clean on both new modules.
+
+## Tick: items 3 and 4 adjudicated -- one was never a defect, one was already fixed
+
+Re-measured at tick start: authority loads CLEAN at `94e482d777`.
+
+### Item 3 -- modelo 193: the records already span 500
+
+The reported figures do not reproduce. All three records -- declarante,
+perceptor, gastos -- span extent **500** in BOTH revisions, matching what their
+design sheets declare. What differs is COVERED bytes: 470/482/381 in 2024 and
+470/494/381 in 2025.
+
+Those two things look alike and are not. A fixed-width record is written into a
+buffer sized by its last field, and every unclaimed position emits as a space --
+so a record that stops short of the design (a truncated line) and a record that
+spans it while leaving filler runs unwritten (a correct line) both present as
+"covers fewer bytes than 500".
+
+Which one modelo 193 is was settled by mapping each gap onto the design.
+EVERY gap coincides byte-for-byte with a field AEAT itself labels `BLANCOS`:
+190+30 and 136+3 and 193+15 and 205+3 and 76+119. Nothing is going out blank
+that AEAT expects filled.
+
+Confirmed at the renderer rather than inferred from the layout:
+`_render_positioned_record` builds `buffer = [" "] * max(offset + length - 1)`
+and fills fields into it, so a BLANCOS run is emitted as spaces by construction.
+
+`test_modelo_193_record_extent.py` pins both halves, checking extent against the
+SHEET's `total_positions` rather than the layout's own arithmetic, which would
+restate the same numbers and prove nothing.
+
+### Item 4 -- modelo 720: fixed in the tree, and now verified end to end
+
+The layout already carries explicit reserved-tail fillers at 181+320 and 481+20,
+whose committed comments name the exact defect ("went out 180 bytes long where
+AEAT reads 500").
+
+Verified rather than taken on trust, because the records declare ONE field each
+and everything else is derived from binding selectors at resolve time. After
+derivation: type_1 resolves 14 fields, type_2 resolves 31, extent 500 for both,
+and **zero** unwritten positions. The design's own sheets list 14 and 31 fields.
+Two independent authorities -- registry derivation and AEAT's Diseño -- counting
+the same record and agreeing.
+
+The bite proof settled what the tail actually is. Stripping it at runtime drops
+type_1 to 13 fields against the design's 14, so the tail is not padding someone
+invented to reach 500: it IS the design's 181-500 BLANCOS field, restated in the
+layout because the binding table has no row for a filler.
+
+### A gate that was measured and NOT landed
+
+The obvious generalisation -- every fixed-width record's extent equals its
+design sheet's declared positions, corpus-wide -- was measured across every
+modelo before being written, and it does not hold as stated. The probe flagged
+36 records, and the flags are mostly its own fault: it compared each record
+against the SET of every sheet total in the design (modelo 200 has 62 distinct
+totals), and envelope headers and footers are not design sheets at all, so a
+328-position header "mismatched" a 1000-position sheet.
+
+A corpus-wide extent gate needs a declared record-to-sheet mapping, which exists
+today only by per-modelo convention. That is precisely what the proposed
+record-length-declaration ADR would make into data. Recording the negative
+result so the next attempt does not re-derive it: the 193 and 720 modules assert
+the property where the mapping is known, and nothing pretends to assert it
+where it is not.
+
+### Verified
+
+* the two new modules plus the previously landed ones and the completeness
+  gate: 23 passed.
+* both new modules bite. Removing the 720 reserved tail reds three of its four
+  checks; the non-vacuity check correctly survives.
+* authority loads CLEAN; ruff clean on both new modules.
+
+### Still open
+
+Items 5 (modelo 369) and 6 (modelo 390) remain, and they are the two where gaps
+were reported to fall over design DATA positions rather than filler -- the case
+modelo 193 turned out NOT to be. The method the last two ticks built is exactly
+what those need: map every gap onto the design and read what AEAT prints there.
+
+Modelo 151/2015-2022's missing ahorro tier remains recorded and unfixed, still
+blocked on acquiring the pre-2023 redacción of art. 93.2.e).2.º.
+
+## Tick: items 5 and 6 adjudicated -- and item 6 was reported exactly inverted
+
+Re-measured at tick start: authority loads CLEAN at `c7825f67b6`.
+
+### Item 5 -- modelo 369: sixteen records, zero unwritten positions
+
+All three schemes -- unión, exterior, importación -- tile completely. Every
+record's extent equals its design sheet's declared positions, no position is
+unwritten anywhere, and the derived field count equals the sheet's own:
+exterior 160/1422, 147/763, 7/2947; importación 164/1454, 147/763, 7/2947;
+unión all six including the 5803-position T36909.
+
+The field-count agreement is the check that matters, because a record could
+cover every byte with one wide field and still have lost the published
+structure. Two independent authorities counting the same record and agreeing.
+
+`test_modelo_369_record_tiling.py` resolves each record to its sheet by the
+code prefix its `record_type` shares with the sheet name, and asserts that
+prefix resolves EXACTLY ONE sheet, so a loose match cannot quietly pair a record
+with the wrong one. The transmission envelope is the single sheet the Diseño
+gives no total, and the module asserts it is the only one rather than taking the
+exemption on faith.
+
+### Item 6 -- modelo 390: pages 5 and 7 are the two that are RIGHT
+
+The reported defect is inverted, and the inversion is the interesting part.
+
+Position 12 of every page record is the "Indicador de página complementaria",
+and AEAT does not give it the same instruction on every page. Read verbatim from
+the Diseño's own `content` text:
+
+* `En Blanco` on páginas 1, 2, 2 bis, 3, 4, 6 and 8;
+* `Blanco (No complementaria) o "C" (Complementaria)` on páginas **5 and 7**.
+
+The registry follows that split exactly, in all four revisions: pages 5 and 7
+cover position 12 with a binding named `indicador-de-pagina-complementaria`,
+every other page with a filler. Pages 5 and 7 look like the ones missing a field
+precisely because they are the two that differ from the other seven.
+
+Their gaps were checked too, and none is a data position: every unwritten run on
+those pages falls over a design field reading `RESERVADO PARA LA A.E.A.T.
+(Dejar en blanco)`, and the record-versus-sheet field-count delta equals the
+number of reserved runs exactly -- 1 on 2024's page-05, 3 on 2025's.
+
+### The probe that produced a false positive, and what corrected it
+
+Worth recording because it nearly became the finding. A first pass classified
+"design DATA field covered only by filler" using the field DESCRIPTION, matching
+`RESERVADO|BLANCOS` to exclude filler. It reported position 12 as an unwritten
+data field on seven page records across all four revisions -- a large,
+consistent, entirely wrong result.
+
+The description says `Indicador de página complementaria` on all nine pages.
+Only the `content` says whether that position carries anything. Classifying on
+description alone turned "AEAT declares this blank here" into "AEAT declares
+data here and we drop it". The gate as landed reads `content`, never a list of
+page numbers kept in the test, so a revision where AEAT moves the indicator
+re-targets it instead of breaking it.
+
+### Verified
+
+* the two new modules plus the 193, 720 and completeness gates: 25 passed, and
+  the 369 module re-run after a lint fix: 5 passed.
+* both new modules bite. Dropping one interior field from every 369 record reds
+  the unwritten and field-count checks; turning the 390 indicator into a filler
+  reds the value check naming the page and AEAT's own instruction text.
+* authority loads CLEAN; ruff clean on both new modules.
+
+### Still open
+
+The queue is exhausted: all six items are adjudicated, four of them as
+already-correct or misreported rather than as defects fixed. What remains from
+these ticks is the modelo 151/2015-2022 ahorro tier -- a genuine
+under-declaration, still blocked on acquiring the pre-2023 redacción of art.
+93.2.e).2.º -- and the record-length-declaration ADR, whose absence is why no
+corpus-wide extent gate can be authored yet.
