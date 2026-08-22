@@ -2245,3 +2245,64 @@ session, against a schema whose accepted set has not been checked, is the condit
 an offset gets invented. The next iteration should first establish what `producer_key` values
 the schema accepts, then transcribe Pág. 1 position-by-position.
 
+## 2026-08-22 — the filing worklist is a BINDINGS backlog, not a layout backlog
+
+Chasing the `producer_key` question to the bottom overturned the campaign's premise. The
+13 entries are not blocked on transcribing byte offsets. They are blocked on the data
+model that feeds a layout.
+
+### Three things measured, in order
+
+**1. `producer_key` is a CLOSED enum, and it is modelo-scoped.** `core.FilingProducerKey`
+carries per-modelo families — m200 135 keys, m296 112, m360 70, m222 23 — plus small generic
+scopes (`taxpayer` 6, `selected_account` 6, `presenter` 1, `filing` 1,
+`entidad_desarrolladora` 2). **There is no `m840` scope.** A key is not enough on its own
+either: `filing_producer_values()` maps each enum member to a value from a typed
+`FilingProducerSnapshot`, so a new modelo-scoped family needs enum members AND a lexicals
+producer AND profile data behind it. That is a feature, not a transcription.
+
+**2. But modelo-scoped keys are NOT required.** 22 shipped layouts use generic keys only —
+modelo 604 uses 2 headers, 347 uses 3, 714 uses 3. So a layout can bind literals, two or
+three generic headers, its casillas, and fillers. The producer namespace is not the blocker.
+
+**3. The actual mechanism: 60 of 86 shipped layouts DERIVE their fields from bindings.**
+Modelo 720's layout declares just 2 inline fields because it sets `binding_record = "type_1"`
+and lets the derivation supply the rest; the inline fields are only the BLANCOS tail the
+derivation misses. The worklist gate's own docstring says this outright — "layouts are
+derived from bindings first, so a revision declaring none inline but deriving one counts as
+capable".
+
+### What that means for the 13
+
+| revision | casillas | bindings |
+|---|---|---|
+| 036/2025-02-03 | 31 | 1 |
+| 182/2007 | 7 | 5 |
+| 188 / 194 | 5 | 0 |
+| 187 | 4 | 0 |
+| 038, 220/2024, 763, 840 | 2 | 0 |
+
+Modelo 840 has 2 casillas and 0 bindings against a 381-field design. Any layout authored from
+that binds two positions and must declare the other ~379 as filler — which asserts AEAT reads
+blanks where it reads the sujeto pasivo's domicilio, the elementos tributarios and the
+relación de locales. That is a structurally thin file behind a valid digest, which
+`modelo-export-mirrors-official-structure` names as the defect the completeness gate exists to
+stop. Omitting them instead truncates the record: emitted length is
+`max(offset + length - 1)`, as modelo 720's own comment records.
+
+**So the honest ceiling is not "3 of 13 authorable". It is ZERO authorable as a layout today.**
+Every one of the 13 needs its casilla and binding set authored first; the layout is the last
+step, and for 60 of 86 shipped cases it is largely derived rather than written.
+
+Filters 1 and 2 from the earlier entry remain correct and still apply — they just were not the
+binding constraint. Ordering the queue by design size was measuring the wrong axis entirely:
+the right axis is how much of the casilla/binding model already exists.
+
+### Consequence for the loop
+
+The campaign goal as written ("author the missing fixed-width export layouts") cannot be
+executed on any of the 13. The prerequisite work is casilla and binding authoring from the
+bundled designs — which is exactly the "NEEDS CASILLA AUTHORING AT SCALE" category the previous
+campaign had already identified and set aside. That category was never a separate backlog from
+this one; it IS this one.
+
