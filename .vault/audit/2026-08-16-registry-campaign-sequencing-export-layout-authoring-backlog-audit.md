@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:9192d4a75e1d0ba3cfa55c8d96b02de81ad791f991a843310c03ad93c610865d'
+body_hash: 'sha256:213d14a551a69647f90a448ba11e7bf2e00d05d90b481a97f35c524c52ca581c'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -14063,6 +14063,98 @@ holds.
 Forty-two designs remain unregistered, and the mechanical seam is now closed:
 what is left needs a design read or an operator ruling, not another pass over
 titles and manifests.
+
+The eight failing gates are all declared inventories. Modelo 840 still needs
+`bindings` and `export_layouts`, `projection_endpoints` decided once a layout
+exists, and 108 casillas whose Catalan and Hungarian labels this session cannot
+ground.
+
+## Tick: the partial-read worklist opened, and a silent wrong-attribution found behind it
+
+Re-measured at tick start: authority loads CLEAN, eight standing registry
+failures, ten of 218 designs partially read. This tick went into the
+record-design parser rather than around it. Nobody was editing it.
+
+### Following one hole to its root
+
+Modelo 390's 2015 edition skipped `Pág. 7` for a 17-byte hole at 132-148. The
+chain, each step measured rather than assumed:
+
+* The line repairs are working and ARE kept for this design -- eight skipped
+  records become one and unread positions fall from 297 to 17. The residual is a
+  single row.
+* That row survives extraction. It arrives split after the offset column: `13
+  132` on one line, `17 N <description>` on another.
+* The two text extractors DISAGREE about which tail belongs to which head.
+  pdfium pairs the "entregas ... Base imponible" tail with `13 132`; pdfplumber
+  pairs it with `12 115`.
+* Five sibling editions -- 2016, 2017, 2018, 2019-2020 and 2025, all read
+  cleanly -- agree unanimously: `@115` is "Servicios localizados ... [523]" and
+  `@132` is "entregas ... Base imponible [654]". pdfium is right.
+
+### The hole was the smaller half of the damage
+
+Under pdfplumber, `@115` did not merely lose its neighbour. It carried casilla
+`[654]` -- a tag belonging to `@132` -- and its own `[523]` was stranded as a
+bare bracket on its own line.
+
+The reversed-column repair's docstring says a wrong pairing "cannot pass
+quietly: it would place a field at a position some other row already covers".
+Here it passed quietly. The mis-paired tail tiled `@115+17` exactly, so nothing
+overlapped and nothing was missing there; the hole the contiguity check found
+was at 132, a DIFFERENT position from the error. A pairing that tiles is
+invisible to that check. That is the finding worth carrying forward: the
+contiguity gate proves a record was read WHOLE, never that each byte range
+carries the field AEAT put there.
+
+### The fix is a measured choice, not a different blanket switch
+
+A design naming its records by page was read through pdfplumber unconditionally,
+on a heuristic that only asks whether any line looks like a page heading. The
+switch now stands unless the alternative is strictly better, in the idiom
+`_read_with_reversed_column_repair` already uses: fewer skipped records first --
+a skipped record is a whole record nobody can read -- and fewer uncovered
+positions only as a tie-break. A design the switch serves today cannot be
+perturbed, because its read is only reconsidered when it skips something.
+
+Measured over every bundled PDF design: 76 compared, **2 improved, 0 regressed,
+74 unchanged**. The second is modelo 280's 2022 edition, which also reads whole
+now.
+
+### What the regression pins, and what it admits
+
+Four checks. The design reads every record; no position in that run carries
+another position's casilla tag; four of the five positions still carry their
+own; and a page-record design whose pdfplumber read is already whole keeps that
+reader -- without which, swapping one unconditional switch for another would
+pass everything else.
+
+The expected descriptions are COMPUTED from the sibling editions rather than
+typed into the test, so the assertion is "this edition agrees with the ones
+around it". The tag check is deliberately asymmetric: a foreign tag fails, a
+missing one does not. `@115`'s `[523]` is still lost, because the bare bracket
+on its own line is reattached by no repair -- a real, smaller gap, and a
+position with no tag contributes no casilla number to coverage. The test states
+that rather than smoothing it over.
+
+### Verified
+
+* the new module: 4 passed.
+* registry package plus the generated-tree gates: 8 failed, 5257 passed, with
+  the failure set unchanged -- no test newly fails.
+* the partial-read worklist: 9 of 218, from 10.
+* authority loads CLEAN; ruff clean on both files touched. The four ruff
+  findings standing in `_record_design.py` are byte-identical at HEAD, so none
+  was introduced here.
+
+### Still open
+
+Nine designs are partially read. The dominant class is unchanged -- rows dropped
+from PDF tables across modelos 100, 131, 180, 200 and 349 -- and modelo 232's
+`TABLAS` tab remains the case the gate deliberately declines to adjudicate.
+
+`@115`'s stranded `[523]` is the next shape in this series: a casilla tag
+emitted as a bare bracket on its own line, which no repair reattaches.
 
 The eight failing gates are all declared inventories. Modelo 840 still needs
 `bindings` and `export_layouts`, `projection_endpoints` decided once a layout
