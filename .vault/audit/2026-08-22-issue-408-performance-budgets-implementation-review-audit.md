@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:a6dbc72c9e0d8fae2739e8b301221a57f0cf89590a49e7b090ce11cd7225d167'
+body_hash: 'sha256:83e86e9f5d52f804bef3921a993bc0431b6a0860456e812364fed56887528e02'
 related: []
 ---
 
@@ -71,6 +71,20 @@ fixture remains 30,000 transactions across ten filing years; quarterly sampling 
 encrypted-SQLite benchmark completed with all seven cases passing, including both degraded
 full-scan controls.
 
+### corrective-query-budget-regression | high | Security-preserving addressed batches exceed both strict performance budgets
+
+Corrective commit `cf5196b7118a87d9b3a026ec868955079a44c324` replaces each targeted
+payload read with three addressed secure-object batches: current-schema inspection,
+atomic-migration version inspection, and payload loading. This correctly avoids a namespace
+scan and closes `targeted-row-version-gate`, but the sequential 30,000-row benchmark now
+fails both affected strict gates. Quarterly partitioned aggregation measured a 3.453
+CPU-second P95 over the unchanged 20 samples, and M130 calculation measured 4.391 CPU
+seconds over its unchanged four-quarter sample, both above the unchanged `< 3.0` ceiling.
+The degraded controls remained strongly non-vacuous: full scans measured approximately
+16.8 to 22.4 CPU seconds. One selected anti-control passed and both optimized-path budget
+tests failed. The performance objective therefore no longer holds at the corrective HEAD;
+security parity cannot be traded for a budget violation.
+
 ## Recommendations
 
 - For `targeted-row-version-gate`, make exact-ID reads enforce the same current-version
@@ -82,3 +96,27 @@ full-scan controls.
   save. Add read-save-read coverage for full, date-window, partition, and exact-ID views.
 - Do not integrate the commit or close issue 408 until both findings are resolved and the
   focused correctness and full benchmark gates remain green.
+
+## Resolution verification
+
+Corrective commit `cf5196b7118a87d9b3a026ec868955079a44c324` resolves the two
+original settled findings. Exact-ID reads now apply the same current-row refusal before
+using `migrate_many_atomically`; a real v1 fixture proves both full and targeted reads raise
+the same `LedgerStorageError`, leave all rows at v1, and read successfully only after the
+explicit authority migration moves the complete transaction namespace to v2. The schema
+guard, migration inspection, and payload read are all exact `object_key IN (...)` queries,
+with an explicit regression proving no secure-object namespace scan. Generic migration
+loads are batched by namespace/class/version contract while still passing records through
+the existing `_record_from_row` classification, version, envelope, and integrity exception
+funnel and the existing cross-namespace CAS conflict proof.
+
+The memoized wrapper now clears its full-catalogue, date-window, partition, and exact-ID
+caches only after a successful delegated save. Its regression primes all four views,
+replaces the catalogue through the wrapper, observes the replacement through every view,
+and proves the removed transaction id no longer resolves. Focused migration, exact-read,
+secure-storage, and cache tests passed: 48 tests.
+
+The benchmark constants, fixture volume, and iterations remain unmodified, but the new
+`corrective-query-budget-regression` finding keeps the implementation blocked. Issue 408 is
+not safe to integrate or close until the exact security semantics and strict performance
+budgets are simultaneously green.
