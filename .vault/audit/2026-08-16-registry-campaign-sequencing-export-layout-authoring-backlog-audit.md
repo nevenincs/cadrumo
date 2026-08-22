@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:793c9718962e26eb38491a80b42ffa644d742560f133edf86af62d43a73a93a0'
+body_hash: 'sha256:69330ff332637ba2f5de13baef6aeb691d786819abf208280c70de457c7df472'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -14928,3 +14928,65 @@ it here.
 The eight inventories. The same binding-derived shape now applies directly to
 modelos 187 and 194, whose designs are the same informativa layout and whose
 printed-box gates pin the same `01`-`05` casilla sets; each is a tick.
+
+## Tick: modelos 187 and 194 can file -- the capability worklist drops to ten
+
+Re-measured at tick start: authority CLEAN, modelo 188's layout and 40 bindings
+holding. 187 and 194 were in exactly 188's prior shape -- printed-box casillas,
+no bindings, no layout, no export link -- so the method established last tick was
+applied to both.
+
+### Authored
+
+* **modelo 187**: 46 bindings from `aeat-dr-187-2022`, two records
+  (declarante + operacion), both tiling **1..500 with zero holes**.
+* **modelo 194**: 41 bindings from `aeat-dr-194-2024`, two records
+  (declarante + perceptor), both tiling **1..250 with zero holes**.
+* Each gained the `export` application link the registry demands of a
+  layout-bearing revision, and each construct was extended to cover the diseño
+  it now cites.
+
+Modelo 194 cites TWO designs, which needed settling before binding: the 2023 and
+2024 editions were compared field by field and are **coordinate-identical**, so
+either grounds the same layout and the current edition is cited. Had they
+differed, binding to one would have misdeclared the years the other governs.
+
+The worklist drops from **13 revisions across 12 modelos to 10 across 9**.
+
+### Two consequences, both surfaced by gates rather than by me
+
+**A stale anti-vacuity witness.** `test_the_probe_answers_for_a_modelo_whose_
+snapshot_refuses` pins M182 and M187 as modelos whose snapshot genuinely
+refuses. Modelo 187 now reaches filing grade, which is the outcome this campaign
+exists for, so the witness was replaced with M220 -- still on the worklist, still
+refusing -- rather than the assertion being loosened.
+
+**Three new lines on the layout-design-applies inventory.** Each revision claims
+years back to 2019 while the design it now cites begins in 2022, 2023 or 2024,
+so the registry states those early filings would be written at a layout AEAT did
+not publish for them. That exposure is real and worth naming plainly: for
+2019-2021 these modelos previously refused, and now they would emit.
+
+It was kept, on evidence rather than convenience. The inventory holds **28
+lines, 25 of them pre-existing** -- modelos 126, 128, 165, 180 and 181 all
+declare a layout whose design starts after their revision's first claimed year.
+This is the registry's established shape, the gap is enumerated by a standing
+gate rather than hidden, and the fix for all 28 is the same: bundle the earlier
+designs or split the revisions at their design boundary. Reverting three lines
+while 25 identical ones stand would buy nothing.
+
+### Verified
+
+* both modelos' records derive at the length their diseño declares, with zero
+  holes -- the property queue items 3 and 4 concern, proved at authoring time.
+* the printed-box-set gate, schema hygiene and the detail-row probe pass.
+* registry + generated-tree + application/registry: **8 failed, 5954 passed** --
+  the eight declared inventories and nothing else, tree quiescent (0/0/0).
+
+### Still open
+
+The eight inventories. Three capability lines have now closed on this method
+(188, 187, 194); the remaining ten are the corpus- and era-blocked lines plus
+modelos whose detail records are larger. The 28-line layout-design-applies
+inventory is the natural next target, since three of its lines are now this
+campaign's own and the fix is bundling designs or splitting revisions.
