@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:d67a4cbb14651fbe62253eafd7563a586dae91ee744b76019e080d5e13d39dc5'
+body_hash: 'sha256:ee11edb1727b285514d3a919286a01fecd1ff6283324a65aa3b79e1c0829b845'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -14330,3 +14330,85 @@ The semantic-map edit was clobbered mid-tick -- the file returned to HEAD with
 the old test back -- and was only caught because the suite re-reported a failure
 under a name that no longer existed in my working copy. A green module is not
 evidence the edit is still there; the re-run is.
+
+## Tick: the inspection boundary closed, and a half-merged HEAD found underneath it
+
+Re-measured at tick start: authority CLEAN, the queue confirmed finished by the
+gate that adjudicates it, and the boundary census still red and unclaimed. Last
+tick recorded that conflict with a recommendation; this tick implemented it.
+
+### The recommendation survived its disproving control
+
+The proposal was to keep inspection static-only and give runtime its non-filing
+read through the graded authority. Controlled before any file was touched:
+`grade=APPLICABILITY` succeeds at every coordinate inspection does **including
+the two where the FILING gate refuses** (modelos 220 and 038), returns the
+identical law-determined revision across eight probes, and its
+`revision.source_refs` and `sources` match the inspection exactly.
+
+That made the refactor safe. Measuring the call sites then made it unnecessary:
+**all five are hardcoded `Modelo.M303`**, and M303 passes the filing gate at all
+**68** valid coordinates from 2019 to 2026, selecting the same revision and
+carrying export layouts every time. So these were filing operations reaching for
+a non-filing read to skip a gate they already pass -- the failure mode the S86
+census exists to catch, not an exception to it.
+
+They now take a filing snapshot. `CalculationRevisionAggregateContext` carries
+`registry_snapshots`, `m303_rectificativa_record_design_from_snapshot` replaces
+its inspection sibling, and the four accessors map straight across
+(`modelo.id`, `revision.id`, `revision.source_refs`, `sources`).
+
+### The sixth offender was a static API living at an application boundary
+
+`_conformance.py` names the inspection type because a STATIC consumer --
+`dev/registry/conformance/manager.py` -- reads through that projection. A
+Protocol would have satisfied the AST census while letting the same object flow
+in, which is hiding the construct from the matcher rather than fixing it. The
+dependency is inverted instead: the application entry point takes a snapshot,
+and `compare_annual_casilla_population_for_revision` takes the coordinate and
+compiled revision as explicit values. No capability is lost and the census is
+not widened.
+
+### What was found underneath: HEAD was half-merged and broken
+
+Mid-tick a peer commit reverted part of this work while keeping the rest, and
+the result did not hold together:
+
+* `dev/registry/conformance/manager.py` called
+  `compare_annual_casilla_population_for_revision` while the function defining
+  it had been reverted away -- the module could not import at all.
+* `CalculationRevisionAggregateContext` required `registry_snapshots` while
+  three application call sites still passed `registry_inspections=` to that
+  strict model -- a live runtime break on the M303 export and amendment paths,
+  not a test-only one.
+
+Both were repaired by completing the merge rather than backing it out, because
+the committed half was the correct direction. Second consecutive tick with a
+clobbered working copy; the difference is that last tick it merely re-reported a
+stale failure, and this time it left a filing path broken at HEAD.
+
+### Verified
+
+* registry package plus generated-tree gates: **8 failed, 5878 passed** -- back
+  to exactly the eight declared inventories, with the boundary census and every
+  peer-fallout failure gone.
+* boundary census: 6 passed.
+* the M303 rectificativa path resolves end to end through the snapshot: revision
+  `2025`, design `aeat-dr-303-2025`, confirmed owned by that revision.
+* domain/modelos, adapters/persistence/profile and the M303 rectificativa
+  lifecycle green; ruff clean across every touched area.
+
+### Still open, and whose
+
+Six failures in `application/registry/tests` are registry-DATA drift, not
+signature drift: modelo 100 gained ten casillas (2093 -> 2103, 2238 -> 2248), a
+revision is now stamped `agent_reviewed` where the test expects
+`pending_review`, and a parameter renumbered 154 -> 166. They are hardcoded
+tallies over a tree the campaign is actively authoring, so they belong to
+whoever authors it -- and they are the "never gate on an exact count"
+antipattern, which is why they drift at all.
+
+`dev/tests/test_registry_conformance_cli.py` carries its own standing red: a
+conformance ratchet whose baseline has drifted (`composed_modelos current=58
+required=73`). It has never been inside this campaign's measured set, recorded
+now so it stops being invisible.

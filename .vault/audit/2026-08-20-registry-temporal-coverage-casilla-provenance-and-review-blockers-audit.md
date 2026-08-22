@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:241ec56f4337f45244caaac0d0fbe3d4b1cc8cf8e62e1bc333fa88fcc2460c13'
+body_hash: 'sha256:fcbed81ba428b5a4b98fb5b28517179d893f5013e370c2d2d25b0faadd1ccf9e'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -2345,4 +2345,3 @@ The four informative returns are ~35 casillas each — the same scale modelo 181
 — and their designs tile clean. They remain subject to Filter 2 (year coverage), which is a
 separate and still-real blocker for a LAYOUT, but authoring their casilla sets is useful work
 that is not blocked by it.
-
