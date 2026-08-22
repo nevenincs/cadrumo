@@ -20,8 +20,11 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._filed_data_capture import _CaptureAccumulator
 from ._filed_capture_history_support import (
     _CAPTURED_AT,
+    _M303_RESULTADO_CASILLA,
     _MODELO_130_FIXTURE_CSV,
+    _MODELO_303_FIXTURE_CSV,
     _stored_130_justificante_observation,
+    _stored_303_justificante_observation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -127,3 +130,64 @@ def test_incomplete_live_manifest_refusal_creates_no_work_unit(
 
     assert not WorkUnitCatalogueRepository().load()
     assert not CalculationRevisionCatalogueRepository().load()
+
+
+def test_m303_live_capture_stays_on_observation_path_without_baseline(
+    runtime_profile: TestRuntimeProfile,
+    tmp_path: Path,
+) -> None:
+    store = FiledDeclaracionObservationStore(tmp_path / "filed")
+    observation = _stored_303_justificante_observation(store).model_copy(
+        update={
+            "casillas": (
+                ObservedCasillaValue(
+                    casilla_id=_M303_RESULTADO_CASILLA,
+                    value="125.00",
+                    value_kind=CasillaValueKind.NUMERIC,
+                    source_artefact_kind="submitted_file",
+                    source_locator="submitted-file:69",
+                    confidence=1.0,
+                ),
+            ),
+        },
+    )
+    accumulator = _CaptureAccumulator()
+    accumulator.absorb(observation, store=store, bucket_id=_PROFILE_ID, output_root=tmp_path)
+
+    assert accumulator.justificante_csvs == [_MODELO_303_FIXTURE_CSV]
+    assert accumulator.observations_for_calculation == [observation]
+    assert accumulator.filing_record_ids == []
+    assert not WorkUnitCatalogueRepository().load()
+    assert not CalculationRevisionCatalogueRepository().load()
+    assert not ModeloRecordCatalogueRepository().load()
+
+
+def test_nonnumeric_live_capture_stays_on_observation_path_without_baseline(
+    runtime_profile: TestRuntimeProfile,
+    tmp_path: Path,
+) -> None:
+    store, complete = _complete_live_observation(tmp_path)
+    observation = complete.model_copy(
+        update={
+            "casillas": (
+                *complete.casillas,
+                ObservedCasillaValue(
+                    casilla_id=validated_casilla_id("03"),
+                    value="ACTIVIDAD PROFESIONAL",
+                    value_kind=CasillaValueKind.TEXT,
+                    source_artefact_kind="declaration_pdf",
+                    source_locator="declaration-pdf:03",
+                    confidence=1.0,
+                ),
+            ),
+        },
+    )
+    accumulator = _CaptureAccumulator()
+    accumulator.absorb(observation, store=store, bucket_id=_PROFILE_ID, output_root=tmp_path)
+
+    assert accumulator.justificante_csvs == [_MODELO_130_FIXTURE_CSV]
+    assert accumulator.observations_for_calculation == [observation]
+    assert accumulator.filing_record_ids == []
+    assert not WorkUnitCatalogueRepository().load()
+    assert not CalculationRevisionCatalogueRepository().load()
+    assert not ModeloRecordCatalogueRepository().load()

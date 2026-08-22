@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:c4bbc35be247542b1f776ded7481fe874f3b8e13da4f7cf880f8b08b7499ffcd'
+body_hash: 'sha256:ff40b3bfbc0b5f669a79a70d5432a1561cbc7bd1749b848b7aa5608ef7d1a97a'
 related: []
 ---
 
@@ -61,3 +61,8 @@ cannot silently fabricate a baseline. This is a non-blocking coverage finding:
 the closed branches are direct, precede source composition, and were verified
 statically. The phase remains partial and does not claim submitted-file/PDF
 declaration extraction owned by issue 305.
+
+The coverage finding is resolved: direct behavioral tests now give both M303
+and non-numeric observations matching parsed justificante evidence, assert they
+remain queued on the calculation-observation path, and prove no work unit,
+calculation revision, or filing record is created.
