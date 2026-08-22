@@ -195,7 +195,7 @@ class SourceConnectivityConnectionIdentity(SourceConnectivityCandidateIdentity):
     """Shared identity of one source-to-revision production connection."""
 
     source_kind: BindingSourceKind
-    source_object_id: _StableToken
+    source_ref: _StableToken
     resolver_id: _StableToken
     calculation_revision_id: CalculationRevisionId
 
@@ -294,8 +294,8 @@ class SourceConnectivityEncryptedRevisionProof(BaseModel):
         """Require true strict-storage claims tied to this exact connection."""
         if not (self.strict_round_trip and self.encrypted_at_rest and self.anti_tautology_mutation):
             raise ValueError("encrypted revision proof requires every strict proof assertion")
-        if self.persisted_source_identity != self.connection.source_object_id:
-            raise ValueError("persisted source identity must match the asserted source object")
+        if self.persisted_source_identity != self.connection.source_ref:
+            raise ValueError("persisted source identity must match the asserted source reference")
         _require_matching_evidence(
             self.connection,
             self.evidence,
