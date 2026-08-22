@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:4f22508aad8057131ed710e420bc3ab1f4d65c58f496ff6ca585b36f4d47bb37'
+body_hash: 'sha256:c9d784f71628c52a00071ef855a0065c2ba91ed30da3683f239fb1032c84ed2a'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -12405,3 +12405,90 @@ item rather than a note.
 
 The three span findings still need per-design epoch authoring: modelo 200's
 2024, modelo 322's 2022, modelo 347's 2008 and 2010.
+
+## Tick: the embed ledger closed, and every zero adjudicated rather than waved through
+
+Re-measured at tick start: authority loads CLEAN, registration gate 49 of 218,
+`test_modelo_specific_embed_classification` at 1 failed with six modules
+carrying modelo-specific content and no adjudication. That was the item named
+as next last tick, and it is now closed.
+
+### Six adjudications, each read rather than inferred from the module name
+
+The ledger asks a judgement of every modelo-specific module: is the content
+regulatory data the authoring tree should own, or machinery carrying a
+coordinate. All six are machinery, and the reason differs in each case:
+
+* `_errors.py` carries one constructor whose message names the Modelo 303
+  ejercicio a DP30305 activity-row collection is incomplete for -- a diagnostic
+  naming what it reports on, with its operator sentence in the four locale
+  catalogues;
+* `_modelo_localization.py` pairs Modelo 303 with one construct id whose
+  localization keys are scoped per-modelo. A key-shape coordinate; the strings
+  live in the catalogues;
+* `_m303_orden_census_artefact.py` is the read/write seam for a census
+  extracted at BUILD time from digest-pinned BOE HTML and committed as a
+  separate manifest. Deleting it would cost the runtime a parse, not the corpus
+  a value -- and it carries no literal evidence, which agrees;
+* `_gasto193_bindings.py` and `_withholding296_bindings.py` are binding
+  families whose declared figures all arrive from persisted observations;
+* `_validate_previous_filing_year_coverage.py` is a build-time validator whose
+  year literals are the coordinates of open corpus gaps.
+
+### The zeros are the substance of the adjudication, not a formality
+
+Thirteen of the eighteen disposition rows answer a `Decimal('0')`, and the
+contract is that a machinery claim must answer EVERY detected literal. A blanket
+"it's just a default" would have been the easy write-up and would have been
+wrong in two of the four roles the zeros actually play. Each was read at its
+line and dispositioned as what it is: the absent-figure default on an optional
+declared amount, the right-hand side of a non-negativity guard, the seed of a
+per-party accumulator identity, and the start value of a sum -- the last two
+being the sentinel zero the authority-flow rule already sanctions and which the
+ledger's own `_invoice_bindings` entry already reasons about that way.
+
+The two non-zero literals are likewise bounded rather than regulatory:
+`porcentaje_retencion`'s 0..100 is the arithmetic range of a percentage, not the
+retencion rate, and `accrual_year`'s 1900..2100 is a sanity range on an input,
+following the precedent the `_bindings.py` entry set for exactly that shape.
+
+The five year literals in the coverage validator were the one place a
+"machinery" call could have been dishonest, since concrete years CAN be
+regulatory. They are not: `_ALLOWANCES` records the first missing year of each
+open gap beside its reason and its discharge condition, and an entry that
+outlives its gap is itself a build failure. They describe the state of the
+corpus, not the content of the law, and the module cannot quietly convert them
+into a coverage claim.
+
+### One stale entry removed, on measurement
+
+`_schema_exports.py` was classified but no longer derives as modelo-specific.
+Confirmed against the derivation rather than assumed -- the module does not
+appear in the scaffold the classifier renders from the live census -- and its
+sixteen-line entry is gone.
+
+### The gate was proven to bite
+
+Both halves of the contract were mutated on a COPY of the ledger outside the
+repository and reconciled through the real loader, so nothing tracked changed:
+dropping ONE of the eighteen disposition rows reds with "machinery claim leaves
+regulatory-literal evidence undispositioned", and flipping `_errors.py` to
+`regulatory_data_embed` reds twice, for the missing destination and the missing
+tree ownership. Baseline is zero failures and the tracked ledger was verified
+byte-identical afterwards.
+
+### Verified
+
+* `test_modelo_specific_embed_classification`: 10 passed, from 1 failed.
+* both ledgers together: 17 passed.
+* authority loads CLEAN.
+* bite proof: 0 baseline failures, 1 on a dropped disposition, 2 on a flipped
+  classification, tracked ledger unchanged.
+
+### Still open
+
+Both classification ledgers are now closed; the drift they track is a
+per-tick cost, not a backlog. Forty-nine unregistered design files still need a
+ruling or an acquisition. The three span findings still need per-design epoch
+authoring: modelo 200's 2024, modelo 322's 2022, modelo 347's 2008 and 2010.
+Modelo 322's `2008-2023` still carries deadline windows for 2023 only.
