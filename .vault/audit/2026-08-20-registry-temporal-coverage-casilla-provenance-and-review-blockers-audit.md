@@ -2204,3 +2204,44 @@ consult): 038, 220/2024, 220/2025-y-siguientes, 763 and 840 declare an `export` 
 182, 185, 187, 188, 194 and 721 do not. That asymmetry is worth an operator ruling — but note
 the gate deliberately ignores it, for the reason quoted above.
 
+### How an export layout is actually produced — two sanctioned paths, measured
+
+Before hand-authoring 381 fields for modelo 840 it was worth asking who owns this job. Both
+shapes ship, and the split is not arbitrary:
+
+- **Generated** (`revisions/<rev>/export/`): 26 revisions across modelos 151, 184, 185, 200,
+  202, 210, 222, 232, 296, 303 … Produced by `dev/registry/pipeline` —
+  `render_complete_export_tree` → `validate_generated_export_tree` →
+  `publish_validated_generated_export_tree` (journalled, exclusive-locked, with rollback) —
+  driven by a **render profile** under `dev/registry/render_profiles/modelo_<id>/<era>/`.
+  16 modelos have one. The tell in the data: m296's `producer_key`s are machine slugs
+  truncated at a fixed width (`m296.dec.numero_identificativo_de_la_declaracio_2`).
+- **Hand-authored** (`revisions/<rev>/export_layouts/`): **60 revisions across 35 modelos** —
+  100, 111, 115, 117, 181, 190, 322, 341, 390, 604, 720 … This is the MAJORITY, and it is
+  legitimate. Modelo 604's 2021-2023 layout is the quality bar for provenance prose; modelo
+  181's `0003-record-declarado.toml` is the closest structural template for a
+  declarante/declarado informative return.
+
+**Rule of thumb established:** if the modelo has a render profile, drive the generator; if it
+does not, hand-author against `export_layouts/`. Modelo 840 has no render profile, so
+hand-authoring is correct for it. (Modelo 185 DOES have one — for era 2026 — and its
+2025-y-siguientes revision already carries a generated `export/` tree; the worklist entry is
+the older 2003-2025 era, which has no registered design at all.)
+
+**Thin layouts are normal, and not thin in substance.** A 3-casilla revision was assumed to
+imply a hollow file; measured, m296's layout is 13 literal + **112 header** + 5 casilla + 6
+filler. The bulk of a fixed-width record is taxpayer profile data carried as `header` fields,
+not casilla values. So a revision with 2 casillas can still emit a substantive file — modelo
+840's page 1 is largely an identity and domicilio block that maps to headers, with its two
+declared casillas landing at @270+4 (Ejercicio [14]) and @274+1 (Declaración de: [15]).
+
+**Where this iteration stopped, and why.** Modelo 840's design tiles cleanly (381 fields, 3
+records: Pág. 1 1132 bytes, Pág. 2 1165, Anexo 1067), covers 24 of 24 claimed years, and
+declares an export application link — it is authorable. It was NOT authored, because the
+`producer_key` namespace it needs for the domicilio block is unvalidated here: the shipped
+examples use either global keys (`taxpayer.tax_id`, `contact_person.phone`) or generator-minted
+modelo-scoped slugs, and hand-minting ~90 address-field keys at the end of a long working
+session, against a schema whose accepted set has not been checked, is the condition under which
+an offset gets invented. The next iteration should first establish what `producer_key` values
+the schema accepts, then transcribe Pág. 1 position-by-position.
+
