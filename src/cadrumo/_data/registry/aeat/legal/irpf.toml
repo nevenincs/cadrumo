@@ -2436,6 +2436,25 @@ applies_from = 2024-02-01
 source_url = "https://www.boe.es/boe/dias/2024/01/31/pdfs/BOE-A-2024-1772.pdf"
 review_status = "reviewed"
 
+[sources."aeat-dr-193-2024-late"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2024-late"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-diciembre-352-kb-pdf.pdf"
+sha256 = "36184283123fec6827bf830a0b7d1b3e84a45937d7d85d9504d807f334caff8e"
+bytes = 359614
+retrieved_at = 2026-05-05
+# Orden HAC/1504/2024 disposicion final unica fixes the ejercicio outright, and
+# AEAT's own filename for this edition is DR_Modelo_193_2024.pdf. The successor
+# edition -- updated by Orden HAC/1430/2025, whose disposicion final unica names
+# "declaraciones informativas correspondientes al ejercicio 2025" and lists
+# modelo 193 among them -- is aeat-dr-193-2025 and takes 2025 onward.
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2024.pdf"
+review_status = "reviewed"
+
 [sources."aeat-dr-193-2025"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -2454,7 +2473,12 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
-record_design_epoch = "2024"
+# Ejercicio 2024 carries TWO editions of this design. Orden HAC/1504/2024
+# de 26 de diciembre re-published it late in the year and its disposicion
+# final unica applies "a declaraciones informativas del ejercicio 2024
+# presentadas en 2025", so both govern 2024 and the epochs carry the
+# sub-year labels the epoch validator prescribes rather than colliding.
+record_design_epoch = "2024-early"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/03-193-orden-hac-56-2024-ejercicios-2024-y-siguientes-556-kb-pdf.pdf"
 sha256 = "1eae714c75eb6be7d412e48141ced46d3dc7e6701473a54b21f81027c211461b"
 bytes = 566209
@@ -6291,6 +6315,41 @@ applies_to = 2014-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr130.09.pdf"
 review_status = "reviewed"
 
+[sources."aeat-dr-130-2007"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2007"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_130/files/02-130-ejercicio-2007-y-2008-primer-trimestre-48-kb-pdf.pdf"
+sha256 = "b1e2ffcbd9196de5ddc87fcb16e6576a77d7f2e4c5a88d87fd9527ec8d873c40"
+bytes = 30089
+retrieved_at = 2026-05-03
+# AEAT titles this "Ejercicio 2007 y 2008 (Primer Trimestre)", so the window
+# runs from the 2007 ejercicio to the end of 2008's first trimester, where its
+# successor takes over.
+applies_from = 2007-01-01
+applies_to = 2008-03-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr130.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-130-2008"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2008"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_130/files/03-130-ejercicio-2008-trimestre-2o-3o-y-4o-30-kb-pdf.pdf"
+sha256 = "45ac8ca05fd3e7412cece1200236c461dcc059328501d531fb50158efc6a81f4"
+bytes = 129051
+retrieved_at = 2026-05-03
+# "Ejercicio 2008 (Trimestre 2o, 3o y 4o)": it picks up exactly where the
+# 2007 design stops and runs to the end of the ejercicio, with aeat-dr-130-2009
+# taking 2009 onward. The three windows tile 2007-2014 without a gap or an
+# overlap.
+applies_from = 2008-04-01
+applies_to = 2008-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr130.08.pdf"
+review_status = "reviewed"
+
 [sources."aeat-dr-130-2015"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -6303,6 +6362,41 @@ retrieved_at = 2026-05-03
 applies_from = 2015-01-01
 applies_to = 2018-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR130e15v11.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-131-2008-early"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+# AEAT re-laid modelo 131 out mid-ejercicio 2008, so both halves govern the same
+# year and the epoch carries the sub-year label the epoch validator prescribes
+# for exactly this case rather than letting both claim "2008".
+record_design_epoch = "2008-early"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/02-131-ejercicio-2008-primer-trimestre-49-kb-pdf.pdf"
+sha256 = "a057c43d75c01c006e2d73820e46cf19e671204b33611d86c255f1a77820224e"
+bytes = 30709
+retrieved_at = 2026-05-03
+# "Ejercicio 2008 (Primer Trimestre)": the first trimester only.
+applies_from = 2008-01-01
+applies_to = 2008-03-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr131.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-131-2008-late"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2008-late"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/03-131-ejercicio-2008-trimestre-2o-3o-y-4o-31-kb-pdf.pdf"
+sha256 = "1f140bd19597b4b83f3990dc33080cffb1504229fc32fb7147bf308113f9d452"
+bytes = 141113
+retrieved_at = 2026-05-03
+# "Ejercicio 2008 (Trimestre 2o, 3o y 4o)": it takes over where the first-
+# trimester edition stops and runs to the end of the ejercicio, with
+# aeat-dr-131-2009 governing 2009 onward. No gap and no overlap.
+applies_from = 2008-04-01
+applies_to = 2008-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr131.08.pdf"
 review_status = "reviewed"
 
 [sources."aeat-dr-131-2009"]

@@ -161,6 +161,24 @@ required_text = [
     "modelos 030 y 036",
 ]
 
+[sources."aeat-dr-036-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx"
+sha256 = "3ecea6c06e3d280d946c619f621efe64d5334ffd0da44568f0c85b2fc8923cf2"
+bytes = 108629
+retrieved_at = 2026-05-03
+# AEAT titles this "Ejercicio 2023 y siguientes" -- open-ended when published,
+# and closed here the day before aeat-dr-036-2025 takes effect (2025-02-03).
+# The title's open end states what AEAT knew at publication, not that the
+# design still governs after its successor.
+applies_from = 2023-01-01
+applies_to = 2025-02-02
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v41.xlsx"
+review_status = "reviewed"
+
 [sources."aeat-dr-036-2025"]
 evidence_tier = "layout_authority"
 authority = "aeat"
