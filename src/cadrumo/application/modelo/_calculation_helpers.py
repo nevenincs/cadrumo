@@ -173,27 +173,27 @@ def build_typed_observations(
 ) -> tuple[CasillaObservation, ...]:
     """Build :class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows.
 
-    Formula targets carry their
-    :class:`~cadrumo.domain.calculations.registry.RegistryCalculationEntry`
-    provenance. Non-formula values get legal/source references from the
-    :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` casilla
-    definitions. Any value without a formula entry or registry casilla
-    definition raises
+    The engine result is already the canonical grounded envelope, including
+    text-family casillas that do not appear in its Decimal-only ``values``
+    projection. This boundary verifies every observation still belongs to the
+    selected registry revision, then preserves the envelope unchanged. Any
+    observation without a registry casilla definition raises
     :class:`cadrumo.application.modelo.CasillaProvenanceMissingError` through
     :func:`cadrumo.application.modelo._calculation_helpers.casilla_observation_for`
     rather than emitting an ungrounded row.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)
-    entries_by_target = {entry.target_casilla_id: entry for entry in engine_result.entries}
-    return tuple(
-        casilla_observation_for(
-            casilla_id=casilla_id,
-            value=value,
-            entry=entries_by_target.get(casilla_id),
-            registry_casilla=revision_casillas_by_id.get(casilla_id),
-        )
-        for casilla_id, value in engine_result.values.items()
+    unknown = tuple(
+        observation.casilla_id
+        for observation in engine_result.observations
+        if observation.casilla_id not in revision_casillas_by_id
     )
+    if unknown:
+        raise CasillaProvenanceMissingError(
+            translated_message="errors.error.error_modelo_casilla_provenance_missing",
+            context={"casilla_id": str(unknown[0]), "origin": "engine_result"},
+        )
+    return engine_result.observations
 
 
 def external_filing_observations(
