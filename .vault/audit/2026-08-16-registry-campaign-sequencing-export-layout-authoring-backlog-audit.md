@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:8ff4c3f3c61a478fd2864be7c9edc893009a46e2da6ae0bb89c366cfa50f318d'
+body_hash: 'sha256:9192d4a75e1d0ba3cfa55c8d96b02de81ad791f991a843310c03ad93c610865d'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -13911,3 +13911,160 @@ above. No untriaged registry failure remains.
 Modelo 840 still needs `bindings` and `export_layouts`, `projection_endpoints`
 decided once a layout exists, and 108 casillas whose Catalan and Hungarian
 labels this session cannot ground.
+
+## Tick: three designs registered, and a "twelve registrable" figure that was nine-twelfths wrong
+
+Re-measured at tick start: authority loads CLEAN, eight standing registry
+failures, all declared inventories.
+
+### The partial-read worklist: one class, not attempted, and why
+
+Last tick's grouping held up on a concrete case. Modelo 390's 2015 design skips
+sheet `Pág. 7` because positions 132-148 -- one 17-byte row, the width of every
+monetary field around it -- "were not read at all".
+
+Chasing it into the parser stopped at a real boundary: the extracted markdown
+carries only three `Pág. N DISEÑO DE REGISTRO` headers while the parser yields
+nine sheets, so sheet segmentation is derived by logic the extracted text does
+not show. That is the record-design parser's own subsystem, where a peer
+campaign has landed five commits in two days. Diagnosing the row-drop properly
+means learning that segmentation, and guessing at it would be worse than leaving
+the grouped worklist for the campaign that owns it.
+
+### The registrable subset, measured twice because the first answer was wrong
+
+The unregistered-design worklist stood at 48 of 218. Registration needs url,
+sha256, bytes and retrieved_at -- all of which the per-modelo corpus manifest
+supplies -- plus an era, which only the title can ground. Sixteen unregistered
+designs state an ejercicio outright.
+
+The first pass reported twelve of those as claiming a free epoch. That was
+wrong, and the control that caught it is worth recording: `modelo` is not a
+field on `SourceReference`, so the lookup keyed every registered design under
+the empty string and no epoch ever matched. Every "free" verdict was vacuous.
+Reading the modelo out of the corpus path instead -- which is where it actually
+lives -- drops twelve to THREE. Modelos 111, 115, 123, 130's 2019, 200, 202 and
+345 already hold the epochs their unregistered files would have claimed, which
+is precisely the collision the epoch rule exists to prevent.
+
+### The three, and how each window is grounded
+
+* **aeat-dr-130-2007**, titled by AEAT "Ejercicio 2007 y 2008 (Primer
+  Trimestre)": 2007-01-01 to 2008-03-31.
+* **aeat-dr-130-2008**, "Ejercicio 2008 (Trimestre 2o, 3o y 4o)": 2008-04-01 to
+  2008-12-31. The two tile onto `aeat-dr-130-2009` with no gap and no overlap,
+  filling this modelo's pre-2009 hole.
+* **aeat-dr-036-2023**, "Ejercicio 2023 y siguientes": 2023-01-01 to 2025-02-02,
+  closed the day before `aeat-dr-036-2025` takes effect. The title's open end
+  states what AEAT knew at publication, not that the design still governs after
+  its successor -- the same reading every sibling window uses.
+
+Every mechanical value was verified against the file on disk rather than taken
+on trust: the manifest's sha256 and bytes match byte-for-byte. Worth noting that
+the KB figure in AEAT's own title does NOT match the file size -- 48 KB against
+30,089 bytes, 30 KB against 129,051 -- so the title's size label is AEAT's
+paperwork, not a checkable fact, and nothing here rests on it.
+
+`review_status` accepts only `reviewed`, so that is what these carry. The
+verifiable half is mechanical and was verified; the judgement is the window, and
+each one states its grounding beside it.
+
+### Verified
+
+* the three sources resolve with the epochs and windows above; authority loads
+  CLEAN.
+* registry package: 8 failed, 5213 passed -- unchanged, with the before/after
+  failure sets identical, so nothing regressed.
+* the unregistered worklist: 45 of 218, from 48.
+
+### Still open
+
+Forty-five designs remain unregistered. Ten carry no ejercicio in their title at
+all (modelos 111, 193, 200, 202, 349, 604 and 036's provisional), four are
+epoch rivals in pairs -- 036's two "2021 y siguientes" and 131's two 2008
+trimester halves -- and the rest carry no manifest provenance. Each needs a
+reading of the design or an operator ruling rather than another mechanical pass.
+
+The eight failing gates are all declared inventories. Modelo 840 still needs
+`bindings` and `export_layouts`, `projection_endpoints` decided once a layout
+exists, and 108 casillas whose Catalan and Hungarian labels this session cannot
+ground.
+
+## Tick: the two epoch-rival pairs resolved, one by convention and one by reading the ordenes
+
+Re-measured at tick start: authority loads CLEAN, eight standing registry
+failures, 45 of 218 designs unregistered.
+
+Last tick left four files parked as "epoch rivals in pairs". Two of those pairs
+turned out to be different problems with different answers, and only one of them
+was a naming question.
+
+### Modelo 131's two 2008 halves: the convention the validator itself names
+
+`02-131-ejercicio-2008-primer-trimestre` and
+`03-131-ejercicio-2008-trimestre-2o-3o-y-4o` both govern ejercicio 2008, so both
+would claim epoch `2008`. The epoch validator's own refusal message says what to
+do about exactly this: "Where AEAT re-laid the form out mid-ejercicio,
+distinguish them with a sub-year label ('{epoch}-early' / '{epoch}-late') rather
+than letting both claim {epoch}". Registered as `2008-early` and `2008-late`,
+windowed on the trimesters their titles state, tiling onto `aeat-dr-131-2009`
+with no gap and no overlap and filling this modelo's pre-2009 hole.
+
+### Modelo 193: two editions of one ejercicio, settled from the corpus
+
+The unregistered file is "Orden EHA/3377/2011 (actualizado por Orden
+HAC/1504/2024, de 26 de diciembre)", and the registered `aeat-dr-193-2025` is
+the same base design updated by Orden HAC/1430/2025. Which ejercicio each edition
+governs is not a naming choice, so it was read rather than reasoned:
+
+* HAC/1504/2024's disposición final única applies it "a declaraciones
+  informativas del ejercicio 2024 presentadas en 2025";
+* HAC/1430/2025's names "declaraciones informativas correspondientes al
+  ejercicio 2025" and lists modelos 199, 182, **193**, 184, 282, 289 and 345
+  among them.
+
+So the unregistered file is a SECOND edition of ejercicio 2024, published late in
+that year, and `aeat-dr-193-2025` is correctly attributed. AEAT's own filename
+for the new one -- `DR_Modelo_193_2024.pdf` -- agrees.
+
+Registered as `aeat-dr-193-2024-late`, and the existing `aeat-dr-193-2024`
+re-labelled `2024-early`. Its ID is untouched, so every citation of it is
+unaffected; only the epoch changed, and both remain inside their own windows for
+the epoch/window cross-check.
+
+### What was NOT resolved, and why
+
+Modelo 036's pair -- two files both titled "Ejercicio 2021 y siguientes",
+differing only by an update date (13-05-2021 and 11-04-2023) -- is left alone.
+Deciding which governs when means reading an update date as a governed period,
+and this campaign has twice had to undo exactly that conflation. Neither file
+states its own boundary and no orden in the catalogue fixes one, so this needs a
+reading of the two designs or an operator ruling rather than an inference from
+their filenames.
+
+Of the ten designs naming an orden instead of an ejercicio, only modelo 193's
+was resolvable: five of the seven ordenes involved -- HAP/2055/2012,
+HAP/636/2013, EHA/664/2010, HAC/360/2002 and EHA/1338/2010 -- are not in the
+legal catalogue at all, so their eras cannot be grounded from anything the tree
+holds.
+
+### Verified
+
+* the three new sources resolve with the epochs and windows above; every sha256
+  and byte count was verified against the file on disk before being written, and
+  all three matched the manifest exactly.
+* authority loads CLEAN after both edits.
+* registry package: 8 failed, 5213 passed -- unchanged, with the before/after
+  failure sets identical.
+* the unregistered worklist: 42 of 218, from 45.
+
+### Still open
+
+Forty-two designs remain unregistered, and the mechanical seam is now closed:
+what is left needs a design read or an operator ruling, not another pass over
+titles and manifests.
+
+The eight failing gates are all declared inventories. Modelo 840 still needs
+`bindings` and `export_layouts`, `projection_endpoints` decided once a layout
+exists, and 108 casillas whose Catalan and Hungarian labels this session cannot
+ground.
