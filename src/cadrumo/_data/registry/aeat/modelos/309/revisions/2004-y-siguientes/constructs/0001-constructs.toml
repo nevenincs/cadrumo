@@ -20,7 +20,16 @@ casilla_ids = [
     "decl.ejercicio",
     "decl.tipo-trigger",
 ]
-formulas = ["modelo-309-iva-cuota-no-periodica-total"]
+formulas = [
+    # All three of the revision's formulas belong to this construct: they carry
+    # identical legal_refs (LIVA art. 161 and Orden HAC/3625/2003 apartados 1
+    # and 3), which the construct's own refs already cover, and the two added
+    # here target the modelo's own boxes 22 and 24. They were declared without
+    # being enrolled, so nothing owned them.
+    "modelo-309-cuota-devengada-total",
+    "modelo-309-iva-cuota-no-periodica-total",
+    "modelo-309-resultado",
+]
 bindings = [
     "modelo-309-iva-autorepercutido-intracomunitaria-cuota",
     "modelo-309-iva-soportado-recargo-equivalencia-cuota",
