@@ -2345,3 +2345,73 @@ The four informative returns are ~35 casillas each — the same scale modelo 181
 — and their designs tile clean. They remain subject to Filter 2 (year coverage), which is a
 separate and still-real blocker for a LAYOUT, but authoring their casilla sets is useful work
 that is not blocked by it.
+
+## 2026-08-22 — authoring modelo 840's casilla set: three things the design does not tell you
+
+Coverage 0 -> 48 of 108 across three iterations (Apartado I [1]-[13], II [16], III [17]-[32],
+V [68]-[83]). Three hazards were only findable by measuring, not by reading the design.
+
+**1. AEAT numbers by the PRINTED FORM, not by byte order.** [11] Provincia @213 precedes [10]
+Municipio @215; [31] @485, [29] @487, [30] @522; [72] @1018, [70] @1020, [71] @1055, [73]
+@1061. Nine of forty-eight fields are out of order. Sorting a design's fields by box number to
+pair them with offsets silently mis-assigns them, and nothing downstream would catch it —
+every offset would still tile.
+
+**2. "Reservado" is not the discriminator; the bracket number is.** Boxes [16], [21], [30],
+[32], [71], [73] and [76] are marked Reservado — the administration fills them — but AEAT
+still numbers them and `build_diseno_coverage_report` derives all seven. They are declared
+with `required = false`. The UNNUMBERED reserved run at @250+6 carries no box number, is not
+derived, and is correctly not a casilla. Reading the label would have got this backwards; the
+question was settled by enumerating the derived set.
+
+**3. A singleton `semantic_role` that normalises onto another role is refused.** The
+registry validates for typo-twins and refused `local_indirecto_pto` and `local_indirecto_piso`
+until each declared `semantic_role_cardinality = "intentional_singleton"` with a reason. That
+declaration is the normal case, not an escape hatch — 1561 casillas carry it.
+
+**An honest limit recorded in the data:** box [79] is "Pto." and the diseño never expands it,
+three boxes from [82] "Pta." (Puerta). In AEAT address blocks Pto. is ordinarily Portal, but
+"ordinarily" is not the standard for a filing-grade label in four languages, so the label keeps
+AEAT's own abbreviation and says why. Expanding it needs an official source.
+
+### Apartado IV is blocked, and the reason is a false green rather than effort
+
+The derived set holds **108 distinct numbers**, but five of Apartado IV's numbers label
+MULTIPLE physical positions: [53], [54] and [55] each head a triplet (Agrupación / Grupo /
+Epígrafe 1º, 2º, 3º), [62] is a date split into día/mes/año components, and [63] labels both
+Causa de la baja and Causa de la variación. They collapse to ONE derived casilla each.
+Declaring one casilla per number would make the coverage report read fully covered while
+**eleven real positions stay unmodelled** — worse than the gap it replaces, because it is
+invisible. Apartado IV needs a distinguishing convention (modelo 604 used slugs for its eight
+signo casillas; modelo 181 used byte spans) chosen deliberately, not mid-transcription.
+
+## 2026-08-22 — a second defect of the same shape in the stamp writer
+
+Modelo 840 became unstampable while its neighbours stamped cleanly. The CLI reported
+`invalid TOML: expected newline, found a period at line 30` — naming a line that, read from
+disk, was blank.
+
+The manifest was never broken. The **writer** broke it and then correctly refused its own
+output. Its table-end scan took the next line beginning with `[` as a new TOML table — but
+this revision's `reviewed_by` cites AEAT box numbers, and the wrap put `[13]. VERIFIED -- ...`
+at the start of a physical line, cutting the revision table thirty lines early. The rebuild
+emitted the remaining prose and the trailing `family_dispositions` outside any table;
+post-write validation caught it and restored the bytes, which is exactly why the file on disk
+always looked healthy and every direct loader call succeeded.
+
+Fixed by skipping each governance assignment's full span before looking for a table header —
+the same span walk `_without_governance_assignments` already performs. Both must agree, or the
+body slice and the removal disagree about where the table ends. Bite-proved both ways.
+
+**This is the second defect of this shape in this writer.** The first dropped only the KEY
+line of a multi-line value and orphaned its prose; this one reads that same prose as
+structure. The general rule: **a governance value's physical lines are opaque text, and no
+line-oriented scan may interpret them.**
+
+**Diagnostic lesson worth more than the fix.** The error's line number MOVED between attempts
+— 30, then 63, then 6 — while the file did not change. A line number that moves against a
+static file is the tell that the reported text is not the text on disk. Several probes were
+spent on cache-poisoning and peer-mutation theories before that registered. Related: a
+`reviewed_by` change on an already-reviewed revision REQUIRES `--reviewed-at`, because an
+omitted date would carry the previous reviewer's date onto the new claim.
+

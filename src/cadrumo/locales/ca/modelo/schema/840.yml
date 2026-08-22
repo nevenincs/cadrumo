@@ -16,6 +16,58 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (alta / variació / baixa)
+            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqrbldpkm6qbgd5ng:
+              help: null
+              label: Codi de municipi del local afecte indirectament a l'activitat
+                (reservat a l'Administració)
+            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3fedq62r0:
+              help: null
+              label: Codi postal del local afecte indirectament a l'activitat
+            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3idtr6irj3d5gg:
+              help: null
+              label: Codi de província del local afecte indirectament a l'activitat
+                (reservat a l'Administració)
+            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqtj9c4:
+              help: null
+              label: Codi de via del local afecte indirectament a l'activitat (reservat
+                a l'Administració)
+            x-dhnm6obc5lkmsp39e9im6t3f5pin6or1dhin4o8:
+              help: null
+              label: Escala del local afecte indirectament a l'activitat
+            x-dhnm6obc5lkmsp39e9im6t3f5plmir3fdlin8sjf:
+              help: null
+              label: Quilòmetre del local afecte indirectament a l'activitat
+            x-dhnm6obc5lkmsp39e9im6t3f5pmnarj9cdkn0qbf:
+              help: null
+              label: Codi de municipi del local afecte indirectament a l'activitat
+            x-dhnm6obc5lkmsp39e9im6t3f5pn7arb5e9ng:
+              help: null
+              label: Número del local afecte indirectament a l'activitat
+            x-dhnm6obc5lkmsp39e9im6t3f5po6isrf:
+              help: null
+              label: Pis del local afecte indirectament a l'activitat
+            x-dhnm6obc5lkmsp39e9im6t3f5po74rrmd5n66qb1:
+              help: null
+              label: Codi de província del local afecte indirectament a l'activitat
+            x-dhnm6obc5lkmsp39e9im6t3f5po78ro:
+              help: null
+              label: Pto. del local afecte indirectament a l'activitat, segons l'abreviatura
+                del disseny de registre
+            x-dhnm6obc5lkmsp39e9im6t3f5po7apbiehgg:
+              help: null
+              label: Porta del local afecte indirectament a l'activitat
+            x-dhnm6obc5lkmsp39e9im6t3f5ppmiprcc4mncqb1:
+              help: null
+              label: Sigla de la via pública del local afecte indirectament a l'activitat
+            x-dhnm6obc5lkmsp39e9im6t3f5pq6ar35cpnmsro:
+              help: null
+              label: Telèfon del local afecte indirectament a l'activitat
+            x-dhnm6obc5lkmsp39e9im6t3f5pqn6rpdchin6t39dpng:
+              help: null
+              label: Ús o destinació del local afecte indirectament a l'activitat
+            x-dhnm6obc5lkmsp39e9im6t3f5pr6io9de1qm4r39cdgg:
+              help: null
+              label: Nom de la via pública del local afecte indirectament a l'activitat
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
               help: null
               label: Cognoms i nom o raó social del representant

@@ -16,6 +16,59 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (registration / change / deregistration)
+            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqrbldpkm6qbgd5ng:
+              help: null
+              label: Municipality code of the premises indirectly used for the activity
+                (reserved for the tax administration)
+            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3fedq62r0:
+              help: null
+              label: Postal code of the premises indirectly used for the activity
+            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3idtr6irj3d5gg:
+              help: null
+              label: Province code of the premises indirectly used for the activity
+                (reserved for the tax administration)
+            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqtj9c4:
+              help: null
+              label: Street code of the premises indirectly used for the activity
+                (reserved for the tax administration)
+            x-dhnm6obc5lkmsp39e9im6t3f5pin6or1dhin4o8:
+              help: null
+              label: Stairwell of the premises indirectly used for the activity
+            x-dhnm6obc5lkmsp39e9im6t3f5plmir3fdlin8sjf:
+              help: null
+              label: Kilometre marker of the premises indirectly used for the activity
+            x-dhnm6obc5lkmsp39e9im6t3f5pmnarj9cdkn0qbf:
+              help: null
+              label: Municipality code of the premises indirectly used for the activity
+            x-dhnm6obc5lkmsp39e9im6t3f5pn7arb5e9ng:
+              help: null
+              label: Street number of the premises indirectly used for the activity
+            x-dhnm6obc5lkmsp39e9im6t3f5po6isrf:
+              help: null
+              label: Floor of the premises indirectly used for the activity
+            x-dhnm6obc5lkmsp39e9im6t3f5po74rrmd5n66qb1:
+              help: null
+              label: Province code of the premises indirectly used for the activity
+            x-dhnm6obc5lkmsp39e9im6t3f5po78ro:
+              help: null
+              label: Pto. of the premises indirectly used for the activity, as abbreviated
+                in the record design
+            x-dhnm6obc5lkmsp39e9im6t3f5po7apbiehgg:
+              help: null
+              label: Door of the premises indirectly used for the activity
+            x-dhnm6obc5lkmsp39e9im6t3f5ppmiprcc4mncqb1:
+              help: null
+              label: Street-type abbreviation of the premises indirectly used for
+                the activity
+            x-dhnm6obc5lkmsp39e9im6t3f5pq6ar35cpnmsro:
+              help: null
+              label: Telephone number of the premises indirectly used for the activity
+            x-dhnm6obc5lkmsp39e9im6t3f5pqn6rpdchin6t39dpng:
+              help: null
+              label: Use or purpose of the premises indirectly used for the activity
+            x-dhnm6obc5lkmsp39e9im6t3f5pr6io9de1qm4r39cdgg:
+              help: null
+              label: Street name of the premises indirectly used for the activity
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
               help: null
               label: Surnames and forename, or legal name, of the representative
