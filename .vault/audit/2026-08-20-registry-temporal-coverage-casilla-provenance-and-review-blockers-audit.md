@@ -3392,3 +3392,62 @@ not converging on a residual of one type. **A ninth form may exist.**
 A semantic map and an export layout. The filing-capability worklist has reported it
 AUTHORABLE since the casilla count passed 272; the casilla work is now finished, and the
 remaining 133 non-addressable numbers are a property of AEAT's numbering, not a gap.
+
+## 2026-08-23 — modelo 220 T22002000, and the repeating-record rule now holds across two modelos
+
+### What landed
+
+Modelo 220 record **T22002000** (entidades del grupo en régimen de consolidación
+fiscal): **16 casillas** — the entidad dominante block and **one** entidad dependiente
+row. Revision 79 → **95 casillas**. Second of the design's 137 records.
+
+Suite: **14 failures, one new, and it is not mine** —
+`test_inss_maternidad_paternidad_art7h::test_help_exposes_prestacion_inss_exenta` is a
+CLI help assertion that passes in isolation (`-n0`, 5 passed); this iteration touched
+only registry TOML and locale catalogues.
+
+### The rule, now stated at full strength: THE NUMBER SET DECIDES, NOT THE REPETITION
+
+Four repeating records have now been authored across two modelos, and the decision has
+gone both ways on a consistent principle:
+
+| record | blocks | AEAT numbers across blocks | authored as |
+|---|---|---|---|
+| m036 Pag. 9 sucesores | 6 | **distinct** (920–943) | six blocks |
+| m036 Pag. 10 titulares | 6 | **distinct** (1000–1023) | six blocks |
+| m036 Pag. 8 socios | 4 | **identical** ([800] on every block's NIF) | one row |
+| m220 T22002000 | 20 | **none at all** | one row |
+
+Where AEAT numbers the rows apart, author them apart; where it does not, author the row.
+
+T22002000 is the sharpest case because it prints **no box numbers anywhere** — all 197
+fields are unnumbered, and the twenty blocks are distinguished only by an ordinal
+appended to each description (`NIF. 1`, `NIF. 2`). The byte-span number those casillas
+carry is **our** convention (modelo 181's), not AEAT's.
+
+That is exactly why one row is right: minting twenty sets of byte-span numbers would
+assert 180 distinct declared boxes where the design declares one repeating row of nine
+fields — and would put our own invention on the same footing as AEAT's numbering
+everywhere else in the registry. A casilla is offset-free, so one row is the complete
+description of what a member entity declares; the repetition is a layout concern for the
+repeat mechanism (`binding_record`).
+
+**The block count is arithmetic, not an estimate:** nine-field blocks start at @128 with
+stride 122 and end exactly at @2568 where the reservado begins — (2568−128)/122 = 20.
+
+**Warning written into the fragment:** a layout mapping these nine casillas once, at
+@128–@249, leaves nineteen blocks unfilled. Repeat required — stride 122, count 20.
+
+### Completeness accounting extended to cover repeats
+
+The complement check now has three buckets rather than two. All 197 fields are:
+**16 authored + 171 covered by the nineteen repeat blocks + 10 explicitly excluded**,
+difference empty. Counting repeat-covered fields as accounted-for is what lets a
+one-row declaration still prove it left nothing behind.
+
+### Scale, stated so the casilla count is not misread
+
+135 of 137 records unauthored; **7592 of 7604 AEAT box numbers unmodelled**. The twelve
+modelled numbers are all on T22001000. **This record adds none, because it prints none.**
+Progress on modelo 220 must not be read from the casilla count — 95 casillas describe
+two records out of 137.
