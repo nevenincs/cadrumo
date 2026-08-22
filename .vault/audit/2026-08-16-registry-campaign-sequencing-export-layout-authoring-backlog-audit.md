@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:213d14a551a69647f90a448ba11e7bf2e00d05d90b481a97f35c524c52ca581c'
+body_hash: 'sha256:77c068cc95e25c5a3ca9a9afa286e0fe1ddcb4c7a383cf1d0cebd21a747c58e5'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -14157,6 +14157,95 @@ from PDF tables across modelos 100, 131, 180, 200 and 349 -- and modelo 232's
 emitted as a bare bracket on its own line, which no repair reattaches.
 
 The eight failing gates are all declared inventories. Modelo 840 still needs
+`bindings` and `export_layouts`, `projection_endpoints` decided once a layout
+exists, and 108 casillas whose Catalan and Hungarian labels this session cannot
+ground.
+
+## Tick: the stranded casilla tag, and 791 of them rather than one
+
+Re-measured at tick start: authority loads CLEAN, nine of 218 designs partially
+read. Last tick named the next shape and this tick went after it.
+
+### One tag was seven designs
+
+Modelo 390's `@115` lost its `[523]` to a bare bracket on its own line. Sizing
+that population first turned a one-off into a class: **791 stranded tags across
+seven bundled designs**, six of them modelo 200 editions carrying 120 to 139
+each. A position that loses its tag contributes no casilla number to coverage,
+so this was 791 silent omissions, not one.
+
+Two shapes, and neither is reachable by an existing repair.
+`_join_wrapped_row_descriptions` absorbs a following line only into a row that
+has NO description, and `_REVERSED_ROW_HEAD_RE` admits a casilla only where it
+rides on the head half. Both shapes have a description already, so the tag is
+simply dropped.
+
+### Reading the page rather than reasoning about the stream
+
+The first cross-edition control said the recovered modelo 200 tags were shifted
+by one row against their siblings -- the exact signature of mis-attachment.
+That was the instrument, not the fold: descriptions are truncated at extraction
+width, which differs per edition, so the consensus key collided across the three
+rows AEAT prints for each year.
+
+Going to the PDF's own word coordinates settled it. Of 16,137 casilla tags in
+these designs, **15,982 share their visual row with content and only 155 are
+alone** -- a "stranded" tag is not isolated on the page at all; the plain
+extractor breaks the line before a far-right column. The physical row for modelo
+200's 2011 case is `17 Num ... 1997 ... Pendiente de aplicación` followed by
+`10 79 [770]`: head, tail and tag are ONE AEAT row, and the tag belongs at that
+description's end. Modelo 200's 2012 shape is the same fact laid out the other
+way: the description alone on one line, `15 164 17 N [194]` on the next.
+
+Two instruments were wrong before one was right, and both failures are worth
+recording. The first scored a physically-alone tag as contradicted rather than
+unverifiable. The second compared line to line where the evidence is row to row.
+Corrected, geometry confirms **766 of 791**; one is physically alone so geometry
+cannot speak; the remaining 22 carry a casilla that repeats two to five times in
+the same document, which the positional tie cannot disambiguate. **None was
+shown to attach to a foreign row.**
+
+### The fold, and what it refuses
+
+A tag alone on its line is folded onto the PRECEDING line, and only where that
+line is field-shaped: a row, or one of the two halves of a split row. Beside a
+heading or prose it stays stranded and is reported, because a casilla declared
+on bytes AEAT never put it on is the failure this repair could otherwise cause
+-- and a tiling mis-attribution has already been shown to pass the contiguity
+check quietly.
+
+Ordering mattered and the first attempt had it wrong. Placed innermost the fold
+saw modelo 2012-2014's descriptions before their columns were joined, so the
+neighbour was bare prose and the guard declined all 386. Moved outermost, every
+shape sees an assembled line.
+
+Corpus-wide: **7 designs changed, +745 casilla tags recovered, 0 designs
+regressed** on records skipped or positions unread. Modelo 390's contested run
+now matches its **nine** sibling editions exactly at all five positions, `[523]`
+included, so the asymmetric tag check written last tick is tightened to equality
+and the docstrings claiming the loss are corrected.
+
+### Verified
+
+* new module: 4 passed. The 390 module still passes at the stricter assertion.
+* authority loads CLEAN; ruff findings on `_record_design.py` are byte-identical
+  to HEAD, so none was introduced here.
+* partial-read worklist: 9 of 218, unchanged and expected -- this recovers tags,
+  not unread positions.
+
+### Still open, and not mine to fix right now
+
+Six `dev/registry` gates fail that did not last tick: the dp30302 field matrix
+(2), the semantic-map raw-projection refusal, the static-inspection boundary,
+and the m200/m220 variable-envelope gates. **Re-run with the fold neutralised in
+process, all six fail identically**, so they are not this change. They sit on the
+registry revision-split campaign a peer has landed four commits into
+(`1acfd3db4f`, `94d1a90bec`, `17c3f5ccf0`, `a30ce296e0`), and the dp30302 count
+halving from 208 to 109 is that campaign's signature. Recorded rather than fixed
+because another agent is editing those files now; whoever owns that split should
+absorb them.
+
+The eight standing gates remain declared inventories. Modelo 840 still needs
 `bindings` and `export_layouts`, `projection_endpoints` decided once a layout
 exists, and 108 casillas whose Catalan and Hungarian labels this session cannot
 ground.
