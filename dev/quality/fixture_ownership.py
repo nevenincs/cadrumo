@@ -283,9 +283,14 @@ def _closure_record_for_candidate(
         if record.qualname != factory_function_name and record.qualname.rsplit(".", 1)[0] == factory_function_name
     ]
     if len(matches) != 1:
+        found = ", ".join(f"{record.qualname} (scope={record.decorator.scope}, line {record.line})" for record in matches) or "none"
         raise FixtureOwnershipError(
             "cannot uniquely resolve the nested fixture closure for factory "
-            f"{candidate.resolved_factory} bound at {candidate.path}:{candidate.line}:{candidate.bound_name}"
+            f"{candidate.resolved_factory} bound at {candidate.path}:{candidate.line}:{candidate.bound_name}; "
+            f"closures found: {found}. A factory returning a DIFFERENT closure per argument -- the shipped case "
+            "selects on `scope` -- cannot be resolved statically, because the decorator the binding inherits "
+            "is chosen at the call site. Give the factory one closure, or teach this resolver which argument "
+            "selects it."
         )
     return matches[0]
 
