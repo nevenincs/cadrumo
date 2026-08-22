@@ -283,7 +283,10 @@ def _closure_record_for_candidate(
         if record.qualname != factory_function_name and record.qualname.rsplit(".", 1)[0] == factory_function_name
     ]
     if len(matches) != 1:
-        found = ", ".join(f"{record.qualname} (scope={record.decorator.scope}, line {record.line})" for record in matches) or "none"
+        found = (
+            ", ".join(f"{record.qualname} (scope={record.decorator.scope}, line {record.line})" for record in matches)
+            or "none"
+        )
         raise FixtureOwnershipError(
             "cannot uniquely resolve the nested fixture closure for factory "
             f"{candidate.resolved_factory} bound at {candidate.path}:{candidate.line}:{candidate.bound_name}; "
