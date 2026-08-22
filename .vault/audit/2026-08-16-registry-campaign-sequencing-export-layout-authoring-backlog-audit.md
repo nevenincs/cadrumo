@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:ff9387f16d94dd36c15b3e4bd428e2b44281db6f8c3a1310e2f2560a0a057adc'
+body_hash: 'sha256:1ab9f2721306d6133d4347021b01dd7eafa1cdab41aba30934bacac96e0632c6'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -12786,3 +12786,127 @@ items 5 and 6 -- both of which are stated in exactly the terms this gate
 measures. Recording rather than fixing, because authoring 395 correspondences is
 a tree-wide schema change rather than a repair, and the enrollment table gives
 each one a place to land as its modelo is worked.
+
+## Tick: items 5 and 6 are clean, the gate I built last tick was a duplicate, and one real defect fell out of finding that
+
+Re-measured at tick start: authority loads CLEAN.
+
+### Modelo 369 and modelo 390 both measure clean
+
+Modelo 369's eighteen records, across all three esquemas, cover their design
+sheets position for position: record span equals design span exactly and no
+DATA position is left unwritten. Its record type names its sheet outright
+(`t36904-un` <-> `T36904 Un`), so the correspondence is derived rather than
+assumed.
+
+Modelo 390 across 2022, 2023, 2024 and 2025 passes the CANONICAL coverage
+validator with zero failures. A locally-written blank-matcher said otherwise,
+and it was wrong: nearly every position it flagged is a field AEAT describes
+`RESERVADO PARA LA A.E.A.T. (Dejar en blanco)`, which a strict-equality blank
+set does not recognise. The canonical rule classifies 25 to 29 positions per
+revision as omissible with a stated reason -- reserved for the Administración,
+declared fill, or delegated to the entidad desarrolladora by the design's own
+footnote -- and requires the rest, which the layouts write.
+
+### The gate authored last tick was a second copy of a shape rule
+
+`validate_export_layout_record_coverage` is a registry-BUILD gate wired into
+`_validate_revision_sections`, so it already runs on every authority load,
+already resolves layouts through `derive_export_layouts_from_bindings`, and
+already documents modelo 720's `binding_record` and modelo 390's XML-dictionary
+siblings -- every fact rediscovered the hard way over the previous two ticks.
+
+The control settles it rather than the resemblance: shortening ONE modelo 193
+declarante field by a single byte makes the AUTHORITY refuse, naming the layout
+and reporting "writes only 71 of the 72 positions its official record design
+requires". That is the same mutation the new gate caught, caught earlier and
+with a better message.
+
+So the gate was deleted. It asserted a property the build already enforces, with
+a cruder omissibility rule that modelo 390 had just demonstrated produces false
+positives -- exactly the "second copy of a shape rule kept for independent
+validation" the export rule forbids. The lesson is the rule's own: find the
+existing authority by MEANING first. Three ticks of measurement went into
+rebuilding something that was already there and better.
+
+### The real defect: one position classified differently by extraction shape
+
+Deleting it surfaced a genuine failure in the canonical module's own tests.
+Modelo 111's Colegio Concertado tick -- Spain's *pago delegado* case, where an
+education Administración presents the modelo for a state-subsidised school -- is
+a datum the PRESENTER writes, and the predicate already had a carve-out saying
+so. The carve-out reads AEAT's `"X"` tick from the CONTENT cell.
+
+Three bundled editions print that row. The two xlsx ones declare the tick in
+`Contenido` and are correctly treated as filer data. The 2012 edition is a PDF
+recovered from chart geometry, which has no content column at all, so the
+identical declaration arrives merged into the description -- and that row was
+excused as reserved space. The same AEAT field, classified two ways, decided by
+which file format the edition happens to be in. That is the very inconsistency
+the predicate was written to remove, reappearing along the extraction axis.
+
+The fallback reads the tick from the description ONLY when the field carries no
+content cell, so a row that declares a contenido is still judged on it and
+cannot be handed to the filer by a stray tick in its prose. Measured before
+being written: of 2,953 rows carrying the reserved word, it reclassifies exactly
+one -- that row -- and leaves 92 bare-label rows untouched.
+
+### Two tests, complementary claims, and the oscillation avoided
+
+Fixing the predicate reddened its sibling, which asserts that a bare `Reservado.`
+row with no contenido stays reserved. That is the oscillation the quality rule
+warns about, and the resolution was not to weaken either.
+
+The sibling selected its population on "no contenido" as a PROXY for "declares
+no filer tick", which is the sentence it actually asserts. The two stopped being
+equivalent the moment a design with no content column was found stating its tick
+in the description. Selecting on the real premise puts the Modelo 111 row in the
+sibling test's population and out of this one's, so each field gets exactly one
+verdict. A floor on the remaining population is asserted too, so the exclusion
+cannot quietly hollow the Modelo 840 rows the fallback rests on.
+
+### What the tree actually looks like on this axis
+
+Measured across every revision: 80 are checked by the coverage gate and 0 fail.
+Twelve declare no export layout at all and every one of them declares
+`applicability` grade rather than claiming filing, so the silence is a declared
+state and not a hole. Six modelo 100 revisions file through an XML dictionary
+and have no positional design to measure. No revision declares its export family
+`not_applicable` while holding a bundled design: the only two that declare it --
+modelos 136 and 721 -- have no design published at all and say so with reasons.
+
+The remaining work is those twelve, and it is already loud: the filing-capability
+worklist is a deliberately-failing, operator-sanctioned gate that derives the
+list on every run and states that the one legitimate way to change its result is
+to build an export layout.
+
+### Verified
+
+* `test_export_layout_record_coverage`: 22 passed, from 1 failed.
+* generated-tree gates plus the coverage, 151, 184 and coverage-key modules: 92
+  passed.
+* authority loads CLEAN.
+* the fallback's blast radius, reconstructing the previous predicate in-process:
+  exactly 1 position changes classification corpus-wide, 92 bare-label rows are
+  untouched, and all three Modelo 111 editions now agree the tick is filer data.
+* the redundancy control: shortening one modelo 193 field makes the authority
+  itself refuse, with the tracked fragment restored byte-exactly afterwards.
+
+### Still open
+
+Twelve revisions need an export layout before the matrix is green. Nine of them
+already have a readable bundled design, so their blocker is authoring rather than
+acquisition, even though the family disposition reads
+`blocked_pending_evidence` for both cases -- the taxonomy has only
+`populated`, `not_applicable` and `blocked_pending_evidence`, with no state for
+"evidence present, authoring pending". Recorded rather than changed: splitting a
+core StrEnum that the authority-grade ladder validates is an ADR-level call, and
+nothing is currently claimed clean by the imprecision.
+
+Ordered by authoring cost: modelo 188 (40 design fields), 187 (46), 038 (58),
+182 (76), 194 (82), 763 (201), 840 (381), 036 (1047), 220 (32,799). Modelo 188
+is the smallest and still not small: it declares five casillas and ZERO
+bindings, so its perceptor detail rows need a binding family designed and
+grounded first. Not started this tick rather than half-built, because a partial
+layout would satisfy the worklist gate while under-declaring, which is the exact
+failure that gate exists to catch.

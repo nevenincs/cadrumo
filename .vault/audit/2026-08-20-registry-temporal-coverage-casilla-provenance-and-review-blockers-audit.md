@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:97605b1461b431c003807cfb8d8000ecfe85da4037f1334921b37dbe75e3ff0d'
+body_hash: 'sha256:0374fa4c7528c6c91055d07dff937549891ac2514c74385155b751fba8675279'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1845,7 +1845,6 @@ known fallout with named fixes rather than as the split having gone wrong.
 Nothing here was changed by this campaign; the two named renames belong to whoever owns
 the splits.
 
-
 ### the-continuity-ratchet-fired-on-exactly-the-ids-the-split-duplicated | medium | which branch applies, decided by measurement
 
 ``test_ungrounded_continuity_backlog_matches_its_committed_baseline`` reds after the
@@ -1888,7 +1887,6 @@ what a revision split drags behind it: stale fragment names (fixable mechanicall
 done), committed baselines that shift by exactly the duplicated-casilla count, bindings
 and export records that move relative to their revision, and a layout gate that the split
 does not satisfy at all.
-
 
 ## Recommendations
 
