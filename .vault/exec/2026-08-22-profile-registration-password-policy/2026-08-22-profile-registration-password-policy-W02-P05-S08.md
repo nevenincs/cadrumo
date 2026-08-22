@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:98f520f859c5ec70c5ef8687651699326b8de808c9f05923926f4f472d774ad2'
+body_hash: 'sha256:4476d65becdc344818c5ec513cd44ec066523c305e811d26a5eb8711060d24b8'
 step_id: 'S08'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
@@ -38,3 +38,25 @@ Focused Ruff and format checks pass. The targeted non-oracular, mutation-safety,
 ## Notes
 
 The new exception required one atomic core error-registry declaration because undeclared `CadrumoError` subclasses are rejected at import time. Deleting the obsolete predicate also required one minimal CLI login consumer update to preserve absent-channel guidance without a runtime import failure. Both dependencies were explicitly authorized for S08; locale population remains S10-owned.
+
+## Review remediation
+
+The blocking review findings `s08-cli-absent-channel-laundering` and
+`s08-operational-distinction-bite` were remediated without adding another public
+error type. The CLI now translates only the custody password error that can
+escape a callback-free login when no configured passphrase exists; keyring,
+record-integrity, KDF resource/supervision, transaction, and other storage
+failures retain their original classifications.
+
+Direct tests prove true absent-channel guidance, representative CLI operational
+fault identity, and the full proof mapper's negative space for every operation.
+Rotation now proves malformed and cryptographically incorrect current passwords
+have the identical public translation key and empty context, disclose no
+candidate, and leave the entire storage tree byte-for-byte unchanged. The
+prospective replacement-password reason contract remains independently covered.
+
+Remediation verification passed Ruff check and format-check on all four touched
+Python files, 24 unit cases for CLI classification and the mapper matrix, and 19
+integration cases for the complete passphrase-rotation lane. The first combined
+parallel run was discarded after pytest-xdist crashed while serializing a
+parameterized exception instance; the authoritative serial runs completed green.
