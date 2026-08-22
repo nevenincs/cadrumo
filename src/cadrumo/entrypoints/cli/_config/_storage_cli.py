@@ -29,8 +29,10 @@ from ....application.storage_management import StorageCheckIssueKind, StorageTre
 from ....core import StorageArea
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, resolve_notice_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ._execution_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, PROFILE_READ, declare_metadata_group
 
 # Eager import so the @register_schema decorators run on the CLI build path.
 from ._storage_payloads import (
@@ -73,6 +75,7 @@ def register_storage_commands(config_app: typer.Typer) -> None:
         "cli.config.storage.list.area_help",
     ),
 )
+@command_execution_policy(PROFILE_READ)
 def config_storage_list(
     ctx: typer.Context,
     output_language: _OutputLanguage | None = typer.Option(
@@ -107,6 +110,7 @@ def config_storage_list(
     "show",
     help=tr("cli.config.storage.show.area_help"),
 )
+@command_execution_policy(PROFILE_READ)
 def config_storage_show(
     ctx: typer.Context,
     area: StorageArea = typer.Argument(
@@ -145,6 +149,7 @@ def config_storage_show(
 
 
 @storage_app.command("check", help=tr("cli.config.storage.check.help"))
+@command_execution_policy(PROFILE_READ)
 def config_storage_check(
     ctx: typer.Context,
     output_language: _OutputLanguage | None = typer.Option(
@@ -226,6 +231,7 @@ def config_storage_check(
 
 
 @storage_app.command("init", help=tr("cli.config.storage.init.help"))
+@command_execution_policy(BOOTSTRAP_WRITE)
 def config_storage_init(
     ctx: typer.Context,
     output_language: _OutputLanguage | None = typer.Option(
@@ -274,6 +280,7 @@ def config_storage_init(
         "cli.config.storage.reclaim.area_help",
     ),
 )
+@command_execution_policy(BOOTSTRAP_DESTRUCTIVE)
 def config_storage_reclaim(
     ctx: typer.Context,
     area: StorageArea = typer.Argument(
@@ -473,5 +480,7 @@ def _notice_lines(notices: Sequence[Notice]) -> list[str]:
         )
     return ["", *lines] if lines else []
 
+
+declare_metadata_group(storage_app)
 
 __all__ = ["register_storage_commands", "storage_app"]

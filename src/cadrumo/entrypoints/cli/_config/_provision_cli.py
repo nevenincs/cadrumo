@@ -24,7 +24,9 @@ import typer
 
 from ....core import ModelRole
 from ....core.i18n import tr
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, resolve_cli_precondition_action
+from ._execution_policies import ENCRYPTED_READ, NETWORK_WRITE, declare_metadata_group
 
 # Eager import so the @register_schema decorators run on the CLI build path.
 from ._provision_payloads import (
@@ -100,11 +102,13 @@ def register_provision_commands(app: typer.Typer) -> None:
     )
 
     @provision_app.command("report", help=tr("cli.config.provision.report.help"))
+    @command_execution_policy(ENCRYPTED_READ)
     def provision_report(ctx: typer.Context) -> None:
         """Report the measured hardware, the per-role model selection, and admission."""
         _emit_provision_report(ctx)
 
     @provision_app.command("pull", help=tr("cli.config.provision.pull.help"))
+    @command_execution_policy(NETWORK_WRITE)
     def provision_pull(
         ctx: typer.Context,
         model: str | None = typer.Option(None, "--model", help=tr("cli.config.provision.pull.model_help")),
@@ -114,6 +118,7 @@ def register_provision_commands(app: typer.Typer) -> None:
         _emit_provision_pull(ctx, model=model, role=role)
 
     @provision_app.command("verify", help=tr("cli.config.provision.verify.help"))
+    @command_execution_policy(ENCRYPTED_READ)
     def provision_verify(
         ctx: typer.Context,
         model: str | None = typer.Option(None, "--model", help=tr("cli.config.provision.verify.model_help")),
@@ -122,6 +127,7 @@ def register_provision_commands(app: typer.Typer) -> None:
         """Confirm a model is resident and answers a trivial prompt within a bound."""
         _emit_provision_verify(ctx, model=model, role=role)
 
+    declare_metadata_group(provision_app)
     app.add_typer(provision_app)
 
 

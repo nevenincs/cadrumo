@@ -70,7 +70,9 @@ from ....adapters.outbound.google import (
 )
 from ....core import GoogleCredentialSourceKind
 from ....core.i18n import tr
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
+from ._execution_policies import GOOGLE_READ, GOOGLE_WRITE, declare_metadata_group
 from ._google_credential_source_payloads import (
     GoogleCredentialSourceSetResult,
     GoogleCredentialSourceShowResult,
@@ -107,6 +109,7 @@ def _default_scopes(selection: GoogleCredentialSourceSelection) -> list[str]:
 
 
 @credential_source_app.command("set", help=tr("cli.config.google.credential_source.set_help"))
+@command_execution_policy(GOOGLE_WRITE)
 def google_credential_source_set(
     ctx: typer.Context,
     kind: GoogleCredentialSourceKind = typer.Option(
@@ -222,6 +225,7 @@ def google_credential_source_set(
 
 
 @credential_source_app.command("show", help=tr("cli.config.google.credential_source.show_help"))
+@command_execution_policy(GOOGLE_READ)
 def google_credential_source_show(
     ctx: typer.Context,
 ) -> None:
@@ -272,5 +276,7 @@ def register_google_credential_source_commands(google_app: typer.Typer) -> None:
     """Mount the ``credential-source`` command group on ``aeat config google``."""
     google_app.add_typer(credential_source_app, name="credential-source")
 
+
+declare_metadata_group(credential_source_app)
 
 __all__ = ["register_google_credential_source_commands"]

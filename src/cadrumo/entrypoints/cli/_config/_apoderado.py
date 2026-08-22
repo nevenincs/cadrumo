@@ -13,9 +13,11 @@ if TYPE_CHECKING:
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._execution_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, declare_metadata_group
 
 _resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None] | None = None
 _mounted_auth_app_ids: set[int] = set()
@@ -74,6 +76,7 @@ def _active_profile_pointer() -> ProfileBucketPointer:
     "list",
     help=tr("cli.config.auth.apoderado.scopes.list_help"),
 )
+@command_execution_policy(ENCRYPTED_READ)
 def apoderado_scopes_list(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
@@ -99,6 +102,7 @@ def apoderado_scopes_list(
     "status",
     help=tr("cli.config.auth.apoderado.status_help"),
 )
+@command_execution_policy(ENCRYPTED_READ)
 def apoderado_status(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
@@ -143,6 +147,7 @@ def apoderado_status(
     "configure",
     help=tr("cli.config.auth.apoderado.configure_help"),
 )
+@command_execution_policy(ENCRYPTED_WRITE)
 def apoderado_configure(
     ctx: typer.Context,
     represented_nif: str | None = typer.Option(
@@ -298,6 +303,7 @@ def _collect_apoderado_answers_interactively(
     "clear",
     help=tr("cli.config.auth.apoderado.clear_help"),
 )
+@command_execution_policy(ENCRYPTED_DESTRUCTIVE)
 def apoderado_clear(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
@@ -331,6 +337,7 @@ def apoderado_clear(
         "cli.config.auth.apoderado.check_help",
     ),
 )
+@command_execution_policy(ENCRYPTED_READ)
 def apoderado_check(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
@@ -355,5 +362,8 @@ def apoderado_check(
     # ``status`` is the offline configuration read.
     svc.check(bucket_id=pointer.bucket_id)
 
+
+declare_metadata_group(apoderado_app)
+declare_metadata_group(scopes_app)
 
 __all__ = ["apoderado_app", "register_apoderado_commands"]

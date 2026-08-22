@@ -40,9 +40,11 @@ import typer
 
 from ....core.i18n import OutputLanguage, tr
 from ....core.json_contract import Notice, NoticeSeverity
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError
+from ._execution_policies import BOOTSTRAP_DESTRUCTIVE
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -207,6 +209,7 @@ def register_profile_delete_command(
     """
 
     @app.command("delete", help=tr("cli.config.profile.delete.help"))
+    @command_execution_policy(BOOTSTRAP_DESTRUCTIVE)
     def config_profile_delete(
         ctx: typer.Context,
         name: _NameArg,

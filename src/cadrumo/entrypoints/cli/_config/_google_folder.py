@@ -14,8 +14,10 @@ from ....adapters.outbound.google import (
     save_drive_config,
 )
 from ....core.i18n import tr
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
+from ._execution_policies import GOOGLE_READ, GOOGLE_WRITE, declare_metadata_group
 from ._google_payloads import GoogleFolderGetResult, GoogleFolderSetResult
 
 _GoogleRefusal = Callable[[GoogleAuthError], CliRefusedBoundaryError]
@@ -31,6 +33,7 @@ def register_google_folder_commands(google_app: typer.Typer, *, google_refusal: 
     """Register Google Drive root-folder commands."""
 
     @folder_app.command("set", help=tr("cli.config.google.folder.set_help"))
+    @command_execution_policy(GOOGLE_WRITE)
     def google_folder_set(
         ctx: typer.Context,
         folder_id: str = typer.Argument(..., help=tr("cli.config.google.folder.folder_id_help")),
@@ -56,6 +59,7 @@ def register_google_folder_commands(google_app: typer.Typer, *, google_refusal: 
         )
 
     @folder_app.command("get", help=tr("cli.config.google.folder.get_help"))
+    @command_execution_policy(GOOGLE_READ)
     def google_folder_get(
         ctx: typer.Context,
     ) -> None:
@@ -84,3 +88,4 @@ def register_google_folder_commands(google_app: typer.Typer, *, google_refusal: 
         )
 
     google_app.add_typer(folder_app, name="folder")
+declare_metadata_group(folder_app)

@@ -7,9 +7,11 @@ import typer
 from ....application.auth import AuthDiagnosticPhoneState
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._execution_policies import ENCRYPTED_READ, ENCRYPTED_WRITE, declare_metadata_group
 
 auth_diagnostics_app = typer.Typer(
     name="diagnostics",
@@ -22,6 +24,7 @@ auth_diagnostics_app = typer.Typer(
     "list",
     help=tr("cli.config.auth.diagnostics.list_help"),
 )
+@command_execution_policy(ENCRYPTED_READ)
 def auth_diagnostics_list(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
@@ -64,6 +67,7 @@ def auth_diagnostics_list(
     "show",
     help=tr("cli.config.auth.diagnostics.show_help"),
 )
+@command_execution_policy(ENCRYPTED_READ)
 def auth_diagnostics_show(
     ctx: typer.Context,
     diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help")),
@@ -141,6 +145,7 @@ def _optional_bool_text(value: bool | None) -> str:
         "cli.config.auth.diagnostics.report_help",
     ),
 )
+@command_execution_policy(ENCRYPTED_WRITE)
 def auth_diagnostics_report(
     ctx: typer.Context,
     diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help")),
@@ -195,5 +200,7 @@ def auth_diagnostics_report(
         ),
     )
 
+
+declare_metadata_group(auth_diagnostics_app)
 
 __all__ = ["auth_diagnostics_app"]

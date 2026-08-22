@@ -12,9 +12,11 @@ import typer
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import strict_round_trip
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._execution_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, declare_metadata_group
 from ._status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
@@ -103,6 +105,7 @@ def _run_provider_auth_operation[AuthResultT](
 
 
 @auth_app.command("providers", help=tr("cli.config.auth.providers_help"))
+@command_execution_policy(ENCRYPTED_READ)
 def auth_providers(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
@@ -133,6 +136,7 @@ def auth_providers(
 
 
 @auth_app.command("configure", help=tr("cli.config.auth.configure_help"))
+@command_execution_policy(ENCRYPTED_WRITE)
 def auth_configure(
     ctx: typer.Context,
     provider: str = typer.Option(
@@ -190,6 +194,7 @@ def auth_configure(
 
 
 @auth_app.command("status", help=tr("cli.config.auth.status_help"))
+@command_execution_policy(ENCRYPTED_READ)
 def auth_status(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider"),
@@ -258,6 +263,7 @@ def _auth_status_summary_line(payload: dict[str, object]) -> str:
 
 
 @auth_app.command("test", help=tr("cli.config.auth.test_help"))
+@command_execution_policy(ENCRYPTED_READ)
 def auth_test(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider"),
@@ -307,6 +313,7 @@ def auth_test(
 
 
 @auth_app.command("login", help=tr("cli.config.auth.login_help"))
+@command_execution_policy(ENCRYPTED_WRITE)
 def auth_login(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider"),
@@ -350,6 +357,7 @@ def auth_login(
 
 
 @auth_app.command("logout", help=tr("cli.config.auth.logout_help"))
+@command_execution_policy(ENCRYPTED_WRITE)
 def auth_logout(
     ctx: typer.Context,
     provider: str | None = typer.Option(
@@ -391,6 +399,7 @@ def auth_logout(
 
 
 @auth_app.command("reset", help=tr("cli.config.auth.reset_help"))
+@command_execution_policy(ENCRYPTED_DESTRUCTIVE)
 def auth_reset(
     ctx: typer.Context,
     provider: str | None = typer.Option(
@@ -429,3 +438,6 @@ def auth_reset(
         result=payload,
         lines=tuple(f"{key}\t{value}" for key, value in result.model_dump(mode="json").items()),
     )
+
+
+declare_metadata_group(auth_app)

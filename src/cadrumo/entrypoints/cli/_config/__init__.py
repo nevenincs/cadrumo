@@ -20,6 +20,7 @@ from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n import tr
 from ....core.logging import get_logger as _get_logger
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
+from .._command_policy import command_execution_policy
 from .._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
 from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
@@ -34,6 +35,7 @@ from ._certificate import certificate_app
 from ._collab import register_collab_commands
 from ._custody import register_custody_commands
 from ._descendiente import register_descendiente_commands
+from ._execution_policies import CALCULATION_READ, PROFILE_READ, STATE_FREE, declare_metadata_group
 from ._login_frontend import offer_login_to_a_gated_verb
 from ._manager_dispatch import register_lazy_wizard_leaf as _register_lazy_wizard_leaf
 from ._passphrase import register_passphrase_commands
@@ -84,6 +86,7 @@ repair_app = typer.Typer(
 
 
 @app.callback()
+@command_execution_policy(STATE_FREE)
 def config_root(
     ctx: typer.Context,
     help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.config.workflow_help"), is_eager=True),
@@ -188,6 +191,7 @@ def _profile_list_lines(
 
 
 @profile_app.command("list", help=tr("cli.config.list.help"))
+@command_execution_policy(PROFILE_READ)
 def config_list(
     ctx: typer.Context,
     output_language: _OutputLanguage | None = typer.Option(
@@ -257,6 +261,7 @@ _register_lazy_wizard_leaf(
 
 
 @profile_app.command("status", help=tr("cli.config.status.help"))
+@command_execution_policy(CALCULATION_READ)
 def config_status(
     ctx: typer.Context,
     output_language: _OutputLanguage | None = typer.Option(
@@ -469,6 +474,7 @@ auth_app.add_typer(auth_diagnostics_app, name="diagnostics")
 auth_app.add_typer(certificate_app, name="certificate")
 app.add_typer(auth_app, name="auth")
 register_collab_commands(app)
+declare_metadata_group(profile_app)
 
 from ._google import google_app as _google_app
 

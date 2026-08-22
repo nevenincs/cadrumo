@@ -16,12 +16,14 @@ import typer
 
 from ....core import ServiceCapability, resolve_active_bucket_id
 from ....core.i18n import tr
+from .._command_policy import command_execution_policy
 from .._common import bad, emit_envelope
 from .._errors import decorate_typer_app
 
 # Eager import so the @register_schema decorators run when this module is imported
 # on the CLI build path, keeping every capability leaf in the JSON-contract registry.
 from ._capabilities_payloads import CapabilitiesShowResult, CapabilitySetResult
+from ._execution_policies import ENCRYPTED_READ, ENCRYPTED_WRITE, declare_metadata_group
 
 
 class _Toggle(StrEnum):
@@ -58,7 +60,9 @@ def _register_show(capabilities_app: typer.Typer) -> None:
         result = CapabilitiesShowResult.model_validate({"profile_id": profile_id, "capabilities": rows})
         emit_envelope(ctx, command="config.profile.capabilities.show", result=result, lines=lines)
 
-    capabilities_app.command("show", help=tr("cli.config.profile.capabilities.show_help"))(capabilities_show)
+    capabilities_app.command("show", help=tr("cli.config.profile.capabilities.show_help"))(
+        command_execution_policy(ENCRYPTED_READ)(capabilities_show)
+    )
 
 
 def _register_set(capabilities_app: typer.Typer) -> None:
@@ -93,7 +97,9 @@ def _register_set(capabilities_app: typer.Typer) -> None:
         ]
         emit_envelope(ctx, command="config.profile.capabilities.set", result=result, lines=lines)
 
-    capabilities_app.command("set", help=tr("cli.config.profile.capabilities.set_help"))(capabilities_set)
+    capabilities_app.command("set", help=tr("cli.config.profile.capabilities.set_help"))(
+        command_execution_policy(ENCRYPTED_WRITE)(capabilities_set)
+    )
 
 
 def register(profile_app: typer.Typer) -> None:
@@ -107,6 +113,7 @@ def register(profile_app: typer.Typer) -> None:
     )
     _register_show(capabilities_app)
     _register_set(capabilities_app)
+    declare_metadata_group(capabilities_app)
     decorate_typer_app(capabilities_app)
     profile_app.add_typer(capabilities_app, name="capabilities")
 

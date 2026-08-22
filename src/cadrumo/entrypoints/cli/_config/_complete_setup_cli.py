@@ -25,11 +25,13 @@ import typer
 
 from ....core import resolve_active_bucket_id
 from ....core.i18n import tr
+from .._command_policy import command_execution_policy
 from .._common import bad, emit_envelope
 
 # Eager import so the @register_schema decorator runs when this module is imported
 # on the CLI build path, keeping the leaf in the JSON-contract registry.
 from ._complete_setup_payloads import ProfileCompleteSetupResult
+from ._execution_policies import ENCRYPTED_WRITE
 
 
 def _still_missing(record: object) -> tuple[str, ...]:
@@ -123,4 +125,4 @@ def register(profile_app: typer.Typer) -> None:
     profile_app.command(
         "complete-setup",
         help=tr("cli.config.profile.complete_setup.help"),
-    )(profile_complete_setup)
+    )(command_execution_policy(ENCRYPTED_WRITE)(profile_complete_setup))

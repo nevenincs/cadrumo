@@ -7,6 +7,7 @@ from typing import Annotated
 import typer
 
 from ....core.i18n import tr
+from .._command_policy import command_execution_policy
 from .._command_suggestions import CadrumoTyperGroup
 from .._common import _emit_envelope
 from .._config_payloads import (
@@ -16,6 +17,7 @@ from .._config_payloads import (
     ConfigResetStatusResult,
 )
 from .._errors import CliRefusedBoundaryError
+from ._execution_policies import BOOTSTRAP_DESTRUCTIVE, PROFILE_READ, declare_metadata_group
 
 reset_app = typer.Typer(
     name="reset",
@@ -114,6 +116,7 @@ def _operation_lines(operation: ConfigResetOperationPayload) -> tuple[str, ...]:
         "cli.config.reset.start_help",
     ),
 )
+@command_execution_policy(BOOTSTRAP_DESTRUCTIVE)
 def config_reset_start(
     ctx: typer.Context,
     yes: _YesOpt = False,
@@ -144,6 +147,7 @@ def config_reset_start(
         "cli.config.reset.status_help",
     ),
 )
+@command_execution_policy(PROFILE_READ)
 def config_reset_status_command(
     ctx: typer.Context,
     operation_id: str | None = typer.Option(
@@ -173,6 +177,7 @@ def config_reset_status_command(
         "cli.config.reset.resume_help",
     ),
 )
+@command_execution_policy(BOOTSTRAP_DESTRUCTIVE)
 def config_reset_resume(
     ctx: typer.Context,
     operation_id: str | None = typer.Option(
@@ -220,5 +225,7 @@ def register_reset_commands(config_app: typer.Typer) -> None:
     """Mount the durable reset lifecycle under ``aeat config reset``."""
     config_app.add_typer(reset_app, name="reset")
 
+
+declare_metadata_group(reset_app)
 
 __all__ = ["register_reset_commands", "reset_app"]

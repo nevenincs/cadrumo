@@ -36,9 +36,11 @@ from pydantic import BaseModel, ConfigDict, SecretStr
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._execution_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, declare_metadata_group
 
 
 class _CertificateSecretSetSecrets(BaseModel):
@@ -69,6 +71,7 @@ certificate_app = typer.Typer(
         "cli.config.auth.certificate.register_help",
     ),
 )
+@command_execution_policy(ENCRYPTED_WRITE)
 def certificate_register(
     ctx: typer.Context,
     name: str = typer.Option(
@@ -135,6 +138,7 @@ def certificate_register(
     "list",
     help=tr("cli.config.auth.certificate.list_help"),
 )
+@command_execution_policy(ENCRYPTED_READ)
 def certificate_list(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
@@ -178,6 +182,7 @@ def certificate_list(
     "select",
     help=tr("cli.config.auth.certificate.select_help"),
 )
+@command_execution_policy(ENCRYPTED_WRITE)
 def certificate_select(
     ctx: typer.Context,
     name: str = typer.Option(
@@ -231,6 +236,7 @@ def certificate_select(
     "remove",
     help=tr("cli.config.auth.certificate.remove_help"),
 )
+@command_execution_policy(ENCRYPTED_DESTRUCTIVE)
 def certificate_remove(
     ctx: typer.Context,
     name: str = typer.Option(
@@ -281,6 +287,7 @@ def certificate_remove(
         "cli.config.auth.certificate.check_help",
     ),
 )
+@command_execution_policy(ENCRYPTED_READ)
 def certificate_check(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
@@ -371,6 +378,7 @@ certificate_app.add_typer(secret_app)
         "cli.config.auth.certificate.secret.set_help",
     ),
 )
+@command_execution_policy(ENCRYPTED_WRITE)
 def certificate_secret_set(
     ctx: typer.Context,
     name: str = typer.Option(
@@ -450,6 +458,7 @@ def certificate_secret_set(
         "cli.config.auth.certificate.secret.remove_help",
     ),
 )
+@command_execution_policy(ENCRYPTED_DESTRUCTIVE)
 def certificate_secret_remove(
     ctx: typer.Context,
     name: str = typer.Option(
@@ -497,5 +506,8 @@ def certificate_secret_remove(
         ),
     )
 
+
+declare_metadata_group(certificate_app)
+declare_metadata_group(secret_app)
 
 __all__ = ["certificate_app"]

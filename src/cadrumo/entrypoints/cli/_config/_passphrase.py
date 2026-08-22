@@ -27,9 +27,11 @@ from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.i18n import OutputLanguage, tr
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError
+from ._execution_policies import ENCRYPTED_DESTRUCTIVE, declare_metadata_group
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfilePassphraseRotationOutcome
@@ -93,6 +95,7 @@ def register_passphrase_commands(app: typer.Typer) -> None:
     )
 
     @passphrase_app.command("change", help=tr("cli.config.passphrase.change_help"))
+    @command_execution_policy(ENCRYPTED_DESTRUCTIVE)
     def passphrase_change(
         ctx: typer.Context,
         secrets_stdin: bool = typer.Option(
@@ -150,6 +153,7 @@ def register_passphrase_commands(app: typer.Typer) -> None:
             lines=list(_rotation_lines(outcome)),
         )
 
+    declare_metadata_group(passphrase_app)
     app.add_typer(passphrase_app, name="passphrase")
 
 

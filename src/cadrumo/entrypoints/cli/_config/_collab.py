@@ -39,6 +39,7 @@ import typer
 
 from ....application.modelo import RecipientFingerprintRegistryRepository, public_key_hex_from_raw_bytes
 from ....core.i18n import tr
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import active_bucket_id_or_refuse as _active_bucket_id_or_refuse
 from ._collab_payloads import (
@@ -47,6 +48,7 @@ from ._collab_payloads import (
     ConfigCollabRecipientRemoveResult,
     RecipientFingerprintRowPayload,
 )
+from ._execution_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, declare_metadata_group
 
 collab_app = typer.Typer(
     name="collab",
@@ -101,6 +103,7 @@ def _validated_public_key_hex(public_key: str) -> str:
         "cli.config.collab.recipient.add_help",
     ),
 )
+@command_execution_policy(ENCRYPTED_WRITE)
 def collab_recipient_add(
     ctx: typer.Context,
     recipient_id: str = typer.Argument(
@@ -156,6 +159,7 @@ def collab_recipient_add(
         "cli.config.collab.recipient.list_help",
     ),
 )
+@command_execution_policy(ENCRYPTED_READ)
 def collab_recipient_list(ctx: typer.Context) -> None:
     """List every registered recipient's fingerprint."""
     registry = _registry()
@@ -183,6 +187,7 @@ def collab_recipient_list(ctx: typer.Context) -> None:
         "cli.config.collab.recipient.remove_help",
     ),
 )
+@command_execution_policy(ENCRYPTED_DESTRUCTIVE)
 def collab_recipient_remove(
     ctx: typer.Context,
     recipient_id: str = typer.Argument(
@@ -207,5 +212,8 @@ def collab_recipient_remove(
         ),
     )
 
+
+declare_metadata_group(collab_app)
+declare_metadata_group(recipient_app)
 
 __all__ = ["collab_app", "recipient_app", "register_collab_commands"]

@@ -15,6 +15,8 @@ from typing import TYPE_CHECKING
 import typer
 
 from ....core import ServiceCapability, resolve_active_bucket_id
+from .._command_policy import command_execution_policy
+from ._execution_policies import ENCRYPTED_READ
 
 if TYPE_CHECKING:
     from ....application.provisioning import ContentionSnapshot, DependencyStatus, HardwareProfile
@@ -80,6 +82,7 @@ def register(app: typer.Typer) -> None:
     """Attach the ``check`` command to the config ``app``."""
 
     @app.command("check", help=tr("cli.config.check.help"))
+    @command_execution_policy(ENCRYPTED_READ)
     def config_check(ctx: typer.Context) -> None:
         """Report external-dependency availability + the active profile's capability posture."""
         from ....adapters.outbound.storage import windows_worst_case_object_path_suffix_length

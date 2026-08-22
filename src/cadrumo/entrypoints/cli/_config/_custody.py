@@ -12,8 +12,10 @@ from ....adapters.persistence.storage import SecretStoreError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
+from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, active_profile_label
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ._execution_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_WRITE
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfileLoginOutcome
@@ -288,6 +290,7 @@ def _register_login_command(app: typer.Typer) -> None:
     """Register the profile-session login door."""
 
     @app.command("login", help=tr("cli.config.login.help"))
+    @command_execution_policy(ENCRYPTED_WRITE)
     def config_login(
         ctx: typer.Context,
         name: str | None = typer.Argument(None, help=tr("cli.config.login.name_help")),
@@ -356,6 +359,7 @@ def _register_logout_command(app: typer.Typer) -> None:
     """Register the profile-session strong-close door."""
 
     @app.command("logout", help=tr("cli.config.logout.help"))
+    @command_execution_policy(ENCRYPTED_DESTRUCTIVE)
     def config_logout(
         ctx: typer.Context,
         output_language: OutputLanguage | None = typer.Option(

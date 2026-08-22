@@ -46,11 +46,14 @@ from ....core.i18n import tr
 from ....core.json_contract import Notice as _Notice
 from ....core.json_contract import NoticeSeverity as _NoticeSeverity
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
+from .._command_policy import command_execution_policy as _command_execution_policy
 from .._command_suggestions import LazySubcommand as _LazySubcommand
 from .._command_suggestions import register_lazy_subcommand as _register_lazy_subcommand
 from .._common import _emit_envelope, active_profile_label
 from .._errors import command_error_boundary as _command_error_boundary
 from .._errors import decorate_typer_app as _decorate_typer_app
+from ._execution_policies import BOOTSTRAP_WRITE as _BOOTSTRAP_WRITE
+from ._execution_policies import ENCRYPTED_WRITE as _ENCRYPTED_WRITE
 
 if TYPE_CHECKING:
     from typing import Literal
@@ -340,11 +343,13 @@ def register_lazy_wizard_leaf(
         leaf = typer.Typer()
         passthrough: _LeafPassthrough = {"help": help, "epilog": epilog}
         leaf.command(name, **passthrough)(
-            _command_error_boundary(
+            _command_execution_policy(_BOOTSTRAP_WRITE if mode == "create" else _ENCRYPTED_WRITE)(
+                _command_error_boundary(
                 with_manager_frontend(
                     build_wizard_command(_get_setup_flow(), mode=mode),
                     mode=mode,
                 ),
+                )
             ),
         )
         return leaf
