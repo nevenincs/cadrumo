@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:82cee8925d7a7c5f93a47482c658b51ec48013aed05ced485f83e83a4153d5ae'
+body_hash: 'sha256:7e7f8690298bdb6a708889b4b5d63c94e4a057e91fcb6bbd88802ab5c7947c33'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -13227,3 +13227,85 @@ ratchet entries carried from before this tick, none of which moved.
 Modelo 840 still needs six more families beyond the applicability rule authored
 last tick, and its 381 design fields need casilla schemas before a layout can
 anchor to anything.
+
+## Tick: four of modelo 840's families resolved, and a gate whose first version was wrong
+
+Re-measured at tick start: authority loads CLEAN, modelo 840 blocked on seven
+families.
+
+### Four dispositions authored, three left blocked on purpose
+
+Each reason is grounded on THIS revision's own declarations rather than borrowed
+from a sibling, following the shape modelos 111, 136 and 145 already set -- each
+of those states what the family MEANS before saying why the revision has none:
+
+* **parameters** -- a parameter feeds a formula, and this revision declares none
+  at all, its formulas family already recording that TRLRHL art. 90 leaves the
+  liquidación with the administration working from the matrícula. The tarifas
+  and cuotas of the IAE are real regulatory values, but they are applied by the
+  administration, never by a formula here.
+* **dependency_classifications** -- the family declares which OTHER modelo's
+  filing a value derives from, and 840 derives from none: it reports the
+  declarant's own actividad, and its plazos anchor to the event rather than to a
+  prior period's filing.
+* **verification_expectations** -- reconciles a FILED return against the engine,
+  and neither side exists: the application does not emit this modelo, and no
+  formula produces a value to reconcile.
+* **verification_predicates** -- guards a CALCULATED result, and none is
+  calculated.
+
+`export_layouts` and `bindings` stay blocked because they are real authoring
+work. `projection_endpoints` stays blocked for a sharper reason: the family
+admits an endpoint an export RECORD repeats, and this revision declares no
+layout at all, so calling it inapplicable would be a guess about a layout nobody
+has written -- the design's Anexo sheet is a repeated element and may well carry
+one. Modelo 840 goes from seven blocked families to three.
+
+### The gate's first version was wrong, and the control said so
+
+Several dispositions are excused on the strength of the revision computing
+nothing, so the obvious invariant is that such a claim must be true. The first
+detector matched any reason claiming the revision "applies none" and flagged six
+-- modelos 190, 193, 216 and 322 -- as excusing a family while declaring
+formulas.
+
+All six were false positives. Those reasons make a different and legitimate
+claim: not that the revision has no formula, but that none of its formulas
+applies a REGULATORY VALUE. Modelo 216 says so in its own words -- "all six of
+its formulas are pure aggregation" -- and measures them. A modelo may compute
+plenty and still need no parameter. Shipping that version would have condemned
+four modelos' correct dispositions.
+
+The gate matches only the strictly stronger claim -- that the revision declares
+no formula, or calculates none -- which is checkable against the revision
+itself. Six dispositions make it and none is wrong.
+
+"Computes no taxpayer liability of its own" is deliberately NOT matched, though
+it appears on sixteen dispositions and currently violates nothing. An informativa
+may carry aggregation formulas and still compute no liability, so reading that
+sentence as a claim about formula count would assert more than it says and would
+red the day one of those modelos gains a legitimate total.
+
+### Verified
+
+* the new gate: 3 passed.
+* both halves bitten on real data, each restored byte-exactly: softening modelo
+  840's parameters reason to the weaker claim reds the anchor assertion, and
+  giving modelo 322's reason the STRONG claim -- it declares three formulas --
+  reds the main one, naming the modelo, revision, family and formula count.
+* full registry package: 18 failed, 5197 passed, from 18 failed / 5194 passed.
+  The failure set is unchanged and the three added passes are this gate; the
+  TOML review baselines held, the new reasons having been wrapped at authoring
+  time rather than repaid afterwards.
+* authority loads CLEAN.
+
+### Still open
+
+Modelo 840 needs `bindings` and `export_layouts` authored, and
+`projection_endpoints` decided once a layout exists. Its 381 design fields still
+need casilla schemas before any layout can anchor to them.
+
+The eighteen standing failures are unchanged: the filing-capability worklist,
+the four span-gate rows, the unregistered-design list, the
+layout-design-applies divergences, and the formula-parity and continuidad
+ratchet entries.
