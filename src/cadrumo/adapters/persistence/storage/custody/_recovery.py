@@ -21,10 +21,7 @@ from .....core.hashing import (
 )
 from .....core.identity import canonical_profile_bucket_id
 from ._errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
-from ._kdf_supervision import (
-    unlock_profile_custody_material,
-    wrap_profile_custody_material,
-)
+from ._kdf_supervision import unlock_profile_custody_recovery_material, wrap_profile_custody_recovery_material
 from ._records import (
     PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
     ProfileCustodyKdfParameters,
@@ -227,7 +224,7 @@ def create_profile_custody_recovery_envelope(
         kdf=kdf,
         aad=_RECOVERY_AAD,
     )
-    wrapped_dek = wrap_profile_custody_material(
+    wrapped_dek = wrap_profile_custody_recovery_material(
         secret=recovery_secret,
         dek=dek,
         kdf=kdf,
@@ -289,7 +286,7 @@ def unlock_profile_custody_recovery(
 ) -> ProfileCustodyRecoveryUnlock:
     """Use the S03 supervised unwrap boundary for an explicit recovery secret."""
     try:
-        dek = unlock_profile_custody_material(
+        dek = unlock_profile_custody_recovery_material(
             profile_id=envelope.profile_id,
             dek_epoch=envelope.dek_epoch,
             kdf=envelope.kdf,

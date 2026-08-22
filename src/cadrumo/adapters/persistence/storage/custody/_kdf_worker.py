@@ -33,6 +33,7 @@ from ._records import (
     ProfileCustodyWrappedDek,
     _decode_profile_password,
 )
+from ._recovery_secret_codec import decode_recovery_secret
 
 _CALIBRATION_PASSWORD = b"cadrumo-profile-kdf-calibration-v1"
 
@@ -55,10 +56,14 @@ def main() -> int:
         if operation == "calibrate-v1":
             _derive_calibration(payload)
             write_kdf_frame(result_fd, KDF_CALIBRATED_FRAME, kind=KDF_FRAME_CONTROL)
-        elif operation == "unwrap-v1":
-            write_kdf_frame(result_fd, _unwrap(payload), kind=KDF_FRAME_DEK)
-        elif operation == "wrap-v1":
-            write_kdf_frame(result_fd, _wrap(payload), kind=KDF_FRAME_CONTROL)
+        elif operation in {"password-unwrap-v1", "recovery-unwrap-v1"}:
+            write_kdf_frame(result_fd, _unwrap(payload, recovery=operation.startswith("recovery-")), kind=KDF_FRAME_DEK)
+        elif operation in {"password-wrap-v1", "recovery-wrap-v1"}:
+            write_kdf_frame(
+                result_fd,
+                _wrap(payload, recovery=operation.startswith("recovery-")),
+                kind=KDF_FRAME_CONTROL,
+            )
         else:
             write_kdf_frame(result_fd, KDF_FAILED_FRAME, kind=KDF_FRAME_CONTROL)
     except (Argon2Error, DecryptionError, EncryptionError, ValueError, TypeError, UnicodeError, binascii.Error):
@@ -92,9 +97,9 @@ def _parse_request(value: bytes) -> dict[str, object]:
     operation = record.get("operation")
     if operation == "calibrate-v1":
         required = {"version", "operation", "kdf"}
-    elif operation == "unwrap-v1":
+    elif operation in {"password-unwrap-v1", "recovery-unwrap-v1"}:
         required = {"version", "operation", "kdf", "wrapped_dek", "password_b64", "associated_data_b64"}
-    elif operation == "wrap-v1":
+    elif operation in {"password-wrap-v1", "recovery-wrap-v1"}:
         required = {"version", "operation", "kdf", "dek_b64", "secret_b64", "associated_data_b64"}
     else:
         raise ValueError("profile KDF operation is invalid")
@@ -108,11 +113,12 @@ def _derive_calibration(payload: Mapping[str, object]) -> None:
     _derive_key(secret=_CALIBRATION_PASSWORD, kdf=kdf)
 
 
-def _unwrap(payload: Mapping[str, object]) -> bytes:
+def _unwrap(payload: Mapping[str, object], *, recovery: bool = False) -> bytes:
     kdf = _validated_kdf(payload["kdf"])
     wrapped_dek = _validated_wrapped_dek(payload["wrapped_dek"])
-    password = _decode_profile_password(_decode_b64(payload["password_b64"]))
-    key = _derive_key(secret=password.encode("utf-8", errors="strict"), kdf=kdf)
+    encoded = _decode_b64(payload["password_b64"])
+    secret = decode_recovery_secret(encoded) if recovery else _decode_profile_password(encoded)
+    key = _derive_key(secret=secret.encode("utf-8", errors="strict"), kdf=kdf)
     associated_data = _decode_b64(payload["associated_data_b64"])
     ciphertext = _decode_b64(wrapped_dek.ciphertext_b64) + _decode_b64(wrapped_dek.tag_b64)
     dek = decrypt_record(
@@ -125,9 +131,10 @@ def _unwrap(payload: Mapping[str, object]) -> bytes:
     return dek
 
 
-def _wrap(payload: Mapping[str, object]) -> bytes:
+def _wrap(payload: Mapping[str, object], *, recovery: bool = False) -> bytes:
     kdf = _validated_kdf(payload["kdf"])
-    secret = _decode_profile_password(_decode_b64(payload["secret_b64"]))
+    encoded = _decode_b64(payload["secret_b64"])
+    secret = decode_recovery_secret(encoded) if recovery else _decode_profile_password(encoded)
     dek = _decode_b64(payload["dek_b64"])
     if len(dek) != KEY_SIZE:
         raise ValueError("profile custody DEK has invalid length")

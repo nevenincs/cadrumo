@@ -103,12 +103,13 @@ class _SupervisedKdfWorker:
         kdf: ProfileCustodyKdfParameters,
         wrapped_dek: ProfileCustodyWrappedDek,
         associated_data: bytes,
+        recovery: bool = False,
     ) -> bytes | None:
         self._write_request(
             {
                 "associated_data_b64": base64.b64encode(associated_data).decode("ascii"),
                 "kdf": kdf.model_dump(mode="json"),
-                "operation": "unwrap-v1",
+                "operation": "recovery-unwrap-v1" if recovery else "password-unwrap-v1",
                 "password_b64": base64.b64encode(password).decode("ascii"),
                 "version": 1,
                 "wrapped_dek": wrapped_dek.model_dump(mode="json"),
@@ -129,13 +130,14 @@ class _SupervisedKdfWorker:
         dek: bytes,
         kdf: ProfileCustodyKdfParameters,
         associated_data: bytes,
+        recovery: bool = False,
     ) -> ProfileCustodyWrappedDek | None:
         self._write_request(
             {
                 "associated_data_b64": base64.b64encode(associated_data).decode("ascii"),
                 "dek_b64": base64.b64encode(dek).decode("ascii"),
                 "kdf": kdf.model_dump(mode="json"),
-                "operation": "wrap-v1",
+                "operation": "recovery-wrap-v1" if recovery else "password-wrap-v1",
                 "secret_b64": base64.b64encode(secret).decode("ascii"),
                 "version": 1,
             },

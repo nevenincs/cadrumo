@@ -33,7 +33,7 @@ from ._filesystem_primitives import (
 )
 from ._kdf_supervision import (
     unlock_profile_custody,
-    unlock_profile_custody_material,
+    unlock_profile_custody_recovery_material,
 )
 from ._records import (
     PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
@@ -301,7 +301,7 @@ def unlock_imported_profile_custody_recovery_artifact(
     """
     if artifact.profile_id != expected_profile_id or artifact.dek_epoch != expected_dek_epoch:
         raise ProfileCustodyRecordError("recovery artifact UUID or DEK epoch does not match its named target")
-    dek = unlock_profile_custody_material(
+    dek = unlock_profile_custody_recovery_material(
         profile_id=artifact.profile_id,
         dek_epoch=artifact.dek_epoch,
         kdf=artifact.kdf,

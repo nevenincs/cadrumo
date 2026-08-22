@@ -65,6 +65,7 @@ from ._records import (
     ProfileCustodyWrappedDek,
     _encode_profile_password,
 )
+from ._recovery_secret_codec import encode_recovery_secret
 from ._sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
 
 if TYPE_CHECKING:
@@ -275,7 +276,7 @@ def unlock_profile_custody(
     timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
 ) -> ProfileCustodyUnlock:
     """Return a DEK only after supervised unwrap and parent sentinel proof."""
-    dek = unlock_profile_custody_material(
+    dek = unlock_profile_custody_password_material(
         profile_id=envelope.profile_id,
         dek_epoch=envelope.dek_epoch,
         kdf=envelope.kdf,
@@ -299,7 +300,7 @@ def unlock_profile_custody(
     )
 
 
-def unlock_profile_custody_material(
+def unlock_profile_custody_password_material(
     *,
     profile_id: UUID,
     dek_epoch: str,
@@ -345,7 +346,7 @@ def unlock_profile_custody_material(
     return dek
 
 
-def wrap_profile_custody_material(
+def wrap_profile_custody_password_material(
     *,
     secret: str,
     dek: bytes,
@@ -377,6 +378,54 @@ def wrap_profile_custody_material(
     if wrapped_dek is None:
         raise ProfileCustodyRecordError("supervised profile custody wrapper creation failed")
     return wrapped_dek
+
+
+def unlock_profile_custody_recovery_material(
+    *, profile_id: UUID, dek_epoch: str, kdf: ProfileCustodyKdfParameters,
+    wrapped_dek: ProfileCustodyWrappedDek, secret: str, associated_data: bytes,
+    sentinel: ProfileCustodySentinelRecord, settings: Settings | None = None,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+) -> bytes:
+    if timeout_seconds <= 0:
+        raise ValueError("profile KDF timeout must be positive")
+    secret_bytes = encode_recovery_secret(secret)
+    deadline = time.monotonic() + timeout_seconds
+    try:
+        with profile_kdf_lease(settings=settings, deadline=deadline), _SupervisedKdfWorker(deadline=deadline) as worker:
+            dek = worker.unwrap(
+                password=secret_bytes,
+                kdf=kdf,
+                wrapped_dek=wrapped_dek,
+                associated_data=associated_data,
+                recovery=True,
+            )
+    except TimeoutError:
+        raise _resource_refusal() from None
+    if dek is None:
+        raise ProfileCustodyPasswordError("profile recovery secret did not authenticate the custody envelope")
+    verify_profile_custody_sentinel(dek=dek, profile_id=profile_id, dek_epoch=dek_epoch, sentinel=sentinel)
+    return dek
+
+
+def wrap_profile_custody_recovery_material(
+    *, secret: str, dek: bytes, kdf: ProfileCustodyKdfParameters, associated_data: bytes,
+    settings: Settings | None = None,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+) -> ProfileCustodyWrappedDek:
+    if timeout_seconds <= 0:
+        raise ValueError("profile KDF timeout must be positive")
+    if len(dek) != KEY_SIZE:
+        raise ProfileCustodyRecordError("profile custody DEK must contain exactly 32 bytes")
+    secret_bytes = encode_recovery_secret(secret)
+    deadline = time.monotonic() + timeout_seconds
+    try:
+        with profile_kdf_lease(settings=settings, deadline=deadline), _SupervisedKdfWorker(deadline=deadline) as worker:
+            wrapped = worker.wrap(secret=secret_bytes, dek=dek, kdf=kdf, associated_data=associated_data, recovery=True)
+    except TimeoutError:
+        raise _resource_refusal() from None
+    if wrapped is None:
+        raise ProfileCustodyRecordError("supervised profile recovery wrapper creation failed")
+    return wrapped
 
 
 def propose_profile_kdf_ratchet(
@@ -543,7 +592,9 @@ __all__ = [
     "propose_profile_kdf_ratchet",
     "read_kdf_frame",
     "unlock_profile_custody",
-    "unlock_profile_custody_material",
-    "wrap_profile_custody_material",
+    "unlock_profile_custody_password_material",
+    "unlock_profile_custody_recovery_material",
+    "wrap_profile_custody_password_material",
+    "wrap_profile_custody_recovery_material",
     "write_kdf_frame",
 ]
