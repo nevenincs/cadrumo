@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:43b31747aeb0e5d3924a9a238ac4a1b13ad1e4121baebbd3f81139eb543f5e7f'
+body_hash: 'sha256:804fe465c2eb5c2516dff77b67e3671d2eba7f0d0cbdaf87d9f9fdb47f82966d'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -16459,3 +16459,100 @@ these ticks is the modelo 151/2015-2022 ahorro tier -- a genuine
 under-declaration, still blocked on acquiring the pre-2023 redacción of art.
 93.2.e).2.º -- and the record-length-declaration ADR, whose absence is why no
 corpus-wide extent gate can be authored yet.
+
+## Tick: the modelo 151 ahorro finding corrected, and the honest half of it landed
+
+Re-measured at tick start: authority loads CLEAN at `cdc0ea598d`; the six queue
+items' gates all green (22 passed). The queue is exhausted, so this tick went to
+the one genuine defect the campaign surfaced -- and in verifying it, found that
+LAST TICK'S CONCLUSION WAS WRONG in its consequence.
+
+### The correction
+
+Last tick recorded modelo 151/2015-2022 as under-declaring: `cuota-diferencial`
+sums only the general branch while the 2025 revision sums general plus ahorro,
+and the 2015-2022 design carries ahorro boxes. Every one of those facts holds.
+The CONSEQUENCE drawn from them does not.
+
+Measured this tick:
+
+* `impatriado.cuota-diferencial` is **not exported** in 2015-2022, and nothing
+  consumes it -- no formula references it, no verification predicate references
+  it. It is an orphan calculation node.
+* The ahorro branch IS filed, through the operator's own page-08 boxes:
+  `[18] Base liquidable del ahorro` (@808-824) and `[20] Cuota correspondiente
+  a la base liquidable general del ahorro` (@842-858), feeding
+  `[21] Cuota íntegra total` (@859-875).
+* The two revisions simply model differently. 2015-2022 computes only the
+  general branch and files everything else from operator input; 2025 computes
+  `impatriado.base-liquidable-ahorro`, `cuota-integra-ahorro` and
+  `cuota-diferencial` and exports all three.
+
+So no filed value is short, and the "missing ahorro tier" is not a filing
+defect. What made the earlier reading wrong was comparing the two revisions'
+CALCULATION surfaces without first asking which casillas each one actually
+files. The label read `Cuota correspondiente a la base liquidable general del a`
+in truncated output and had to be read in full before it could be used at all --
+"general del ahorro" is one phrase, not two branches.
+
+### What IS real, and what was landed
+
+The general branch carries a soundness advisory; the ahorro branch carried
+nothing. And the branches are not equally safe: the general cuota is
+`lookup_bracket`-derived, so a positive base with a zero cuota is reachable only
+through a registry regression, while casilla [20] is OPERATOR-SUPPLIED. Plain
+omission reaches a filed declaration reporting savings income and no tax on it.
+
+Landed as the sibling advisory, using only casillas that already exist:
+
+    implies_nonzero(["p08.base-liquidable-del-ahorro-18",
+                     "p08.cuota-correspondiente-e-general-del-ahorro-20"])
+
+ADVISORY, grounded on `ley-35-2006:art-93`. It states no rate and derives
+nothing.
+
+### Why no rate, stated precisely this time
+
+The previous note said the escala could not be grounded. That was asserted;
+this tick it was TESTED. The bundled corpus carries art. 93 only in its current
+and 2023 redactions. Fetching the pre-2023 consolidated text at
+`act.php?id=BOE-A-2006-20764&p=20220101` -- the same URL pattern that produced
+the committed 2023 excerpt -- returns a payload that truncates at article 9, far
+short of 93; the legislación-consolidada open-data API returns HTTP 400. The
+blocker is retrieval, not authorisation.
+
+Also worth correcting: pre-2023, art. 93.2.e).2.º pointed at the rentas of art.
+25.1.f) TRLIRNR, and the bundled TRLIRNR shows 25.1.f) is a FLAT 19% that merely
+identifies the income categories, not a progressive scale. So the pre-2023
+impatriado savings scale cannot be reconstructed from the TRLIRNR either -- it
+has to come from the art. 93 text of that era.
+
+Checking without a rate is the honest half of the fix. Computing with an
+invented one would not be.
+
+### Verified
+
+* the new advisory module: 13 passed across sampled ejercicios 2015, 2019 and
+  2022, evaluating the REGISTRY's own declared expression through the real
+  predicate evaluator, not a hand-written string. It holds at a zero and at a
+  negative base, holds on a correctly declared branch, and fails on a positive
+  base with a zero cuota.
+* it bites: forcing the evaluator to always hold reds exactly the three
+  fires-on-omission cases and nothing else.
+* the predicate is located by the casilla pair it GUARDS rather than by
+  predicate_id, so a rename cannot silently empty the module.
+* authority loads CLEAN after the registry edit; 27 passed across the new module
+  and the 151 and completeness gates; 244 passed across the registry
+  predicate/verification lane; ruff clean.
+
+### Still open
+
+The 2015-2022 impatriado savings ESCALA remains ungrounded and therefore
+uncomputed, now with a tested reason rather than an assumed one. Closing it
+needs the art. 93 text as it stood before 2023, which this tree cannot retrieve
+through the whole-law URL or the open-data API -- an operator-side acquisition.
+
+`impatriado.cuota-diferencial` in 2015-2022 is dead capacity: computed,
+unexported, unconsumed, and general-only. Left alone deliberately -- deleting a
+declared casilla touches the completeness manifest, and rewriting the formula of
+a node nothing reads would be unverifiable by behaviour.
