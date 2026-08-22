@@ -650,9 +650,6 @@ if TYPE_CHECKING:
         activate_profile_record_session as activate_profile_record_session,
     )
     from ._profile_record_repository import (
-        bound_profile_record_session as bound_profile_record_session,
-    )
-    from ._profile_record_repository import (
         close_active_profile_record_session as close_active_profile_record_session,
     )
     from ._profile_record_repository import (
@@ -912,7 +909,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "apply_censal_read": "._censo_sync",
     "apply_cotejo": "._cotejo_apply",
     "apply_profile_fact_changes": "._fact_write",
-    "bound_profile_record_session": "._profile_record_repository",
     "build_profile_overview": "._overview",
     "build_profile_preflight_requirement": "._preflight",
     "bundle_data_categories": "._bundle_export",
@@ -1122,7 +1118,6 @@ __all__ = [
     "apply_cotejo",
     "apply_profile_fact_changes",
     "bind_resumed_profile_session",
-    "bound_profile_record_session",
     "build_profile_overview",
     "build_profile_preflight_requirement",
     "bundle_data_categories",
