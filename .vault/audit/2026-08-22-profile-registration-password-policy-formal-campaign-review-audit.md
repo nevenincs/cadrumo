@@ -5,30 +5,11 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:410bfcfbe1b9a4123b4cab012c6b2b8a4acd6c23700a9d96cd2b0635b84aec33'
+body_hash: 'sha256:99d708839a8b090903921b22db622600c31642ac42941bf61e222f8e13260b31'
 related:
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace profile-registration-password-policy with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `profile-registration-password-policy` audit: `formal campaign review`
 
@@ -94,3 +75,29 @@ and all four locale catalogues.
   entry to this audit before closing S14. S15 must also preserve S13's honest statement
   that full-tree gates were not green on the mixed concurrent HEAD; focused success is
   not proof that those repository-wide commands passed.
+
+## Resolution
+
+Commit `e306d10802` closes `live-tui-refusal-matrix`. The parameterized 257-scalar,
+1,025-byte, high-surrogate, and low-surrogate cases now set the real Textual password
+and confirmation widgets, observe the `Input.Changed` feedback line, click the real
+create button, and inspect the pinned refusal channel. Each case proves the exact typed
+localized message, no worker error, no raw custody English, traceback, INTERNAL copy,
+or candidate echo, and a race-safe empty storage boundary. Independent verification
+passes all 15 tests in the TUI module in 23.41 seconds; the four remediated cases would
+have failed the previous direct-presenter-only structure by never reaching these widget
+assertions.
+
+The same commit closes `secure-input-channel-prose`. The shared module now accurately
+describes itself as the owner of three explicit input helpers while leaving each command
+resolver responsible for configured sources. The creation resolver documents the live
+precedence exactly: explicit bounded stdin, then an interactive no-echo prompt, then the
+sanctioned configured fallback. No accepted channel behavior changed.
+
+Post-remediation Ruff lint and format checks pass for the three changed files. The
+complete focused unit lane passes 67 tests with 81 expected marker deselections, and the
+complete focused integration lane passes 103 tests with 5 expected marker deselections.
+Exact searches find obsolete names only inside their intentional negative-space tests,
+and find no recovery production dependency on the profile-password assessment. No open
+LOW, MEDIUM, HIGH, or CRITICAL finding remains. S14 may close and S15 may begin, subject
+to the gate-honesty constraint above.
