@@ -48,12 +48,14 @@ on:
       - "frontend/**"
       - "**.md"
 
-# Quick runs are disposable signals for the newest push; unlike the full
-# campaign (whose completed runs feed promotion and must never be cancelled),
-# an in-flight quick run is superseded by the next push.
+# Main pushes must produce a completed packaging signal. GitHub concurrency
+# still bounds this lane to one running and one pending run per ref, replacing
+# an older pending run when a newer push arrives. Pull-request revisions are
+# different: an updated PR supersedes its in-flight result, so only PR runs
+# cancel in progress.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
