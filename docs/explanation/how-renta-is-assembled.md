@@ -15,12 +15,13 @@ with `aeat config profile create` as
 step-by-step preparation lives in
 [Prepare the annual Modelo 100 Renta declaration](../how-to/modelo-100.md).
 
-## One declaration, four kinds of source
+## One declaration, four source routes used here
 
 Modelo 100 is the largest form the tool prepares - the 2025 revision defines
 over two thousand casillas and two hundred formulas. Every value on it
-arrives through a declared data source - the listing below calls each one
-a *binding* - and every source is one of four kinds. List them for your
+arrives through a declared data source - the listing below calls each contract
+a *binding*. The current Renta flow uses four broad routes. They are not the
+complete source-kind taxonomy for every modelo. List them for your
 filing year:
 
 ```{cli-sequence} renta-assembly-bindings
@@ -52,6 +53,13 @@ you. The full inventory for your year:
 ```{cli-sequence} renta-assembly-requires
 :verify: Confirm the declaration's requirement inventory reads back.
 ```
+
+Stock inventory is one such current boundary. The encrypted inventory register
+can record movements and calculate valuations, but it is not enrolled in the
+Renta source mesh. For the 2025 revision, boxes 0177 (increase in stock
+variation), 0181 (stock purchases), and 0182 (decrease in stock variation)
+remain manual inputs. A dormant inventory helper refers to box 0155; that stale
+name does not connect inventory to the declaration.
 
 ## How the quarterly filings fold in
 

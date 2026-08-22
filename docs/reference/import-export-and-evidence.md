@@ -14,6 +14,7 @@ it.”
 | --- | --- | --- |
 | Source evidence | Taxpayer document bytes, provenance, and content digests; separately, official source material grounds the registry | The original material supporting the tax position and the sources governing its interpretation |
 | Ledger facts | Typed transactions, direction, category, amount, dates, and linked evidence | The economic events that may participate in a return; the filing period is derived from their dates |
+| Other business aggregates | Typed invoice catalogues, foreign-asset observations, and stock-inventory ledgers in their own encrypted repositories | Reusable business facts that remain separate from a filing until a registered resolver projects them |
 | Registry | {term}`modelo` revision, numbered {term}`casilla` fields, formulas, bindings, legal references, and export layout | The versioned rulebook used to interpret the facts |
 | Calculation revision | Inputs, observations, overrides, calculated casillas, and provenance | A reproducible attempt at calculating one return |
 | Filing record | Current or superseded filing state linked to a calculation revision and optionally carrying external AEAT evidence | What the application records as filed, and the history behind it |
@@ -23,6 +24,15 @@ Every calculated casilla can carry formula, legal, and source provenance. Ledger
 evidence records which financial facts contributed to it. Review the values in
 [Review calculation values](../how-to/review-calculation-values.md), then follow
 the full revision workflow in [Prepare and manage filings](../how-to/filing-spine.md).
+
+A registry binding is a typed projection contract, not a place to attach a
+source record. Binary documents follow the encrypted attachment path. Parsed
+business records remain in their owning typed repositories, and an enrolled
+resolver projects only the scalar or repeating-row fields requested by the
+registry. Modelo 720 foreign-asset rows already follow this route. Stock
+`InventoryLedger` records are encrypted and usable for valuation, but they are
+not currently enrolled as a calculation source and do not flow into a
+calculation revision.
 
 ## What can be imported
 

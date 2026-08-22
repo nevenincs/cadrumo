@@ -39,6 +39,11 @@ profile](profile-setup.md).
   ```{cli-sequence} modelo-100-preflight
   :verify: Confirm the year's ledger reads back clean for the annual period.
   ```
+
+  The transaction ledger is not the stock-inventory register. If your activity
+  holds stock, maintain its encrypted inventory ledger separately, then enter
+  the applicable Renta stock figures manually. There is no automatic
+  inventory-to-Modelo-100 projection in this version.
 - File and evidence the year's quarterly instalments first. Modelo 100 folds
   in your Modelo 130/131 payments on account and the retenciones reported on
   modelos 111, 123, 190, and 193 where they exist. Check what this
@@ -82,6 +87,12 @@ Find what applies to you and what is still missing:
 ```{cli-sequence} modelo-100-inspect-inputs
 :verify: Confirm the declaration's missing bindings, required casillas, and observations read back.
 ```
+
+For stock under estimación directa, inspect and supply boxes 0177, 0181, and
+0182 when they apply. They are manual inputs in the current registry. Do not use
+0155 as an inventory substitute: an unused inventory helper still carries that
+stale box name, but calculation does not route the inventory register through
+it.
 
 Supply a manual casilla and recalculate by passing `--casilla 0003=24000` on
 the calculate command, alongside the bindings the declaration still needs (the

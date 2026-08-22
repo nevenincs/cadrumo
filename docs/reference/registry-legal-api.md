@@ -19,6 +19,26 @@ identify the exact rule set.
 | `source_refs` | Official manual or source material supporting the implementation |
 | Evidence provenance | Local record, document, observation, or prior filed revision that supplied a value |
 
+## Filing-input contract shapes
+
+The validated registry snapshot is the read-model authority for one modelo,
+filing year, and period. It defines the casillas, formulas, bindings, repeating
+fields, grounding, and export layout required by that filing revision. Source
+business records remain owned by their encrypted domain repositories.
+
+| Shape | Registry contract | Runtime projection |
+| --- | --- | --- |
+| Scalar binding | Typed source kind, selector, and aggregation | One numeric, enumerated, text, or date value for a binding id |
+| Repeating row binding | Typed source kind plus grouping, row field, and aggregation | Values keyed by binding id and one-based row index, with validated detail rows |
+| Formula | Typed operands and operation grounded by registry references | A calculated casilla observation |
+
+A binding is not an attachable data blob. It is the contract by which an
+enrolled source resolver projects an owned source record into one of these
+filing-input shapes. Modelo 720 foreign assets use an enrolled repeating-row
+projection. The encrypted `InventoryLedger` currently has no inventory member
+in the binding-source taxonomy and no enrolled calculation resolver, so it is a
+standalone business register rather than a modelo input.
+
 Use the generated [application command reference](../cli/app.rst) to look up
 registry inspection, modelo description, formula, verification-report, and
 audit surfaces. Use the {doc}`glossary </_generated/glossary>` for taxpayer-facing
