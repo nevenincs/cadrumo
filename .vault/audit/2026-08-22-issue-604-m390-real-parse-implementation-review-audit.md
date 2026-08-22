@@ -9,8 +9,6 @@ body_hash: 'sha256:4e66e968d9174f94b21da9ea6635d6f0e97b8abb95a79c8bad2fca1309ecd
 related: []
 ---
 
-
-
 # `issue-604-m390-real-parse` audit: `M390 real declaration parsing implementation review`
 
 ## Scope

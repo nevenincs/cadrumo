@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:070d329eaf95312df6dd349d188d8adf54f087aeb4cc16653d6fcfc08f3f2341'
+body_hash: 'sha256:1e28f6884ade792e283d5343796537786717ee32ae100d3c5d0aef8632eb6a67'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15464,3 +15464,71 @@ Six partly-read designs: modelo 100's 2014 edition (a distinct
 record-body-restart cause), modelo 200's three editions, and the two DIAGRAM
 lines needing AEAT acquisition. Modelo 200's remain the largest parser lane and
 the header-position holes described above are where that work starts.
+
+## Tick: modelo 100's Anexo record, and a tree that broke underneath the verification
+
+Re-measured at tick start: authority CLEAN, partly-read inventory at 6 of 218.
+
+### The loose end from last tick, closed
+
+`test_production_python_source_ref_literals_resolve_to_catalogue_and_corpus` was
+reported last tick as unattributed. Re-read at HEAD it names its cause outright:
+`cadrumo/core/source_connectivity.py:117`, a file created by the peer's
+in-flight `source connectivity` feature this session. Not this campaign's.
+
+### Modelo 100's 2014 edition now reads whole
+
+Its remaining skip was not a dropped row but an unidentified RECORD: a body
+whose positions restart at 1 with no recognised heading, which the reader
+reports unread rather than merging into the record above -- correctly, since
+merging would understate the document by a whole record while reporting the
+read complete.
+
+The heading is `Anexo B.5`, standing alone on its line. The corpus already
+carries two anexo heading forms -- `ANEXO "quoted title"` and modelo 840's
+`Anexo DISEÑO DE REGISTRO` -- and this is a third: a bare anexo IDENTIFIER with
+no title and no trailing words. The new pattern is anchored to the whole line
+and to the `letter.digit` shape, so a sentence mentioning an anexo cannot match;
+the identifier must be all the line says.
+
+**216 designs compared: 1 improved, 0 regressed, 215 unchanged.** A heading
+change moves record SEGMENTATION rather than field recovery, so the control
+mattered more here than for the row splits, and it shows the change touching
+exactly the one design it was written for. Modelo 100's 2014 edition goes from
+27 sheets with one unread body to **28 sheets, complete**, and the partly-read
+inventory falls from **6 of 218 to 5**.
+
+### The verification run is not usable, and the reason is at HEAD
+
+The standing suite returned **98 failed, 5,494 passed, 33 errors**. None of it
+is measurement of this change: the registry does not load at HEAD --
+
+    registry validation failed:
+     - source 'boe-modelo-194-form-layout' byte count mismatch
+
+and the top commit is a peer audit saying so in its own subject: "the blocked
+closure resolver prevents manifest regeneration, and the manifest has drifted".
+With the authority refusing, every gate that reads it fails.
+
+This change cannot be the cause: it touches `_record_design.py` only, a parser
+that reads design PDFs, and the failing source is a BOE form-layout artefact
+whose byte count comes from a corpus manifest this tick never wrote.
+
+What the run DOES confirm is the inventory figure, because that gate reads
+designs from disk rather than through the authority: 5 of 218, matching the
+corpus control exactly.
+
+### Verified
+
+* the corpus control (1 improved, 0 regressed, 215 unchanged) ran against a
+  working tree, before the manifest drift landed.
+* modelo 100's 2014 edition reads complete with `Anexo B.5` as a named record.
+* ruff clean on the parser.
+* the standing suite is NOT claimed as evidence this tick. It should be re-run
+  once the manifest is regenerated, and that is the peer's open item.
+
+### Still open
+
+Five partly-read designs: modelo 200's three editions, whose holes sit inside
+record HEADERS rather than at droppable rows, and the two DIAGRAM lines needing
+AEAT acquisition. Ahead of any of them, the authority needs to load again.

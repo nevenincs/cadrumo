@@ -9,8 +9,6 @@ body_hash: 'sha256:bb3b3de2b0641c9bd7d30eb6ef1910ad9cf34be507f1bd627e1a8f98e2e00
 related: []
 ---
 
-
-
 # `issue-624-text-observations` audit: `Grounded text observation implementation review`
 
 ## Scope

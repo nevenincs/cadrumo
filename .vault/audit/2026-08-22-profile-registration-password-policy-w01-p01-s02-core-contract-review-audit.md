@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:520c6e696b814df0e49a60f520e76191b553d3018a3b8e40d263875b8b0da69b'
+body_hash: 'sha256:687b2fad11f71910afff89666890715a9a90d53183ce33613a9cf151babe2869'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -485,3 +485,137 @@ red, but they also demonstrate why the HIGH CLI laundering path must not ship.
 
 No CRITICAL finding was found. The HIGH and MEDIUM findings block review-clean S08 and
 W03.P06.S09 dispatch until remediated and independently verified.
+
+#### S08 remediation closure
+
+Current-HEAD re-review of the S08 paths in mixed-provenance commits `b64e27f26c`,
+`1da3ae3f89`, and `f9a4062945`, after repeated semantic code and governing-ADR
+discovery plus exact-symbol confirmation, closes both findings. The CLI boundary at
+`src/cadrumo/entrypoints/cli/_config/_custody.py:253-280` no longer imports or catches
+the broad `SecretStoreError` family. It catches only the application authentication
+refusal and the exact custody password error that escapes before authentication when
+there is no callback or configured password. Only the latter, combined with both
+channel-absence facts, becomes `passphrase_channel_absent`; an offered malformed or
+wrong password remains the common application refusal.
+
+The new CLI classification tests inject `KeyringUnavailableError`, custody record
+integrity failure, and KDF supervision refusal into callback-free login and require the
+same exception object and concrete type to propagate. The genuine raw custody password
+absence signal independently retains the specific CLI guidance. Exact source inspection
+shows transaction, resource, archive, generic unavailable-storage, and other operational
+errors are outside the catch tuple entirely, so their type, category, retryability, and
+context cannot be rewritten there. No broad password predicate or `SecretStoreError`
+catch has been reintroduced.
+
+The mapper negative-space matrix at
+`src/cadrumo/application/user_profile/tests/test_authentication_failure_mapping.py:18-35`
+covers record/integrity, transaction, KDF resource, KDF supervision, and keyring
+unavailability for every closed `ProfilePasswordProofOperation`; all return `None`.
+Each public application door handles that result with a bare re-raise, preserving the
+original exception object, while only `ProfileCustodyPasswordError` becomes
+`ProfileAuthenticationRefusedError`. Rotation now pairs a malformed `short` current
+password with a cryptographically incorrect well-shaped password and proves identical
+outer translation key, `context is None`, candidate absence, whole-storage byte identity,
+and continued unlock by the current credential. The existing prospective replacement
+matrix remains separate and retains its detailed reason-bearing contract. No new error
+or compatibility type was introduced.
+
+Diff hygiene passes for the isolated S08 paths. Independent Ruff lint and format checks
+pass over all four remediation files. The serial CLI/mapper lane passes all 24 cases in
+2.27 seconds, and the complete serial rotation lane passes all 19 cases in 35.57 seconds,
+matching the execution record. `s08-cli-absent-channel-laundering` and
+`s08-operational-distinction-bite` are closed. No unresolved HIGH, CRITICAL, or MEDIUM
+finding remains, and W03.P06.S09 may proceed.
+
+### s09-duplicate-prospective-mapping | medium | The TUI reimplements the application refusal contract
+
+The mandatory S09 review grounded commits `12f30636fc` and `90c05dad3a` against the
+accepted ADR, research, incident reference, live plan, current source, history, diffs,
+and execution evidence. The screen now consumes the canonical core assessment for live
+acceptance, retains refusal keys and primitive safe facts in a frozen/slotted
+`RegistrationRefusal`, and resolves them only at the active-language presentation
+boundary. The manager frontend preserves keyed `ProfileRegistrationError` facts and
+rethrows unkeyed registration failures into the genuine unexpected-worker path. Refused
+submission tests cover all four reasons, 14 and 257 scalars, 1,025 bytes, and both
+surrogate halves without persistence, candidate representation, raw custody prose, or
+traceback material. The password stays only in the masked correction fields and the
+necessary submission span; the temporary mutable byte buffer is wiped on every worker
+exit, and neither attempt nor refusal envelope retains it. Locale files are untouched as
+assigned to S10. Accepted live 15/256/1,024 and composed/decomposed end-to-end coverage
+is properly scheduled for S11 rather than duplicated in this mapping Step.
+
+However, `assessment_refusal` at
+`src/cadrumo/adapters/inbound/tui/_registration_screen.py:142-164` independently rebuilds
+the complete reason-to-message map, safe-context shape, and reason-specific limit facts
+already owned by application
+`src/cadrumo/application/user_profile/_prospective_password.py:32-72`. It imports all
+three profile-password limits and branches over every refusal reason a second time. A
+future application key or context change can therefore make live TUI feedback disagree
+with submission, and a new reason requires synchronized edits in two layers. This is the
+parallel policy/presentation path the ADR and the campaign's no-bloat requirement forbid,
+even though its current values agree.
+
+Expose the already canonical prospective refusal projection through the application
+facade (or a dependency-safe equivalent application presenter) and have both live TUI
+feedback and registration submission adapt that one immutable result into
+`RegistrationRefusal`. Delete the TUI reason branches, limit imports, and duplicated
+keys without aliases or shims. Add an equality bite proving live feedback and application
+submission carry the same key and exact safe context for every reason. This is an
+architectural consistency and bloat defect, not a current secret leak.
+
+### s09-original-crash-bite | medium | The live screen test stays green on the original worker-error regression
+
+`test_short_password_refuses_and_creates_nothing` at
+`src/cadrumo/adapters/inbound/tui/tests/test_registration_screen.py:162-175` drives the
+real Textual screen but asserts only `outcome is None` and no manifest. In the original
+bug, 8-14-scalar input reached the worker, raised custody English, rendered mixed-language
+INTERNAL guidance, created no profile, and also left `outcome` as `None`; this test would
+therefore remain green. The new parameterized test at lines 45-76 asserts the direct
+manager attempt envelope, not the live worker settlement or pinned status message, and
+its `"INTERNAL" not in repr(attempt)` assertion cannot detect what the screen renders.
+
+Strengthen the live 14-scalar regression to require `app.error is None`, an error-toned
+nonempty pinned refusal, the expected typed key/context path, and absence of INTERNAL
+guidance, raw custody English, traceback text, and the submitted candidate from both the
+status and retained attempt/error state. Add a deliberately unkeyed registration failure
+test proving the opposite branch still sets `app.error` and renders genuine INTERNAL
+guidance. S11 may own the broader all-language and accepted-boundary matrix, but S09 must
+bite the exact crash shape it claims to remove.
+
+Commit diff hygiene, Ruff lint, and Ruff format checks pass over the four changed Python
+files. The registration-screen module passes 11 cases; the registration plus full
+language-switch lane passes 15, although it emits a pre-existing cross-context cleanup
+warning from `override_settings`; and the existing manager refusal-rendering lane passes
+three cases. No HIGH or CRITICAL finding was found. These two MEDIUM findings block
+review-clean S09 and S10 until remediated and independently verified.
+
+#### S09 remediation closure
+
+Current-HEAD re-review of commit `fbfaa7cb84`, after repeated semantic code and
+governing-ADR discovery plus exact-symbol confirmation, closes both S09 findings. The
+application facade now exports `prospective_profile_password_refusal`, whose immutable
+result remains the sole production owner of refusal-reason message keys, exact safe
+context, and reason-specific limits. TUI `assessment_refusal` at
+`src/cadrumo/adapters/inbound/tui/_registration_screen.py:140-151` only adapts that
+application result into the immutable screen envelope. Exact search finds no TUI copy of
+the four keys, maximum-scalar or byte limits, or reason-to-context branches; the retained
+minimum import serves only the independent password-hint copy. The five refused
+candidate cases prove exact equality between live projection and the real submission
+attempt envelope, including both surrogate endpoints.
+
+The headless 14-scalar regression at
+`src/cadrumo/adapters/inbound/tui/tests/test_registration_screen.py:165-198` drives the
+real password widget and create action. It proves nonempty live and submitted refusal
+copy, error tone, `app.error is None`, no manifest, and absence of the candidate,
+`INTERNAL`, the original raw custody English, and traceback text. Its assertions would
+turn red on the original escaped-worker failure. The paired unkeyed `RuntimeError` test
+at lines 201-220 proves the genuine unexpected path retains the exact exception in
+`app.error` and renders exactly the active-language INTERNAL boundary guidance. Expected
+keyed errors therefore remain typed and localized without swallowing programming faults.
+
+Diff hygiene passes. Independent Ruff lint and format checks pass on all three
+remediation source/test files. The authoritative registration, language-switch, and
+manager-refusal integration lane passes all 19 cases in 19.11 seconds with the one
+already documented Textual context-teardown warning. `s09-duplicate-prospective-mapping`
+and `s09-original-crash-bite` are closed. No unresolved HIGH, CRITICAL, or MEDIUM
+finding remains, and W03.P07.S10 may proceed.

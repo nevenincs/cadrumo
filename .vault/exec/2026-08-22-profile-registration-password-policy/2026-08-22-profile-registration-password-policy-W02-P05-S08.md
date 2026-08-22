@@ -11,9 +11,6 @@ related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
 ---
 
-
-
-
 # Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then collapse malformed and incorrect existing-password proofs without hiding operational faults and prove login restore and recovery authorization behavior
 
 ## Scope
