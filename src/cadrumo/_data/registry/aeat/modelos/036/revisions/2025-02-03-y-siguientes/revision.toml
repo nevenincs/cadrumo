@@ -25,44 +25,53 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the censal alta/modificacion/baja declaration, \
-re-stamped after completing PAGINA 1. DISCLOSURE -- self-review: the same agent authored \
-the ten new casillas in the immediately preceding commit. VERIFIED -- COVERAGE 29 -> 35 of \
-288 derived casillas, 41 casillas in total. Every box number AEAT prints on Pag. 1 is now \
-modelled; 101, 102, 103, 141, 151 and 152 were the six missing. VERIFIED -- TILING: Pag. 1 \
-of aeat-dr-036-2025 tiles 1..500 exactly once, no gap, no overlap, 53 fields. All thirteen \
-records of this design tile clean. VERIFIED -- 141 AND 152 ARE EACH ONE DATE, not three \
-integers: the diseno splits each into dia, mes and ano component fields (@189/@191/@193 \
-and @199/@201/@203), and a composite component is not a casilla of its own. This is the \
-convention modelo 840 settled and its first application to another modelo. VERIFIED -- THE \
-FIRMA BLOCK carries no box numbers and takes slug numbers: lugar @207+40, the fecha \
-components @247/@249/@251 as ONE date, the calidad flag @255+1 and the firmante name \
-@256+125. They are filer-supplied facts so they are casillas, but a slug does not count \
-toward coverage -- which is why ten new casillas moved coverage by exactly six. NOT \
-CLAIMED -- A PROVENANCE GAP ON THE SIBLING FRAGMENT, recorded rather than repeated. The \
-causa-110..150 fragment states its numbers and labels are transcribed verbatim from the \
-AEAT Instrucciones Modelo 036, Anexo 3, PAGINA 1, table columns TIPO / CASILLA / CAUSA DE \
-PRESENTACION, citing instrucciones-cumplimentacion-pagina-1.html. That bundled file is a \
-5.4 KB navigation shell carrying no casilla table, and searched across ALL SIX bundled \
-modelo 036 instruction files the numbers 101, 103, 141, 151 and 152 appear in none of \
-them. The labels are also editorially expanded (pag. rendered as paginas), so they did not \
-come from the diseno either. The claim cannot be checked against what is bundled. The 29 \
-causa casillas are NOT asserted wrong -- only unverifiable from the corpus as it stands. \
-Whoever revisits them should either bundle the real Anexo 3 table or re-ground them on the \
-diseno. NOT CLAIMED -- THE NEW CASILLAS ARE GROUNDED IN aeat-dr-036-2025, the bundled \
-diseno, precisely because it is verifiable; every number and offset was read from its own \
-field description. NOT CLAIMED -- 253 OF 288 DERIVED CASILLAS REMAIN UNCOVERED across the \
-other twelve records. Several are heavily collapsed: Pag. 6 prints 613 and 614 on twelve \
-positions each and Pag. 8 prints 805 on twelve, so those records need the slug convention \
-at scale. Pag. 0, 2A and 2C carry NO box numbers at all and are repeating or structural \
-records rather than flat casilla sets. NOT CLAIMED -- NO CONSTRUCT MEMBERSHIP CHANGE, \
-deliberately: this modelo's construct is a censo-foundation construct listing only \
-profile-bound facts, and all 29 pre-existing causa casillas sit outside it. Adding these \
-would copy modelo 840's shape onto a modelo that does not use it. NOT CLAIMED -- NO EXPORT \
-LAYOUT: the application still cannot file this modelo, it stays on the filing-capability \
-worklist, and model_law_authority_scope remains inspection_only. NOT CLAIMED -- \
-independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- the audited locales \
-are complete for all 41 labels, verified by counting non-null VALUES rather than keys, but \
-the strings were not audited for accuracy."""
+re-stamped after completing PAGINA 1 and authoring PAGINA 3. DISCLOSURE -- self-review: \
+the same agent authored the forty new casillas across two units and re-grounded the \
+pre-existing causa fragment. VERIFIED -- COVERAGE 29 -> 59 of 288 derived casillas, 71 \
+casillas in total. PAGINA 1 is complete (every box number AEAT prints on it) and PAGINA 3, \
+the two representante blocks, is complete. VERIFIED -- TILING before any offset was \
+trusted: Pag. 1 tiles 1..500 and Pag. 3 tiles 1..1200, each exactly once, no gap, no \
+overlap. All thirteen records of this design tile clean, and they also pass the \
+partial-overlap check a peer shipped as test_cited_design_field_bounds_are_self_consistent \
+-- a gap-only check would not have been sufficient, because partial overlap leaves no \
+holes. VERIFIED -- SIX DATES ARE EACH ONE CASILLA, not eighteen integers: 141, 152, 303, \
+313, 353 and 363 are each split by the diseno into dia, mes and ano component fields, and \
+a composite component is not a casilla of its own. This is the convention modelo 840 \
+settled, now applied six times across two modelos without adjustment. VERIFIED -- THE \
+CAUSA FRAGMENT IS RE-GROUNDED. Its numbers and its alta/modificacion/baja section mapping \
+are checkable against aeat-dr-036-2025: every description in the diseno opens \"Alta.\", \
+\"Modificacion.\" or \"Baja.\", so the TIPO axis was grounded all along and merely \
+mis-attributed. NOT CLAIMED -- ITS LABELS ARE NOT DERIVABLE FROM ANY BUNDLED SOURCE. The \
+fragment cited the AEAT Instrucciones Anexo 3 PAGINA 1 table; that bundled file is a 5.4 \
+KB navigation shell with no table, and across all six bundled modelo 036 instruction files \
+the numbers 101, 103, 141, 151 and 152 appear in none. The capture dropped the table -- \
+the file's own title names Anexo 3 -- so the source exists and is unbundled. The labels \
+are NOT re-derived from the diseno on purpose: it carries AEAT's own typo at 130 \
+(\"ata/baja\"), renders 142 and 143 unaccented and lowercase, and abbreviates throughout, \
+so re-grounding labels on it would degrade them. ONE label was corrected on diseno \
+evidence: 137 read \"otros Impuestos\", dropping the \"y registros\" the diseno states, \
+which narrowed what the box covers. Four divergences are recorded and NOT changed -- 124 \
+and 142 carry \"y baja\", 129 says \"alta/baja\" where the diseno says \
+\"inscripcion/baja\", and 145 carries a page reference the diseno does not print. \
+Adjudicating them needs the real Anexo 3 table bundled. NOT CLAIMED -- TWO DISENO DEFECTS \
+ARE RECORDED, NOT CORRECTED. The causa-de-la-representacion fields at @480 and @956 are \
+labelled \"[330 332]\" and \"[380 382]\" -- two box numbers in one bracket -- and the \
+derived-casilla regex matches a single number, so none of 330, 332, 380 or 382 is in the \
+derived set. Verified by enumerating that set. Both fields take slugs rather than claim a \
+box the coverage report cannot see. Separately, the field at @480 is described \"3.2.\" \
+while sitting inside block 3.1, whose neighbours read \"3.1.\"; the offsets are \
+unambiguous so this file follows the offsets. NOT CLAIMED -- 229 OF 288 DERIVED CASILLAS \
+REMAIN UNCOVERED across eleven records, and they are not 229 units of transcription. Pag. \
+6 prints 613 and 614 on twelve positions each and Pag. 8 prints 805 on twelve, so those \
+need the slug convention at scale; Pag. 0, 2A and 2C carry NO box numbers at all and are \
+repeating or structural records rather than flat casilla sets. NOT CLAIMED -- NO CONSTRUCT \
+MEMBERSHIP CHANGE, deliberately: this modelo's construct is a censo-foundation construct \
+listing only profile-bound facts, and every transcribed form box sits outside it. NOT \
+CLAIMED -- NO EXPORT LAYOUT: the application still cannot file this modelo, it stays on \
+the filing-capability worklist, and model_law_authority_scope remains inspection_only. NOT \
+CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- all 71 \
+labels are populated and non-null across es/en/ca/hu, verified by counting VALUES rather \
+than keys; the strings were not audited for accuracy."""
 reviewed_at = 2026-08-22
 
 [revisions."2025-02-03-y-siguientes".family_dispositions.deadline_windows]
