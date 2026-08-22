@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:e6eafff87da0bf3e736924547354b0bb97ddc96106c884db8b296c7cec11ead5'
+body_hash: 'sha256:1f28439e5cf34dfec67671130c32ec3ced69263a910421e37c6ce06da96fae99'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1631,7 +1631,6 @@ where the overturned conclusion was already written into this document. The chec
 caught it -- compare the actual designs rather than infer from another gate's silence --
 is the same one that should have been run before the claim was made.
 
-
 ### TWO-SHIPPED-RULES-CONFLICT-the-citation-class-is-empty | high | the registry forbids the citation the layout gate demands
 
 Attempting the three "safe" citation fixes produced the finding the previous four
@@ -1678,7 +1677,6 @@ reaching it. Ten minutes of actually attempting the edit produced a single error
 that settled it. The attempt was cheap, fully reverted -- ``git checkout`` on the modelo
 directory, 24 m714 tests passing again -- and it is now recorded so nobody else spends
 four iterations on the same reasoning.
-
 
 ### RESOLVED-design-source-windows-are-ejercicio-scoped-so-the-gate-measures-the-wrong-axis | high | the registry states this in its own authoring comment
 
@@ -1729,7 +1727,6 @@ twenty-five entries are consequences of the mismatch rather than data defects. I
 unilaterally narrow a shipped gate -- that is a decision about what the check is for, and
 the gate's author reasoned carefully enough on the adjacent axis that the change belongs
 with them.
-
 
 ## Recommendations
 

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-campaign-sequencing'
 date: '2026-08-16'
-modified: '2026-08-21'
+modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:30bd1aa298d33196df65e7402332dbbc70c77ee205519d37a982d5d3c186ab89'
+body_hash: 'sha256:82338a8d48a762c61c686906952c41d8cd46207ecc4e2ba7a331fe24cec79224'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -11404,3 +11404,112 @@ Titular de la unidad de convivencia is deliberately NOT set: the validator
 refused it on a clave A row because the design declares campo 20 only for clave
 L.29. That refusal is the design's applicability rule doing its job, and taking
 the value back out was the fix rather than working around it.
+
+## Tick: modelo 322 split at the 2023/2024 boundary, and the key that was not sound
+
+Re-measured at tick start: authority CLEAN, span gate 4 failed, modelo 322
+reporting two re-layouts. The two confirmation runs left in flight last tick had
+both been cut short by the session ending, so neither carried a verdict; they
+were re-run rather than cited.
+
+### The registered source that was missing
+
+Four modelo 322 designs are bundled but only three were registered as sources:
+the `ejercicio 2022 y siguientes` workbook had no `[sources]` entry at all, so
+nothing could load it and the earliest boundary could not even be measured.
+Registering it needed no fabrication -- the repo's own
+`disenos_registro/modelo_322/manifest.json` records the retrieval URL, and its
+sha256 and byte count match the file on disk.
+
+### Choosing the transfer key by measurement, and rejecting one
+
+The 184 derivation transferred semantics on (record_identity, offset). Applying
+that here without checking would have been wrong, and the measurement says so:
+
+    2023 -> 2024   offset 231/231, right-only 9      a pure ADDITION
+    2022 -> 2023   offset 163/217                    boxes MOVE
+    2024 -> 2026   offset  81/240                    boxes MOVE
+
+An ordinal key looked like the answer for the moving boundaries -- 216 of 217
+paired, and the single miss was the DR32202 end-of-record marker numbered 28 in
+2022 and 27 in 2023. That reading was WRONG, and the control that caught it is
+worth keeping: the ordinals are contiguous 1..N per record in both designs, so
+`ordinal` is a position, not an identity. Pairing on it maps the Nth field of
+one design onto the Nth of another -- the same positional error that once put
+five modelo 390 recargo casillas on the IVA-deducible page. The marker's 28->27
+shift was the tell, not an anomaly to route around.
+
+A box-number key (parsed from the bracketed `[nnn]` the design prints) was
+measured next and also refused: it collides six times per design, because a
+split amount mentions its box in both the parte entera and the parte decimal
+row, and it still leaves seven fields unpaired.
+
+So the epoch derived from a sound total key was built and the other was not.
+The 2022 epoch was deleted rather than kept as an approximation.
+
+### What was split
+
+Revision `2008-2025` became `2008-2023` and `2024-2025`. The later half now
+emits its own design; the earlier half emits the 2023 design rather than the
+2024-2025 one it emitted for every year back to 2008. That is not correct for
+2008-2022 and is not claimed to be -- it is strictly closer, and the remaining
+boundary keeps reporting on the progress ledger rather than being papered over.
+
+Eight casillas (165-170, 172, 173) were dropped from the earlier revision:
+their fields are the ones the 2024 design adds, and declaring them on 2008-2023
+would claim boxes AEAT had not published for those years.
+
+### Two things the generator caught that the derivation missed
+
+* The 2023 mapping had no `variable_envelopes` block, because the builder
+  carried records and entries only. The parser refuses an envelope record
+  without a reviewed contract. The 2023 and 2024 designs report byte-identical
+  envelope anchors -- prefix rows 6..18, body 19, closing 20, total 21 -- so the
+  block was carried with only its source identity changed.
+* Validation then refused the tree because `m322-2023.page-01.f097` wrote data
+  into @1311..1475, which the 2023 design RESERVES for the Administración. The
+  2024 design revives that slot as a 17-byte data field -- the span gate names
+  it, "1 slot REVIVED out of reserved space (DR32201 offset 1311)" -- and the
+  offset pairing carried the later meaning backwards. Corrected to a filler.
+
+  The general lesson: an offset pairing that is total by COUNT can still pair
+  two fields that mean different things. Comparing the paired descriptions
+  found exactly two such cases across 231 fields, and only one mattered.
+
+### A carry that deleted before it checked
+
+The locale carry for this split removed all 442 orphaned keys and carried none,
+because the script retargeted from modelo 184 still filtered on the old modelo
+id: the filter's string is double-quoted in the source and the edit replaced
+only the single-quoted form, so the wanted set came back empty and the deletion
+half ran anyway. The values were recovered from the committed catalogue and
+re-carried, 500 keys with none unmatched.
+
+The defect is the script's SHAPE, not the typo: a carry whose match set is
+empty should refuse rather than proceed to its deletion half. The replacement
+asserts on both the wanted set and the carried count before writing anything.
+
+### Verified
+
+* authority CLEAN; generated-tree gates 36 -> 38, both new revisions enrolled.
+* the span gate now reports modelo 322 as ONE re-layout needing two revisions,
+  down from two and three, and still reports it -- the detector was not
+  silenced. The split-progress ledger entry was retargeted rather than removed,
+  which is the honest state for a half-done split.
+* `codebase_missing` back to 0 after re-carrying and authoring the last 20
+  labels; extras at the 118 docs/mcp baseline.
+* modelo 322's registry and worked-example tests: 14 passed.
+
+### Not this tick's work, and not caused by it
+
+The application-calculations suite reports 82 failures. None name modelo 184 or
+322, and the causes are unrelated and several: 35 profile-readiness errors, 16
+"modelo 390: no revision for year=2026", 9 modelo 721 revisions with no export
+layout, 7 modelo 714 source-window violations. The modelo 390 gap is queue item
+6's modelo and will be met there.
+
+Modelo 184's `2015-2024` also now appears in
+`test_layout_design_applies_to_claimed_years`, joining ten other modelos whose
+revisions claim filing years no bundled design covers. That gate was already
+red with that family; the split did not create the class, and modelo 322's
+`2008-2023` joins it for the same reason -- no design is bundled before 2022.
