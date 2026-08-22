@@ -5782,3 +5782,45 @@ scan, not a clean population, and the previous entry's locating fix is what make
 successive blocker addressable instead of anonymous.
 
 Lanes 314 integration / 1587 unit, unchanged.
+
+### The second blocker is a model mismatch, not a bug, and is left for a ruling
+
+The census's next refusal, now reachable, is
+`active_profile_isolated_backend_fixture` bound at
+`application/auth/tests/test_certificate_source_tax_id.py:50`. The cause is exact:
+`_closure_record_for_candidate` requires EXACTLY ONE nested `@pytest.fixture` per factory,
+and this factory branches on `scope` and returns a module-scoped closure or a
+function-scoped one.
+
+**Refusing is correct, not lazy.** `_factory_binding_record` reads scope and autouse off the
+closure, so picking either arbitrarily would record a lifecycle the binding does not have --
+the same "do not invent a value" principle behind the dynamic-name refusal.
+
+**Both real fixes are structural, and neither was taken here.** Teaching the resolver to
+evaluate the return branch means simulating control flow against argument defaults, which is
+a new capability rather than a repair. Splitting the factory so each has one closure touches
+a fixture 31 modules bind, and the one module-scope consumer reaches it through a wrapper
+that exists specifically so the shared arguments cannot drift -- so the branch would move
+rather than disappear. Choosing between those is a design decision about the census's model,
+not a defect to fix in passing, and the directive's own rule applies: do not widen a
+narrow carve-out to turn a gate green.
+
+**What was done instead is the previous entry's lesson applied again.** The refusal named the
+factory and the binding but not what it FOUND. It now lists the candidate closures with
+their scopes and lines and states why the shape is unresolvable, so the next person meets a
+decision rather than a puzzle.
+
+**No test pins that message, deliberately.** It is a diagnostic on an error path that exists
+only while this factory is unresolved; a test asserting its content would have to be deleted
+alongside the condition it describes. A test that expires on the fix is worse than none. The
+behaviour is unchanged -- it still refuses -- and the message was verified against the live
+gate.
+
+**Two process notes.** A grep for the swept change reported absent because the pattern did
+not allow for the f-string braces between the tokens; reading the actual line showed HEAD was
+correct. And the added detail was 132 characters -- over the limit -- and reached main
+through a peer sweep before ruff ran on it here. That lint error was live and is fixed; it is
+the second time this session that a sweep has published work before its own verification
+finished, which is an argument for running the linter BEFORE the lanes, not after.
+
+Lanes 314 integration / 1587 unit, unchanged.
