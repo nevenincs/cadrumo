@@ -15,6 +15,7 @@ from ......core import (
     PROFILE_PASSWORD_MIN_SCALARS,
     ProfilePasswordRefusalReason,
     StorageCategory,
+    assess_profile_password,
     storage_location,
 )
 from ... import __all__ as storage_exports
@@ -155,21 +156,32 @@ def test_password_contract_preserves_exact_unicode_at_every_accepted_boundary() 
 @pytest.mark.parametrize(
     ("candidate", "reason"),
     (
-        ("a" * (PROFILE_PASSWORD_MIN_SCALARS - 1), ProfilePasswordRefusalReason.TOO_FEW_SCALARS),
-        ("a" * (PROFILE_PASSWORD_MAX_SCALARS + 1), ProfilePasswordRefusalReason.TOO_MANY_SCALARS),
+        ("Q7!Ω🔒" + "x" * 9, ProfilePasswordRefusalReason.TOO_FEW_SCALARS),
+        ("leak-marker-" + "x" * 245, ProfilePasswordRefusalReason.TOO_MANY_SCALARS),
         (
             "😀" * PROFILE_PASSWORD_MAX_SCALARS + "a",
             ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES,
         ),
-        ("\ud800" + "a" * (PROFILE_PASSWORD_MIN_SCALARS - 1), ProfilePasswordRefusalReason.CONTAINS_SURROGATE),
+        ("\udfffS3cr3t-Ω-marker", ProfilePasswordRefusalReason.CONTAINS_SURROGATE),
     ),
 )
 def test_password_contract_maps_every_canonical_reason_to_a_safe_custody_error(
     candidate: str,
     reason: ProfilePasswordRefusalReason,
 ) -> None:
-    with pytest.raises(ProfileCustodyPasswordError, match=reason.value):
+    assessment = assess_profile_password(candidate)
+    with pytest.raises(ProfileCustodyPasswordError) as captured:
         _encode_profile_password(candidate)
+
+    message = str(captured.value)
+    assert message == f"profile password refused by canonical policy: {reason.value}"
+    assert candidate not in message
+    assert "scalar_count" not in message
+    assert "utf8_byte_count" not in message
+    assert repr(assessment) not in message
+    assert str(assessment.scalar_count) not in message
+    if assessment.utf8_byte_count is not None:
+        assert str(assessment.utf8_byte_count) not in message
 
 
 def test_password_transport_refuses_non_utf8_bytes() -> None:

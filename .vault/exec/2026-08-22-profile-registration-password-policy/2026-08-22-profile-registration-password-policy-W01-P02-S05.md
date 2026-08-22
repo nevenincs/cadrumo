@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:a81565763ae930a6c2ea58621f2901348ee1ab0dd68648b83984dde86b3880f8'
+body_hash: 'sha256:1d684ba9b4ef9928a3d29d6f4b96d5a0783a4f35065d5415deb25ae8a002376d'
 step_id: 'S05'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
@@ -41,6 +41,9 @@ related:
 - All 13 focused record tests and all 207 custody tests pass; 207 custody tests
   collect cleanly with 10 excluded only by the repository marker selection.
 - Ruff, diff hygiene, public-facade probes, and feature Vaultspec checks pass.
+- The post-review error bite captures every canonical refusal and requires the
+  exact finite diagnostic while independently excluding the candidate, scalar
+  count, UTF-8 byte count, field names, and complete assessment representation.
 
 ## Notes
 
