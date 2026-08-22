@@ -4,7 +4,7 @@ tags:
   - '#profile-registration-password-policy'
 date: '2026-08-22'
 modified: '2026-08-22'
-body_hash: 'sha256:07142f1d0fa33c64f2ba10b92df7027c3329bd2eb15050817376169b413a2431'
+body_hash: 'sha256:55cac38c2c65b1a0d20715e87352cae0c265c56423a97b9ded8557ff68c59e01'
 tier: L3
 related:
   - '[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]'
@@ -60,7 +60,7 @@ Deliver defense-in-depth custody validation consuming core authority without own
 
 Deliver a dedicated recovery codec shared by parent and supervised worker without changing mnemonic or envelope bytes.
 
-- [ ] `W01.P03.S06` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then separate recovery-secret encoding across parent and worker and prove unchanged mnemonic, envelope, transport, and derivation roundtrips; `src/cadrumo/adapters/persistence/storage/custody`.
+- [x] `W01.P03.S06` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then separate recovery-secret encoding across parent and worker and prove unchanged mnemonic, envelope, transport, and derivation roundtrips; `src/cadrumo/adapters/persistence/storage/custody`.
 
 ## Wave `W02` - make application capabilities typed and mutation-safe
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:a824503def040c9194dec6d78b91faea3fe8246639bef4990585ebaf9723f3ef'
+body_hash: 'sha256:f7172d511d330881cdd10c7fad42011aae70ea137512b598f3870a4eaed3ae8a'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15261,3 +15261,72 @@ lines are all large or peer-owned, so the next real progress on it is either
 modelo 220's 16,079 fields -- which wants the generator pipeline, not
 hand-authored bindings -- or an operator decision on acquiring modelo 038's
 tabular diseño.
+
+## Tick: the partly-read inventory is two backlogs, and two of its nine are diagrams
+
+Re-measured at tick start: authority CLEAN. The capability worklist had no line
+this tick could advance, and establishing that took two measurements worth
+keeping.
+
+### Modelo 220 is not hand-authorable, and the numbers say why
+
+Modelo 220 passes design integrity outright -- 137 sheets, zero partial
+overlaps -- so the defect that blocks modelo 038 does not apply. Two hypotheses
+for making its **16,079 fields** tractable were tested and both closed:
+
+* **Reuse from modelo 200**, its sibling return: the two share **zero** sheet
+  identities. 220 is `T220xxxxx`, 200 is `DP200xxx`.
+* **The generator pipeline**: modelo 200's authored mapping is **91,074 lines**
+  across 77 files plus a **45,201-line** render profile, for 6,808 fields.
+  Modelo 220 carries 2.4 times that.
+
+So modelo 220 needs a generation approach nobody has yet, not a bigger tick.
+With modelos 036 and 840 under active peer authoring and 038 blocked on its
+artefact, the capability worklist was closed to this tick, which is a fact worth
+stating rather than working around.
+
+### The partly-read inventory conflates two opposite kinds of work
+
+Its message says each line "is a parser gap or a corpus defect and either way it
+is work" -- correct, and it never said WHICH. Measured across all nine:
+
+* **7 are TABLES**: modelos 100 (three editions), 131 and 200 (three editions),
+  yielding 1,907 to 2,995 parseable field rows each. Rows drop; that is parser
+  work on this repository.
+* **2 are DIAGRAMS**: modelo 180's Orden de 20 de noviembre de 2000 design (43
+  lines, **0** parseable rows, 8 position rulers) and modelo 349's Orden
+  HAC/360/2002 design (98 lines, 0 rows, 16 rulers). AEAT published a PICTURE of
+  the form -- a byte ruler and free-floating labels -- so no parser change reads
+  them.
+
+That is the same artefact shape as modelo 038, which cost a full authoring
+attempt and a withdrawal to discover. Modelo 180 would have cost another: it is
+the SMALLEST file in the list at 12 KB and both its records skip the identical
+range 196-250, which reads exactly like one tidy systematic row-drop worth
+chasing.
+
+### What was landed
+
+Each partial line now carries its shape -- `[TABLE]` or `[DIAGRAM (8 position
+ruler(s), 0 parseable field rows)]` -- computed from the extraction rather than
+listed, so it cannot rot as designs are fixed or re-bundled. The group still
+names the symptom; the shape names the remedy.
+
+The cost is one extra text extraction per PARTIAL design, nine of them, on a
+gate that already parses all 218.
+
+### Verified
+
+* the classification measured on every one of the nine, not sampled: row counts
+  and ruler counts reported per design.
+* registry + generated-tree + application/registry: **8 failed, 5957 passed** --
+  the eight declared inventories and nothing else, tree quiescent (0/0/0).
+* ruff clean.
+
+### Still open
+
+The eight inventories. Two of them now say plainly where effort should NOT go:
+the capability worklist marks modelo 038 blocked on its artefact, and the
+partly-read inventory marks modelos 180 and 349 as diagrams. Between them, three
+designs are now known to need AEAT acquisition rather than engineering -- which
+is an operator decision and the third time this campaign has reached one.

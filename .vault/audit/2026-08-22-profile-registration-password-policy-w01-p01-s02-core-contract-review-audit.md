@@ -294,3 +294,32 @@ The formatter was applied only to the owned production modules and tests. Ruff c
 format-check are clean; the focused worker/codec lane passes 28 tests, and the complete
 serial default custody lane passes 218 tests with 10 expected marker deselections. Both
 MEDIUM findings are closed, with no remaining HIGH or CRITICAL S06 defect.
+
+#### S06 independent remediation verification
+
+Current-HEAD re-review independently confirms that commits `672b342a17` and
+`2b78e05375` close `s06-worker-policy-independence-bite` and
+`s06-format-evidence`. Semantic code and governing-ADR discovery was repeated before
+exact search of the two routing owners. The regression at
+`src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py:409-441`
+uses the deliberately password-invalid recovery candidate `short` across the real
+parent-to-supervised-worker recovery wrap and unwrap operations, verifies the exact DEK
+after sentinel proof, and then requires the paired canonical password wrapper to refuse
+the identical candidate with `too_few_scalars`. This test therefore fails if either
+recovery operation is redirected through profile-password assessment.
+
+The static bite at
+`src/cadrumo/adapters/persistence/storage/custody/tests/test_recovery_secret_codec.py:37-50`
+now covers the recovery portion of `_kdf_supervision.py` and all of `_kdf_worker.py`; it
+excludes profile-password assessment and codecs from the supervisor recovery routes and
+requires both worker recovery branches to select `decode_recovery_secret`. Exact search
+also confirms the obsolete generic wrap and unlock names remain absent except for their
+negative assertions. Commit diff checks are clean. Ruff check passes and Ruff
+format-check reports all six reviewed modules/tests already formatted. The focused
+serial worker/codec lane independently passes 28 tests, and the complete serial default
+custody lane independently passes 218 tests with the same 10 expected marker
+deselections in 85.23 seconds. Those results agree with the amended S06 execution
+record rather than relying on its assertion.
+
+Both S06 MEDIUM findings are closed. No unresolved HIGH, CRITICAL, or MEDIUM finding
+remains from this review chain, and W01.P03.S07 may proceed.

@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-22'
-body_hash: 'sha256:b1c5265c7ccba924fbd17ff32fb650fb04fe5cacf2034a0b77fcb2aec4527a13'
+body_hash: 'sha256:8c0e460e2015a4bd4e1d58f8c565e859c532a649fa0e503b523481e022a0b4dd'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -43,11 +43,11 @@ Make the real installed command tree authoritative for universal enrollment.
 - [x] `W01.P01.S01` - Extend the live command walker to emit stable command paths, node kind, loader owner, and handler owner for every reachable node; `src/cadrumo/entrypoints/cli/_command_suggestions.py`.
 - [x] `W01.P01.S02` - Define command capability classes covering registry, profile custody, encrypted facts, network, browser, Google, calculation, filing, and state-free behavior; `src/cadrumo/entrypoints/cli/_command_schema.py`.
 - [x] `W01.P01.S03` - Introduce lightweight node-attached command execution policy and expose it through the live command census; `src/cadrumo/entrypoints/cli/_command_policy.py and _command_suggestions.py`.
-- [ ] `W01.P01.S48` - Attach execution policy to config subtree callbacks and remove config risk path declarations; `src/cadrumo/entrypoints/cli/_config/`.
+- [ ] `W01.P01.S48` - Attach execution policy to every config subtree callback and group; `src/cadrumo/entrypoints/cli/_config/`.
 - [ ] `W01.P01.S49` - Attach execution policy to ledger subtree callbacks and remove ledger risk path declarations; `src/cadrumo/entrypoints/cli/ ledger modules`.
 - [ ] `W01.P01.S50` - Attach execution policy to modelo subtree callbacks and remove modelo risk path declarations; `src/cadrumo/entrypoints/cli/ modelo modules`.
 - [ ] `W01.P01.S51` - Attach execution policy to live, diagnostics, maintenance, review, overview, registry, and quickfile callbacks; `src/cadrumo/entrypoints/cli/ remaining app modules`.
-- [ ] `W01.P01.S52` - Migrate operator-surface and MCP HITL consumers to live-node execution policy and delete the keyed risk table; `src/cadrumo/application/operator_surface and src/cadrumo/adapters/inbound/mcp`.
+- [ ] `W01.P01.S52` - Migrate operator-surface and MCP HITL consumers to live-node execution policy, remove all legacy risk rows, and delete the keyed risk table; `src/cadrumo/application/operator_surface and src/cadrumo/adapters/inbound/mcp`.
 - [ ] `W01.P01.S53` - Migrate profile-bound write routing to execution-policy scope and delete the verb-path catalogue; `src/cadrumo/application/storage_write_policy.py and src/cadrumo/entrypoints/cli/_common.py`.
 - [ ] `W01.P01.S04` - Add a universal census gate that fails for every unclassified node and prove the detector against an externally injected node; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
 
