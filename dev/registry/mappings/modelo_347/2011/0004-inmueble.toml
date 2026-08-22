@@ -1,0 +1,215 @@
+schema_version = 1
+fragment_id = "inmueble"
+modelo = "347"
+design_epoch = "2011"
+source_ref = "aeat-dr-347-2011"
+source_sha256 = "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f001"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 777
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f002"
+kind = "literal"
+literal = "347"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 779
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f003"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 781
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f004"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 784
+ordinal = "4"
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f005"
+kind = "casilla"
+casilla_id = "inmueble.arrendatario-nif"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 787
+ordinal = "5"
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f006"
+kind = "casilla"
+casilla_id = "inmueble.representante-legal-nif"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 813
+ordinal = "6"
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f007"
+kind = "casilla"
+casilla_id = "inmueble.arrendatario-nombre"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 819
+ordinal = "7"
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f008"
+kind = "literal"
+literal = "I"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 829
+ordinal = "8"
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f009"
+kind = "filler"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 831
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f010"
+kind = "casilla"
+casilla_id = "inmueble.importe-operacion"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 839
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f011"
+kind = "casilla"
+casilla_id = "inmueble.importe-operacion"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 841
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f012"
+kind = "casilla"
+casilla_id = "inmueble.situacion"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 843
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f013"
+kind = "casilla"
+casilla_id = "inmueble.referencia-catastral"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 853
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f014"
+kind = "casilla"
+casilla_id = "inmueble.direccion"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 859
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Inmueble"
+
+
+[[entries]]
+export_field_id = "m347-2011.inmueble.f015"
+kind = "filler"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Inmueble"
+source_row = 942
+ordinal = "14"
+record_identity = "Tipo 2 - Registro De Inmueble"
+

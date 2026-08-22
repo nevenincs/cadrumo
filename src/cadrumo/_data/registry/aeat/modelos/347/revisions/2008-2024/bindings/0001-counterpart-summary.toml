@@ -1,0 +1,48 @@
+# Type 1 declarante summary fed by the enrolled invoice source resolver.
+# The resolver applies the RD 1065/2007 art. 31 declaration threshold before
+# these bindings count or sum declared counterpart records.
+# The M347 summary record unions collectible and payable invoice observations
+# in the resolver because the public declarante count must deduplicate a NIF
+# across deliveries and acquisitions.
+
+[[revisions."2008-2024".bindings]]
+id = "modelo-347-declarante-numero-personas-entidades"
+source = "collectible_invoice"
+selector = { fact = "operator_count", record = "m347_declarante_summary", rectification_scope = "any" }
+aggregation = { op = "count_distinct" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-31",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-347-2011",
+    "aeat-modelo-347-procedure",
+    "boe-modelo-347-2008-form",
+]
+
+[[revisions."2008-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]
+
+[[revisions."2008-2024".bindings]]
+id = "modelo-347-declarante-importe-total-anual-operaciones"
+source = "collectible_invoice"
+selector = { fact = "invoice_total_sum", record = "m347_declarante_summary", rectification_scope = "any" }
+aggregation = { op = "sum" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-31",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-347-2011",
+    "aeat-modelo-347-procedure",
+    "boe-modelo-347-2008-form",
+]
+
+[[revisions."2008-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]
