@@ -448,8 +448,27 @@ def attempt_registration(label: str, passphrase: str, output_language: str) -> R
             recovery_handover=captured.append,
         )
     except ProfileRegistrationError as refusal:
-        return _Attempt(refusal=str(refusal))
+        return _Attempt(refusal=_refusal_text(refusal))
     return _Attempt(outcome=outcome, enrollment=captured[0] if captured else None)
+
+
+def _refusal_text(refusal: Exception) -> str:
+    """Render a refusal as the words an operator reads.
+
+    ``str()`` on a translated error yields its message KEY -- the constructor
+    passes ``translated_message`` straight to ``Exception.__init__`` as a
+    fallback -- so displaying it put
+    ``application.user_profile.errors.profile_already_exists`` on the screen
+    where the operator should have read that the name is taken and what to run
+    instead. Translating here is what this seam's docstring already claims it
+    does; only the code did not.
+    """
+    from ....core.i18n import tr
+
+    key = getattr(refusal, "translated_message", None)
+    if not key:
+        return str(refusal)
+    return tr(key, **dict(getattr(refusal, "context", None) or {}))
 
 
 def present_registration(*, suggested_name: str | None = None) -> ProfileRegistrationOutcome | None:
