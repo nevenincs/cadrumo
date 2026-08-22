@@ -17,11 +17,63 @@ from cadrumo.domain.calculations.registry import (
 
 from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from ..pipeline._record_design_ir import load_record_design_intermediate
-from ..pipeline._render_profile import RenderProfile, RenderProfileDesignIdentity, RenderProfileSourceEvidence
+from ..pipeline._render_profile import (
+    RenderProfile,
+    RenderProfileDesignIdentity,
+    RenderProfileSourceEvidence,
+    load_render_profile,
+    load_render_profile_source_evidence,
+)
 from ..pipeline._semantic_map import SemanticMap
+from ..pipeline._semantic_map_loader import load_semantic_map
 from ..pipeline._semantic_map_join import join_record_design_semantics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _real_render_profile(modelo: str, design_epoch: str, source_ref: str, catalogues) -> tuple:
+    """Return the authored render profile and its official-source evidence.
+
+    Generation refuses a profile that does not cover exactly the design's
+    eligible blank numeric fields, so these gates cannot stand up a placeholder
+    profile to reach a later refusal. Evidence is read out of the hash-verified
+    design binary only when the profile actually claims a cell; a profile whose
+    every rule is reviewed policy claims none, and the resolver refuses an empty
+    claim set.
+    """
+    profile = load_render_profile(Path("dev/registry/render_profiles") / f"modelo_{modelo}" / design_epoch)
+    claims_official = any(
+        rule.evidence.authority_kind != "reviewed_policy"
+        for rule in (*profile.singleton_rules, *profile.width_17_rules)
+    )
+    evidence = (
+        load_render_profile_source_evidence(
+            bundled_path() / catalogues.sources[source_ref].corpus_path, profile
+        )
+        if claims_official
+        else RenderProfileSourceEvidence(design_identity=profile.design_identity, entries=())
+    )
+    return profile, evidence
+
+
+def _authored_envelope_contract(modelo: str, design_epoch: str, body_record_id: str) -> dict[str, object]:
+    """Return the reviewed variable-envelope contract, bound to one body record.
+
+    The join refuses a design whose parser owns a variable envelope unless the
+    semantic map carries exactly one reviewed contract for it, so these gates
+    cannot build a map without one. The contract is taken from the authored
+    mapping rather than invented here: its prefix roles are semantic judgements
+    about what the design PRINTS, which no fixture can derive from the parser.
+
+    Only ``body_record_ids`` is rebound. These gates focus the intermediate down
+    to a single sheet so the refusal under test is reached quickly, and the
+    validator derives the expected body records from the sheets actually
+    present, so the authored list of every page would not match the focused
+    intermediate.
+    """
+    authored = load_semantic_map(Path("dev/registry/mappings") / f"modelo_{modelo}" / design_epoch)
+    contract = authored.variable_envelopes[0].model_copy(update={"body_record_ids": (body_record_id,)})
+    return contract.model_dump(mode="python")
 
 
 def test_static_generator_exposes_no_filing_instance_channels() -> None:
@@ -40,7 +92,15 @@ def test_static_generator_exposes_no_filing_instance_channels() -> None:
 
 
 def test_real_m200_variable_envelope_survives_join_and_refuses_fixed_generation(tmp_path: Path) -> None:
-    """The parsed DP200000 composition cannot disappear before rendering."""
+    """The parsed DP200000 composition cannot disappear before rendering.
+
+    Driven with the AUTHORED mapping against the whole parsed design rather
+    than a focused synthetic map. A design whose parser owns a variable
+    envelope must carry a reviewed contract for it AND declare its revision's
+    projection endpoints, so a hand-built one-record map can no longer reach
+    the refusal under test -- and the authored map is the better witness
+    anyway, being the artefact generation actually consumes.
+    """
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
     inspection = bundled_revision_inspection("200", filing_year=2025, period="0A")
@@ -51,48 +111,10 @@ def test_real_m200_variable_envelope_survives_join_and_refuses_fixed_generation(
         filing_year=2025,
         design_epoch="2025",
     )
-    real_sheet = parsed.sheets[0]
-    real_field = real_sheet.fields[0]
-    focused_sheet = real_sheet.model_copy(
-        update={
-            "declared_total": real_field.offset + real_field.length - 1,
-            "fields": (real_field,),
-        },
-    )
-    focused = parsed.model_copy(update={"sheets": (focused_sheet,)})
-    semantic_map = SemanticMap.model_validate(
-        {
-            "modelo": "200",
-            "design_epoch": "2025",
-            "source_ref": parsed.source.source_ref,
-            "source_sha256": parsed.source.source_sha256,
-            "records": (
-                {
-                    "sheet": real_sheet.sheet,
-                    "record_identity": real_sheet.record_identity,
-                    "export_record_id": "m200-envelope-gate-record",
-                    "record_type": "declaracion",
-                },
-            ),
-            "entries": (
-                {
-                    "anchor": {
-                        "sheet": real_field.sheet,
-                        "source_row": real_field.source_row,
-                        "source_cell": real_field.source_cell,
-                        "ordinal": real_field.ordinal,
-                        "record_identity": real_field.record_identity,
-                    },
-                    "export_field_id": "m200-envelope-gate-field",
-                    "kind": "filler",
-                    "legal_refs": ("ley-27-2014:art-40",),
-                    "source_refs": ("aeat-dr-200-2025",),
-                },
-            ),
-        },
-    )
+    semantic_map = load_semantic_map(Path("dev/registry/mappings") / "modelo_200" / "2025")
+    render_profile, evidence = _real_render_profile("200", "2025", "aeat-dr-200-2025", catalogues)
 
-    joined = join_record_design_semantics(semantic_map, focused, inspection)
+    joined = join_record_design_semantics(semantic_map, parsed, inspection)
     target = tmp_path / "export"
 
     assert joined.variable_envelopes == parsed.variable_envelopes
@@ -100,7 +122,7 @@ def test_real_m200_variable_envelope_survives_join_and_refuses_fixed_generation(
     with pytest.raises(RegistryValidationError, match="refuses variable envelopes"):
         render_complete_export_tree(
             target,
-            revision_id="2025-y-siguientes",
+            revision_id=inspection.revision_id,
             joined=joined,
             semantic_map=semantic_map,
             transport_profile=ExportTreeTransportProfile(
@@ -114,27 +136,8 @@ def test_real_m200_variable_envelope_survives_join_and_refuses_fixed_generation(
                 line_ending="crlf",
                 serializer_convention="rtoml-pretty-v1",
             ),
-            render_profile=RenderProfile(
-                schema_version=1,
-                design_identity=RenderProfileDesignIdentity(
-                    modelo="200",
-                    design_epoch="2025",
-                    source_ref="aeat-dr-200-2025",
-                    source_sha256="b" * 64,
-                ),
-                fragment_ids=(),
-                width_17_rules=(),
-                singleton_rules=(),
-            ),
-            render_profile_source_evidence=RenderProfileSourceEvidence(
-                design_identity=RenderProfileDesignIdentity(
-                    modelo="200",
-                    design_epoch="2025",
-                    source_ref="aeat-dr-200-2025",
-                    source_sha256="b" * 64,
-                ),
-                entries=(),
-            ),
+            render_profile=render_profile,
+            render_profile_source_evidence=evidence,
         )
 
     assert not target.exists()
