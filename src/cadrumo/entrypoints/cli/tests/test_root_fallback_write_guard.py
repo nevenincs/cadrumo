@@ -11,13 +11,18 @@ from pathlib import Path
 
 import pytest
 import typer
+from typer.testing import CliRunner
 
 from ....application.storage_write_policy import StorageWritePolicyCode, inspect_storage_write_policy
-from ....core.config import Settings
+from ....core.config import Settings, override_settings
+from ....tests.cli_runner import cadrumo_click_command
+from ....tests.secure_sql import isolated_profile_storage_root
 from ...cli import app
 from .. import _activate_active_bucket_session
+from .._bootstrap_exempt import LOGIN_GATED_VERB_PATHS, is_bootstrap_exempt
 from .._command_policy import command_execution_policy
 from .._command_suggestions import execution_policy_for_cli_path, walk_live_command_tree
+from .._errors import CliRefusedBoundaryError, error_boundary_under_test
 from .._ledger_execution_policies import LEDGER_WRITE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -67,6 +72,73 @@ def test_bootstrap_root_policy_bypasses_route_inspection(tmp_path: Path) -> None
     )
     assert decision.allowed is True
     assert decision.code is StorageWritePolicyCode.BOOTSTRAP_EXEMPT
+
+
+def test_every_mutating_session_exemption_declares_bootstrap_root() -> None:
+    failures = []
+    for node in walk_live_command_tree(app):
+        policy = node.execution_policy
+        path = " ".join(node.path[1:])
+        if (
+            node.kind == "leaf"
+            and policy is not None
+            and "local-state" in policy.classification.side_effects
+            and is_bootstrap_exempt(path)
+            and policy.write_route != "bootstrap-root"
+        ):
+            failures.append(path)
+    assert failures == []
+
+
+def test_every_non_exempt_bootstrap_root_route_has_a_login_gate_justification() -> None:
+    login_gated = {entry.verb_path for entry in LOGIN_GATED_VERB_PATHS}
+    unexplained = []
+    for path, write_route in _live_leaf_routes().items():
+        rendered = " ".join(path)
+        if write_route == "bootstrap-root" and not is_bootstrap_exempt(rendered) and rendered not in login_gated:
+            unexplained.append(rendered)
+    assert unexplained == []
+
+
+def test_login_recovery_door_reaches_its_target_resolver(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path), override_settings(cadrumo_output_language="en"):
+        result = CliRunner().invoke(app, ["config", "login", "does-not-exist"])
+
+    assert result.exit_code != 0
+    assert "Unknown profile" in result.output
+    assert "No active profile" not in result.output
+
+
+def test_real_root_dispatch_refuses_profile_write_before_root_database_creation(tmp_path: Path) -> None:
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
+        error_boundary_under_test(),
+        pytest.raises(CliRefusedBoundaryError),
+    ):
+        cadrumo_click_command().main(
+            args=["app", "modelo", "work", "verify", "revision-id"],
+            prog_name="aeat",
+            standalone_mode=False,
+        )
+
+    assert tuple(storage_root.rglob("*.db")) == ()
+
+
+def test_real_root_dispatch_refuses_profile_write_before_explicit_database_creation(tmp_path: Path) -> None:
+    explicit_database = tmp_path / "explicit.db"
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        override_settings(cadrumo_database_url=f"sqlite:///{explicit_database.as_posix()}"),
+        error_boundary_under_test(),
+        pytest.raises(CliRefusedBoundaryError),
+    ):
+        cadrumo_click_command().main(
+            args=["config", "google", "login"],
+            prog_name="aeat",
+            standalone_mode=False,
+        )
+
+    assert not explicit_database.exists()
 
 
 def test_unclassified_planted_leaf_fails_closed() -> None:

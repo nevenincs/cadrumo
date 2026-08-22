@@ -908,13 +908,6 @@ group = "modelo-path-routing"
 selects = "MODELO_210_SEDE_ONLY"
 
 [[branch]]
-path = "src/cadrumo/application/storage_write_policy.py"
-enclosing_symbol = "_delegates_to_leaf_refusal"
-modelo_codes = "M210"
-group = "modelo-scope-guard"
-selects = "_delegates_to_leaf_refusal"
-
-[[branch]]
 path = "src/cadrumo/domain/filing/_validator.py"
 enclosing_symbol = "_required_casilla_satisfied_by_row_bindings"
 modelo_codes = "M349"
