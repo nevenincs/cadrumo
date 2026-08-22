@@ -2007,13 +2007,11 @@ legitimately added year.
 
 ### Two blocker descriptions were wrong
 
-- **m763 does not need a three-way split at 2015 and Q4 2018.** The corpus-evidenced
-  boundary is **2012/2015**, and the split gate does not flag this revision at all — it
-  carries no export layout, so there are no byte offsets for a re-layout to write wrongly.
-  What it needed was the amending orden: HAP/2373/2014 disposición final primera, which
-  substitutes its anexo I "con efectos para los periodos de liquidación que se inicien a
-  partir del 1 de enero de 2015" — the measured boundary exactly. Cited; the NO-LEGAL-
-  EVIDENCE verdict is cleared. The 2018-4T layout's own orden remains unbundled.
+- **m763 needed the amending ordenes, and the split.** HAP/2373/2014 disposición final
+  primera substitutes its anexo I "con efectos para los periodos de liquidación que se
+  inicien a partir del 1 de enero de 2015"; HAC/1363/2018 artículo único substitutes it
+  again "para las autoliquidaciones correspondientes al cuarto trimestre del año 2018 y
+  siguientes". Both are now bundled and cited; the NO-LEGAL-EVIDENCE verdict is cleared.
 - **m220's blocker was one acquisition, and it landed.** Orden HAC/529/2026 approves the
   2025 IS models; its art 6.3 is the modelo-220-specific plazo (LIS art 75.2) and is
   stronger grounding than the 2024 era's, whose only bundled provision naming 220 is art 3's
@@ -2033,3 +2031,35 @@ corrected in orden-hac-510-2021 the same day. Recorded in the excerpt's own prov
 - HAC/529/2026 art. 1 and the m763 2018-4T orden remain to be bundled.
 - Peers captured this work by bare commit **twice in one session**. The `reviewed_by` scope
   statement is what survived both times; commit messages did not.
+
+### Correction: the stale m763 note was right, and this audit was wrong about it
+
+An earlier entry above claimed the campaign note describing m763 as needing "BOE-A-2014-13180
++ BOE-A-2018-17602 bundled + three-way split at 2015 and Q4 2018" was "wrong on both counts".
+It was not. **Both document ids are correct**, and **both boundaries are real** — the design
+registrations bracket them exactly (`aeat-dr-763-2015` runs 2015-01-01 to 2018-09-30,
+`enrolled-modelo-763-layout` from 2018-10-01) and each now has its orden bundled.
+
+What misled me was the span gate, which reports a single boundary, "2012/2015". That is the
+*same* 2015 boundary expressed as a design-epoch pair, not a competing account, and the gate's
+silence on the 2018 one is a limit of what it can see — not evidence the boundary is absent.
+Reading one instrument's verdict as the whole truth is the error; the design registrations were
+sitting in the catalogue saying otherwise the entire time.
+
+**The partition is larger than "three-way", too.** The 2018 boundary falls MID-YEAR, and
+`PeriodSelector` is year-granular — `years`, `year_from`, `year_to` and one `periods` list, with
+no per-year period bound. A mid-year era is therefore expressed by giving the boundary year its
+own explicit `years = [YYYY]` revisions with disjoint period lists, with the open tail starting
+at the next clean year. Modelo 490 already does this at its 2022 1T|2T boundary and documents
+the reason in its own prose. So m763 wants **five** revisions: 2011-2014, 2015-2017, 2018-1T-3T,
+2018-4T, 2019-y-siguientes.
+
+**Why it was not executed here.** Each closed era additionally needs its own trimestral windows
+derived from orden-eha-1881-2011 art 4 ("la presentación será trimestral y se efectuará durante
+el mes siguiente a la finalización de cada trimestre natural"), because an applicability-grade
+revision that cannot say when it is due does not meet its own grade — the lesson m604's
+2021-2023 era already taught. This revision's eight windows cover 2025 and 2026 only, so four
+of the five eras would land with none, and splitting without them would convert one honest
+pending revision into five unstampable ones. The acquisition is done and durable; the partition
+is the next step, specified above rather than half-started.
+

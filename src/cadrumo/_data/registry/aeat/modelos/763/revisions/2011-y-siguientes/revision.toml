@@ -21,10 +21,32 @@ authority_grade = "applicability"
 # I with effect for liquidation periods beginning 1 January 2015, which is the
 # measured boundary exactly.
 #
-# NOT SPLIT, deliberately: the split gate (test_no_revision_spans_a_design_relayout)
-# does not flag this revision, because it carries no export layout -- there are no
-# byte offsets here for a re-layout to write wrongly. The 2018-4T layout's own
-# amending orden is not yet bundled and remains open.
+# BOTH amending ordenes are now bundled and cited. HAP/2373/2014 disposición final
+# primera carries the 2015 boundary; HAC/1363/2018 artículo único substitutes the
+# anexo again and applies "para las autoliquidaciones correspondientes al cuarto
+# trimestre del año 2018 y siguientes", matching enrolled-modelo-763-layout's
+# applies_from 2018-10-01 exactly.
+#
+# STILL ONE REVISION, and this is a known gap rather than a judgement that one is
+# right. The correct partition is FIVE revisions, not two: 2011-2014, 2015-2017,
+# 2018-1T-3T, 2018-4T and 2019-y-siguientes. Four are needed because the second
+# boundary falls MID-YEAR and PeriodSelector is year-granular -- it carries
+# `years`, `year_from`, `year_to` and one `periods` list, with no per-year period
+# bound -- so a mid-year era is expressed by giving the boundary year its own
+# explicit `years = [YYYY]` revisions with disjoint period lists, and the open
+# tail starts at the next clean year. Modelo 490 already does exactly this at its
+# 2022 1T|2T boundary and documents the reason in its own prose.
+#
+# What that partition additionally requires, and why it is not done here: each
+# closed era needs its own trimestral deadline windows derived from
+# orden-eha-1881-2011 art 4 ("la presentación será trimestral y se efectuará
+# durante el mes siguiente a la finalización de cada trimestre natural"), because
+# an applicability-grade revision that cannot say when it is due does not meet its
+# own grade -- the lesson from modelo 604's 2021-2023 era. This revision's eight
+# windows cover 2025 and 2026 only, so the four earlier eras would land with none.
+#
+# The span gate sees only the 2012/2015 boundary; the 2018 one is invisible to it
+# but real, evidenced by the design registrations and now by its orden.
 valid_from = 2011-01-01
 period_selector = { year_from = 2011, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-eha-1881-2011:art-1"]
@@ -32,6 +54,7 @@ legal_refs = [
     "orden-eha-1881-2011:art-1",
     "orden-eha-1881-2011:art-4",
     "orden-hap-2373-2014:df-primera",
+    "orden-hac-1363-2018:art-unico",
     "ley-58-2003:art-93",
 ]
 source_refs = [
@@ -39,6 +62,7 @@ source_refs = [
     "enrolled-modelo-763-layout",
     "aeat-dr-763-2015",
     "boe-modelo-763-2015-amendment",
+    "boe-modelo-763-2018-amendment",
 ]
 
 
