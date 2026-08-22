@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:c5f26e2dc18619959264ce4cc47936cbb8f10325ad747eab16b4ac90bc40dc41'
+body_hash: 'sha256:ac4ba5157c6e556cd3ebf03e5814833b53bb3f63eab8e399854414b82f8e3ab9'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1770,6 +1770,44 @@ have forced it to state.
 it, and several ended by refusing a stamp that looked available. That is the intended
 shape: the pending count is not the deliverable, and a revision moved across it without
 evidence would be worse than one left behind.
+
+
+### splitting-a-revision-does-not-clear-the-layout-coverage-gate | high | feedback for work currently in flight
+
+Peers are splitting revisions right now -- m184, m322 and m347 all landed splits during
+this campaign's later iterations. Re-measuring the layout-coverage divergences after
+those splits gives a result worth passing back immediately:
+
+**The count is unchanged at 25.** What changed is only the revision identifiers:
+
+| before | after the split | still divergent |
+|---|---|---|
+| m184 2015-y-siguientes | **m184 2015-2024** | yes |
+| m322 2008-2025 | **m322 2008-2023** | yes |
+| m347 2008-y-siguientes | **m347 2008-2024** | yes |
+
+Each split correctly bounded an open-ended revision -- which is a real improvement and
+exactly what the span gate asks for -- and none of the three cleared this gate, because
+the binding constraint is different.
+
+**Why splitting cannot clear it.** m184's earlier segment now claims 2015-2024 against a
+design that applies from 2025. Bounding the revision does not conjure a design for the
+years before the earliest bundled one. The span gate wants a revision not to straddle a
+re-layout; this gate wants every claimed year to have a design. A split answers the first
+and leaves the second untouched whenever the modelo's oldest bundled design post-dates
+the revision's oldest claimed year -- which is the situation for all fourteen genuine-gap
+entries.
+
+**So the two gates want different things and only one is satisfiable by restructuring.**
+For the fourteen, the remedy is acquiring older designs, or narrowing what the revision
+claims to the years evidence exists for -- and the second makes the registry assert less
+than the taxpayer's reality, which the span gate's own docstring warns against in the
+Modelo 720 case it records.
+
+Recorded here because the splits are landing now and the next natural step after them --
+re-running this gate and expecting improvement -- will show none, which reads as the work
+having failed when it did not.
+
 
 ## Recommendations
 
