@@ -54,7 +54,9 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
 )
 from ...domain.user_profile import ProfileNotFoundError
+from ._command_policy import command_execution_policy
 from ._common import MODELO_CODE_CHOICE, _emit_envelope, _parse_iso_date, resolve_notice_action
+from ._modelo_execution_policies import REGISTRY_MODEL_READ, REGISTRY_READ, declare_metadata_group
 from ._modelo_payloads import (
     BindingListRowPayload,
     BindingPreviewRowPayload,
@@ -113,6 +115,7 @@ def register_discovery_commands(
         no_args_is_help=True,
         add_completion=False,
     )
+    declare_metadata_group(bindings_app)
     app.add_typer(bindings_app, name="bindings")
     _register_list_command(app, deps)
     _register_describe_command(app, deps)
@@ -194,6 +197,7 @@ def _register_list_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         )
 
     @app.command("list", help=tr("cli.app.modelo.list.help"))
+    @command_execution_policy(REGISTRY_READ)
     def list_modelos(
         ctx: typer.Context,
         year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
@@ -228,6 +232,7 @@ def _register_list_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
 
 def _register_describe_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
     @app.command("describe", help=tr("cli.app.modelo.describe.help"))
+    @command_execution_policy(REGISTRY_READ)
     def describe_modelo(
         ctx: typer.Context,
         modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.describe.modelo_help"))],
@@ -272,6 +277,7 @@ def _register_describe_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
 
 def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
     @app.command("casillas", help=tr("cli.app.modelo.casillas.help"))
+    @command_execution_policy(REGISTRY_READ)
     def casillas(
         ctx: typer.Context,
         modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.casillas.modelo_help"))],
@@ -401,6 +407,7 @@ def _register_casilla_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             ),
         ),
     )
+    @command_execution_policy(REGISTRY_READ)
     def casilla(
         ctx: typer.Context,
         modelo: Annotated[
@@ -513,6 +520,7 @@ def _register_requires_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             ),
         ),
     )
+    @command_execution_policy(REGISTRY_MODEL_READ)
     def requires(
         ctx: typer.Context,
         modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.requires.modelo_help"))],
@@ -840,6 +848,7 @@ def _binding_list_rows_for_report(
 
 def _register_bindings_list_command(bindings_app: typer.Typer, deps: _DiscoveryDeps) -> None:
     @bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
+    @command_execution_policy(REGISTRY_MODEL_READ)
     def bindings_list(
         ctx: typer.Context,
         modelo: Annotated[
@@ -1016,6 +1025,7 @@ def _require_binding_scope(*, modelo: str | None, year: int | None, period: str 
 
 def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _DiscoveryDeps) -> None:
     @bindings_app.command("resolve", help=tr("cli.app.modelo.bindings.resolve_help"))
+    @command_execution_policy(REGISTRY_MODEL_READ)
     def bindings_resolve(
         ctx: typer.Context,
         modelo: Annotated[
@@ -1125,6 +1135,7 @@ def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _Discove
 
 def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
     @app.command("formulas", help=tr("cli.app.modelo.formulas.help"))
+    @command_execution_policy(REGISTRY_READ)
     def formulas(
         ctx: typer.Context,
         modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.formulas.modelo_help"))],
@@ -1260,6 +1271,7 @@ def _register_support_matrix_command(app: typer.Typer) -> None:
             ),
         ),
     )
+    @command_execution_policy(REGISTRY_READ)
     def support_matrix(ctx: typer.Context) -> None:
         report = registry_support_matrix()
         entries = [_support_matrix_entry_payload(entry) for entry in report.entries]

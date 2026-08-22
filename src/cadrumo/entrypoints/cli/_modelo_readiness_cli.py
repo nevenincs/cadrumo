@@ -29,9 +29,11 @@ from ...core.json_contract import (
 )
 from ...domain.calculations.registry import RevisionId
 from ...domain.user_profile import ProfileNotFoundError
+from ._command_policy import command_execution_policy
 from ._common import MODELO_CODE_CHOICE, _emit_envelope, _no_active_profile_refusal, resolve_notice_action
 from ._errors import CliRefusedBoundaryError
 from ._modelo_cli_support import unsupported_local_work_period_refusal
+from ._modelo_execution_policies import CALCULATION_READ
 from ._modelo_payloads import (
     LedgerIssuePayload,
     ModeloReadinessMissingBindingPayload,
@@ -50,6 +52,7 @@ def register_readiness_commands(app: typer.Typer) -> None:
             default="Report whether the active profile is ready to file one modelo / year / period.",
         ),
     )
+    @command_execution_policy(CALCULATION_READ)
     def modelo_readiness(
         ctx: typer.Context,
         modelo: Annotated[

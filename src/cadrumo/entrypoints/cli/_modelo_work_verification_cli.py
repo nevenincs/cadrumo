@@ -46,7 +46,9 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError, derive_taxpayer_files_economic_activity
 from ...domain.modelos import CalculationRevisionState
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, _filing_taxpayer_or_refuse
+from ._modelo_execution_policies import CALCULATION_READ, CALCULATION_WRITE, MODEL_HANDOFF
 from ._modelo_payloads import (
     CrossPeriodCleanStatePayload,
     CrossPeriodDependencyEvidencePayload,
@@ -130,6 +132,7 @@ def register_work_verification_commands(
 
 def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationDeps) -> None:
     @work_app.command("verify", help=tr("cli.app.modelo.work.verify_help"))
+    @command_execution_policy(CALCULATION_WRITE)
     def work_verify(
         ctx: typer.Context,
         calculation_revision_id: _CalculationRevisionIdArg = None,
@@ -228,6 +231,7 @@ def _register_work_dependencies_command(
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
 ) -> None:
     @work_app.command("dependencies", help=tr("cli.app.modelo.work.dependencies_help"))
+    @command_execution_policy(CALCULATION_READ)
     def work_dependencies(
         ctx: typer.Context,
         year: Annotated[
@@ -419,6 +423,7 @@ def _dependency_inventory_lines(result: WorkDependenciesResult) -> list[str]:
 
 def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDeps) -> None:
     @work_app.command("file", help=tr("cli.app.modelo.work.file_help"))
+    @command_execution_policy(MODEL_HANDOFF)
     def work_file(
         ctx: typer.Context,
         calculation_revision_id: _CalculationRevisionIdArg = None,

@@ -17,7 +17,9 @@ from ...application.modelo import (
 from ...core.i18n import tr
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import CensoModeloEventKind
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
+from ._modelo_execution_policies import MODEL_READ, MODEL_WRITE, declare_metadata_group
 from ._modelo_payloads_m036 import (
     M036DeclarationListResult,
     M036DeclarationRecordResult,
@@ -54,6 +56,7 @@ def register_m036_commands(
         no_args_is_help=True,
         add_completion=False,
     )
+    declare_metadata_group(m036_app)
     app.add_typer(m036_app, name="m036")
 
     def record_m036(
@@ -114,6 +117,7 @@ def register_m036_commands(
             default="Record an M036 alta declaration (initial census registration) filed at sede.",
         ),
     )
+    @command_execution_policy(MODEL_WRITE)
     def m036_alta(
         ctx: typer.Context,
         declared_on: Annotated[
@@ -160,6 +164,7 @@ def register_m036_commands(
             default="Record an M036 modificacion declaration (census update) filed at sede.",
         ),
     )
+    @command_execution_policy(MODEL_WRITE)
     def m036_modificacion(
         ctx: typer.Context,
         declared_on: _DeclaredOnOpt,
@@ -182,6 +187,7 @@ def register_m036_commands(
             default="Record an M036 baja declaration (census deregistration) filed at sede.",
         ),
     )
+    @command_execution_policy(MODEL_WRITE)
     def m036_baja(
         ctx: typer.Context,
         declared_on: _DeclaredOnOpt,
@@ -219,6 +225,7 @@ def _register_m036_readback_commands(
             default="List the M036 declarations recorded in the active profile.",
         ),
     )
+    @command_execution_policy(MODEL_READ)
     def m036_list(ctx: typer.Context) -> None:
         """List the active profile's recorded M036 declarations."""
         require_active_profile()
@@ -264,6 +271,7 @@ def _register_m036_readback_commands(
             default="View one recorded M036 declaration by id (or unambiguous prefix).",
         ),
     )
+    @command_execution_policy(MODEL_READ)
     def m036_view(
         ctx: typer.Context,
         declaration_id: Annotated[

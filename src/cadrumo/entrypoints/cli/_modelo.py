@@ -61,6 +61,7 @@ from ...domain.modelos import (
     M303RectificativaMotive,
     WorkUnit,
 )
+from ._command_policy import command_execution_policy
 from ._common import (
     MODELO_CODE_CHOICE,
     activate_subcommand_output_language,
@@ -114,6 +115,7 @@ from ._modelo_cli_support import (
     work_calculate_input_bundle_from_cli as _work_calculate_input_bundle_from_cli,
 )
 from ._modelo_discovery_cli import register_discovery_commands
+from ._modelo_execution_policies import CALCULATION_READ, CALCULATION_WRITE, MODEL_READ, declare_metadata_group
 from ._modelo_export_cli import register_export_commands
 from ._modelo_iva_wallet_cli import register_iva_wallet_commands
 from ._modelo_m036_cli import register_m036_commands
@@ -171,6 +173,7 @@ app = typer.Typer(
     help=tr("cli.app.modelo.app_help"),
     no_args_is_help=True,
 )
+declare_metadata_group(app)
 
 
 def _validate_work_unit_lookup_id(value: str) -> str:
@@ -445,6 +448,7 @@ register_aggregate_commands(app, resolve_year_period=_resolve_year_period)
 
 work_app = create_work_app()
 app.add_typer(work_app, name="work")
+declare_metadata_group(work_app)
 
 
 _M200_M202_PAGOS_RELATION_IDS: frozenset[str] = frozenset(
@@ -694,6 +698,7 @@ register_work_wizard_commands(
     "compare-taxation",
     help=tr("cli.app.modelo.work.compare_taxation_help"),
 )
+@command_execution_policy(CALCULATION_READ)
 def work_compare_taxation(
     ctx: typer.Context,
     work_unit_id: _WorkUnitIdArg = None,
@@ -851,6 +856,7 @@ register_work_review_command(
     "history",
     help=tr("cli.app.modelo.work.history_help"),
 )
+@command_execution_policy(MODEL_READ)
 def work_history(
     ctx: typer.Context,
     work_unit_id: Annotated[
@@ -1018,6 +1024,7 @@ def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[CasillaId
 
 
 @work_app.command("amend", help=tr("cli.app.modelo.work.amend_help"))
+@command_execution_policy(CALCULATION_WRITE)
 def work_amend(
     ctx: typer.Context,
     from_filing_record_id: Annotated[
@@ -1159,6 +1166,7 @@ register_record_commands(
         default="Chronological modelo lifecycle audit (calculate/verify/file/amend/...) for one modelo.",
     ),
 )
+@command_execution_policy(MODEL_READ)
 def modelo_history(
     ctx: typer.Context,
     modelo: Annotated[

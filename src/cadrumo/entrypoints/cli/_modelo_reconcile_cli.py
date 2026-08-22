@@ -25,7 +25,9 @@ import typer
 from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationReport
 from ...core.i18n import tr
 from ...domain.modelos import WorkUnit
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
+from ._modelo_execution_policies import BROWSER_MODEL_WRITE, MODEL_HANDOFF, MODEL_READ, declare_metadata_group
 from ._modelo_work_options import _ActorOpt, _BucketIdOpt, _ModeloOpt, _PeriodOpt, _RevisionOpt, _YearOpt
 
 _require_active_profile: Callable[[], None] | None = None
@@ -46,6 +48,7 @@ reconcile_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(reconcile_app)
 
 
 def register_reconcile_commands(
@@ -199,6 +202,7 @@ _KindOpt = Annotated[
         default="Pull the justificante for a work unit from AEAT and reconcile against it. Contacts AEAT (read-only).",
     ),
 )
+@command_execution_policy(BROWSER_MODEL_WRITE)
 def reconcile_pull_verb(
     ctx: typer.Context,
     work_unit_id: _WorkUnitIdArg = None,
@@ -243,6 +247,7 @@ def reconcile_pull_verb(
         ),
     ),
 )
+@command_execution_policy(MODEL_HANDOFF)
 def reconcile_file_verb(
     ctx: typer.Context,
     file: Annotated[
@@ -299,6 +304,7 @@ def reconcile_file_verb(
         ),
     ),
 )
+@command_execution_policy(MODEL_READ)
 def reconcile_history_verb(
     ctx: typer.Context,
     work_unit_id: Annotated[

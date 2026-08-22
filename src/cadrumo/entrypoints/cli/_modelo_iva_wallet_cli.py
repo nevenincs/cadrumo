@@ -22,7 +22,9 @@ from ...core import Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.i18n import tr
 from ...domain.iva_compensation import IvaCompensationSeedConflictError
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
+from ._modelo_execution_policies import MODEL_READ, MODEL_WRITE, declare_metadata_group
 from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
 from ._modelo_payloads_m036 import IvaWalletCorrectResult
 
@@ -67,6 +69,7 @@ def register_iva_wallet_commands(
         no_args_is_help=True,
         add_completion=False,
     )
+    declare_metadata_group(iva_wallet_app)
     app.add_typer(iva_wallet_app, name="iva-wallet")
     _register_iva_wallet_balance_command(iva_wallet_app)
     _register_iva_wallet_seed_command(iva_wallet_app, active_bucket_id=active_bucket_id)
@@ -87,6 +90,7 @@ def _register_iva_wallet_balance_command(iva_wallet_app: typer.Typer) -> None:
             ),
         ),
     )
+    @command_execution_policy(MODEL_READ)
     def iva_wallet_balance_cmd(
         ctx: typer.Context,
         as_of_year: Annotated[
@@ -139,6 +143,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
             ),
         ),
     )
+    @command_execution_policy(MODEL_WRITE)
     def iva_wallet_seed_cmd(
         ctx: typer.Context,
         filing_year: Annotated[
@@ -276,6 +281,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
             ),
         ),
     )
+    @command_execution_policy(MODEL_WRITE)
     def iva_wallet_correct_cmd(
         ctx: typer.Context,
         filing_year: Annotated[
@@ -454,6 +460,7 @@ def _register_iva_wallet_override_command(iva_wallet_app: typer.Typer, *, active
             ),
         ),
     )
+    @command_execution_policy(MODEL_WRITE)
     def iva_wallet_override_cmd(
         ctx: typer.Context,
         filing_year: Annotated[

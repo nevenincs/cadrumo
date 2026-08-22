@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import BaseModel, ConfigDict, SecretStr
 
-from ....adapters.persistence.storage import SecretStoreError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -217,6 +216,7 @@ def _login_through_the_prompt(
     console-less one keeps the substrate's own refusal and exit code
     rather than acquiring this package's; neither behaviour moves.
     """
+    from ....adapters.persistence.storage.custody import ProfileCustodyPasswordError
     from ....application.user_profile import ProfileAuthenticationRefusedError, login_profile
     from ....core.config import load_settings
     from .. import _headless_secret_channel_active
@@ -252,7 +252,7 @@ def _login_through_the_prompt(
 
     try:
         return login_profile(name=name, passphrase_callback=passphrase_callback)
-    except (ProfileAuthenticationRefusedError, SecretStoreError) as exc:
+    except (ProfileAuthenticationRefusedError, ProfileCustodyPasswordError) as exc:
         # Distinguish "no password was offered" from "the password was wrong".
         # Custody refuses both through one error, and its absent-channel
         # wording is necessarily terse: it cannot name --secrets-stdin,
@@ -266,7 +266,7 @@ def _login_through_the_prompt(
         # login legitimately proceeds with no callback at all -- a configured
         # passphrase and a resumed session are both unlocked inside it.
         if (
-            isinstance(exc, SecretStoreError)
+            isinstance(exc, ProfileCustodyPasswordError)
             and passphrase_callback is None
             and load_settings().cadrumo_secret_passphrase is None
         ):

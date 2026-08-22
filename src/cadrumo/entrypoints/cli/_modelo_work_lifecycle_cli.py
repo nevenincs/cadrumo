@@ -38,8 +38,10 @@ from ...core.json_contract import (
 from ...domain.calculations.registry import RegistrySnapshotError, RevisionId
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, active_profile_label, resolve_lifecycle_continuation_notice
 from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
+from ._modelo_execution_policies import MODEL_DESTRUCTIVE, MODEL_READ, MODEL_WRITE
 from ._modelo_payloads import (
     WorkCreateResult,
     WorkDiscardResult,
@@ -153,6 +155,7 @@ def guard_unsupported_work_modelo(modelo: str) -> None:
 
 def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
     @work_app.command("create", help=tr("cli.app.modelo.work.create_help"))
+    @command_execution_policy(MODEL_WRITE)
     def work_create(
         ctx: typer.Context,
         modelo: Annotated[
@@ -392,6 +395,7 @@ def _modelo_100_obligation_advisory_output(unit) -> tuple[list[Notice], list[str
 
 def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
     @work_app.command("list", help=tr("cli.app.modelo.work.list_help"))
+    @command_execution_policy(MODEL_READ)
     def work_list(
         ctx: typer.Context,
         bucket_id: _BucketIdOpt = None,
@@ -431,6 +435,7 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
 
 def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
     @work_app.command("status", help=tr("cli.app.modelo.work.status_help"))
+    @command_execution_policy(MODEL_READ)
     def work_status(
         ctx: typer.Context,
         work_unit_id: _WorkUnitIdArg = None,
@@ -469,6 +474,7 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
 
 def _register_work_rename_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
     @work_app.command("rename", help=tr("cli.app.modelo.work.rename_help"))
+    @command_execution_policy(MODEL_WRITE)
     def work_rename(
         ctx: typer.Context,
         work_unit_id: _WorkUnitIdArg = None,
@@ -505,6 +511,7 @@ def _register_work_rename_command(work_app: typer.Typer, deps: _LifecycleDeps) -
 
 def _register_work_discard_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
     @work_app.command("discard", help=tr("cli.app.modelo.work.discard_help"))
+    @command_execution_policy(MODEL_DESTRUCTIVE)
     def work_discard(
         ctx: typer.Context,
         work_unit_id: _WorkUnitIdArg = None,

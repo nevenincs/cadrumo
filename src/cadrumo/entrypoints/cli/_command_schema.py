@@ -40,6 +40,7 @@ CommandCapability = Literal[
     "google",
     "calculation",
     "filing",
+    "crypto",
 ]
 """Authority families a command may enter while it executes.
 

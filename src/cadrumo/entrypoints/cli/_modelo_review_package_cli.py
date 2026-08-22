@@ -122,6 +122,7 @@ from ...application.workflow import workflow_state_repository
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, _filing_taxpayer_or_refuse
 from ._modelo_cli_support import (
     parse_revision_selector,
@@ -129,6 +130,14 @@ from ._modelo_cli_support import (
     resolve_explicit_or_active_bucket_id,
     validate_calculation_revision_id,
     validate_work_unit_id,
+)
+from ._modelo_execution_policies import (
+    CALCULATION_WRITE,
+    CRYPTO_FILE_WRITE,
+    CRYPTO_MODEL_WRITE,
+    CRYPTO_PROFILE_FILE_WRITE,
+    CRYPTO_READ,
+    declare_metadata_group,
 )
 from ._modelo_review_package_rendering import (
     review_package_build_result_lines,
@@ -162,6 +171,7 @@ review_package_app = typer.Typer(
     ),
     no_args_is_help=True,
 )
+declare_metadata_group(review_package_app)
 
 
 def register_review_package_commands(app: typer.Typer) -> None:
@@ -180,6 +190,7 @@ def register_review_package_commands(app: typer.Typer) -> None:
         ),
     ),
 )
+@command_execution_policy(CALCULATION_WRITE)
 def review_package_build(
     ctx: typer.Context,
     work_unit_id: Annotated[
@@ -375,6 +386,7 @@ def review_package_build(
         ),
     ),
 )
+@command_execution_policy(CRYPTO_READ)
 def review_package_verify(
     ctx: typer.Context,
     package: Annotated[
@@ -418,6 +430,7 @@ def review_package_verify(
         ),
     ),
 )
+@command_execution_policy(CRYPTO_PROFILE_FILE_WRITE)
 def review_package_sign(
     ctx: typer.Context,
     package: Annotated[
@@ -494,6 +507,7 @@ def review_package_sign(
         ),
     ),
 )
+@command_execution_policy(CRYPTO_READ)
 def review_package_verify_signature(
     ctx: typer.Context,
     package: Annotated[
@@ -564,6 +578,7 @@ def review_package_verify_signature(
         ),
     ),
 )
+@command_execution_policy(CRYPTO_PROFILE_FILE_WRITE)
 def review_package_counter_sign(
     ctx: typer.Context,
     package: Annotated[
@@ -664,6 +679,7 @@ def review_package_counter_sign(
         ),
     ),
 )
+@command_execution_policy(CRYPTO_READ)
 def review_package_verify_receipt(
     ctx: typer.Context,
     package: Annotated[
@@ -752,6 +768,7 @@ def review_package_verify_receipt(
         ),
     ),
 )
+@command_execution_policy(CRYPTO_FILE_WRITE)
 def review_package_encrypt_for_recipient(
     ctx: typer.Context,
     package: Annotated[
@@ -875,6 +892,7 @@ def review_package_encrypt_for_recipient(
         ),
     ),
 )
+@command_execution_policy(CRYPTO_PROFILE_FILE_WRITE)
 def review_package_decrypt(
     ctx: typer.Context,
     envelope_path: Annotated[
@@ -959,6 +977,7 @@ def review_package_decrypt(
         ),
     ),
 )
+@command_execution_policy(CRYPTO_FILE_WRITE)
 def review_package_encrypt_feedback(
     ctx: typer.Context,
     originator_id: Annotated[
@@ -1108,6 +1127,7 @@ def review_package_encrypt_feedback(
         ),
     ),
 )
+@command_execution_policy(CRYPTO_MODEL_WRITE)
 def review_package_import_feedback(
     ctx: typer.Context,
     envelope_path: Annotated[

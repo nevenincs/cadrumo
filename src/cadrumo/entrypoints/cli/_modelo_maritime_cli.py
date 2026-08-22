@@ -28,8 +28,10 @@ from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...domain.renta import RentaValidationError
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
 from ._modelo_cli_support import optional_decimal_option
+from ._modelo_execution_policies import CALCULATION_READ
 from ._modelo_payloads import (
     CasillaObservationPayload,
     WorkPreviewMaritimeExemptionResult,
@@ -65,6 +67,7 @@ def register_maritime_commands(
             ),
         ),
     )
+    @command_execution_policy(CALCULATION_READ)
     def work_preview_maritime_exemption(
         ctx: typer.Context,
         annual_salary: Annotated[

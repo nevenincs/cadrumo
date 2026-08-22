@@ -47,6 +47,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import ResolvedPreconditionAction
 from ._action_rendering import resolved_precondition_action_json_cell
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, resolve_cli_precondition_action
 from ._modelo_cli_support import (
     OutputLanguageOpt,
@@ -54,6 +55,7 @@ from ._modelo_cli_support import (
     validate_calculation_revision_id,
     validate_work_unit_id,
 )
+from ._modelo_execution_policies import MODEL_READ, MODEL_WRITE
 from ._modelo_payloads import WorkflowRunPayload, WorkResumeResult, WorkRunsResult
 from ._modelo_work_options import (
     _BucketIdOpt,
@@ -159,6 +161,7 @@ def register_work_run_commands(
         "runs",
         help=tr("cli.app.modelo.work.runs_help"),
     )
+    @command_execution_policy(MODEL_READ)
     def work_runs(
         ctx: typer.Context,
         output_language: OutputLanguageOpt = None,
@@ -181,6 +184,7 @@ def register_work_run_commands(
         "resume",
         help=tr("cli.app.modelo.work.resume_help"),
     )
+    @command_execution_policy(MODEL_WRITE)
     def work_resume(
         ctx: typer.Context,
         target: Annotated[

@@ -34,7 +34,9 @@ from ...application.modelo import (
 from ...core import CasillaId, Period, PeriodError, validated_casilla_id
 from ...core.i18n import tr
 from ...domain.modelos import ExternalEvidenceKind, ModeloCode, ModeloValidationError
+from ._command_policy import command_execution_policy
 from ._common import MODELO_CODE_CHOICE, _declared_tax_id, _emit_envelope
+from ._modelo_execution_policies import MODEL_READ, MODEL_WRITE, declare_metadata_group
 from ._modelo_payloads import (
     FilingRecordImportResult,
     FilingRecordLocalObservationResult,
@@ -141,9 +143,12 @@ verification_report_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(filing_record_app)
+declare_metadata_group(verification_report_app)
 
 
 @filing_record_app.command("list", help=tr("cli.app.modelo.filing_record.list_help"))
+@command_execution_policy(MODEL_READ)
 def filing_record_list(
     ctx: typer.Context,
     bucket_id: Annotated[
@@ -199,6 +204,7 @@ def filing_record_list(
 
 
 @filing_record_app.command("view", help=tr("cli.app.modelo.filing_record.view_help"))
+@command_execution_policy(MODEL_READ)
 def filing_record_show(
     ctx: typer.Context,
     filing_record_id: Annotated[
@@ -218,6 +224,7 @@ def filing_record_show(
 
 
 @filing_record_app.command("import", help=tr("cli.app.modelo.filing_record.import_help"))
+@command_execution_policy(MODEL_WRITE)
 def filing_record_import(
     ctx: typer.Context,
     work_unit_id: Annotated[
@@ -309,6 +316,7 @@ def filing_record_import(
     "observe-local",
     help=tr("cli.app.modelo.filing_record.observe_local_help"),
 )
+@command_execution_policy(MODEL_WRITE)
 def filing_record_observe_local(
     ctx: typer.Context,
     modelo: Annotated[
@@ -448,6 +456,7 @@ def filing_record_observe_local(
 
 
 @verification_report_app.command("list", help=tr("cli.app.modelo.verification_report.list_help"))
+@command_execution_policy(MODEL_READ)
 def verification_report_list(
     ctx: typer.Context,
     calculation_revision_id: Annotated[
@@ -494,6 +503,7 @@ def verification_report_list(
 
 
 @verification_report_app.command("view", help=tr("cli.app.modelo.verification_report.view_help"))
+@command_execution_policy(MODEL_READ)
 def verification_report_show(
     ctx: typer.Context,
     verification_report_id: Annotated[

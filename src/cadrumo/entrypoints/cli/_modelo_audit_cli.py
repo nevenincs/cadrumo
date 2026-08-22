@@ -8,7 +8,9 @@ from typing import Annotated
 import typer
 
 from ...core.i18n import tr
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, active_bucket_id_or_refuse
+from ._modelo_execution_policies import MODEL_HANDOFF, MODEL_READ, declare_metadata_group
 
 audit_app = typer.Typer(
     name="audit",
@@ -18,6 +20,7 @@ audit_app = typer.Typer(
     ),
     no_args_is_help=True,
 )
+declare_metadata_group(audit_app)
 
 
 def register_audit_commands(app: typer.Typer) -> None:
@@ -38,6 +41,7 @@ def _evidence_bundle_service():
         default="Render an evidence bundle's manifest and referenced records.",
     ),
 )
+@command_execution_policy(MODEL_READ)
 def audit_show(
     ctx: typer.Context,
     bundle_id: Annotated[
@@ -89,6 +93,7 @@ def audit_show(
         default="Re-verify the evidence bundle's integrity (report-only).",
     ),
 )
+@command_execution_policy(MODEL_READ)
 def audit_check(
     ctx: typer.Context,
     bundle_id: Annotated[
@@ -131,6 +136,7 @@ def audit_check(
         default="Write a ZIP archive of the bundle (manifest emitted last).",
     ),
 )
+@command_execution_policy(MODEL_HANDOFF)
 def audit_export(
     ctx: typer.Context,
     bundle_id: Annotated[
