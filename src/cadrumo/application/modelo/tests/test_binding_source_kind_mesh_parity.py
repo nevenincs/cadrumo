@@ -25,10 +25,8 @@ from ...aggregation import (
     RESERVED_SOURCE_KINDS,
     BindingSourceDisposition,
 )
-from .._calculation_source_policy import (
-    _BINDING_SOURCE_DISPOSITIONS,
-    BUCKET_AGGREGATION_OWNED_SOURCES,
-)
+from .._calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from .._calculation_source_policy import BUCKET_AGGREGATION_OWNED_SOURCES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -119,7 +117,7 @@ def test_reserved_mesh_members_are_not_routed_or_deferred() -> None:
 # ---------------------------------------------------------------------------
 # the ONE disposition registry parity gate.
 #
-# The disposition registry (_BINDING_SOURCE_DISPOSITIONS) is the single mapping
+# The canonical route disposition registry is the single mapping
 # answering "where does source X resolve" for every BindingSourceKind member,
 # built from the LIVE enrolled set (no hard-coded dispositions). These assertions
 # bind it to the enum and to the owned / deferred / reserved sets, making
@@ -132,7 +130,7 @@ def test_disposition_registry_covers_every_enum_member() -> None:
     A member missing from the registry is an unaccounted source kind; the registry
     builder raises on a member in zero or two states, so this pins full coverage.
     """
-    assert set(_BINDING_SOURCE_DISPOSITIONS) == set(BindingSourceKind)
+    assert set(CALCULATION_ROUTE_SOURCE_DISPOSITIONS) == set(BindingSourceKind)
 
 
 def test_disposition_enrolled_partition_equals_owned_mesh_set() -> None:
@@ -145,7 +143,7 @@ def test_disposition_enrolled_partition_equals_owned_mesh_set() -> None:
     """
     enrolled = frozenset(
         source
-        for source, disposition in _BINDING_SOURCE_DISPOSITIONS.items()
+        for source, disposition in CALCULATION_ROUTE_SOURCE_DISPOSITIONS.items()
         if disposition is BindingSourceDisposition.ENROLLED
     )
     assert enrolled == BUCKET_AGGREGATION_OWNED_SOURCES
@@ -155,7 +153,7 @@ def test_disposition_deferred_partition_equals_deferred_set() -> None:
     """The DEFERRED disposition partition equals DEFERRED_SOURCE_KINDS exactly."""
     deferred = frozenset(
         source
-        for source, disposition in _BINDING_SOURCE_DISPOSITIONS.items()
+        for source, disposition in CALCULATION_ROUTE_SOURCE_DISPOSITIONS.items()
         if disposition is BindingSourceDisposition.DEFERRED
     )
     assert deferred == DEFERRED_SOURCE_KINDS
@@ -165,7 +163,7 @@ def test_disposition_reserved_partition_equals_reserved_set() -> None:
     """The RESERVED disposition partition equals RESERVED_SOURCE_KINDS exactly."""
     reserved = frozenset(
         source
-        for source, disposition in _BINDING_SOURCE_DISPOSITIONS.items()
+        for source, disposition in CALCULATION_ROUTE_SOURCE_DISPOSITIONS.items()
         if disposition is BindingSourceDisposition.RESERVED
     )
     assert reserved == RESERVED_SOURCE_KINDS
@@ -178,9 +176,21 @@ def test_disposition_partitions_are_a_total_disjoint_cover() -> None:
     structures with one mapping: every member is enrolled, deferred, or reserved,
     and never two at once.
     """
-    enrolled = {s for s, d in _BINDING_SOURCE_DISPOSITIONS.items() if d is BindingSourceDisposition.ENROLLED}
-    deferred = {s for s, d in _BINDING_SOURCE_DISPOSITIONS.items() if d is BindingSourceDisposition.DEFERRED}
-    reserved = {s for s, d in _BINDING_SOURCE_DISPOSITIONS.items() if d is BindingSourceDisposition.RESERVED}
+    enrolled = {
+        source
+        for source, disposition in CALCULATION_ROUTE_SOURCE_DISPOSITIONS.items()
+        if disposition is BindingSourceDisposition.ENROLLED
+    }
+    deferred = {
+        source
+        for source, disposition in CALCULATION_ROUTE_SOURCE_DISPOSITIONS.items()
+        if disposition is BindingSourceDisposition.DEFERRED
+    }
+    reserved = {
+        source
+        for source, disposition in CALCULATION_ROUTE_SOURCE_DISPOSITIONS.items()
+        if disposition is BindingSourceDisposition.RESERVED
+    }
     assert enrolled.isdisjoint(deferred)
     assert enrolled.isdisjoint(reserved)
     assert deferred.isdisjoint(reserved)

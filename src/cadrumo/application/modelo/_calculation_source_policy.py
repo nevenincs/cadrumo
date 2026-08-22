@@ -33,48 +33,16 @@ from __future__ import annotations
 
 from ...core import BindingSourceKind
 from ..aggregation import DEFERRED_SOURCE_KINDS
-from ..aggregation import BindingSourceDisposition as _BindingSourceDisposition
 from ..aggregation import CallerOverrideDisposition as _CallerOverrideDisposition
-from ..aggregation import build_binding_source_dispositions as _build_binding_source_dispositions
 from ..aggregation import precedence_ladder_sources as _precedence_ladder_sources
+from ._calculation_route import (
+    CALCULATION_ROUTE_ENROLLED_SOURCES,
+    CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
+)
 
 # Boundary gate: source kinds handled by the live calculate path, either
 # through an enrolled resolver or an explicitly-deferred advisory.
-_ENROLLED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
-    {
-        BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
-        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
-        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
-        BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
-        BindingSourceKind.LEDGER_OSS_AGGREGATION,
-        BindingSourceKind.RETENCIONES_AGGREGATION,
-        BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
-        BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
-        BindingSourceKind.WITHHOLDING,
-        BindingSourceKind.COLLECTIBLE_INVOICE,
-        BindingSourceKind.PAYABLE_INVOICE,
-        BindingSourceKind.FOREIGN_ASSET,
-        BindingSourceKind.ATRIBUCION_MEMBER,
-        BindingSourceKind.PREVIOUS_FILING,
-        BindingSourceKind.RELATION_PREFILL,
-        BindingSourceKind.PRORRATA_REGULARIZACION,
-        BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
-        BindingSourceKind.PROFILE,
-        BindingSourceKind.BORRADOR,
-        BindingSourceKind.IVA_WALLET_DECISION,
-        BindingSourceKind.MANUAL_INPUT,
-    },
-)
-
-_BINDING_SOURCE_DISPOSITIONS = _build_binding_source_dispositions(_ENROLLED_SOURCE_KINDS)
-
-BUCKET_AGGREGATION_OWNED_SOURCES: frozenset[BindingSourceKind] = frozenset(
-    source
-    for source, disposition in _BINDING_SOURCE_DISPOSITIONS.items()
-    if disposition is _BindingSourceDisposition.ENROLLED
-)
+BUCKET_AGGREGATION_OWNED_SOURCES = CALCULATION_ROUTE_ENROLLED_SOURCES
 
 # Caller-override lock / carry sets, DERIVED from the ordered precedence-ladder
 # declaration (``CALLER_OVERRIDE_PRECEDENCE_LADDER`` in the aggregation package)
@@ -94,8 +62,8 @@ CALLER_OVERRIDABLE_CARRY_SOURCES: frozenset[BindingSourceKind] = _precedence_lad
 
 ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS = BUCKET_AGGREGATION_OWNED_SOURCES | DEFERRED_SOURCE_KINDS
 
-BINDING_SOURCE_DISPOSITIONS = _BINDING_SOURCE_DISPOSITIONS
-ENROLLED_SOURCE_KINDS = _ENROLLED_SOURCE_KINDS
+BINDING_SOURCE_DISPOSITIONS = CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+ENROLLED_SOURCE_KINDS = CALCULATION_ROUTE_ENROLLED_SOURCES
 
 __all__ = [
     "ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS",

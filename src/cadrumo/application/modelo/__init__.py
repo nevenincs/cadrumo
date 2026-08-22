@@ -144,6 +144,14 @@ from ._calculation_actions import (
     mark_revision_verificado_completo,
 )
 from ._calculation_resolution import resolve_calculation_binding_channels
+from ._calculation_route import (
+    CALCULATION_ROUTE_ENROLLED_SOURCES,
+    CALCULATION_ROUTE_PRE_MESH_SOURCES,
+    CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
+    CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
+    CalculationRouteResolverOwnership,
+    validate_calculation_route_resolver_ownership,
+)
 from ._calculation_source_policy import (
     BUCKET_AGGREGATION_LOCK_SOURCES,
     CALLER_OVERRIDABLE_CARRY_SOURCES,
@@ -575,6 +583,10 @@ from ._workflow_gate import build_revision_deadline_window_checker, workflow_per
 __all__ = [
     "APP_FILING_SOURCE_KIND",
     "BUCKET_AGGREGATION_LOCK_SOURCES",
+    "CALCULATION_ROUTE_ENROLLED_SOURCES",
+    "CALCULATION_ROUTE_PRE_MESH_SOURCES",
+    "CALCULATION_ROUTE_RESOLVER_OWNERSHIP",
+    "CALCULATION_ROUTE_SOURCE_DISPOSITIONS",
     "CALLER_OVERRIDABLE_CARRY_SOURCES",
     "CEDED_AUTONOMIC_MODELOS",
     "CEDED_AUTONOMIC_MODELO_LOCALE_KEYS",
@@ -601,6 +613,7 @@ __all__ = [
     "CalculationRevisionNotFoundError",
     "CalculationRevisionState",
     "CalculationRevisionStateError",
+    "CalculationRouteResolverOwnership",
     "CasillaDivergence",
     "CasillaDivergenceKind",
     "CasillaPopulationScope",
@@ -979,6 +992,7 @@ __all__ = [
     "select_exportable_revision",
     "select_modelo_calculation_revision",
     "sign_review_package",
+    "validate_calculation_route_resolver_ownership",
     "validate_m145_communication_record",
     "validate_m349_country_prefix_context",
     "validate_m349_nif_format",
