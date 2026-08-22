@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:52720c7af6570ac93bf1fa742c4ebb13bd16fb7839d6221edd816b3a91b44515'
+body_hash: 'sha256:a63654ba0e2ad9ee423e0c14bfe5e37485a923f0e5c317fc08e3801a9c5f6ca1'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -13475,3 +13475,126 @@ custody work in flight. The sixteen standing registry failures. Modelo 840 needs
 `bindings` and `export_layouts`, `projection_endpoints` decided once a layout
 exists, and 108 casillas whose Catalan and Hungarian labels this session cannot
 ground.
+
+## Tick: the seeded profile state that never reached storage, and the refusal that dropped its grounding
+
+Re-measured at tick start: authority loads CLEAN. Last tick's deferral reason --
+the profile-custody path being actively edited -- no longer held: nothing in
+`user_profile/` was uncommitted, so the defect became this tick's work.
+
+### The helper wrote facts and dropped everything else
+
+`replace_test_profile_record` is the door 110 test modules reach a seeded
+profile through, and 104 of them seed `setup_state = COMPLETE`. It built a
+replacement record carrying the caller's state and then called
+`apply_fact_changes(facts=replacement.facts)` -- a writer that takes facts and
+NOTHING else -- before returning `repository.load(...)`, the stored record. So
+the caller's state never reached storage and the helper returned a record that
+was still INCOMPLETE.
+
+Measured rather than inferred: seeding COMPLETE with sixteen facts and loading
+back through the readiness gate's own path returned the same sixteen facts,
+`setup_state = incomplete`, and a different `created_at`. The facts survived the
+write; the state did not.
+
+The refusal that followed named no missing field, which is what made it hard to
+read from the failure: nothing WAS missing. The gate can only say "incomplete"
+and enumerate nothing when the record's facts are schema-complete, which is
+exactly the state this bug produced.
+
+### Promotion goes through the door that judges, and stops where it must
+
+The fix promotes through `ProfileRecordRepository.complete_setup`, the
+production door, because COMPLETE is a CLAIM that nothing schema-required is
+absent rather than a label. Its own docstring says so.
+
+The first version let that door's refusal propagate, and the control said no: 29
+tests then failed inside the promotion with `required field identity.tax_id`.
+Reading them settles why -- fixtures like the autonomic-deducción advisory seed
+a deliberately minimal fact set for the behaviour under test and never read the
+state at all. Forcing every seeding fixture to author a schema-complete profile
+is a cost the defect does not justify, and the tests that genuinely need
+COMPLETE already seed complete facts.
+
+So the promotion is attempted and a schema refusal leaves the record as applied.
+That is not a return to silence: no production path can mint a COMPLETE record
+whose facts fail validation either, and a fixture that DOES depend on the state
+now meets the gate's missing-field refusal, which names what to add. The
+unactionable case -- schema-complete facts whose state was dropped -- is the one
+this promotion exists for.
+
+### A test that was passing on the bug
+
+`test_create_work_unit_service_refuses_a_setup_incomplete_profile` seeds a ready
+profile, then "demotes" it to INCOMPLETE. The demotion was always a no-op --
+there is no production door back to INCOMPLETE, by design -- and the scenario
+only existed because the seeding dropped the COMPLETE it was handed.
+
+The state is reachable honestly: a capsule is minted INCOMPLETE, so applying a
+complete fact set without completing setup IS a mid-setup profile. The test now
+seeds that directly, which is also what its own docstring describes.
+
+### The refusal named the fields and dropped the articles
+
+Fixing the above left one failure whose contract is stated in its own docstring:
+the gate "threads the live registry authority ... so a raised
+ModeloProfileReadinessError carries real legal_refs for every missing field the
+registry grounds - not a bare label". It did not. The setup-incomplete branch
+composed its missing-field list by calling the requirement builder with NO
+grounding index -- the index is built further down, AFTER that raise -- so the
+one surface whose purpose is telling an operator why a field is demanded of them
+named the fields and dropped the articles.
+
+The branch now builds the index before composing, and renders each requirement
+as its label followed by the articles that ground it, with a bare label where
+the registry grounds nothing rather than a trailing empty bracket.
+
+This failure is NOT attributable to the seeding fix: its fixture seeds a profile
+with no facts whatsoever, so the promotion is refused and the state is unchanged
+from before.
+
+### Verified
+
+* `test_profile_readiness_gate`: 22 passed, from 7 failed.
+* the seeding probe: a profile seeded COMPLETE now loads back COMPLETE, with its
+  sixteen facts intact.
+* the readiness class across the package: zero occurrences of
+  `profile_readiness_setup_incomplete` remain.
+* new `test_profile_capsule` regressions pin all three directions -- COMPLETE
+  seeds COMPLETE, the facts survive alongside the promoted state, and an
+  INCOMPLETE seed is left INCOMPLETE so a refusal scenario is not quietly
+  deleted.
+
+### A capture mistake worth recording
+
+The first full-package measurement was piped through `tail` before reaching its
+file, so the log held four lines and the greps run over it -- "0 refusals", "0
+readiness" -- were measuring nothing. The local-execution rule names this exact
+trap. The re-run with complete capture reported different totals and the real
+attribution, and every claim above rests on that one.
+
+### Still open
+
+`created_at` still differs across a seed, correctly: it belongs to the capsule's
+creation, not to the seeding call, and no production path rewrites it.
+
+The registry campaign's own backlog is unchanged: sixteen standing failures,
+modelo 840 needing `bindings` and `export_layouts`, `projection_endpoints`
+pending a layout, and 108 casillas whose Catalan and Hungarian labels this
+session cannot ground.
+
+### Two attributions settled by control rather than by argument
+
+A full-package run mid-tick reported 387 failed against 185 an hour earlier, with
+233 of them one registry error: `source 'boe-modelo-220-2026-form' byte count
+mismatch`. That was a snapshot taken across a peer's four-commit modelo 220
+landing (span split, locales, record-design re-key, payment-cutoff grounding).
+The authority loads CLEAN on the settled tree, so the jump was the landing rather
+than the code, exactly as the local-execution rule predicts for this share.
+
+Four failures remain in `test_m303_regimen_simplificado_scope`. They are not this
+tick's: with the readiness-gate change reverted to HEAD and restored
+byte-exactly, that module measures 4 failed / 2 passed in BOTH states. The
+seeding change cannot reach them either -- the module's fact set omits
+`identity.tax_id`, so its promotion is refused and its state is what it always
+was.

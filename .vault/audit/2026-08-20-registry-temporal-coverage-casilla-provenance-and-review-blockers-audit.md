@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:a61971fea9d7d3d9a8e22ce051a51f4e95bcf378bd68c8d821958da796c07b9a'
+body_hash: 'sha256:f99de73d3830aab4c2d3884ceb465aca2a82af529ad6fe6470fe7d1e84d375cb'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -2033,4 +2033,3 @@ corrected in orden-hac-510-2021 the same day. Recorded in the excerpt's own prov
 - HAC/529/2026 art. 1 and the m763 2018-4T orden remain to be bundled.
 - Peers captured this work by bare commit **twice in one session**. The `reviewed_by` scope
   statement is what survived both times; commit messages did not.
-
