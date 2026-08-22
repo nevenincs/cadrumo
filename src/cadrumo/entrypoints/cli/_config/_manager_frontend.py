@@ -429,12 +429,12 @@ def attempt_registration(label: str, passphrase: str, output_language: str) -> R
     application's exception types.
     """
     from ....adapters.inbound.tui import RegistrationAttempt as _Attempt
+    from ....adapters.inbound.tui import RegistrationRefusal
     from ....application.user_profile import (
         ProfileRecoveryEnrollment,
         ProfileRegistrationError,
         register_profile_with_credentials,
     )
-    from ....core.errors import resolve_error_message
     from ....domain.user_profile import UserProfileFact
 
     # The full-screen door shows the words itself, so the enrollment rides
@@ -449,7 +449,15 @@ def attempt_registration(label: str, passphrase: str, output_language: str) -> R
             recovery_handover=captured.append,
         )
     except ProfileRegistrationError as refusal:
-        return _Attempt(refusal=resolve_error_message(refusal))
+        if refusal.translated_message is None:
+            raise
+        context = tuple((refusal.context or {}).items())
+        return _Attempt(
+            expected_refusal=RegistrationRefusal(
+                message_key=refusal.translated_message,
+                context=context,
+            )
+        )
     return _Attempt(outcome=outcome, enrollment=captured[0] if captured else None)
 
 

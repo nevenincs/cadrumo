@@ -26,7 +26,7 @@ from .....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     unlock_profile_custody,
 )
-from .....core import assess_profile_password
+from .....core import ProfilePasswordRefusalReason, assess_profile_password
 from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
@@ -40,6 +40,39 @@ pytestmark = [
 _TERMINAL_SIZE = (140, 60)
 _TYPED_PASSWORD = "screen-typed-operator-secret"  # noqa: S105 - synthetic test fixture
 _TOO_SHORT_PASSWORD = "abc"  # noqa: S105 - synthetic test fixture, deliberately under the floor
+
+
+@pytest.mark.parametrize(
+    ("candidate", "reason", "message_key"),
+    (
+        ("a" * 14, ProfilePasswordRefusalReason.TOO_FEW_SCALARS, "profile_password_too_few_scalars"),
+        ("a" * 257, ProfilePasswordRefusalReason.TOO_MANY_SCALARS, "profile_password_too_many_scalars"),
+        (
+            "😀" * 255 + "abcde",
+            ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES,
+            "profile_password_too_many_utf8_bytes",
+        ),
+        ("a" * 15 + "\ud800", ProfilePasswordRefusalReason.CONTAINS_SURROGATE, "profile_password_contains_surrogate"),
+        ("a" * 15 + "\udc00", ProfilePasswordRefusalReason.CONTAINS_SURROGATE, "profile_password_contains_surrogate"),
+    ),
+)
+def test_submission_refusals_stay_typed_secret_free_and_create_nothing(
+    tmp_path,
+    candidate: str,
+    reason: ProfilePasswordRefusalReason,
+    message_key: str,
+) -> None:
+    """Direct attempts cover candidates Textual widgets cannot transport."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        attempt = attempt_registration("Refused candidate", candidate, "en")
+
+        assert attempt.outcome is None
+        assert attempt.expected_refusal is not None
+        assert attempt.expected_refusal.message_key.endswith(message_key)
+        assert dict(attempt.expected_refusal.context)["reason"] == reason.value
+        assert candidate not in repr(attempt)
+        assert "INTERNAL" not in repr(attempt)
+        assert not list(storage_root.glob("*/manifest.json"))
 
 
 def _screen(**kwargs) -> RegistrationApp:
