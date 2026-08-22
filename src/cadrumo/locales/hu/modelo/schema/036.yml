@@ -706,6 +706,139 @@ modelo:
             x-d5r62bjiclr6arj4cli6usj5ecmm2r3kc4mm4obac4mmcpb3d1gg:
               label: AFA. Eszkoz-viszontelado. Viszontelado bejegyzese vagy torlese.
                 Datum
+            x-dth6obj9e9n74bbddti62r39chgm8:
+              label: Kulfoldiek jovedelemadoja. Allando telephely. Az allando telephely
+                tipusa
+            x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4:
+              label: Kulfoldiek jovedelemadoja. Allando telephely. Bevallasbenyujtasi
+                kotelezettseg
+            x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4bb6clhmgo8:
+              label: Kulfoldiek jovedelemadoja. Allando telephely. A bevallasbenyujtasi
+                kotelezettseg datuma
+            x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qco:
+              label: Kulfoldiek jovedelemadoja. Allando telephely. A 40.3. cikk szerinti
+                szamitasi rendszer valasztasa
+            x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qcpdcpim6q31:
+              label: Kulfoldiek jovedelemadoja. Allando telephely. A 40.3. cikk szerinti
+                szamitasi rendszer valasztasanak datuma
+            x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dg:
+              label: Kulfoldiek jovedelemadoja. Allando telephely. Az altalanos rendszer
+                valasztasa
+            x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dgmmcpb3d1gg:
+              label: Kulfoldiek jovedelemadoja. Allando telephely. Az altalanos rendszer
+                valasztasanak datuma
+            x-dth6obj9e9o6cbb5chpiqc9dd5gma:
+              label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
+                tetel, az egyszerusitett modszer szerint bevallott 1. tevekenyseg
+            x-dth6obj9e9o6cbb5chpiqc9dehkn0rpdc5hn8qbmd5i62p0:
+              label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az egyszerusitett
+                modszer szerint bevallott 1. tevekenyseg
+            x-dth6obj9e9o6cbb5chpiqchdd5gma:
+              label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
+                tetel, az egyszerusitett modszer szerint bevallott 2. tevekenyseg
+            x-dth6obj9e9o6cbb5chpiqchdehkn0rpdc5hn8qbmd5i62p0:
+              label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az egyszerusitett
+                modszer szerint bevallott 2. tevekenyseg
+            x-dth6obj9e9o6cbb5chpiqcpdd5gma:
+              label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
+                tetel, az egyszerusitett modszer szerint bevallott 3. tevekenyseg
+            x-dth6obj9e9o6cbb5chpiqcpdehkn0rpdc5hn8qbmd5i62p0:
+              label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az egyszerusitett
+                modszer szerint bevallott 3. tevekenyseg
+            x-dth6obj9e9o6cbb5chpiqd1dd5gma:
+              label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
+                tetel, az egyszerusitett modszer szerint bevallott 4. tevekenyseg
+            x-dth6obj9e9o6cbb5chpiqd1dehkn0rpdc5hn8qbmd5i62p0:
+              label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az egyszerusitett
+                modszer szerint bevallott 4. tevekenyseg
+            x-dth6obj9e9o6cbb5dsmj2bb9c5ig:
+              label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
+                tetel, az objektiv megallapitas szerint bevallott 1. tevekenyseg
+            x-dth6obj9e9o6cbb5dsmj2bbkd5o6ubb1cdq6itj9chgm8:
+              label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az objektiv
+                megallapitas szerint bevallott 1. tevekenyseg
+            x-dth6obj9e9o6cbb5dsmj4bb9c5ig:
+              label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
+                tetel, az objektiv megallapitas szerint bevallott 2. tevekenyseg
+            x-dth6obj9e9o6cbb5dsmj4bbkd5o6ubb1cdq6itj9chgm8:
+              label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az objektiv
+                megallapitas szerint bevallott 2. tevekenyseg
+            x-dth6obj9e9o6cbb5dsmj6bb9c5ig:
+              label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
+                tetel, az objektiv megallapitas szerint bevallott 3. tevekenyseg
+            x-dth6obj9e9o6cbb5dsmj6bbkd5o6ubb1cdq6itj9chgm8:
+              label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az objektiv
+                megallapitas szerint bevallott 3. tevekenyseg
+            x-dth6obj9e9o6cbb5dsmj8bb9c5ig:
+              label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
+                tetel, az objektiv megallapitas szerint bevallott 4. tevekenyseg
+            x-dth6obj9e9o6cbb5dsmj8bbkd5o6ubb1cdq6itj9chgm8:
+              label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az objektiv
+                megallapitas szerint bevallott 4. tevekenyseg
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r0:
+              label: Szemelyi jovedelemado (IRPF). Normal kozvetlen megallapitasi
+                modszer
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r1dcpim6q31:
+              label: Szemelyi jovedelemado (IRPF). Normal kozvetlen megallapitasi
+                modszer. Datum
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              label: Szemelyi jovedelemado (IRPF). Egyszerusitett kozvetlen megallapitasi
+                modszer
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p315lj6aor8c4:
+              label: Szemelyi jovedelemado (IRPF). Egyszerusitett kozvetlen megallapitasi
+                modszer. Datum
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              label: Szemelyi jovedelemado (IRPF). Objektiv megallapitasi modszer
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62bb6clhmgo8:
+              label: Szemelyi jovedelemado (IRPF). Objektiv megallapitasi modszer.
+                Datum
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i0:
+              label: Szemelyi jovedelemado (IRPF). Gazdasagi tevekenysegbol eredo
+                reszletfizetesi kotelezettseg
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i2qpj5cdk62:
+              label: Szemelyi jovedelemado (IRPF). A gazdasagi tevekenysegbol eredo
+                reszletfizetesi kotelezettseg datuma
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nms:
+              label: Szemelyi jovedelemado (IRPF). Reszletfizetesi kotelezettseg jovedelem-hozzarendelesi
+                szervezet tagjakent
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nmsbb6clhmgo8:
+              label: Szemelyi jovedelemado (IRPF). A jovedelem-hozzarendelesi szervezet
+                tagjakenti reszletfizetesi kotelezettseg datuma
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn0:
+              label: A 49/2002. torveny szerinti kulonleges adorendszer. A kulonleges
+                adorendszer valasztasanak gyakorlasa
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn2qpj5cdk62:
+              label: A 49/2002. torveny szerinti kulonleges adorendszer. A kulonleges
+                adorendszer valasztasanak datuma
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5gg:
+              label: A 49/2002. torveny szerinti kulonleges adorendszer. A kulonleges
+                adorendszerrol valo lemondas
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5giqpj5cdk62:
+              label: A 49/2002. torveny szerinti kulonleges adorendszer. A kulonleges
+                adorendszerrol valo lemondas datuma
+            x-dth6objjdthmipb4c5i6aspdcdkmasjickmmaqj5e9hmior9ds:
+              label: Tarsasagi ado. Az uzleti ev zarasanak napja es honapja
+            x-dth6objjdthmipb4c5i6aspdcln78qb4c5i2qpbocln78o8:
+              label: Tarsasagi ado. Mentes szervezeti minoseg
+            x-dth6objjdthmipb4c5i6aspdcls6arj3d5nms:
+              label: Tarsasagi ado. Mentesseg
+            x-dth6objjdthmipb4c5i6aspdcls6arj3d5nmsbb6clhmgo8:
+              label: Tarsasagi ado. Mentesseg. Datum
+            x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62sg:
+              label: Tarsasagi ado. Bevallasbenyujtasi kotelezettseg
+            x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62shdcpim6q31:
+              label: Tarsasagi ado. A bevallasbenyujtasi kotelezettseg datuma
+            x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j:
+              label: Tarsasagi ado. A 40.3. cikk szerinti szamitasi rendszer valasztasa
+            x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j5lj6aor8c4:
+              label: Tarsasagi ado. A 40.3. cikk szerinti szamitasi rendszer valasztasanak
+                datuma
+            x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn0:
+              label: Tarsasagi ado. Az adokonszolidacios rendszer alkalmazasarol valo
+                lemondas
+            x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn2qpj5cdk62:
+              label: Tarsasagi ado. Az adokonszolidacios rendszerrol valo lemondas
+                datuma
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
               label: Ertesitesek. AEAT-ertesitesek bejegyzese
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:

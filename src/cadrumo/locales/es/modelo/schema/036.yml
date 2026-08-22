@@ -738,6 +738,131 @@ modelo:
             x-d5r62bjiclr6arj4cli6usj5ecmm2r3kc4mm4obac4mmcpb3d1gg:
               label: IVA. Revendedores de dispositivos. Alta o baja de revendedores.
                 Fecha
+            x-dth6obj9e9n74bbddti62r39chgm8:
+              label: IRNR. Establecimiento permanente. Modalidad de establecimiento
+                permanente
+            x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4:
+              label: IRNR. Establecimiento permanente. Obligacion de presentar declaracion
+            x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4bb6clhmgo8:
+              label: IRNR. Establecimiento permanente. Fecha de la obligacion de presentar
+                declaracion
+            x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qco:
+              label: IRNR. Establecimiento permanente. Opcion por el sistema de calculo
+                del art. 40.3
+            x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qcpdcpim6q31:
+              label: IRNR. Establecimiento permanente. Fecha de la opcion por el sistema
+                de calculo del art. 40.3
+            x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dg:
+              label: IRNR. Establecimiento permanente. Opcion por el regimen general
+            x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dgmmcpb3d1gg:
+              label: IRNR. Establecimiento permanente. Fecha de la opcion por el regimen
+                general
+            x-dth6obj9e9o6cbb5chpiqc9dd5gma:
+              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 1 declarada
+                en modalidad simplificada
+            x-dth6obj9e9o6cbb5chpiqc9dehkn0rpdc5hn8qbmd5i62p0:
+              label: IRPF. Tipo de actividad, actividad 1 declarada en modalidad simplificada
+            x-dth6obj9e9o6cbb5chpiqchdd5gma:
+              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 2 declarada
+                en modalidad simplificada
+            x-dth6obj9e9o6cbb5chpiqchdehkn0rpdc5hn8qbmd5i62p0:
+              label: IRPF. Tipo de actividad, actividad 2 declarada en modalidad simplificada
+            x-dth6obj9e9o6cbb5chpiqcpdd5gma:
+              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 3 declarada
+                en modalidad simplificada
+            x-dth6obj9e9o6cbb5chpiqcpdehkn0rpdc5hn8qbmd5i62p0:
+              label: IRPF. Tipo de actividad, actividad 3 declarada en modalidad simplificada
+            x-dth6obj9e9o6cbb5chpiqd1dd5gma:
+              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 4 declarada
+                en modalidad simplificada
+            x-dth6obj9e9o6cbb5chpiqd1dehkn0rpdc5hn8qbmd5i62p0:
+              label: IRPF. Tipo de actividad, actividad 4 declarada en modalidad simplificada
+            x-dth6obj9e9o6cbb5dsmj2bb9c5ig:
+              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 1 declarada
+                en estimacion objetiva
+            x-dth6obj9e9o6cbb5dsmj2bbkd5o6ubb1cdq6itj9chgm8:
+              label: IRPF. Tipo de actividad, actividad 1 declarada en estimacion
+                objetiva
+            x-dth6obj9e9o6cbb5dsmj4bb9c5ig:
+              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 2 declarada
+                en estimacion objetiva
+            x-dth6obj9e9o6cbb5dsmj4bbkd5o6ubb1cdq6itj9chgm8:
+              label: IRPF. Tipo de actividad, actividad 2 declarada en estimacion
+                objetiva
+            x-dth6obj9e9o6cbb5dsmj6bb9c5ig:
+              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 3 declarada
+                en estimacion objetiva
+            x-dth6obj9e9o6cbb5dsmj6bbkd5o6ubb1cdq6itj9chgm8:
+              label: IRPF. Tipo de actividad, actividad 3 declarada en estimacion
+                objetiva
+            x-dth6obj9e9o6cbb5dsmj8bb9c5ig:
+              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 4 declarada
+                en estimacion objetiva
+            x-dth6obj9e9o6cbb5dsmj8bbkd5o6ubb1cdq6itj9chgm8:
+              label: IRPF. Tipo de actividad, actividad 4 declarada en estimacion
+                objetiva
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r0:
+              label: IRPF. Estimacion directa normal
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r1dcpim6q31:
+              label: IRPF. Estimacion directa normal. Fecha
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              label: IRPF. Estimacion directa simplificada
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p315lj6aor8c4:
+              label: IRPF. Estimacion directa simplificada. Fecha
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              label: IRPF. Estimacion objetiva
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62bb6clhmgo8:
+              label: IRPF. Estimacion objetiva. Fecha
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i0:
+              label: IRPF. Obligacion de realizar pagos fraccionados por actividades
+                economicas
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i2qpj5cdk62:
+              label: IRPF. Fecha de la obligacion de pagos fraccionados por actividades
+                economicas
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nms:
+              label: IRPF. Obligacion de pagos fraccionados como miembro de una entidad
+                en atribucion de rentas
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nmsbb6clhmgo8:
+              label: IRPF. Fecha de la obligacion de pagos fraccionados como miembro
+                de una entidad en atribucion
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn0:
+              label: Regimen fiscal especial de la Ley 49/2002. Ejerce la opcion por
+                el regimen fiscal especial
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn2qpj5cdk62:
+              label: Regimen fiscal especial de la Ley 49/2002. Fecha del ejercicio
+                de la opcion por el regimen fiscal especial
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5gg:
+              label: Regimen fiscal especial de la Ley 49/2002. Renuncia a la aplicacion
+                del regimen fiscal especial
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5giqpj5cdk62:
+              label: Regimen fiscal especial de la Ley 49/2002. Fecha de la renuncia
+                al regimen fiscal especial
+            x-dth6objjdthmipb4c5i6aspdcdkmasjickmmaqj5e9hmior9ds:
+              label: Impuesto sobre Sociedades. Fecha de cierre del ejercicio economico,
+                dia y mes
+            x-dth6objjdthmipb4c5i6aspdcln78qb4c5i2qpbocln78o8:
+              label: Impuesto sobre Sociedades. Condicion de entidad exenta
+            x-dth6objjdthmipb4c5i6aspdcls6arj3d5nms:
+              label: Impuesto sobre Sociedades. Exencion
+            x-dth6objjdthmipb4c5i6aspdcls6arj3d5nmsbb6clhmgo8:
+              label: Impuesto sobre Sociedades. Exencion. Fecha
+            x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62sg:
+              label: Impuesto sobre Sociedades. Obligacion de presentar declaracion
+            x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62shdcpim6q31:
+              label: Impuesto sobre Sociedades. Fecha de la obligacion de presentar
+                declaracion
+            x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j:
+              label: Impuesto sobre Sociedades. Opcion por el sistema de calculo del
+                art. 40.3
+            x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j5lj6aor8c4:
+              label: Impuesto sobre Sociedades. Fecha de la opcion por el sistema
+                de calculo del art. 40.3
+            x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn0:
+              label: Impuesto sobre Sociedades. Renuncia a la aplicacion del regimen
+                de consolidacion fiscal
+            x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn2qpj5cdk62:
+              label: Impuesto sobre Sociedades. Fecha de la renuncia al regimen de
+                consolidacion fiscal
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
               label: Avisos. Alta de avisos de la AEAT
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:

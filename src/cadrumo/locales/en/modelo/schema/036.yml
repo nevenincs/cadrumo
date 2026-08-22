@@ -717,6 +717,137 @@ modelo:
             x-d5r62bjiclr6arj4cli6usj5ecmm2r3kc4mm4obac4mmcpb3d1gg:
               label: VAT. Resellers of devices. Reseller registration or removal.
                 Date
+            x-dth6obj9e9n74bbddti62r39chgm8:
+              label: Non-resident income tax. Permanent establishment. Type of permanent
+                establishment
+            x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4:
+              label: Non-resident income tax. Permanent establishment. Obligation
+                to file a return
+            x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4bb6clhmgo8:
+              label: Non-resident income tax. Permanent establishment. Date of the
+                obligation to file a return
+            x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qco:
+              label: Non-resident income tax. Permanent establishment. Election for
+                the calculation system of art. 40.3
+            x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qcpdcpim6q31:
+              label: Non-resident income tax. Permanent establishment. Date of the
+                election for the calculation system of art. 40.3
+            x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dg:
+              label: Non-resident income tax. Permanent establishment. Election for
+                the general regime
+            x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dgmmcpb3d1gg:
+              label: Non-resident income tax. Permanent establishment. Date of the
+                election for the general regime
+            x-dth6obj9e9o6cbb5chpiqc9dd5gma:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 1 declared under the simplified method
+            x-dth6obj9e9o6cbb5chpiqc9dehkn0rpdc5hn8qbmd5i62p0:
+              label: Personal income tax (IRPF). Type of activity, activity 1 declared
+                under the simplified method
+            x-dth6obj9e9o6cbb5chpiqchdd5gma:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 2 declared under the simplified method
+            x-dth6obj9e9o6cbb5chpiqchdehkn0rpdc5hn8qbmd5i62p0:
+              label: Personal income tax (IRPF). Type of activity, activity 2 declared
+                under the simplified method
+            x-dth6obj9e9o6cbb5chpiqcpdd5gma:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 3 declared under the simplified method
+            x-dth6obj9e9o6cbb5chpiqcpdehkn0rpdc5hn8qbmd5i62p0:
+              label: Personal income tax (IRPF). Type of activity, activity 3 declared
+                under the simplified method
+            x-dth6obj9e9o6cbb5chpiqd1dd5gma:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 4 declared under the simplified method
+            x-dth6obj9e9o6cbb5chpiqd1dehkn0rpdc5hn8qbmd5i62p0:
+              label: Personal income tax (IRPF). Type of activity, activity 4 declared
+                under the simplified method
+            x-dth6obj9e9o6cbb5dsmj2bb9c5ig:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 1 declared under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj2bbkd5o6ubb1cdq6itj9chgm8:
+              label: Personal income tax (IRPF). Type of activity, activity 1 declared
+                under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj4bb9c5ig:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 2 declared under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj4bbkd5o6ubb1cdq6itj9chgm8:
+              label: Personal income tax (IRPF). Type of activity, activity 2 declared
+                under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj6bb9c5ig:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 3 declared under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj6bbkd5o6ubb1cdq6itj9chgm8:
+              label: Personal income tax (IRPF). Type of activity, activity 3 declared
+                under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj8bb9c5ig:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 4 declared under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj8bbkd5o6ubb1cdq6itj9chgm8:
+              label: Personal income tax (IRPF). Type of activity, activity 4 declared
+                under the objective assessment method
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r0:
+              label: Personal income tax (IRPF). Standard direct assessment method
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r1dcpim6q31:
+              label: Personal income tax (IRPF). Standard direct assessment method.
+                Date
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              label: Personal income tax (IRPF). Simplified direct assessment method
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p315lj6aor8c4:
+              label: Personal income tax (IRPF). Simplified direct assessment method.
+                Date
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              label: Personal income tax (IRPF). Objective assessment method
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62bb6clhmgo8:
+              label: Personal income tax (IRPF). Objective assessment method. Date
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i0:
+              label: Personal income tax (IRPF). Obligation to make instalment payments
+                from economic activities
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i2qpj5cdk62:
+              label: Personal income tax (IRPF). Date of the instalment-payment obligation
+                from economic activities
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nms:
+              label: Personal income tax (IRPF). Obligation to make instalment payments
+                as a member of an income-attribution entity
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nmsbb6clhmgo8:
+              label: Personal income tax (IRPF). Date of the instalment-payment obligation
+                as a member of an attribution entity
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn0:
+              label: Special tax regime under Law 49/2002. Exercises the election
+                for the special tax regime
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn2qpj5cdk62:
+              label: Special tax regime under Law 49/2002. Date of the election for
+                the special tax regime
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5gg:
+              label: Special tax regime under Law 49/2002. Waiver of the special tax
+                regime
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5giqpj5cdk62:
+              label: Special tax regime under Law 49/2002. Date of the waiver of the
+                special tax regime
+            x-dth6objjdthmipb4c5i6aspdcdkmasjickmmaqj5e9hmior9ds:
+              label: Corporate income tax. Closing date of the financial year, day
+                and month
+            x-dth6objjdthmipb4c5i6aspdcln78qb4c5i2qpbocln78o8:
+              label: Corporate income tax. Status as an exempt entity
+            x-dth6objjdthmipb4c5i6aspdcls6arj3d5nms:
+              label: Corporate income tax. Exemption
+            x-dth6objjdthmipb4c5i6aspdcls6arj3d5nmsbb6clhmgo8:
+              label: Corporate income tax. Exemption. Date
+            x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62sg:
+              label: Corporate income tax. Obligation to file a return
+            x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62shdcpim6q31:
+              label: Corporate income tax. Date of the obligation to file a return
+            x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j:
+              label: Corporate income tax. Election for the calculation system of
+                art. 40.3
+            x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j5lj6aor8c4:
+              label: Corporate income tax. Date of the election for the calculation
+                system of art. 40.3
+            x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn0:
+              label: Corporate income tax. Waiver of the tax consolidation regime
+            x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn2qpj5cdk62:
+              label: Corporate income tax. Date of the waiver of the tax consolidation
+                regime
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
               label: Alerts. Registration for AEAT alerts
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:

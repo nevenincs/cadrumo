@@ -714,6 +714,123 @@ modelo:
               label: IVA. Registres. Registre d'operadors intracomunitaris. Data
             x-d5r62bjiclr6arj4cli6usj5ecmm2r3kc4mm4obac4mmcpb3d1gg:
               label: IVA. Revenedors de dispositius. Alta o baixa de revenedors. Data
+            x-dth6obj9e9n74bbddti62r39chgm8:
+              label: IRNR. Establiment permanent. Modalitat d'establiment permanent
+            x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4:
+              label: IRNR. Establiment permanent. Obligacio de presentar declaracio
+            x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4bb6clhmgo8:
+              label: IRNR. Establiment permanent. Data de l'obligacio de presentar
+                declaracio
+            x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qco:
+              label: IRNR. Establiment permanent. Opcio pel sistema de calcul de l'art.
+                40.3
+            x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qcpdcpim6q31:
+              label: IRNR. Establiment permanent. Data de l'opcio pel sistema de calcul
+                de l'art. 40.3
+            x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dg:
+              label: IRNR. Establiment permanent. Opcio pel regim general
+            x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dgmmcpb3d1gg:
+              label: IRNR. Establiment permanent. Data de l'opcio pel regim general
+            x-dth6obj9e9o6cbb5chpiqc9dd5gma:
+              label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 1 declarada
+                en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqc9dehkn0rpdc5hn8qbmd5i62p0:
+              label: IRPF. Tipus d'activitat, activitat 1 declarada en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqchdd5gma:
+              label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 2 declarada
+                en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqchdehkn0rpdc5hn8qbmd5i62p0:
+              label: IRPF. Tipus d'activitat, activitat 2 declarada en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqcpdd5gma:
+              label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 3 declarada
+                en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqcpdehkn0rpdc5hn8qbmd5i62p0:
+              label: IRPF. Tipus d'activitat, activitat 3 declarada en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqd1dd5gma:
+              label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 4 declarada
+                en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqd1dehkn0rpdc5hn8qbmd5i62p0:
+              label: IRPF. Tipus d'activitat, activitat 4 declarada en modalitat simplificada
+            x-dth6obj9e9o6cbb5dsmj2bb9c5ig:
+              label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 1 declarada
+                en estimacio objectiva
+            x-dth6obj9e9o6cbb5dsmj2bbkd5o6ubb1cdq6itj9chgm8:
+              label: IRPF. Tipus d'activitat, activitat 1 declarada en estimacio objectiva
+            x-dth6obj9e9o6cbb5dsmj4bb9c5ig:
+              label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 2 declarada
+                en estimacio objectiva
+            x-dth6obj9e9o6cbb5dsmj4bbkd5o6ubb1cdq6itj9chgm8:
+              label: IRPF. Tipus d'activitat, activitat 2 declarada en estimacio objectiva
+            x-dth6obj9e9o6cbb5dsmj6bb9c5ig:
+              label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 3 declarada
+                en estimacio objectiva
+            x-dth6obj9e9o6cbb5dsmj6bbkd5o6ubb1cdq6itj9chgm8:
+              label: IRPF. Tipus d'activitat, activitat 3 declarada en estimacio objectiva
+            x-dth6obj9e9o6cbb5dsmj8bb9c5ig:
+              label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 4 declarada
+                en estimacio objectiva
+            x-dth6obj9e9o6cbb5dsmj8bbkd5o6ubb1cdq6itj9chgm8:
+              label: IRPF. Tipus d'activitat, activitat 4 declarada en estimacio objectiva
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r0:
+              label: IRPF. Estimacio directa normal
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r1dcpim6q31:
+              label: IRPF. Estimacio directa normal. Data
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              label: IRPF. Estimacio directa simplificada
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p315lj6aor8c4:
+              label: IRPF. Estimacio directa simplificada. Data
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              label: IRPF. Estimacio objectiva
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62bb6clhmgo8:
+              label: IRPF. Estimacio objectiva. Data
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i0:
+              label: IRPF. Obligacio de fer pagaments fraccionats per activitats economiques
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i2qpj5cdk62:
+              label: IRPF. Data de l'obligacio de pagaments fraccionats per activitats
+                economiques
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nms:
+              label: IRPF. Obligacio de pagaments fraccionats com a membre d'una entitat
+                en atribucio de rendes
+            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nmsbb6clhmgo8:
+              label: IRPF. Data de l'obligacio de pagaments fraccionats com a membre
+                d'una entitat en atribucio
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn0:
+              label: Regim fiscal especial de la Llei 49/2002. Exerceix l'opcio pel
+                regim fiscal especial
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn2qpj5cdk62:
+              label: Regim fiscal especial de la Llei 49/2002. Data de l'exercici
+                de l'opcio pel regim fiscal especial
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5gg:
+              label: Regim fiscal especial de la Llei 49/2002. Renuncia a l'aplicacio
+                del regim fiscal especial
+            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5giqpj5cdk62:
+              label: Regim fiscal especial de la Llei 49/2002. Data de la renuncia
+                al regim fiscal especial
+            x-dth6objjdthmipb4c5i6aspdcdkmasjickmmaqj5e9hmior9ds:
+              label: Impost sobre Societats. Data de tancament de l'exercici economic,
+                dia i mes
+            x-dth6objjdthmipb4c5i6aspdcln78qb4c5i2qpbocln78o8:
+              label: Impost sobre Societats. Condicio d'entitat exempta
+            x-dth6objjdthmipb4c5i6aspdcls6arj3d5nms:
+              label: Impost sobre Societats. Exempcio
+            x-dth6objjdthmipb4c5i6aspdcls6arj3d5nmsbb6clhmgo8:
+              label: Impost sobre Societats. Exempcio. Data
+            x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62sg:
+              label: Impost sobre Societats. Obligacio de presentar declaracio
+            x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62shdcpim6q31:
+              label: Impost sobre Societats. Data de l'obligacio de presentar declaracio
+            x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j:
+              label: Impost sobre Societats. Opcio pel sistema de calcul de l'art.
+                40.3
+            x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j5lj6aor8c4:
+              label: Impost sobre Societats. Data de l'opcio pel sistema de calcul
+                de l'art. 40.3
+            x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn0:
+              label: Impost sobre Societats. Renuncia a l'aplicacio del regim de consolidacio
+                fiscal
+            x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn2qpj5cdk62:
+              label: Impost sobre Societats. Data de la renuncia al regim de consolidacio
+                fiscal
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
               label: Avisos. Alta d'avisos de l'AEAT
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
