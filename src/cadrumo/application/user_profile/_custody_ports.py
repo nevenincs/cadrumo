@@ -1066,17 +1066,6 @@ PROFILE_CAPSULE_RECOVERY_MAX_BYTES = custody.PROFILE_CUSTODY_RECOVERY_MAX_BYTES
 PROFILE_CAPSULE_DATABASE_MAX_BYTES = custody.PROFILE_CUSTODY_DATA_FILE_MAX_BYTES
 
 
-def profile_custody_read_member(path: Path, *, maximum_bytes: int) -> bytes:
-    """Read one capsule member through the anchored, bounded, no-follow primitive.
-
-    The same read the published capsule uses. It matters MORE for the source an
-    operator hands to ``config profile restore``, which is the less trusted of
-    the two: a published capsule lives inside this product's own storage root,
-    while a restore source is a directory from anywhere.
-    """
-    return custody.read_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
-
-
 def profile_custody_read_optional_member(path: Path, *, maximum_bytes: int) -> bytes | None:
     """Read an optional capsule member, or prove its absence, in one operation.
 
@@ -1084,6 +1073,12 @@ def profile_custody_read_optional_member(path: Path, *, maximum_bytes: int) -> b
     ``is_file()``. Inspecting a pathname and then reopening it is two
     operations on a name, not one on a file, and the primitive's own contract
     says exactly that.
+
+    Anchored, bounded and no-follow matter MOST for the source an operator
+    hands to ``config profile restore``, which is the less trusted of the two
+    capsule kinds: a published capsule lives inside this product's own storage
+    root, while a restore source is a directory from anywhere. This is the read
+    that path uses.
     """
     return custody.read_optional_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
 
