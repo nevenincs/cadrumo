@@ -37,6 +37,13 @@
 # design confirm it, the slugs can be replaced with a recorded reason; until then the
 # registry does not assert a box number AEAT did not print.
 #
+# ONE BYTE CARRIES A LIST BRACKET. @11+1 prints "[B1,B2]" -- a single selecting code
+# byte behind two printed tick boxes (residente or constituida en Espana / no
+# residente or constituida en el extranjero). No single number describes such a
+# field, so it takes a slug, exactly as Pag. 3's causa flags do. B1 and B2 are
+# therefore both unmodelled AS NUMBERS, which is correct rather than a gap: neither
+# names the field on its own. The tell is field width against number count.
+#
 # FOUR NUMBERS COLLAPSE THREE COMPONENTS EACH -- B8 (fecha acuerdo de voluntades),
 # B9 (fecha de constitucion), B10 (fecha de inscripcion registral) and B3B (fecha de
 # efectos de residencia fiscal) are each printed on a dia, mes and ano triple. Each
@@ -57,10 +64,10 @@
 # This file is the first half of the record, split from its sibling only to stay
 # within the registry reviewability line budget.
 
-# @11+1. Identificacion. Persona juridica o entidad residente o constituida en Espana, o no residente.
+# @11+1. Identificacion. Persona juridica o entidad residente o constituida en Espana, o no residente o constituida en el extranjero. AEAT prints a LIST bracket here, "[B1,B2]": one selecting byte behind two printed tick boxes, so no single number describes the field and it takes a slug.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "pj.ident-residencia-indicador"
-number = "B2"
+number = "pj-ident-residencia-indicador"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "text"
 required = false
