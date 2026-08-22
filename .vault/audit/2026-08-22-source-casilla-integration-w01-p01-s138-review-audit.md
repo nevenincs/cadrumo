@@ -12,7 +12,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-w01-p01-s136-review-audit]]"
 ---
 
-
 # `source-casilla-integration` audit: `W01.P01.S138 persisted source reference review`
 
 ## Scope
@@ -98,4 +97,3 @@ persistence implementation.
 - Treat `persisted-reference-domain` as HIGH and block S137 and S134 until it is
   corrected and re-reviewed. The old S136 raw-object defect is removed in name,
   but production parity is not yet achieved.
-

@@ -11,9 +11,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
-
-
-
 # replace raw source-object identity with the exact persisted source reference across connected proof
 
 ## Scope

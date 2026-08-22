@@ -11,9 +11,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
-
-
-
 # extend connected authority validation with the full encrypted-revision proof and refuse persisted identity or fingerprint drift
 
 ## Scope

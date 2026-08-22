@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:2753dfacfdc29d4355bd4f0168636f16f2c8629ebf8428c0df83d0a7d08d7518'
+body_hash: 'sha256:b0f8bea43f599c2d0bb2f56fb96579100dbd4c169f6c44d67e12b0fcd7b3174d'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15666,3 +15666,134 @@ worklist. Seven further reds -- fragment naming, Spanish label coverage, the
 compiled-cache rebuild, two continuidad ratchets, modelo 390's derived sets and
 the legal-grounding literal check -- surface peer authoring in flight; only the
 last two were attributed to a specific cause this tick.
+
+## Tick: the unattributed reds resolved to two peer surfaces, and three modelo 200 hypotheses eliminated
+
+Re-measured at tick start: authority CLEAN and holding.
+
+### The five reds left unattributed last tick, now attributed
+
+Last tick reported seven reds beyond the declared inventories and attributed
+only two, saying so rather than implying otherwise. The remaining five resolve
+to three sources:
+
+* **`test_compiled_registry_cache::...rebuilds_byte_equivalently_from_toml`** --
+  passes in ISOLATION. A parallel artefact, not a defect. It was the one most
+  worth checking first, because "byte equivalently" and the previous tick's
+  line-ending work look related; they are not, since that change touches
+  `corpus/**` and this reads registry TOML.
+* **Modelo 390's 2021 stub, three times over.** The casilla fragment naming
+  violation names `modelos/390/revisions/2021/casillas/
+  0001-declaration-parser-casillas.toml`; the continuity baseline observes 2,743
+  ungrounded groups against 2,733 recorded, a difference of ten; and ten casilla
+  chains are partially stamped. That revision carries exactly ten casillas and
+  was created by the single commit touching its directory. One stub, three
+  gates.
+* **`source_connectivity.py`**, already attributed.
+
+None was fixed. The fragment rename is mechanical and would take a minute, and
+it is a file a peer created one commit ago while actively authoring the largest
+modelo in the queue -- renaming it underneath them is the collision the rules
+name. That is the stated reason, and it is the same reason for the other two.
+
+### Modelo 200's 2010 header holes: three hypotheses tested, three eliminated
+
+Its records lose position 10 on two sheets. The header shape is now known:
+ord1 `@1+2`, ord2 `@3+3`, ord3 `@6+3`, ord4 `@9+1`, ord5 `@10+1` -- so the
+missing byte is a missing ord5, the ``Indicador de pagina complementaria``.
+
+Eliminated, each by measurement rather than reasoning:
+
+1. **A gap between adjacent parsed rows** -- no pair anywhere in either the
+   plain or the reversed-column-repaired view has one row ending at 9 and the
+   next starting at 11.
+2. **A row missing from the line stream** -- every `ord4@9` in the repaired view
+   IS followed by an `ord5@10`. The row is there.
+3. **A degenerate description being discarded** -- exactly ONE `ord5@10` row has
+   a description of three characters or fewer, and it belongs to the Página
+   "002" record, not to either failing sheet.
+
+So the row exists, parses, and is dropped during RECORD ASSEMBLY rather than
+during reading. The next step is the reader's per-record assignment, which this
+tick did not reach.
+
+Stopping there was the choice. A fourth hypothesis could have been written and
+shipped on a corpus control alone, and this campaign has twice paid for changes
+that passed their control and were wrong for a reason the control could not see.
+
+### Verified
+
+* the isolation run that cleared the compiled-cache test.
+* the three eliminations above, each reproduced against the real design.
+* authority CLEAN.
+
+### Still open
+
+The eight inventories. Modelo 390's 2021 stub is a peer's live authoring surface
+and currently accounts for three separate red gates; it will clear as they
+finish. Modelo 200's three editions remain the parser lane, now with three dead
+ends recorded so the next attempt starts at record assembly rather than
+re-testing the reading path.
+
+## Tick: a fourth modelo 200 hypothesis eliminated, and the deferred rename taken once its reason expired
+
+Re-measured at tick start: authority CLEAN.
+
+### Modelo 200's missing ord5 is not lost in the assembly transforms
+
+Last tick placed the loss in record ASSEMBLY rather than reading. Traced through
+each stage on the real design, counting the specific row:
+
+* after the reading pre-passes: **48** `ord5@10` rows
+* after `_undouble_struck_rows`: 48
+* after `_rejoin_reversed_column_rows`: 48, from 5,815 lines down to 4,824
+
+None of those transforms drops it. Segmenting the repaired stream by ordinal
+restart gives **45 records, ZERO of them lacking an `ord5@10`**, and three
+carrying two -- which accounts for 48 exactly.
+
+So the row survives every transform and a naive segmentation finds one in every
+record, while the reader reports two records without it. The reader's own
+segmentation therefore differs from the reconstruction, and the next step is to
+instrument `_extract_pdf_lines` rather than to rebuild its input again. That is
+the fourth hypothesis eliminated and the first that points inside the reader.
+
+Also separated while measuring: the five skipped sheets are not one defect. Two
+lose position 10; the other three lose mid-record RUNS of 15, 17 and 17 bytes,
+which is the width of a monetary row and a different cause.
+
+### The deferred rename, taken once its reason expired
+
+Last tick declined the modelo 390/2021 fragment rename because a peer was
+actively authoring that stub -- the sanctioned reason -- and offered it as a
+question. The condition was re-checked rather than the offer repeated: that
+directory has one commit, an hour old, with no uncommitted edits, while the same
+peer committed elsewhere 45 seconds before the check. Actively editing something,
+not that file.
+
+So the reason had expired and the rename was taken:
+`0001-declaration-parser-casillas.toml` ->
+`civa.anual.repercutido.super-reducido__civa.anual.compensacion-generada-ejercicio-no-97.toml`,
+the exact stem the gate names, via `git mv`. The naming gate passes and the
+authority still loads.
+
+Its two siblings -- the continuity baseline's ten extra groups and the ten
+partially-stamped chains -- were left. Those are not naming: they need the
+stub's casillas stamped or removed, which is authoring on a revision whose
+formulas, bindings and layout the peer has not written yet.
+
+### Verified
+
+* the stage-by-stage count reproduced on the real design rather than argued.
+* registry + generated-tree + application/registry: **13 failed, 5,957 passed**,
+  down from 15. The fragment-naming gate is closed and the compiled-cache
+  artefact did not recur.
+* the remaining thirteen are the eight declared inventories plus five peer
+  surfaces, all previously attributed.
+
+### Still open
+
+The eight inventories. Modelo 200's three editions remain the parser lane, now
+with four dead ends recorded and the search narrowed to the reader's internal
+segmentation. Modelo 390's 2021 stub still accounts for two red gates, and both
+clear when its casillas are stamped.

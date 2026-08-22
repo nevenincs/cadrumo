@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:4723d2a2bf0bb9cd7f5f4855f93aa70421ecffb8744a23dcb249237cc5866e5d'
+body_hash: 'sha256:ed532cf6f4b5f5807d977fc697a6d500811865dfeddc379d7846b2218cc130a1'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -652,8 +652,8 @@ checks only forbidden substrings and nonzero exit, so it would pass with an empt
 misclassified envelope and does not catch this extra field.
 
 Keep the typed payload available to in-process application/TUI consumers without letting
-automatic CLI context extraction publish itâ€”for example through an explicitly excluded
-private backing field or a boundary allowlistâ€”while retaining the exact reason and safe
+automatic CLI context extraction publish it--for example through an explicitly excluded
+private backing field or a boundary allowlist--while retaining the exact reason and safe
 numeric context. Strengthen the scripted regression to parse stderr JSON and assert the
 exact schema, command, category, code, localized non-key message, `retryable`, `action`,
 and exact finite context for the refusal, plus the existing negative secret/diagnostic
@@ -708,3 +708,147 @@ files, and commit diff hygiene passes. The S10 execution record now truthfully r
 eight scripted cases and eleven combined cases, including the integration marker
 selection. `s10-public-envelope-internal-payload` and `s10-execution-count` are closed.
 No unresolved HIGH, CRITICAL, or MEDIUM finding remains, and W03.P07.S11 may proceed.
+
+### s11-cross-surface-matrix-absent | high | The recorded 22 cases do not prove the required inbound parity matrix
+
+The mandatory S11 review isolated the feature-owned paths in mixed commit
+`005b1c2fdc`, then reviewed `793cbb44b4` and `41c8daa7ff` against the accepted
+ADR, research, incident reference, live plan, current source, exact-symbol search, and
+execution evidence. The new machine channel itself follows the established custody
+shape: `_CreationSecrets` at
+`src/cadrumo/entrypoints/cli/_config/_scripted_registration.py:50-55` is frozen,
+uses `SecretStr`, and forbids extras; `resolve_creation_passphrase` delegates to the
+shared bounded strict reader at lines 69-70, compares confirmation without echo at
+lines 71-75, and passes only the selected value to registration. The lazy create
+signature adds one boolean `--secrets-stdin` option at
+`src/cadrumo/entrypoints/cli/_config/_manager_dispatch.py:160-172`. Live help contains
+the option exactly once, and the lazy verb schema resolves one matching boolean field.
+The malformed-JSON and extra-field cases refuse without the fixture secret, traceback,
+or profile publication.
+
+The core purpose of S11 is nevertheless absent. Exact search shows that scripted CLI
+has only the 14-scalar prospective refusal at
+`src/cadrumo/entrypoints/cli/_config/tests/test_scripted_profile_creation.py:190-243`.
+It has no real cases for accepted 15, 256, or 1,024-byte candidates; refused 257 or
+1,025-byte candidates; either surrogate endpoint; or composed/decomposed exact
+usability and distinctness. The TUI registration module's parameterization at
+`src/cadrumo/adapters/inbound/tui/tests/test_registration_screen.py:45-59` covers 14,
+257, one 1,025-byte candidate, and both surrogates only through direct submission. It
+does not cover 15, 256, or 1,024-byte accepted boundaries or composed/decomposed exact
+credentials. Its byte candidate is 260 scalars and therefore proves the chosen byte
+precedence, not an independent accepted/refused byte boundary pair. The one live
+accepted screen case uses a single ordinary password and does not fill those cells.
+
+Likewise, `test_profile_password_messages_are_complete_distinct_real_translations` at
+`src/cadrumo/adapters/inbound/tui/tests/test_profile_password_locale_parity.py:21-30`
+calls `tr` directly. It proves five catalogue leaves are nonempty, interpolated, and
+different across en/es/ca/hu, but it does not drive either real inbound surface in any
+locale and therefore cannot prove one-language TUI/scripted rendering or the required
+absence of INTERNAL guidance, raw custody text, traceback, key, candidate, internal
+marker, and persistence across the matrix.
+
+The stated 22 combined integration cases genuinely pass in 13.07 seconds, and the five
+catalogue cases pass in 3.04 seconds, but those counts are the existing module totals,
+not the ADR acceptance matrix the execution record and closed plan Step claim. Add a
+table-driven real scripted lane and the closest transport-real TUI/live-submission lane
+covering every scalar, byte-precedence, surrogate, and exact-Unicode cell; assert exact
+accepted usability/distinctness, typed refusal parity, active-locale-only output, all
+negative diagnostics/secrets, and no publication for every refusal. This HIGH blocks
+review-clean S11 and W04.P09.S12.
+
+### s11-creation-channel-contract-bite | medium | Confirmation and lazy-option invariants lack regressions
+
+The creation-specific channel tests cover syntactically malformed JSON and one object
+with an extra field at
+`src/cadrumo/entrypoints/cli/_config/tests/test_scripted_profile_creation.py:246-264`.
+They do not cover a missing `passphrase_confirmation`, unequal passphrase and
+confirmation, oversized input at the shared bound, or assert that lazy help and the
+projected verb schema contain the option exactly once. The shared reader already has
+generic strict/bounded coverage, so duplicating its entire parser matrix is unnecessary;
+however, the creation model's exact required fields, its operation-specific confirmation
+comparison, and its dynamically injected lazy option are new integration seams and can
+regress independently. Add focused cases for missing and mismatched confirmation with
+no echo/no profile, plus one lazy help/schema uniqueness assertion; either rely explicitly
+on the shared bound test or add one real oversized creation payload if the execution
+record claims that boundary end to end.
+
+### s11-secret-channel-prose-drift | low | The scripted registration module still documents the pre-stdin channel order
+
+The module prose at `src/cadrumo/entrypoints/cli/_config/_scripted_registration.py:8-23`
+still lists only console prompt, environment fallback, and refusal, while the function
+docstring says the channel is console-first even though explicit `--secrets-stdin` is
+now checked first. The code is correct--an explicitly selected machine channel must win--
+but the stale security-contract prose can mislead future maintenance. Reconcile it in
+the documentation/bloat Step without changing behavior.
+
+Ruff lint and Ruff format checks pass on all four feature-owned Python files. The S11
+commit itself is clean; whole mixed-commit diff hygiene reports an unrelated trailing
+blank line in `test_operator_surface_contract_drift.py`. Locale scaffold/audit remain
+globally red only on concurrent Modelo 036/390 generated catalogue drift (currently 198
+missing leaves per locale); no feature credential leaf is missing, extra, stale,
+uninterpolated, or identical. No CRITICAL finding was found. The HIGH and MEDIUM block
+S12 until remediated and independently verified.
+
+#### S11 remediation follow-up
+
+Current-HEAD re-review of commit `601e90890f`, after repeated semantic code and
+governing-ADR discovery plus exact-symbol confirmation, closes the central HIGH matrix
+gap and the LOW prose drift. The new real scripted matrix at
+`src/cadrumo/entrypoints/cli/_config/tests/test_profile_password_inbound_matrix.py:43-105`
+drives `config profile create --secrets-stdin` for refused 14 and 257 scalars, the
+1,025-byte precedence case, and both surrogate halves; accepted 15 and 256 scalars,
+exactly 1,024 UTF-8 bytes, and composed/decomposed sequences create real profiles. Each
+accepted profile's committed capsule unlocks with the submitted sequence, while the
+opposite normalization form is refused for both composition variants. The TUI's real
+headless Pilot acceptance case at
+`src/cadrumo/adapters/inbound/tui/tests/test_registration_screen.py:99-161` now covers
+the same five accepted candidates, real persistence, exact unlock, normalization
+counterpart refusal, and an unrelated wrong-password refusal. Its established typed
+submission refusal matrix still covers 14, 257, 1,025-byte precedence, and both
+surrogate endpoints without profile publication.
+
+The scripted module prose now accurately places explicit bounded `--secrets-stdin`
+first, followed by the no-echo terminal, configured secret, and refusal. The independent
+serial integration lane passes all 44 cases in 32.15 seconds; the five catalogue parity
+cases pass in 3.03 seconds. Ruff lint, Ruff format, and commit diff hygiene all pass over
+the four remediation Python files. `s11-cross-surface-matrix-absent` is closed as a HIGH,
+and `s11-secret-channel-prose-drift` is closed. Two residual test-contract gaps remain.
+
+### s11-language-surface-bite | medium | Four-locale runtime cases do not prove one-language or full no-leak/no-persistence claims
+
+The new en/es/ca/hu runtime test at
+`src/cadrumo/entrypoints/cli/_config/tests/test_profile_password_inbound_matrix.py:72-80`
+parses only `error.message` and asserts that it is nonempty, omits the candidate and
+message-key prefix, and differs from the raw English custody diagnostic. It does not
+assert refusal status/classification, equality to the exact translation for the selected
+locale, inequality/absence of the other three rendered leaves, or absence of INTERNAL,
+traceback, internal type marker, and profile publication. Consequently the test would
+remain green if every locale incorrectly rendered the same non-key sentence, if a leak
+appeared elsewhere in stdout/stderr, or if the refusal stranded storage. The English
+matrix cases prove those negatives only for English and only check for one capsule
+filename rather than the authoritative bucket listing.
+
+Strengthen the four-locale real invocation to compare the public message with the exact
+selected-locale rendering, prove it is not any other locale's rendering, apply all
+combined-output negative assertions, and use the authoritative profile/bucket listing or
+a whole-storage snapshot to prove no publication. This MEDIUM blocks the execution
+record's one-language/no-leak/no-persistence claim and S12.
+
+### s11-creation-channel-contract-bite-follow-up | medium | The new command tests still leave three claimed seams unpinned
+
+Missing confirmation, malformed JSON, an extra field, and greater-than-8-KiB payloads
+now refuse and the shared list command proves no profile for those parameterized cases.
+Unequal confirmation is also refused. However, the mismatch test at
+`src/cadrumo/entrypoints/cli/_config/tests/test_scripted_profile_creation.py:269-276`
+does not prove the distinct confirmation value is absent or that no profile was created.
+The oversized case asserts absence of `_PASSPHRASE`, which is not present in its payload,
+so it would not catch echo of the actual 9,000-character secret. Finally, the help test
+at lines 279-282 proves one rendered option but never builds the lazy verb schema or
+asserts its single boolean `secrets_stdin` field, despite the execution claim covering
+both help and schema.
+
+Add exact mismatch no-echo/no-profile assertions, make the oversized case check its own
+submitted value (or a distinctive safe substring) plus no profile, and assert the lazy
+`config.profile.create` schema contains exactly one `--secrets-stdin` boolean parameter.
+The original MEDIUM is therefore only partially remediated and remains open. No HIGH or
+CRITICAL finding remains, but these two MEDIUM findings block W04.P09.S12.

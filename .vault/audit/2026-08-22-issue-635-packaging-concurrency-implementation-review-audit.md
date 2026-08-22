@@ -9,8 +9,6 @@ body_hash: 'sha256:943e58ecbf1f7afe9e79cf50ada2ca13b1a5463ba42f08671e8c2ae0d9669
 related: []
 ---
 
-
-
 # `issue-635-packaging-concurrency` audit: `Packaging quick concurrency implementation review`
 
 ## Scope
