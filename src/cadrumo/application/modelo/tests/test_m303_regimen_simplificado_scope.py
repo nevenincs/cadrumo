@@ -48,12 +48,24 @@ def _work_unit() -> WorkUnit:
     )
 
 
+#: The three facts the profile schema requires of every record. A profile
+#: missing any of them cannot be COMPLETE, and these tests need a COMPLETE one:
+#: the scope resolver refuses an incomplete profile with ``profile_inactive``
+#: before it ever reads the IVA composition, so seeding without the baseline
+#: made every case here refuse for the wrong reason -- including the one whose
+#: whole subject is an absent composition on an otherwise ready profile.
+_SCHEMA_REQUIRED_FACTS = (
+    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+)
+
+
 def _store_profile(*, composition: M303RegimeComposition | None) -> None:
-    facts = ()
+    facts = _SCHEMA_REQUIRED_FACTS
     if composition is not None:
         facts = (
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
+            *_SCHEMA_REQUIRED_FACTS,
             UserProfileFact(path="iva.m303_regime_composition", value=composition.value),
             UserProfileFact(path="iva.redeme_enrolled", value=False),
             UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
@@ -104,16 +116,31 @@ def test_secure_profile_composition_derives_the_closed_m303_scope(
     assert decision.scope is expected_scope
 
 
-def test_secure_profile_without_iva_composition_blocks_m303_scope_resolution(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        _store_profile(composition=None)
+def test_a_profile_projection_without_an_iva_block_blocks_m303_scope_resolution() -> None:
+    """The refusal is a backstop against a projection the schema cannot produce.
 
-        with pytest.raises(ModeloProfileReadinessError) as raised_1:
-            resolve_m303_regimen_simplificado_scope(_work_unit())
+    This seeded a capsule record with no IVA composition and drove the whole
+    resolver, which cannot reach the branch: ``iva.regime`` is schema-required,
+    and the schema requires ``iva.m303_regime_composition`` "when any IVA
+    profile fact claims the IVA block", so EVERY complete profile carries one. A
+    record without it is not COMPLETE, and the resolver refuses an incomplete
+    profile with ``profile_inactive`` before it ever reads the composition --
+    which is the refusal that test actually asserted against.
 
-        failure_1 = raised_1.value.precondition_failure
-        assert failure_1 is not None, "the refusal must carry its declared precondition failure"
-        assert failure_1.scenario_id == "modelo.work.calculate.m303_profile_readiness.iva_composition_missing"
+    So the branch is exercised where it can be: on the projection itself, with
+    no IVA block at all. That is the state it defends against -- a projection
+    reaching the scope resolver without the block the schema guarantees -- and
+    it is reached the same way the sibling composition test reaches its own
+    refusal, by calling the function under test directly.
+    """
+    with pytest.raises(ModeloProfileReadinessError) as raised_1:
+        m303_regimen_simplificado_scope_for_profile(
+            TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL, iva=None),
+        )
+
+    failure_1 = raised_1.value.precondition_failure
+    assert failure_1 is not None, "the refusal must carry its declared precondition failure"
+    assert failure_1.scenario_id == "modelo.work.calculate.m303_profile_readiness.iva_composition_missing"
 
 
 def test_raw_unknown_composition_is_refused() -> None:
