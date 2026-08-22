@@ -121,11 +121,7 @@ def test_the_bundled_modelo_200_orden_design_now_reads_named_page_records() -> N
     Before the recovery this design produced ZERO sheets: every one of its page
     records was anonymous, so the whole document was reported unread.
     """
-    matches = [
-        path
-        for path in _bundled_designs()
-        if path.name.startswith("17-200-orden-eha-1338-2010")
-    ]
+    matches = [path for path in _bundled_designs() if path.name.startswith("17-200-orden-eha-1338-2010")]
     assert matches, "the bundled modelo 200 2010 orden design is no longer in the corpus"
 
     extraction = extract_record_design(matches[0])
@@ -135,6 +131,7 @@ def test_the_bundled_modelo_200_orden_design_now_reads_named_page_records() -> N
     assert any(name.startswith("Pág. ") for name in names), (
         f"no page record was recovered by its declared identity; read {names}"
     )
+
 
 def test_a_two_digit_page_constant_is_read_the_same_as_a_three_digit_one() -> None:
     """The page constant's WIDTH is not part of the evidence; its position is.

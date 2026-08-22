@@ -324,6 +324,7 @@ def _seed_current_revision(work_unit_id: str) -> str:
         binding_overrides={},
         casilla_values={_RESUME_CASILLA: Decimal("10")},
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -342,6 +343,7 @@ def _seed_current_revision(work_unit_id: str) -> str:
         created_at=_T,
         updated_at=_T,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     repository.save(upsert_calculation_revision(repository.load(), revision))
     work_repository = WorkUnitCatalogueRepository()

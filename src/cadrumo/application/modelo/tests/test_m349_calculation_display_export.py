@@ -152,6 +152,7 @@ def _calculated_revision(
             casilla_values=raw_casilla_values,
             detail_rows=detail_rows,
             filing_instance_evidence=None,
+            source_provenance=(),
         ),
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.BORRADOR,
@@ -163,6 +164,7 @@ def _calculated_revision(
         created_at=_CLOCK,
         updated_at=_CLOCK,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     calc_lines: Any = calculation_revision_lines
     calc_payload: Any = calculation_revision_payload
@@ -186,6 +188,7 @@ def _calculated_revision(
         casilla_values=casilla_values,
         detail_rows=detail_rows,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     return (
         snapshot,
@@ -202,6 +205,7 @@ def _calculated_revision(
             created_at=_CLOCK,
             updated_at=_CLOCK,
             filing_instance_evidence=None,
+            source_provenance=(),
         ),
     )
 

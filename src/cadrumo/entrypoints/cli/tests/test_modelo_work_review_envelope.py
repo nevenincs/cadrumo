@@ -80,6 +80,7 @@ def _persist_blocked_review(tmp_path: Path) -> Iterator[tuple[ModeloWorkReview, 
             binding_overrides={},
             casilla_values={},
             filing_instance_evidence=None,
+            source_provenance=(),
         )
         work_unit = WorkUnit(
             work_unit_id=work_unit_id,
@@ -100,6 +101,7 @@ def _persist_blocked_review(tmp_path: Path) -> Iterator[tuple[ModeloWorkReview, 
             created_at=_NOW,
             updated_at=_NOW,
             filing_instance_evidence=None,
+            source_provenance=(),
         )
         finding = ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,

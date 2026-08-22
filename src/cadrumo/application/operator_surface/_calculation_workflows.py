@@ -65,8 +65,7 @@ class SupportedModeloCalculationWorkflowCatalogue(BaseModel):
     def supports(self, *, entrypoint_id: str, command_id: str) -> bool:
         """Return whether the exact reconciled workflow identity is supported."""
         return any(
-            workflow.entrypoint_id == entrypoint_id and workflow.command_id == command_id
-            for workflow in self.workflows
+            workflow.entrypoint_id == entrypoint_id and workflow.command_id == command_id for workflow in self.workflows
         )
 
 

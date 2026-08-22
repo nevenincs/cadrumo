@@ -763,12 +763,8 @@ def _committed_export_field(revision: ModeloRevision) -> ExportFieldDefinition:
     constructed field can satisfy a detector that the real declaration's shape
     would slip past.
     """
-    return next(
-        field
-        for layout in revision.export_layouts
-        for record in layout.records
-        for field in record.fields
-    )
+    return next(field for layout in revision.export_layouts for record in layout.records for field in record.fields)
+
 
 def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_draft_field() -> None:
     """Collapsing M200's envelope-open composite back onto the year field must be refused.
@@ -818,8 +814,7 @@ def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_d
         and field.length != DRAFT_ATTRIBUTE_CANONICAL_WIDTHS[ExportDraftAttribute.FILING_YEAR]
     )
     assert collapsed_onto_a_record == (), (
-        f"a record field binds the ejercicio to a slot that is not the year's own width: "
-        f"{collapsed_onto_a_record}"
+        f"a record field binds the ejercicio to a slot that is not the year's own width: {collapsed_onto_a_record}"
     )
 
     collapsed = _committed_export_field(revision).model_copy(
@@ -865,9 +860,7 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
         "the width ruling must stay total over the declarable attributes, or a "
         "re-introduced identity attribute could be bound with no width ruling at all"
     )
-    assert all(
-        attribute.name.startswith(("FILING_", "PERIOD_")) for attribute in ExportDraftAttribute
-    ), (
+    assert all(attribute.name.startswith(("FILING_", "PERIOD_")) for attribute in ExportDraftAttribute), (
         "a draft attribute yielding a party's identity is back; the grupo-mercantil "
         "parent-TIN misbinding becomes expressible again and needs its own width ruling"
     )
@@ -879,9 +872,7 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
         for field in record.fields
         if field.kind is CasillaFieldKind.DRAFT and field.length == SPANISH_TAX_ID_WIDTH
     )
-    assert declarant_bound_slots == (), (
-        f"a draft field is bound at the Spanish tax id's width: {declarant_bound_slots}"
-    )
+    assert declarant_bound_slots == (), f"a draft field is bound at the Spanish tax id's width: {declarant_bound_slots}"
 
     misbound = _committed_export_field(revision).model_copy(
         update={

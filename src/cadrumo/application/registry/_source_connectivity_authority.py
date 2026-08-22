@@ -147,8 +147,7 @@ class LiveSourceConnectivityProofAuthority:
         source_identity_rows = tuple(
             row
             for row in revision.source_provenance
-            if row.binding_source is connection.source_kind
-            and row.source_ref == proof.persisted_source_identity
+            if row.binding_source is connection.source_kind and row.source_ref == proof.persisted_source_identity
         )
         return (
             len(source_identity_rows) == 1

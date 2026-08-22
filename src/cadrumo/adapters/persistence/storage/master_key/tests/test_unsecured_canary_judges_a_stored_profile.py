@@ -69,9 +69,7 @@ def _store_profile_row(tax_id: str) -> None:
     document = json.dumps({"payload": {"facts": [{"path": "identity.tax_id", "value": tax_id}]}})
     wire = EncryptedBytes().process_bind_param(document.encode("utf-8"), None)
 
-    database = bucket_scoped_storage_path(
-        StorageCategory.BUCKET_DATABASE_FILE, _BUCKET_ID, settings=load_settings()
-    )
+    database = bucket_scoped_storage_path(StorageCategory.BUCKET_DATABASE_FILE, _BUCKET_ID, settings=load_settings())
     database.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(database)
     try:

@@ -161,6 +161,7 @@ def _seed_m303_external_baseline(
         binding_overrides=overrides_map,
         casilla_values=casilla_values,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit.work_unit_id,
@@ -187,6 +188,7 @@ def _seed_m303_external_baseline(
         filed_at=_T1,
         filed_by="aeat-import",
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
 

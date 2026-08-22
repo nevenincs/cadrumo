@@ -74,7 +74,6 @@ jobs:
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
@@ -143,6 +142,7 @@ jobs:
           if-no-files-found: error
           overwrite: true
 
+
       - name: Stage Cadrumo packaging smoke evidence
         if: always()
         run: |
@@ -200,7 +200,6 @@ jobs:
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
@@ -294,7 +293,6 @@ jobs:
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
@@ -378,11 +376,8 @@ jobs:
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          # EXACT pin: release_cohort.py enforces _REQUIRED_PYTHON_VERSION for a
-          # reproducible cohort, so this job must provision that exact CPython -
-          # a bare "3.13" resolves to the latest patch (3.13.14 on a fresh runner)
-          # and the builder correctly refuses it. Keep in step with that constant.
-          python-version: "3.13.11"
+          # With no python-version override, uv reads the checkout's exact
+          # .python-version pin. release_cohort.py enforces the same source.
           # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
@@ -447,7 +442,6 @@ jobs:
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
@@ -494,7 +488,6 @@ jobs:
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
@@ -540,7 +533,6 @@ jobs:
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
@@ -569,4 +561,3 @@ jobs:
           path: var/distribution-install-readiness/*.json
           if-no-files-found: error
           overwrite: true
-

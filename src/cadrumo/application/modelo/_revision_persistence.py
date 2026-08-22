@@ -252,7 +252,7 @@ def persist_calculation_revision(
     bindings_sourced_from_borrador: tuple[BindingId, ...],
     observations: tuple[CasillaObservation, ...],
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = (),
-    source_provenance: tuple[CalculationSourceRef, ...] = (),
+    source_provenance: tuple[CalculationSourceRef, ...],
     source_issues: tuple[CalculationSourceIssue, ...] = (),
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
@@ -279,8 +279,9 @@ def persist_calculation_revision(
     The ``source_provenance`` tuple carries the resolver-level source-mesh trace
     (:class:`~domain.modelos.CalculationSourceRef` rows projected from the
     calculation source mesh) so the persisted revision records which resolver
-    mesh and which upstream source objects produced it. It is additive and does
-    NOT participate in ``derive_calculation_revision_id``.
+    mesh and which upstream source objects produced it. The tuple is required at
+    every call site (including an explicit empty decision) and participates in
+    ``derive_calculation_revision_id`` through an order-canonical identity payload.
 
     ``ledger_filing_snapshot`` pins the ledger state the casilla values were
     computed FROM, for a ledger-derived draft. It is the anchor the verify-time

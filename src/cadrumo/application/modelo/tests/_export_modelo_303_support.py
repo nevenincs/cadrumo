@@ -227,6 +227,7 @@ def _seed_modelo_303_1t_clean_state(
         binding_overrides={},
         casilla_values=values,
         filing_instance_evidence=prior_filing_instance_evidence,
+        source_provenance=(),
     )
     prior_revision = CalculationRevision(
         calculation_revision_id=prior_revision_id,
@@ -241,6 +242,7 @@ def _seed_modelo_303_1t_clean_state(
         filed_at=filed_at,
         filed_by=filed_by,
         filing_instance_evidence=prior_filing_instance_evidence,
+        source_provenance=(),
     )
     calculation_repository.save(
         upsert_calculation_revision(calculation_repository.load(), prior_revision),

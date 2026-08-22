@@ -614,6 +614,7 @@ def test_borrador_snapshot_id_participates_in_calculation_revision_identity() ->
         borrador_snapshot_id="borrador-one",
         bindings_sourced_from_borrador=(_DECIMAL_BINDING,),
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     second = derive_calculation_revision_id(
         work_unit_id="1" * 64,
@@ -623,6 +624,7 @@ def test_borrador_snapshot_id_participates_in_calculation_revision_identity() ->
         borrador_snapshot_id="borrador-two",
         bindings_sourced_from_borrador=(_DECIMAL_BINDING,),
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
     assert first != second

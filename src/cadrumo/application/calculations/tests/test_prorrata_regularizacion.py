@@ -170,6 +170,7 @@ def _seed_verified_m303_settlement(
         binding_overrides={},
         casilla_values=casilla_values,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     verified_at = _T0 + timedelta(hours=1)
     revision = CalculationRevision(
@@ -190,6 +191,7 @@ def _seed_verified_m303_settlement(
         verified_at=verified_at,
         verified_by="aeat.test.modelo.verify",
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,

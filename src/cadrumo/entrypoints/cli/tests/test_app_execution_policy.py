@@ -65,9 +65,7 @@ def test_maximum_effect_and_risk_judgments_are_not_downgraded() -> None:
 
     assert by_path[("aeat", "app", "live", "expedientes", "pull")] == LIVE_PROFILE_WRITE
     assert by_path[("aeat", "app", "live", "expedientes", "list")] == ENCRYPTED_READ
-    assert by_path[("aeat", "app", "live", "iva-wallet", "pull-evidence")] == (
-        BROWSER_SUBPROCESS_LIVE_PROFILE_WRITE
-    )
+    assert by_path[("aeat", "app", "live", "iva-wallet", "pull-evidence")] == (BROWSER_SUBPROCESS_LIVE_PROFILE_WRITE)
     assert by_path[("aeat", "app", "live", "portals", "list")] == METADATA
     assert by_path[("aeat", "app", "diagnostics", "runs")] == LOCAL_STORAGE_READ
     assert by_path[("aeat", "app", "maintenance", "reconcile")] == PROFILE_LOCAL_DESTRUCTIVE

@@ -44,8 +44,7 @@ _THIRD_PARTY_CLAIM = "third-party data"
 _REPORTS_OTHERS: dict[str, str] = {
     "189": "Declaracion informativa anual acerca de valores, seguros y rentas",
     "280": "Declaracion informativa anual de Planes de Ahorro a Largo Plazo",
-    "345": "Declaracion informativa anual de planes y fondos de pensiones, participes, "
-    "aportaciones y contribuciones",
+    "345": "Declaracion informativa anual de planes y fondos de pensiones, participes, aportaciones y contribuciones",
     "347": "Operaciones con terceras personas (informativa anual)",
 }
 

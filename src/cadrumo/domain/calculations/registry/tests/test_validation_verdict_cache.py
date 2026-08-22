@@ -56,7 +56,6 @@ def _reset_all_caches() -> None:
     ve.reset_corpus_text_cache()
 
 
-
 def _tree_state(root: Path) -> dict[str, tuple[int, int]]:
     """Return size and mtime for every file under ``root``."""
     state: dict[str, tuple[int, int]] = {}

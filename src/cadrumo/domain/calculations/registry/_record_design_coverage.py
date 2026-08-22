@@ -818,10 +818,7 @@ def build_diseno_coverage_report(
 
     extracted_fields = sum(len(sheet.fields) for sheet in sheets)
     described_fields = sum(
-        1
-        for sheet in sheets
-        for design_field in sheet.fields
-        if design_field.type_code != _VISUAL_CHART_TYPE_CODE
+        1 for sheet in sheets for design_field in sheet.fields if design_field.type_code != _VISUAL_CHART_TYPE_CODE
     )
     return DisenoCoverageReport(
         modelo_id=modelo_id,

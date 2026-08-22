@@ -41,15 +41,11 @@ def test_a_type_written_with_abbreviation_punctuation_still_parses() -> None:
 
 
 def test_a_stuttered_ordinal_and_position_prefix_is_dropped() -> None:
-    assert _collapse_stuttered_row_prefix(("99 1592 99 1592 17 Num Deducciones",)) == (
-        "99 1592 17 Num Deducciones",
-    )
+    assert _collapse_stuttered_row_prefix(("99 1592 99 1592 17 Num Deducciones",)) == ("99 1592 17 Num Deducciones",)
 
 
 def test_an_ordinary_row_is_untouched() -> None:
-    assert _collapse_stuttered_row_prefix(("99 1592 17 Num Deducciones",)) == (
-        "99 1592 17 Num Deducciones",
-    )
+    assert _collapse_stuttered_row_prefix(("99 1592 17 Num Deducciones",)) == ("99 1592 17 Num Deducciones",)
 
 
 def test_a_near_miss_is_not_treated_as_a_stutter() -> None:

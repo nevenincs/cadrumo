@@ -74,6 +74,5 @@ def test_an_unreviewed_revision_is_distinguishable_from_a_demoted_one() -> None:
 
     unreviewed = [ledger for ledger in inspection_only if not ledger.reviewed_but_not_filing_capable]
     assert unreviewed, (
-        "every inspection-scope ledger carries a fallback reason, so the distinction "
-        "this records would be vacuous"
+        "every inspection-scope ledger carries a fallback reason, so the distinction this records would be vacuous"
     )

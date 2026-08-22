@@ -82,9 +82,7 @@ def _bundled_designs(modelo_id: str) -> tuple[str, ...]:
     directory = bundled_path("corpus", "aeat_official", "disenos_registro", f"modelo_{modelo_id}", "files")
     if not directory.is_dir():
         return ()
-    return tuple(
-        sorted(path.name for path in directory.iterdir() if path.suffix.lower() in {".pdf", ".xls", ".xlsx"})
-    )
+    return tuple(sorted(path.name for path in directory.iterdir() if path.suffix.lower() in {".pdf", ".xls", ".xlsx"}))
 
 
 def _blocker(modelo: object, revision: object, sources: object) -> str:
@@ -141,8 +139,7 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
     cited = tuple(
         str(ref)
         for ref in (revision.source_refs or ())
-        if (source := sources.get(str(ref))) is not None
-        and getattr(source, "kind", None) == "record_design"
+        if (source := sources.get(str(ref))) is not None and getattr(source, "kind", None) == "record_design"
     )
     if not designs:
         return "BLOCKED on corpus: no record design is bundled for this modelo"
@@ -222,9 +219,7 @@ def _uncovered_claimed_years(revision: object, cited: tuple[str, ...], sources: 
     return [
         year
         for year in claimed
-        if not any(
-            (start is None or year >= start) and (end is None or year <= end) for start, end in windows
-        )
+        if not any((start is None or year >= start) and (end is None or year <= end) for start, end in windows)
     ]
 
 

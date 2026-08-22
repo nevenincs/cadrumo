@@ -79,6 +79,7 @@ def _persist_parent_revision() -> str:
         binding_overrides={},
         casilla_values={},
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -87,6 +88,7 @@ def _persist_parent_revision() -> str:
         created_at=_REVISION_CREATED_AT,
         updated_at=_REVISION_CREATED_AT,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).save(
         CalculationRevisionCatalogue(revisions={revision_id: revision}),

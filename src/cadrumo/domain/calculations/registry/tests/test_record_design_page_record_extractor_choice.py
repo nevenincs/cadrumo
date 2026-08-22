@@ -63,7 +63,11 @@ _CONTESTED_OFFSETS = (115, 132, 149, 166, 183)
 #: using that reader, or the change would be a blanket preference for the plain
 #: extractor rather than a measured choice.
 _CLEAN_PAGE_RECORD_DESIGN = bundled_path(
-    "corpus", "aeat_official", "disenos_registro", "modelo_840", "files",
+    "corpus",
+    "aeat_official",
+    "disenos_registro",
+    "modelo_840",
+    "files",
     "01-840-orden-hac-2572-2003-99-kb-pdf.pdf",
 )
 
@@ -163,8 +167,7 @@ def test_every_contested_position_carries_its_own_tag() -> None:
         if not expected_tags:
             continue
         assert set(_TAG.findall(by_offset.get(offset, ""))) == expected_tags, (
-            f"@{offset} does not carry the casilla the sibling editions put there: "
-            f"expected {sorted(expected_tags)}"
+            f"@{offset} does not carry the casilla the sibling editions put there: expected {sorted(expected_tags)}"
         )
 
 

@@ -137,11 +137,7 @@ def test_cold_start_refusal_is_consistent_across_surfaces(_fresh_storage_root: P
     # failed condition, the evidence and the recovery action -- is what
     # "identical refusal" means here.
     def _surface_independent(output: str) -> tuple[str, ...]:
-        return tuple(
-            line
-            for line in output.strip().splitlines()
-            if not line.strip().startswith("command:")
-        )
+        return tuple(line for line in output.strip().splitlines() if not line.strip().startswith("command:"))
 
     assert _surface_independent(modelo.output) == _surface_independent(ledger.output), (
         "cold-start refusal diverged between modelo work and ledger surfaces:\n"

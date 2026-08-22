@@ -81,9 +81,7 @@ def _revision_scoped_source_id(modelo: ModeloDefinition, catalogues: RegistryCat
     """
     scoped = _revision_scoped_source_ids(modelo)
     usable = sorted(
-        source_id
-        for source_id in scoped
-        if getattr(catalogues.sources[source_id], "kind", None) != "record_design"
+        source_id for source_id in scoped if getattr(catalogues.sources[source_id], "kind", None) != "record_design"
     )
     assert usable, "the M100 2025 revision must own at least one non-design source ref of its own"
     return usable[0]

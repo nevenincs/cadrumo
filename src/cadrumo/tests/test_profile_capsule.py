@@ -43,8 +43,7 @@ def test_a_profile_seeded_complete_loads_back_complete(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         before = _loaded(profile.bucket_id)
         assert before.setup_state is ProfileSetupState.INCOMPLETE, (
-            "a freshly minted capsule must start INCOMPLETE, or this test cannot show "
-            "that the seeding promoted it"
+            "a freshly minted capsule must start INCOMPLETE, or this test cannot show that the seeding promoted it"
         )
 
         seeded = seed_test_profile_record(

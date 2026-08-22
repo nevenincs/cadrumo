@@ -435,6 +435,7 @@ def test_calculation_revision_projection_preserves_absent_by_design_marker() -> 
             binding_overrides={},
             casilla_values=casilla_values,
             filing_instance_evidence=None,
+            source_provenance=(),
         ),
         work_unit_id=_WORK_UNIT_ID,
         state=CalculationRevisionState.BORRADOR,
@@ -443,6 +444,7 @@ def test_calculation_revision_projection_preserves_absent_by_design_marker() -> 
         created_at=_REVISION_TIMESTAMP,
         updated_at=_REVISION_TIMESTAMP,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
     payload = calculation_revision_payload(revision)

@@ -186,9 +186,7 @@ def test_both_read_surfaces_route_through_the_one_decode_core() -> None:
 
     for surface in (codec.secure_object_record_from_row, codec.secure_object_list_item_from_raw_row):
         source = inspect.getsource(surface)
-        assert _calls(source, "decode_secure_object_row"), (
-            f"{surface.__name__} does not route through the decode core"
-        )
+        assert _calls(source, "decode_secure_object_row"), f"{surface.__name__} does not route through the decode core"
         for reimplemented in (
             "decrypt_secure_object_payload(",
             "secure_object_payload_aad(",
@@ -334,11 +332,7 @@ def test_the_delegation_check_rejects_a_docstring_mention() -> None:
     for.
     """
     calling = "def surface(row):\n    return shared_routine(row)\n"
-    mentioning = (
-        "def surface(row):\n"
-        '    """Delegates to shared_routine( ) in the core."""\n'
-        "    return row\n"
-    )
+    mentioning = 'def surface(row):\n    """Delegates to shared_routine( ) in the core."""\n    return row\n'
 
     assert _calls(calling, "shared_routine")
     assert not _calls(mentioning, "shared_routine")

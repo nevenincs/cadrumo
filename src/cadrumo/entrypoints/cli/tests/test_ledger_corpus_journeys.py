@@ -311,6 +311,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         source_transaction_ids=(tx,),
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     now = datetime(2026, 5, 2, 9, 0, tzinfo=UTC)
     WorkUnitCatalogueRepository().save(
@@ -353,6 +354,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
                     verified_at=now,
                     verified_by="operator",
                     filing_instance_evidence=filing_instance_evidence,
+                    source_provenance=(),
                 ),
             },
         ),

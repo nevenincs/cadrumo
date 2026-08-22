@@ -72,7 +72,11 @@ def test_modelo_187_188_194_declare_no_formula(modelo_id: str) -> None:
 
 @pytest.mark.parametrize(
     ("modelo_id", "expected"),
-    [("187", ("01", "02", "03", "04")), ("188", ("01", "02", "03", "04", "05")), ("194", ("01", "02", "03", "04", "05"))],
+    [
+        ("187", ("01", "02", "03", "04")),
+        ("188", ("01", "02", "03", "04", "05")),
+        ("194", ("01", "02", "03", "04", "05")),
+    ],
 )
 def test_modelo_187_188_194_casilla_set_is_the_printed_box_set(modelo_id: str, expected: tuple[str, ...]) -> None:
     """The declared casillas are the boxes the approving orden's annex prints."""

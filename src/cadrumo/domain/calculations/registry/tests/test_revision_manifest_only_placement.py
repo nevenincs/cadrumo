@@ -63,7 +63,7 @@ _FIELD_LITERALS: dict[str, str] = {
     # than a scalar: the refusal must fire on WHERE the field is declared, so the
     # value has to be well-formed enough to reach the placement check.
     "family_dispositions": (
-        "{ casilla_continuidad_evolutions = { reason = \"declared for the placement refusal\", "
+        '{ casilla_continuidad_evolutions = { reason = "declared for the placement refusal", '
         f'legal_refs = ["{_LEGAL_REF}"], source_refs = ["aeat-manual"] }} }}'
     ),
 }

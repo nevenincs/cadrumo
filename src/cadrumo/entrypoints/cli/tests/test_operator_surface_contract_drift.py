@@ -153,5 +153,3 @@ def test_operator_surface_contract_covers_the_live_tree() -> None:
             lines.append(f"[{root}] contract families with NO live CLI mount: {families_orphan}")
 
     assert not lines, "OperatorSurfaceContract drifted from the live CLI tree:\n" + "\n".join(lines)
-
-

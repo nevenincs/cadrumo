@@ -108,6 +108,7 @@ def _revision(
         casilla_values={},
         source_transaction_ids=source_ids,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=rid,
@@ -118,6 +119,7 @@ def _revision(
         created_at=_NOW,
         updated_at=_NOW,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
 
 
@@ -182,6 +184,7 @@ def _verified_revision(
         casilla_values={},
         source_transaction_ids=source_ids,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=rid,
@@ -194,6 +197,7 @@ def _verified_revision(
         verified_at=_NOW,
         verified_by="operator",
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
 
 

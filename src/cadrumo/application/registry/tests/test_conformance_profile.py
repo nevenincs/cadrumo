@@ -81,6 +81,7 @@ _M100_DICTIONARY_CASILLA_COUNTS = {
     2025: 2215,
 }
 
+
 @pytest.fixture(scope="module")
 def tree_modelos() -> tuple[ModeloDefinition, ...]:
     """Every compiled modelo in the bundled tree, read without validation."""
@@ -536,13 +537,10 @@ def test_annual_casilla_comparison_uses_the_selected_year_dictionary(
     # cited, not the input dictionary, not the XSD, not the Renta manual. Both
     # now carry a descriptive id.
     fabricated = sorted(
-        casilla_id
-        for casilla_id in (layout_comparison.missing_casilla_ids or ())
-        if casilla_id.isdigit()
+        casilla_id for casilla_id in (layout_comparison.missing_casilla_ids or ()) if casilla_id.isdigit()
     )
     assert not fabricated, (
-        f"{filing_year} declares AEAT-numbered casilla(s) {fabricated} that its own dictionary "
-        "does not contain"
+        f"{filing_year} declares AEAT-numbered casilla(s) {fabricated} that its own dictionary does not contain"
     )
 
     entries = xml_dictionary_entries(

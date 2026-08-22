@@ -128,6 +128,7 @@ def _persist_sealed_303(*, filing_year: int, period: str, state: CalculationRevi
         binding_overrides={},
         casilla_values=casilla_values,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,

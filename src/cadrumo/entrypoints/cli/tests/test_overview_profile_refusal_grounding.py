@@ -133,9 +133,7 @@ def test_calendar_refusal_reads_as_a_refusal_not_as_invalid_input() -> None:
     # Click's "Invalid value" header are translated, so an English token cannot
     # decide the question in a Spanish-rendered run. The category IS the
     # channel -- a parameter error never carries REFUSED.
-    result = _invoke(
-        ["--format", "json", "app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"]
-    )
+    result = _invoke(["--format", "json", "app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"])
 
     assert result.exit_code != 0, result.output
     envelope = json.loads(result.output)

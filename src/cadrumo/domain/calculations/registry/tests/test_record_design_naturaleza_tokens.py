@@ -58,9 +58,7 @@ def test_an_unknown_type_token_is_still_refused() -> None:
     assert _parse_pdf_row("26 192 1 Zzz Alguna descripcion", 1) is None
 
 
-@pytest.mark.parametrize(
-    "prefix", ["14-100-ejercicio-2009", "15-100-ejercicio-2010", "16-100-ejercicio-2011"]
-)
+@pytest.mark.parametrize("prefix", ["14-100-ejercicio-2009", "15-100-ejercicio-2010", "16-100-ejercicio-2011"])
 def test_the_bundled_modelo_100_editions_carry_no_position_holes(prefix: str) -> None:
     """The real corpus case: each of these reported holes across most of its records."""
     matches = [path for path in _bundled_designs() if path.name.startswith(prefix)]
@@ -72,9 +70,7 @@ def test_the_bundled_modelo_100_editions_carry_no_position_holes(prefix: str) ->
     assert not holes, [sheet.reason[:120] for sheet in holes]
 
 
-@pytest.mark.parametrize(
-    "prefix", ["17-100-ejercicio-2012", "18-100-ejercicio-2013", "19-100-ejercicio-2014"]
-)
+@pytest.mark.parametrize("prefix", ["17-100-ejercicio-2012", "18-100-ejercicio-2013", "19-100-ejercicio-2014"])
 def test_the_later_editions_recover_the_doubly_glued_row(prefix: str) -> None:
     """The doubly-glued row is now read, and position 9 is no longer a hole.
 
@@ -102,14 +98,11 @@ def test_the_later_editions_recover_the_doubly_glued_row(prefix: str) -> None:
 
     extraction = extract_record_design(matches[0])
 
-    assert not [
-        sheet for sheet in extraction.skipped if "but 9 were not read at all" in sheet.reason
-    ], "position 9 is a hole again; the doubly-glued row stopped being recovered"
+    assert not [sheet for sheet in extraction.skipped if "but 9 were not read at all" in sheet.reason], (
+        "position 9 is a hole again; the doubly-glued row stopped being recovered"
+    )
 
     recovered = [
-        field
-        for sheet in extraction.sheets
-        for field in sheet.fields
-        if field.offset == 9 and field.length == 1
+        field for sheet in extraction.sheets for field in sheet.fields if field.offset == 9 and field.length == 1
     ]
     assert recovered, "no record carries the one-byte field the doubly-glued row declares at position 9"

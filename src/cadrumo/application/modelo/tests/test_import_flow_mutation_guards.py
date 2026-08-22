@@ -327,6 +327,7 @@ def test_calculation_revision_actions_refuse_a_foreign_work_unit(tmp_path: Path)
                 binding_overrides={},
                 casilla_values={},
                 filing_instance_evidence=None,
+                source_provenance=(),
             ),
             work_unit_id=foreign.work_unit_id,
             state=CalculationRevisionState.BORRADOR,
@@ -335,6 +336,7 @@ def test_calculation_revision_actions_refuse_a_foreign_work_unit(tmp_path: Path)
             created_at=_GUARD_CLOCK,
             updated_at=_GUARD_CLOCK,
             filing_instance_evidence=None,
+            source_provenance=(),
         )
         cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
 

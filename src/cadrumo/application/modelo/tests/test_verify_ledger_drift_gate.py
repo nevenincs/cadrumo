@@ -312,6 +312,7 @@ def test_the_drift_anchor_does_not_move_any_revision_id() -> None:
         casilla_values={},
         source_transaction_ids=("beef1234" * 8,),
         filing_instance_evidence=None,
+        source_provenance=(),
     ) == derive_calculation_revision_id(
         work_unit_id="a1b2c3d4" * 8,
         input_values_by_casilla_id={},
@@ -319,4 +320,5 @@ def test_the_drift_anchor_does_not_move_any_revision_id() -> None:
         casilla_values={},
         source_transaction_ids=("beef1234" * 8,),
         filing_instance_evidence=None,
+        source_provenance=(),
     )

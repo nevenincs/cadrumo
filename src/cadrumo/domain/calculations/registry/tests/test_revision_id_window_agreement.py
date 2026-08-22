@@ -99,9 +99,7 @@ def test_the_marker_recognises_every_open_ended_id_the_tree_carries() -> None:
         for modelo_id, revision in _committed_revisions()
         if str(revision.id).endswith("-y-siguientes")
     ]
-    unrecognised = [
-        subject for subject in spelled_open if not revision_id_claims_open_window(subject.split(":", 1)[1])
-    ]
+    unrecognised = [subject for subject in spelled_open if not revision_id_claims_open_window(subject.split(":", 1)[1])]
 
     assert spelled_open, "the tree carries no open-ended revision id at all, so this proves nothing"
     assert not unrecognised, (

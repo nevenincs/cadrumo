@@ -102,7 +102,6 @@ jobs:
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           enable-cache: true
 
       - name: Require operator-minted evidence for every claimed host-extension channel
@@ -148,7 +147,6 @@ jobs:
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           enable-cache: true
 
       - name: Compute the version and land the bump
@@ -206,7 +204,6 @@ jobs:
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           enable-cache: true
 
       - name: Dispatch the packaging campaign and wait for MY run
@@ -290,7 +287,6 @@ jobs:
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           enable-cache: true
 
       - name: Dispatch every lane the claimed channels require
@@ -343,7 +339,6 @@ jobs:
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           enable-cache: true
 
       - name: Seal the candidate record
@@ -427,7 +422,6 @@ jobs:
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.29"
-          python-version: "3.13"
           enable-cache: true
 
       - name: Alert the operator that this release-path run failed

@@ -73,23 +73,23 @@ def test_a_bound_repository_refuses_to_read_once_the_session_serves_another_buck
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
         activate_session(_session(_BUCKET_A_ID)),
     ):
-            repository = inspect_storage_runtime(settings, now=_NOW).secure_object_repository()
-            repository.save(
-                namespace=namespace,
-                object_key="state",
-                classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
-                schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
-                written_at=_NOW,
-                payload=_A_ONLY_PAYLOAD,
-            )
+        repository = inspect_storage_runtime(settings, now=_NOW).secure_object_repository()
+        repository.save(
+            namespace=namespace,
+            object_key="state",
+            classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+            schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+            written_at=_NOW,
+            payload=_A_ONLY_PAYLOAD,
+        )
 
-            with activate_session(_session(_BUCKET_B_ID)), pytest.raises(StorageValidationError) as raised:
-                repository.load(
-                    namespace,
-                    "state",
-                    expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
-                    max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
-                )
+        with activate_session(_session(_BUCKET_B_ID)), pytest.raises(StorageValidationError) as raised:
+            repository.load(
+                namespace,
+                "state",
+                expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+            )
 
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
     assert StorageRuntimeReadinessCode.SESSION_CHANGED.value in str(raised.value.context)

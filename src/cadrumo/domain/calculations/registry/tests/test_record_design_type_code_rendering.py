@@ -36,9 +36,11 @@ _STEM = "21-100-ejercicio-2016-1-90-mb-xls"
 
 def _rows(path: Path):
     sheets = extract_record_design(path).require_complete()
-    return [(sheet.name, field.offset, field.length, field.description, field.type_code)
-            for sheet in sheets
-            for field in sheet.fields]
+    return [
+        (sheet.name, field.offset, field.length, field.description, field.type_code)
+        for sheet in sheets
+        for field in sheet.fields
+    ]
 
 
 def test_the_coercion_is_what_renders_an_integral_float_as_an_integer() -> None:

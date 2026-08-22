@@ -131,6 +131,7 @@ def _real_review(
                 binding_overrides=binding_overrides,
                 casilla_values=casilla_values,
                 filing_instance_evidence=None,
+                source_provenance=(),
             )
             if blocked or materialised
             else None
@@ -160,6 +161,7 @@ def _real_review(
                 created_at=_NOW,
                 updated_at=_NOW,
                 filing_instance_evidence=None,
+                source_provenance=(),
             )
             calculation_repository.save(
                 upsert_calculation_revision(calculation_repository.load(), calculation),

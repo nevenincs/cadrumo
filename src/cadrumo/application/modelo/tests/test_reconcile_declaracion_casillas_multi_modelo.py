@@ -127,6 +127,7 @@ def _persist_filed_revision(work_unit: WorkUnit, *, casilla_values: dict[str, De
         binding_overrides={},
         casilla_values=validated_values,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(
@@ -150,6 +151,7 @@ def _persist_filed_revision(work_unit: WorkUnit, *, casilla_values: dict[str, De
                 filed_at=_CLOCK,
                 filed_by="test",
                 filing_instance_evidence=None,
+                source_provenance=(),
             ),
         ),
     )

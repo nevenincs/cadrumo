@@ -41,9 +41,7 @@ _HEADER = (
 
 
 def _read(lines: tuple[str, ...], *, repair: bool):
-    state = _PdfParseState(
-        source_label="probe.pdf", corrections=_EMPTY_CORRECTIONS, repair_glued_rows=repair
-    )
+    state = _PdfParseState(source_label="probe.pdf", corrections=_EMPTY_CORRECTIONS, repair_glued_rows=repair)
     for number, line in enumerate(lines, start=1):
         state.feed(line, number)
     state._close_current_body()

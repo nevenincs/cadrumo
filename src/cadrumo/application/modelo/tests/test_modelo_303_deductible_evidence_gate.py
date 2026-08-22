@@ -742,6 +742,7 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
         casilla_values={},
         source_transaction_ids=(sale.transaction_id,),
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -751,6 +752,7 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
         created_at=_T0,
         updated_at=_T0,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
 
     findings = _missing_evidence_findings(

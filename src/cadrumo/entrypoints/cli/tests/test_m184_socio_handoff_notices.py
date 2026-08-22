@@ -40,6 +40,7 @@ def _revision(*detail_rows: ModeloDetailRow) -> CalculationRevision:
         casilla_values={},
         detail_rows=tuple(detail_rows),
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -52,6 +53,7 @@ def _revision(*detail_rows: ModeloDetailRow) -> CalculationRevision:
         created_at=_CLOCK,
         updated_at=_CLOCK,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
 

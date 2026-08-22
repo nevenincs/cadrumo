@@ -198,6 +198,7 @@ def import_external_filing_evidence[CasillaKey](
         casilla_values=outputs,
         filing_instance_evidence=None,
         m303_regimen_simplificado_annual_summary_handoff=None,
+        source_provenance=(),
     )
     # Revisioned: both catalogues are composed into the co-commit below, so
     # neither can use a self-committing mutation, and an unguarded read would
@@ -226,6 +227,7 @@ def import_external_filing_evidence[CasillaKey](
         observations=observations,
         filing_instance_evidence=None,
         m303_regimen_simplificado_annual_summary_handoff=None,
+        source_provenance=(),
     )
     revisions = upsert_calculation_revision(revisions, revision)
 

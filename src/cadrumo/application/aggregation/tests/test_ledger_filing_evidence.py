@@ -155,6 +155,7 @@ def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> Ca
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         source_transaction_ids=(tx_id,),
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -176,6 +177,7 @@ def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> Ca
         verified_by="operator",
         ledger_filing_evidence=evidence,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
 
 

@@ -78,6 +78,7 @@ def _verified_revision(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) ->
         binding_overrides={},
         casilla_values=values,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -95,6 +96,7 @@ def _verified_revision(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) ->
         verified_at=_NOW,
         verified_by="operator",
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
 
@@ -105,6 +107,7 @@ def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, D
         binding_overrides={},
         casilla_values=values,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -125,6 +128,7 @@ def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, D
         verified_at=_NOW,
         verified_by="operator",
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
 

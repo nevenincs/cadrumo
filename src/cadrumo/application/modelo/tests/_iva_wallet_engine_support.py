@@ -300,6 +300,7 @@ def _work_unit_and_revision_for_wallet_gate(
         binding_overrides={},
         casilla_values=casilla_values,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -328,6 +329,7 @@ def _work_unit_and_revision_for_wallet_gate(
         created_at=_DECIDED_AT,
         updated_at=_DECIDED_AT,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     return work_unit, revision
 

@@ -68,9 +68,7 @@ def test_the_expected_witness_is_replaced(tmp_path: Path) -> None:
     path = _record(tmp_path)
     write_profile_custody_local_record(path, _FIRST, publish_once=True)
 
-    compare_and_replace_profile_custody_local_record(
-        path, expected=_FIRST, replacement=_SECOND, maximum_bytes=_LIMIT
-    )
+    compare_and_replace_profile_custody_local_record(path, expected=_FIRST, replacement=_SECOND, maximum_bytes=_LIMIT)
 
     assert _on_disk(path) == _SECOND
 
@@ -145,9 +143,7 @@ def test_an_oversized_payload_is_refused_before_it_reaches_disk(tmp_path: Path) 
     write_profile_custody_local_record(path, _FIRST, publish_once=True)
 
     with pytest.raises(ProfileCustodyRecordError, match="byte limit"):
-        compare_and_replace_profile_custody_local_record(
-            path, expected=_FIRST, replacement=b"x" * 64, maximum_bytes=16
-        )
+        compare_and_replace_profile_custody_local_record(path, expected=_FIRST, replacement=b"x" * 64, maximum_bytes=16)
 
     assert _on_disk(path) == _FIRST
 

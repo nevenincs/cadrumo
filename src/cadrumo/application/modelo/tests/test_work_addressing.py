@@ -132,6 +132,7 @@ def _seed_revision(
         binding_overrides={},
         casilla_values={_OUTPUT_CASILLA: output},
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -152,6 +153,7 @@ def _seed_revision(
         filed_at=created_at if state is CalculationRevisionState.PRESENTADO else None,
         filed_by="operator" if state is CalculationRevisionState.PRESENTADO else None,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     repository.save(upsert_calculation_revision(repository.load(), revision))
     return revision

@@ -71,9 +71,7 @@ def _seed_profile_row(tax_id: str, root: Path) -> None:
     finally:
         seeding.close()
 
-    database = bucket_scoped_storage_path(
-        StorageCategory.BUCKET_DATABASE_FILE, _BUCKET_ID, settings=load_settings()
-    )
+    database = bucket_scoped_storage_path(StorageCategory.BUCKET_DATABASE_FILE, _BUCKET_ID, settings=load_settings())
     database.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(database)
     try:

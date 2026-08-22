@@ -1,0 +1,753 @@
+# Modelo 036 PAGINA 6 -- obligaciones por IRPF, Impuesto sobre Sociedades e IRNR,
+# y la opcion por el regimen fiscal especial del Titulo II de la Ley 49/2002.
+#
+# 47 casillas over 88 design fields, 25 carrying an AEAT number and 22 slugs.
+# Grounded in aeat-dr-036-2025. Pag. 6 tiles 1..400 exactly once with NO gap and NO
+# PARTIAL OVERLAP -- both checked -- and every number, offset, length and type below
+# was read from its own field description.
+#
+# A SECOND FALSE-POSITIVE CLASS, larger than the first. Pag. 4 established that a
+# token which merely LOOKS like a box number is not one: "(m2)" in "Superficie (m2)"
+# was being counted as box "m2". This record carries a bigger instance of the same
+# error. Twenty-four of its fields open "IRPF. (1) Si determinaba el rendimiento
+# neto..." or "(2) Si determinaba...", where (1) and (2) are FOOTNOTE MARKERS keyed
+# to notes printed below the form. Both matched a parenthesised-number pattern and
+# were counted as boxes "1" and "2" in every denominator reported for this modelo.
+#
+# Removing m2, 1 and 2 and admitting the NNNbis form, the corrected count is 670.
+# Seven reported denominators now: 288, 348, 659, 667, 669, 672, 670. The two most
+# recent moved in OPPOSITE directions, which is the point -- a pattern over prose
+# mis-measures both ways, and no count derived this way should be stated as the
+# design's true box total.
+#
+# ONE NUMBER OVER A WHOLE REPEATING BLOCK. AEAT prints [613] over all twelve fields
+# of the estimacion objetiva activity block and [614] over all twelve of the
+# modalidad simplificada block. Each block is four activity rows of seccion I.A.E.,
+# grupo o epigrafe and tipo de actividad. No single field owns either number, so all
+# sixteen casillas take slugs and 613 and 614 join the numbers that are covered by a
+# modelled FIELD without being individually addressable -- the same state as a list
+# bracket. Splitting one number across four rows would assert four boxes AEAT does
+# not print; collapsing four rows into one casilla would lose four distinct declared
+# activities.
+#
+# Within each row, seccion (1 position) and grupo o epigrafe (4) become ONE casilla
+# of five, and tipo de actividad (3) another -- the same split Pag. 4 uses for [402]
+# and [403], which the design there declares explicitly.
+#
+# [640] IS A TWO-COMPONENT DATE, not a truncated triple. The design declares only
+# @129+2 dia and @131+2 mes for "fecha de cierre del ejercicio economico", with NO
+# ano field, an annual closing date being a day and a month. The casilla spans four
+# positions rather than eight; this is read from the design, not an omission.
+#
+# SIX FIELDS CARRY LIST BRACKETS and take slugs, as elsewhere on this modelo: the
+# three IRPF estimacion methods, the IS exencion and its fecha, and the IRNR
+# modalidad. Each is one selecting byte behind several printed tick boxes.
+#
+# NOT MODELLED, deliberately: the envelope identifiers at @1+9 and @391+10, the
+# record-level "Tipo declaracion" at @10+1, and the "Reservado para la Agencia
+# Tributaria" run at @207+184. None is filer-supplied.
+
+# @11+1. IRPF. Obligaciones y metodo de determinacion del rendimiento. Obligacion de realizar pagos fraccionados derivados del desarrollo de actividades economicas.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-pagos-fraccionados-actividad"
+number = "600"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @12+8. IRPF. Obligaciones y metodo de determinacion del rendimiento. Fecha de la obligacion de pagos fraccionados por actividades economicas. ONE casilla over @12+2 dia, @14+2 mes and @16+4 ano, all printed under the single number 602.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-pagos-fraccionados-actividad-fecha"
+number = "602"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @20+1. IRPF. Obligaciones y metodo de determinacion del rendimiento. Obligacion de realizar pagos fraccionados derivados de la condicion de miembro de una entidad en atribucion de rentas.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-pagos-fraccionados-atribucion"
+number = "601"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @21+8. IRPF. Obligaciones y metodo de determinacion del rendimiento. Fecha de la obligacion de pagos fraccionados por condicion de miembro de entidad en atribucion. ONE casilla over @21+2 dia, @23+2 mes and @25+4 ano, all printed under the single number 603.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-pagos-fraccionados-atribucion-fecha"
+number = "603"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @29+1. IRPF. Obligaciones y metodo de determinacion del rendimiento. Estimacion objetiva. LIST bracket [604,605,606,607,615]: one selecting byte behind five printed tick boxes.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-estimacion-objetiva"
+number = "obl-irpf-estimacion-objetiva"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @30+8. IRPF. Obligaciones y metodo de determinacion del rendimiento. Estimacion objetiva. Fecha. ONE casilla over @30+2 dia, @32+2 mes and @34+4 ano, all printed under the single number 616.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-estimacion-objetiva-fecha"
+number = "616"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @38+1. IRPF. Obligaciones y metodo de determinacion del rendimiento. Estimacion directa normal. LIST bracket [608,617].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-estimacion-directa-normal"
+number = "obl-irpf-estimacion-directa-normal"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @39+8. IRPF. Obligaciones y metodo de determinacion del rendimiento. Estimacion directa normal. Fecha. ONE casilla over @39+2 dia, @41+2 mes and @43+4 ano, all printed under the single number 618.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-estimacion-directa-normal-fecha"
+number = "618"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @47+1. IRPF. Obligaciones y metodo de determinacion del rendimiento. Estimacion directa simplificada. LIST bracket [609,610,611,612,619].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-estimacion-directa-simplificada"
+number = "obl-irpf-estimacion-directa-simplificada"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @48+8. IRPF. Obligaciones y metodo de determinacion del rendimiento. Estimacion directa simplificada. Fecha. ONE casilla over @48+2 dia, @50+2 mes and @52+4 ano, all printed under the single number 650.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-estimacion-directa-simplificada-fecha"
+number = "650"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @56+5. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 1 que determinaba el rendimiento neto por el metodo de estimacion objetiva. Seccion del I.A.E. y grupo o epigrafe. ONE casilla over @56+1 seccion and @57+4 grupo. AEAT prints [613] over all twelve fields of this block, so no single field owns that number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eo-1-iae"
+number = "obl-irpf-eo-1-iae"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @61+3. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 1 que determinaba el rendimiento neto por el metodo de estimacion objetiva. Tipo de actividad. AEAT prints [613] over all twelve fields of this block.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eo-1-tipo-actividad"
+number = "obl-irpf-eo-1-tipo-actividad"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @64+5. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 2 que determinaba el rendimiento neto por el metodo de estimacion objetiva. Seccion del I.A.E. y grupo o epigrafe. ONE casilla over @64+1 seccion and @65+4 grupo. AEAT prints [613] over all twelve fields of this block, so no single field owns that number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eo-2-iae"
+number = "obl-irpf-eo-2-iae"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @69+3. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 2 que determinaba el rendimiento neto por el metodo de estimacion objetiva. Tipo de actividad. AEAT prints [613] over all twelve fields of this block.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eo-2-tipo-actividad"
+number = "obl-irpf-eo-2-tipo-actividad"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @72+5. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 3 que determinaba el rendimiento neto por el metodo de estimacion objetiva. Seccion del I.A.E. y grupo o epigrafe. ONE casilla over @72+1 seccion and @73+4 grupo. AEAT prints [613] over all twelve fields of this block, so no single field owns that number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eo-3-iae"
+number = "obl-irpf-eo-3-iae"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @77+3. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 3 que determinaba el rendimiento neto por el metodo de estimacion objetiva. Tipo de actividad. AEAT prints [613] over all twelve fields of this block.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eo-3-tipo-actividad"
+number = "obl-irpf-eo-3-tipo-actividad"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @80+5. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 4 que determinaba el rendimiento neto por el metodo de estimacion objetiva. Seccion del I.A.E. y grupo o epigrafe. ONE casilla over @80+1 seccion and @81+4 grupo. AEAT prints [613] over all twelve fields of this block, so no single field owns that number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eo-4-iae"
+number = "obl-irpf-eo-4-iae"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @85+3. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 4 que determinaba el rendimiento neto por el metodo de estimacion objetiva. Tipo de actividad. AEAT prints [613] over all twelve fields of this block.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eo-4-tipo-actividad"
+number = "obl-irpf-eo-4-tipo-actividad"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @88+5. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 1 que determinaba el rendimiento neto por la modalidad simplificada. Seccion del I.A.E. y grupo o epigrafe. ONE casilla over @88+1 seccion and @89+4 grupo. AEAT prints [614] over all twelve fields of this block, so no single field owns that number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eds-1-iae"
+number = "obl-irpf-eds-1-iae"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @93+3. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 1 que determinaba el rendimiento neto por la modalidad simplificada. Tipo de actividad. AEAT prints [614] over all twelve fields of this block.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eds-1-tipo-actividad"
+number = "obl-irpf-eds-1-tipo-actividad"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @96+5. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 2 que determinaba el rendimiento neto por la modalidad simplificada. Seccion del I.A.E. y grupo o epigrafe. ONE casilla over @96+1 seccion and @97+4 grupo. AEAT prints [614] over all twelve fields of this block, so no single field owns that number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eds-2-iae"
+number = "obl-irpf-eds-2-iae"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @101+3. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 2 que determinaba el rendimiento neto por la modalidad simplificada. Tipo de actividad. AEAT prints [614] over all twelve fields of this block.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eds-2-tipo-actividad"
+number = "obl-irpf-eds-2-tipo-actividad"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @104+5. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 3 que determinaba el rendimiento neto por la modalidad simplificada. Seccion del I.A.E. y grupo o epigrafe. ONE casilla over @104+1 seccion and @105+4 grupo. AEAT prints [614] over all twelve fields of this block, so no single field owns that number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eds-3-iae"
+number = "obl-irpf-eds-3-iae"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @109+3. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 3 que determinaba el rendimiento neto por la modalidad simplificada. Tipo de actividad. AEAT prints [614] over all twelve fields of this block.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eds-3-tipo-actividad"
+number = "obl-irpf-eds-3-tipo-actividad"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @112+5. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 4 que determinaba el rendimiento neto por la modalidad simplificada. Seccion del I.A.E. y grupo o epigrafe. ONE casilla over @112+1 seccion and @113+4 grupo. AEAT prints [614] over all twelve fields of this block, so no single field owns that number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eds-4-iae"
+number = "obl-irpf-eds-4-iae"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @117+3. IRPF. Obligaciones y metodo de determinacion del rendimiento. Actividad 4 que determinaba el rendimiento neto por la modalidad simplificada. Tipo de actividad. AEAT prints [614] over all twelve fields of this block.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irpf-eds-4-tipo-actividad"
+number = "obl-irpf-eds-4-tipo-actividad"
+section = ["declaracion", "obligaciones", "irpf"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @120+1. Impuesto sobre Sociedades. Obligacion de presentar declaracion por el Impuesto sobre Sociedades.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.sociedades-obligacion-declarar"
+number = "620"
+section = ["declaracion", "obligaciones", "sociedades"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @121+8. Impuesto sobre Sociedades. Fecha de la obligacion de presentar declaracion por el Impuesto sobre Sociedades. ONE casilla over @121+2 dia, @123+2 mes and @125+4 ano, all printed under the single number 641.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.sociedades-obligacion-declarar-fecha"
+number = "641"
+section = ["declaracion", "obligaciones", "sociedades"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @129+4. Impuesto sobre Sociedades. Fecha de cierre del ejercicio economico. ONE casilla over @129+2 dia and @131+2 mes ONLY -- the design declares NO ano component, an annual closing date being a day and month, and both are printed under the single number 640.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.sociedades-cierre-ejercicio"
+number = "640"
+section = ["declaracion", "obligaciones", "sociedades"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @133+1. Impuesto sobre Sociedades. Opcion por el sistema de calculo del art. 40.3 de la Ley del Impuesto sobre Sociedades para los pagos fraccionados.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.sociedades-opcion-art-40-3"
+number = "621"
+section = ["declaracion", "obligaciones", "sociedades"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @134+8. Impuesto sobre Sociedades. Fecha de la opcion por el sistema del art. 40.3. ONE casilla over @134+2 dia, @136+2 mes and @138+4 ano, all printed under the single number 642.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.sociedades-opcion-art-40-3-fecha"
+number = "642"
+section = ["declaracion", "obligaciones", "sociedades"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @142+1. Impuesto sobre Sociedades. Condicion de entidad exenta en el Impuesto sobre Sociedades.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.sociedades-entidad-exenta"
+number = "622"
+section = ["declaracion", "obligaciones", "sociedades"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @143+1. Impuesto sobre Sociedades. Exencion. LIST bracket [623,624,625,627].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.sociedades-exencion"
+number = "obl-sociedades-exencion"
+section = ["declaracion", "obligaciones", "sociedades"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @144+8. Impuesto sobre Sociedades. Exencion. Fecha. ONE casilla over @144+2 dia, @146+2 mes and @148+4 ano, all carrying the LIST bracket [643,644,645,647].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.sociedades-exencion-fecha"
+number = "obl-sociedades-exencion-fecha"
+section = ["declaracion", "obligaciones", "sociedades"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @152+1. Impuesto sobre Sociedades. Ejercitada la opcion por el regimen de consolidacion fiscal, renuncia a su aplicacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.sociedades-renuncia-consolidacion"
+number = "626"
+section = ["declaracion", "obligaciones", "sociedades"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @153+8. Impuesto sobre Sociedades. Fecha de la renuncia al regimen de consolidacion fiscal. ONE casilla over @153+2 dia, @155+2 mes and @157+4 ano, all printed under the single number 646.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.sociedades-renuncia-consolidacion-fecha"
+number = "646"
+section = ["declaracion", "obligaciones", "sociedades"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @161+1. IRNR. Modalidad de establecimiento permanente. Modalidad de establecimiento permanente. LIST bracket [630,631,632].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irnr-modalidad"
+number = "obl-irnr-modalidad"
+section = ["declaracion", "obligaciones", "irnr"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @162+1. IRNR. Modalidad de establecimiento permanente. Opcion por el regimen general.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irnr-opcion-regimen-general"
+number = "633"
+section = ["declaracion", "obligaciones", "irnr"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @163+8. IRNR. Modalidad de establecimiento permanente. Fecha de la opcion por el regimen general. ONE casilla over @163+2 dia, @165+2 mes and @167+4 ano, all printed under the single number 636.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irnr-opcion-regimen-general-fecha"
+number = "636"
+section = ["declaracion", "obligaciones", "irnr"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @171+1. IRNR. Modalidad de establecimiento permanente. Obligacion de presentar declaracion por el I.R.N.R.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irnr-obligacion-declarar"
+number = "634"
+section = ["declaracion", "obligaciones", "irnr"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @172+8. IRNR. Modalidad de establecimiento permanente. Fecha de la obligacion de presentar declaracion por el I.R.N.R. ONE casilla over @172+2 dia, @174+2 mes and @176+4 ano, all printed under the single number 637.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irnr-obligacion-declarar-fecha"
+number = "637"
+section = ["declaracion", "obligaciones", "irnr"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @180+1. IRNR. Modalidad de establecimiento permanente. Opcion por el sistema de calculo previsto en el art. 40.3.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irnr-opcion-art-40-3"
+number = "635"
+section = ["declaracion", "obligaciones", "irnr"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @181+8. IRNR. Modalidad de establecimiento permanente. Fecha de la opcion por el sistema del art. 40.3. ONE casilla over @181+2 dia, @183+2 mes and @185+4 ano, all printed under the single number 638.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.irnr-opcion-art-40-3-fecha"
+number = "638"
+section = ["declaracion", "obligaciones", "irnr"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @189+1. Regimen fiscal especial del Titulo II de la Ley 49/2002. Ejerce la opcion por el regimen fiscal especial del Titulo II de la Ley 49/2002.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.regimen-ley-49-2002-ejerce-opcion"
+number = "651"
+section = ["declaracion", "obligaciones", "regimen_ley_49_2002"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @190+8. Regimen fiscal especial del Titulo II de la Ley 49/2002. Fecha del ejercicio de la opcion. ONE casilla over @190+2 dia, @192+2 mes and @194+4 ano, all printed under the single number 653.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.regimen-ley-49-2002-ejerce-opcion-fecha"
+number = "653"
+section = ["declaracion", "obligaciones", "regimen_ley_49_2002"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @198+1. Regimen fiscal especial del Titulo II de la Ley 49/2002. Ejercitada la opcion por el regimen fiscal especial, renuncia a su aplicacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.regimen-ley-49-2002-renuncia"
+number = "652"
+section = ["declaracion", "obligaciones", "regimen_ley_49_2002"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @199+8. Regimen fiscal especial del Titulo II de la Ley 49/2002. Fecha de la renuncia. ONE casilla over @199+2 dia, @201+2 mes and @203+4 ano, all printed under the single number 654.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "obl.regimen-ley-49-2002-renuncia-fecha"
+number = "654"
+section = ["declaracion", "obligaciones", "regimen_ley_49_2002"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]

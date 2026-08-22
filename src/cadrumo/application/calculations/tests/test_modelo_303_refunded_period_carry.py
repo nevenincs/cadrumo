@@ -190,6 +190,7 @@ def _revision_from_result(result: RegistryCalculationResult) -> CalculationRevis
         binding_overrides={},
         casilla_values=values,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -204,6 +205,7 @@ def _revision_from_result(result: RegistryCalculationResult) -> CalculationRevis
         filed_at=_CLOCK,
         filed_by="refund-carry-test",
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
 
 
