@@ -713,10 +713,19 @@ test-integration-serial:
 # having had its key removed by a peer worker mid-test. That reads as a custody
 # failure and is really a collision. Serial is not a speed compromise here, it is
 # the only correct way to exercise a shared external store.
+#
+# The CLI path names the DIRECTORY, not one module. It named
+# `test_profile_session_root_resume.py` alone, and three `os_keychain` custody
+# cases in two sibling files were therefore selected by no lane at all -- among
+# them "registered profile custody survives logout and reopens on login", which
+# is the cross-process resumption contract this lane exists for. The marker
+# expression is what scopes the directory, so a future `os_keychain` case added
+# beside them is selected the moment it lands rather than silently reading as
+# coverage.
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('testing')]
 test-os-keychain:
-    uv run --no-sync pytest -q -rsf -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py src/cadrumo/tests/test_secure_sql.py src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests
+    uv run --no-sync pytest -q -rsf -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/tests/test_secure_sql.py src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests
 
 # Run the live test suite. Quiet progress; failures shown.
 [group('testing')]
