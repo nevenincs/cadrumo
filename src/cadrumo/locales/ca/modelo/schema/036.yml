@@ -1505,6 +1505,130 @@ modelo:
             x-e9in0cheehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
               help: null
               label: Clau del titol de representacio (segon representant, bloc 3.2)
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmo:
+              label: Registre d'extractors de diposits fiscals. Sol-licita alta o
+                baixa per a productes dels Impostos sobre l'alcohol i begudes derivades
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmobb6clhmgo8:
+              label: Registre d'extractors de diposits fiscals. Data de la sol-licitud
+                per a alcohol i begudes derivades
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uso:
+              label: Registre d'extractors de diposits fiscals. Sol-licita alta o
+                baixa per a productes dels Impostos sobre Hidrocarburs
+            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uspdcpim6q31:
+              label: Registre d'extractors de diposits fiscals. Data de la sol-licitud
+                per a hidrocarburs
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cg:
+              label: Impostos especials. Obligat a presentar autoliquidacio per l'Impost
+                sobre l'Electricitat
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cgmmcpb3d1gg:
+              label: Impostos especials. Data. Obligat a presentar autoliquidacio
+                per l'Impost sobre l'Electricitat
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m0:
+              label: Impostos especials. Obligacio d'inscriure els establiments al
+                registre territorial de l'oficina gestora
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m2qpj5cdk62:
+              label: Impostos especials. Data. Obligacio d'inscriure els establiments
+                al registre territorial de l'oficina gestora
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uso:
+              label: Impostos especials. Obligacio de presentar declaracio per l'Impost
+                Especial sobre Primes d'Assegurances
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uspdcpim6q31:
+              label: Impostos especials. Data. Obligacio de presentar declaracio per
+                l'Impost Especial sobre Primes d'Assegurances
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre:
+              label: Impostos especials. Obligat a presentar la declaracio resum anual
+                de l'Impost Especial sobre el Carbo
+            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre5lj6aor8c4:
+              label: Impostos especials. Data. Obligat a presentar la declaracio resum
+                anual de l'Impost Especial sobre el Carbo
+            x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpddto66qbfdomn4pb7d5mmarhdctimspbic5m0:
+              label: IVA. Adquisicions intracomunitaries. Opcio pel regim general
+                de l'IVA, subjeccio o no subjeccio
+            x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpdelmm4sj1dgmj2c1g60o0:
+              label: IVA. Adquisicions intracomunitaries. Ha superat el llindar de
+                10.000 euros
+            x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi:
+              label: Impostos mediambientals. Obligacio de presentar declaracio
+            x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi5lj6aor8c4:
+              label: Impostos mediambientals. Data de l'obligacio de presentar declaracio
+            x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ec:
+              label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
+                a compte sobre rendiments d'activitats professionals
+            x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ecmmcpb3d1gg:
+              label: Retencions i ingressos a compte. Data de l'obligacio sobre rendiments
+                d'activitats professionals
+            x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78ro:
+              label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
+                a compte sobre rendiments de l'arrendament o subarrendament
+            x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78rpdcpim6q31:
+              label: Retencions i ingressos a compte. Data de l'obligacio sobre rendiments
+                de l'arrendament o subarrendament
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdo:
+              label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
+                a compte sobre rendes de capital mobiliari obtingudes per la contraprestacio
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdommcpb3d1gg:
+              label: Retencions i ingressos a compte. Data de l'obligacio sobre rendes
+                de capital mobiliari obtingudes per la contraprestacio
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ec:
+              label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
+                a compte sobre rendes de capital mobiliari procedents d'operacions
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ecmmcpb3d1gg:
+              label: Retencions i ingressos a compte. Data de l'obligacio sobre rendes
+                de capital mobiliari procedents d'operacions
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj:
+              label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
+                a compte sobre altres rendes de capital mobiliari
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj5lj6aor8c4:
+              label: Retencions i ingressos a compte. Data de l'obligacio sobre altres
+                rendes de capital mobiliari
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdo:
+              label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
+                a compte sobre rendes de capital mobiliari derivades de la transmissio
+            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdommcpb3d1gg:
+              label: Retencions i ingressos a compte. Data de l'obligacio sobre rendes
+                de capital mobiliari derivades de la transmissio
+            x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m0:
+              label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
+                a compte sobre rendiments del treball personal
+            x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m2qpj5cdk62:
+              label: Retencions i ingressos a compte. Data de l'obligacio sobre rendiments
+                del treball personal
+            x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ec:
+              label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
+                a compte sobre transmissions o reemborsaments d'accions o participacions
+            x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ecmmcpb3d1gg:
+              label: Retencions i ingressos a compte. Data de l'obligacio sobre transmissions
+                o reemborsaments d'accions o participacions
+            x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p0:
+              label: Impost sobre determinats serveis digitals. Obligat a presentar
+                autoliquidacio
+            x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p2qpj5cdk62:
+              label: Impost sobre determinats serveis digitals. Data de l'obligacio
+                de presentar autoliquidacio
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dchin6t39dpng:
+              label: Serveis de telecomunicacions, radiodifusio i via electronica
+                (art. 70.Uno.4.a). Tributacio en desti
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dcpim6q31:
+              label: Serveis de telecomunicacions, radiodifusio i via electronica
+                (art. 70.Uno.4.a). Data
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1de9incrr3c5hmirre:
+              label: Serveis de telecomunicacions, radiodifusio i via electronica
+                (art. 70.Uno.4.a). Revocacio
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1delmm4sj1dgmj2c1g60o0:
+              label: Serveis de telecomunicacions, radiodifusio i via electronica
+                (art. 70.Uno.4.a). Ha superat el llindar de 10.000 euros
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dchin6t39dpng:
+              label: Serveis de telecomunicacions, radiodifusio i via electronica
+                (art. 70.Uno.8). Tributacio en desti
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dcpim6q31:
+              label: Serveis de telecomunicacions, radiodifusio i via electronica
+                (art. 70.Uno.8). Data
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1de9incrr3c5hmirre:
+              label: Serveis de telecomunicacions, radiodifusio i via electronica
+                (art. 70.Uno.8). Revocacio
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
+              label: Serveis de telecomunicacions, radiodifusio i via electronica
+                (art. 70.Uno.8). Ha superat el llindar de 10.000 euros
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
               help: null
               label: Quota de liquidacio, patrimoni o cabal hereditari del successor

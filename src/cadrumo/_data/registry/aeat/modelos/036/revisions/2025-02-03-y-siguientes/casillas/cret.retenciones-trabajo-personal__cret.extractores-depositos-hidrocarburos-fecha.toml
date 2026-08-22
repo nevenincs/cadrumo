@@ -1,0 +1,673 @@
+# Modelo 036 PAGINA 7 -- obligacion de retener o ingresar a cuenta, impuestos
+# especiales, adquisiciones intracomunitarias, impuestos medioambientales, el
+# impuesto sobre determinados servicios digitales, los servicios de
+# telecomunicaciones prestados desde otros estados miembros, y el registro de
+# extractores de depositos fiscales.
+#
+# 42 casillas over 84 design fields, 38 carrying an AEAT number and 4 slugs.
+# Grounded in aeat-dr-036-2025. Pag. 7 tiles 1..400 exactly once with NO gap and NO
+# PARTIAL OVERLAP -- both checked -- and every number, offset, length and type below
+# was read from its own field description.
+#
+# AN EIGHTH NUMBER FORM: THE DOTTED SUFFIX. The extractores block prints [716.a],
+# [717.a], [716.b] and [717.b] -- a number, a full stop, then a letter. Every pattern
+# used on this modelo so far allowed a trailing letter attached directly (A4, 412bis)
+# but never one behind a separator, so all four were invisible and none of their bare
+# stems (716, 717) appears anywhere else in the design either. FOUR numbers added,
+# taking the count to 674.
+#
+# EIGHT REPORTED DENOMINATORS NOW: 288, 348, 659, 667, 669, 672, 670, 674. Each of the
+# last three corrections found a different KIND of error -- a missing form, a false
+# positive, another missing form -- rather than more of the same. The count is a
+# measurement with error in both directions, not a fact about the design, and it should
+# be read as "what a stated pattern, less stated noise, finds".
+#
+# The dotted pair is semantically clear even though its form is new: 716 is the
+# alta/baja flag and 717 its fecha, with ".a" for alcohol y bebidas derivadas and ".b"
+# for hidrocarburos. The suffix distinguishes two product scopes of the SAME registro,
+# which is why AEAT numbered them as variants rather than as separate boxes.
+#
+# FOUR FIELDS CARRY LIST BRACKETS and take slugs, as elsewhere on this modelo: the
+# IVA sujecion/no-sujecion option, the intracomunitarias threshold, and the two
+# telecom excede/no-excede selectors. Each is one byte behind two printed tick boxes.
+#
+# EIGHTEEN DATE TRIPLES collapse to one date casilla each, two of them under a dotted
+# number.
+#
+# THE RETENCIONES AND IIEE BLOCKS ARE GENERATED from their repeated flag-plus-date
+# shape, but every generated offset and number was cross-checked individually against
+# its own design row rather than trusted to the repetition.
+#
+# NOT MODELLED, deliberately: the envelope identifiers at @1+9 and @391+10, the
+# record-level "Tipo declaracion" at @10+1, and the three "Reservado para la Agencia
+# Tributaria" runs at @119+82, @203+3 and @264+127. None is filer-supplied.
+
+# @11+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre rendimientos del trabajo personal.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-trabajo-personal"
+number = "700"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @12+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre rendimientos del trabajo personal. ONE casilla over @12+2 dia, @14+2 mes and @16+4 ano, all printed under the single number 720.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-trabajo-personal-fecha"
+number = "720"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @20+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre rendimientos de actividades profesionales.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-actividades-profesionales"
+number = "701"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @21+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre rendimientos de actividades profesionales. ONE casilla over @21+2 dia, @23+2 mes and @25+4 ano, all printed under the single number 721.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-actividades-profesionales-fecha"
+number = "721"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @29+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre rendimientos procedentes del arrendamiento o subarrendamiento.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-arrendamiento"
+number = "702"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @30+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre rendimientos procedentes del arrendamiento o subarrendamiento. ONE casilla over @30+2 dia, @32+2 mes and @34+4 ano, all printed under the single number 722.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-arrendamiento-fecha"
+number = "722"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @38+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre transmisiones o reembolsos de acciones o participaciones.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-transmision-acciones"
+number = "703"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @39+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre transmisiones o reembolsos de acciones o participaciones. ONE casilla over @39+2 dia, @41+2 mes and @43+4 ano, all printed under the single number 723.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-transmision-acciones-fecha"
+number = "723"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @47+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre rentas o rendimientos de capital mobiliario derivados de la transmision.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-capital-mobiliario-transmision"
+number = "704"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @48+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre rentas o rendimientos de capital mobiliario derivados de la transmision. ONE casilla over @48+2 dia, @50+2 mes and @52+4 ano, all printed under the single number 724.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-capital-mobiliario-transmision-fecha"
+number = "724"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @56+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre rentas o rendimientos de capital mobiliario obtenidos por la contraprestacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-capital-mobiliario-contraprestacion"
+number = "705"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @57+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre rentas o rendimientos de capital mobiliario obtenidos por la contraprestacion. ONE casilla over @57+2 dia, @59+2 mes and @61+4 ano, all printed under the single number 725.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-capital-mobiliario-contraprestacion-fecha"
+number = "725"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @65+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre rentas o rendimientos de capital mobiliario procedentes de operaciones.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-capital-mobiliario-operaciones"
+number = "706"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @66+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre rentas o rendimientos de capital mobiliario procedentes de operaciones. ONE casilla over @66+2 dia, @68+2 mes and @70+4 ano, all printed under the single number 726.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-capital-mobiliario-operaciones-fecha"
+number = "726"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @74+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre otras rentas o rendimientos de capital mobiliario.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-capital-mobiliario-otros"
+number = "707"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @75+8. Obligacion de retener o ingresar a cuenta. Fecha de la obligacion sobre otras rentas o rendimientos de capital mobiliario. ONE casilla over @75+2 dia, @77+2 mes and @79+4 ano, all printed under the single number 727.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.retenciones-capital-mobiliario-otros-fecha"
+number = "727"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @83+1. Impuestos especiales. Obligacion de inscribir sus establecimientos en el registro territorial de la oficina gestora.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.impuestos-especiales-inscripcion-registro-territorial"
+number = "710"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @84+8. Impuestos especiales. Fecha. Obligacion de inscribir sus establecimientos en el registro territorial de la oficina gestora. ONE casilla over @84+2 dia, @86+2 mes and @88+4 ano, all printed under the single number 730.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.impuestos-especiales-inscripcion-registro-territorial-fecha"
+number = "730"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @92+1. Impuestos especiales. Obligado a presentar autoliquidacion por el Impuesto sobre la Electricidad.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.impuestos-especiales-impuesto-electricidad"
+number = "711"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @93+8. Impuestos especiales. Fecha. Obligado a presentar autoliquidacion por el Impuesto sobre la Electricidad. ONE casilla over @93+2 dia, @95+2 mes and @97+4 ano, all printed under the single number 731.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.impuestos-especiales-impuesto-electricidad-fecha"
+number = "731"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @101+1. Impuestos especiales. Obligado a presentar declaracion resumen anual de operaciones del Impuesto Especial sobre el Carbon.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.impuestos-especiales-resumen-anual-carbon"
+number = "712"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @102+8. Impuestos especiales. Fecha. Obligado a presentar declaracion resumen anual de operaciones del Impuesto Especial sobre el Carbon. ONE casilla over @102+2 dia, @104+2 mes and @106+4 ano, all printed under the single number 732.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.impuestos-especiales-resumen-anual-carbon-fecha"
+number = "732"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @110+1. Impuestos especiales. Obligacion de presentar declaracion por el Impuesto Especial sobre Primas de Seguros.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.impuestos-especiales-primas-seguros"
+number = "713"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @111+8. Impuestos especiales. Fecha. Obligacion de presentar declaracion por el Impuesto Especial sobre Primas de Seguros. ONE casilla over @111+2 dia, @113+2 mes and @115+4 ano, all printed under the single number 733.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.impuestos-especiales-primas-seguros-fecha"
+number = "733"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @201+1. IVA. Adquisiciones intracomunitarias. Opcion por el regimen general del I.V.A. Sujecion o no sujecion. LIST bracket [910,911].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.iva-intracomunitario-opcion-regimen-general"
+number = "ret-iva-intracomunitario-opcion-regimen-general"
+section = ["declaracion", "otras_obligaciones", "iva_intracomunitario"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @202+1. IVA. Adquisiciones intracomunitarias. Ha superado el umbral de 10.000 euros en sus adquisiciones intracomunitarias. LIST bracket [912,913].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.iva-intracomunitario-umbral-10000"
+number = "ret-iva-intracomunitario-umbral-10000"
+section = ["declaracion", "otras_obligaciones", "iva_intracomunitario"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @206+1. Impuestos medioambientales. Obligacion de presentar declaracion por impuestos medioambientales.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.medioambientales-obligacion-declarar"
+number = "708"
+section = ["declaracion", "otras_obligaciones", "medioambientales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @207+8. Impuestos medioambientales. Fecha de la obligacion por impuestos medioambientales. ONE casilla over @207+2 dia, @209+2 mes and @211+4 ano, all printed under the single number 709.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.medioambientales-obligacion-declarar-fecha"
+number = "709"
+section = ["declaracion", "otras_obligaciones", "medioambientales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @215+1. Impuesto sobre determinados servicios digitales. Obligado a presentar autoliquidacion por el Impuesto sobre Determinados Servicios Digitales.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.servicios-digitales-obligacion-autoliquidar"
+number = "714"
+section = ["declaracion", "otras_obligaciones", "servicios_digitales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @216+8. Impuesto sobre determinados servicios digitales. Fecha de la obligacion por el Impuesto sobre Determinados Servicios Digitales. ONE casilla over @216+2 dia, @218+2 mes and @220+4 ano, all printed under the single number 715.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.servicios-digitales-obligacion-autoliquidar-fecha"
+number = "715"
+section = ["declaracion", "otras_obligaciones", "servicios_digitales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @224+1. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.4.a). Excede o no excede de 10.000 euros. LIST bracket [750,751].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.telecom-art-70-uno-4-umbral-10000"
+number = "ret-telecom-art-70-uno-4-umbral-10000"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_4"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @225+1. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.4.a). Tributacion en destino.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.telecom-art-70-uno-4-destino"
+number = "752"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_4"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @226+1. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.4.a). Revocacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.telecom-art-70-uno-4-revocacion"
+number = "753"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_4"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @227+8. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.4.a). Fecha. ONE casilla over @227+2 dia, @229+2 mes and @231+4 ano, all printed under the single number 754.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.telecom-art-70-uno-4-fecha"
+number = "754"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_4"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @235+1. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.8). Excede o no excede de 10.000 euros. LIST bracket [755,756].
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.telecom-art-70-uno-8-umbral-10000"
+number = "ret-telecom-art-70-uno-8-umbral-10000"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_8"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @236+1. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.8). Tributacion en destino.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.telecom-art-70-uno-8-destino"
+number = "757"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_8"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @237+1. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.8). Revocacion.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.telecom-art-70-uno-8-revocacion"
+number = "758"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_8"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @238+8. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.8). Fecha. ONE casilla over @238+2 dia, @240+2 mes and @242+4 ano, all printed under the single number 759.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.telecom-art-70-uno-8-fecha"
+number = "759"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_8"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @246+1. Registro de extractores de depositos fiscales. Solicita alta o baja en el registro de extractores de depositos fiscales de productos incluidos en el ambito objetivo de los Impuestos sobre el alcohol y bebidas derivadas.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.extractores-depositos-alcohol"
+number = "716.a"
+section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @247+8. Registro de extractores de depositos fiscales. Fecha de la solicitud para alcohol y bebidas derivadas. ONE casilla over @247+2 dia, @249+2 mes and @251+4 ano, all printed under the single number 717.a.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.extractores-depositos-alcohol-fecha"
+number = "717.a"
+section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @255+1. Registro de extractores de depositos fiscales. Solicita alta o baja en el registro de extractores de depositos fiscales de productos incluidos en el ambito objetivo de los Impuestos sobre Hidrocarburos.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.extractores-depositos-hidrocarburos"
+number = "716.b"
+section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @256+8. Registro de extractores de depositos fiscales. Fecha de la solicitud para hidrocarburos. ONE casilla over @256+2 dia, @258+2 mes and @260+4 ano, all printed under the single number 717.b.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "ret.extractores-depositos-hidrocarburos-fecha"
+number = "717.b"
+section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
