@@ -5824,3 +5824,48 @@ the second time this session that a sweep has published work before its own veri
 finished, which is an argument for running the linter BEFORE the lanes, not after.
 
 Lanes 314 integration / 1587 unit, unchanged.
+
+### Two private reaches promoted, and a bigger shim question surfaced rather than answered
+
+The import-hygiene ratchet is red across six peer packages, which is an operator matter --
+but the sites inside THIS domain are not. Filtered to storage, user_profile and cli/_config,
+exactly two undocumented test-only private cross-package imports exist, and both are now
+fixed by promotion, which the mandate names as the fix.
+
+**One bought nothing.** `test_bundle_encryption_kdf_window` reached into
+`domain.user_profile._values` for `UserProfileFact` and `UserProfileRecord`. Both were
+ALREADY in that package's `__all__` -- measured before touching it -- so the private path
+was pure habit. One import line.
+
+**The other is a real cross-layer contract that lacked a public name.**
+`test_sealed_archive_member_bound` compares the storage reader's member ceiling against the
+application writer's payload cap. The two constants are deliberately separate: the reader is
+an ADAPTER, and importing the application layer would invert the hexagonal dependency, so
+the adapter keeps its own value and a test holds them equal. That design is right, and it
+means the coupling test needs a public name to compare against. Promoted to
+`PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES`, documented at its canonical home as the
+cross-layer contract it is -- including why the adapter must NOT import it -- and the
+reader's comment now cites the public name.
+
+**The bigger find is deliberately not acted on.** The same run surfaced
+`test_family2_delegate_wrapper_shims`, red on roughly thirty-four callables in
+`application/user_profile/_custody_ports.py`. The gate's message is this campaign's mandate
+almost word for word: "a public callable whose whole body re-calls another package's symbol
+with its own arguments unchanged, so it owns no decision and only adds a second import path
+to a symbol that already has a canonical home."
+
+That module's own docstring answers back: it exists so "the custody surface has exactly one
+application-owned door", binding narrowed ports to the persistence facade so consumers do
+not reach into adapters themselves. **Both statements are defensible, and they contradict.**
+A shipped gate says delete the indirection; a deliberate hexagonal ports boundary says the
+indirection IS the design. Thirty-four callables with many consumers is not a question to
+settle in passing, and the resolution is not obvious: documenting them as reasoned
+exemptions is as plausible as deleting them. Recorded for a ruling rather than decided.
+
+**Process note, applied not just recorded.** Ruff ran BEFORE the lanes this iteration and
+caught two errors: an `__all__` left unsorted by a naive alphabetical insertion, and an
+import block reordered by the shortened path. Last iteration an over-long line reached main
+because a peer sweep published the work before the linter ran here; running it first is the
+cheap fix and it paid immediately.
+
+Lanes 314 integration / 1587 unit, unchanged.
