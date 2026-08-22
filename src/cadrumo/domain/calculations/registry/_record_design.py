@@ -761,6 +761,67 @@ _DOUBLED_COORDINATE_ROW_RE = re.compile(
 )
 
 
+def _split_tail_from_leading_fragment(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Separate a reversed-column TAIL from the previous row's trailing fragment.
+
+    Modelo 200's 2010 edition prints two consecutive RIC rows whose descriptions
+    differ only by a footnote marker, and the extraction runs the first row's
+    trailing ``(1) [020]`` into the second row's tail::
+
+        '78 1219 17 Num Reg.reserva ... Inv.anticipadas futuras dotaciones R'
+        '(1) [020] 17 Num Reg.reserva ... Inv.anticipadas futuras dotaciones'
+        '79 1236 (2 a 6) [021]'
+
+    The middle line is row 79's length, naturaleza and description; the last is
+    its ordinal and position. :func:`_rejoin_reversed_column_rows` pairs a tail
+    with an adjacent head, but that tail cannot match
+    :data:`_REVERSED_ROW_TAIL_RE` while a footnote and a casilla tag sit in
+    front of it, so the pair is never formed and position 1236 is lost.
+
+    Two independent facts are required before splitting, neither read off the
+    line being changed. The SUFFIX must be a well-formed tail, and the FOLLOWING
+    line must be a head whose ordinal follows the last row read by one and whose
+    offset resumes exactly where that row ended. A fragment that happens to
+    precede tail-shaped text, with no head continuing the sequence after it, is
+    left alone.
+
+    The fragment is emitted as its own line rather than dropped: it is the
+    previous row's own content, and discarding text to make a row appear is the
+    defect this repair exists to undo, inverted.
+    """
+    split: list[str] = []
+    previous: _PdfRow | None = None
+    for index, line in enumerate(lines):
+        parsed = _parse_pdf_row(line, index + 1)
+        if parsed is not None:
+            previous = parsed
+            split.append(line)
+            continue
+        recovered = False
+        if (
+            previous is not None
+            and previous.ordinal is not None
+            and previous.ordinal.isdigit()
+            and index + 1 < len(lines)
+            and _REVERSED_ROW_TAIL_RE.match(line) is None
+        ):
+            head = _REVERSED_ROW_HEAD_RE.match(lines[index + 1]) or _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(
+                lines[index + 1],
+            )
+            if head is not None and _continues(previous, head.group("ordinal"), int(head.group("offset"))):
+                tokens = line.split()
+                for cut in range(1, len(tokens)):
+                    suffix = " ".join(tokens[cut:])
+                    if _REVERSED_ROW_TAIL_RE.match(suffix) is not None:
+                        split.append(" ".join(tokens[:cut]))
+                        split.append(suffix)
+                        recovered = True
+                        break
+        if not recovered:
+            split.append(line)
+    return tuple(split)
+
+
 def _collapse_doubled_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
     """Collapse a row whose position and length were printed twice.
 
@@ -1140,7 +1201,11 @@ def _read_with_reversed_column_repair(
         return first
     repaired_lines = _reattach_stranded_casilla_tags(
         _collapse_stuttered_row_prefix(
-            _join_wrapped_row_descriptions(_rejoin_reversed_column_rows(_undouble_struck_rows(lines))),
+            _join_wrapped_row_descriptions(
+            _rejoin_reversed_column_rows(
+                _split_tail_from_leading_fragment(_undouble_struck_rows(lines)),
+            ),
+        ),
         ),
     )
     try:

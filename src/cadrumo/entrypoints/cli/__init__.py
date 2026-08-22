@@ -25,6 +25,7 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, cast
 
 import typer
+from typer._click.core import Command as _TyCommand
 
 if TYPE_CHECKING:
     import click
@@ -67,7 +68,10 @@ from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip as _strict_round_trip
 from ...core.output_rendering import OutputFormat as _OutputFormat
 from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
+from ._app_execution_policies import CALCULATION_READ as _ROOT_STATUS_POLICY
+from ._app_execution_policies import METADATA as _APP_HELP_POLICY
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
+from ._command_policy import command_execution_policy as _command_execution_policy
 from ._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
 from ._command_suggestions import (
     LazySubcommand as _LazySubcommand,
@@ -128,6 +132,7 @@ app = typer.Typer(
 
 
 @app.callback()
+@_command_execution_policy(_ROOT_STATUS_POLICY)
 def _root(
     ctx: typer.Context,
     language: str | None = typer.Option(
@@ -1151,6 +1156,7 @@ app_app = typer.Typer(
 
 
 @app_app.callback()
+@_command_execution_policy(_APP_HELP_POLICY)
 def _app_root(
     ctx: typer.Context,
     help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.root.app_help_help"), is_eager=True),
@@ -1238,7 +1244,7 @@ app.add_typer(app_app, name="app")
 _decorate_typer_app(app)
 
 
-def full_command_tree() -> click.Command:
+def full_command_tree() -> _TyCommand:
     """Materialise the whole CLI as one fully-loaded Click command tree.
 
     Drains every lazily-registered subtree reachable from :data:`app`, converts
