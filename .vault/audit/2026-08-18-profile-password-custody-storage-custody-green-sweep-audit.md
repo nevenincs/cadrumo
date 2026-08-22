@@ -5208,3 +5208,47 @@ was written.
 Gate: `custody/tests/test_capsule_data_path_validation.py`, seven tests. Proven to bite by
 restoring the POSIX-only validator from a scratchpad plugin: both new checks fail
 independently. Lanes 314 integration / 1583 unit (+7).
+
+### The fix that did not travel, and a failure that is not a traversal
+
+Hardening `bucket_paths` against a dot-segment id was correct and incomplete. Its twin
+`keystore_path` carried the SAME two checks -- empty and separator -- and therefore the same
+omission, so `".."` still resolved to the storage root; the escape had simply moved to the
+tree holding key material. `keystore_sidecar_path` was weaker again: it validated
+`bucket_id` through the separation contract and joined `filename` without examining it at
+all, and its own docstring names it the canonical join point for the persisted session
+record, the wrapped bucket DEK and the login-throttle cache. Measured against real joins
+with root `C:/storage-root`:
+
+    keystore_path('..')                    -> C:/storage-root
+    sidecar(filename='../../secrets.json') -> C:/storage-root/secrets.json
+    sidecar(filename='C:/evil.json')       -> C:/evil.json
+
+**The fourth failure is not a traversal, and it is the one worth carrying.** `"D:x"`
+resolves onto another drive. `"C:x"`, against a root already on `C:`, stays inside the tree
+and silently becomes the component `"x"` -- pathlib drops the same-drive qualifier. The
+directory name then no longer equals the identifier that named it, so two distinct ids land
+on one directory. Every containment check in the world calls that safe, because it IS
+contained; what it violates is identity, not containment. A gate written as "does the join
+stay under the root" would pass it, which is why the anti-vacuity test pins the renaming
+directly rather than the escape.
+
+**Three copies of one rule had drifted into three different answers.** That is the actual
+defect: not any single missing check, but a rule with no home, so hardening one join left
+the others as they were. The rule now lives in `validate_path_component` and the three joins
+consult it -- empty, separator, dot segment, drive-qualified. The tests pin the JOINS rather
+than the helper, so a caller that stops consulting it fails rather than quietly reverting.
+
+**Still latent, and the reasoning is the same each time.** Every caller passes a constant --
+`PROFILE_SESSION_FILENAME`, `LOGIN_THROTTLE_FILENAME`, a UUID or a system-scoped id -- and
+`keystore_path` has no external callers at all, though it is a facade export. The check
+belongs at the join so containment stays a property of the join rather than of whoever
+happens to call it. This is the third consecutive iteration where a guard's real guarantee
+lived somewhere other than where it was written, and the pattern is now explicit enough to
+state as a heuristic: **when hardening a validator, find its twins before closing the item
+-- a rule enforced in more than one place is a rule that has already drifted.**
+
+Gate: `bucket/tests/test_keystore_path_components.py`, five tests. Proven to bite by
+restoring the pre-fix joins from a scratchpad plugin: both refusals fail independently.
+Lanes 314 integration / 1588 unit (+5). Swept into peer commit `4d08cf20c4`, verified
+complete by reading all three files back out of HEAD.
