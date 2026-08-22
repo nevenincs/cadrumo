@@ -61,6 +61,81 @@ class M303ForalLexicals:
     prorrata_special_revocation: str | None
 
 
+_MODELO_PRODUCER_NAMESPACE_OWNERS = {
+    "amendment_evidence": "modelo_specific_amendment",
+    "contact_person": "modelo_specific_contact",
+    "entidad_desarrolladora": "product_software_identity",
+    "irnr": "modelo_210",
+    "m111": "modelo_111",
+    "m200": "modelo_200",
+    "m202": "modelo_202",
+    "m222": "modelo_222",
+    "m296": "modelo_296",
+    "m303": "modelo_303",
+    "m353": "modelo_353",
+    "m360": "modelo_360",
+    "presenter": "modelo_specific_presenter",
+    "filing": "modelo_specific_filing",
+    "prior_domiciliation": "modelo_specific_domiciliation",
+    "selected_account": "modelo_specific_account",
+    "taxpayer": "modelo_specific_taxpayer",
+}
+
+
+def filing_producer_ownership() -> dict[FilingProducerKey, str]:
+    """Return the exhaustive owner dispatch for the closed producer vocabulary."""
+    shared = {
+        FilingProducerKey.PRESENTER_TAX_ID,
+        FilingProducerKey.FILING_RESULT_DISPOSITION,
+        FilingProducerKey.TAXPAYER_TAX_ID,
+        FilingProducerKey.TAXPAYER_LEGAL_NAME,
+        FilingProducerKey.TAXPAYER_GIVEN_NAME,
+        FilingProducerKey.TAXPAYER_SURNAMES,
+        FilingProducerKey.TAXPAYER_FULL_NAME,
+        FilingProducerKey.TAXPAYER_SURNAMES_OR_LEGAL_NAME,
+        FilingProducerKey.CONTACT_PERSON_PHONE,
+        FilingProducerKey.CONTACT_PERSON_NAME,
+        FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA,
+        FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA,
+        FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT,
+        FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES,
+        FilingProducerKey.AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO,
+        FilingProducerKey.SELECTED_ACCOUNT_IBAN,
+        FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC,
+        FilingProducerKey.SELECTED_ACCOUNT_BANK_NAME,
+        FilingProducerKey.SELECTED_ACCOUNT_BANK_ADDRESS,
+        FilingProducerKey.SELECTED_ACCOUNT_BANK_CITY,
+        FilingProducerKey.SELECTED_ACCOUNT_BANK_COUNTRY_CODE,
+        FilingProducerKey.PRIOR_DOMICILIATION_ACTION,
+        FilingProducerKey.M303_REDEME_ENROLLED,
+        FilingProducerKey.M303_EXCLUSIVELY_FORAL,
+        FilingProducerKey.M303_REGIME_COMPOSITION_CODE,
+        FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO,
+        FilingProducerKey.M303_JOINT_RETURN_ELECTED,
+        FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED,
+        FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS,
+        FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION,
+        FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION,
+        FilingProducerKey.M303_INSOLVENCY_DECLARED,
+        FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE,
+        FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE,
+        FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED,
+        FilingProducerKey.M303_EXONERADO_390_APPLICABLE,
+        FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED,
+        FilingProducerKey.M111_COLEGIO_CONCERTADO,
+    }
+    owners = {key: "shared_snapshot" for key in shared}
+    for key in FilingProducerKey:
+        if key in owners:
+            continue
+        namespace = key.value.partition(".")[0]
+        owner = _MODELO_PRODUCER_NAMESPACE_OWNERS.get(namespace)
+        if owner is None:
+            raise FilingExportValidationError(f"filing producer key {key.value!r} has no declared owner")
+        owners[key] = owner
+    return owners
+
+
 def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
     """Resolve every canonical producer identity from one immutable snapshot."""
     identity = snapshot.taxpayer_identity
@@ -152,8 +227,9 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
                 FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
             },
         )
-    if set(values) != set(FilingProducerKey):
-        raise FilingExportValidationError("filing producer resolver is not exhaustive")
+    shared_owned = {key for key, owner in filing_producer_ownership().items() if owner == "shared_snapshot"}
+    if set(values) != shared_owned:
+        raise FilingExportValidationError("shared filing producer resolver is not exhaustive over its owned keys")
     return values
 
 
@@ -274,6 +350,7 @@ __all__ = [
     "M303ForalLexicals",
     "M303ProfileLexicals",
     "SelectedAccountLexicals",
+    "filing_producer_ownership",
     "filing_producer_values",
     "m303_filing_lexicals",
     "m303_foral_lexicals",
