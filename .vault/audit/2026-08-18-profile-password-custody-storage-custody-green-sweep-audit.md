@@ -5339,3 +5339,53 @@ declaration, which catches a future hand-copied literal.
 **No production change this iteration**, so the lanes were not re-run. The remaining named
 items are unchanged: the profile-bundle import half needs an operator ruling, and the
 over-export inventory is deferred by scope, not by ignorance of it.
+
+### A gate two docstrings cite, that nobody had written back
+
+The `safe_subpath` defect was prose describing a contract the code no longer had, which
+makes "prose naming an artefact that does not resolve" a searchable class -- the discipline
+the firmware-parity rule already applies to shipped rules. Swept over the domain's Sphinx
+roles, after filtering builtins, stdlib, third-party roots and package directories, eleven
+references did not resolve. Three are bare external class names (`TypeDecorator`,
+`ContextVar`, `sessionmaker`), one is a deliberate past-tense note about a consolidated
+method, and two named artefacts that genuinely do not exist.
+
+The important one is cited TWICE, in both directions.
+`application/user_profile/__init__.py:55` says the boundary's laziness is enforced by "the
+:mod:`entrypoints.cli.tests.test_lazy_command_tree` gate and the producer-side probe in
+:mod:`application.user_profile.tests.test_lazy_boundary`". The producer probe says the same
+in reverse: "The CLI-side gate ... enforces that the state-free CLI surfaces do not
+transitively load the registry. This module pins the same contract at the *producer*
+boundary." **Only the producer half existed.** The mutual citation is what made the absence
+invisible: each document points at the other as corroboration, and two documents agreeing
+reads as two gates.
+
+**The property was measured before anything was written, and it holds** -- building the
+command tree and rendering `--help` and `--version` loads ZERO registry modules. So this is
+a missing gate over correct behaviour, not a live regression, and saying so matters:
+restoring a gate that would have been red is a different act from restoring one that is
+green.
+
+**The halves are not redundant, which is why the survivor did not cover the gap.** The
+producer probe imports `cadrumo.application.user_profile` alone. The CLI reaches that
+boundary through Typer registration, group callbacks and Click's help rendering, so an eager
+import added in a command module, a callback default or an import-time help string is
+invisible to the producer probe. Demonstrated rather than argued: injecting an eager
+registry import into the CLI startup path surfaces 162 registry modules here while the
+producer probe stays green.
+
+The gate is restored under the name both docstrings cite, so the references resolve rather
+than being edited away -- and the second citation is corrected, since it omitted the
+`.tests` segment and named a module path that could never have existed.
+
+**Two method notes.** The anti-vacuity risk was specific: a probe whose CLI invocation
+crashed would import nothing and pass. Both invocations therefore assert exit code and
+non-empty output before the scan, and the probe prints a completion sentinel the test
+requires. Separately, the detector that found this had 67 hits of which most were builtins
+and stdlib; the filtered rerun cut it to 11. A sweep whose false-positive rate is unknown
+cannot support a "nothing else is wrong" claim, which is why the filter was tightened before
+any conclusion was drawn from it.
+
+Lanes 314 integration / 1586 unit, both unchanged -- the new gate lives in
+`entrypoints/cli/tests`, outside the domain lane paths, and is reachable through the `unit`
+marker that `just test-unit` selects.
