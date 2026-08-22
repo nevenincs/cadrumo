@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:804fe465c2eb5c2516dff77b67e3671d2eba7f0d0cbdaf87d9f9fdb47f82966d'
+body_hash: 'sha256:fe1a412e08ec13999389611debbf833adb5dc6bf261b023f0386c2c6422d4557'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -16556,3 +16556,106 @@ through the whole-law URL or the open-data API -- an operator-side acquisition.
 unexported, unconsumed, and general-only. Left alone deliberately -- deleting a
 declared casilla touches the completeness manifest, and rewriting the formula of
 a node nothing reads would be unverifiable by behaviour.
+
+## Tick: a real defect found where the queue never pointed -- modelo 200 writes into AEAT-reserved bytes
+
+Re-measured at tick start: authority loads CLEAN at `0eb73f412c`, the six queue
+items' gates green (28 passed). Queue exhausted, so this tick took the standing
+instruction to implement the record-length ADR's reversible parts.
+
+### The resolver was built, measured, and NOT landed as a gate
+
+A record-to-sheet resolver trying four conventions -- code prefix, `page-NN`,
+`type_N`, and trailing noun -- and requiring EXACTLY ONE matching sheet, reaches
+**122 of 403** fixed-width records. Of those: 110 agree with their sheet's
+declared positions, 3 have no declared total, and 9 disagree.
+
+30% coverage is not a corpus-wide gate, and the 281 unresolved are mostly
+envelope headers and footers, which are not design sheets at all. This is the
+concrete argument for the record-length-declaration ADR: the mapping has to be
+DECLARED, because it cannot be inferred for two thirds of the corpus. Recording
+the number so the ADR is argued from a measurement rather than an intuition.
+
+### The nine disagreements, and the hypothesis that was wrong
+
+Eight are modelo 200/2024-y-siguientes continuation pages (`B`/`C`/`D`), one is
+modelo 349.
+
+First hypothesis: the designs are under-read, so the sheet totals understate.
+DISPROVED -- both designs read with zero skipped records and zero holes in the
+sheets concerned. Second consideration, and the one that mattered: a clean tile
+proves only that what was read is contiguous, never that it reaches as far as
+AEAT's record, because a collapsed wide field tiles perfectly.
+
+So it was reproduced on a single case. `m200-page-022b` against `DP200022B`:
+
+* the record's leading EIGHTEEN coordinates are identical to the sheet's, so the
+  pairing is not in doubt;
+* the design then declares `ord19 @234+200 RESERVADO PARA LA AEAT` and
+  `ord20 @434+12 Identificador de fin de registro`, ending the record at 445;
+* the record instead continues its 17-byte money run into 234 and places its
+  terminator at 553, ending at 564.
+
+The design here is a cleanly-read XLS, not a PDF, and a 200-byte reserved block
+beside 17-byte monetary neighbours is exactly what AEAT prints. The design is
+right and the record is wrong.
+
+### The population
+
+Measured across every modelo: **8 records write data-bearing fields into
+positions their design marks RESERVADO**, all in modelo 200/2024-y-siguientes --
+`page-015b` (7 fields), `016b` (2), `018b` (12), `020b` (2), `020c` (10),
+`020d` (6), `022b` (7), `026b` (1). No other modelo has one.
+
+`m200-page-020b` shows the mechanism: the record carries an extra one-byte field
+at 489 that the sheet does not have, and every field after it sits one position
+off.
+
+### Why it was not fixed this tick
+
+This revision's export tree is GENERATED -- it carries
+`_generation.provenance.json` -- so the remediation is a regeneration through
+`dev/registry`'s validate-then-publish path. Rendering into `src/` by hand
+re-implements the pre-cutover proof and loses what it proves. That is a
+multi-step operation on a 10.7 MB, 75-sheet design and would not have reached a
+verified finish in the remaining tick; a partially regenerated tree is worse
+than an unregenerated one.
+
+Worth noting for whoever picks it up: the generator already detects these. The
+reserved test in `dev/registry/pipeline/_render_profile.py` is type-agnostic --
+`"reservado" in field.normalized_description.casefold()` -- so the defect is
+downstream of detection, not a missed match.
+
+### What was landed instead, and why this shape
+
+`test_modelo_200_reserved_block_authority.py` pins the DESIGN side: the reserved
+runs, the terminator position, and the record end for the two sheets measured.
+It deliberately does not assert the defect, which would freeze it as the
+contract; it fixes the target a regeneration has to hit, on a corpus that has
+previously had rows collapse into one wide field with no contiguity check
+noticing.
+
+It carries its own disconfirming check. If the reserved runs were an extraction
+artefact rather than AEAT's words, the records would be right and this module
+wrong -- so each sheet must show a reserved run AND an abutting terminator AND a
+real run of 17-byte fields ahead of it, which a collapsed-row read would not
+produce together.
+
+The first draft of that module GUESSED DP200015B's coordinates and the test
+caught it: that sheet carries TWO reserved runs, the earlier one 13 bytes typed
+`Num` -- the retired-quantity residue the render profile's own docstring
+describes -- and its terminator sits at 2497, not where it was assumed. The
+pinned values are now measured, and the count is no longer pinned at one.
+
+### Verified
+
+* the new module: 7 passed. 26 passed across it plus the 369, 390 and
+  completeness gates. Authority loads CLEAN; ruff clean.
+
+### Still open
+
+The eight modelo 200 records, needing a `dev/registry` regeneration.
+
+The 2015-2022 impatriado escala: a SECOND retrieval route was tried this tick --
+the amending norm, Ley 26/2014 -- and it truncates at article 58, short of the
+provision that amends art. 93. Two routes tested, both short. Operator-side.
