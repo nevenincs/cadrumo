@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:b8840e9bd0e55a1a06278fa032f785b5293ecb775c0ab8c6d34c56f5a89749f7'
+body_hash: 'sha256:80c8c1270047661def5e564d9a084f54cfa9734e538fa7244f4a290dcce8f622'
 related: []
 ---
 
@@ -66,3 +66,25 @@ and each invalid exception redden the gate.
 The production change is directionally correct, but issue 623 is not safe to
 integrate or close until this medium gate defect is fixed and the focused
 workflow/property checks pass again.
+
+#### Resolution verification (2026-08-22)
+
+Corrective commit `e0cd3d507e9fffeee5dcc032872758a27483a4e9` resolves the
+medium finding. `_assert_setup_uv_consumers_follow_pin` now records the
+existence of any matching consumer and refuses an empty surface without
+pinning a brittle repository-wide count. `test_empty_setup_uv_surface_is_rejected`
+directly proves the former vacuous-pass mutation is red.
+
+The compatibility exception is now an extracted predicate with a parametrised
+table covering the valid canonical-pin-plus-alternative matrix and the
+important invalid shapes: missing canonical pin, canonical pin without an
+alternative, a loose literal override, a non-matrix expression, and an
+expression whose matrix key does not exist. The cases substitute `_python_pin()`
+through a test-only pin sentinel; they do not duplicate the repository's
+`3.13.11` literal. This preserves the separation between the exact CI runtime
+pin and compatibility alternatives.
+
+Re-review verification passed 34 focused Python-pin, release-cohort, and
+packaging-workflow tests. Ruff and Git whitespace checks also passed. `HEAD`
+was re-read as the corrective commit before this resolution was recorded. The
+finding is closed; issue 623 is now safe to integrate and close.
