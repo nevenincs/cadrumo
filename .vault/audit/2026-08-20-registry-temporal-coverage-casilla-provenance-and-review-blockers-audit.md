@@ -3266,3 +3266,54 @@ reader does not "restore" a year field that was never there.
 
 Authored: Pag. 1, 2A, 2B, 2C, 4, 5, 6, 9 and most of 3. Pag. 0 is the envelope.
 Three records remain plus the Pag. 3 remainder.
+
+## 2026-08-23 — Pagina 7 authored, and an eighth number form
+
+### What landed
+
+Modelo 036 Pag. 7: **42 casillas over its 84 fields** — 38 numbered, 4 slugs. Revision
+now **640 casillas**. It carries retenciones e ingresos a cuenta across eight income
+kinds, impuestos especiales, adquisiciones intracomunitarias, impuestos
+medioambientales, servicios digitales, the two telecomunicaciones regimes, and the
+registro de extractores de depósitos fiscales.
+
+Zero mismatches, zero invented, zero missed; all 84 fields authored, collapsed, or
+explicitly excluded. Tiles 1..400 exactly once, no gap, no partial overlap. Suite:
+**13 failures, zero new, zero gone.**
+
+### An eighth number form: the dotted suffix
+
+The extractores block prints `[716.a]`, `[717.a]`, `[716.b]`, `[717.b]` — a number, a
+full stop, then a letter. Every pattern used on this modelo allowed a trailing letter
+attached **directly** (`A4`, `412bis`) but never one behind a separator, so all four
+were invisible. Their bare stems `716` and `717` appear nowhere else in the design
+either, so these are not mis-parsed variants of numbers already counted. **+4 → 674.**
+
+The pair is semantically clear despite the new form: `716` is the alta/baja flag and
+`717` its fecha, with `.a` for alcohol y bebidas derivadas and `.b` for hidrocarburos.
+The suffix distinguishes two product scopes of the **same** registro — which is why AEAT
+numbered them as variants rather than as separate boxes. That reading comes from the two
+field descriptions, which differ only in product scope; it is not inferred from the
+numbering shape.
+
+### Eight denominators, and what the sequence now shows
+
+288 → 348 → 659 → 667 → 669 → 672 → 670 → **674**.
+
+The point is no longer that the count keeps moving. It is that **the last three
+corrections each found a different KIND of error** — a missing form, then a false
+positive, then another missing form. The error is not converging on a residual of one
+type that could be bounded and closed out; each pass finds a new category. A count
+derived by pattern-matching prose is a measurement carrying error in both directions,
+and should always be stated as "what a stated pattern, less stated noise, finds".
+
+### Coverage, three ways
+
+| state | count |
+|---|---|
+| directly modelled | **530** |
+| behind a slug casilla | **90** — Pag. 5: 55, Pag. 6: 25, Pag. 7: 8, Pag. 2B: 2 |
+| no casilla at all | **54** — Pag. 10 (24), Pag. 8 (16), Pag. 3 (14) |
+
+Authored: Pag. 1, 2A, 2B, 2C, 4, 5, 6, 7, 9 and most of 3. Pag. 0 is the envelope.
+**Two records remain plus the Pag. 3 remainder.**

@@ -26,65 +26,62 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the censal alta/modificacion/baja declaration. \
 DISCLOSURE -- self-review: the same agent authored the casillas being reviewed. VERIFIED \
--- PAGINA 6 IS AUTHORED, 47 casillas over its 88 design fields, 25 carrying an AEAT number \
-and 22 slugs. Revision total 598 casillas. Pag. 6 carries the IRPF obligations and method \
-of determining the rendimiento, the Impuesto sobre Sociedades obligations and exenciones, \
-the IRNR establecimiento permanente modalidad, and the option for the Titulo II Ley \
-49/2002 special regime. Every offset, length and number was cross-checked back against the \
-design row it came from -- zero missing, zero invented, zero length mismatches -- and \
-every one of the 88 fields is authored, a collapsed component, or explicitly excluded with \
-a stated reason, so nothing is unaccounted for. Pag. 6 tiles 1..400 exactly once with NO \
-gap and NO PARTIAL OVERLAP, both checked. A SECOND FALSE-POSITIVE CLASS WAS FOUND, LARGER \
-THAN THE FIRST. Pag. 4 established that a token which merely LOOKS like a box number is \
-not one: \"(m2)\" in \"Superficie (m2)\" was being counted as a box called m2. This record \
-carries a bigger instance of the same error. TWENTY-FOUR of its fields open \"IRPF. (1) Si \
-determinaba el rendimiento neto...\" or \"(2) Si determinaba...\", where (1) and (2) are \
-FOOTNOTE MARKERS keyed to notes printed below the form, not box numbers. Both matched a \
-parenthesised-number pattern and were counted as boxes 1 and 2 in every denominator \
-reported for this modelo. THE DENOMINATOR IS NOW 670, being the seven-form set less the \
-three noise tokens m2, 1 and 2. SEVEN DENOMINATORS HAVE NOW BEEN REPORTED: 288, 348, 659, \
-667, 669, 672 and 670. THE TWO MOST RECENT MOVED IN OPPOSITE DIRECTIONS, and that is the \
-substantive point rather than any single figure: a pattern applied to prose mis-measures \
-in BOTH directions, so no count derived this way should be stated as the design's true box \
-total. It is what a stated pattern, less stated noise, finds. VERIFIED -- ONE NUMBER OVER \
-A WHOLE REPEATING BLOCK, a shape not previously met on this modelo. AEAT prints 613 over \
-ALL TWELVE fields of the estimacion objetiva activity block and 614 over all twelve of the \
-modalidad simplificada block, each block being four activity rows of seccion I.A.E., grupo \
-o epigrafe and tipo de actividad. No single field owns either number, so all sixteen \
-casillas take slugs and 613 and 614 join the numbers covered by a modelled FIELD without \
-being individually addressable -- the same state as a list bracket. The two rejected \
-alternatives are stated because both are plausible: splitting one number across four rows \
-would assert four boxes AEAT does not print, and collapsing four rows into one casilla \
-would lose four distinct declared activities. Within each row, seccion and grupo o \
-epigrafe become ONE casilla and tipo de actividad another, the same split Pag. 4's design \
-declares explicitly for 402 and 403. VERIFIED -- 640 IS A TWO-COMPONENT DATE, NOT A \
-TRUNCATED TRIPLE. The design declares only @129+2 dia and @131+2 mes for the fecha de \
-cierre del ejercicio economico, with NO ano component, an annual closing date being a day \
-and a month. The casilla spans four positions rather than eight; this is read from the \
-design rather than an omission, and is stated so that a later reader does not \"restore\" \
-a year field that was never there. VERIFIED -- SIX FIELDS CARRY LIST BRACKETS and take \
-slugs as elsewhere on this modelo: the three IRPF estimacion methods, the IS exencion and \
-its fecha, and the IRNR modalidad. Each is one selecting byte behind several printed tick \
-boxes. VERIFIED -- COVERAGE, REPORTED IN THREE PARTS because a single figure would \
-overstate the gap: 492 of 670 numbers are DIRECTLY MODELLED, each on its own casilla; a \
-further 82 sit BEHIND A SLUG CASILLA where the FIELD is modelled but the number is not \
-individually addressable (55 on Pag. 5, 25 on Pag. 6, B1 and B2 on Pag. 2B); and only 96 \
-boxes have NO CASILLA AT ALL. NOT CLAIMED -- 96 BOXES HAVE NO CASILLA, exactly: Pag. 7 42, \
-Pag. 10 24, Pag. 8 16, and 14 still open on Pag. 3. Pag. 0 is the envelope and has none. \
-Authored: Pag. 1, 2A, 2B, 2C, 4, 5, 6, 9 and most of 3. NOT CLAIMED -- THE CAUSA \
-FRAGMENT'S LABELS on Pag. 3 remain underivable from any bundled source; its cited \
-instructions file is a 5.4 KB navigation shell with no casilla table. Numbers and section \
-mapping ARE grounded on the diseno. NOT CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT \
-MEMBERSHIP CHANGE. model_law_authority_scope remains inspection_only, so this stamp is \
-made under the LOWER inspection bar and MUST be re-made if a layout lands and lifts the \
-derived scope to filing. NOT CLAIMED -- the IRPF, IS and IRNR casillas here record \
-OBLIGATIONS AND ELECTIONS on a censal declaration; nothing on this record computes or \
-reports a tax amount, and none of it supports a liquidacion. NOT CLAIMED -- LABELS ARE \
-UNACCENTED ASCII across all four catalogues, matching the pre-existing modelo 036 labels; \
-a known presentation limitation. All 598 label keys carry non-null values in es/en/ca/hu, \
-verified by counting VALUES rather than keys; the translations were not audited by a \
-second party. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero."""
-reviewed_at = 2026-08-22
+-- PAGINA 7 IS AUTHORED, 42 casillas over its 84 design fields, 38 carrying an AEAT number \
+and 4 slugs. Revision total 640 casillas. Pag. 7 carries the obligacion de retener o \
+ingresar a cuenta across eight income kinds, the impuestos especiales obligations, the \
+adquisiciones intracomunitarias options, impuestos medioambientales, the impuesto sobre \
+determinados servicios digitales, the two telecomunicaciones regimes of art. 70.Uno.4.a \
+and 70.Uno.8, and the registro de extractores de depositos fiscales. Every offset, length \
+and number was cross-checked back against the design row it came from -- zero missing, \
+zero invented, zero length mismatches -- and every one of the 84 fields is authored, a \
+collapsed date component, or explicitly excluded with a stated reason, so nothing is \
+unaccounted for. Pag. 7 tiles 1..400 exactly once with NO gap and NO PARTIAL OVERLAP, both \
+checked. AN EIGHTH NUMBER FORM WAS FOUND: THE DOTTED SUFFIX. The extractores block prints \
+716.a, 717.a, 716.b and 717.b -- a number, a full stop, then a letter. Every pattern used \
+on this modelo so far allowed a trailing letter attached DIRECTLY (A4, 412bis) but never \
+one behind a separator, so all four were invisible, and none of their bare stems 716 or \
+717 appears anywhere else in the design either, so they were not merely mis-parsed \
+variants of numbers already counted. Four numbers added; THE DENOMINATOR IS NOW 674. EIGHT \
+DENOMINATORS HAVE NOW BEEN REPORTED: 288, 348, 659, 667, 669, 672, 670, 674. What is worth \
+recording is that the last three corrections each found a DIFFERENT KIND of error -- a \
+missing form, then a false positive, then another missing form -- rather than more of the \
+same kind. The count is a measurement carrying error in both directions, not a fact about \
+the design, and the honest form of any coverage claim over it remains \"what a stated \
+pattern, less stated noise, finds\". VERIFIED -- THE DOTTED PAIR IS SEMANTICALLY CLEAR \
+even though its form is new: 716 is the alta/baja flag and 717 its fecha, with the \".a\" \
+suffix for productos del Impuesto sobre el alcohol y bebidas derivadas and \".b\" for \
+hidrocarburos. The suffix distinguishes two product scopes of the SAME registro, which is \
+why AEAT numbered them as variants rather than as separate boxes. This reading is grounded \
+in the two field descriptions themselves, which differ only in the product scope, not \
+inferred from the numbering shape. VERIFIED -- FOUR FIELDS CARRY LIST BRACKETS and take \
+slugs, as elsewhere on this modelo: the IVA sujecion or no sujecion option, the \
+intracomunitarias 10.000 euro threshold, and the two telecom excede/no-excede selectors. \
+Each is one byte behind two printed tick boxes. VERIFIED -- EIGHTEEN DATE TRIPLES collapse \
+to one date casilla each, two of them under a dotted number. VERIFIED -- THE RETENCIONES \
+AND IIEE BLOCKS WERE GENERATED from their repeated flag-plus-date shape, but every \
+generated offset and number was cross-checked individually against its own design row \
+rather than trusted to the repetition. VERIFIED -- COVERAGE, REPORTED IN THREE PARTS \
+because a single figure would overstate the gap: 530 of 674 numbers are DIRECTLY MODELLED, \
+each on its own casilla; a further 90 sit BEHIND A SLUG CASILLA where the FIELD is \
+modelled but the number is not individually addressable because AEAT prints several on one \
+byte or one number over a whole block (55 on Pag. 5, 25 on Pag. 6, 8 on Pag. 7, 2 on Pag. \
+2B); and only 54 boxes have NO CASILLA AT ALL. NOT CLAIMED -- 54 BOXES HAVE NO CASILLA, \
+exactly: Pag. 10 24, Pag. 8 16, and 14 still open on Pag. 3. Pag. 0 is the envelope and \
+has none. Authored: Pag. 1, 2A, 2B, 2C, 4, 5, 6, 7, 9 and most of 3. Two records remain \
+plus the Pag. 3 remainder. NOT CLAIMED -- THE CAUSA FRAGMENT'S LABELS on Pag. 3 remain \
+underivable from any bundled source; its cited instructions file is a 5.4 KB navigation \
+shell with no casilla table. Numbers and section mapping ARE grounded on the diseno. NOT \
+CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT MEMBERSHIP CHANGE. model_law_authority_scope \
+remains inspection_only, so this stamp is made under the LOWER inspection bar and MUST be \
+re-made if a layout lands and lifts the derived scope to filing. NOT CLAIMED -- the \
+casillas on this record declare OBLIGATIONS AND REGISTRATIONS on a censal declaration; \
+nothing here computes or reports a retencion, a cuota or any tax amount, and none of it \
+supports a liquidacion. NOT CLAIMED -- LABELS ARE UNACCENTED ASCII across all four \
+catalogues, matching the pre-existing modelo 036 labels; a known presentation limitation. \
+All 640 label keys carry non-null values in es/en/ca/hu, verified by counting VALUES \
+rather than keys; the translations were not audited by a second party. NOT CLAIMED -- \
+independent_check_coverage is n/a: NO CLAIM, not zero."""
+reviewed_at = 2026-08-23
 
 [revisions."2025-02-03-y-siguientes".family_dispositions.deadline_windows]
 reason = """\
