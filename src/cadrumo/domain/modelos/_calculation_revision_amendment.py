@@ -8,7 +8,7 @@ from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import FilingRecordId
-from ..calculations.registry import RegistryRevisionInspection, RevisionId, SourceReference
+from ..calculations.registry import RegistrySnapshot, RevisionId, SourceReference
 from ._errors import ModeloValidationError
 
 
@@ -84,16 +84,16 @@ def m303_rectificativa_motive_is_applicable(
     ) in _M303_RECTIFICATIVA_RECORD_DESIGNS
 
 
-def m303_rectificativa_record_design_from_inspection(
-    inspection: RegistryRevisionInspection,
+def m303_rectificativa_record_design_from_snapshot(
+    snapshot: RegistrySnapshot,
 ) -> SourceReference | None:
-    """Resolve the sole admitted record-design source owned by one inspection."""
+    """Resolve the sole admitted record-design source owned by one snapshot."""
     candidates = tuple(
         source
-        for source in inspection.sources.values()
-        if source.id in inspection.revision_source_refs
+        for source in snapshot.sources.values()
+        if source.id in snapshot.revision.source_refs
         and m303_rectificativa_motive_is_applicable(
-            registry_revision_id=inspection.revision_id,
+            registry_revision_id=snapshot.revision.id,
             record_design=source,
         )
     )
@@ -107,5 +107,5 @@ __all__ = [
     "CalculationRevisionAmendmentKind",
     "M303RectificativaMotive",
     "m303_rectificativa_motive_is_applicable",
-    "m303_rectificativa_record_design_from_inspection",
+    "m303_rectificativa_record_design_from_snapshot",
 ]

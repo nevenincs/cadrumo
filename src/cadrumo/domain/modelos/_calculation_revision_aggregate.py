@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.identity import SubjectTaxId
-from ..calculations.registry import RegistryRevisionInspection, SourceReference
+from ..calculations.registry import RegistrySnapshot, SourceReference
 from ..justificante import Justificante
 from ._calculation_revision import CalculationRevision
 from ._calculation_revision_amendment import (
@@ -33,7 +33,7 @@ class CalculationRevisionAggregateContext(BaseModel):
     work_units: WorkUnitCatalogue
     filing_records: ModeloRecordCatalogue
     justificantes: tuple[Justificante, ...]
-    registry_inspections: Mapping[str, RegistryRevisionInspection]
+    registry_snapshots: Mapping[str, RegistrySnapshot]
     expected_taxpayer_tax_id: SubjectTaxId | None
 
 
@@ -63,8 +63,8 @@ def validate_calculation_revision_aggregate(
 
     m303 = _require_m303_filing_evidence(revision)
     record_design = _validate_m303_evidence_coordinate(m303, work_unit)
-    inspection = _require_registry_inspection(context, work_unit)
-    _validate_record_design_authority(inspection, record_design)
+    snapshot = _require_registry_snapshot(context, work_unit)
+    _validate_record_design_authority(snapshot, record_design)
     motive = _require_rectificativa_motive(identity, work_unit, record_design)
     receipt = _require_target_receipt(identity, context, work_unit)
     if context.expected_taxpayer_tax_id is None:
@@ -131,26 +131,33 @@ def _validate_m303_evidence_coordinate(
     return regimen_snapshot.record_design
 
 
-def _require_registry_inspection(
+def _require_registry_snapshot(
     context: CalculationRevisionAggregateContext,
     work_unit: WorkUnit,
-) -> RegistryRevisionInspection:
-    """Resolve the exact static registry inspection for a work unit."""
-    inspection = context.registry_inspections.get(work_unit.work_unit_id)
-    if inspection is None:
-        raise ModeloValidationError("M303 rectificativa revision lacks exact registry inspection context")
-    if inspection.modelo_id != Modelo.M303 or inspection.revision_id != work_unit.revision_id:
-        raise ModeloValidationError("M303 rectificativa registry inspection disagrees with its parent WorkUnit")
-    return inspection
+) -> RegistrySnapshot:
+    """Resolve the exact law-selected registry snapshot for a work unit.
+
+    A filing snapshot rather than a static revision inspection. Amending and
+    exporting a rectificativa IS a filing operation, so it reads through the
+    gate that certifies the revision can produce a filing artifact instead of
+    the projection that exists to skip it -- and every M303 coordinate these
+    paths reach resolves the identical revision under either.
+    """
+    snapshot = context.registry_snapshots.get(work_unit.work_unit_id)
+    if snapshot is None:
+        raise ModeloValidationError("M303 rectificativa revision lacks exact registry snapshot context")
+    if snapshot.modelo.id != Modelo.M303 or snapshot.revision.id != work_unit.revision_id:
+        raise ModeloValidationError("M303 rectificativa registry snapshot disagrees with its parent WorkUnit")
+    return snapshot
 
 
 def _validate_record_design_authority(
-    inspection: RegistryRevisionInspection,
+    snapshot: RegistrySnapshot,
     record_design: SourceReference,
 ) -> None:
-    """Require the embedded M303 record design to be owned by the inspection."""
-    inspected_source = inspection.sources.get(record_design.id)
-    if inspected_source is None or inspected_source.id not in inspection.revision_source_refs:
+    """Require the embedded M303 record design to be owned by the snapshot."""
+    inspected_source = snapshot.sources.get(record_design.id)
+    if inspected_source is None or inspected_source.id not in snapshot.revision.source_refs:
         raise ModeloValidationError("M303 rectificativa record-design source is not owned by the selected revision")
     if inspected_source != record_design:
         raise ModeloValidationError(

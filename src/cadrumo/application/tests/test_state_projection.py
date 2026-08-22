@@ -52,7 +52,6 @@ from ..state_projection import (
 from ..user_profile import (
     close_active_profile_record_session,
     profile_bind_bucket_session,
-    profile_close_bucket_session,
     register_profile_with_credentials,
 )
 from ..wizard import WIZARD_FLOWS
@@ -136,7 +135,7 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
         storage_root=storage_root,
     )
     profile_bind_bucket_session(session)
-    _ACTIVE_STORAGE_STACK.callback(profile_close_bucket_session)
+    _ACTIVE_STORAGE_STACK.callback(master_key.close_active_bucket_session)
     _ACTIVE_STORAGE_STACK.callback(close_active_profile_record_session)
     register_minimal_profile(
         profile_id=outcome.profile_id,

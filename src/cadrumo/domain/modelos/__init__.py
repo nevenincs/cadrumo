@@ -114,7 +114,7 @@ from ._calculation_revision_aggregate import (
 )
 from ._calculation_revision_amendment import (
     m303_rectificativa_motive_is_applicable,
-    m303_rectificativa_record_design_from_inspection,
+    m303_rectificativa_record_design_from_snapshot,
 )
 from ._codes import ModeloCode
 from ._dt12_reduccion import (
@@ -307,7 +307,7 @@ __all__ = (
     "is_justificante_backed_external_evidence",
     "m232_related_party_row_casilla_values",
     "m303_rectificativa_motive_is_applicable",
-    "m303_rectificativa_record_design_from_inspection",
+    "m303_rectificativa_record_design_from_snapshot",
     "m349_nif_number_for_export",
     "raise_catalogue_integrity_error",
     "snapshot_fingerprint",

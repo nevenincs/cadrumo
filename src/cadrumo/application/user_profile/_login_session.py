@@ -58,6 +58,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError, model_validator
 
+from ...adapters.persistence.storage import master_key
+from ...adapters.persistence.storage.custody import profile_session_path
 from ...adapters.persistence.storage import custody, master_key
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
@@ -91,12 +93,9 @@ from ._custody_ports import (
     default_profile_custody_local_record_store,
     profile_advance_session_idle_deadline,
     profile_bind_bucket_session,
-    profile_close_bucket_session,
-    profile_current_bucket_session,
     profile_is_keyring_unavailable,
     profile_is_password_authentication_failure,
     profile_is_persisted_session,
-    profile_session_path,
     profile_session_serves_bucket,
     refuse_profile_login_without_password_channel,
     unlock_profile_custody_password,
@@ -656,7 +655,7 @@ def logout_active_profile() -> str | None:
     selection to revoke, otherwise ``None`` for an idempotent logged-out call.
     """
     storage_root = effective_storage_root()
-    live = profile_current_bucket_session()
+    live = master_key.current_active_bucket_session()
     live_bucket_id = live.bucket_id if live is not None else None
     with active_profile_pointer_transaction(storage_root) as pointer_transaction:
         selected = pointer_transaction.read()
@@ -664,7 +663,7 @@ def logout_active_profile() -> str | None:
         target_ids = _distinct_bucket_ids(live_bucket_id, selected_bucket_id)
         if not target_ids:
             return None
-        profile_close_bucket_session()
+        master_key.close_active_bucket_session()
         for bucket_id in target_ids:
             close_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
         pointer_transaction.clear()
@@ -679,11 +678,11 @@ def revoke_live_profile_secret_for_custody_delete(*, bucket_id: str) -> ProfileC
     owner performs both the identity query and the zeroisation; callers only
     receive a durable, non-secret outcome they can receipt.
     """
-    session = profile_current_bucket_session()
+    session = master_key.current_active_bucket_session()
     if not profile_session_serves_bucket(session, bucket_id):
         return ProfileCustodySessionOwnerEffect.VERIFIED_ABSENT
-    profile_close_bucket_session()
-    if profile_session_serves_bucket(profile_current_bucket_session(), bucket_id):
+    master_key.close_active_bucket_session()
+    if profile_session_serves_bucket(master_key.current_active_bucket_session(), bucket_id):
         raise UserProfileError(
             translated_message="errors.integrity.integrity_storage_profile_custody_record",
             context={"bucket_id": bucket_id, "owner": "process-secret-revocation"},
@@ -955,7 +954,7 @@ def _resume_idempotent_login_if_allowed(
     now: datetime,
 ) -> ProfilePersistedSessionPort | None:
     """Resume only when the durable pointer and local binding already agree."""
-    live_before = profile_current_bucket_session()
+    live_before = master_key.current_active_bucket_session()
     if not _can_resume_idempotent_login(attempt=attempt, live_session=live_before):
         return None
     return _resume_for_idempotent_login(bucket_id=attempt.target.bucket_id, now=now)
@@ -1036,7 +1035,7 @@ def _resume_for_idempotent_login(
     anchored to the AAD-bound, deadline-authenticated record, never to
     process memory alone.
     """
-    live = profile_current_bucket_session()
+    live = master_key.current_active_bucket_session()
     if profile_session_serves_bucket(live, bucket_id) and live is not None and not live.is_expired(now):
         peeked, _ = _resume_acceleration_receipt(
             storage_root=effective_storage_root(),
@@ -1173,7 +1172,7 @@ def _promote_candidate_login(
     # gate: it is absent in an ordinary invocation, which is a fresh process.
     # This binding survives for its own separate job -- closing the in-process
     # session object by identity, further down in _retire_previous_authorities.
-    previous_live = profile_current_bucket_session()
+    previous_live = master_key.current_active_bucket_session()
     retired_bucket_ids = _retired_bucket_ids(
         live_bucket_id=_live_bucket_id(previous_live),
         selected_bucket_id=selected_bucket_id,
@@ -1454,7 +1453,7 @@ def _rollback_candidate_promotion(
         if previous_live is not None:
             profile_bind_bucket_session(previous_live)
         else:
-            profile_close_bucket_session()
+            master_key.close_active_bucket_session()
         if previous_record is not None:
             bind_active_profile_record_session(previous_record)
         else:
