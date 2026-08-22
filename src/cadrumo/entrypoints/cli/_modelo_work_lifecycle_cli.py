@@ -41,7 +41,7 @@ from ...domain.modelos import WorkUnit
 from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, active_profile_label, resolve_lifecycle_continuation_notice
 from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
-from ._modelo_execution_policies import MODEL_DESTRUCTIVE, MODEL_READ, MODEL_WRITE
+from ._modelo_execution_policies import MODEL_DESTRUCTIVE, MODEL_READ, MODEL_WRITE, REGISTRY_MODEL_WRITE
 from ._modelo_payloads import (
     WorkCreateResult,
     WorkDiscardResult,
@@ -155,7 +155,7 @@ def guard_unsupported_work_modelo(modelo: str) -> None:
 
 def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
     @work_app.command("create", help=tr("cli.app.modelo.work.create_help"))
-    @command_execution_policy(MODEL_WRITE)
+    @command_execution_policy(REGISTRY_MODEL_WRITE)
     def work_create(
         ctx: typer.Context,
         modelo: Annotated[

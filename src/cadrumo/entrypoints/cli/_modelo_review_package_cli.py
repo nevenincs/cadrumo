@@ -133,9 +133,8 @@ from ._modelo_cli_support import (
 )
 from ._modelo_execution_policies import (
     CALCULATION_WRITE,
-    CRYPTO_FILE_WRITE,
-    CRYPTO_MODEL_WRITE,
-    CRYPTO_PROFILE_FILE_WRITE,
+    CRYPTO_FACT_FILE_WRITE,
+    CRYPTO_PROFILE_WRITE,
     CRYPTO_READ,
     declare_metadata_group,
 )
@@ -430,7 +429,7 @@ def review_package_verify(
         ),
     ),
 )
-@command_execution_policy(CRYPTO_PROFILE_FILE_WRITE)
+@command_execution_policy(CRYPTO_PROFILE_WRITE)
 def review_package_sign(
     ctx: typer.Context,
     package: Annotated[
@@ -578,7 +577,7 @@ def review_package_verify_signature(
         ),
     ),
 )
-@command_execution_policy(CRYPTO_PROFILE_FILE_WRITE)
+@command_execution_policy(CRYPTO_PROFILE_WRITE)
 def review_package_counter_sign(
     ctx: typer.Context,
     package: Annotated[
@@ -768,7 +767,7 @@ def review_package_verify_receipt(
         ),
     ),
 )
-@command_execution_policy(CRYPTO_FILE_WRITE)
+@command_execution_policy(CRYPTO_FACT_FILE_WRITE)
 def review_package_encrypt_for_recipient(
     ctx: typer.Context,
     package: Annotated[
@@ -892,7 +891,7 @@ def review_package_encrypt_for_recipient(
         ),
     ),
 )
-@command_execution_policy(CRYPTO_PROFILE_FILE_WRITE)
+@command_execution_policy(CRYPTO_PROFILE_WRITE)
 def review_package_decrypt(
     ctx: typer.Context,
     envelope_path: Annotated[
@@ -977,7 +976,7 @@ def review_package_decrypt(
         ),
     ),
 )
-@command_execution_policy(CRYPTO_FILE_WRITE)
+@command_execution_policy(CRYPTO_FACT_FILE_WRITE)
 def review_package_encrypt_feedback(
     ctx: typer.Context,
     originator_id: Annotated[
@@ -1127,7 +1126,7 @@ def review_package_encrypt_feedback(
         ),
     ),
 )
-@command_execution_policy(CRYPTO_MODEL_WRITE)
+@command_execution_policy(CRYPTO_PROFILE_WRITE)
 def review_package_import_feedback(
     ctx: typer.Context,
     envelope_path: Annotated[

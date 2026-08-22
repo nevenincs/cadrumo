@@ -55,7 +55,7 @@ from ._modelo_cli_support import (
     validate_calculation_revision_id,
     validate_work_unit_id,
 )
-from ._modelo_execution_policies import MODEL_READ, MODEL_WRITE
+from ._modelo_execution_policies import MODEL_READ
 from ._modelo_payloads import WorkflowRunPayload, WorkResumeResult, WorkRunsResult
 from ._modelo_work_options import (
     _BucketIdOpt,
@@ -184,7 +184,7 @@ def register_work_run_commands(
         "resume",
         help=tr("cli.app.modelo.work.resume_help"),
     )
-    @command_execution_policy(MODEL_WRITE)
+    @command_execution_policy(MODEL_READ)
     def work_resume(
         ctx: typer.Context,
         target: Annotated[

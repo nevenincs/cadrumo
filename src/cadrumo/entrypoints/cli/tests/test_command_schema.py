@@ -73,6 +73,7 @@ def test_command_capability_taxonomy_is_closed_and_serialisable() -> None:
         "google",
         "calculation",
         "filing",
+        "crypto",
     }
 
     assert set(get_args(CommandCapability)) == expected_capabilities
@@ -146,6 +147,13 @@ def test_command_capability_class_expands_only_owned_authorities() -> None:
             "filing",
         }
     )
+
+    crypto_only = CommandCapabilityClass(
+        capabilities=frozenset({"crypto"}),
+        side_effects=frozenset({"none"}),
+        performance="local-io",
+    )
+    assert crypto_only.expanded_capabilities == frozenset({"crypto"})
 
 
 @pytest.mark.parametrize(
