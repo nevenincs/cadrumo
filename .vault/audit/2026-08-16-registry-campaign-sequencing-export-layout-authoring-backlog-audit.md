@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:e1018222f6b058f86e0a67ca36b0ef2a98c17d584d70ade1c803902fefb480a3'
+body_hash: 'sha256:23a030df73fd2828b12b5b367b4b56187b5537615e65b2de5e87016cc875f639'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15932,3 +15932,68 @@ record of five moves fields rather than the headline figure. Two of its four
 remaining holes are the position-10 pair closed last tick as unrecoverable; the
 other two are the Pág. 16 and Pág. 31 rows above, each needing its own repair
 and its own control.
+
+## Tick: modelo 200's Pág. 16 recovered -- a tail wearing the previous row's footnote
+
+Re-measured at tick start: authority CLEAN. Last tick recovered Pág. 5 and named
+Pág. 16 and Pág. 31 as the remaining repairs, each needing its own guard.
+
+### What the source does
+
+AEAT prints two consecutive RIC rows whose descriptions differ only by a
+footnote marker, and the extraction runs the first row's trailing fragment into
+the second row's tail:
+
+    '78 1219 17 Num Reg.reserva ... Inv.anticipadas futuras dotaciones R'
+    '(1) [020] 17 Num Reg.reserva ... Inv.anticipadas futuras dotaciones'
+    '79 1236 (2 a 6) [021]'
+
+The middle line is row 79's length, naturaleza and description; the last is its
+ordinal and position. `_rejoin_reversed_column_rows` pairs a tail with an
+adjacent head, and it does handle the swapped order -- but that tail cannot
+match `_REVERSED_ROW_TAIL_RE` while ``(1) [020]`` sits in front of it, so the
+pair is never formed and position 1236 is lost.
+
+### The guard, and why it is two facts rather than one
+
+The split requires the SUFFIX to be a well-formed tail AND the FOLLOWING line to
+be a head whose ordinal follows the last row read by one and whose offset
+resumes exactly where that row ended. Neither fact is read off the line being
+changed: one comes from the shape of what remains, the other from a row already
+parsed and the line after.
+
+Proved on its refusal paths, not only the passing one: a head with the wrong
+ordinal, a head with the wrong offset, and a following line that is not a head
+at all are each refused. The stripped fragment is emitted as its own line, since
+it is the previous row's own content.
+
+### Verified
+
+* **216 designs compared: 1 improved, 0 regressed, 215 unchanged.** Modelo 200's
+  2010 edition goes from 4 skipped sheets to 3 and 41 sheets to 42, recovering
+  **146 fields**. With last tick's repair that design has gone 5 -> 3 skipped and
+  40 -> 42 sheets across two ticks, on two unrelated guards.
+* registry + generated-tree + application/registry: **13 failed, 5,957 passed**,
+  plus one ERROR examined below.
+* ruff on the parser: unchanged at its four standing findings.
+
+### The new ERROR is a stale import from a peer refactor
+
+`test_binding_coverage_breadth.py` fails to COLLECT:
+
+    ImportError: cannot import name '_ENROLLED_SOURCE_KINDS' from
+    'cadrumo.application.modelo._calculation_source_policy'
+
+The symbol no longer exists there. This tick touched only `_record_design.py`,
+so it is not this change; it is a rename or removal in that policy module with
+the test's import left behind. Recorded with the exact symbol and module so it
+can be repointed in one edit rather than rediscovered.
+
+### Still open
+
+The partly-read inventory holds at **5 of 218** and modelo 200's 2010 edition
+will not leave it by parser work alone: of its three remaining holes, the Pág.
+21 and Pág. 22 position-10 pair was closed two ticks ago as unrecoverable
+without a better extraction. Pág. 31's row -- an ordinal/offset identity shared
+across twenty-two lines, where the rejoin's duplicate guard is in play -- is the
+last one on that design that repair can reach.
