@@ -5116,3 +5116,46 @@ it. Redaction base composition is already verified sound and is not re-probed he
 residue is a silent invariant, not an open hole.
 
 **No production change this iteration.** The lanes were not re-run, because nothing ran.
+
+### A dot segment is a separator the separator check cannot see
+
+`bucket_paths(root, bucket_id)` at `adapters/persistence/storage/bucket/_layout.py:66` is
+the one place the on-disk layout `<root>/buckets/<bucket-id>/` is composed. It refused an
+empty id and an id carrying `/` or `\`. It accepted `".."`.
+
+Measured rather than reasoned about, against a real call:
+
+    '..'    -> C:\storage-root            (ABOVE buckets/, at the storage root)
+    '.'     -> C:\storage-root\buckets    (the buckets directory itself)
+    '../..' -> REFUSED, path separator
+    'ok-id' -> C:\storage-root\buckets\ok-id
+
+The shape is worth naming because the guard looks complete: `".."` IS a traversal, but it
+is spelled without the character the traversal check looks for, so it passes on a
+technicality. `"../.."` was refused, which makes the surface look guarded from the outside
+-- and it was refused incidentally, for carrying a separator, not for traversing.
+
+**No live exploit path, and the reason is the interesting part.** The one place an
+untrusted `bucket_id` could enter is a restored archive header, and an archive is an
+attacker-supplyable file. That path is contained: `_capsule_archive.py:252,258` requires the
+header's `bucket_id` to equal the custody envelope's `profile_id`, which is a UUID, so
+`".."` cannot survive the cross-check. The system-scoped ids in the tree are `system`,
+`unsecured` and `diagnostic-probe`. So the containment is real -- but it lives upstream, in
+an identity check written to prove the archive's members agree with each other, not to
+prove a path stays inside its directory. `BucketId` itself is
+`StringConstraints(min_length=1, max_length=128)` and admits `".."` happily.
+
+The fix puts the refusal at the boundary that owns the join, so the guarantee no longer
+depends on every future caller happening to have a UUID. The refusal is `set(id) == {"."}`,
+which covers `"."`, `".."` and `"..."` without touching an id that merely CONTAINS a dot --
+`a.b` and `..alpha` are still valid ids, and a test pins that direction, because a guard
+that widened onto legitimate ids would break `system` and `unsecured` while passing every
+assertion about `".."`.
+
+**The general lesson:** when a validator enumerates the dangerous CHARACTERS, ask which
+dangerous VALUES contain none of them. Path traversal is the classic case because the
+dangerous value is spelled entirely in a character every path legitimately contains.
+
+Gate: `bucket/tests/test_layout.py`, beside the empty-id and separator siblings it belongs
+with. Proven to bite by restoring the permissive join from a scratchpad plugin: DID NOT
+RAISE. Lanes 314 integration / 1576 unit (+3).
