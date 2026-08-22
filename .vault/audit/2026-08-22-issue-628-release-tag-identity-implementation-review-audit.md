@@ -9,8 +9,6 @@ body_hash: 'sha256:2f4142cc931b4637b6642767079cd85852ca8b366e2e29b7f566f260b5476
 related: []
 ---
 
-
-
 # `issue-628-release-tag-identity` audit: `Release annotated tag identity implementation review`
 
 ## Scope

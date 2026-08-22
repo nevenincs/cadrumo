@@ -9,8 +9,6 @@ body_hash: 'sha256:9886185ed4beb5dd5f946ca8c7afc946e6ac3ea7d1654c2ccb08287078177
 related: []
 ---
 
-
-
 # `issue-630-immutable-dispatch` audit: `Immutable release dispatch implementation review`
 
 ## Scope

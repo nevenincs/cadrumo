@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:687b2fad11f71910afff89666890715a9a90d53183ce33613a9cf151babe2869'
+body_hash: 'sha256:4723d2a2bf0bb9cd7f5f4855f93aa70421ecffb8744a23dcb249237cc5866e5d'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -619,3 +619,92 @@ manager-refusal integration lane passes all 19 cases in 19.11 seconds with the o
 already documented Textual context-teardown warning. `s09-duplicate-prospective-mapping`
 and `s09-original-crash-bite` are closed. No unresolved HIGH, CRITICAL, or MEDIUM
 finding remains, and W03.P07.S10 may proceed.
+
+### s10-public-envelope-internal-payload | medium | Scripted refusal context exposes an internal typed-object marker
+
+The mandatory S10 review grounded commits `ebc9df4343` and `15eb951042` against the
+accepted ADR, research, incident reference, live plan, current source, history, diffs,
+and execution evidence. Scripted registration now lets the typed application error reach
+the common CLI boundary without a redundant catch/rethrow. The error registry correctly
+binds the registration and non-oracular authentication families; custody password
+diagnostics remain behind application mapping. The real 14-scalar scripted refusal exits
+as localized `REFUSED_PROFILE_REGISTRATION`, contains no message key, raw custody
+English, traceback, INTERNAL guidance, or candidate, and publishes no profile.
+
+All 20 feature leaves exist across en/es/ca/hu, render without unresolved placeholders,
+and each key has four non-identical real translations. The four prospective keys carry
+only their reason-appropriate safe placeholders; the single authentication leaf exposes
+no policy reason or measurement. Exact search confirms the eight obsolete
+`registration_passphrase_too_short` and `flows.registration.strength.too_short` locale
+leaves are absent. The commit changes only the expected application and flow catalogues
+for each locale, with the mechanical ordering/wrapping produced by the documented
+`dev.locales` authority; no unrelated locale changes were overwritten.
+
+However, the real JSON error document also publishes
+`"password_refusal":"<ProspectiveProfilePasswordRefusal>"` inside `error.context`, in
+addition to `reason`, `scalar_count`, `utf8_byte_count`, and `minimum_scalars`. This is
+the CLI boundary auto-projecting the public exception's typed payload attribute as an
+opaque class marker. It is non-secret, but it is neither one of the stable safe facts nor
+useful operator/machine context; it exposes an implementation type name and makes the
+wire contract change when that internal class is renamed. The new test at
+`src/cadrumo/entrypoints/cli/_config/tests/test_scripted_profile_creation.py:188-204`
+checks only forbidden substrings and nonzero exit, so it would pass with an empty or
+misclassified envelope and does not catch this extra field.
+
+Keep the typed payload available to in-process application/TUI consumers without letting
+automatic CLI context extraction publish itâ€”for example through an explicitly excluded
+private backing field or a boundary allowlistâ€”while retaining the exact reason and safe
+numeric context. Strengthen the scripted regression to parse stderr JSON and assert the
+exact schema, command, category, code, localized non-key message, `retryable`, `action`,
+and exact finite context for the refusal, plus the existing negative secret/diagnostic
+checks and no-persistence proof. This is a public-contract and internal-detail exposure
+defect, not a candidate leak.
+
+### s10-execution-count | low | The combined focused-test total is understated
+
+The execution record says the scripted lane passes eight and the combined
+scripted/manager lane passes ten. At the reviewed commit and current HEAD, the scripted
+module contains eight cases and the manager refusal-rendering module contains three;
+the correctly selected serial integration command passes all 11 in 11.52 seconds. Amend
+the record to 11 and include the marker selection so the evidence cannot be confused
+with the default unit-only lane, which deselects all 11.
+
+Ruff lint and format checks pass for both changed Python files. `dev.locales scaffold
+--check` and `dev.locales audit` remain globally red with exactly 125 missing leaves per
+locale, all under unrelated Modelo 036 or Modelo 390 generated schema keys; neither gate
+reports a missing, extra, placeholder, or identical-value defect for this feature. No
+HIGH or CRITICAL finding was found. The MEDIUM blocks review-clean S10 and S11 until the
+public envelope is narrowed, its regression bites the exact contract, and evidence is
+corrected.
+
+#### S10 remediation closure
+
+Current-HEAD re-review of commit `4ecef2687f`, after repeated semantic code and
+governing-ADR discovery plus exact-symbol confirmation, closes both S10 findings. The
+registration error now stores its typed refusal only in `_password_refusal` and exposes
+it to trusted in-process consumers through the getter-only `password_refusal` property
+at `src/cadrumo/application/user_profile/_registration.py:77-82`. The matching rotation
+error uses the same private-storage/read-only-access contract at
+`src/cadrumo/application/user_profile/_passphrase_rotation.py:74-79`. The stored value is
+the existing frozen, slotted `ProspectiveProfilePasswordRefusal`, whose derived context
+is a `MappingProxyType`; no candidate is retained. Because automatic CLI context
+extraction deliberately skips underscore-prefixed attributes, the typed payload remains
+available in process without becoming public wire context.
+
+The real scripted regression now parses the nonempty stderr JSON document and pins the
+exact six outer keys and eight error keys, command, error status, empty notices,
+`REFUSED` category, `REFUSED_PROFILE_REGISTRATION` code, null action/runbook/trace ID,
+non-retryability, the active-locale rendered message, and exactly the four safe context
+facts `minimum_scalars=15`, `reason=too_few_scalars`, `scalar_count=14`, and
+`utf8_byte_count=14`. It explicitly excludes `password_refusal`, the internal result
+type marker, message key, raw custody diagnostic, traceback, INTERNAL guidance, and the
+candidate, and retains the no-profile proof. This test would turn red for the reviewed
+extra-marker regression, an empty or malformed envelope, additional key drift, or an
+incorrect localization.
+
+Independent execution of the serial integration lane passes all 11 scripted and manager
+cases in 11.36 seconds. Ruff lint and Ruff format checks pass on all three changed Python
+files, and commit diff hygiene passes. The S10 execution record now truthfully reports
+eight scripted cases and eleven combined cases, including the integration marker
+selection. `s10-public-envelope-internal-payload` and `s10-execution-count` are closed.
+No unresolved HIGH, CRITICAL, or MEDIUM finding remains, and W03.P07.S11 may proceed.

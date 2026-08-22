@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:1e28f6884ade792e283d5343796537786717ee32ae100d3c5d0aef8632eb6a67'
+body_hash: 'sha256:2753dfacfdc29d4355bd4f0168636f16f2c8629ebf8428c0df83d0a7d08d7518'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15532,3 +15532,137 @@ corpus control exactly.
 Five partly-read designs: modelo 200's three editions, whose holes sit inside
 record HEADERS rather than at droppable rows, and the two DIAGRAM lines needing
 AEAT acquisition. Ahead of any of them, the authority needs to load again.
+
+## Tick: the authority was broken by line endings, not by a corpus defect
+
+Re-measured at tick start: the registry still refused to load at HEAD --
+``source 'boe-modelo-194-form-layout' byte count mismatch`` -- unchanged from
+last tick and claimed by nobody. Nothing in this campaign can be verified while
+the authority refuses, so it came first.
+
+### The diagnosis, and why the obvious reading was wrong
+
+The declaration records sha256 ``ad0a39e3...`` and 103,935 bytes for
+``corpus/normatives/html/orden-1999-11-18.html``. The file on disk measured
+104,069 bytes with a different digest, which reads as a corpus artefact someone
+re-fetched or edited without restamping -- the shape this campaign has seen
+before.
+
+It was not that. Git reports the file UNMODIFIED, and its committed blob is
+exactly 103,935 bytes with exactly the declared digest. The working copy
+carries 134 CRLF pairs, and 104,069 minus 134 is 103,935. Git was translating
+line endings on checkout, so the bytes the validator measured were never the
+bytes the corpus committed.
+
+### The rule that was missing
+
+``.gitattributes`` already protects one corpus tree --
+``src/cadrumo/_data/corpus/aeat_official/** -text`` -- precisely so official
+evidence is never translated. The normatives corpus had no such rule and fell
+under the repository-wide ``* text=auto``. Every source there declares its own
+sha256 and byte count and the validator compares both against disk, so any
+translation breaks them.
+
+The same protection now covers ``corpus/normatives/**``, and the fourteen files
+carrying introduced CRLF were re-materialised from their blobs. Two files still
+carry CRLF and correctly so: both are PDFs whose blobs contain those bytes, and
+each is byte-identical to its blob.
+
+**The authority loads CLEAN.**
+
+### What that unblocked, measured
+
+The standing suite goes from **98 failed with 33 errors** to **16 failed, 5,954
+passed**. The 98 were never measurements of anything: with the authority
+refusing, every gate that reads it fails regardless of its subject.
+
+Eight of the sixteen are the declared inventories. The partly-read inventory
+reads **5 of 218**, which confirms last tick's parser work held through the
+outage -- that gate reads designs from disk rather than through the authority,
+which is why it stayed meaningful while the rest did not.
+
+The remaining eight -- casilla fragment naming, Spanish label coverage, two
+continuidad ratchets, two reviewability budgets, the legal-grounding literal
+check (already attributed to the peer's ``source_connectivity.py``) and modelo
+390's derived-set population -- were NOT individually attributed this tick.
+They surface peer authoring in flight; the modelo 390 one reads designs and is
+the one that could plausibly relate to last tick's Anexo heading change, so it
+deserves a check before anyone assumes otherwise.
+
+### Verified
+
+* the CRLF arithmetic reproduced exactly: 104,069 - 134 = 103,935 = blob.
+* only ``.gitattributes`` remains modified; the fourteen corpus files match
+  their blobs byte for byte, so nothing was rewritten to fit.
+* authority CLEAN; suite measurable again.
+
+### Still open
+
+The eight inventories, plus the eight unattributed reds above. Ahead of any
+authoring, someone should confirm whether other corpus trees share the
+normatives gap -- this one broke only because a source there is validated by
+byte count, and a tree without that check would drift silently.
+
+## Tick: both owed items closed -- the 390 red is not ours, and the corpus gap was a class
+
+Re-measured at tick start: authority CLEAN, holding after last tick's
+line-ending fix.
+
+### The modelo 390 red, attributed
+
+Last tick flagged `test_modelo_390_rate_box_total_invariant::
+test_the_derived_sets_are_populated` as possibly caused by the Anexo heading
+pattern, because that pattern changes record SEGMENTATION and the corpus control
+had only measured fields. Controlled directly: with the pattern neutralised
+in-process the test fails identically, so it is not that change.
+
+The cause is visible in the tree. Modelo 390 gained a **2021** revision -- it had
+2022 through 2025 when this campaign last measured it -- carrying 10 casillas
+and **zero** formulas, bindings and layouts, created by the single commit that
+touches that directory. The gate is an anti-vacuity precondition and fires
+correctly: there is nothing yet for the invariant below it to measure.
+
+Recorded rather than fixed, on the stated ground that another agent is working
+that file now. Authoring modelo 390's 2021 formulas would collide directly with
+in-flight work on the largest and most filing-grade modelo in the queue. It also
+explains the capability worklist moving from 13 revisions to **14 across 13
+modelos**: the new stub declares no layout.
+
+### The corpus gap was a class, not an instance
+
+Last tick's fix named one tree. The question left open -- whether others drift
+silently -- was answered by measuring every declared source against its bytes:
+**454 sources across four trees, 0 mismatched**. Nothing is drifting today.
+
+But matching today is not protection. `git check-attr` shows the exposure:
+`aeat_official` and `normatives` carried `-text`, while **eu_official's four
+declared HTML sources were `text=auto`** -- the exact configuration that broke
+`boe-modelo-194-form-layout`. They match only because nothing has re-checked
+them out on a translating platform.
+
+`src/cadrumo/_data/corpus/** -text` now covers every tree, including ones added
+later. The two narrower rules are left in place: they carry their own history
+and are harmless beside a broader one.
+
+Worth stating because it is the sharper half of the finding: a tree whose
+sources declare no byte count would drift SILENTLY rather than failing
+validation. The normatives break was loud only by luck of what that source
+declares.
+
+### Verified
+
+* the neutralisation control run in-process, so the attribution rests on
+  behaviour rather than on reading the diff.
+* corpus integrity re-swept after the attribute change: still 454 sources,
+  0 mismatched; every corpus path now reports `-text`.
+* registry + generated-tree + application/registry: **15 failed, 5,955 passed**.
+  Eight are the declared inventories; the partly-read figure holds at 5 of 218,
+  confirming the parser work survived the outage and this change.
+
+### Still open
+
+The eight inventories, now including modelo 390's 2021 stub on the capability
+worklist. Seven further reds -- fragment naming, Spanish label coverage, the
+compiled-cache rebuild, two continuidad ratchets, modelo 390's derived sets and
+the legal-grounding literal check -- surface peer authoring in flight; only the
+last two were attributed to a specific cause this tick.

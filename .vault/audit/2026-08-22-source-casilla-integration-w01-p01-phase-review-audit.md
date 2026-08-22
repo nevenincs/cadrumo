@@ -12,8 +12,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-research]]"
 ---
 
-
-
 # `source-casilla-integration` audit: `W01.P01 census contract phase review`
 
 ## Scope
