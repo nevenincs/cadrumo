@@ -43,9 +43,11 @@ from secrets import token_bytes
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.storage.custody import ProfileCustodyRecoveryArtifactWarning
+from ._authentication import ProfilePasswordProofOperation
 from ._capsule_record import ProfileRecordSession
 from ._custody_ports import (
     create_profile_recovery_enrollment_material,
+    map_profile_password_proof_failure,
     prove_profile_recovery_artifact,
     unlock_profile_custody_password,
 )
@@ -162,13 +164,19 @@ def export_profile_recovery_artifact(
     exported cannot be recalled, and that losing it does not lock them out
     while they still have their password.
     """
-    receipt = _export_recovery_artifact(
-        enrollment.envelope,
-        current_password=current_password,
-        password_envelope=password_envelope,
-        sentinel=sentinel,
-        target=target,
-    )
+    try:
+        receipt = _export_recovery_artifact(
+            enrollment.envelope,
+            current_password=current_password,
+            password_envelope=password_envelope,
+            sentinel=sentinel,
+            target=target,
+        )
+    except BaseException as exc:
+        refusal = map_profile_password_proof_failure(exc, operation=ProfilePasswordProofOperation.RECOVERY_EXPORT)
+        if refusal is None:
+            raise
+        raise refusal from exc
     return ProfileRecoveryArtifactReceipt(
         profile_id=receipt.artifact.profile_id,
         dek_epoch=receipt.artifact.dek_epoch,
@@ -199,10 +207,16 @@ def restore_profile_with_password(
     The session is closed in every exit path, including the failing ones, so
     a refused restore leaves no live key material behind.
     """
-    unlock = unlock_profile_custody_password(
-        _SuppliedPasswordMaterial(envelope=password_envelope, sentinel=sentinel),
-        password=password,
-    )
+    try:
+        unlock = unlock_profile_custody_password(
+            _SuppliedPasswordMaterial(envelope=password_envelope, sentinel=sentinel),
+            password=password,
+        )
+    except BaseException as exc:
+        refusal = map_profile_password_proof_failure(exc, operation=ProfilePasswordProofOperation.RESTORE)
+        if refusal is None:
+            raise
+        raise refusal from exc
     return _publish_restored_capsule(
         label=label,
         password_envelope=password_envelope,

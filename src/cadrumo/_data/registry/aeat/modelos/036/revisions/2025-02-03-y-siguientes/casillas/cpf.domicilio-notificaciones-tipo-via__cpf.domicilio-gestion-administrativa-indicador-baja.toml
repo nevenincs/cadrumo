@@ -1,0 +1,878 @@
+# Modelo 036 PAGINA 2A, continued -- persona fisica: domicilio a efectos de
+# notificaciones, domicilio de gestion administrativa y establecimientos
+# permanentes.
+#
+# This is the second half of Pag. 2A, split from the first only to stay within the
+# registry reviewability line budget; the two files share one design, one grounding
+# and one set of caveats, recorded in full in the sibling fragment whose stem begins
+# "cpf.identificacion-residencia-indicador".
+#
+# The caveats that bear on THIS half specifically: every box number here is LETTERED
+# ([A41], [A71], [A91]) and therefore invisible to the derived-casilla regex, so
+# authoring it moves derived coverage by zero; the six unnumbered fields (the INE
+# via and municipio codes for both domicilios) take descriptive slugs because they
+# carry no printed number; and A57, A58, A65 to A67, A86 to A89, A93, A95 and A97
+# are absent from the design and are NOT invented here.
+#
+# A40 and A70 sit near the end of the record by offset, far from the domicilio
+# blocks they belong to; they are placed in their owning section rather than by
+# adjacency, which is why this file's last casilla is a gestion-administrativa flag.
+#
+# Grounded in aeat-dr-036-2025. Pag. 2A tiles 1..2000 exactly once with no gap and
+# no overlap, and every number, offset, length and type below was read from its own
+# field description.
+
+# @835+5. Domicilio a efectos de notificaciones. Domicilio 1. Tipo de via.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-tipo-via"
+number = "A41"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @840+5. Domicilio a efectos de notificaciones. Domicilio 1. Codigo de via INE. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-codigo-via-ine"
+number = "domicilio-notificaciones-codigo-via-ine"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @845+50. Domicilio a efectos de notificaciones. Domicilio 1. Nombre de la via publica.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-nombre-via"
+number = "A42"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @895+3. Domicilio a efectos de notificaciones. Domicilio 1. Tipo de numero.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-tipo-numero"
+number = "A43"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @898+5. Domicilio a efectos de notificaciones. Domicilio 1. Numero de casa.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-numero-casa"
+number = "A44"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @903+3. Domicilio a efectos de notificaciones. Domicilio 1. Calificador del numero.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-calificador-numero"
+number = "A45"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @906+3. Domicilio a efectos de notificaciones. Domicilio 1. Bloque.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-bloque"
+number = "A46"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @909+3. Domicilio a efectos de notificaciones. Domicilio 1. Portal.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-portal"
+number = "A47"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @912+3. Domicilio a efectos de notificaciones. Domicilio 1. Escalera.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-escalera"
+number = "A48"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @915+3. Domicilio a efectos de notificaciones. Domicilio 1. Planta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-planta"
+number = "A49"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @918+3. Domicilio a efectos de notificaciones. Domicilio 1. Puerta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-puerta"
+number = "A50"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @921+40. Domicilio a efectos de notificaciones. Domicilio 1. Complemento de domicilio.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-complemento-domicilio"
+number = "A51"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @961+30. Domicilio a efectos de notificaciones. Domicilio 1. Localidad o poblacion, si es distinta del municipio.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-localidad"
+number = "A52"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @991+5. Domicilio a efectos de notificaciones. Domicilio 1. Codigo postal.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-codigo-postal"
+number = "A53"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @996+5. Domicilio a efectos de notificaciones. Domicilio 1. Codigo de municipio INE. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-codigo-municipio-ine"
+number = "domicilio-notificaciones-codigo-municipio-ine"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "municipality_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1001+30. Domicilio a efectos de notificaciones. Domicilio 1. Nombre del municipio.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-municipio"
+number = "A54"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1031+2. Domicilio a efectos de notificaciones. Domicilio 1. Codigo de provincia.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-codigo-provincia"
+number = "A55"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1033+100. Identificacion. Dominio o direccion de internet. Printed with a leading space in the diseno: "[ A38]".
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.identificacion-dominio-internet-secundario"
+number = "A38"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1160+50. Domicilio a efectos de notificaciones. Domicilio 1. Destinatario, si es distinto del declarante.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-destinatario"
+number = "A59"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1210+2. Domicilio a efectos de notificaciones. Domicilio 1. En calidad de (representante, apoderado, familiar).
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-calidad"
+number = "A60"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1212+10. Domicilio a efectos de notificaciones. Domicilio 2. Numero de apartado de correos.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-apartado-correos"
+number = "A61"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1222+30. Domicilio a efectos de notificaciones. Domicilio 2. Poblacion o ciudad.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-apartado-poblacion"
+number = "A62"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1252+5. Domicilio a efectos de notificaciones. Domicilio 2. Codigo postal.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-apartado-codigo-postal"
+number = "A63"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1257+2. Domicilio a efectos de notificaciones. Domicilio 2. Codigo de provincia.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-apartado-codigo-provincia"
+number = "A64"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1286+50. Domicilio a efectos de notificaciones. Domicilio 2. Destinatario, si es distinto del declarante.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-apartado-destinatario"
+number = "A68"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1336+2. Domicilio a efectos de notificaciones. Domicilio 2. En calidad de (representante, apoderado, familiar).
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-apartado-calidad"
+number = "A69"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1338+5. Domicilio de gestion administrativa. Tipo de via.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-tipo-via"
+number = "A71"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1343+5. Domicilio de gestion administrativa. Codigo de via INE. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-codigo-via-ine"
+number = "domicilio-gestion-administrativa-codigo-via-ine"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1348+50. Domicilio de gestion administrativa. Nombre de la via publica.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-nombre-via"
+number = "A72"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1398+3. Domicilio de gestion administrativa. Tipo de numero.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-tipo-numero"
+number = "A73"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1401+5. Domicilio de gestion administrativa. Numero de casa.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-numero-casa"
+number = "A74"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1406+3. Domicilio de gestion administrativa. Calificador del numero.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-calificador-numero"
+number = "A75"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1409+3. Domicilio de gestion administrativa. Bloque.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-bloque"
+number = "A76"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1412+3. Domicilio de gestion administrativa. Portal.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-portal"
+number = "A77"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1415+3. Domicilio de gestion administrativa. Escalera.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-escalera"
+number = "A78"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1418+3. Domicilio de gestion administrativa. Planta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-planta"
+number = "A79"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1421+3. Domicilio de gestion administrativa. Puerta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-puerta"
+number = "A80"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1424+40. Domicilio de gestion administrativa. Complemento de domicilio.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-complemento-domicilio"
+number = "A81"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1464+30. Domicilio de gestion administrativa. Localidad o poblacion, si es distinta del municipio.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-localidad"
+number = "A82"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1494+5. Domicilio de gestion administrativa. Codigo postal.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-codigo-postal"
+number = "A83"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1499+5. Domicilio de gestion administrativa. Codigo de municipio INE. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-codigo-municipio-ine"
+number = "domicilio-gestion-administrativa-codigo-municipio-ine"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "municipality_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1504+30. Domicilio de gestion administrativa. Nombre del municipio.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-municipio"
+number = "A84"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1534+2. Domicilio de gestion administrativa. Codigo de provincia.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-codigo-provincia"
+number = "A85"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1663+1. Establecimientos permanentes. Opera en Espana a traves de establecimiento permanente.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.establecimientos-permanentes-opera-establecimiento-permanente"
+number = "A91"
+section = ["declaracion", "persona_fisica", "establecimientos_permanentes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1664+3. Establecimientos permanentes. Numero de establecimientos permanentes.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.establecimientos-permanentes-cuantos"
+number = "A92"
+section = ["declaracion", "persona_fisica", "establecimientos_permanentes"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1667+40. Establecimientos permanentes. Denominacion del establecimiento permanente 1.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.establecimientos-permanentes-denominacion-1"
+number = "A94"
+section = ["declaracion", "persona_fisica", "establecimientos_permanentes"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1707+40. Establecimientos permanentes. Denominacion del establecimiento permanente 2.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.establecimientos-permanentes-denominacion-2"
+number = "A96"
+section = ["declaracion", "persona_fisica", "establecimientos_permanentes"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1747+40. Establecimientos permanentes. Denominacion del establecimiento permanente 3.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.establecimientos-permanentes-denominacion-3"
+number = "A98"
+section = ["declaracion", "persona_fisica", "establecimientos_permanentes"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1787+1. Identificacion. Empresario de Responsabilidad Limitada. Alta y baja.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.identificacion-erl-alta-baja"
+number = "A9"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1788+8. Identificacion. Empresario de Responsabilidad Limitada. Fecha de alta o baja. ONE casilla over three design components at @1788+2 dia, @1790+2 mes and @1792+4 ano, all three printed under the single number A10.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.identificacion-erl-fecha"
+number = "A10"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1796+20. Domicilio fiscal en Espana. Referencia catastral.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-fiscal-referencia-catastral"
+number = "A30"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1816+25. Identificacion. Codigo de identificacion fiscal del Estado de residencia o NIF-IVA.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.identificacion-nif-estado-residencia"
+number = "A90"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "nif_iva"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1841+2. Identificacion. Codigo de pais del Estado de residencia (no residentes).
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.identificacion-codigo-pais-residencia"
+number = "A2"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1843+1. Domicilio a efectos de notificaciones. Baja del domicilio de notificaciones.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-notificaciones-baja-domicilio"
+number = "A40"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1846+8. Identificacion. Fecha de efectos de la residencia fiscal. ONE casilla over three design components at @1846+2 dia, @1848+2 mes and @1850+4 ano, all three printed under the single number A3B.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.identificacion-fecha-efectos-residencia"
+number = "A3B"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1854+1. Domicilio fiscal en Espana. Indicador de referencia catastral del domicilio fiscal.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-fiscal-indicador-referencia-catastral"
+number = "A39"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @1855+1. Domicilio de gestion administrativa. Indicador de baja del domicilio de gestion administrativa.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pf.domicilio-gestion-administrativa-indicador-baja"
+number = "A70"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]

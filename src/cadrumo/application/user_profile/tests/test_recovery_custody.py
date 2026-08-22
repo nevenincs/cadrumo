@@ -33,7 +33,7 @@ from ....adapters.persistence.storage.custody import (
 )
 from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileRecord
-from .. import create_profile_custody_registration_material
+from .. import ProfileAuthenticationRefusedError, create_profile_custody_registration_material
 from .._capsule_record import ProfileRecordSession, ProfileRecordStore
 from .._lifecycle import ProfileCapsuleLifecycle
 from .._recovery_custody import (
@@ -341,20 +341,28 @@ def test_export_refuses_to_replace_an_existing_file(
     assert target.read_text(encoding="utf-8") == "not an artifact"
 
 
-def test_export_requires_the_current_password(enrolled: _EnrolledProfile, tmp_path: Path) -> None:
+@pytest.mark.parametrize("candidate", ("not the operator's passphrase at all", "short"))
+def test_export_requires_the_current_password(
+    enrolled: _EnrolledProfile,
+    tmp_path: Path,
+    candidate: str,
+) -> None:
     """Producing a second door requires the door that already exists."""
     target = tmp_path / "exports" / "recovery.json"
 
-    with pytest.raises(ProfileCustodyPasswordError):
+    with pytest.raises(ProfileAuthenticationRefusedError) as refused:
         export_profile_recovery_artifact(
             enrolled.enrollment,
-            current_password="not the operator's passphrase at all",  # noqa: S106 - real test credential
+            current_password=candidate,
             password_envelope=enrolled.envelope,
             sentinel=enrolled.sentinel,
             target=target,
         )
 
     assert not target.exists()
+    assert refused.value.translated_message == "application.user_profile.errors.profile_authentication_refused"
+    assert refused.value.context is None
+    assert candidate not in repr(refused.value)
 
 
 def test_password_only_restore_publishes_the_capsule(
@@ -375,17 +383,19 @@ def test_password_only_restore_publishes_the_capsule(
     assert restored.publication_kind == "restore"
 
 
+@pytest.mark.parametrize("candidate", ("a different passphrase entirely, still long enough", "short"))
 def test_password_only_restore_refuses_the_wrong_password(
     enrolled: _EnrolledProfile,
     tmp_path: Path,
+    candidate: str,
 ) -> None:
     """The password proof is a real unwrap, so a wrong one publishes nothing."""
     destination = tmp_path / "refused-restore"
 
-    with pytest.raises(ProfileCustodyPasswordError):
+    with pytest.raises(ProfileAuthenticationRefusedError) as refused:
         restore_profile_with_password(
             label="Refused",
-            password="a different passphrase entirely, still long enough",  # noqa: S106 - real test credential
+            password=candidate,
             password_envelope=enrolled.envelope,
             sentinel=enrolled.sentinel,
             database_bytes=enrolled.database_bytes,
@@ -393,6 +403,9 @@ def test_password_only_restore_refuses_the_wrong_password(
         )
 
     assert not (destination / "buckets" / str(enrolled.profile_id)).exists()
+    assert refused.value.translated_message == "application.user_profile.errors.profile_authentication_refused"
+    assert refused.value.context is None
+    assert candidate not in repr(refused.value)
 
 
 def test_restore_refuses_a_database_key_the_committed_sentinel_does_not_commit_to(

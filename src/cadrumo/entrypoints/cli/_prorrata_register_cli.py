@@ -42,8 +42,10 @@ from ...domain.prorrata_register import (
     ProrrataRegisterValidationError,
     SectorDefinition,
 )
+from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope, parse_decimal_amount
 from ._common import active_bucket_id_or_refuse as _register_bucket_id
+from ._ledger_execution_policies import LEDGER_READ, LEDGER_WRITE, declare_metadata_group
 from ._prorrata_register_payloads import (
     ProrrataDeclareSectorResult,
     ProrrataElectEspecialResult,
@@ -154,6 +156,7 @@ prorrata_app = typer.Typer(
     ),
     no_args_is_help=True,
 )
+declare_metadata_group(prorrata_app)
 
 
 def _entry_payload(entry: ProrrataRegisterEntry) -> ProrrataEntryPayload:
@@ -283,6 +286,7 @@ def _elect(
         ),
     ),
 )
+@command_execution_policy(LEDGER_WRITE)
 def prorrata_elect_especial(
     ctx: typer.Context,
     ejercicio: _EjercicioOpt,
@@ -331,6 +335,7 @@ def prorrata_elect_especial(
         ),
     ),
 )
+@command_execution_policy(LEDGER_WRITE)
 def prorrata_elect_general(
     ctx: typer.Context,
     ejercicio: _EjercicioOpt,
@@ -373,6 +378,7 @@ def prorrata_elect_general(
         default=("Revoke prorrata especial for an ejercicio after a prior-year especial state (LIVA art. 103.Dos.1)."),
     ),
 )
+@command_execution_policy(LEDGER_WRITE)
 def prorrata_revoke_especial(
     ctx: typer.Context,
     ejercicio: _EjercicioOpt,
@@ -417,6 +423,7 @@ def prorrata_revoke_especial(
         ),
     ),
 )
+@command_execution_policy(LEDGER_WRITE)
 def prorrata_declare_sector(
     ctx: typer.Context,
     sector_id: str = typer.Option(
@@ -481,6 +488,7 @@ def prorrata_declare_sector(
         default="List every register entry and declared differentiated sector on the active profile.",
     ),
 )
+@command_execution_policy(LEDGER_READ)
 def prorrata_list(ctx: typer.Context) -> None:
     """List the register via :class:`ProrrataRegisterService`."""
     bucket_id = _register_bucket_id()

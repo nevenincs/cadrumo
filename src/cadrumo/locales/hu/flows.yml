@@ -300,7 +300,6 @@ flows:
     strength:
       fair: Megfelelő.
       strong: Erős.
-      too_short: 'Túl rövid: legalább {minimum_length} karakter szükséges.'
       weak: Elfogadva, de gyenge. A hosszabbítás többet segít, mint a szimbólumok
         hozzáadása.
     title: Profil létrehozása

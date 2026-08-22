@@ -65,6 +65,7 @@ def test_declared_schema_modules_reconcile_exactly_to_registry_projection() -> N
 def test_command_capability_taxonomy_is_closed_and_serialisable() -> None:
     expected_capabilities = {
         "state-free",
+        "local-storage",
         "registry",
         "profile-custody",
         "encrypted-facts",
@@ -73,6 +74,8 @@ def test_command_capability_taxonomy_is_closed_and_serialisable() -> None:
         "google",
         "calculation",
         "filing",
+        "crypto",
+        "subprocess",
     }
 
     assert set(get_args(CommandCapability)) == expected_capabilities
@@ -146,6 +149,13 @@ def test_command_capability_class_expands_only_owned_authorities() -> None:
             "filing",
         }
     )
+
+    crypto_only = CommandCapabilityClass(
+        capabilities=frozenset({"crypto"}),
+        side_effects=frozenset({"none"}),
+        performance="local-io",
+    )
+    assert crypto_only.expanded_capabilities == frozenset({"crypto"})
 
 
 @pytest.mark.parametrize(

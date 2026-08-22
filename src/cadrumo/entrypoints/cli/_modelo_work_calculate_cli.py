@@ -40,10 +40,12 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistryValidationError
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
 from ._errors import CliOutboundPayloadBoundaryError
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_cli_support import OutputLanguageOpt
+from ._modelo_execution_policies import CALCULATION_WRITE
 from ._modelo_payloads import WorkCalculateResult
 from ._modelo_rendering import (
     advisory_notice,
@@ -321,6 +323,7 @@ def register_work_calculate_commands(
     )
 
     @work_app.command("calculate", help=tr("cli.app.modelo.work.calculate_help"))
+    @command_execution_policy(CALCULATION_WRITE)
     def work_calculate(
         ctx: typer.Context,
         work_unit_id: _WorkUnitIdArg = None,

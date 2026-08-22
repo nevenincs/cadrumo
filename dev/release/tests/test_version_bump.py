@@ -9,6 +9,7 @@ checks its output must agree on what those surfaces are.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import stat
 import subprocess
@@ -382,25 +383,55 @@ def _make_git_repo_root(tmp_path: Path, *, version: str = "1.2.3", manifest_floo
 
 
 def test_commit_tag_and_push_creates_a_local_commit_and_tag_without_pushing(tmp_path: Path) -> None:
-    """A clean, non-burned, above-floor version commits and tags locally; push defaults off."""
+    """Commit and annotated tag creation need no ambient Git identity."""
     root = _make_git_repo_root(tmp_path, version="1.2.3", manifest_floor="1.0.0")
     # A real diff to commit -- in real orchestration `stage_bump` has
     # already run and produced exactly this kind of change by the time this
     # stage runs.
     version_bump.apply_version(root, "2.0.0", changelog_block=_CHANGELOG_BLOCK, release_date="2026-08-02")
 
-    commit_sha = version_bump.commit_tag_and_push(
-        root,
-        "2.0.0",
-        repository="nevenincs/cadrumo",
-        skip_network=True,
+    empty_config_home = tmp_path / "empty-git-config"
+    empty_config_home.mkdir()
+    environment = {
+        **os.environ,
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "HOME": str(empty_config_home),
+        "USERPROFILE": str(empty_config_home),
+        "XDG_CONFIG_HOME": str(empty_config_home),
+    }
+    invocation = subprocess.run(  # noqa: S603 - fixed interpreter and argument vector, no shell.
+        [
+            sys.executable,
+            "-c",
+            (
+                "from pathlib import Path; "
+                "from dev.release.version_bump import commit_tag_and_push; "
+                "print(commit_tag_and_push(Path(__import__('sys').argv[1]), '2.0.0', "
+                "repository='nevenincs/cadrumo', skip_network=True))"
+            ),
+            str(root),
+        ],
+        cwd=Path(__file__).resolve().parents[3],
+        env=environment,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
     )
+    assert invocation.returncode == 0, invocation.stderr
+    commit_sha = invocation.stdout.strip()
 
     assert commit_sha == _git(root, "rev-parse", "HEAD").strip()
     tags = _git(root, "tag", "-l").split()
     assert "v2.0.0" in tags
     log = _git(root, "log", "-1", "--format=%s")
     assert log.strip() == "chore(release): v2.0.0"
+    author = _git(root, "log", "-1", "--format=%an <%ae>").strip()
+    assert author == "cadrumo-release <release@cadrumo.invalid>"
+    assert _git(root, "cat-file", "-t", "v2.0.0").strip() == "tag"
+    tagger = _git(root, "for-each-ref", "refs/tags/v2.0.0", "--format=%(taggername) <%(taggeremail)>").strip()
+    assert tagger == "cadrumo-release <<release@cadrumo.invalid>>"
 
 
 def test_commit_tag_and_push_refuses_a_burned_version_before_any_commit(tmp_path: Path) -> None:

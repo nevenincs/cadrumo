@@ -92,7 +92,9 @@ from ...domain.modelos import (
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
+from ._command_policy import command_execution_policy
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
+from ._modelo_execution_policies import INTERACTIVE_MODEL_WRITE
 from ._modelo_rendering import filing_record_lines
 from ._modelo_work_options import (
     _ActorOpt,
@@ -192,6 +194,7 @@ def register_amend_wizard_commands(
     )
 
     @work_app.command("amend-wizard", help=tr("cli.app.modelo.work.amend_wizard_help"))
+    @command_execution_policy(INTERACTIVE_MODEL_WRITE)
     def work_amend_wizard(
         ctx: typer.Context,
         work_unit_id: _WorkUnitIdArg = None,

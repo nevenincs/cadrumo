@@ -18,14 +18,17 @@ from ...domain.transactions import (
     Transaction,
     TransactionLifecycleState,
 )
+from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope
 from ._common import active_bucket_id_or_refuse as _rule_bucket_id
+from ._ledger_execution_policies import LEDGER_COMPUTE_WRITE, LEDGER_READ, LEDGER_WRITE, declare_metadata_group
 
 rule_app = typer.Typer(
     name="rule",
     help=tr("cli.app.ledger.rule.group_help"),
     no_args_is_help=True,
 )
+declare_metadata_group(rule_app)
 
 
 def register_rule_commands(app: typer.Typer) -> None:
@@ -58,6 +61,7 @@ def _validate_category_id(category_id: str | None) -> str | None:
     "add",
     help=tr("cli.app.ledger.rule.add_help"),
 )
+@command_execution_policy(LEDGER_WRITE)
 def rule_add(
     ctx: typer.Context,
     description_pattern: str = typer.Option(
@@ -249,6 +253,7 @@ def _emit_rule_apply_result(ctx: typer.Context, result: ApplyRulesResult) -> Non
     "apply",
     help=tr("cli.app.ledger.rule.apply_help"),
 )
+@command_execution_policy(LEDGER_COMPUTE_WRITE)
 def rule_apply(
     ctx: typer.Context,
     reaffirm: bool = typer.Option(
@@ -291,6 +296,7 @@ def rule_apply(
     "list",
     help=tr("cli.app.ledger.rule.list_help"),
 )
+@command_execution_policy(LEDGER_READ)
 def rule_list(ctx: typer.Context) -> None:
     """List all stored ledger classification rules (priority ascending)."""
     from ...application.ledger import LedgerClassificationRuleRepository

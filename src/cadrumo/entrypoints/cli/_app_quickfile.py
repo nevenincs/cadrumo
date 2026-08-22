@@ -27,7 +27,9 @@ from ...application.workflow import workflow_state_repository
 from ...core import PaymentElection, Period, PeriodError, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice
+from ._app_execution_policies import QUICKFILE_HANDOFF
 from ._app_quickfile_payloads import QuickfileResultPayload
+from ._command_policy import command_execution_policy
 from ._common import (
     _emit_envelope,
     _filing_taxpayer_or_refuse,
@@ -78,6 +80,7 @@ def _resolve_period(*, modelo: str, year: int, period: str) -> Period:
 
 
 @app.callback()
+@command_execution_policy(QUICKFILE_HANDOFF)
 def quickfile(
     ctx: typer.Context,
     modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))],

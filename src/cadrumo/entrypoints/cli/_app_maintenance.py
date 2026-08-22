@@ -32,11 +32,13 @@ from ...application.operator_actions import ActionReference
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ._app_execution_policies import METADATA, PROFILE_LOCAL_DESTRUCTIVE
 from ._app_maintenance_payloads import (
     ProfileBundleReconcileResult,
     ReconciledProfileExportPayload,
     UnreconciledProfileExportPayload,
 )
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, resolve_notice_action
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
 
@@ -54,6 +56,7 @@ app = typer.Typer(
 
 
 @app.callback()
+@command_execution_policy(METADATA)
 def maintenance() -> None:
     """Keep ``maintenance`` a command group rather than a single collapsed verb.
 
@@ -74,6 +77,7 @@ def maintenance() -> None:
         ),
     ),
 )
+@command_execution_policy(PROFILE_LOCAL_DESTRUCTIVE)
 def app_maintenance_reconcile(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(

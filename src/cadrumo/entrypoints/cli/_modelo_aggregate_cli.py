@@ -30,7 +30,9 @@ from ...core.external_constants import RETENCIONES_MODELOS
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import WithholdingClaveBreakdown, aggregate_withholding_by_clave
+from ._command_policy import command_execution_policy
 from ._common import MODELO_CODE_CHOICE, _emit_envelope, _load_invoices
+from ._modelo_execution_policies import CALCULATION_WRITE
 from ._modelo_payloads import ModeloAggregateResult
 
 ResolveYearPeriod = Callable[..., Period]
@@ -49,6 +51,7 @@ def register_aggregate_commands(app: typer.Typer, *, resolve_year_period: Resolv
             ),
         ),
     )
+    @command_execution_policy(CALCULATION_WRITE)
     def aggregate_modelo(
         ctx: typer.Context,
         modelo: Annotated[

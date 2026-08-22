@@ -15,9 +15,8 @@ the stdio transport. ``_server`` owns the per-session state instance and calls
 the decision function byte-identically on the direct call path and the
 ``execute`` meta path so the two cannot diverge.
 
-Mutability is read from the DECLARED risk table
-(:func:`~application.operator_surface.command_classification`), never a
-leaf-name heuristic: a call is mutating when its classification is not
+Mutability is read from callback-attached live command policy, never a keyed
+table or leaf-name heuristic: a call is mutating when its policy is not
 ``read_only``.
 """
 
@@ -25,9 +24,9 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from cadrumo.application.operator_surface import command_classification
 from cadrumo.core.i18n import tr
 
+from ._command_policy import command_policy
 from ._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
 
 #: Verbs that change or clear WHICH taxpayer profile is active. Executing one
@@ -156,7 +155,12 @@ def identity_gate_refusal(command_key: str, *, state: _IdentityGateState) -> str
     if command_key in IDENTITY_READ_COMMANDS:
         state.record_identity_read()
         return None
-    classification = command_classification(command_key)
+    try:
+        classification = command_policy(command_key)
+    except (LookupError, ValueError):
+        if state.identity_confirmed:
+            return None
+        return tr("mcp.identity_gate.first_mutation_refused", default=_FIRST_MUTATION_REFUSED_DEFAULT)
     if classification.read_only and not classification.open_world:
         return None
     if state.identity_confirmed:

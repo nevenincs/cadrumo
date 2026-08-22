@@ -11,7 +11,6 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import nullcontext
 from pathlib import Path
-from typing import Literal
 
 import pytest
 
@@ -25,6 +24,54 @@ from .user_profile import register_minimal_profile
 DEFAULT_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 
 
+def _seeded_world(
+    *,
+    bucket_id: str,
+    dispose_engine_around: bool,
+    settings_overrides: Mapping[str, object] | Callable[[Path], Mapping[str, object]] | None,
+    profile_overrides: Mapping[str, str] | None,
+    display_name: str | None,
+) -> Callable[[Path], Iterator[None]]:
+    """Return the seeding body both fixture factories drive.
+
+    Hoisted out of the factories rather than closed over inside one, so the
+    function-scoped and module-scoped variants can be separate factories -- each
+    with exactly ONE nested fixture -- while still sharing this body verbatim.
+    Splitting the factories without sharing this would have duplicated the world
+    setup, which is the thing that must not diverge between the two scopes.
+    """
+
+    def _seeded(root: Path) -> Iterator[None]:
+        if dispose_engine_around:
+            dispose_engine()
+        resolved_overrides = settings_overrides(root) if callable(settings_overrides) else settings_overrides
+        settings_cm = override_settings(**resolved_overrides) if resolved_overrides else nullcontext()
+        with (
+            settings_cm,
+            isolated_profile_storage_root(tmp_path=root),
+            open_test_profile_session(bucket_id),
+        ):
+            if dispose_engine_around:
+                try:
+                    register_minimal_profile(
+                        profile_id=bucket_id,
+                        display_name=display_name,
+                        overrides=profile_overrides,
+                    )
+                    yield
+                finally:
+                    dispose_engine()
+            else:
+                register_minimal_profile(
+                    profile_id=bucket_id,
+                    display_name=display_name,
+                    overrides=profile_overrides,
+                )
+                yield
+
+    return _seeded
+
+
 def active_profile_isolated_backend_fixture(
     *,
     bucket_id: str = DEFAULT_BUCKET_ID,
@@ -34,7 +81,6 @@ def active_profile_isolated_backend_fixture(
     settings_overrides: Mapping[str, object] | Callable[[Path], Mapping[str, object]] | None = None,
     profile_overrides: Mapping[str, str] | None = None,
     display_name: str | None = None,
-    scope: Literal["function", "module"] = "function",
 ) -> Callable[..., Iterator[None]]:
     """Build a fixture isolating storage and opening a seeded profile session.
 
@@ -74,62 +120,73 @@ def active_profile_isolated_backend_fixture(
     :func:`~cadrumo.tests.user_profile.register_minimal_profile`. Default
     ``None`` preserves every existing caller's behaviour unchanged.
 
-    ``scope`` is a sixth axis, for suites whose every test only READS the
-    seeded world. Those pay a full storage root and profile registration per
-    test to observe a state none of them changes; ``scope="module"`` seeds it
-    once for the file instead. A module-scoped fixture cannot depend on the
-    function-scoped ``tmp_path``, so that variant draws its root from
-    ``tmp_path_factory``. Default ``"function"`` preserves every existing
-    caller's behaviour unchanged.
+    A module-scoped variant lives in
+    :func:`module_scoped_profile_isolated_backend_fixture` rather than behind a
+    ``scope`` argument here. One factory returning a different nested fixture
+    per argument cannot be resolved by the static fixture census, and that
+    refusal blocked the ownership manifest's verification AND its
+    regeneration.
 
-    Opting in is a claim about the suite, not a speed knob: one mutating test
-    in a module-scoped file leaks into every test after it, and under random
-    ordering it leaks into a DIFFERENT set each run. Only opt in where the
-    whole file reads, and hoist any seeding the tests share into a fixture of
-    the same scope so it happens once rather than once per test.
     """
 
-    def _seeded_backend(root: Path) -> Iterator[None]:
-        if dispose_engine_around:
-            dispose_engine()
-        resolved_overrides = settings_overrides(root) if callable(settings_overrides) else settings_overrides
-        settings_cm = override_settings(**resolved_overrides) if resolved_overrides else nullcontext()
-        with (
-            settings_cm,
-            isolated_profile_storage_root(tmp_path=root),
-            open_test_profile_session(bucket_id),
-        ):
-            if dispose_engine_around:
-                try:
-                    register_minimal_profile(
-                        profile_id=bucket_id,
-                        display_name=display_name,
-                        overrides=profile_overrides,
-                    )
-                    yield
-                finally:
-                    dispose_engine()
-            else:
-                register_minimal_profile(
-                    profile_id=bucket_id,
-                    display_name=display_name,
-                    overrides=profile_overrides,
-                )
-                yield
-
-    if scope == "module":
-
-        @pytest.fixture(name=name, autouse=autouse, scope="module")
-        def _module_scoped_backend(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
-            yield from _seeded_backend(tmp_path_factory.mktemp(name.lstrip("_")))
-
-        return _module_scoped_backend
+    seeded = _seeded_world(
+        bucket_id=bucket_id,
+        dispose_engine_around=dispose_engine_around,
+        settings_overrides=settings_overrides,
+        profile_overrides=profile_overrides,
+        display_name=display_name,
+    )
 
     @pytest.fixture(name=name, autouse=autouse)
     def _active_profile_isolated_backend(tmp_path: Path) -> Iterator[None]:
-        yield from _seeded_backend(tmp_path)
+        yield from seeded(tmp_path)
 
     return _active_profile_isolated_backend
 
 
-__all__ = ["DEFAULT_BUCKET_ID", "active_profile_isolated_backend_fixture"]
+def module_scoped_profile_isolated_backend_fixture(
+    *,
+    bucket_id: str = DEFAULT_BUCKET_ID,
+    autouse: bool = True,
+    name: str = "_isolated_backend",
+    dispose_engine_around: bool = False,
+    settings_overrides: Mapping[str, object] | Callable[[Path], Mapping[str, object]] | None = None,
+    profile_overrides: Mapping[str, str] | None = None,
+    display_name: str | None = None,
+) -> Callable[..., Iterator[None]]:
+    """The same seeded world as the sibling above, built once per MODULE.
+
+    A separate factory rather than a ``scope`` argument on one. Selecting the
+    scope inside a single factory meant it returned a DIFFERENT nested fixture
+    per call, and the decorator a binding inherits was therefore chosen at the
+    call site -- which the static fixture census cannot resolve. It refused,
+    and that refusal blocked BOTH the ownership manifest's verification and its
+    regeneration, so the committed manifest drifted with nothing able to report
+    it. One factory, one closure, one resolvable answer.
+
+    Opting in is a claim about the suite, not a speed knob: one mutating test
+    in a module-scoped file leaks into every test after it. Only use this where
+    the whole file reads, and hoist shared seeding into a fixture of the same
+    scope. A module-scoped fixture cannot depend on the function-scoped
+    ``tmp_path``, so this variant draws its root from ``tmp_path_factory``.
+    """
+    seeded = _seeded_world(
+        bucket_id=bucket_id,
+        dispose_engine_around=dispose_engine_around,
+        settings_overrides=settings_overrides,
+        profile_overrides=profile_overrides,
+        display_name=display_name,
+    )
+
+    @pytest.fixture(name=name, autouse=autouse, scope="module")
+    def _module_scoped_backend(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
+        yield from seeded(tmp_path_factory.mktemp(name.lstrip("_")))
+
+    return _module_scoped_backend
+
+
+__all__ = [
+    "DEFAULT_BUCKET_ID",
+    "active_profile_isolated_backend_fixture",
+    "module_scoped_profile_isolated_backend_fixture",
+]

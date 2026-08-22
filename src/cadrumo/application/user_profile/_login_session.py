@@ -58,9 +58,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError, model_validator
 
-from ...adapters.persistence.storage import master_key
-from ...adapters.persistence.storage.custody import profile_session_path
 from ...adapters.persistence.storage import custody, master_key
+from ...adapters.persistence.storage.custody import profile_session_path
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     BucketPointer,
@@ -82,6 +81,7 @@ from ...core.paths import effective_storage_root
 from ...core.time import now as _now
 from ...core.time import validate_utc_aware
 from ...domain.user_profile import ProfileNotFoundError, UserProfileError
+from ._authentication import ProfilePasswordProofOperation
 from ._capsule_record import ProfileRecordSession
 from ._custody_ports import (
     ProfileBucketSessionPort,
@@ -91,10 +91,10 @@ from ._custody_ports import (
     ProfileSessionResumeOutcomePort,
     default_profile_bucket_event_history_repository,
     default_profile_custody_local_record_store,
+    map_profile_password_proof_failure,
     profile_advance_session_idle_deadline,
     profile_bind_bucket_session,
     profile_is_keyring_unavailable,
-    profile_is_password_authentication_failure,
     profile_is_persisted_session,
     profile_session_serves_bucket,
     refuse_profile_login_without_password_channel,
@@ -1124,8 +1124,10 @@ def _authenticate_candidate_or_record_failure(
     try:
         unlocked = unlock_profile_custody_password(material, password=password)
     except BaseException as exc:
-        if profile_is_password_authentication_failure(exc):
+        refusal = map_profile_password_proof_failure(exc, operation=ProfilePasswordProofOperation.LOGIN)
+        if refusal is not None:
             master_key.record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
+            raise refusal from exc
         raise
 
     dek_buffer = bytearray(unlocked.dek)

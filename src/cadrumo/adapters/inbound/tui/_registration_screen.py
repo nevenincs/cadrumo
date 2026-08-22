@@ -89,6 +89,28 @@ class ProfilePasswordVerdict(Protocol):
         """Whether a profile can be created with this passphrase."""
         ...  # pragma: no cover
 
+    @property
+    def scalar_count(self) -> int:
+        """Safe number of Unicode scalars observed."""
+        ...  # pragma: no cover
+
+    @property
+    def utf8_byte_count(self) -> int | None:
+        """Safe strict UTF-8 size, absent when encoding is invalid."""
+        ...  # pragma: no cover
+
+
+@dataclass(frozen=True, slots=True)
+class RegistrationRefusal:
+    """Secret-free localized refusal retained as data until rendering."""
+
+    message_key: str
+    context: tuple[tuple[str, object], ...] = ()
+
+    def render(self) -> str:
+        """Resolve the refusal under the screen's active language."""
+        return tr(self.message_key, **dict(self.context))
+
 
 @dataclass(frozen=True, slots=True)
 class RegistrationAttempt:
@@ -106,8 +128,26 @@ class RegistrationAttempt:
     """
 
     outcome: ProfileRegistrationOutcome | None = None
-    refusal: str | None = None
+    expected_refusal: RegistrationRefusal | None = None
     enrollment: ProfileRecoveryEnrollment | None = None
+
+    @property
+    def refusal(self) -> str | None:
+        """Render expected refusal data only at the presentation boundary."""
+        return self.expected_refusal.render() if self.expected_refusal is not None else None
+
+
+def assessment_refusal(assessment: ProfilePasswordVerdict) -> RegistrationRefusal | None:
+    """Project a canonical verdict through the application presentation authority."""
+    from ....application.user_profile import prospective_profile_password_refusal
+
+    refusal = prospective_profile_password_refusal(assessment)
+    if refusal is None:
+        return None
+    return RegistrationRefusal(
+        message_key=refusal.translated_message,
+        context=tuple(refusal.context.items()),
+    )
 
 
 def assessment_copy(assessment: ProfilePasswordVerdict) -> str:
@@ -120,10 +160,9 @@ def assessment_copy(assessment: ProfilePasswordVerdict) -> str:
     them out here keeps the copy scaffoldable and greppable, and the
     exhaustive match means a new band cannot ship without its own line.
     """
-    if assessment.reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS:
-        return tr("flows.registration.strength.too_short", minimum_length=PROFILE_PASSWORD_MIN_SCALARS)
-    if assessment.reason is not None:
-        return tr("errors.refused.refused_storage_profile_custody")
+    refusal = assessment_refusal(assessment)
+    if refusal is not None:
+        return refusal.render()
     match assessment.strength:
         case PassphraseStrength.WEAK:
             return tr("flows.registration.strength.weak")
@@ -501,4 +540,10 @@ def run_registration_tui(
     )
 
 
-__all__ = ["ProfilePasswordVerdict", "RegistrationApp", "RegistrationAttempt", "run_registration_tui"]
+__all__ = [
+    "ProfilePasswordVerdict",
+    "RegistrationApp",
+    "RegistrationAttempt",
+    "RegistrationRefusal",
+    "run_registration_tui",
+]

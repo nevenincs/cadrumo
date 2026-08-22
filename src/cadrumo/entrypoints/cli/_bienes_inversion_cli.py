@@ -25,8 +25,10 @@ from ._bienes_inversion_payloads import (
     BienesInversionListResult,
     BienInversionRecordPayload,
 )
+from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope, parse_decimal_amount
 from ._common import active_bucket_id_or_refuse as _register_bucket_id
+from ._ledger_execution_policies import LEDGER_READ, LEDGER_WRITE, declare_metadata_group
 
 
 def register_bienes_inversion_commands(app: typer.Typer) -> None:
@@ -42,6 +44,7 @@ bienes_inversion_app = typer.Typer(
     ),
     no_args_is_help=True,
 )
+declare_metadata_group(bienes_inversion_app)
 
 
 def _parse_kind(raw: BienInversionKind) -> BienInversionKind:
@@ -76,6 +79,7 @@ def _record_payload(record: BienInversionIvaRecord) -> BienInversionRecordPayloa
         default="Declare one capital good tracked for IVA regularización.",
     ),
 )
+@command_execution_policy(LEDGER_WRITE)
 def bienes_inversion_declare(
     ctx: typer.Context,
     identifier: str = typer.Argument(
@@ -209,6 +213,7 @@ def bienes_inversion_declare(
         default="List every tracked capital good on the active profile register.",
     ),
 )
+@command_execution_policy(LEDGER_READ)
 def bienes_inversion_list(ctx: typer.Context) -> None:
     """List register records via :class:`BienesInversionRegisterService`."""
     bucket_id = _register_bucket_id()

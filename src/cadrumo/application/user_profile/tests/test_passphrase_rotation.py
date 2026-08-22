@@ -8,17 +8,23 @@ having been made.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from types import MappingProxyType
+from typing import TYPE_CHECKING, NoReturn
 from uuid import UUID
 
 import pytest
 
 from ....adapters.persistence.storage.custody import (
+    ProfileCustodyPasswordError,
     load_committed_profile_password_material,
     parse_profile_custody_recovery_envelope,
     unlock_profile_custody_recovery,
 )
-from ....core import PROFILE_PASSWORD_MAX_SCALARS, ProfilePasswordRefusalReason
+from ....core import (
+    PROFILE_PASSWORD_MAX_SCALARS,
+    PROFILE_PASSWORD_MIN_SCALARS,
+    ProfilePasswordRefusalReason,
+)
 from ....domain.buckets import BucketEventType
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import (
@@ -27,11 +33,11 @@ from .. import (
     login_profile,
     logout_active_profile,
     profile_custody_recovery_envelope_path,
-    profile_is_password_authentication_failure,
     register_profile_with_credentials,
     rotate_profile_passphrase,
     unlock_profile_custody_password,
 )
+from .. import _passphrase_rotation as rotation_module
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -43,6 +49,19 @@ _CURRENT = "passphrase-rotation-current-operator-secret"
 _REPLACEMENT = "passphrase-rotation-replacement-operator-secret"
 _WRONG = "passphrase-rotation-not-the-current-operator-secret"
 _TOO_SHORT = "short"
+
+_REFUSAL_MESSAGES = {
+    ProfilePasswordRefusalReason.CONTAINS_SURROGATE: (
+        "application.user_profile.errors.profile_password_contains_surrogate"
+    ),
+    ProfilePasswordRefusalReason.TOO_FEW_SCALARS: ("application.user_profile.errors.profile_password_too_few_scalars"),
+    ProfilePasswordRefusalReason.TOO_MANY_SCALARS: (
+        "application.user_profile.errors.profile_password_too_many_scalars"
+    ),
+    ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES: (
+        "application.user_profile.errors.profile_password_too_many_utf8_bytes"
+    ),
+}
 
 
 def _register(handed: list[str] | None = None):
@@ -74,7 +93,7 @@ def test_the_new_passphrase_opens_the_profile_and_the_old_one_no_longer_does(tmp
         assert unlock_profile_custody_password(material, password=_REPLACEMENT).dek is not None
         with pytest.raises(Exception) as refused:
             unlock_profile_custody_password(material, password=_CURRENT)
-        assert profile_is_password_authentication_failure(refused.value)
+        assert isinstance(refused.value, ProfileCustodyPasswordError)
 
 
 def test_the_profile_record_is_still_readable_after_the_change(tmp_path: Path) -> None:
@@ -163,24 +182,31 @@ def test_an_outstanding_recovery_phrase_still_opens_the_profile_afterwards(tmp_p
         assert proved.dek == unlock_profile_custody_password(material, password=_REPLACEMENT).dek
 
 
-def test_a_wrong_current_passphrase_refuses_and_changes_nothing(tmp_path: Path) -> None:
+@pytest.mark.parametrize("current_candidate", (_WRONG, "short"))
+def test_a_rejected_current_passphrase_is_non_oracular_and_changes_nothing(
+    tmp_path: Path,
+    current_candidate: str,
+) -> None:
     """Fail closed: the existing wrapper must survive a refused attempt intact."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = _register()
         profile_id = UUID(outcome.profile_id)
-        before = load_committed_profile_password_material(profile_id).envelope.canonical_json_bytes()
+        before = _storage_snapshot(storage_root)
 
-        with pytest.raises(ProfilePassphraseRotationError):
+        with pytest.raises(ProfilePassphraseRotationError) as refused:
             rotate_profile_passphrase(
                 profile_id=profile_id,
-                current_passphrase=_WRONG,
+                current_passphrase=current_candidate,
                 new_passphrase=_REPLACEMENT,
                 new_passphrase_confirmation=_REPLACEMENT,
             )
 
         material = load_committed_profile_password_material(profile_id)
-        assert material.envelope.canonical_json_bytes() == before
+        assert _storage_snapshot(storage_root) == before
         assert unlock_profile_custody_password(material, password=_CURRENT).dek is not None
+        assert refused.value.translated_message == "application.user_profile.errors.passphrase_current_rejected"
+        assert refused.value.context is None
+        assert current_candidate not in repr(refused.value)
 
 
 def test_a_mismatched_confirmation_refuses_before_anything_is_read(tmp_path: Path) -> None:
@@ -253,8 +279,101 @@ def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
         assert payload is not None
         assert payload.reason is reason
         assert candidate not in repr(payload)
-        assert refused.value.context == payload.context
-        assert payload.translated_message.startswith("application.user_profile.errors.profile_password_")
+        assert type(payload.context) is MappingProxyType
+        assert refused.value.context == dict(payload.context)
+        assert payload.translated_message == _REFUSAL_MESSAGES[reason]
+        assert refused.value.translated_message == _REFUSAL_MESSAGES[reason]
+        expected_context: dict[str, object] = {"reason": reason.value, "scalar_count": len(candidate)}
+        if reason is not ProfilePasswordRefusalReason.CONTAINS_SURROGATE:
+            expected_context["utf8_byte_count"] = len(candidate.encode("utf-8"))
+        if reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS:
+            expected_context["minimum_scalars"] = 15
+        elif reason is ProfilePasswordRefusalReason.TOO_MANY_SCALARS:
+            expected_context["maximum_scalars"] = 256
+        elif reason is ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES:
+            expected_context["maximum_utf8_bytes"] = 1024
+        assert dict(payload.context) == expected_context
+        with pytest.raises(TypeError):
+            payload.context["candidate"] = candidate  # type: ignore[index]
+
+
+def test_rotation_refusal_bites_before_root_lock_load_unwrap_rehead_and_publication(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Invalid replacement input must not touch any custody or mutation collaborator."""
+
+    def fail_if_called(*_args: object, **_kwargs: object) -> NoReturn:
+        pytest.fail("rotation collaborator ran before replacement-password refusal")
+
+    monkeypatch.setattr(rotation_module, "effective_storage_root", fail_if_called)
+    monkeypatch.setattr(rotation_module, "profile_custody_transaction_lock", fail_if_called)
+    monkeypatch.setattr(rotation_module.custody, "load_committed_profile_password_material", fail_if_called)
+    monkeypatch.setattr(rotation_module, "unlock_profile_custody_password", fail_if_called)
+    monkeypatch.setattr(rotation_module.ProfileRecordStore, "rehead_under_rotated_envelope", fail_if_called)
+    monkeypatch.setattr(rotation_module.custody, "replace_committed_profile_custody_envelope", fail_if_called)
+
+    with pytest.raises(ProfilePassphraseRotationError):
+        rotate_profile_passphrase(
+            profile_id=UUID(int=0),
+            current_passphrase=_CURRENT,
+            new_passphrase="a" * 14,
+            new_passphrase_confirmation="a" * 14,
+        )
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        "a" * PROFILE_PASSWORD_MIN_SCALARS,
+        "a" * PROFILE_PASSWORD_MAX_SCALARS,
+        "\U0001f600" * 256,
+    ),
+)
+def test_rotation_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path, replacement: str) -> None:
+    """Rotation accepts the two scalar boundaries and 1,024 strict UTF-8 bytes."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        outcome = _register()
+        profile_id = UUID(outcome.profile_id)
+
+        rotate_profile_passphrase(
+            profile_id=profile_id,
+            current_passphrase=_CURRENT,
+            new_passphrase=replacement,
+            new_passphrase_confirmation=replacement,
+        )
+
+        material = load_committed_profile_password_material(profile_id)
+        assert unlock_profile_custody_password(material, password=replacement).dek is not None
+
+
+@pytest.mark.parametrize(
+    ("replacement", "equivalent"),
+    (
+        ("\u00e9" * PROFILE_PASSWORD_MIN_SCALARS, "e\u0301" * PROFILE_PASSWORD_MIN_SCALARS),
+        ("e\u0301" * PROFILE_PASSWORD_MIN_SCALARS, "\u00e9" * PROFILE_PASSWORD_MIN_SCALARS),
+    ),
+)
+def test_rotation_preserves_composed_and_decomposed_passwords_exactly(
+    tmp_path: Path,
+    replacement: str,
+    equivalent: str,
+) -> None:
+    """Rotation never normalises a replacement credential."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        outcome = _register()
+        profile_id = UUID(outcome.profile_id)
+        rotate_profile_passphrase(
+            profile_id=profile_id,
+            current_passphrase=_CURRENT,
+            new_passphrase=replacement,
+            new_passphrase_confirmation=replacement,
+        )
+
+        material = load_committed_profile_password_material(profile_id)
+        assert unlock_profile_custody_password(material, password=replacement).dek is not None
+        with pytest.raises(Exception) as refused:
+            unlock_profile_custody_password(material, password=equivalent)
+        assert isinstance(refused.value, ProfileCustodyPasswordError)
 
 
 def _storage_snapshot(root: Path) -> dict[str, bytes | None]:

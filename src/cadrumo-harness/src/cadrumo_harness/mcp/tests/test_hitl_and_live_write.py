@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.tests.declared_command_risk import declared_live_write
-
-from .._hitl import ConfirmationPolicy, confirmation_for_tool
+from .._command_policy import CommandPolicyProjection
+from .._hitl import ConfirmationPolicy, confirmation_for_policy, confirmation_for_tool
 from .._tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -46,8 +45,16 @@ def test_a_hypothetical_live_write_would_be_blocked() -> None:
     # Defensive: if a live-write verb ever entered the command set - declared
     # live_write in the risk table - the gate blocks it outright. This proves the
     # BLOCK rail is real, not vacuous.
-    with declared_live_write("modelo.work.submit"):
-        assert confirmation_for_tool(command_key="modelo.work.submit") is ConfirmationPolicy.BLOCK
+    planted = CommandPolicyProjection(
+        command_key="planted.live.submit",
+        read_only=False,
+        destructive=False,
+        idempotent=False,
+        handoff=False,
+        live_write=True,
+        open_world=True,
+    )
+    assert confirmation_for_policy(planted) is ConfirmationPolicy.BLOCK
 
 
 def test_an_unclassified_key_is_refused_not_auto_approved() -> None:
@@ -58,7 +65,7 @@ def test_an_unclassified_key_is_refused_not_auto_approved() -> None:
     # names no exposed command is refused rather than auto-approved.
     bogus_key = "totally.bogus.unclassified.key"
     assert bogus_key not in {descriptor.command_key for descriptor in build_tool_descriptors()}
-    with pytest.raises(ValueError, match="names no exposed command"):
+    with pytest.raises(LookupError):
         confirmation_for_tool(command_key=bogus_key)
 
 

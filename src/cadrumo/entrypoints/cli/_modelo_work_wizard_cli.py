@@ -77,8 +77,10 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import InputKind, RegistrySnapshotError, RegistryValidationError
 from ...domain.user_profile import ProfileNotFoundError
+from ._command_policy import command_execution_policy
 from ._errors import CliOutboundPayloadBoundaryError
 from ._modelo_cli_support import MISSING_INPUT_TRANSLATED_MESSAGES, work_calculate_input_bundle_from_cli
+from ._modelo_execution_policies import INTERACTIVE_MODEL_WRITE
 from ._modelo_rendering import (
     calculation_revision_lines,
     calculation_revision_payload,
@@ -186,6 +188,7 @@ def register_work_wizard_commands(
     )
 
     @work_app.command("wizard", help=tr("cli.app.modelo.work.wizard_help"))
+    @command_execution_policy(INTERACTIVE_MODEL_WRITE)
     def work_wizard(
         ctx: typer.Context,
         work_unit_id: _WorkUnitIdArg = None,

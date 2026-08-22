@@ -17,8 +17,7 @@ from typing import Any, cast
 import anyio
 import pytest
 
-from cadrumo.application.operator_surface import command_classification
-
+from .._command_policy import command_policy
 from .._dispatch import tool_name_for_command
 from .._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
 from .._identity_gate import (
@@ -159,7 +158,8 @@ def test_a_reappearing_sandbox_use_verb_would_fail_closed_rather_than_pass() -> 
     survives someone re-registering the verb without re-reading this module.
     """
     for retired in _RETIRED_SANDBOX_USE_KEYS:
-        assert command_classification(retired).read_only is False
+        with pytest.raises(LookupError):
+            command_policy(retired)
         assert identity_gate_refusal(retired, state=SessionIdentityState()) is not None
 
     # ...and it is a refusal on the UNCONFIRMED session specifically, not a

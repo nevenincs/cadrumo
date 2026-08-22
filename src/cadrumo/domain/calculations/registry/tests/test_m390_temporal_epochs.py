@@ -7,6 +7,7 @@ from datetime import date
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .._errors import NoRevisionForPeriodError
 from .._temporal import select_revision
 from ._registry_schema_support import _committed_modelo
@@ -14,7 +15,7 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@pytest.mark.parametrize("filing_year", [2022, 2023, 2024, 2025])
+@pytest.mark.parametrize("filing_year", [2021, 2022, 2023, 2024, 2025])
 def test_m390_selects_the_exact_annual_epoch_and_own_record_design(filing_year: int) -> None:
     modelo, catalogues = _committed_modelo("390")
 
@@ -28,14 +29,14 @@ def test_m390_selects_the_exact_annual_epoch_and_own_record_design(filing_year: 
     assert revision.source_refs.count(own_source_ref) == 1
     serialized_revision = revision.model_dump_json()
     assert own_source_ref in serialized_revision
-    for other_year in {2022, 2023, 2024, 2025} - {filing_year}:
+    for other_year in {2021, 2022, 2023, 2024, 2025} - {filing_year}:
         assert f"aeat-dr-390-{other_year}" not in serialized_revision
     assert catalogues.sources[own_source_ref].record_design_epoch == str(filing_year)
     assert catalogues.sources[own_source_ref].applies_from == date(filing_year, 1, 1)
     assert catalogues.sources[own_source_ref].applies_to == date(filing_year, 12, 31)
 
 
-@pytest.mark.parametrize("unsupported_year", [*range(2010, 2022), 2026])
+@pytest.mark.parametrize("unsupported_year", [*range(2010, 2021), 2026])
 def test_m390_refuses_years_without_enrolled_record_design_authority(unsupported_year: int) -> None:
     modelo, _catalogues = _committed_modelo("390")
 
@@ -48,14 +49,27 @@ def test_m390_rdl_4_2024_is_confined_to_the_2024_epoch() -> None:
     provision = "real-decreto-ley-4-2024:art-1"
 
     assert provision in modelo.revisions["2024"].model_dump_json()
-    for year in ("2022", "2023", "2025"):
+    for year in ("2021", "2022", "2023", "2025"):
         assert provision not in modelo.revisions[year].model_dump_json()
 
 
 def test_m390_has_no_open_compatibility_revision() -> None:
     modelo, _catalogues = _committed_modelo("390")
 
-    assert set(modelo.revisions) == {"2022", "2023", "2024", "2025"}
+    assert set(modelo.revisions) == {"2021", "2022", "2023", "2024", "2025"}
+
+
+def test_m390_2021_parser_epoch_does_not_advertise_filing_capability() -> None:
+    modelo, _catalogues = _committed_modelo("390")
+    revision = modelo.revisions["2021"]
+
+    surfaces = {link.surface for link in revision.application_links}
+    consumers = {link.consumer for link in revision.application_links}
+
+    assert revision.authority_grade == RegistryAuthorityGrade.APPLICABILITY
+    assert surfaces == {"extractor"}
+    assert "cadrumo.application.filing" not in consumers
+    assert not revision.export_layouts
 
 
 #: Binding ids embed the revision year (`modelo-390-2024.page_5.223-239....`),

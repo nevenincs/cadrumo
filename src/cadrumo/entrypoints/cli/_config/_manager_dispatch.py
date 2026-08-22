@@ -157,6 +157,20 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
         emit_manager_closed(ctx, label, created=False)
         return None
 
+    if mode == "create":
+        import inspect
+
+        signature = inspect.signature(_dispatch)
+        parameters = list(signature.parameters.values())
+        parameters.append(
+            inspect.Parameter(
+                "secrets_stdin",
+                kind=inspect.Parameter.KEYWORD_ONLY,
+                annotation=bool,
+                default=typer.Option(False, "--secrets-stdin", help=tr("cli.config.custody.secrets_stdin_help")),
+            )
+        )
+        _dispatch.__signature__ = signature.replace(parameters=parameters)
     return _dispatch
 
 
@@ -345,10 +359,10 @@ def register_lazy_wizard_leaf(
         leaf.command(name, **passthrough)(
             _command_execution_policy(_BOOTSTRAP_WRITE if mode == "create" else _ENCRYPTED_WRITE)(
                 _command_error_boundary(
-                with_manager_frontend(
-                    build_wizard_command(_get_setup_flow(), mode=mode),
-                    mode=mode,
-                ),
+                    with_manager_frontend(
+                        build_wizard_command(_get_setup_flow(), mode=mode),
+                        mode=mode,
+                    ),
                 )
             ),
         )

@@ -61,6 +61,13 @@ from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva_compensation import IvaCompensationDecisionReason
+from ._app_execution_policies import (
+    BROWSER_SUBPROCESS_LIVE_PROFILE_WRITE,
+    ENCRYPTED_READ,
+    LIVE_PROFILE_WRITE,
+    LIVE_READ,
+    declare_metadata_group,
+)
 from ._app_live_auth_preflight import _emit_live_auth_preflight
 from ._app_live_borrador_cli import borrador_100_app, borrador_app, register_borrador_commands
 from ._app_live_deudas_cli import register_deudas_commands
@@ -70,6 +77,7 @@ from ._app_live_notifications_cli import notifications_app, register_notificatio
 from ._app_live_portals_cli import portals_app, portals_list, portals_show, register_portals_commands
 from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_filed_capture_lines
 from ._app_live_verify_cli import register_verify_commands, verify_app
+from ._command_policy import command_execution_policy
 from ._common import (
     _emit_envelope,
     active_bucket_id_or_refuse,
@@ -121,6 +129,10 @@ iva_wallet_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+
+declare_metadata_group(app)
+declare_metadata_group(filed_app)
+declare_metadata_group(iva_wallet_app)
 app.add_typer(iva_wallet_app, name="iva-wallet")
 
 
@@ -1864,6 +1876,19 @@ register_verify_commands(app, active_bucket_id=active_bucket_id_or_refuse, verif
 
 
 register_borrador_commands(app, active_bucket_id=active_bucket_id_or_refuse)
+
+for _callback in (
+    iva_wallet_pull_cmd,
+    iva_wallet_pull_history_cmd,
+    filed_pull_all_cmd,
+    filed_pull_cmd,
+    filed_pull_sources_cmd,
+):
+    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)
+command_execution_policy(BROWSER_SUBPROCESS_LIVE_PROFILE_WRITE)(iva_wallet_pull_evidence_cmd)
+for _callback in (iva_wallet_history_cmd, filed_list_cmd):
+    command_execution_policy(ENCRYPTED_READ)(_callback)
+command_execution_policy(LIVE_READ)(filed_discover_cmd)
 
 __all__ = [
     "app",

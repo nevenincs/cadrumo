@@ -18,7 +18,9 @@ import typer
 
 from ...application.live import capture_expedientes_bulk
 from ...core.i18n import tr
+from ._app_execution_policies import ENCRYPTED_READ, LIVE_PROFILE_WRITE, declare_metadata_group
 from ._app_live_auth_preflight import _metric_line, resolve_active_bucket, run_auth_preflight
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, resolve_pull_year_range
 
 _active_bucket_id: Callable[[], str] | None = None
@@ -30,6 +32,7 @@ expedientes_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(expedientes_app)
 
 
 def register_expedientes_commands(
@@ -333,3 +336,8 @@ def expedientes_latest(ctx: typer.Context) -> None:
         f"declaration_count\t{len(record.declarations)}",
     ]
     _emit_envelope(ctx, command="app.live.expedientes.latest", result=result, lines=lines)
+
+
+command_execution_policy(LIVE_PROFILE_WRITE)(expedientes_pull)
+for _callback in (expedientes_list, expedientes_show, expedientes_latest):
+    command_execution_policy(ENCRYPTED_READ)(_callback)

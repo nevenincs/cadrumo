@@ -6,6 +6,13 @@
 
 src/cadrumo/_data/corpus/aeat_official/** -text
 
+# The normatives corpus is byte-exact legal evidence too: every source declares
+# its own sha256 and byte count, and the registry validator compares them
+# against the bytes on disk. Line-ending translation on checkout changes both,
+# which broke `boe-modelo-194-form-layout` -- its blob is 103,935 bytes and its
+# working copy was 104,069, exactly the 134 CRLF pairs git had introduced.
+src/cadrumo/_data/corpus/normatives/** -text
+
 # Binary content, by extension rather than by location.
 #
 # `* text=auto` above asks git to GUESS which files are text and normalise

@@ -176,7 +176,7 @@ class RegistryCalculationResult(BaseModel):
     every casilla on the
     :class:`~domain.calculations.registry.RegistrySnapshot` revision
     (inputs, bound, and formula-computed). Each observation carries
-    its final Decimal ``value`` plus the legal / source provenance for
+    its final scalar ``value`` plus the legal / source provenance for
     that casilla pulled from the registry. Formula-computed
     observations additionally carry ``formula_id``, ``op``,
     ``operand_refs``, and ``operand_values`` so the full evaluation
@@ -189,8 +189,9 @@ class RegistryCalculationResult(BaseModel):
 
     Coverage asymmetry preserved by the derivation:
 
-    * :attr:`values` covers every observation (inputs, bound, computed), keyed
-      by ``casilla_id`` to ``value``.
+    * :attr:`values` covers every Decimal observation (inputs, bound,
+      computed), keyed by ``casilla_id`` to ``value``. Text observations stay
+      exclusively on the canonical typed envelope.
     * :attr:`entries` covers ONLY observations where ``formula_id`` is
       set. ``len(entries) <= len(observations)`` always; equality holds
       only when every casilla is formula-computed (rare in practice).
@@ -295,7 +296,7 @@ class RegistryCalculationResult(BaseModel):
         self-incompatibly under ``extra='forbid'`` because the loader
         would refuse the duplicate field on the way back in.
         """
-        return {obs.casilla_id: obs.value for obs in self.observations}
+        return {obs.casilla_id: obs.value for obs in self.observations if isinstance(obs.value, Decimal)}
 
     @property
     def entries(self) -> tuple[RegistryCalculationEntry, ...]:
@@ -307,21 +308,28 @@ class RegistryCalculationResult(BaseModel):
         ``observations`` is preserved; the engine emits in formula
         evaluation order, which matches the original ``entries`` shape.
         """
-        return tuple(
-            RegistryCalculationEntry(
-                formula_id=obs.formula_id,
-                target_casilla_id=obs.casilla_id,
-                op=obs.op or "value",
-                operand_refs=obs.operand_refs,
-                operand_casilla_refs=obs.operand_casilla_refs,
-                operand_values=obs.operand_values,
-                value=obs.value,
-                legal_refs=obs.legal_refs,
-                source_refs=obs.source_refs,
+        entries: list[RegistryCalculationEntry] = []
+        for observation in self.observations:
+            if observation.formula_id is None:
+                continue
+            if not isinstance(observation.value, Decimal):
+                raise RegistryValidationError(
+                    f"formula observation for casilla {observation.casilla_id!r} must carry a Decimal value"
+                )
+            entries.append(
+                RegistryCalculationEntry(
+                    formula_id=observation.formula_id,
+                    target_casilla_id=observation.casilla_id,
+                    op=observation.op or "value",
+                    operand_refs=observation.operand_refs,
+                    operand_casilla_refs=observation.operand_casilla_refs,
+                    operand_values=observation.operand_values,
+                    value=observation.value,
+                    legal_refs=observation.legal_refs,
+                    source_refs=observation.source_refs,
+                )
             )
-            for obs in self.observations
-            if obs.formula_id is not None
-        )
+        return tuple(entries)
 
 
 def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputValue](
@@ -529,6 +537,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
 
     observations = _materialise_observations(
         values=values,
+        text_values=resolved_text_inputs,
         computed_provenance=computed_provenance,
         casillas_by_id=casillas_by_id,
         absent_by_design_casilla_ids=absent_by_design_casilla_ids,

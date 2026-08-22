@@ -59,6 +59,7 @@ from ...domain.categories import (
 )
 from ...domain.invoices import LinkInconsistency
 from ...domain.transactions import Transaction, ledger_irpf_category_catalogue
+from ._command_policy import command_execution_policy
 from ._common import (
     _bad,
     _canonical_period,
@@ -70,6 +71,7 @@ from ._common import (
     optional_decimal_text,
     resolve_notice_action,
 )
+from ._ledger_execution_policies import LEDGER_COMPUTE_READ, LEDGER_HANDOFF, LEDGER_READ
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
     project_ledger_list,
@@ -149,6 +151,7 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
         "llm-diagnostics",
         help=tr("cli.ledger.llm_diagnostics.help"),
     )
+    @command_execution_policy(LEDGER_READ)
     def ledger_llm_diagnostics(
         ctx: typer.Context,
         since: str | None = typer.Option(
@@ -290,6 +293,7 @@ def _register_ledger_categories_command(app: typer.Typer) -> None:
         return purpose
 
     @app.command("categories", help=tr("cli.ledger.categories.help"))
+    @command_execution_policy(LEDGER_COMPUTE_READ)
     def ledger_categories(ctx: typer.Context) -> None:
         """List the recognised `--category-id` spending-category catalogue."""
         families: list[dict[str, object]] = []
@@ -416,6 +420,7 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
         "check",
         help=tr("cli.ledger.check.help"),
     )
+    @command_execution_policy(LEDGER_COMPUTE_READ)
     def ledger_check(
         ctx: typer.Context,
         bucket_id_option: str | None = typer.Option(
@@ -653,6 +658,7 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
         "preflight",
         help=tr("cli.ledger.preflight.help"),
     )
+    @command_execution_policy(LEDGER_COMPUTE_READ)
     def ledger_preflight(
         ctx: typer.Context,
         period: str = typer.Option(
@@ -716,6 +722,7 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
 
 def _register_ledger_history_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
     @app.command("history", help=tr("cli.ledger.history.help"))
+    @command_execution_policy(LEDGER_READ)
     def ledger_history(
         ctx: typer.Context,
         transaction_id: str = typer.Argument(..., help=tr("cli.ledger.history.id_help")),
@@ -761,6 +768,7 @@ def _register_ledger_history_command(app: typer.Typer, *, resolve_transaction_id
 
 def _register_ledger_export_command(app: typer.Typer) -> None:
     @app.command("export", help=tr("cli.ledger.export.help"))
+    @command_execution_policy(LEDGER_HANDOFF)
     def ledger_export(
         ctx: typer.Context,
         output: Path = typer.Option(..., "--output", help=tr("cli.ledger.export.output_help")),
@@ -818,6 +826,7 @@ def _register_ledger_export_command(app: typer.Typer) -> None:
 
 def _register_ledger_list_command(app: typer.Typer) -> None:
     @app.command("list", help=tr("cli.ledger.list.help"))
+    @command_execution_policy(LEDGER_READ)
     def ledger_list(
         ctx: typer.Context,
         filters: list[str] = typer.Option([], "--filter", help=tr("cli.ledger.list.filter_help")),
@@ -893,6 +902,7 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
 
 def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
     @app.command("view", help=tr("cli.ledger.view.help"))
+    @command_execution_policy(LEDGER_READ)
     def ledger_view(
         ctx: typer.Context,
         transaction_id: str = typer.Argument(..., help=tr("cli.ledger.view.transaction_id_help")),
@@ -969,6 +979,7 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
 
 def _register_ledger_status_command(app: typer.Typer) -> None:
     @app.command("status", help=tr("cli.ledger.status.help"))
+    @command_execution_policy(LEDGER_READ)
     def ledger_status(
         ctx: typer.Context,
         period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.status.period_help")),
@@ -1058,6 +1069,7 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
 
 def _register_ledger_track_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
     @app.command("track", help=tr("cli.ledger.track.help"))
+    @command_execution_policy(LEDGER_READ)
     def ledger_track(
         ctx: typer.Context,
         transaction_id: str = typer.Argument(..., help=tr("cli.ledger.track.transaction_id_help")),

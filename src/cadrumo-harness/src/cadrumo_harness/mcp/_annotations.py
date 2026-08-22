@@ -21,7 +21,9 @@ from collections.abc import Iterable
 
 from pydantic import BaseModel, ConfigDict
 
-from cadrumo.application.operator_surface import OperatorMutability, classify_command
+from cadrumo.application.operator_surface import OperatorMutability
+
+from ._command_policy import CommandPolicyProjection
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -30,7 +32,7 @@ class McpAnnotations(BaseModel):
     """SDK-independent MCP tool annotations for one command.
 
     Maps to the MCP ``ToolAnnotations`` hint fields, derived from the single
-    :func:`~application.operator_surface.classify_command` authority.
+    live callback execution-policy authority.
     ``read_only_hint`` mirrors the family
     mutability; ``destructive_hint`` is true only for irreversible
     state-destroying verbs; ``idempotent_hint`` for pure repeatable reads;
@@ -49,22 +51,25 @@ class McpAnnotations(BaseModel):
     open_world_hint: bool = False
 
 
-def annotations_for_command(*, command_key: str, mutability: OperatorMutability, title: str) -> McpAnnotations:
+def annotations_for_command(
+    *, command_key: str, mutability: OperatorMutability, title: str, policy: CommandPolicyProjection
+) -> McpAnnotations:
     """Build the MCP annotations for one command key.
 
-    Derived from :func:`~application.operator_surface.classify_command` - the one
-    authority the HITL confirmation tier also reads - so the client hint and the
-    server gate cannot drift.
+    Derived from the same callback-attached policy the HITL confirmation tier
+    reads, so the client hint and server gate cannot drift.
 
     Args:
         command_key: The registry command key (e.g. ``"ledger.remove"``).
         mutability: The owning family's mutability from the manifest.
         title: A human-readable tool title.
+        policy: The callback-attached policy resolved from the live CLI path.
 
     Returns:
         :class:`McpAnnotations` for the command's MCP descriptor.
     """
-    classification = classify_command(command_key, mutability=mutability)
+    del mutability
+    classification = policy
     annotations = McpAnnotations(
         title=title,
         read_only_hint=classification.read_only,

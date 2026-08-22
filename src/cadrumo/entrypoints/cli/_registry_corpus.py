@@ -33,6 +33,8 @@ from ...application.registry import (
 from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip
 from ...domain.manuals import ManualPart
+from ._app_execution_policies import REGISTRY_READ, declare_metadata_group
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
 from ._registry_corpus_payloads import (
     CitationListResult,
@@ -58,6 +60,8 @@ manuals_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(citations_app)
+declare_metadata_group(manuals_app)
 
 
 @citations_app.command("list", help=tr("cli.registry.citations.list_help"))
@@ -320,6 +324,18 @@ def _manual_verification_lines(report: RegistryManualVerificationReport) -> list
     for issue in report.issues:
         lines.append("\t".join(("issue", issue.level.value, issue.code, issue.reference_id or "", issue.message)))
     return lines
+
+
+for _callback in (
+    list_citations_cmd,
+    show_citation_cmd,
+    verify_citations_cmd,
+    list_manuals_cmd,
+    show_manual_cmd,
+    list_manual_rules_cmd,
+    verify_manual_cmd,
+):
+    command_execution_policy(REGISTRY_READ)(_callback)
 
 
 __all__ = ["citations_app", "manuals_app"]

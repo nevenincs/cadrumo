@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Set as AbstractSet
 
-from ....core import Modelo
+from ....core import Modelo, RegistryAuthorityGrade
 from ._schema import ModeloRevision
 
 _COMMUNICATION_SURFACES = {"communication", "payer_delivery"}
@@ -84,8 +84,15 @@ def _application_link_surface_failures(
     for revision_attribute, required_surface, message in _SIMPLE_APPLICATION_LINK_RULES:
         if getattr(revision, revision_attribute) and required_surface not in surfaces:
             failures.append(f"{scope}: {message}")
-    casillas_have_lifecycle_link = "filing" in surfaces or (
-        modelo_requires_communication and bool(communication_surfaces)
+    extractor_owns_observation_casillas = (
+        revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
+        and bool(revision.extraction_profiles)
+        and "extractor" in surfaces
+    )
+    casillas_have_lifecycle_link = (
+        "filing" in surfaces
+        or (modelo_requires_communication and bool(communication_surfaces))
+        or extractor_owns_observation_casillas
     )
     if revision.casillas and not casillas_have_lifecycle_link:
         failures.append(f"{scope}: casillas require a filing or communication application link")

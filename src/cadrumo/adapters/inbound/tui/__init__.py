@@ -55,6 +55,7 @@ from ._registration_screen import (
     ProfilePasswordVerdict,
     RegistrationApp,
     RegistrationAttempt,
+    RegistrationRefusal,
     run_registration_tui,
 )
 from ._select import select_flow_frontend
@@ -119,6 +120,7 @@ __all__ = [
     "ProfilePasswordVerdict",
     "RegistrationApp",
     "RegistrationAttempt",
+    "RegistrationRefusal",
     "StatusApp",
     "StatusAuthView",
     "StatusFactRow",

@@ -20,7 +20,9 @@ from ...application.ledger import (
 )
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core.i18n import tr
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, _state, _tx_repo
+from ._ledger_execution_policies import LEDGER_READ
 from ._ledger_list import ledger_review_query_for_spec
 from ._ledger_support import _ledger_cli_no_recovery
 
@@ -29,6 +31,7 @@ ResolveTransactionId = Callable[[TransactionCatalogueRepository, str], str]
 
 def register_ledger_review_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
     @app.command("review", help=tr("cli.ledger.review.help"))
+    @command_execution_policy(LEDGER_READ)
     def ledger_review(
         ctx: typer.Context,
         filters: list[str] = typer.Option([], "--filter", help=tr("cli.ledger.review.filter_help")),

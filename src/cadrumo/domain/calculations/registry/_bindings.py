@@ -22,7 +22,7 @@ from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
 from typing import Literal, TypeGuard
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ....core import OBJECT_TUPLE_ADAPTER, STRICT_FROZEN_CONFIG, CasillaId, FilingPeriodCode, Period
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind
@@ -360,7 +360,8 @@ class CasillaObservation(BaseModel):
     """One typed casilla observation emitted by the formula runtime.
 
     Carries a :class:`~core.CasillaId`, final
-    :class:`decimal.Decimal` value, required legal/source provenance, and
+    scalar value (numeric :class:`decimal.Decimal` or validated text), required
+    legal/source provenance, and
     optional formula lineage. When ``formula_id`` is set, the runtime computed
     this casilla and ``operand_refs`` / ``operand_values`` trace its inputs
     while ``operand_casilla_refs`` carries the casilla-id-only projection; when
@@ -375,7 +376,8 @@ class CasillaObservation(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
-    value: Decimal
+    value_kind: Literal["decimal", "text"] = Field(default="decimal", exclude_if=lambda value: value == "decimal")
+    value: Decimal | str
     formula_id: FormulaId | None = None
     # ``op`` is the formula's top-level operator label (``add``, ``multiply``,
     # ``lookup_bracket_by_ccaa`` …). Carried alongside ``formula_id`` so the
@@ -400,13 +402,23 @@ class CasillaObservation(BaseModel):
 
     @field_validator("value", mode="before")
     @classmethod
-    def _decimal_value_from_json_string(cls, value: object) -> object:
-        return _decimal_from_json_string(value)
+    def _value_from_json_string(cls, value: object, info: ValidationInfo) -> object:
+        if info.data.get("value_kind", "decimal") == "decimal":
+            return _decimal_from_json_string(value)
+        return value
 
     @field_validator("value")
     @classmethod
-    def _decimal_value(cls, value: Decimal) -> Decimal:
+    def _scalar_value(cls, value: Decimal | str) -> Decimal | str:
         return value
+
+    @model_validator(mode="after")
+    def _value_matches_kind(self) -> CasillaObservation:
+        if self.value_kind == "decimal" and not isinstance(self.value, Decimal):
+            raise RegistryValidationError("decimal casilla observation must carry a Decimal value")
+        if self.value_kind == "text" and not isinstance(self.value, str):
+            raise RegistryValidationError("text casilla observation must carry a string value")
+        return self
 
     @field_validator("operand_refs", "operand_casilla_refs", "legal_refs", "source_refs", mode="before")
     @classmethod
@@ -491,7 +503,7 @@ class RegistryModeloObservation(BaseModel):
         round-trip self-incompatibly under ``extra='forbid'`` because
         the loader would refuse the duplicate field on the way back in.
         """
-        return {obs.casilla_id: obs.value for obs in self.observations}
+        return {obs.casilla_id: obs.value for obs in self.observations if isinstance(obs.value, Decimal)}
 
 
 class OracleModeloObservation(RegistryModeloObservation):

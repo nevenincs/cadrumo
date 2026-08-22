@@ -14,7 +14,9 @@ from ...application.modelo import build_modelo_work_review
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...domain.modelos import WorkUnit
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope  # pyright: ignore[reportPrivateUsage]
+from ._modelo_execution_policies import MODEL_READ
 from ._modelo_payloads import WorkReviewResult
 from ._modelo_rendering import verification_findings_notices
 from ._modelo_work_options import (
@@ -75,6 +77,7 @@ def register_work_review_command(
         "review",
         help=tr("cli.app.modelo.work.review_help"),
     )
+    @command_execution_policy(MODEL_READ)
     def work_review(  # pyright: ignore[reportUnusedFunction]
         ctx: typer.Context,
         work_unit_id: _WorkUnitIdArg = None,

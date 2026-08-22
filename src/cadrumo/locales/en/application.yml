@@ -1336,12 +1336,19 @@ application:
         was not changed
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
         login NAME to activate it or aeat config profile delete NAME first.
+      profile_authentication_refused: The profile password was not accepted.
+      profile_password_contains_surrogate: The profile password contains a value that
+        cannot be encoded as strict UTF-8.
+      profile_password_too_few_scalars: The profile password must contain at least
+        {minimum_scalars} Unicode scalars; received {scalar_count}.
+      profile_password_too_many_scalars: The profile password must contain at most
+        {maximum_scalars} Unicode scalars; received {scalar_count}.
+      profile_password_too_many_utf8_bytes: The profile password must use at most
+        {maximum_utf8_bytes} UTF-8 bytes; received {utf8_byte_count}.
       registration_displaced_session_not_retired: The profile could not be created.
         The stored session of the profile it replaces could not be removed. Close
         any program using the profile store and try again.
       registration_label_blank: The profile name cannot be empty.
-      registration_passphrase_too_short: The password must be at least {minimum_length}
-        characters long.
       repository_classification_mismatch: Secure-object namespace %{namespace} is
         registered for sensitivity %{expected}, but the stored record's classification
         is %{classification}.

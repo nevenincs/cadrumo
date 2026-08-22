@@ -36,7 +36,9 @@ from ...core import CasillaId, Modelo
 from ...core.i18n import tr
 from ...core.output_rendering import jsonable_output_payload
 from ...domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
+from ._command_policy import command_execution_policy
 from ._common import MODELO_CODE_CHOICE, _emit_envelope
+from ._modelo_execution_policies import CALCULATION_READ
 from ._modelo_payloads import (
     CasillaObservationPayload,
     CompareSectionPayload,
@@ -104,6 +106,7 @@ def _register_modelo_project_command(
             ),
         ),
     )
+    @command_execution_policy(CALCULATION_READ)
     def modelo_project(
         ctx: typer.Context,
         year: Annotated[
@@ -261,6 +264,7 @@ def _register_modelo_compare_command(
             ),
         ),
     )
+    @command_execution_policy(CALCULATION_READ)
     def modelo_compare(
         ctx: typer.Context,
         year: Annotated[

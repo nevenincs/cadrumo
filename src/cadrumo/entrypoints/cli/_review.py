@@ -16,6 +16,8 @@ from ...core.decimal import coerce_decimal_strict
 from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ._app_execution_policies import ENCRYPTED_READ, declare_metadata_group
+from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope, activate_subcommand_output_language, case_insensitive_choice
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 
@@ -76,6 +78,7 @@ app = typer.Typer(
     help=tr("cli.review.app_help"),
     no_args_is_help=True,
 )
+declare_metadata_group(app)
 
 
 @app.command("queue", help=tr("cli.review.queue.help"))
@@ -217,3 +220,7 @@ def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[st
     if not report.rows:
         lines.append(tr("cli.review.queue.empty"))
     return lines
+
+
+command_execution_policy(ENCRYPTED_READ)(review_queue)
+command_execution_policy(ENCRYPTED_READ)(review_show)

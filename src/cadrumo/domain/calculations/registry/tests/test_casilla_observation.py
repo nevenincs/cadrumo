@@ -25,6 +25,7 @@ _FULL_PROVENANCE_CASILLA: CasillaId = validated_casilla_id("0519")
 _VALUE_TYPE_TEST_CASILLA: CasillaId = validated_casilla_id("0001")
 _ABSENT_BY_DESIGN_CASILLA: CasillaId = validated_casilla_id("15")
 _ROUNDTRIP_CASILLA: CasillaId = validated_casilla_id("01")
+_TEXT_CASILLA: CasillaId = validated_casilla_id("decl.periodo")
 _EMPTY_CASILLA_ID = ""
 _LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:art-56",)
 _SOURCE_REFS: tuple[SourceRefId, ...] = ("aeat-renta-2025-manual-parte1",)
@@ -190,3 +191,20 @@ def test_casilla_observation_absent_by_design_default_roundtrips_through_json() 
 
     assert restored == original
     assert restored.absent_by_design is False
+
+
+@pytest.mark.parametrize("text_value", ("1T", "28001"))
+def test_text_casilla_observation_roundtrips_without_becoming_a_structural_zero(text_value: str) -> None:
+    original = CasillaObservation(
+        casilla_id=_TEXT_CASILLA,
+        value_kind="text",
+        value=text_value,
+        legal_refs=("rd-1624-1992:art-71",),
+        source_refs=("aeat-modelo-303-procedure",),
+    )
+
+    restored = CasillaObservation.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.value == text_value
+    assert restored.value != Decimal("0")

@@ -28,8 +28,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.operator_surface import command_classification
-
+from .._command_policy import command_policy
 from .._identity_gate import identity_gate_refusal
 from .._tools import build_tool_descriptors
 
@@ -67,7 +66,7 @@ def test_no_exposed_command_is_both_read_only_and_open_world() -> None:
     offenders = sorted(
         key
         for key in _exposed_keys()
-        if command_classification(key).read_only and command_classification(key).open_world
+        if command_policy(key).read_only and command_policy(key).open_world
     )
 
     assert offenders == [], (
@@ -84,16 +83,16 @@ def test_every_aeat_reaching_command_is_still_gated() -> None:
     open-world commands at all, and would keep passing if the whole live surface
     were removed or stopped classifying as open-world.
     """
-    open_world = [key for key in _exposed_keys() if command_classification(key).open_world]
+    open_world = [key for key in _exposed_keys() if command_policy(key).open_world]
 
     assert len(open_world) > 10, f"expected the live AEAT surface, found {len(open_world)}"
-    assert all(not command_classification(key).read_only for key in open_world)
+    assert all(not command_policy(key).read_only for key in open_world)
 
 
 def test_an_unidentified_open_world_call_is_refused() -> None:
     """End to end through the real decision function, not the predicate alone."""
     open_world = [
-        key for key in _exposed_keys() if command_classification(key).open_world and key.startswith("app.live.")
+        key for key in _exposed_keys() if command_policy(key).open_world and key.startswith("app.live.")
     ]
     assert open_world, "no app.live command found to exercise the gate"
 
@@ -110,7 +109,7 @@ def test_a_local_read_is_still_allowed_unidentified() -> None:
     local_reads = [
         key
         for key in _exposed_keys()
-        if command_classification(key).read_only and not command_classification(key).open_world
+        if command_policy(key).read_only and not command_policy(key).open_world
     ]
     assert local_reads, "no local read-only command found"
 

@@ -41,6 +41,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from ...core.output_rendering import OutputFormat
 from ...domain.iva import InvoiceKind
+from ._command_policy import command_execution_policy
 from ._common import (
     _bad,
     _emit_envelope,
@@ -53,6 +54,7 @@ from ._common import (
 )
 from ._config._status_rendering import precondition_action_lines
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
+from ._ledger_execution_policies import LEDGER_NETWORK_WRITE
 
 if TYPE_CHECKING:
     from ...application.ledger import BatchItemResult, BatchRunResult, UnresolvedBatchSource
@@ -68,6 +70,7 @@ def register_evidence_batch_command(evidence_app: typer.Typer) -> None:
         "batch",
         help=tr("cli.app.ledger.evidence.batch_help"),
     )
+    @command_execution_policy(LEDGER_NETWORK_WRITE)
     def evidence_batch(
         ctx: typer.Context,
         directory: str | None = typer.Argument(

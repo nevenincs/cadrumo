@@ -35,12 +35,14 @@ from ...application.workflow import workflow_state_repository
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, _filing_taxpayer_or_refuse
 from ._modelo_cli_support import (
     parse_revision_selector,
     validate_calculation_revision_id,
     validate_work_unit_id,
 )
+from ._modelo_execution_policies import MODEL_HANDOFF
 from ._modelo_payloads import ModeloExportPayload
 from ._modelo_work_options import (
     _BucketIdOpt,
@@ -130,6 +132,7 @@ def register_export_commands(
             ),
         ),
     )
+    @command_execution_policy(MODEL_HANDOFF)
     def modelo_export_verb(
         ctx: typer.Context,
         work_unit_id: Annotated[

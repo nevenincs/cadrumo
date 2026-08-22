@@ -211,6 +211,14 @@ def test_the_campaign_builds_the_commit_the_bump_landed() -> None:
     assert "needs.bump.outputs.commit" in str(campaign)
 
 
+def test_campaign_dispatch_cannot_override_resolution_with_a_mutable_ref() -> None:
+    """The resolver owns one SHA for both dispatch and run identity matching."""
+    surface = _run_surface(_document(), "campaign")
+
+    assert '--head-sha "${head_sha}"' in surface
+    assert "--ref" not in surface
+
+
 def test_the_acquisition_lane_set_is_derived_not_hardcoded() -> None:
     """Lanes come from the claimed-channel authority the publication gate reads.
 

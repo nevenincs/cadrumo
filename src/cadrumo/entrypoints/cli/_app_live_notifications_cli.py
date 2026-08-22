@@ -49,6 +49,7 @@ from ...application.live import (
 from ...core.config import Settings, load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ._app_execution_policies import ENCRYPTED_READ, LIVE_PROFILE_WRITE, declare_metadata_group
 from ._app_live_auth_preflight import resolve_active_bucket, run_auth_preflight
 from ._app_live_payloads import (
     NotificationDocumentHistoryEntry,
@@ -63,6 +64,7 @@ from ._app_live_payloads import (
     NotificationsViewResult,
     SancionReadingPayload,
 )
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, notice_lines
 
 if TYPE_CHECKING:
@@ -127,6 +129,7 @@ notifications_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(notifications_app)
 
 
 @notifications_app.command(
@@ -306,6 +309,7 @@ document_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(document_app)
 notifications_app.add_typer(document_app, name="document")
 
 
@@ -645,3 +649,18 @@ def notifications_document_history(ctx: typer.Context) -> None:
         lines=lines,
         notices=notices,
     )
+
+
+for _callback in (
+    notifications_pull,
+    notifications_document_pull,
+):
+    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)
+for _callback in (
+    notifications_list,
+    notifications_show,
+    notifications_latest,
+    notifications_document_view,
+    notifications_document_history,
+):
+    command_execution_policy(ENCRYPTED_READ)(_callback)

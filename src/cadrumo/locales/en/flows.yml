@@ -295,7 +295,6 @@ flows:
     strength:
       fair: Reasonable.
       strong: Strong.
-      too_short: 'Too short: at least {minimum_length} characters are required.'
       weak: Accepted, but weak. Making it longer helps more than adding symbols.
     title: Create your profile
     username_hint: How this profile appears in lists. You can change it later.

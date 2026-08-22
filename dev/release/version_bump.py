@@ -538,14 +538,14 @@ def commit_tag_and_push(
     # `-c` rather than a persisted `git config` call: this repo is the real
     # checkout (or, under a rehearsal, the disposable copy that already seeded
     # its own persisted identity), and a runner image carries no default git
-    # identity, so a bare `git commit` fails "Author identity unknown" the
-    # first time this stage actually runs. The same bot identity the account's
+    # identity, so both a bare `git commit` and the annotated `git tag -a`
+    # fail when this stage first runs. The same bot identity the account's
     # other automated commits (the Scoop/Homebrew tap pushes) already use.
     identity = ["-c", "user.name=cadrumo-release", "-c", "user.email=release@cadrumo.invalid"]
     _run([git, "add", "--", *(str(relative) for relative in _STAGED_RELATIVE_PATHS)], cwd=repo_root)
     _run([git, *identity, "commit", "-m", f"chore(release): v{version}"], cwd=repo_root)
     commit_sha = _run([git, "rev-parse", "HEAD"], cwd=repo_root).stdout.strip()
-    _run([git, "tag", "-a", tag_name, "-m", f"Cadrumo {tag_name}"], cwd=repo_root)
+    _run([git, *identity, "tag", "-a", tag_name, "-m", f"Cadrumo {tag_name}"], cwd=repo_root)
     if push:
         _run([git, "push", "origin", "main"], cwd=repo_root)
         _run([git, "push", "origin", f"refs/tags/{tag_name}"], cwd=repo_root)

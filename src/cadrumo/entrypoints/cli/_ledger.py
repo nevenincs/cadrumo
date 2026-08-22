@@ -52,6 +52,7 @@ from ...domain.transactions import (
     is_classified,
 )
 from ._bienes_inversion_cli import register_bienes_inversion_commands
+from ._command_policy import command_execution_policy
 from ._common import (
     _bad,
     _emit_envelope,
@@ -67,6 +68,13 @@ from ._ledger_business_invoice_cli import (
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
 from ._ledger_counterparty_cli import register_counterparty_commands
 from ._ledger_evidence_cli import register_evidence_commands
+from ._ledger_execution_policies import (
+    LEDGER_COMPUTE_WRITE,
+    LEDGER_NETWORK_COMPUTE_WRITE,
+    LEDGER_NETWORK_WRITE,
+    LEDGER_WRITE,
+    declare_metadata_group,
+)
 from ._ledger_import_cli import register_import_commands
 from ._ledger_inventory_cli import inventory_app, register_inventory_commands
 from ._ledger_lifecycle_cli import (
@@ -141,6 +149,7 @@ app = typer.Typer(
     help=tr("cli.ledger.app_help"),
     no_args_is_help=True,
 )
+declare_metadata_group(app)
 
 
 def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
@@ -262,6 +271,7 @@ def _prorrata_sector_unmatched_notice(
 
 
 @app.command("add", help=tr("cli.ledger.add.help"))
+@command_execution_policy(LEDGER_NETWORK_WRITE)
 def ledger_add(
     ctx: typer.Context,
     booked_date: str = typer.Option(..., "--date", help=tr("cli.ledger.add.date_help")),
@@ -473,6 +483,7 @@ def ledger_add(
 
 
 @app.command("update", help=tr("cli.ledger.update.help"))
+@command_execution_policy(LEDGER_WRITE)
 def ledger_update(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(..., help=tr("cli.ledger.update.id_help")),
@@ -569,6 +580,7 @@ _FileOpt = Annotated[
 
 
 @app.command("classify", help=tr("cli.ledger.classify.help"))
+@command_execution_policy(LEDGER_NETWORK_COMPUTE_WRITE)
 def ledger_classify(
     ctx: typer.Context,
     transaction_id: str | None = typer.Argument(None, help=tr("cli.ledger.classify.id_help")),
@@ -764,6 +776,7 @@ def ledger_classify(
 
 
 @app.command("allocate", help=tr("cli.ledger.allocate.help"))
+@command_execution_policy(LEDGER_COMPUTE_WRITE)
 def ledger_allocate(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(..., help=tr("cli.ledger.allocate.id_help")),
@@ -837,6 +850,7 @@ register_lifecycle_commands(app)
     "link",
     help=tr("cli.ledger.link.help"),
 )
+@command_execution_policy(LEDGER_COMPUTE_WRITE)
 def ledger_link(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(

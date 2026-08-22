@@ -30,8 +30,10 @@ from ...application.modelo import (
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...domain.modelos import CalculationRevision, WorkUnit
+from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
 from ._modelo_cli_support import OutputLanguageOpt
+from ._modelo_execution_policies import MODEL_READ
 from ._modelo_payloads import WorkObservationsResult, WorkRevisionResult, WorkRevisionsResult
 from ._modelo_rendering import (
     calculation_observation_lines,
@@ -97,6 +99,7 @@ def _resolve_selected_revision(
 
 def _register_work_revisions_command(work_app: typer.Typer, deps: _WorkRevisionCommandDeps) -> None:
     @work_app.command("revisions", help=tr("cli.app.modelo.work.revisions_help"))
+    @command_execution_policy(MODEL_READ)
     def work_revisions(
         ctx: typer.Context,
         work_unit_id: _WorkUnitIdArg = None,
@@ -154,6 +157,7 @@ def _register_work_revisions_command(work_app: typer.Typer, deps: _WorkRevisionC
 
 def _register_work_revision_command(work_app: typer.Typer, deps: _WorkRevisionCommandDeps) -> None:
     @work_app.command("revision", help=tr("cli.app.modelo.work.revision_show_help"))
+    @command_execution_policy(MODEL_READ)
     def work_revision(
         ctx: typer.Context,
         calculation_revision_id: _CalculationRevisionIdArg = None,
@@ -231,6 +235,7 @@ def _register_work_observations_command(work_app: typer.Typer, deps: _WorkRevisi
             default="Show typed per-casilla calculation observations and provenance.",
         ),
     )
+    @command_execution_policy(MODEL_READ)
     def work_observations(
         ctx: typer.Context,
         calculation_revision_id: _CalculationRevisionIdArg = None,

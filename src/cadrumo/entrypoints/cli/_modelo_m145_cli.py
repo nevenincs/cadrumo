@@ -39,6 +39,8 @@ from ...application.modelo import (
     validate_m145_communication_record,
 )
 from ...core.i18n import tr
+from ._command_policy import command_execution_policy
+from ._modelo_execution_policies import MODEL_HANDOFF, MODEL_READ, MODEL_WRITE, declare_metadata_group
 from ._modelo_m145_parsing import ParseCasillaOverride, m145_actor_from_cli, m145_create_command_from_cli
 from ._modelo_m145_rendering import (
     emit_m145_export_result,
@@ -65,6 +67,7 @@ def register_m145_communication_commands(
         no_args_is_help=True,
         add_completion=False,
     )
+    declare_metadata_group(m145_app)
     app.add_typer(m145_app, name="m145")
 
     def _bucket_id() -> str:
@@ -78,6 +81,7 @@ def register_m145_communication_commands(
             default="Create a Modelo 145 local payer communication record.",
         ),
     )
+    @command_execution_policy(MODEL_WRITE)
     def m145_create(
         ctx: typer.Context,
         year: Annotated[
@@ -139,6 +143,7 @@ def register_m145_communication_commands(
             default="Validate a Modelo 145 local payer communication record.",
         ),
     )
+    @command_execution_policy(MODEL_READ)
     def m145_validate(
         ctx: typer.Context,
         communication_record_id: Annotated[
@@ -162,6 +167,7 @@ def register_m145_communication_commands(
             default="Export a Modelo 145 local payer communication record.",
         ),
     )
+    @command_execution_policy(MODEL_HANDOFF)
     def m145_export(
         ctx: typer.Context,
         communication_record_id: Annotated[
@@ -202,6 +208,7 @@ def _register_m145_transition_commands(
             default="Mark a Modelo 145 local communication record delivered to the payer.",
         ),
     )
+    @command_execution_policy(MODEL_WRITE)
     def m145_mark_delivered_to_payer(
         ctx: typer.Context,
         communication_record_id: Annotated[
@@ -228,6 +235,7 @@ def _register_m145_transition_commands(
             default="Mark a Modelo 145 local communication record locally completed.",
         ),
     )
+    @command_execution_policy(MODEL_WRITE)
     def m145_mark_locally_completed(
         ctx: typer.Context,
         communication_record_id: Annotated[

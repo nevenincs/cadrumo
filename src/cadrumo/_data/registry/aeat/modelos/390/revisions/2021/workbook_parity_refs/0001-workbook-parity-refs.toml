@@ -1,0 +1,9 @@
+[[revisions."2021".workbook_parity_refs]]
+id = "modelo-390-dr-2021"
+workbook_source = "aeat-dr-390-2021"
+fixture_id = "modelo-390-2021-record-design-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2021"]

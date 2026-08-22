@@ -39,6 +39,7 @@ from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva import StatedCountryCodeStatus
+from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope, _state, _tx_repo, resolve_notice_action
 from ._ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
@@ -47,12 +48,14 @@ from ._ledger_business_payloads import (
     EvidenceReviewRowPayload,
     EvidenceReviewShowResult,
 )
+from ._ledger_execution_policies import LEDGER_READ, declare_metadata_group
 
 review_app = typer.Typer(
     name="review",
     help=tr("cli.app.ledger.evidence.review.group_help"),
     no_args_is_help=True,
 )
+declare_metadata_group(review_app)
 
 
 def register_evidence_review_commands(evidence_app: typer.Typer) -> None:
@@ -431,6 +434,7 @@ def _register_review_list_command() -> None:
         "list",
         help=tr("cli.app.ledger.evidence.review.list_help"),
     )
+    @command_execution_policy(LEDGER_READ)
     def review_list(
         ctx: typer.Context,
         reason: ConfirmationBlockReason | None = typer.Option(
@@ -531,6 +535,7 @@ def _register_review_show_command() -> None:
         "show",
         help=tr("cli.app.ledger.evidence.review.show_help"),
     )
+    @command_execution_policy(LEDGER_READ)
     def review_show(
         ctx: typer.Context,
         reference: str = typer.Argument(
