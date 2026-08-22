@@ -7,6 +7,7 @@ from datetime import date
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .._errors import NoRevisionForPeriodError
 from .._temporal import select_revision
 from ._registry_schema_support import _committed_modelo
@@ -56,6 +57,19 @@ def test_m390_has_no_open_compatibility_revision() -> None:
     modelo, _catalogues = _committed_modelo("390")
 
     assert set(modelo.revisions) == {"2021", "2022", "2023", "2024", "2025"}
+
+
+def test_m390_2021_parser_epoch_does_not_advertise_filing_capability() -> None:
+    modelo, _catalogues = _committed_modelo("390")
+    revision = modelo.revisions["2021"]
+
+    surfaces = {link.surface for link in revision.application_links}
+    consumers = {link.consumer for link in revision.application_links}
+
+    assert revision.authority_grade == RegistryAuthorityGrade.APPLICABILITY
+    assert surfaces == {"extractor"}
+    assert "cadrumo.application.filing" not in consumers
+    assert not revision.export_layouts
 
 
 #: Binding ids embed the revision year (`modelo-390-2024.page_5.223-239....`),

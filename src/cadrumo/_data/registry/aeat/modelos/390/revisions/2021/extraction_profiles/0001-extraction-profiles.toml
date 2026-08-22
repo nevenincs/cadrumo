@@ -40,7 +40,10 @@ target_casillas = [
     # generated corpus. Measured against the bundled AEAT manual annex.
     {casilla_id = "iva.anual.resultado-regimen-general", match_strategy = "named_label", value_kind = "amount", label_pattern = '(?:Resultado\s+r[eé]gimen\s+general|Result\s+of\s+the\s+general\s+system)\s+\(\s*4\s*7\s*-\s*64\s*\)'},
     {casilla_id = "iva.anual.compensacion-ultimo-periodo-97", match_strategy = "named_label", value_kind = "amount", label_pattern = '\{?\s*(?:A\s+compensar|To\s+offset)'},
-    {casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97", match_strategy = "named_label", value_kind = "amount", label_pattern = '(?:Cuotas\s+pendientes\s+de\s+compensaci[oó]n\s+generadas\s+en\s+el\s+ejercicio|Amounts\s+pending\s+offset\s+arising\s+in\s+the\s+year)'},
+    # Box 662 is printed but blank in the 2021 English declaration. Anchoring
+    # on its box geometry lets the extractor observe that absence; a named-label
+    # match mistakes the printed box number itself for an amount of 662 euros.
+    {casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^662$", value_offset = "right_of_number", anchor_x_min = 335.0, anchor_x_max = 360.0}},
 ]
 confidence = "strict"
 corpus_round_trip_verified = true
