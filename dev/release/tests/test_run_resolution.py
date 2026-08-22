@@ -248,6 +248,22 @@ def test_resolve_rejects_a_malformed_head_sha() -> None:
         )
 
 
+def test_resolve_normalizes_uppercase_sha_to_github_canonical_identity() -> None:
+    """Uppercase input matches GitHub's lowercase run record and returns lowercase."""
+    created_after = datetime(2026, 8, 2, tzinfo=UTC)
+    own = _run_record(run_id=102, created_at=created_after + timedelta(seconds=1))
+
+    resolved = rr.resolve_dispatched_run(
+        workflow_path=_WORKFLOW,
+        head_sha=_HEAD_SHA.upper(),
+        created_after=created_after,
+        run_records=(own,),
+    )
+
+    assert resolved.head_sha == _HEAD_SHA
+    assert resolved.run_id == "102"
+
+
 # ---------------------------------------------------------------------------
 # wait_for_run — bounded poll over an injected clock; the competing-run hazard
 # ---------------------------------------------------------------------------
@@ -447,6 +463,25 @@ def test_dispatch_workflow_raises_on_gh_failure(tmp_path: Path) -> None:
         rr.dispatch_workflow(_WORKFLOW, ref=_HEAD_SHA, gh_executable=str(script))
 
 
+@pytest.mark.parametrize("mutable_or_malformed_ref", ["main", "abc123", "g" * 40])
+def test_dispatch_workflow_refuses_non_immutable_ref_before_invoking_gh(
+    tmp_path: Path,
+    mutable_or_malformed_ref: str,
+) -> None:
+    """A branch or malformed ref produces no external dispatch side effect."""
+    capture = tmp_path / "argv.txt"
+    script = _write_argv_capture_gh(tmp_path / "bin", capture_path=capture)
+
+    with pytest.raises(rr.RunResolutionError, match="40-character"):
+        rr.dispatch_workflow(
+            _WORKFLOW,
+            ref=mutable_or_malformed_ref,
+            gh_executable=str(script),
+        )
+
+    assert not capture.exists()
+
+
 def test_list_workflow_runs_parses_real_subprocess_output(tmp_path: Path) -> None:
     """Multi-line JSON output from a real gh stub parses into one record per line."""
     lines = "\n".join(
@@ -542,6 +577,54 @@ def test_dispatch_and_resolution_share_the_same_immutable_revision_when_main_adv
     assert _OTHER_SHA not in argv
     assert resolved.head_sha == _HEAD_SHA
     assert resolved.run_id == "77"
+
+
+def test_dispatch_and_resolve_normalizes_uppercase_before_dispatch_and_matching(tmp_path: Path) -> None:
+    """One canonical lowercase SHA crosses both the gh and run-record boundaries."""
+    capture = tmp_path / "argv.txt"
+    script = _write_argv_capture_gh(tmp_path / "bin", capture_path=capture)
+    fixed_now = datetime(2026, 8, 2, 9, 0, 0, tzinfo=UTC)
+    own = _run_record(run_id=79, created_at=fixed_now + timedelta(seconds=1))
+
+    resolved = rr.dispatch_and_resolve(
+        _WORKFLOW,
+        head_sha=_HEAD_SHA.upper(),
+        resolve_budget=rr.PollBudget(total_seconds=30),
+        gh_executable=str(script),
+        list_runs=lambda: (own,),
+        now=lambda: fixed_now,
+        sleep=lambda _seconds: None,
+    )
+
+    argv = _read_argv(capture)
+    assert argv[argv.index("--ref") + 1] == _HEAD_SHA
+    assert resolved.head_sha == _HEAD_SHA
+
+
+def test_dispatch_and_resolve_rejects_mutable_head_before_clock_or_gh_side_effect(tmp_path: Path) -> None:
+    """Composite validation precedes both timestamp capture and external dispatch."""
+    capture = tmp_path / "argv.txt"
+    script = _write_argv_capture_gh(tmp_path / "bin", capture_path=capture)
+    clock_read = False
+
+    def observe_clock() -> datetime:
+        nonlocal clock_read
+        clock_read = True
+        return datetime(2026, 8, 2, tzinfo=UTC)
+
+    with pytest.raises(rr.RunResolutionError, match="40-character"):
+        rr.dispatch_and_resolve(
+            _WORKFLOW,
+            head_sha="main",
+            resolve_budget=rr.PollBudget(total_seconds=30),
+            gh_executable=str(script),
+            list_runs=tuple,
+            now=observe_clock,
+            sleep=lambda _seconds: None,
+        )
+
+    assert not clock_read
+    assert not capture.exists()
 
 
 # ---------------------------------------------------------------------------

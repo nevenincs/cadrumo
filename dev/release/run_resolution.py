@@ -159,6 +159,18 @@ def _run_gh(gh: str, arguments: Sequence[str]) -> str:
     return result.stdout
 
 
+def _canonical_commit_sha(value: str, *, field_name: str) -> str:
+    """Return one immutable full commit SHA in GitHub's lowercase spelling.
+
+    Validation belongs before dispatch, not only in run resolution: accepting a
+    branch name or malformed token long enough to invoke ``gh workflow run``
+    creates an external side effect that the later resolver can never undo.
+    """
+    if len(value) != 40 or not all(character in "0123456789abcdefABCDEF" for character in value):
+        raise RunResolutionError(f"{field_name} must be one full 40-character commit SHA, got {value!r}")
+    return value.lower()
+
+
 def dispatch_workflow(
     workflow_path: str,
     *,
@@ -174,8 +186,9 @@ def dispatch_workflow(
     happens-before semantics must capture their own created-after timestamp
     BEFORE calling this function (:func:`dispatch_and_resolve` does this).
     """
+    immutable_ref = _canonical_commit_sha(ref, field_name="ref")
     gh = _resolve_gh(gh_executable)
-    arguments = ["workflow", "run", workflow_path, "--repo", repo_slug, "--ref", ref]
+    arguments = ["workflow", "run", workflow_path, "--repo", repo_slug, "--ref", immutable_ref]
     for key, value in sorted((inputs or {}).items()):
         arguments += ["-f", f"{key}={value}"]
     _run_gh(gh, arguments)
@@ -249,8 +262,7 @@ def resolve_dispatched_run(
             matches, or the live ``gh`` call fails.
         RunNotYetVisibleError: No run matches yet.
     """
-    if len(head_sha) != 40 or not all(c in "0123456789abcdefABCDEF" for c in head_sha):
-        raise RunResolutionError(f"head_sha must be one full 40-character commit SHA, got {head_sha!r}")
+    canonical_head_sha = _canonical_commit_sha(head_sha, field_name="head_sha")
     records = (
         run_records
         if run_records is not None
@@ -260,27 +272,27 @@ def resolve_dispatched_run(
         record
         for record in records
         if record.get("path") == workflow_path
-        and record.get("head_sha") == head_sha
+        and record.get("head_sha") == canonical_head_sha
         and str(record.get("event")) == "workflow_dispatch"
         and _parse_created_at(record) >= created_after
     ]
     if not candidates:
         raise RunNotYetVisibleError(
-            f"no workflow_dispatch run of {workflow_path!r} at {head_sha!r} created at/after "
+            f"no workflow_dispatch run of {workflow_path!r} at {canonical_head_sha!r} created at/after "
             f"{created_after.isoformat()} is visible yet",
         )
     if len(candidates) > 1:
         ids = sorted(str(candidate.get("id")) for candidate in candidates)
         raise RunResolutionError(
             f"ambiguous dispatch: {len(candidates)} workflow_dispatch run(s) of {workflow_path!r} at "
-            f"{head_sha!r} created at/after {created_after.isoformat()} match: {ids}. Refusing to guess "
+            f"{canonical_head_sha!r} created at/after {created_after.isoformat()} match: {ids}. Refusing to guess "
             "which is this dispatch's own run — a competing dispatch queued in the same window.",
         )
     record = candidates[0]
     return DispatchedRun(
         run_id=str(record["id"]),
         workflow_path=workflow_path,
-        head_sha=head_sha,
+        head_sha=canonical_head_sha,
         html_url=str(record.get("html_url", "")),
     )
 
@@ -382,17 +394,18 @@ def dispatch_and_resolve(
     :func:`dispatch_workflow` and :func:`resolve_dispatched_run` stay exposed
     separately for finer-grained composition and testing.
     """
+    canonical_head_sha = _canonical_commit_sha(head_sha, field_name="head_sha")
     created_after = now()
     dispatch_workflow(
         workflow_path,
-        ref=head_sha,
+        ref=canonical_head_sha,
         inputs=inputs,
         repo_slug=repo_slug,
         gh_executable=gh_executable,
     )
     return wait_for_run(
         workflow_path=workflow_path,
-        head_sha=head_sha,
+        head_sha=canonical_head_sha,
         created_after=created_after,
         budget=resolve_budget,
         repo_slug=repo_slug,
