@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ... import core
+from ...domain.modelos import CalculationSourceRef
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -340,6 +341,42 @@ def test_authority_admits_a_complete_supported_connected_claim() -> None:
     assert row.disposition is core.SourceConnectivityDisposition.CONNECTED
     assert row.connected_proof is not None
     assert row.connected_proof.connection == _connection()
+
+
+@pytest.mark.parametrize(
+    "source_ref",
+    [
+        "percepcion:12345678Z:A:-",
+        "invoice:INV-2026/0001",
+        "foreign_asset:Opaque Asset Ref #1",
+        " invoice:Case-And-Space/0002 ",
+        "R" * 256,
+    ],
+)
+def test_connectivity_source_reference_acceptance_matches_persisted_model_exactly(source_ref: str) -> None:
+    persisted = CalculationSourceRef(
+        source_kind=core.BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
+        source_ref=source_ref,
+        fingerprint=_FINGERPRINT,
+    )
+    connection = _connection(source_ref=source_ref)
+    proof = _connected_proof(connection).encrypted_revision
+    assert connection.source_ref == persisted.source_ref == source_ref
+    assert proof.persisted_source_identity == source_ref
+
+
+@pytest.mark.parametrize("source_ref", ["", "R" * 257])
+def test_connectivity_source_reference_rejection_matches_persisted_model(source_ref: str) -> None:
+    with pytest.raises(ValidationError):
+        CalculationSourceRef(
+            source_kind=core.BindingSourceKind.COLLECTIBLE_INVOICE.value,
+            binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
+            source_ref=source_ref,
+            fingerprint=_FINGERPRINT,
+        )
+    with pytest.raises(ValidationError):
+        _connection(source_ref=source_ref)
 
 
 @pytest.mark.parametrize(
