@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:7f29099c9a905552fea9b4b4af49ea3b35847450cf33c1539983cd12278310fb'
+body_hash: 'sha256:8ff4c3f3c61a478fd2864be7c9edc893009a46e2da6ae0bb89c366cfa50f318d'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -13816,6 +13816,97 @@ divergences) plus the unregistered-design list, the formula-parity ownership
 check, `test_every_bundled_design_is_read_or_reported`, and the modelo 100
 art. 85 imputed-real-estate worked example. The eleventh is the peer's modelo 763
 url, in flight.
+
+Modelo 840 still needs `bindings` and `export_layouts`, `projection_endpoints`
+decided once a layout exists, and 108 casillas whose Catalan and Hungarian
+labels this session cannot ground.
+
+## Tick: two orphaned formula sets adopted, and the registry package reduced to its declared worklists
+
+Re-measured at tick start: authority loads CLEAN, eleven standing registry
+failures.
+
+### Formulas no construct owned
+
+`test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces`
+requires every formula in a revision to be owned by a construct -- that is what
+carries the calculation, review, approval, reconciliation and workflow surfaces
+to it. Two revisions had orphans, and the whole population was measured before
+either was touched, so this was one pass rather than one failure per run:
+
+* **Modelo 309 / 2004-y-siguientes** declared three formulas and its single
+  construct owned one. The two orphans target the modelo's own boxes 22 and 24
+  and carry legal_refs identical to the owned one -- LIVA art. 161 and Orden
+  HAC/3625/2003 apartados 1 and 3 -- which the construct's refs already cover.
+* **Modelo 353 / 2008-2025** declared six and owned three. The three orphans are
+  the 2021-2025 era formulas targeting boxes 03, 05 and 09, and their refs are
+  likewise a subset of the construct's.
+
+In both cases the revision has exactly ONE construct and the construct's
+grounding already covers the orphans, so adoption is the only coherent reading
+rather than a choice between owners. Both were declared without being enrolled;
+nothing owned them and the workflow surfaces a construct carries never reached
+them.
+
+### A worked example missing one supplied binding
+
+The Modelo 100 art. 85 imputed-real-estate example refused with
+`binding 'renta-2024-profile-deduccion-maternidad' has no supplied value`. The
+2024 fixture already supplies four maternity-family inputs at neutral zero --
+guardería gastos, incremento, descendientes, cotizaciones SS madre -- and the
+2025 branch states the convention outright: "neutral zero when the chain under
+test is unrelated". The maternity deducción's own fact joined the closure after
+its four siblings and was the only one left unsupplied. Supplied on the same
+basis: an art. 85 imputed-real-estate scenario claims no maternity deducción.
+
+### A characterisation of mine, corrected
+
+Last tick this audit called `test_every_bundled_design_is_read_or_reported` a
+genuine gate rather than a declared inventory, and named it as untriaged work.
+Reading it settles the opposite: "THE WORKLIST. Landed red deliberately; the
+failures are the finding ... do not weaken it, exempt from it, or narrow its
+enumeration to shorten the list." It is the third standing-red inventory
+alongside the filing-capability worklist and the span gate.
+
+It also answers the question its contents invite. Modelo 232's skipped `TABLAS`
+tab is very likely a lookup table rather than a lost record, and the module says
+so -- but "the extractor cannot tell a lookup tab from a dropped record body,
+and neither can this gate, so it reports the fact and declines to adjudicate."
+
+### What the worklist is actually asking for, grouped
+
+Nobody had grouped its 26 skips by class, so that is recorded here. Of ten
+partially-read designs:
+
+* **23 skips, one class**: a sheet declares N total positions and a range of
+  them "were not read at all, so rows were dropped". PDF row extraction losing
+  rows -- modelos 100 (2012, 2013, 2014), 131, 180, 200 (2010, 2011), 349, 390.
+* **2 skips**: modelo 232's `TABLAS` tab, which carries no
+  `Posic./Lon/Tipo/Contenido` columns anywhere -- the lookup-table case above.
+* **1 skip**: a distinct record body beginning mid-sheet with positions
+  restarting, which the source's heading does not announce.
+
+So this worklist is dominated by ONE parser class, not ten separate problems.
+Not attempted here: it is PDF row-extraction work in `_record_design.py`, where
+a peer campaign has landed five commits in two days, and the grouping above is
+the useful thing this tick can add to it.
+
+### Verified
+
+* formula parity: 1 passed, from failing on two modelos in turn.
+* the art. 85 module: 5 passed.
+* registry package: 8 failed, 5213 passed, from 11 failed / 5210 passed.
+* the before/after failure sets differ by exactly three, with NO new entry. One
+  of the three -- `test_committed_aeat_record_design_sources_match_corpus_manifests`
+  -- was closed by a peer's modelo 763 commits, not by this tick.
+* authority loads CLEAN after both registry edits.
+
+### Still open
+
+All eight remaining registry failures are now declared standing inventories: the
+filing-capability worklist, the four span-gate rows, the layout-design
+divergences, the unregistered-design list, and the partial-read worklist grouped
+above. No untriaged registry failure remains.
 
 Modelo 840 still needs `bindings` and `export_layouts`, `projection_endpoints`
 decided once a layout exists, and 108 casillas whose Catalan and Hungarian
