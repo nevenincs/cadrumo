@@ -217,7 +217,7 @@ from ._local_observation_actions import (
     ModeloLocalObservationResult,
     record_operator_local_observation,
 )
-from ._local_observation_spreadsheet import parse_casilla_value_spreadsheet
+from ._local_observation_spreadsheet import parse_casilla_lexical_spreadsheet, parse_casilla_value_spreadsheet
 from ._m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
@@ -926,6 +926,7 @@ __all__ = [
     "modelo_work_profile_preflight_report",
     "natural_target_work_units",
     "open_review_only_workspace",
+    "parse_casilla_lexical_spreadsheet",
     "parse_casilla_value_spreadsheet",
     "persist_filed_revision",
     "persist_filed_revision_observation",

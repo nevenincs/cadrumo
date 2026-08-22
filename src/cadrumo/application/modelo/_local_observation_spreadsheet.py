@@ -124,6 +124,34 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
     return values
 
 
+def parse_casilla_lexical_spreadsheet(path: Path) -> dict[str, str]:
+    """Read the complete spreadsheet casilla manifest without rewriting value tokens.
+
+    The same structural and numeric validation as
+    :func:`parse_casilla_value_spreadsheet` applies. CSV value cells are returned
+    byte-for-text exactly as decoded, while casilla ids remain trimmed identifiers.
+    """
+    if not path.exists() or not path.is_file():
+        raise ModeloLocalObservationError(
+            translated_message="errors.error.error_modelos",
+            context={"path": str(path)},
+        )
+    rows = _read_xlsx_rows(path) if path.suffix.lower() == XLSX_EXTENSION else _read_csv_rows(path)
+    if not rows:
+        raise ModeloLocalObservationError(
+            translated_message="errors.error.error_modelos",
+            context={"path": str(path)},
+        )
+    code_index, value_index, data_rows = _locate_columns(rows)
+    decimal_values, malformed = _parse_value_rows(data_rows, code_index=code_index, value_index=value_index)
+    if malformed or not decimal_values:
+        raise ModeloLocalObservationError(
+            translated_message="errors.error.error_modelos",
+            context={"path": str(path), "malformed_rows": " | ".join(malformed)},
+        )
+    return {_cell(row, code_index): row[value_index] for row in data_rows if _cell(row, code_index)}
+
+
 def _parse_value_rows(
     data_rows: list[list[str]],
     *,
@@ -241,8 +269,8 @@ def _read_csv_rows(path: Path) -> list[list[str]]:
     text = _decode_bytes(source_bytes, path=path)
     delimiter = detect_tabular_delimiter(text) or ","
     reader = csv.reader(io.StringIO(text), delimiter=delimiter)
-    rows = [[cell.strip() for cell in row] for row in reader]
-    return [row for row in rows if any(cell for cell in row)]
+    rows = [list(row) for row in reader]
+    return [row for row in rows if any(cell.strip() for cell in row)]
 
 
 def _decode_bytes(source_bytes: bytes, *, path: Path) -> str:
@@ -286,5 +314,6 @@ def _read_xlsx_rows(path: Path) -> list[list[str]]:
 
 __all__ = [
     "CSV_EXTENSIONS",
+    "parse_casilla_lexical_spreadsheet",
     "parse_casilla_value_spreadsheet",
 ]

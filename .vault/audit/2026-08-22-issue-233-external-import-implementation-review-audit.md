@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:7a638a6a005d03adedf70bbbbb50c2f6a478daae96e97d00a6641ef8f43b1600'
+body_hash: 'sha256:8863d184dbd9051a4ad5ae56420dfe223f2da9acad8449f78e343ccbd24d71fc'
 related: []
 ---
 
@@ -81,6 +81,37 @@ this four-file diff, but they prevent compatibility and immediate-amendment
 acceptance from being claimed on this head. The branch needs a green,
 non-weakened adjacent import/amendment gate or a separately grounded baseline
 accounting for every failure before integration.
+
+### source-adapters-remain-disconnected-resolution | low | CSV/XLSX now has a real production caller
+
+Resolved in the corrective commit: `filing-record import --file` invokes the
+existing spreadsheet adapter, retains its decoded source lexicals, and calls
+the shared external-baseline service. The integration test drives the real CLI,
+CSV parser, secure repositories, and persisted calculation revision. PDF and
+live capture are no longer claimed by the focused E2E; their complete casilla
+extraction remains outside issue 233.
+
+### source-completeness-resolution | low | Registry-required numeric IDs now bind completeness
+
+Resolved in the corrective commit: the source service resolves the independent
+registry snapshot and refuses a source missing any required numeric casilla.
+The public-path regression removes one required M130 casilla and proves refusal
+before a work unit exists.
+
+### create-then-import-resolution | low | Fallible source validation precedes creation
+
+Resolved for application refusals in the corrective commit: registry identity,
+required-ID completeness, lexical/numeric agreement, M303 policy, actor shape,
+and justificante identity are validated before `create_work_unit`. Regressions
+prove partial and missing-evidence sources leave neither a work unit nor a work
+creation event.
+
+### adjacent-import-tests-resolution | low | Reported fixture drift is present on origin/main
+
+The hyphenated justificante fixtures and the strict uppercase-alphanumeric
+`AeatCsv` contract are byte-identical on `origin/main`; issue 233 did not cause
+that failure and does not weaken or rewrite it. The corrective application,
+spreadsheet, and CLI lanes are green.
 
 ## Recommendations
 

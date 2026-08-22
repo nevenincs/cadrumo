@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import Period
+from ....domain.buckets import BucketEventType
 from ....domain.modelos import CalculationRevisionAmendmentKind, ExternalEvidenceKind
 from .. import (
     ExternalFilingBaselineSource,
@@ -52,25 +53,12 @@ def test_source_lexicals_refuse_value_shadowing() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    "evidence_kind",
-    (
-        ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-        ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-        ExternalEvidenceKind.AEAT_CSV_REGISTER,
-    ),
-)
 def test_source_payload_import_creates_exact_amendable_baseline(
     repos: _Repos,
-    evidence_kind: ExternalEvidenceKind,
 ) -> None:
-    """Each transport's complete casilla map reaches one durable baseline."""
+    """The CSV-register source's complete casilla map reaches one durable baseline."""
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    reference_id = {
-        ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF: "SOURCEPDF0001",
-        ExternalEvidenceKind.AEAT_LIVE_CAPTURE: "SOURCELIVE001",
-        ExternalEvidenceKind.AEAT_CSV_REGISTER: "SOURCECSV0001",
-    }[evidence_kind]
+    reference_id = "SOURCECSV0001"
     persist_justificante_metadata(
         reference_id,
         modelo="130",
@@ -85,7 +73,7 @@ def test_source_payload_import_creates_exact_amendable_baseline(
             modelo="130",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            evidence_kind=evidence_kind,
+            evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             evidence_reference_id=reference_id,
             tax_id=_TAX_ID,
             casilla_lexicals={
@@ -128,3 +116,68 @@ def test_source_payload_import_creates_exact_amendable_baseline(
         clock=_T2,
     )
     assert amended.amends_filing_record_id == filing.filing_record_id
+
+
+def test_public_source_import_refuses_partial_required_manifest_without_writes(repos: _Repos) -> None:
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    persist_justificante_metadata(
+        "PARTIALCSV01",
+        modelo="130",
+        filing_year=2026,
+        period="1T",
+        captured_at=_T1,
+        tax_id=_TAX_ID,
+    )
+    with pytest.raises(ExternalModeloImportError):
+        import_external_filing_source(
+            ExternalFilingBaselineSource(
+                modelo="130",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
+                evidence_reference_id="PARTIALCSV01",
+                tax_id=_TAX_ID,
+                casilla_lexicals={_IMPORT_INCOME_CASILLA: "1500"},
+            ),
+            bucket_id=_PROFILE_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T1,
+        )
+    assert not wu_repo.load()
+    assert not bv_repo.load().for_bucket(
+        _PROFILE_ID,
+        event_types=(BucketEventType.MODELO_WORK_UNIT_CREATED,),
+    )
+
+
+def test_failed_source_evidence_validation_leaves_no_work_unit_or_event(repos: _Repos) -> None:
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    with pytest.raises(ExternalModeloImportError):
+        import_external_filing_source(
+            ExternalFilingBaselineSource(
+                modelo="130",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
+                evidence_reference_id="MISSINGCSV01",
+                tax_id=_TAX_ID,
+                casilla_lexicals={
+                    _IMPORT_INCOME_CASILLA: "1500",
+                    _IMPORT_EXPENSE_CASILLA: "300",
+                },
+            ),
+            bucket_id=_PROFILE_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T1,
+        )
+    assert not wu_repo.load()
+    assert not bv_repo.load().for_bucket(
+        _PROFILE_ID,
+        event_types=(BucketEventType.MODELO_WORK_UNIT_CREATED,),
+    )

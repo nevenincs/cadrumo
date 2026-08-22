@@ -157,6 +157,45 @@ def import_external_filing_source(
         lexical_values[casilla_id] = raw_lexical
         decimal_values[casilla_id] = decimal_value
 
+    snapshot, canonical_values = _reject_unknown_import_casillas(
+        modelo=source.modelo,
+        filing_year=source.filing_year,
+        period=source.period,
+        casilla_values=decimal_values,
+    )
+    _validated_source_lexicals(
+        canonical_values=canonical_values,
+        source_lexicals=lexical_values,
+    )
+    required_numeric_ids = {
+        casilla.id
+        for casilla in snapshot.revision.casillas
+        if casilla.required and casilla.data_type in {"decimal", "money", "integer", "ratio", "boolean"}
+    }
+    missing_required = required_numeric_ids.difference(canonical_values)
+    if missing_required:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_source_incomplete",
+            context={"missing_casilla_ids": ",".join(sorted(missing_required))},
+        )
+    if source.modelo == Modelo.M303.value:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
+        )
+    if not actor.strip():
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_source_actor_blank",
+        )
+    _require_bound_justificante_artifact(
+        evidence_kind=source.evidence_kind,
+        evidence_reference_id=source.evidence_reference_id.strip(),
+        modelo=source.modelo,
+        filing_year=source.filing_year,
+        period=source.period,
+        expected_tax_id=source.tax_id,
+        justificante_repository=justificante_repository or JustificanteRepository(),
+    )
+
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
     active_matches = tuple(
         unit
