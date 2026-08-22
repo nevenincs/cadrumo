@@ -73,6 +73,14 @@ _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
 #: Nth field of one design onto the Nth of another), offset pairs only 163 of
 #: 217, and box-number-plus-description leaves seven unpaired while colliding
 #: six times per design.
+#: Re-examined on BYTES, the way modelo 347's blocker was, and unlike 347 this
+#: one SURVIVES: the 2022 and 2023 designs straddle. AEAT inserted fields into
+#: DR32201 (84 -> 99) and displaced the survivors five bytes, so 267-283 in
+#: 2022 sits at 272-288 in 2023 -- overlapping with neither containing the
+#: other, 82 times on that sheet and 3 more on DR32202. Position therefore
+#: carries no semantics across this boundary and the split needs a per-box
+#: reading. The re-layout is localised: DR32200, DR32203 and DR32204 nest
+#: cleanly. Measured in test_modelo_322_designs_straddle.py.
 #:
 #: `("184", "2015-y-siguientes")` removed: the revision was partitioned into
 #: `2015-2024` and `2025-y-siguientes` at the boundary Orden HAC/1430/2025 sets
