@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:7839ce1aba324e0164ea6f9377ddd9d0ca74bb676ea5824c7b3cfcf7ea7fb182'
+body_hash: 'sha256:ff9387f16d94dd36c15b3e4bd428e2b44281db6f8c3a1310e2f2560a0a057adc'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -12698,3 +12698,91 @@ names, so its cause is neither of the two fixed here and needs its own
 measurement. Modelos 220, 763 and 840 declare two casillas each against designs
 of 7596, 143 and 108 -- that gap is real unauthored surface, not an instrument
 defect, and authoring it is the campaign's own endpoint rather than a repair.
+
+## Tick: queue items 3 and 4 -- both modelos are correct, and both premises came from reading the wrong view
+
+Re-measured at tick start: authority loads CLEAN, generated-tree gates green.
+
+### Modelo 193 leaves no data position unwritten
+
+The item reported the three records emitting 235/339/207 against a design
+declaring 500. Measured, the records span exactly 500 and write 470/482/381
+(2024) and 470/494/381 (2025). The shortfall is gaps, not truncation.
+
+Reconciled against each record's OWN design sheet -- the declarante record
+renders Tipo 1, the perceptor record Tipo 2, and the gastos record the separate
+Tipo 2 "Relación de Gastos" sheet -- every unwritten position in all six records
+falls on a field the design itself marks `BLANCOS`. Zero DATA positions, zero
+positions the design maps to nothing.
+
+The control matters here, because a permissive blank-matcher would have produced
+the same tidy answer for the wrong reason. Each gap covers a WHOLE design field
+whose entire description is exactly `BLANCOS` or `BLANCOS.` -- 30 bytes at 190,
+3 at 136, 15 at 193, 119 at 76 -- so no substring leniency was needed and
+nothing was cleared by accident. The 2025 design's perceptor record writes 12
+more bytes than 2024's, which is `CÓDIGO ISIN` at 193, already authored.
+
+### Modelo 720 writes all 500 bytes of both records
+
+The item reported type_1 and type_2 emitting 180 and 480 against 500. Those are
+the GAP sizes, and they exist only in the raw layout view: both records are
+binding-derived, their TOML declares a single reserved-tail filler each (320
+bytes at 181, 20 bytes at 481), and the remaining coordinates live on the
+bindings. Read through `derive_export_layouts_from_bindings`, type_1 resolves to
+14 fields and type_2 to 31, both writing all 500 positions with no gap at all --
+matching the design's own 14 and 31 sheet fields exactly.
+
+I made this same mistake mid-tick: the first 720 measurement read the raw layout
+and reproduced the 180/480 figure. The resolver is what tells a record with no
+anchors from a record whose anchors are declared elsewhere.
+
+### The gate this leaves behind, and why it is enrolled rather than swept
+
+A fixed-width record is padded to its full span, so an unwritten position still
+reaches AEAT as spaces. Where the design says `BLANCOS` that is correct; where
+the design puts a DATA field there, the filing under-declares it behind a
+correct length and a valid digest, and nothing downstream can distinguish that
+from a taxpayer who declared nothing. That is the export-completeness rule one
+layer lower: completeness asks whether a casilla has a value, this asks whether
+the byte range that value belongs in is written at all.
+
+The gate reconciles each record against its design sheet and refuses any
+unwritten position that is not a declared blank. It reads through the binding
+resolver, never the raw layout, for the reason modelo 720 demonstrates.
+
+It is enrolled per record rather than swept across the tree because the
+record-to-sheet correspondence has no declared home. Sheet naming is
+heterogeneous -- `Tipo 1 - Registro De Declarante`, `M11100`, `DR 11500`,
+`Pág. 1`, `DPA` -- and keying on `record_type` plus a `Tipo N` prefix resolves
+**0 of the tree's 403 export records**. This is the same missing correspondence
+recorded last tick from the segmento side, now measured from the record side and
+far larger. Six modelo 193 records and two modelo 720 records are enrolled, each
+sheet read out of the design; a modelo absent from the table is UNMEASURED by
+this gate and the docstring says so rather than implying coverage.
+
+An anti-vacuity row per record proves each has real content to reconcile. It
+does NOT demand that every sheet declare a blank: modelo 720 writes every byte,
+which is a stronger state than a reconciled one, and requiring a blank would red
+it for being more complete than modelo 193.
+
+### Verified
+
+* the new gate: 17 passed across eight enrolled records.
+* generated-tree gates plus the gate and the 151/184/coverage-key modules: 87
+  passed.
+* authority loads CLEAN.
+* bite proof on real data: shortening ONE declarante field from 3 bytes to 2
+  reds exactly one test, naming the design DATA it exposed; the tracked fragment
+  restored byte-exactly and green again. An in-process proof also confirms that
+  removing a DATA field's coverage exposes design DATA, so the reconciliation
+  cannot be passing by finding nothing.
+
+### Still open
+
+The record-to-sheet correspondence needs a declared home in registry data before
+this gate can cover the remaining 395 records. That is a schema addition the
+proposed record-length ADR governs, and it is the shared dependency of queue
+items 5 and 6 -- both of which are stated in exactly the terms this gate
+measures. Recording rather than fixing, because authoring 395 correspondences is
+a tree-wide schema change rather than a repair, and the enrollment table gives
+each one a place to land as its modelo is worked.
