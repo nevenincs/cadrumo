@@ -2087,12 +2087,21 @@ five deadlines for periods the modelo may never have covered — the same trap o
 HAC/510/2021's disposición transitoria set for modelo 604, caught there only by reading the
 orden before generating.
 
-**Ley 13/2011 art. 48 could not be retrieved.** Three BOE surfaces were tried —
-`buscar/act.php`, the ELI consolidated URL, and `buscar/doc.php` — and all three truncate in
-Título V (around arts. 21–24), well before Título VII where the Régimen Fiscal sits; the
-open-data block endpoint returned HTTP 400. The provision is not reachable with a
-text-fetching tool at this document size. Whoever resumes this needs a browser tool, the
-per-block API with a correct block id, or the BOE PDF.
+**Ley 13/2011 art. 48 could not be retrieved — text fetch is exhausted, do not repeat it.**
+FOUR BOE surfaces were tried across two sittings: `buscar/act.php`, the ELI consolidated URL
+(`/eli/es/l/2011/05/27/13/con`), `buscar/doc.php`, and `diario_boe/xml.php`. All four truncate
+in or before Título V (arts. 21–24); the XML surface returns the table of contents listing
+"Artículo 48. Impuesto sobre actividades de juego" but cuts off in the preámbulo. The
+open-data block endpoint `/datosabiertos/api/legislacion-consolidada/id/BOE-A-2011-9280/texto/bloque/a48`
+returns HTTP 400. Título VII (Régimen fiscal) sits at the end of a document too large for a
+text-fetching tool to reach. Whoever resumes this needs a browser tool, the per-block API with
+a correct block id, or the BOE PDF — not another `WebFetch` against a consolidated URL.
+
+**A related fact that is measurable and already decisive on its own:** AEAT publishes NO
+diseño de registro covering 2011 or 1T 2012 for this modelo. The three bundled designs, with
+their manifest-recorded index titles, begin at 2T/3T 2012. That does not by itself rule on the
+first devengo, but it means the registry's `valid_from = 2011-01-01` is unsupported by every
+artefact AEAT ships for the form.
 
 **Recorded rather than resolved, deliberately.** `applies_from = 2012-04-01` on the new
 `aeat-dr-763-2012` source records what the artefact evidences; it is NOT a ruling on when the
