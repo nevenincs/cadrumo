@@ -9,7 +9,7 @@ related:
   - '[[2026-08-22-profile-registration-password-policy-holistic-credential-capability-research]]'
   - '[[2026-08-22-profile-registration-password-policy-tui-custody-validation-mismatch-reference]]'
 modified: '2026-08-22'
-body_hash: 'sha256:a7ac9cfc52a3d8562d163e806ab05cf08b78e3a703627d89c6c12cc9251da163'
+body_hash: 'sha256:24c6713ed09d642eed30ccdd3fb63ee5ffbaf61ca26c4ec83bdf507d5d493b17'
 ---
 
 <!-- RETIRED: S01 -->
@@ -98,7 +98,7 @@ Deliver scripted creation parity and complete real translations maintained only 
 
 Deliver real headless TUI and scripted CLI regressions for the original crash and canonical boundaries.
 
-- [ ] `W03.P08.S11` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then prove real TUI scripted CLI and all-language parity at scalar byte surrogate and exact-Unicode boundaries with no persistence on refusal; `profile credential inbound tests`.
+- [x] `W03.P08.S11` - Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then prove real TUI scripted CLI and all-language parity at scalar byte surrogate and exact-Unicode boundaries with no persistence on refusal; `profile credential inbound tests`.
 
 ## Wave `W04` - reconcile documentation and prove campaign closure
 
