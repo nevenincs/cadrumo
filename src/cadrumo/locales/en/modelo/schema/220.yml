@@ -122,6 +122,604 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+            x-chim8bj9dpq2qp3k68piqob3egp38bb4d4p30chk5lgn0r39cc:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. financial year 2024. applied in this assessment
+            x-chim8bj9dpq2qp3k68piqob3egp38bb4d4p30chk5ljmarg:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. financial year 2024. deduction generated
+            x-chim8bj9dpq2qp3k68piqob3egp38bb4d4p30chk5lo6arj45lj7at0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. financial year 2024. outstanding for application in future
+                periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojabb1e1m6ioo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2015. applied in
+                this assessment
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojabbgcln68bb1dpq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2015. deduction
+                outstanding from prior periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojabbgcln68bb5d8:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2015. deduction
+                outstanding in 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojabbgcln68bb6elq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2015. outstanding
+                for application in future periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojcbb1e1m6ioo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2016. applied in
+                this assessment
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojcbbgcln68bb1dpq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2016. deduction
+                outstanding from prior periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojcbbgcln68bb5d8:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2016. deduction
+                outstanding in 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojcbbgcln68bb6elq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2016. outstanding
+                for application in future periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojebb1e1m6ioo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2017. applied in
+                this assessment
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojebbgcln68bb1dpq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2017. deduction
+                outstanding from prior periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojebbgcln68bb5d8:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2017. deduction
+                outstanding in 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojebbgcln68bb6elq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2017. outstanding
+                for application in future periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojgbb1e1m6ioo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2018. applied in
+                this assessment
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojgbbgcln68bb1dpq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2018. deduction
+                outstanding from prior periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojgbbgcln68bb5d8:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2018. deduction
+                outstanding in 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojgbbgcln68bb6elq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2018. outstanding
+                for application in future periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojibb1e1m6ioo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2019. applied in
+                this assessment
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojibbgcln68bb1dpq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2019. deduction
+                outstanding from prior periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojibbgcln68bb5d8:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2019. deduction
+                outstanding in 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojibbgcln68bb6elq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2019. outstanding
+                for application in future periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p30bb1e1m6ioo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2020. applied in
+                this assessment
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p30bbgcln68bb1dpq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2020. deduction
+                outstanding from prior periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p30bbgcln68bb5d8:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2020. deduction
+                outstanding in 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p30bbgcln68bb6elq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2020. outstanding
+                for application in future periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p32bb1e1m6ioo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2021. applied in
+                this assessment
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p32bbgcln68bb1dpq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2021. deduction
+                outstanding from prior periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p32bbgcln68bb5d8:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2021. deduction
+                outstanding in 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p32bbgcln68bb6elq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2021. outstanding
+                for application in future periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p34bb1e1m6ioo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2022. applied in
+                this assessment
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p34bbgcln68bb1dpq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2022. deduction
+                outstanding from prior periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p34bbgcln68bb5d8:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2022. deduction
+                outstanding in 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p34bbgcln68bb6elq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2022. outstanding
+                for application in future periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p36bb1e1m6ioo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2023. applied in
+                this assessment
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p36bbgcln68bb1dpq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2023. deduction
+                outstanding from prior periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p36bbgcln68bb5d8:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2023. deduction
+                outstanding in 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p36bbgcln68bb6elq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2023. outstanding
+                for application in future periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p38bb1e1m6ioo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2024. applied in
+                this assessment
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p38bbgcln68bb1dpq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2024. deduction
+                outstanding from prior periods
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p38bbgcln68bb5d8:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2024. deduction
+                outstanding in 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p38bbgcln68bb6elq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2024. outstanding
+                for application in future periods
+            x-chim8bj9dpq2qp3k68piqobeegmn8rrkc5m2qobgdhkm6:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. total. applied in this assessment
+            x-chim8bj9dpq2qp3k68piqobeegmn8rrkc5m2qs35dpi2qobeeg:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. total. deduction outstanding from prior
+                periods
+            x-chim8bj9dpq2qp3k68piqobeegmn8rrkc5m2qs35dpi2qpba:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. total. deduction outstanding in 2024
+            x-chim8bj9dpq2qp3k68piqobeegmn8rrkc5m2qs35dpi2qpjleg:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. total. outstanding for application
+                in future periods
+            x-chim8bj9dpq2qp3k68piqt3fehgmobb1e1m6ioo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. total. applied in this assessment
+            x-chim8bj9dpq2qp3k68piqt3fehgmobb7cln0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. total. deduction generated
+            x-chim8bj9dpq2qp3k68piqt3fehgmobbgcln68bb6elq0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. total. outstanding for application in future periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g70mm2s3cd5hg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2008. applied in this assessment
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g70mn0pbecgmm2rjk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2008. deduction outstanding from prior periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g70mn0pbecgmmaqg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2008. deduction outstanding in 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g70mn0pbecgmmctbk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2008. outstanding for application in future periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g74mm2s3cd5hg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2009. applied in this assessment
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g74mn0pbecgmm2rjk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2009. deduction outstanding from prior periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g74mn0pbecgmmaqg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2009. deduction outstanding in 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g74mn0pbecgmmctbk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2009. outstanding for application in future periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h60mm2s3cd5hg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2010. applied in this assessment
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h60mn0pbecgmm2rjk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2010. deduction outstanding from prior periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h60mn0pbecgmmaqg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2010. deduction outstanding in 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h60mn0pbecgmmctbk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2010. outstanding for application in future periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h64mm2s3cd5hg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2011. applied in this assessment
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h64mn0pbecgmm2rjk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2011. deduction outstanding from prior periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h64mn0pbecgmmaqg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2011. deduction outstanding in 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h64mn0pbecgmmctbk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2011. outstanding for application in future periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h68mm2s3cd5hg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2012. applied in this assessment
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h68mn0pbecgmm2rjk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2012. deduction outstanding from prior periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h68mn0pbecgmmaqg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2012. deduction outstanding in 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h68mn0pbecgmmctbk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2012. outstanding for application in future periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6cmm2s3cd5hg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2013. applied in this assessment
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6cmn0pbecgmm2rjk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2013. deduction outstanding from prior periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6cmn0pbecgmmaqg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2013. deduction outstanding in 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6cmn0pbecgmmctbk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2013. outstanding for application in future periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6gmm2s3cd5hg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2014. applied in this assessment
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6gmn0pbecgmm2rjk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2014. deduction outstanding from prior periods
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6gmn0pbecgmmaqg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2014. deduction outstanding in 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6gmn0pbecgmmctbk:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2014. outstanding for application in future periods
+            x-chim8bj9dpq2qsj4dhimebbkdtq62r1dc5o6oqb3:
+              label: Deductions for internal double taxation, RDLEG 4/2004. total.
+                applied in this assessment
+            x-chim8bj9dpq2qsj4dhimebbkdtq62r1de1imsp1dc5n78:
+              label: Deductions for internal double taxation, RDLEG 4/2004. total.
+                deduction outstanding from prior periods
+            x-chim8bj9dpq2qsj4dhimebbkdtq62r1de1imsp1dcll0:
+              label: Deductions for internal double taxation, RDLEG 4/2004. total.
+                deduction outstanding in 2024
+            x-chim8bj9dpq2qsj4dhimebbkdtq62r1de1imsp1dcpqn8:
+              label: Deductions for internal double taxation, RDLEG 4/2004. total.
+                outstanding for application in future periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojabb1e1m6ioo:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2015. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojabbgcln68bb1dpq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2015. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojabbgcln68bb5d8:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2015. deduction outstanding in 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojabbgcln68bb6elq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2015. outstanding for application in future
+                periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojcbb1e1m6ioo:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2016. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojcbbgcln68bb1dpq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2016. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojcbbgcln68bb5d8:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2016. deduction outstanding in 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojcbbgcln68bb6elq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2016. outstanding for application in future
+                periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojebb1e1m6ioo:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2017. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojebbgcln68bb1dpq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2017. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojebbgcln68bb5d8:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2017. deduction outstanding in 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojebbgcln68bb6elq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2017. outstanding for application in future
+                periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojgbb1e1m6ioo:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2018. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojgbbgcln68bb1dpq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2018. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojgbbgcln68bb5d8:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2018. deduction outstanding in 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojgbbgcln68bb6elq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2018. outstanding for application in future
+                periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojibb1e1m6ioo:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2019. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojibbgcln68bb1dpq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2019. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojibbgcln68bb5d8:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2019. deduction outstanding in 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojibbgcln68bb6elq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2019. outstanding for application in future
+                periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p30bb1e1m6ioo:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2020. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p30bbgcln68bb1dpq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2020. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p30bbgcln68bb5d8:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2020. deduction outstanding in 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p30bbgcln68bb6elq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2020. outstanding for application in future
+                periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p32bb1e1m6ioo:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2021. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p32bbgcln68bb1dpq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2021. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p32bbgcln68bb5d8:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2021. deduction outstanding in 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p32bbgcln68bb6elq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2021. outstanding for application in future
+                periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p34bb1e1m6ioo:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2022. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p34bbgcln68bb1dpq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2022. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p34bbgcln68bb5d8:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2022. deduction outstanding in 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p34bbgcln68bb6elq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2022. outstanding for application in future
+                periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p36bb1e1m6ioo:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2023. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p36bbgcln68bb1dpq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2023. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p36bbgcln68bb5d8:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2023. deduction outstanding in 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p36bbgcln68bb6elq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2023. outstanding for application in future
+                periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p38bb1e1m6ioo:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2024. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p38bbgcln68bb1dpq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2024. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p38bbgcln68bb5d8:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2024. deduction outstanding in 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p38bbgcln68bb6elq0:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2024. outstanding for application in future
+                periods
+            x-chim8bj9dpq6obbcd5piqobeegmn8rrkc5m2qobgdhkm6:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. total. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobeegmn8rrkc5m2qs35dpi2qobeeg:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. total. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbcd5piqobeegmn8rrkc5m2qs35dpi2qpba:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. total. deduction outstanding in 2024
+            x-chim8bj9dpq6obbcd5piqobeegmn8rrkc5m2qs35dpi2qpjleg:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. total. outstanding for application in future periods
+            x-chim8bj9dpq6obbcd5piqobiegpj2bb4d4p30chk5lgn0r39cc:
+              label: Deductions for international double taxation, LIS. juridical
+                double taxation, tax borne by the taxpayer (art. 31 LIS). double taxation
+                of 2024. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobiegpj2bb4d4p30chk5ljmarg:
+              label: Deductions for international double taxation, LIS. juridical
+                double taxation, tax borne by the taxpayer (art. 31 LIS). double taxation
+                of 2024. deduction generated
+            x-chim8bj9dpq6obbcd5piqobiegpj2bb4d4p30chk5lo6arj45lj7at0:
+              label: Deductions for international double taxation, LIS. juridical
+                double taxation, tax borne by the taxpayer (art. 31 LIS). double taxation
+                of 2024. outstanding for application in future periods
+            x-chim8bj9dpq6obbcd5piqobiegpj4bb4d4p30chk5lgn0r39cc:
+              label: Deductions for international double taxation, LIS. economic double
+                taxation, dividends and profit participations (art. 32 LIS). double
+                taxation of 2024. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqobiegpj4bb4d4p30chk5ljmarg:
+              label: Deductions for international double taxation, LIS. economic double
+                taxation, dividends and profit participations (art. 32 LIS). double
+                taxation of 2024. deduction generated
+            x-chim8bj9dpq6obbcd5piqobiegpj4bb4d4p30chk5lo6arj45lj7at0:
+              label: Deductions for international double taxation, LIS. economic double
+                taxation, dividends and profit participations (art. 32 LIS). double
+                taxation of 2024. outstanding for application in future periods
+            x-chim8bj9dpq6obbcd5piqt3fegp38bb4d4p30chk5lgn0r39cc:
+              label: Deductions for international double taxation, LIS. total for
+                financial year 2024. applied in this assessment
+            x-chim8bj9dpq6obbcd5piqt3fegp38bb4d4p30chk5ljmarg:
+              label: Deductions for international double taxation, LIS. total for
+                financial year 2024. deduction generated
+            x-chim8bj9dpq6obbcd5piqt3fegp38bb4d4p30chk5lo6arj45lj7at0:
+              label: Deductions for international double taxation, LIS. total for
+                financial year 2024. outstanding for application in future periods
+            x-chim8bj9dpq6obbichm6appdctimschg60qiqobgdhkm6:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2005. applied in this assessment
+            x-chim8bj9dpq6obbichm6appdctimschg60qiqs35dpi2qobeeg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2005. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbichm6appdctimschg60qiqs35dpi2qpba:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2005. deduction outstanding in 2024
+            x-chim8bj9dpq6obbichm6appdctimschg60qiqs35dpi2qpjleg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2005. outstanding for application in future periods
+            x-chim8bj9dpq6obbichm6appdctimschg60r2qobgdhkm6:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2006. applied in this assessment
+            x-chim8bj9dpq6obbichm6appdctimschg60r2qs35dpi2qobeeg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2006. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbichm6appdctimschg60r2qs35dpi2qpba:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2006. deduction outstanding in 2024
+            x-chim8bj9dpq6obbichm6appdctimschg60r2qs35dpi2qpjleg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2006. outstanding for application in future periods
+            x-chim8bj9dpq6obbichm6appdctimschg60riqobgdhkm6:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2007. applied in this assessment
+            x-chim8bj9dpq6obbichm6appdctimschg60riqs35dpi2qobeeg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2007. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbichm6appdctimschg60riqs35dpi2qpba:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2007. deduction outstanding in 2024
+            x-chim8bj9dpq6obbichm6appdctimschg60riqs35dpi2qpjleg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2007. outstanding for application in future periods
+            x-chim8bj9dpq6obbichm6appdctimschg60s2qobgdhkm6:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2008. applied in this assessment
+            x-chim8bj9dpq6obbichm6appdctimschg60s2qs35dpi2qobeeg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2008. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbichm6appdctimschg60s2qs35dpi2qpba:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2008. deduction outstanding in 2024
+            x-chim8bj9dpq6obbichm6appdctimschg60s2qs35dpi2qpjleg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2008. outstanding for application in future periods
+            x-chim8bj9dpq6obbichm6appdctimschg60siqobgdhkm6:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2009. applied in this assessment
+            x-chim8bj9dpq6obbichm6appdctimschg60siqs35dpi2qobeeg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2009. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbichm6appdctimschg60siqs35dpi2qpba:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2009. deduction outstanding in 2024
+            x-chim8bj9dpq6obbichm6appdctimschg60siqs35dpi2qpjleg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2009. outstanding for application in future periods
+            x-chim8bj9dpq6obbichm6appdctimschg64o2qobgdhkm6:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2010. applied in this assessment
+            x-chim8bj9dpq6obbichm6appdctimschg64o2qs35dpi2qobeeg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2010. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbichm6appdctimschg64o2qs35dpi2qpba:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2010. deduction outstanding in 2024
+            x-chim8bj9dpq6obbichm6appdctimschg64o2qs35dpi2qpjleg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2010. outstanding for application in future periods
+            x-chim8bj9dpq6obbichm6appdctimschg64oiqobgdhkm6:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2011. applied in this assessment
+            x-chim8bj9dpq6obbichm6appdctimschg64oiqs35dpi2qobeeg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2011. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbichm6appdctimschg64oiqs35dpi2qpba:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2011. deduction outstanding in 2024
+            x-chim8bj9dpq6obbichm6appdctimschg64oiqs35dpi2qpjleg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2011. outstanding for application in future periods
+            x-chim8bj9dpq6obbichm6appdctimschg64p2qobgdhkm6:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2012. applied in this assessment
+            x-chim8bj9dpq6obbichm6appdctimschg64p2qs35dpi2qobeeg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2012. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbichm6appdctimschg64p2qs35dpi2qpba:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2012. deduction outstanding in 2024
+            x-chim8bj9dpq6obbichm6appdctimschg64p2qs35dpi2qpjleg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2012. outstanding for application in future periods
+            x-chim8bj9dpq6obbichm6appdctimschg64piqobgdhkm6:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2013. applied in this assessment
+            x-chim8bj9dpq6obbichm6appdctimschg64piqs35dpi2qobeeg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2013. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbichm6appdctimschg64piqs35dpi2qpba:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2013. deduction outstanding in 2024
+            x-chim8bj9dpq6obbichm6appdctimschg64piqs35dpi2qpjleg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2013. outstanding for application in future periods
+            x-chim8bj9dpq6obbichm6appdctimschg64q2qobgdhkm6:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2014. applied in this assessment
+            x-chim8bj9dpq6obbichm6appdctimschg64q2qs35dpi2qobeeg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2014. deduction outstanding from prior periods
+            x-chim8bj9dpq6obbichm6appdctimschg64q2qs35dpi2qpba:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2014. deduction outstanding in 2024
+            x-chim8bj9dpq6obbichm6appdctimschg64q2qs35dpi2qpjleg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2014. outstanding for application in future periods
+            x-chim8bj9dpq6obbichm6appdehnn8obc5lgn0r39cc:
+              label: Deductions for international double taxation, RDLEG 4/2004. total.
+                applied in this assessment
+            x-chim8bj9dpq6obbichm6appdehnn8obc5lo6arj45lgmst0:
+              label: Deductions for international double taxation, RDLEG 4/2004. total.
+                deduction outstanding from prior periods
+            x-chim8bj9dpq6obbichm6appdehnn8obc5lo6arj45limk:
+              label: Deductions for international double taxation, RDLEG 4/2004. total.
+                deduction outstanding in 2024
+            x-chim8bj9dpq6obbichm6appdehnn8obc5lo6arj45lj7at0:
+              label: Deductions for international double taxation, RDLEG 4/2004. total.
+                outstanding for application in future periods
+            x-chim8bjkd5o6ubbkd5o6ubbmc5m6usg:
+              label: Tax rate
             x-cln78qb4c5i2qp3fdlkmsobeehiisobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
               label: Parent entity. Surnames or legal name
             x-cln78qb4c5i2qp3fdlkmsobeehiisrjfdlh74p8:

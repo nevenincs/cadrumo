@@ -140,6 +140,601 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+            x-chim8bj9dpq2qp3k68piqob3egp38bb4d4p30chk5lgn0r39cc:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicio
+                2024. aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqob3egp38bb4d4p30chk5ljmarg:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicio
+                2024. deduccion generada
+            x-chim8bj9dpq2qp3k68piqob3egp38bb4d4p30chk5lo6arj45lj7at0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicio
+                2024. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojabb1e1m6ioo:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2015. aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojabbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2015. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojabbgcln68bb5d8:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2015. deduccion pendiente en 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojabbgcln68bb6elq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2015. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojcbb1e1m6ioo:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2016. aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojcbbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2016. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojcbbgcln68bb5d8:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2016. deduccion pendiente en 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojcbbgcln68bb6elq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2016. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojebb1e1m6ioo:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2017. aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojebbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2017. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojebbgcln68bb5d8:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2017. deduccion pendiente en 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojebbgcln68bb6elq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2017. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojgbb1e1m6ioo:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2018. aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojgbbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2018. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojgbbgcln68bb5d8:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2018. deduccion pendiente en 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojgbbgcln68bb6elq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2018. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojibb1e1m6ioo:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2019. aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojibbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2019. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojibbgcln68bb5d8:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2019. deduccion pendiente en 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojibbgcln68bb6elq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2019. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p30bb1e1m6ioo:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2020. aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p30bbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2020. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p30bbgcln68bb5d8:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2020. deduccion pendiente en 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p30bbgcln68bb6elq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2020. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p32bb1e1m6ioo:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2021. aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p32bbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2021. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p32bbgcln68bb5d8:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2021. deduccion pendiente en 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p32bbgcln68bb6elq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2021. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p34bb1e1m6ioo:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2022. aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p34bbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2022. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p34bbgcln68bb5d8:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2022. deduccion pendiente en 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p34bbgcln68bb6elq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2022. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p36bb1e1m6ioo:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2023. aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p36bbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2023. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p36bbgcln68bb5d8:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2023. deduccion pendiente en 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p36bbgcln68bb6elq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2023. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p38bb1e1m6ioo:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2024. aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p38bbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2024. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p38bbgcln68bb5d8:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2024. deduccion pendiente en 2024
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p38bbgcln68bb6elq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. doble imposicion de 2024. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq2qp3k68piqobeegmn8rrkc5m2qobgdhkm6:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. total. aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqobeegmn8rrkc5m2qs35dpi2qobeeg:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. total. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq2qp3k68piqobeegmn8rrkc5m2qs35dpi2qpba:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. total. deduccion pendiente en 2024
+            x-chim8bj9dpq2qp3k68piqobeegmn8rrkc5m2qs35dpi2qpjleg:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. ejercicios
+                anteriores. total. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq2qp3k68piqt3fehgmobb1e1m6ioo:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. total.
+                aplicado en esta liquidacion
+            x-chim8bj9dpq2qp3k68piqt3fehgmobb7cln0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. total.
+                deduccion generada
+            x-chim8bj9dpq2qp3k68piqt3fehgmobbgcln68bb6elq0:
+              label: Deducciones por doble imposicion interna, DT 23a LIS. total.
+                pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g70mm2s3cd5hg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2008. aplicado en esta liquidacion
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g70mn0pbecgmm2rjk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2008. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g70mn0pbecgmmaqg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2008. deduccion pendiente en 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g70mn0pbecgmmctbk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2008. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g74mm2s3cd5hg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2009. aplicado en esta liquidacion
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g74mn0pbecgmm2rjk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2009. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g74mn0pbecgmmaqg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2009. deduccion pendiente en 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g74mn0pbecgmmctbk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2009. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h60mm2s3cd5hg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2010. aplicado en esta liquidacion
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h60mn0pbecgmm2rjk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2010. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h60mn0pbecgmmaqg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2010. deduccion pendiente en 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h60mn0pbecgmmctbk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2010. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h64mm2s3cd5hg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2011. aplicado en esta liquidacion
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h64mn0pbecgmm2rjk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2011. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h64mn0pbecgmmaqg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2011. deduccion pendiente en 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h64mn0pbecgmmctbk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2011. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h68mm2s3cd5hg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2012. aplicado en esta liquidacion
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h68mn0pbecgmm2rjk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2012. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h68mn0pbecgmmaqg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2012. deduccion pendiente en 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h68mn0pbecgmmctbk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2012. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6cmm2s3cd5hg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2013. aplicado en esta liquidacion
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6cmn0pbecgmm2rjk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2013. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6cmn0pbecgmmaqg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2013. deduccion pendiente en 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6cmn0pbecgmmctbk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2013. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6gmm2s3cd5hg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2014. aplicado en esta liquidacion
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6gmn0pbecgmm2rjk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2014. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6gmn0pbecgmmaqg:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2014. deduccion pendiente en 2024
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6gmn0pbecgmmctbk:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. ejercicio
+                de generacion 2014. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq2qsj4dhimebbkdtq62r1dc5o6oqb3:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. total.
+                aplicado en esta liquidacion
+            x-chim8bj9dpq2qsj4dhimebbkdtq62r1de1imsp1dc5n78:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. total.
+                deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq2qsj4dhimebbkdtq62r1de1imsp1dcll0:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. total.
+                deduccion pendiente en 2024
+            x-chim8bj9dpq2qsj4dhimebbkdtq62r1de1imsp1dcpqn8:
+              label: Deducciones por doble imposicion interna, RDLEG 4/2004. total.
+                pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojabb1e1m6ioo:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2015. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojabbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2015. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojabbgcln68bb5d8:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2015. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojabbgcln68bb6elq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2015. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojcbb1e1m6ioo:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2016. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojcbbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2016. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojcbbgcln68bb5d8:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2016. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojcbbgcln68bb6elq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2016. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojebb1e1m6ioo:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2017. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojebbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2017. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojebbgcln68bb5d8:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2017. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojebbgcln68bb6elq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2017. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojgbb1e1m6ioo:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2018. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojgbbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2018. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojgbbgcln68bb5d8:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2018. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojgbbgcln68bb6elq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2018. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojibb1e1m6ioo:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2019. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojibbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2019. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojibbgcln68bb5d8:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2019. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojibbgcln68bb6elq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2019. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p30bb1e1m6ioo:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2020. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p30bbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2020. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p30bbgcln68bb5d8:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2020. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p30bbgcln68bb6elq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2020. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p32bb1e1m6ioo:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2021. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p32bbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2021. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p32bbgcln68bb5d8:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2021. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p32bbgcln68bb6elq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2021. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p34bb1e1m6ioo:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2022. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p34bbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2022. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p34bbgcln68bb5d8:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2022. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p34bbgcln68bb6elq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2022. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p36bb1e1m6ioo:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2023. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p36bbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2023. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p36bbgcln68bb5d8:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2023. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p36bbgcln68bb6elq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2023. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p38bb1e1m6ioo:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2024. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p38bbgcln68bb1dpq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2024. deduccion pendiente de periodos
+                anteriores
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p38bbgcln68bb5d8:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2024. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p38bbgcln68bb6elq0:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. doble imposicion de 2024. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbcd5piqobeegmn8rrkc5m2qobgdhkm6:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. total. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobeegmn8rrkc5m2qs35dpi2qobeeg:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. total. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq6obbcd5piqobeegmn8rrkc5m2qs35dpi2qpba:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. total. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbcd5piqobeegmn8rrkc5m2qs35dpi2qpjleg:
+              label: Deducciones por doble imposicion internacional, LIS. ejercicios
+                anteriores. total. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq6obbcd5piqobiegpj2bb4d4p30chk5lgn0r39cc:
+              label: Deducciones por doble imposicion internacional, LIS. doble imposicion
+                juridica, impuesto soportado por el contribuyente (art. 31 LIS). doble
+                imposicion de 2024. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobiegpj2bb4d4p30chk5ljmarg:
+              label: Deducciones por doble imposicion internacional, LIS. doble imposicion
+                juridica, impuesto soportado por el contribuyente (art. 31 LIS). doble
+                imposicion de 2024. deduccion generada
+            x-chim8bj9dpq6obbcd5piqobiegpj2bb4d4p30chk5lo6arj45lj7at0:
+              label: Deducciones por doble imposicion internacional, LIS. doble imposicion
+                juridica, impuesto soportado por el contribuyente (art. 31 LIS). doble
+                imposicion de 2024. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq6obbcd5piqobiegpj4bb4d4p30chk5lgn0r39cc:
+              label: Deducciones por doble imposicion internacional, LIS. doble imposicion
+                economica, dividendos y participaciones en beneficios (art. 32 LIS).
+                doble imposicion de 2024. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqobiegpj4bb4d4p30chk5ljmarg:
+              label: Deducciones por doble imposicion internacional, LIS. doble imposicion
+                economica, dividendos y participaciones en beneficios (art. 32 LIS).
+                doble imposicion de 2024. deduccion generada
+            x-chim8bj9dpq6obbcd5piqobiegpj4bb4d4p30chk5lo6arj45lj7at0:
+              label: Deducciones por doble imposicion internacional, LIS. doble imposicion
+                economica, dividendos y participaciones en beneficios (art. 32 LIS).
+                doble imposicion de 2024. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq6obbcd5piqt3fegp38bb4d4p30chk5lgn0r39cc:
+              label: Deducciones por doble imposicion internacional, LIS. total del
+                ejercicio 2024. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbcd5piqt3fegp38bb4d4p30chk5ljmarg:
+              label: Deducciones por doble imposicion internacional, LIS. total del
+                ejercicio 2024. deduccion generada
+            x-chim8bj9dpq6obbcd5piqt3fegp38bb4d4p30chk5lo6arj45lj7at0:
+              label: Deducciones por doble imposicion internacional, LIS. total del
+                ejercicio 2024. pendiente de aplicacion en periodos futuros
+            x-chim8bj9dpq6obbichm6appdctimschg60qiqobgdhkm6:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2005. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbichm6appdctimschg60qiqs35dpi2qobeeg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2005. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq6obbichm6appdctimschg60qiqs35dpi2qpba:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2005. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbichm6appdctimschg60qiqs35dpi2qpjleg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2005. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbichm6appdctimschg60r2qobgdhkm6:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2006. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbichm6appdctimschg60r2qs35dpi2qobeeg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2006. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq6obbichm6appdctimschg60r2qs35dpi2qpba:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2006. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbichm6appdctimschg60r2qs35dpi2qpjleg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2006. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbichm6appdctimschg60riqobgdhkm6:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2007. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbichm6appdctimschg60riqs35dpi2qobeeg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2007. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq6obbichm6appdctimschg60riqs35dpi2qpba:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2007. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbichm6appdctimschg60riqs35dpi2qpjleg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2007. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbichm6appdctimschg60s2qobgdhkm6:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2008. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbichm6appdctimschg60s2qs35dpi2qobeeg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2008. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq6obbichm6appdctimschg60s2qs35dpi2qpba:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2008. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbichm6appdctimschg60s2qs35dpi2qpjleg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2008. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbichm6appdctimschg60siqobgdhkm6:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2009. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbichm6appdctimschg60siqs35dpi2qobeeg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2009. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq6obbichm6appdctimschg60siqs35dpi2qpba:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2009. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbichm6appdctimschg60siqs35dpi2qpjleg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2009. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbichm6appdctimschg64o2qobgdhkm6:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2010. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbichm6appdctimschg64o2qs35dpi2qobeeg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2010. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq6obbichm6appdctimschg64o2qs35dpi2qpba:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2010. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbichm6appdctimschg64o2qs35dpi2qpjleg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2010. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbichm6appdctimschg64oiqobgdhkm6:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2011. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbichm6appdctimschg64oiqs35dpi2qobeeg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2011. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq6obbichm6appdctimschg64oiqs35dpi2qpba:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2011. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbichm6appdctimschg64oiqs35dpi2qpjleg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2011. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbichm6appdctimschg64p2qobgdhkm6:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2012. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbichm6appdctimschg64p2qs35dpi2qobeeg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2012. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq6obbichm6appdctimschg64p2qs35dpi2qpba:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2012. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbichm6appdctimschg64p2qs35dpi2qpjleg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2012. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbichm6appdctimschg64piqobgdhkm6:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2013. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbichm6appdctimschg64piqs35dpi2qobeeg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2013. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq6obbichm6appdctimschg64piqs35dpi2qpba:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2013. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbichm6appdctimschg64piqs35dpi2qpjleg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2013. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbichm6appdctimschg64q2qobgdhkm6:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2014. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbichm6appdctimschg64q2qs35dpi2qobeeg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2014. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq6obbichm6appdctimschg64q2qs35dpi2qpba:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2014. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbichm6appdctimschg64q2qs35dpi2qpjleg:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                ejercicio de generacion 2014. pendiente de aplicacion en periodos
+                futuros
+            x-chim8bj9dpq6obbichm6appdehnn8obc5lgn0r39cc:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                total. aplicado en esta liquidacion
+            x-chim8bj9dpq6obbichm6appdehnn8obc5lo6arj45lgmst0:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                total. deduccion pendiente de periodos anteriores
+            x-chim8bj9dpq6obbichm6appdehnn8obc5lo6arj45limk:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                total. deduccion pendiente en 2024
+            x-chim8bj9dpq6obbichm6appdehnn8obc5lo6arj45lj7at0:
+              label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
+                total. pendiente de aplicacion en periodos futuros
+            x-chim8bjkd5o6ubbkd5o6ubbmc5m6usg:
+              label: Tipo de gravamen
             x-cln78qb4c5i2qp3fdlkmsobeehiisobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
               label: Entidad dominante. Apellidos o razon social
             x-cln78qb4c5i2qp3fdlkmsobeehiisrjfdlh74p8:

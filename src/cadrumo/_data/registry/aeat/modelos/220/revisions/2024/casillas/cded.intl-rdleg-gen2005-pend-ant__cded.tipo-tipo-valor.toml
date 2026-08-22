@@ -1,0 +1,1113 @@
+# Modelo 220 RECORD T22012000, continued -- deducciones por doble imposicion
+# INTERNACIONAL: bajo el RDLEG 4/2004 y bajo la LIS, y el tipo de gravamen del
+# ejercicio.
+#
+# Second half of the record, split from the first only to stay within the registry
+# reviewability line budget. The two files share one design, one grounding and one set
+# of caveats, recorded in full in the sibling fragment whose stem begins
+# "cded.int-rdleg-gen2008-pend-ant".
+#
+# THE CAVEATS THAT BEAR ON THIS HALF, restated rather than cross-referenced because
+# they govern casillas declared here:
+#
+#   * EVERY casilla carries a real AEAT box number. The record is a numbered grid and
+#     no cell is unnumbered, so there are no slugs anywhere in either file.
+#   * THE IDS ARE DERIVED FROM A CHECKED DECOMPOSITION, not a guess: family, group,
+#     scope and column, all closed vocabularies, with nothing unresolved across the
+#     180 descriptions and NO duplicate key. The group axis exists because a
+#     three-axis attempt collided on nineteen numbers, and every collision was in
+#     THIS half -- the "DI internacional periodos anteriores", "DI juridica (art. 31
+#     LIS)", "DI economica (art. 32 LIS)" and "Total 2024" groups all print otherwise
+#     identical column labels.
+#   * AEAT truncates a column label twice in this half, printing "licado en esta
+#     liquidacion" for "Aplicado en esta liquidacion". The truncation is matched
+#     deliberately so the decomposition reflects the design; the casilla label uses
+#     the corrected form.
+#
+# The tipo de gravamen at @3059+6 is the record's only non-money cell and is typed
+# `ratio`.
+#
+# Grounded in aeat-dr-220-2024. T22012000 tiles 1..3226 exactly once with no gap and
+# no partial overlap, and every number, offset, length and type was read from its own
+# field description.
+#
+# NOT MODELLED here: the "RESERVADO PARA LA ADMINISTRACION" run at @3065+150 and the
+# end-of-record marker at @3215+12.
+
+# @1410+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Per. ant: Ded. pendiente. Ejercicio de generación. 2005
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2005-pend-ant"
+number = "00153"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1427+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004: 2024:deducción pendiente. Ejercicio de generación. 2005
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2005-pend-ej"
+number = "00637"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1444+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Aplicado en esta liquidación. Ejercicio de generación. 2005
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2005-aplic"
+number = "00638"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1461+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG4/2004.Pendiente de aplicación en periodos futuros. Ejercicio de generación. 2005
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2005-pend-fut"
+number = "01973"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1478+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Per. ant: Ded.pendiente. Ejercicio de generación. 2006
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2006-pend-ant"
+number = "00154"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1495+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004: 2024:deducción pendiente. Ejercicio de generación. 2006
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2006-pend-ej"
+number = "00849"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1512+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Aplicado en esta liquidación. Ejercicio de generación. 2006
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2006-aplic"
+number = "00894"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1529+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Pendiente de aplicación en periodos futuros. Ejercicio de generación. 2006
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2006-pend-fut"
+number = "00197"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1546+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Per. ant: Ded. pendiente. Ejercicio de generación. 2007
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2007-pend-ant"
+number = "00155"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1563+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004: 2024:deducción pendiente. Ejercicio de generación. 2007
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2007-pend-ej"
+number = "00285"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1580+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Aplicado en esta liquidación. Ejercicio de generación. 2007
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2007-aplic"
+number = "00286"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1597+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Pendiente de aplicación en periodos futuros. Ejercicio de generación. 2007
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2007-pend-fut"
+number = "00287"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1614+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Per. ant: Ded. pendiente.Ejercicio de generación. 2008
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2008-pend-ant"
+number = "00156"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1631+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004: 2024: deducción pendiente. Ejercicio de generación. 2008
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2008-pend-ej"
+number = "00825"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1648+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Aplicado en esta liquidación. Ejercicio de generación. 2008
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2008-aplic"
+number = "00826"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1665+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Pendiente de aplicación en periodos futuros. Ejercicio de generación. 2008
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2008-pend-fut"
+number = "00827"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1682+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Per. ant: Ded.pendiente. Ejercicio de generación. 2009
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2009-pend-ant"
+number = "00157"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1699+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004: 2024: deducción pendiente. Ejercicio de generación. 2009
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2009-pend-ej"
+number = "00001"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1716+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Aplicado en esta liquidación. Ejercicio de generación. 2009
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2009-aplic"
+number = "00002"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1733+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Pendiente de aplicación en periodos futuros. Ejercicio de generación. 2009
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2009-pend-fut"
+number = "00003"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1750+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Per. ant: Ded. pendiente. Ejercicio de generación. 2010
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2010-pend-ant"
+number = "00158"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1767+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004: 2024: deducción pendiente. Ejercicio de generación. 2010
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2010-pend-ej"
+number = "00028"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1784+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Aplicado en esta liquidación. Ejercicio de generación. 2010
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2010-aplic"
+number = "00029"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1801+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Pendiente de aplicación en periodos futuros. Ejercicio de generación. 2010
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2010-pend-fut"
+number = "00030"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1818+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Per. ant: Ded. pendiente. Ejercicio de generación. 2011
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2011-pend-ant"
+number = "00159"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1835+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004: 2024: deducción pendiente. Ejercicio de generación. 2011
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2011-pend-ej"
+number = "00717"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1852+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Aplicado en esta liquidación. Ejercicio de generación. 2011
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2011-aplic"
+number = "00718"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1869+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Pendiente de aplicación en periodos futuros. Ejercicio de generación. 2011
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2011-pend-fut"
+number = "00719"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1886+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Per. ant: Ded.pendiente.Ejercicio de generación. 2012
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2012-pend-ant"
+number = "00324"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1903+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004: 2024: deducción pendiente. Ejercicio de generación. 2012
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2012-pend-ej"
+number = "00325"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1920+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Aplicado en esta liquidación. Ejercicio de generación. 2012
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2012-aplic"
+number = "00326"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1937+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Pendiente de aplicación en periodos futuros. Ejercicio de generación. 2012
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2012-pend-fut"
+number = "00327"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1954+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG4/2004.Per. ant: Ded.pendiente. Ejercicio de generación. 2013
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2013-pend-ant"
+number = "00328"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1971+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004: 2024: deducción pendiente. Ejercicio de generación. 2013
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2013-pend-ej"
+number = "00329"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1988+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Aplicado en esta liquidación. Ejercicio de generación. 2013
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2013-aplic"
+number = "00330"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2005+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Pendiente de aplicación en periodos futuros. Ejercicio de generación. 2013
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2013-pend-fut"
+number = "00331"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2022+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Per. ant: Ded.pendiente. Ejercicio de generación. 2014
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2014-pend-ant"
+number = "00367"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2039+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004: 2024: deducción pendiente. Ejercicio de generación. 2014
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2014-pend-ej"
+number = "00368"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2056+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Aplicado en esta liquidación. Ejercicio de generación. 2014
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2014-aplic"
+number = "00369"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2073+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Pendiente de aplicación en periodos futuros. Ejercicio de generación. 2014
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-gen2014-pend-fut"
+number = "00370"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2090+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Per. ant: Ded.pendiente. Per. actual: Ded. Generada.Total periodos anteriores
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-total-pend-ant"
+number = "00160"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2107+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004: 2024: deducción pendiente. Total periodos anteriores
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-total-pend-ej"
+number = "00161"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2124+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Aplicado en esta liquidación. Total periodos anteriores
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-total-aplic"
+number = "00572"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2141+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004.Pendiente de aplicación en periodos futuros.Total periodos anteriores
+[[revisions."2024".casillas]]
+id = "ded.intl-rdleg-total-pend-fut"
+number = "00162"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2158+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2015. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2015-pend-ant"
+number = "03244"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2175+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2015. 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2015-pend-ej"
+number = "03246"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2192+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2015. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2015-aplic"
+number = "03247"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2209+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2015. Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2015-pend-fut"
+number = "03248"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2226+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2016. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2016-pend-ant"
+number = "01974"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2243+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2016. 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2016-pend-ej"
+number = "01975"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2260+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2016. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2016-aplic"
+number = "01976"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2277+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2016. Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2016-pend-fut"
+number = "01977"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2294+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2017. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2017-pend-ant"
+number = "00927"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2311+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2017. 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2017-pend-ej"
+number = "00928"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2328+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2017. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2017-aplic"
+number = "00948"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2345+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2017. Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2017-pend-fut"
+number = "00949"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2362+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2018. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2018-pend-ant"
+number = "02642"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2379+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2018. 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2018-pend-ej"
+number = "02643"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2396+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2018. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2018-aplic"
+number = "02644"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2413+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2018. Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2018-pend-fut"
+number = "02645"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2430+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2019. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2019-pend-ant"
+number = "01198"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2447+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2019. 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2019-pend-ej"
+number = "01199"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2464+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2019. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2019-aplic"
+number = "01200"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2481+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2019. Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2019-pend-fut"
+number = "01201"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2498+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2020. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2020-pend-ant"
+number = "02359"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2515+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2020. 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2020-pend-ej"
+number = "02360"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2532+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2020. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2020-aplic"
+number = "02361"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2549+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2020. Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2020-pend-fut"
+number = "02362"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2566+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2021. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2021-pend-ant"
+number = "02818"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2583+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2021. 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2021-pend-ej"
+number = "02819"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2600+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2021. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2021-aplic"
+number = "02820"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2617+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2021. Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2021-pend-fut"
+number = "02821"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2634+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2022. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2022-pend-ant"
+number = "01637"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2651+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2022. 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2022-pend-ej"
+number = "01638"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2668+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2022. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2022-aplic"
+number = "01639"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2685+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2022. Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2022-pend-fut"
+number = "01640"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2702+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2023-pend-ant"
+number = "01380"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2719+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023. 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2023-pend-ej"
+number = "01381"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2736+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2023-aplic"
+number = "01382"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2753+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023. Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2023-pend-fut"
+number = "01408"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2770+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2024(*). Deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2024-pend-ant"
+number = "02253"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2787+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2024(*). 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2024-pend-ej"
+number = "02254"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2804+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2024(*). Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2024-aplic"
+number = "02255"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2821+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2024(*). Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-di2024-pend-fut"
+number = "02256"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2838+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: Total. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-total-pend-ant"
+number = "03249"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2855+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: Total. 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-total-pend-ej"
+number = "03250"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2872+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: Total. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-total-aplic"
+number = "03251"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2889+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: Total. Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-ant-total-pend-fut"
+number = "03252"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2906+17. Deducciones doble imposición internacional LIS. DI internacional 2024: DI jurídica: Imp. soportado por el contribuyente (art. 31 LIS). Deducción generada
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-art31-di2024-gen"
+number = "03254"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2923+17. Deducciones doble imposición internacional LIS. DI internacional 2024: DI jurídica: Imp. soportado por el contribuyente (art. 31 LIS). Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-art31-di2024-aplic"
+number = "03255"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2940+17. Deducciones doble imposición internacional LIS. DI internacional 2024: DI jurídica: Imp. soportado por el contribuyente (art. 31 LIS). Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-art31-di2024-pend-fut"
+number = "03256"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2957+17. Deducciones doble imposición internacional LIS. DI internacional 2024: DI económica: Dividendos y part. en beneficios (art. 32 LIS). Deducción generada
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-art32-di2024-gen"
+number = "03257"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2974+17. Deducciones doble imposición internacional LIS. DI internacional 2024: DI económica: Dividendos y part. en beneficios (art. 32 LIS). Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-art32-di2024-aplic"
+number = "03258"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2991+17. Deducciones doble imposición internacional LIS. DI internacional 2024: DI económica: Dividendos y part. en beneficios (art. 32 LIS). Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-art32-di2024-pend-fut"
+number = "03259"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @3008+17. Deducciones doble imposición internacional LIS. DI internacional 2024: Total 2024. Deducción generada
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-tot24-di2024-gen"
+number = "03260"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @3025+17. Deducciones doble imposición internacional LIS. DI internacional 2024: Total 2024. licado en esta liquidación
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-tot24-di2024-aplic"
+number = "03261"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @3042+17. Deducciones doble imposición internacional LIS. DI internacional 2024: Total 2024. Pendiente de aplicación períodos futuros
+[[revisions."2024".casillas]]
+id = "ded.intl-lis-tot24-di2024-pend-fut"
+number = "03262"
+section = ["liquidacion", "di_internacional_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @3059+6. Tipo de gravamen 2024
+[[revisions."2024".casillas]]
+id = "ded.tipo-tipo-valor"
+number = "03253"
+section = ["liquidacion", "tipo_gravamen"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
