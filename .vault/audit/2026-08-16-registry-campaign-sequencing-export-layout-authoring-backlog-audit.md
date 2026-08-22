@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:c9d784f71628c52a00071ef855a0065c2ba91ed30da3683f239fb1032c84ed2a'
+body_hash: 'sha256:472dac0a77a37c0698f363a92892ee412fd0b5ebfa0c559cd9cc9c9f32f111f4'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -12492,3 +12492,108 @@ per-tick cost, not a backlog. Forty-nine unregistered design files still need a
 ruling or an acquisition. The three span findings still need per-design epoch
 authoring: modelo 200's 2024, modelo 322's 2022, modelo 347's 2008 and 2010.
 Modelo 322's `2008-2023` still carries deadline windows for 2023 only.
+
+## Tick: queue item 1 -- modelo 184's casilla 77 is CORRECT, and the gate that would judge it is blind
+
+Re-measured at tick start: authority loads CLEAN, the embed and census ledgers
+green from last tick. Queue item 1 was modelo 184's casilla `77` "declared under
+segmento `184-2-entidad` that the diseño does not carry it under".
+
+### The premise is false against the source
+
+Read out of the hash-pinned official design through the shipped parser, the
+*Registro de Rentas de la Entidad* record carries, at exactly the declared
+positions:
+
+* `@77` length 1 -- `CLAVE`
+* `@78..79` length 2 -- `SUBCLAVE.`
+* `@177..190` length 14 -- `RENTA ATRIBUIBLE / RENDIMIENTO NETO ATRIBUIBLE`
+
+which is what the completeness manifest declares for `tipo2.clave`,
+`tipo2.subclave` and `tipo2.renta-atribuible-importe` under `184-2-entidad`.
+The manifest is right, in both the 2023-2024 and the 2025 design.
+
+The segment qualifier is doing real work rather than decorating: modelo 184's
+Tipo 2 is TWO different records, and the socio/heredero one diverges at every
+one of those offsets -- `@77` there is a 2-byte `CODIGO PROVINCIA`, and `@177`
+is not a field boundary at all. A declaration under the wrong segmento would
+write a filing at the wrong offsets.
+
+### Why nothing was refusing, and why nothing can
+
+The segment-aware coverage gate matches a declared `segmento` against the
+bracketed casilla tags a design prints. Modelo 184's design prints none, on any
+sheet, so the derivation gets an EMPTY pair set and stands down by design -- the
+module's own comment says so. The check is therefore vacuous here, and no
+authoring can give it teeth: the tags are absent from the PDF, not from the
+registry.
+
+There is a second, independent reason it could never have confirmed this
+declaration. The matcher compares a segmento to a design SHEET NAME by exact
+equality or name-plus-space prefix. `184-2-entidad` is an app-side label; the
+sheet is named `Tipo 2 - Registro De Rentas De La`. They cannot match. If the
+design ever started printing tags, the correct declaration would refuse.
+
+### The population was measured, not assumed
+
+A first sweep reported six revisions as live-and-unmatched, which would have
+been six false refusals waiting. That over-reported: the refusal loop iterates
+the CALCULATION CLOSURE, so a segmento on a casilla outside it is never checked.
+Restricted to the population the gate actually measures, the answer is zero live
+unmatched and four vacuous:
+
+* `184/2015-2024` and `184/2025-y-siguientes` -- `184-2-entidad`
+* `193/2024` and `193/2025-y-siguientes` -- `declarante`
+
+The narrowing was shown to discard only false positives rather than to tidy the
+output. Modelo 193 is queue item 3's modelo, and this is a measured input to it:
+its segmento labels are app-side too, so that item cannot lean on this gate
+either.
+
+### What was authored instead
+
+Six tests, proving the positions against the SOURCE rather than against the
+blind gate, in the shape modelo 210's party-key coverage already established:
+
+* two pin the three entidad positions to the design's own offsets, lengths and
+  field descriptions, once per shipped design;
+* two are the discriminating control -- the socio record must diverge at all
+  three, so the proof cannot be passing against the wrong record. It does;
+* two pin the manifest to the same numbers, so a renumber cannot leave the
+  design proof asserting positions nothing declares.
+
+The sheets are told apart by a field present only in the socio record rather
+than by the truncated PDF heading, which is an extraction artefact.
+
+### A stale test from my own split, found by running it
+
+`test_modelo_184_february_deadline_windows_match_hap_2250_2015_art_4` pinned all
+nine February windows on `2025-y-siguientes`. That was right while one revision
+answered for every year and became wrong when the split moved seven of them to
+`2015-2024`. It now resolves each ejercicio through the law-determined selector
+and requires the window on the half that ejercicio lands on, plus the partition
+itself (7 + 2, and no revision declaring more) so a regression that copied every
+window back into both halves is still caught. This is the fourth instance of the
+same pattern and the second time it surfaced only because a neighbouring change
+made the module run.
+
+### Verified
+
+* `test_modelo_184_registry`: 15 passed, from 14 passed + 1 failed.
+* generated-tree gates plus the 184 module: 55 passed.
+* authority loads CLEAN.
+* bite proof: renumbering `tipo2.clave` from 77 to 78 reds both revisions;
+  tracked manifests restored byte-exactly and green again afterwards. The design
+  proofs read a hash-pinned binary that cannot be mutated in place, so their
+  discrimination rests on the socio control, which is asserted rather than
+  claimed.
+
+### Still open
+
+The segmento-to-sheet correspondence has no declared home: for modelos whose
+segmentos are app-side labels the coverage gate can only ever be vacuous or
+wrong. Recording rather than fixing, because giving it one is a schema addition
+spanning modelo 184, 185 and 193 and belongs with queue item 3 rather than
+ahead of it. Forty-nine unregistered design files. The three span findings still
+need per-design epoch authoring: modelo 200's 2024, modelo 322's 2022, modelo
+347's 2008 and 2010.
