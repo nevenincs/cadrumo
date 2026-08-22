@@ -1,0 +1,16 @@
+[revisions."2021"]
+authority_grade = "applicability"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
+period_selector = { years = [2021], periods = ["0A"] }
+orden_aplicabilidad = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1", "orden-eha-3111-2009:art-8"]
+source_refs = ["aeat-dr-390-2021", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+review_status = "agent_reviewed"
+reviewed_by = "agent: exact 2021 declaration-parser casillas checked against the enrolled AEAT record design; filing layout authority is not claimed"
+reviewed_at = 2026-08-22
+
+[revisions."2021".family_dispositions.casilla_continuidad_evolutions]
+reason = "Revision 2021 is the earliest exact annual M390 epoch enrolled, so no earlier sibling transition can land here."
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2021"]

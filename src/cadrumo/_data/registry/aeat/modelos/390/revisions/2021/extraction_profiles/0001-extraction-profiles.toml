@@ -1,0 +1,51 @@
+[[revisions."2021".extraction_profiles]]
+id = "modelo-390-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaracion"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+# M390 layout: box numbers sit in the right cuota column at x0≈413–414 (page 3) and
+# x0≈412–413 (page 4).  Values appear to the right on the same y-row.  The leaf
+# sub-total casillas (boxes 02/04/06/26/49) are often blank — a zero/not-applicable
+# rate is a legitimate filing.  The generated annual corpus covers 4/10 targets
+# in 2021 and 8/10 in 2021-2023, so the floor preserves the sparse shape while
+# rejecting no hits.
+# The three summary-total targets (boxes 47/64/65) are always present in a valid
+# M390 filing; the verification chain test asserts their presence independently.
+target_casillas = [
+    # Leaf bound casillas — supplied as inputs to the calculation engine.
+    # Régimen ordinario sub-totals by IVA rate: box 02 (4%), 04 (10%), 06 (21%).
+    {casilla_id = "iva.anual.repercutido.super-reducido", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^02$", value_offset = "right_of_number", anchor_x_min = 407.0, anchor_x_max = 425.0}},
+    {casilla_id = "iva.anual.repercutido.reducido", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^04$", value_offset = "right_of_number", anchor_x_min = 407.0, anchor_x_max = 425.0}},
+    {casilla_id = "iva.anual.repercutido.general", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^06$", value_offset = "right_of_number", anchor_x_min = 407.0, anchor_x_max = 425.0}},
+    # Adquisiciones intracomunitarias de bienes 21%: box [26] is the AIC rate-box-layer
+    # cuota for this rung, not the rate-blind total (box 26 is rate-specific per the
+    # design's own "Tipo 21%" label; the rate-blind casilla no longer exports here).
+    {casilla_id = "iva.anual.aic.bienes.tipo-21.cuota", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^26$", value_offset = "right_of_number", anchor_x_min = 407.0, anchor_x_max = 425.0}},
+    # Total cuotas deducibles operaciones interiores corrientes: box 49 (deducible section, page 4).
+    {casilla_id = "iva.anual.soportado.interiores", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^49$", value_offset = "right_of_number", anchor_x_min = 407.0, anchor_x_max = 425.0}},
+    # Computed summary totals — extracted for corpus ground-truth comparison.
+    # These are NOT supplied as engine inputs (input_kind = "computed").
+    # AEAT renders the sede justificante in the language the filer chose, and the
+    # printed labels are translated with it. The bundled real render is English
+    # throughout, so a Spanish-only pattern reads nothing from it. Each alternate
+    # below is the label as the English render literally prints it; box 47 keeps a
+    # Spanish-only pattern because it sits on a form page that render omits, so no
+    # English wording for it is observable in bundled evidence.
+    {casilla_id = "iva.anual.cuota-devengada-total", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+cuotas\s+IVA\s+y\s+recargo\s+de\s+equivalencia'},
+    {casilla_id = "iva.anual.cuota-deducible-total", match_strategy = "named_label", value_kind = "amount", label_pattern = '(?:Suma\s+de\s+deducciones|Total\s+deductions)'},
+    # The box-number reference tolerates internal spacing: the real AEAT render
+    # kerns "(47 - 64)" so text extraction yields "(4 7 - 64)", and the stricter
+    # pattern silently dropped box 65 on every real render while matching the
+    # generated corpus. Measured against the bundled AEAT manual annex.
+    {casilla_id = "iva.anual.resultado-regimen-general", match_strategy = "named_label", value_kind = "amount", label_pattern = '(?:Resultado\s+r[eé]gimen\s+general|Result\s+of\s+the\s+general\s+system)\s+\(\s*4\s*7\s*-\s*64\s*\)'},
+    {casilla_id = "iva.anual.compensacion-ultimo-periodo-97", match_strategy = "named_label", value_kind = "amount", label_pattern = '\{?\s*(?:A\s+compensar|To\s+offset)'},
+    {casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97", match_strategy = "named_label", value_kind = "amount", label_pattern = '(?:Cuotas\s+pendientes\s+de\s+compensaci[oó]n\s+generadas\s+en\s+el\s+ejercicio|Amounts\s+pending\s+offset\s+arising\s+in\s+the\s+year)'},
+]
+confidence = "strict"
+corpus_round_trip_verified = true
+verification_source = "synthetic_from_aeat_published_text"
+min_coverage = "0.4"
+failure_semantics = "fail_hard"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2021", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
