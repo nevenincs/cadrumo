@@ -82,3 +82,43 @@ def test_neighbouring_declarations_survive_the_removal() -> None:
     parsed = tomllib.loads(rewritten)["revisions"]["2019-y-siguientes"]
     assert parsed["authority_grade"] == "applicability"
     assert parsed["legal_refs"] == ["orden-1999-11-17:apartado-quinto"]
+
+
+def test_a_bracket_initial_prose_line_does_not_end_the_revision_table() -> None:
+    """A wrapped reviewer line starting with "[" is prose, not a table header.
+
+    Modelo 840's reviewed_by cites AEAT box numbers, and the writer's wrap put
+    ``[13]. VERIFIED -- ...`` at the start of a physical line. The table-end scan
+    looked for the next line beginning with a bracket, took that prose line for a
+    new TOML table, and truncated the revision table thirty lines early; the
+    rebuild then emitted the remaining prose and the trailing declarations
+    outside any table, so the manifest stopped parsing and the revision was
+    unstampable while its neighbours stamped cleanly.
+    """
+    from ..conformance._stamp import _apply_governance
+
+    block = (
+        'reviewed_by = """\n'
+        'agent: coverage 0 -> 15 of 108. AEAT prints them as [14] at @270+4 and\n'
+        '[13]. VERIFIED -- the wrap put a bracket at the start of this line\n'
+        'and the scan must not read it as a table header.\n'
+        '"""\n'
+    )
+    neighbour = (
+        '\n[revisions."2019-y-siguientes".family_dispositions.formulas]\n'
+        'reason = "unchanged neighbour"\n'
+    )
+
+    rewritten = _apply_governance(
+        _manifest(block) + neighbour,
+        "2019-y-siguientes",
+        {"review_status": '"agent_reviewed"', "reviewed_by": '"agent: replacement"'},
+    )
+
+    parsed = tomllib.loads(rewritten)["revisions"]["2019-y-siguientes"]
+    assert parsed["reviewed_by"] == "agent: replacement"
+    # The whole prose span goes, including the bracket-initial line.
+    assert "VERIFIED" not in rewritten
+    assert "@270+4" not in rewritten
+    # The real table that follows is untouched.
+    assert parsed["family_dispositions"]["formulas"]["reason"] == "unchanged neighbour"

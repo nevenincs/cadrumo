@@ -26,39 +26,38 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the IAE alta/variacion/baja declaration, re-stamped \
-after authoring Apartado I. DISCLOSURE -- self-review: the same agent authored the 13 \
-Apartado I casillas, re-grounded the two pre-existing ones and swept the construct \
-membership in the immediately preceding commits. VERIFIED -- COVERAGE MOVED 0 -> 15 of \
-108. The two pre-existing casillas carried SLUG numbers, and a slug matches no design box, \
-which is the whole reason the coverage report read zero; AEAT prints them as [14] at \
-@270+4 (Ejercicio) and [15] at @274+1 (Declaracion de:), and they now carry those numbers. \
-This is the same defect and the same fix already applied to modelo 604. VERIFIED -- TILING \
-before any offset was trusted: Pag. 1 of aeat-dr-840 tiles 1..1132 exactly once, no gap \
-and no overlap, 106 fields. Apartado I is transcribed position-by-position as boxes [1] to \
-[13]. VERIFIED -- TWO AUTHORING HAZARDS, both recorded in the fragment: AEAT numbers by \
-the PRINTED FORM not by byte order, so [11] Provincia sits at @213 while [10] Municipio \
-sits at @215 and the offsets are deliberately non-monotonic in number -- sorting by number \
-would have mis-assigned them; and codigo postal, numero, kilometro and the \
-provincia/municipio codes are text rather than integer, because each is a fixed-width code \
-where a leading zero is significant and an integer round-trip drops it silently. NOT \
-CLAIMED -- 93 OF 108 DERIVED CASILLAS REMAIN UNCOVERED. Apartados II (declaracion), III \
-(representante), IV (datos de la actividad) and V (local afecto indirectamente) are \
-unauthored. Apartado IV additionally needs a distinguishing convention before it can be \
-touched: five of its box numbers repeat across sibling positions -- [53], [54] and [55] \
-each label a triplet (Agrupacion/Grupo/Epigrafe 1o, 2o, 3o), [62] is a date split into \
-dia/mes/ano components, and [63] labels both Causa de la baja and Causa de la variacion -- \
-and (segmento, number) is uniqueness-enforced, so they cannot each carry the printed \
-number. NOT CLAIMED -- DELIBERATELY UNMODELLED: the unnumbered Municipio description run \
-at @220+30 and the administration-reserved Cod. Mun. at @250+6 are a table expansion and a \
-reserved slot, not taxpayer-supplied boxes. NOT CLAIMED -- NO EXPORT LAYOUT, so this \
-application still cannot file the modelo and it stays on the filing-capability worklist; \
-model_law_authority_scope remains inspection_only. A layout needs the remaining apartados \
-first. NOT CLAIMED -- the earlier review's reasoning that this modelo 'is not a return \
-this application emits' is NOT relied on here: the worklist gate's own docstring says an \
-individually-defensible withdrawal record is the historical defect, not a justification. \
-NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- the \
-audited locales are complete for all 15 labels across es/en/ca/hu, but the strings were \
-not audited for accuracy."""
+after authoring Apartados I, II[16] and III. DISCLOSURE -- self-review: the same agent \
+authored all 30 new casillas, re-grounded the two pre-existing ones onto AEAT's bracket \
+numbers, and swept construct membership. VERIFIED -- COVERAGE 0 -> 32 of 108 derived \
+casillas. The two original casillas had carried SLUG numbers, which match no design box \
+and were the sole reason the report read zero; they now carry AEAT's [14] Ejercicio @270+4 \
+and [15] Declaracion de: @274+1, the same fix already applied to modelo 604. VERIFIED -- \
+TILING re-checked before every transcription: Pag. 1 of aeat-dr-840 tiles 1..1132 exactly \
+once, no gap, no overlap, 106 fields. VERIFIED -- CONSTRUCT MEMBERSHIP exact, 32 of 32 \
+both directions. VERIFIED -- RESERVADO BOXES ARE DECLARED where AEAT numbers them ([16], \
+[21], [30], [32]), required = false recording that the administration and not the filer \
+supplies them; the UNNUMBERED reserved run at @250+6 is correctly NOT a casilla. The \
+discriminator is the bracket number, not the word Reservado, settled by enumerating the \
+derived set rather than reading labels. VERIFIED -- NON-MONOTONIC NUMBERING handled \
+explicitly: AEAT numbers by printed form, so [11]@213 precedes [10]@215, and [31]@485, \
+[29]@487, [30]@522 run out of order; sorting by number would have mis-assigned five \
+fields. All code-like fields (postal, municipio, provincia, telefono, numero, kilometro) \
+are text, never integer, because a leading zero is significant. NOT CLAIMED -- 76 OF 108 \
+DERIVED CASILLAS REMAIN UNCOVERED: Apartados IV and V are unauthored, as are the Pag. 2 \
+and Anexo records entirely. NOT CLAIMED -- A KNOWN BLIND SPOT GATES APARTADO IV: the \
+derived set holds 108 DISTINCT numbers, but five of its numbers label MULTIPLE physical \
+positions -- [53], [54] and [55] each head a triplet (Agrupacion / Grupo / Epigrafe 1o, \
+2o, 3o), [62] is a date split into dia/mes/ano components, and [63] labels both Causa de \
+la baja and Causa de la variacion. They collapse to one derived casilla each, so declaring \
+one casilla per number would read as FULLY COVERED while eleven real positions stay \
+unmodelled -- a false green, not a gap. Apartado IV must not be authored until that is \
+resolved. NOT CLAIMED -- NO EXPORT LAYOUT: this application still cannot file the modelo, \
+it stays on the filing-capability worklist, and model_law_authority_scope remains \
+inspection_only. NOT CLAIMED -- the earlier review's reasoning that this modelo 'is not a \
+return this application emits' is NOT relied on; the worklist gate's docstring treats an \
+individually-defensible withdrawal record as the historical defect, not a justification. \
+NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- \
+locales complete for all 32 labels across es/en/ca/hu, not audited for accuracy."""
 reviewed_at = 2026-08-22
 
 [revisions."2003-y-siguientes".family_dispositions.formulas]

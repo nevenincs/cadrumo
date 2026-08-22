@@ -1043,10 +1043,7 @@ def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str
             f"here. Rewrite the header line in the canonical form and stamp again.",
         ) from exc
 
-    end = next(
-        (index for index in range(start + 1, len(lines)) if lines[index].startswith("[")),
-        len(lines),
-    )
+    end = _revision_table_end(lines, start)
     body = _without_governance_assignments(lines[start + 1 : end])
     while body and not body[-1].strip():
         body.pop()
@@ -1056,6 +1053,37 @@ def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str
     while rebuilt and not rebuilt[-1].strip():
         rebuilt.pop()
     return newline.join(rebuilt) + newline
+
+
+
+def _revision_table_end(lines: list[str], start: int) -> int:
+    """Index of the first line after the revision table that ``start`` opens.
+
+    A table ends at the next line that OPENS a new TOML table, but the scan
+    cannot simply look for a leading ``[``: a governance value written as a
+    multi-line basic string carries arbitrary prose, and a wrapped continuation
+    line may legitimately BEGIN with a bracket. Modelo 840 is the worked case --
+    its reviewed_by cites AEAT box numbers, and the wrap put ``[13]. VERIFIED
+    -- ...`` at the start of a line, which the naive scan read as a table header
+    and used to truncate the table thirty lines early. The rebuild then emitted
+    the remaining prose outside any table and the manifest stopped parsing, so
+    the revision was unstampable through this writer while its neighbours were
+    fine.
+
+    Skipping each governance assignment's full span keeps the scan on real
+    structure. This is the same span walk :func:`_without_governance_assignments`
+    performs; both must agree, or the body slice and the removal disagree about
+    where the table ends.
+    """
+    index = start + 1
+    while index < len(lines):
+        if _is_governance_line(lines[index]):
+            index += _governance_assignment_length(lines, index)
+            continue
+        if lines[index].startswith("["):
+            return index
+        index += 1
+    return len(lines)
 
 
 def _without_governance_assignments(body: list[str]) -> list[str]:
