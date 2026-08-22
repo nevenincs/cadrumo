@@ -736,6 +736,8 @@ cli:
         filing_record_id_help: Stable filing-record identifier
         import_casilla_help: Imported casilla value with CASILLA_ID=DECIMAL syntax
           (repeatable; at least one required)
+        import_file_help: Path to a CSV or XLSX casilla manifest exported from the
+          external filing source
         import_help: Persist an externally-filed return as a baseline filing record
           carrying imported AEAT-attested evidence
         import_set_required: --set is required at least once for an import.

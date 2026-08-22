@@ -262,7 +262,12 @@ def filing_record_import(
     ] = None,
     file: Annotated[
         Path | None,
-        typer.Option("--file", exists=True, dir_okay=False, help="CSV/XLSX casilla manifest source"),
+        typer.Option(
+            "--file",
+            exists=True,
+            dir_okay=False,
+            help=tr("cli.app.modelo.filing_record.import_file_help"),
+        ),
     ] = None,
 ) -> None:
     """Import AEAT external evidence as a current :class:`ModeloRecord`.

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:dd63badce0066ae4df5156fed65408e10b8fab052ca8a7b04fdb06222634ec02'
+body_hash: 'sha256:f7341d74a017b21334ef8ea651be9417fa13f57140b0d3b003c2eb91161cc3e1'
 related: []
 ---
 
@@ -112,6 +112,13 @@ The hyphenated justificante fixtures and the strict uppercase-alphanumeric
 `AeatCsv` contract are byte-identical on `origin/main`; issue 233 did not cause
 that failure and does not weaken or rewrite it. The corrective application,
 spreadsheet, and CLI lanes are green.
+
+### import-file-help-localization-resolution | low | File-source help now resolves through supported locales
+
+Resolved after re-review: the production `--file` option uses the
+`cli.app.modelo.filing_record.import_file_help` translation key, with authored
+English, Spanish, Catalan, and Hungarian values. No unsupported French or
+Arabic catalogue entries were introduced.
 
 ### corrective-csv-slice-verification | low | The four prior HIGH findings are resolved for the bounded CSV/XLSX tranche
 
