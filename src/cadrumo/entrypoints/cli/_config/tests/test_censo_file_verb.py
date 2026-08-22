@@ -3,36 +3,40 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from .....tests.cli_runner import invoke_cached_cli
-from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
-from .....tests.user_profile import register_cli_profile
+from .....tests.secure_sql import isolated_cli_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 @pytest.fixture(autouse=True)
-def _active_profile(_isolated_cli_backend: Path) -> None:  # noqa: F811 - requesting an
-    # imported fixture by name necessarily shadows the import; the dependency is the point
-    """Register the active profile the censo verbs are bound to.
+def _active_profile(tmp_path: Path) -> Iterator[None]:
+    """Provide the active profile the censo verbs are bound to, and isolate storage.
 
     ``config profile censo file`` declares a ``profile-bound`` write route, so
     with no active profile the CLI root refuses at the boundary
     (``REFUSED_CLI_BOUNDARY``, failed condition ``profile.active``) and the
     artefact is never opened. These cases assert the PARSER's refusal, which
-    lives downstream of that guard, so without a profile they would be asserting
-    a contract they never reach. Registering one is also the honest scenario:
-    a cotejo compares a certificate against the active profile's censo facts,
-    and there is nothing to compare against without one.
+    lives downstream of that guard, so without a profile they would be
+    asserting a contract they never reach. A profile is also the honest
+    scenario: a cotejo compares a certificate against the active profile's
+    censo facts, and there is nothing to compare against without one.
 
-    The isolated backend is requested by name rather than relied on
-    implicitly: it must be established BEFORE a profile is registered, or the
-    registration would land in the operator's real store.
+    The bucket is provisioned directly rather than registered through the CLI
+    door. Registration derives custody material through the supervised
+    Argon2id worker, which spawns a subprocess per call; under the full CLI
+    tree at eight xdist workers that spawn storm makes the supervisor refuse
+    with ``KDF_SUPERVISION_UNAVAILABLE``, and these cases would then fail for
+    a reason unrelated to what they assert. The KDF path is covered where it
+    is the subject, not incidentally here.
     """
-    register_cli_profile(label="censo-operator")
+    with isolated_cli_runtime_profile(tmp_path=tmp_path):
+        yield
 
 
 def _invoke_with_artefact(tmp_path: Path, payload: bytes):

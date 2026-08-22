@@ -26,15 +26,24 @@ import time
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from math import isfinite
 from pathlib import Path
+from statistics import median
 from typing import Any, Literal, Self, cast
 
 from ._inventory import SRC_CADRUMO
 from .subprocess_cli import subprocess_cli_env
 
 __all__ = [
+    "CliPerformanceCalibration",
     "CliPerformanceObservation",
     "CliPerformanceProfile",
+    "LatencyBudget",
+    "LatencyBudgetResult",
+    "LatencyDistribution",
+    "PerformanceCalibrationPolicy",
+    "calibrate_cli_path",
+    "evaluate_latency_budget",
     "profile_cli_path",
     "verify_cli_profiler_instrumentation",
 ]
@@ -49,6 +58,8 @@ _IMPORT_FAMILY_PREFIXES: dict[str, tuple[str, ...]] = {
     "storage": ("cadrumo.adapters.persistence", "sqlalchemy", "sqlite3"),
 }
 _ENV_PREFIXES = ("AEAT_", "PYTEST_", "CADRUMO_")
+_QUIET_CONTROL_PATH: tuple[str, ...] = ()
+_QUIET_CONTROL_INVOCATION_ARGS = ("--version",)
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,6 +133,189 @@ class CliPerformanceProfile:
 
     resolution: CliPerformanceObservation
     invocation: CliPerformanceObservation
+
+
+@dataclass(frozen=True, slots=True)
+class PerformanceCalibrationPolicy:
+    """Noise-resistant sampling policy for quiet-runner calibration."""
+
+    warmup_runs: int = 1
+    sample_count: int = 5
+
+    def __post_init__(self) -> None:
+        if self.warmup_runs < 1:
+            raise ValueError("calibration requires at least one warmup run")
+        if self.sample_count < 3:
+            raise ValueError("calibration requires at least three measured samples")
+
+
+@dataclass(frozen=True, slots=True)
+class LatencyDistribution:
+    """A measured latency distribution summarized without a lucky-sample pass."""
+
+    samples_seconds: tuple[float, ...]
+    median_seconds: float
+    median_absolute_deviation_seconds: float
+
+    @classmethod
+    def from_samples(cls, samples: Sequence[float]) -> Self:
+        values = tuple(float(value) for value in samples)
+        if len(values) < 3:
+            raise ValueError("latency distribution requires at least three samples")
+        if any(not isfinite(value) or value < 0 for value in values):
+            raise ValueError("latency samples must be finite and non-negative")
+        centre = float(median(values))
+        dispersion = float(median(abs(value - centre) for value in values))
+        return cls(values, centre, dispersion)
+
+
+@dataclass(frozen=True, slots=True)
+class CliPerformanceCalibration:
+    """Paired command and quiet-control distributions from fresh processes."""
+
+    command_profiles: tuple[CliPerformanceProfile, ...]
+    control_profiles: tuple[CliPerformanceProfile, ...]
+    command_resolution: LatencyDistribution
+    command_invocation: LatencyDistribution
+    control_resolution: LatencyDistribution
+    control_invocation: LatencyDistribution
+
+    @property
+    def resolution_control_ratio(self) -> float:
+        """Median command resolution divided by quiet-control resolution."""
+        return self.command_resolution.median_seconds / self.control_resolution.median_seconds
+
+    @property
+    def invocation_control_ratio(self) -> float:
+        """Median command invocation divided by quiet-control invocation."""
+        return self.command_invocation.median_seconds / self.control_invocation.median_seconds
+
+
+@dataclass(frozen=True, slots=True)
+class LatencyBudget:
+    """Absolute and quiet-control-relative limits for one latency distribution."""
+
+    maximum_median_seconds: float | None = None
+    maximum_control_ratio: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.maximum_median_seconds is None and self.maximum_control_ratio is None:
+            raise ValueError("latency budget requires an absolute or ratio limit")
+        for value in (self.maximum_median_seconds, self.maximum_control_ratio):
+            if value is not None and (not isfinite(value) or value <= 0):
+                raise ValueError("latency budget limits must be finite and positive")
+
+
+@dataclass(frozen=True, slots=True)
+class LatencyBudgetResult:
+    """Typed budget verdict retaining actionable threshold breaches."""
+
+    passed: bool
+    observed_median_seconds: float
+    control_ratio: float | None
+    violations: tuple[Literal["absolute-median", "control-ratio"], ...]
+    outlier_samples_seconds: tuple[float, ...]
+
+
+def evaluate_latency_budget(
+    observed: LatencyDistribution,
+    budget: LatencyBudget,
+    *,
+    control: LatencyDistribution | None = None,
+) -> LatencyBudgetResult:
+    """Evaluate median-based absolute and relative limits without hiding the tail."""
+    violations: list[Literal["absolute-median", "control-ratio"]] = []
+    thresholds: list[float] = []
+    ratio: float | None = None
+    if budget.maximum_median_seconds is not None:
+        thresholds.append(budget.maximum_median_seconds)
+        if observed.median_seconds > budget.maximum_median_seconds:
+            violations.append("absolute-median")
+    if budget.maximum_control_ratio is not None:
+        if control is None:
+            raise ValueError("a control distribution is required for a ratio budget")
+        if control.median_seconds <= 0:
+            raise ValueError("control median must be positive for a ratio budget")
+        ratio = observed.median_seconds / control.median_seconds
+        thresholds.append(control.median_seconds * budget.maximum_control_ratio)
+        if ratio > budget.maximum_control_ratio:
+            violations.append("control-ratio")
+    strictest_threshold = min(thresholds)
+    return LatencyBudgetResult(
+        passed=not violations,
+        observed_median_seconds=observed.median_seconds,
+        control_ratio=ratio,
+        violations=tuple(violations),
+        outlier_samples_seconds=tuple(value for value in observed.samples_seconds if value > strictest_threshold),
+    )
+
+
+def calibrate_cli_path(
+    command_path: Sequence[str],
+    *,
+    invocation_args: Sequence[str] = (),
+    storage_root: Path | None = None,
+    extra_env: Mapping[str, str] | None = None,
+    stdin_payload: str | None = None,
+    timeout: float = 120.0,
+    policy: PerformanceCalibrationPolicy | None = None,
+) -> CliPerformanceCalibration:
+    """Measure a command beside a quiet ``--version`` control in fresh processes."""
+    calibration_policy = policy or PerformanceCalibrationPolicy()
+    command_profiles: list[CliPerformanceProfile] = []
+    control_profiles: list[CliPerformanceProfile] = []
+    for index in range(calibration_policy.warmup_runs + calibration_policy.sample_count):
+        def measure_command() -> CliPerformanceProfile:
+            return profile_cli_path(
+                command_path,
+                invocation_args=invocation_args,
+                storage_root=storage_root,
+                extra_env=extra_env,
+                stdin_payload=stdin_payload,
+                timeout=timeout,
+            )
+
+        def measure_control() -> CliPerformanceProfile:
+            return profile_cli_path(
+                _QUIET_CONTROL_PATH,
+                invocation_args=_QUIET_CONTROL_INVOCATION_ARGS,
+                storage_root=storage_root,
+                extra_env=extra_env,
+                timeout=timeout,
+            )
+
+        if index % 2 == 0:
+            command, control = measure_command(), measure_control()
+        else:
+            control, command = measure_control(), measure_command()
+        _require_successful_profile(command, label="command")
+        _require_successful_profile(control, label="control")
+        if index >= calibration_policy.warmup_runs:
+            command_profiles.append(command)
+            control_profiles.append(control)
+    return CliPerformanceCalibration(
+        command_profiles=tuple(command_profiles),
+        control_profiles=tuple(control_profiles),
+        command_resolution=_phase_distribution(command_profiles, "resolution"),
+        command_invocation=_phase_distribution(command_profiles, "invocation"),
+        control_resolution=_phase_distribution(control_profiles, "resolution"),
+        control_invocation=_phase_distribution(control_profiles, "invocation"),
+    )
+
+
+def _require_successful_profile(profile: CliPerformanceProfile, *, label: str) -> None:
+    for observation in (profile.resolution, profile.invocation):
+        if observation.failure_kind != "none" or observation.exit_code != 0:
+            raise RuntimeError(
+                f"{label} {observation.phase} observation failed: "
+                f"failure_kind={observation.failure_kind}, exit_code={observation.exit_code}"
+            )
+
+
+def _phase_distribution(
+    profiles: Sequence[CliPerformanceProfile], phase: Literal["resolution", "invocation"]
+) -> LatencyDistribution:
+    return LatencyDistribution.from_samples(tuple(getattr(profile, phase).wall_seconds for profile in profiles))
 
 
 def profile_cli_path(
