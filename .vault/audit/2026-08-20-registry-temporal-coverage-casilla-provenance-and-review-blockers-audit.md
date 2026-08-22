@@ -2462,3 +2462,57 @@ apart, two different concepts — and the registry refused both. Declaring them
 renamed instead to the distinction AEAT actually draws: **municipal** (C, cuota municipal)
 versus **provincial-nacional** (D, cuota provincial o nacional). The check was right; the
 names were wrong.
+
+## 2026-08-22 — the collapsed-number convention, settled
+
+Three iterations deferred this. It gated Apartado IV of modelo 840 and boxes [86] and
+[109] of its Pag. 2, and it is now decided and proven on the smaller case.
+
+### The problem, stated precisely
+
+`build_diseno_coverage_report` keys a derived casilla on `(segmento, number)`, so several
+design fields printing the same `[NN]` collapse to ONE derived casilla. Declaring a single
+casilla per number satisfies the coverage report while the other physical positions stay
+unmodelled — **covered on paper, absent in fact**. Across modelo 840 that is sixteen
+positions behind seven numbers.
+
+### The convention, taken from modelo 604 rather than invented
+
+Modelo 604 carries eight "signo" casillas that qualify another box. Each one puts a
+DESCRIPTIVE SLUG in `number` — `liq-03-signo-base-rectificaciones` — instead of repeating
+the box number it refers to, because `(segmento, number)` is uniqueness-enforced.
+
+Generalised: **where N positions share one printed number, ONE casilla carries AEAT's
+number and each remaining position becomes its own casilla with a slug number.** The
+derived box is covered exactly once and no position is dropped.
+
+**A slug-numbered casilla does not count toward diseño coverage, and that is correct.**
+Coverage measures how many of AEAT's printed boxes are modelled, not how many casillas
+exist. Proven on the Pag. 2 case: five new casillas moved coverage by exactly two
+(72 -> 74 of 108), which is the honest arithmetic — five positions modelled, two boxes
+covered.
+
+### Not every collapse is the same shape, and the treatment differs
+
+- **Two unrelated concepts sharing a number** — [86] is the Apartado VI "B) Suma" of
+  maquinas recreativas at @672 AND the Apartado VII "Cuota maquinas recreativas" at @1044.
+  Two casillas; the number stays where the box is defined.
+- **Composite components of one value** — [109]'s Dia, Mes and Ano are three fields of a
+  single date. That is the "composite components" class of legitimate non-casilla design
+  row: ONE `date` casilla, not three integers. So [109]'s five positions become three
+  casillas (Lugar, fecha, calidad), which is the honest count.
+- **A repeated independent fact** — [53], [54] and [55] each head a triplet (Agrupacion /
+  Grupo / Epigrafe 1o, 2o, 3o), and each of the three is a separate "S"-or-blank flag the
+  filer sets independently. Three casillas each, one numbered and two slugged. NOT a
+  composite: collapsing them to one casilla would lose two independent facts.
+
+Deciding by shape rather than applying one rule everywhere is the whole content of this
+convention. The first case would be wrong as a composite; the second would be wrong as
+three casillas.
+
+### What it unblocks
+
+Apartado IV of Pag. 1 ([33]-[67], including the [53]/[54]/[55] triplets, the [62] date and
+the [63] dual cause) is now authorable. The Anexo remains a separate matter: 165 fields
+carrying 4 distinct numbers, almost entirely one repeating relacion-de-locales block, which
+is a `binding_record` shape rather than a casilla set.
