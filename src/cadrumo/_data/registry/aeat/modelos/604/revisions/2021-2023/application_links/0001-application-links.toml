@@ -1,7 +1,7 @@
-# No deadline application link: this era declares no deadline_windows (the only
-# windows modelo 604 ever carried were the twelve 2025 monthly windows, which
-# belong to the 2024-y-siguientes revision). No export link either: this era
-# declares no export layout.
+# This era carries its own thirty-six monthly deadline windows (2021-2023),
+# derived from orden-hac-510-2021 art 3 and, for the first five periods of 2021,
+# its disposición transitoria única. The export link lives in 0002 alongside the
+# era's own transcribed layout.
 
 [[revisions."2021-2023".application_links]]
 id = "modelo-604-filing"
@@ -9,4 +9,12 @@ surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-hac-510-2021:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".application_links]]
+id = "modelo-604-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hac-510-2021:art-3", "orden-hac-510-2021:dt-unica", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]

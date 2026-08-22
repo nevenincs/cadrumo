@@ -695,6 +695,46 @@ class DisenoCoverageReport:
         return len(self.coverage_gap_casillas)
 
 
+def _normalised_box_number(value: str | None) -> str:
+    """Return a box number in the one form both sides can be compared in.
+
+    A box number is an integer, and the two sides write it differently: the
+    registry zero-pads (modelo 714 declares ``"01"``, ``"02"``) while the design
+    prints the bare numeral (``"1"``, ``"15"``). Compared verbatim they never
+    meet, which is why modelo 714 reported 0 of 120 covered while declaring 85
+    numeric casillas -- an inventory reading as "nothing authored" for a revision
+    that authors most of the form.
+
+    Anything that is not a bare numeral is returned unchanged. Byte-position
+    ranges (``"124-173"``) are left exactly as they are: they are a different
+    axis, not a differently-written box number, and normalising them would
+    manufacture matches rather than reveal them.
+    """
+    text = (value or "").strip()
+    if not text.isdigit():
+        return text
+    return str(int(text))
+
+
+def _segmento_addresses_sheet(segmento: str | None, sheet_name: str | None) -> bool:
+    """Whether a declared ``segmento`` names the design sheet a casilla sits on.
+
+    This is the correspondence :func:`derive_calculation_completeness_casillas`
+    already applies on the load path, applied here too. A segmento names a sheet,
+    and designs differ in whether the printed name carries a trailing
+    description: modelo 200's segmentos are exact sheet names (``DP200012``),
+    modelo 714's are the sheet's leading code where the design writes
+    ``714-01 Patrimonio``. Matching to a WORD boundary rather than by bare
+    ``startswith`` keeps ``714-1`` from claiming ``714-10 Patrimonio``.
+
+    The coverage report compared these verbatim, so every modelo whose design
+    prints a trailing description scored zero regardless of what it declared.
+    """
+    if segmento is None or sheet_name is None:
+        return segmento == sheet_name
+    return segmento == sheet_name or sheet_name.startswith(f"{segmento} ")
+
+
 def build_diseno_coverage_report(
     path: Path,
     modelo_id: str,
@@ -750,11 +790,21 @@ def build_diseno_coverage_report(
     """
     sheets = _extract_record_design(path)
     diseno = _derive_diseno_coverage_casillas_from_sheets(sheets, multi_segment=multi_segment)
-    declared_metadata = {(casilla.segmento, casilla.form_number or casilla.number) for casilla in revision.casillas}
+
+    declared_by_segmento: dict[str | None, set[str]] = {}
+    for casilla in revision.casillas:
+        number = _normalised_box_number(casilla.form_number or casilla.number)
+        declared_by_segmento.setdefault(casilla.segmento, set()).add(number)
+
     covered: list[DerivedDisenoCasilla] = []
     gap: list[DerivedDisenoCasilla] = []
     for casilla in diseno:
-        if (casilla.segmento, casilla.number) in declared_metadata:
+        number = _normalised_box_number(casilla.number)
+        declared_numbers: set[str] = set()
+        for segmento, numbers in declared_by_segmento.items():
+            if _segmento_addresses_sheet(segmento, casilla.segmento):
+                declared_numbers |= numbers
+        if number in declared_numbers:
             covered.append(casilla)
         else:
             gap.append(casilla)

@@ -280,24 +280,24 @@ def _administration_reserved(field: RecordDesignField) -> bool:
       contenido says. Modelo 131 ``@627+1`` and Modelo 303 ``@840+1`` are the
       reason this comes first: they are the administración's AND declare a value
       set, so a content-led rule would wrongly hand them to the filer.
-    * Otherwise a contenido declaring AEAT's filer tick ``"X"`` means the row
-      holds a datum despite the label.
+    * Otherwise AEAT's filer tick ``"X"`` means the row holds a datum despite the
+      label -- read from ``Contenido``, or from the description where none exists.
 
     A "Reservado"-labelled row that names no owner and declares no filer tick
     stays reserved -- Modelo 840's forty-odd ``Reservado. Apart. VII: Cuota
     [103]`` rows, which carry no contenido at all, are the population that
     depends on that fallback.
 
-    Measured over the bundled corpus: 3,919 rows carry the word, and exactly one
-    position -- Modelo 111 ``@552+1``, in the 2016-2018 and 2019-y-siguientes
-    designs -- is reclassified as a datum by the second signal.
+    Measured over the bundled corpus: 2,953 rows carry the word, and exactly one
+    POSITION -- Modelo 111's Colegio Concertado tick, in the 2016/2019 xlsx
+    ``Contenido`` and in the 2012 PDF's description -- is reclassified.
     """
     description = field.description or ""
     if not _RESERVED_WORD.search(description):
         return False
     if _RESERVED_FOR_ADMINISTRATION.search(description):
         return True
-    return not _FILER_MARK.search(field.content or "")
+    return not _FILER_MARK.search((field.content or "").strip() or description)
 
 
 #: A ``Nota N`` citation inside a field's own naming cell.

@@ -37,7 +37,7 @@ from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# (modelo_id, revision, approval, plazo, doc, tax_domain, window_count)
+# (modelo_id, approval, plazo, doc, tax_domain, period_codes_per_filing_year)
 _MODELOS = [
     (
         "490",
@@ -45,7 +45,7 @@ _MODELOS = [
         "orden-hac-590-2021:art-3",
         "BOE-A-2021-9721",
         TaxDomain.IDSD,
-        8,
+        ("1T", "2T", "3T", "4T"),
     ),
     (
         "604",
@@ -53,7 +53,7 @@ _MODELOS = [
         "orden-hac-510-2021:art-3",
         "BOE-A-2021-8878",
         TaxDomain.ITF,
-        12,
+        ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
     ),
     (
         "763",
@@ -61,14 +61,14 @@ _MODELOS = [
         "orden-eha-1881-2011:art-4",
         "BOE-A-2011-11704",
         TaxDomain.JUEGO,
-        8,
+        ("1T", "2T", "3T", "4T"),
     ),
 ]
 
 
-@pytest.mark.parametrize("mid,approval,plazo,doc,domain,windows", _MODELOS)
+@pytest.mark.parametrize("mid,approval,plazo,doc,domain,codes", _MODELOS)
 def test_committed_definition_legal_authority_and_deadline_windows(
-    mid: str, approval: str, plazo: str, doc: str, domain: TaxDomain, windows: int
+    mid: str, approval: str, plazo: str, doc: str, domain: TaxDomain, codes: tuple[str, ...]
 ) -> None:
     """Each new-tax autoliquidacion validates and cites its plazo on every window.
 
@@ -76,9 +76,22 @@ def test_committed_definition_legal_authority_and_deadline_windows(
     This test used to pin a revision id, and both pinned ids stopped existing
     when modelo 490 and modelo 604 had their spans split -- the windows did not
     move or change, but the lookup raised ``KeyError`` and the modelo went
-    unchecked. The orden fixes how many filing windows the tax has; which
-    revision declares them is a registry-shape decision that a split may
-    legitimately change, so the count is asserted where it is stable.
+    unchecked.
+
+    It then pinned a TOTAL window count, which was the same defect one level up.
+    The docstring claimed "the orden fixes how many filing windows the tax has",
+    but an orden fixes the CADENCE, not a total: 490 and 763 read 8 because the
+    registry happened to enumerate two years of quarters, and 604 read 12 because
+    it enumerated one year of months. Authoring modelo 604's 2021-2023 era, whose
+    windows are as derivable from the same orden as the ones already present,
+    moved the total to 48 and reddened a test that had detected nothing about the
+    new windows' correctness.
+
+    What the orden really fixes is that every filing year the registry
+    enumerates is COMPLETE for the tax's cadence -- twelve months, or four
+    quarters, no duplicates and no holes. That property catches a dropped or
+    doubled window, which a total cannot distinguish from a legitimately added
+    year, and it stays true as eras are split or extended.
     """
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
@@ -91,5 +104,14 @@ def test_committed_definition_legal_authority_and_deadline_windows(
         assert entry.document_id == doc
 
     declared = [window for revision in modelo.revisions.values() for window in revision.deadline_windows]
-    assert len(declared) == windows
+    assert declared, f"modelo {mid} declares no deadline windows at all"
     assert all(plazo in window.legal_refs for window in declared)
+
+    by_year: dict[int, list[str]] = {}
+    for window in declared:
+        by_year.setdefault(window.filing_year, []).append(window.period.code)
+    for year, found in sorted(by_year.items()):
+        assert sorted(found) == sorted(codes), (
+            f"modelo {mid} filing year {year} declares periods {sorted(found)}, "
+            f"not the complete cadence {sorted(codes)}; a filing period is missing or doubled"
+        )

@@ -1,6 +1,6 @@
 """Tests for the governed-persistence :class:`SubmissionRepository`.
 
-Exercises :class:`cadrumo.domain.submission.SubmissionRepository`'s save,
+Exercises :class:`cadrumo.adapters.persistence.profile.submission.SubmissionRepository`'s save,
 load, list, iter, and delete API; the per-submission lock isolation;
 and the classification gate enforcement on the audit envelope.
 """

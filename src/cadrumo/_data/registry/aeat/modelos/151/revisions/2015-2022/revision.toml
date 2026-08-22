@@ -45,8 +45,14 @@ source_refs = [
     # 2015-01-01..2022-12-31, matching the revision exactly. AEAT titles it
     # "151 - Orden HAP/2783/2015 (Ejercicios 2015-2022)". Without it this
     # revision cited only the 2023-and-later edition, so every year it
-    # claims read as uncovered. The 2023 citation is left in place: judging
-    # whether it is now redundant here is a separate call.
+    # claims read as uncovered.
+    #
+    # That deferred call has since been made: the 2023-and-later edition is
+    # cited nowhere in this revision -- not here, not on any of the 529
+    # casillas, not in the export layout, not in workbook_parity_refs. It
+    # governs from ejercicio 2023 by Orden HFP/1338/2023's own Disposicion
+    # Final Segunda(a), which is outside this span, so it does not belong to
+    # this revision and no longer appears in it.
     "aeat-dr-151-2015",
 ]
 

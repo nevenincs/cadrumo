@@ -654,7 +654,15 @@ def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
         # field still refuses, because dropping it leaves the field missing.
         if raw_value is None:
             continue
-        payload[raw_key] = raw_value
+        # A python-mode ``model_dump()`` emits StrEnum MEMBERS, and the
+        # exact-type checks below reject one although a member's value IS the
+        # wire primitive -- which made every layout carrying a projection
+        # unable to survive its own serialisation. Narrowing to the value keeps
+        # those checks strict against genuine non-primitives (a bool still
+        # refuses on an integer field) for the same reason the null branch
+        # above exists: refusing a value the target model accepts is a defect,
+        # not strictness.
+        payload[raw_key] = raw_value.value if isinstance(raw_value, StrEnum) else raw_value
     for field_name in _STRING_WIRE_FIELDS.intersection(payload):
         if type(payload[field_name]) is not str:
             raise ValueError(f"filing projection reference {field_name!r} must be an exact string")

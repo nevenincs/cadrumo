@@ -13,28 +13,41 @@ Both locks are the same primitive over different PATHS -- the root lock is
 the type system distinguishes them and nothing stops a future caller taking
 them the other way round.
 
-WHY THIS OBSERVES RATHER THAN SUBSTITUTES. The wrapper below records each lock
-path and then delegates to the REAL implementation, which really acquires the
-real file locks; nothing is faked and no acquisition is skipped. The recording
-is the only addition. Order cannot be read off the filesystem afterwards --
-both files exist once the block is entered, and which was created first is not
-retained -- so observing the calls is what makes the invariant assertable at
-all.
+HOW THE ORDER IS OBSERVED, WITHOUT PATCHING ANYTHING. An earlier version of
+this module wrapped the lock primitive to record each path. That wrapper
+delegated to the real implementation and faked nothing, but it was still
+monkeypatch machinery in a deterministic test, which this project forbids
+outright -- and the ratchet that says so lives in `dev/tests`, which no
+per-push lane runs, so it went unreported.
+
+Real contention answers the same question without touching the code under
+test. A sibling PROCESS holds the ROOT lock; a thread here then enters the
+transaction and must block. While it is blocked, this process acquires the
+PROFILE lock itself. That acquisition SUCCEEDING is the proof: had the
+transaction taken the profile lock first, the lock would already be held and
+the probe would fail. The probe is a real acquisition of the real file lock,
+and on Windows the primitive opens its leaf with no sharing, so a second
+acquire fails even from the same process -- which is what makes the probe
+discriminating rather than decorative.
 
 An empirical sweep over the custody suites (583 tests, 95 real acquisitions, 61
-of them nested) found every nesting already in the declared order. This test
-keeps it that way.
+of them nested) found every nesting already in the declared order. This keeps
+it that way.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import multiprocessing as mp
+import threading
+from queue import Empty
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 import pytest
 
 from ....adapters.persistence.storage import custody
-from ....adapters.persistence.storage.custody import _filesystem
+from ....core import StorageCategory, storage_location
+from ....core.paths import effective_storage_root
 from .._custody_repository import profile_custody_transaction_lock
 
 if TYPE_CHECKING:
@@ -42,60 +55,132 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ROOT_LOCK_NAME = ".profile-custody-root.lock"
 _PROFILE_ID = UUID("aef4bd4b-2a08-454e-9e46-ad76d1928ac7")
 
+#: Long enough that a real acquisition wins, short enough that a HELD lock
+#: reports quickly rather than hanging the suite for the 30 s default.
+_PROBE_SECONDS = 3.0
 
-def _recorded_lock_order(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[str, ...]:
-    """Run the real transaction lock, returning the lock names in order taken."""
-    taken: list[str] = []
-    real_lock = _filesystem.profile_custody_local_lock
-
-    def observing_lock(path: Path, **kwargs: object):
-        taken.append(path.name)
-        return real_lock(path, **kwargs)
-
-    # Patched in BOTH places the primitive is reached from, which is the whole
-    # difficulty: `profile_custody_root_lock` is itself a local lock, and it
-    # calls the primitive through its OWN module global rather than the facade
-    # attribute. Observing only the facade saw the profile lock and missed the
-    # root acquisition entirely -- reporting an inversion that was not there.
-    monkeypatch.setattr(_filesystem, "profile_custody_local_lock", observing_lock)
-    monkeypatch.setattr(custody, "profile_custody_local_lock", observing_lock)
-
-    with profile_custody_transaction_lock(tmp_path, _PROFILE_ID):
-        pass
-    return tuple(taken)
+#: How long the blocked transaction is given to prove it is genuinely blocked.
+_BLOCKED_WINDOW_SECONDS = 1.0
 
 
-def test_the_root_lock_is_taken_before_the_profile_lock(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """DISCRIMINATING: the inversion two operators would deadlock on."""
-    order = _recorded_lock_order(tmp_path, monkeypatch)
+def _profile_lock_path(root: Path) -> Path:
+    """Resolve the per-profile lock leaf exactly as the transaction does."""
+    capsules_root = effective_storage_root(root) / storage_location(StorageCategory.BUCKETS).relative_path()
+    return capsules_root / f".profile-custody-{_PROFILE_ID}.lock"
 
-    assert order, "no lock was taken; the transaction lock is not reaching the custody primitive"
-    assert order[0] == _ROOT_LOCK_NAME, (
-        f"the custody transaction took {order[0]!r} before the root lock. Two processes taking this "
-        "pair in opposite orders deadlock, and the declared order is root first."
+
+def _hold_root_lock_in_sibling(root_text: str, release_event: Any, result_queue: Any) -> None:
+    """Hold ONLY the root lock in a separate interpreter.
+
+    Only the root lock, deliberately: holding the whole transaction would also
+    hold the profile lock, and then the probe below could not distinguish "the
+    transaction under test took it" from "the sibling took it".
+
+    ``ready`` is published before the acquisition so a caller timing the
+    contention window is not timing a Windows spawn plus a cadrumo import.
+    """
+    from pathlib import Path as _Path
+
+    from ....adapters.persistence.storage import custody as _custody
+    from ....core.paths import effective_storage_root as _effective_root
+
+    result_queue.put("ready")
+    with _custody.profile_custody_root_lock(_effective_root(_Path(root_text))):
+        result_queue.put("locked")
+        release_event.wait(30)
+
+
+def _await(queue: Any, expected: str, *, timeout: float = 30.0) -> None:
+    """Block until ``expected`` arrives, failing the test rather than hanging."""
+    try:
+        received = queue.get(timeout=timeout)
+    except Empty:  # pragma: no cover - only on a genuinely wedged sibling
+        pytest.fail(f"sibling never published {expected!r}")
+    assert received == expected, f"expected {expected!r} from the sibling, got {received!r}"
+
+
+def test_the_root_lock_is_taken_before_the_profile_lock(tmp_path: Path) -> None:
+    """DISCRIMINATING: the inversion two operators would deadlock on.
+
+    Proven against real file locks in two processes: no wrapper, no patch, and
+    every acquisition below is the production primitive doing its real work.
+    """
+    # The transaction creates this directory itself, but only AFTER taking the
+    # root lock -- so while it is blocked the probe would have no parent to
+    # anchor against and would fail for the wrong reason. Creating it here is
+    # what the transaction would do anyway, and it is idempotent.
+    _profile_lock_path(tmp_path).parent.mkdir(parents=True, exist_ok=True)
+
+    context = mp.get_context("spawn")
+    release_root = context.Event()
+    from_sibling = context.Queue()
+    sibling = context.Process(
+        target=_hold_root_lock_in_sibling,
+        args=(str(tmp_path), release_root, from_sibling),
     )
-    profile_locks = [name for name in order if name.startswith(".profile-custody-") and name != _ROOT_LOCK_NAME]
-    assert profile_locks, "the profile-scoped lock was never taken"
-    assert order.index(_ROOT_LOCK_NAME) < order.index(profile_locks[0])
+    sibling.start()
+    entered = threading.Event()
+
+    def _enter_transaction() -> None:
+        with profile_custody_transaction_lock(tmp_path, _PROFILE_ID):
+            entered.set()
+
+    transaction = threading.Thread(target=_enter_transaction, daemon=True)
+    try:
+        _await(from_sibling, "ready")
+        _await(from_sibling, "locked")
+        transaction.start()
+
+        assert not entered.wait(_BLOCKED_WINDOW_SECONDS), (
+            "the transaction entered while a sibling process held the ROOT lock, so it is not "
+            "taking the root lock first -- or not taking it at all"
+        )
+
+        # The proof. A free profile lock means the blocked transaction has not
+        # taken it, so root is genuinely first. Released before the root lock
+        # is, or the transaction would block again on this very handle.
+        with custody.profile_custody_local_lock(_profile_lock_path(tmp_path), timeout_seconds=_PROBE_SECONDS):
+            pass
+    finally:
+        release_root.set()
+        sibling.join(timeout=30)
+        transaction.join(timeout=30)
+
+    assert entered.is_set(), "the transaction never completed once the root lock was released"
 
 
-def test_the_profile_lock_names_the_profile_it_scopes(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_the_probe_fails_when_the_profile_lock_is_genuinely_held(tmp_path: Path) -> None:
+    """ANTI-TAUTOLOGY: the probe must be able to say "held".
+
+    The assertion above is an acquisition SUCCEEDING. If this lock were freely
+    re-acquirable -- a re-entrant primitive, a path that never really locks --
+    that success would mean nothing and the test would pass against an inverted
+    implementation. This holds the same leaf and requires a second acquire to
+    refuse.
+    """
+    target = _profile_lock_path(tmp_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+
+    with custody.profile_custody_local_lock(target, timeout_seconds=_PROBE_SECONDS):
+        with pytest.raises(Exception):  # noqa: B017 - the refusal type is the primitive's own
+            with custody.profile_custody_local_lock(target, timeout_seconds=0.5):
+                pass
+
+
+def test_the_profile_lock_names_the_profile_it_scopes(tmp_path: Path) -> None:
     """ANTI-VACUITY: the second lock must be per-profile, not a second root.
 
     Ordering is only worth asserting if the two locks are genuinely different
     subjects. If the profile-scoped lock ever collapsed onto one shared path,
     every profile would serialise against every other and the assertion above
-    would still pass.
+    would still pass. Observed from the filesystem: entering the transaction
+    materialises the leaf, and its name carries the profile id.
     """
-    order = _recorded_lock_order(tmp_path, monkeypatch)
+    with profile_custody_transaction_lock(tmp_path, _PROFILE_ID):
+        target = _profile_lock_path(tmp_path)
 
-    assert f".profile-custody-{_PROFILE_ID}.lock" in order
+        assert target.is_file(), f"the per-profile lock leaf was never materialised at {target}"
+        assert str(_PROFILE_ID) in target.name
+        assert target.name != ".profile-custody-root.lock"

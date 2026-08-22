@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _IMPOSSIBLE_ANCHOR: Final[str] = "zzz-no-such-anchor-zzz"
 
-_UNVERIFIED_ANCHOR_CEILING: Final[int] = 89
+_UNVERIFIED_ANCHOR_CEILING: Final[int] = 87
 """Entries whose anchor a wrong value would pass, re-measured 2026-08-06.
 
 Shrink-only. The 318 this replaces was inflated by the resolver falling back to
@@ -65,6 +65,19 @@ hiding: their declared anchors were ``#a1``/``#a2``, minted by the extractor's
 legacy heading fallback, while boe.es publishes this orden's articles under
 ``#ar``/``#ar-2``. Both citations deep-linked nowhere. An unverified anchor is
 not only unchecked, it can be wrong.
+
+Lowered 89 -> 87 on 2026-08-22, by the same remedy, while enrolling three new
+entries that would otherwise have pushed this to 92. A hand-authored excerpt
+CANNOT produce an anchored unit: the segmenter splits on ``<h[1-6]
+class="articulo">`` and reads the anchor from a preceding ``[Bloque N: #x]``
+marker, so an excerpt written with ``<div id="a3"><h2>`` -- the shape several
+bundled excerpts use -- extracts as one anchorless unit and every anchor
+resolves against it. Re-shaping orden-hac-510-2021 to the real BOE markup made
+its two existing entries verified (-2) and its new disposición-transitoria entry
+verified on arrival; orden-hac-529-2026 was authored in that shape from the
+start. The rule for anyone enrolling a new legal reference: author the excerpt
+in BOE's marker-and-classed-heading shape, or the citation joins this population
+by construction and the ceiling forbids the enrollment.
 """
 
 _MINIMUM_CLASSIFIED_ENTRIES: Final[int] = 550

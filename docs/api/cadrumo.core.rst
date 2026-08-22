@@ -132,6 +132,7 @@ Submodules
    cadrumo.core._tipos_actividad
    cadrumo.core._toml
    cadrumo.core._type_adapters
+   cadrumo.core._windows_contention
    cadrumo.core.aggregation
    cadrumo.core.async_cleanup
    cadrumo.core.atomic_write

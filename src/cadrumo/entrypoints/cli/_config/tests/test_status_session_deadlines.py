@@ -5,7 +5,7 @@ of a login, but nothing rendered them: an operator working full-screen had
 no way to tell how long they had left before re-authenticating. These
 tests drive the real chain — a real credential registration followed by the
 canonical authenticated login door, the real in-process
-:class:`~cadrumo.adapters.persistence.storage.BucketSession`, the real
+:class:`~cadrumo.adapters.persistence.storage.master_key.BucketSession`, the real
 :func:`~cadrumo.entrypoints.cli._config._status_frontend.build_status_page_data`
 builder, and the real :class:`~cadrumo.adapters.inbound.tui.StatusApp`
 surface. No mock, stub, or hand-built session record.

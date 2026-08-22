@@ -777,9 +777,16 @@ def test_the_colegio_concertado_row_is_filer_data_not_reserved_space(
     ]
     assert tagged, "the Colegio Concertado row is no longer in the bundled corpus; re-anchor this test"
     for field in tagged:
-        assert '"X"' in (field.content or ""), (
+        # The tick is read from whichever cell the edition prints it in. The two
+        # xlsx designs declare it in Contenido; the 2012 PDF is recovered from
+        # chart geometry and has no content column, so the identical declaration
+        # arrives merged into the description. Demanding the content cell made
+        # this row's premise depend on the extraction shape rather than on what
+        # AEAT states, which is the axis the production rule now also spans.
+        assert '"X"' in f"{field.content or ''} {field.description or ''}", (
             f"@{field.offset}+{field.length} no longer declares AEAT's filer tick "
-            f"(contenido {field.content!r}); the premise of this test has changed"
+            f"(contenido {field.content!r}, description {field.description!r}); "
+            "the premise of this test has changed"
         )
         assert not _administration_reserved(field), (
             f"@{field.offset}+{field.length} carries a filer mark but was excused as reserved"
@@ -802,14 +809,28 @@ def test_a_bare_reservado_label_with_no_contenido_stays_reserved(
 
     This is why the predicate could not be narrowed on WORDING alone: keying on
     the ``para``-less shape would have required every one of these.
+
+    The population is selected on declaring no tick ANYWHERE, which is the
+    sentence this test actually asserts. An empty contenido used to stand in for
+    that, and the two stopped being equivalent once a geometry-recovered design
+    -- which has no contenido column at all -- was found stating its tick in the
+    description instead. Selecting on the proxy would put the Modelo 111 row of
+    the sibling test into this one's population and demand the opposite verdict
+    of the same field.
     """
     _modelos, catalogues = registry_tree
     bare = [
         field
         for field in _every_declared_design_row(catalogues)
-        if (field.description or "").strip().startswith("Reservado.") and not (field.content or "").strip()
+        if (field.description or "").strip().startswith("Reservado.")
+        and not (field.content or "").strip()
+        and '"X"' not in (field.description or "")
     ]
     assert bare, "no bare-label Reservado row was examined, so the fallback proved nothing"
+    assert len(bare) > 20, (
+        f"only {len(bare)} bare-label rows remain; the Modelo 840 population this "
+        "fallback rests on has thinned out and the exclusion needs re-checking"
+    )
     for field in bare:
         assert _administration_reserved(field), (
             f"@{field.offset}+{field.length} ({field.description!r}) lost its reservation "

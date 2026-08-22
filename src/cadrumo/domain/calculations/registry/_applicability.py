@@ -771,22 +771,28 @@ a rationale pointing at the deferred expansion. See
 """
 
 
-#: Modelo ids whose applicability rule is authored in the registry
-#: (W01.P03.S09 migration, landed and flipped) rather than declared as a
-#: Python literal in :data:`_MODELO_APPLICABILITY_RULES` below. Every
-#: revision of every one of these 25 modelos was hydration-verified equal to
-#: the literal it replaces, through the real loader, before this set was
-#: populated and the literal deleted in the same commit. 303 and 390 stay
-#: literal in :data:`_MODELO_APPLICABILITY_RULES` -- their authoring trees
-#: are owned by the export-fragment-generator-authority campaign, not
-#: unplaced by omission.
+#: Modelo ids whose applicability rule is authored in the registry rather than
+#: declared as a Python literal in :data:`_MODELO_APPLICABILITY_RULES` below.
+#: 303 and 390 stay literal -- their authoring trees are owned by the
+#: export-fragment-generator-authority campaign, not unplaced by omission.
+#:
+#: Membership is reached two ways, and the difference matters when reading a
+#: rule's provenance. Most entries arrived by MIGRATION: every revision of each
+#: was hydration-verified equal to the literal it replaces, through the real
+#: loader, before it was added here and the literal deleted in the same commit.
+#: Modelo 840 arrived by AUTHORING instead -- it never had a literal to be
+#: verified against, and its rule is grounded directly on TRLRHL arts. 78, 82
+#: and 90 with real-profile verdicts asserted in
+#: ``test_modelo_840_applicability``. A migrated entry's guarantee is
+#: equivalence; an authored entry's is its citations and its tests, and no
+#: count is stated here because a tally of either goes stale on the next entry.
 #:
 #: This is the single declaration of the mixed-surface state
-#: ``_MODELO_APPLICABILITY_RULES`` is now in: these 25 modelos resolve from
-#: the registry, 303 and 390 still resolve from the literal table. The
-#: literal table retires outright once the export-fragment campaign closes
-#: those two trees and they are migrated the same way; this module then
-#: stops authoring applicability data at all -- it only reads it.
+#: ``_MODELO_APPLICABILITY_RULES`` is now in: these modelos resolve from the
+#: registry, 303 and 390 still resolve from the literal table. The literal
+#: table retires outright once the export-fragment campaign closes those two
+#: trees and they are migrated the same way; this module then stops authoring
+#: applicability data at all -- it only reads it.
 REGISTRY_RESOLVED_APPLICABILITY_MODELOS: frozenset[Modelo] = frozenset(
     {
         Modelo.M100,
@@ -798,6 +804,9 @@ REGISTRY_RESOLVED_APPLICABILITY_MODELOS: frozenset[Modelo] = frozenset(
         Modelo.M128,
         Modelo.M130,
         Modelo.M131,
+        Modelo.M136,
+        Modelo.M145,
+        Modelo.M151,
         Modelo.M180,
         Modelo.M184,
         Modelo.M187,
@@ -807,13 +816,20 @@ REGISTRY_RESOLVED_APPLICABILITY_MODELOS: frozenset[Modelo] = frozenset(
         Modelo.M194,
         Modelo.M200,
         Modelo.M202,
+        Modelo.M210,
+        Modelo.M216,
+        Modelo.M232,
+        Modelo.M296,
         Modelo.M322,
         Modelo.M347,
         Modelo.M349,
         Modelo.M353,
+        Modelo.M360,
         Modelo.M369,
+        Modelo.M714,
         Modelo.M720,
         Modelo.M721,
+        Modelo.M840,
     },
 )
 

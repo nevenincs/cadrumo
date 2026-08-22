@@ -50,18 +50,18 @@ applicability only, which is what the applicability rung asserts. ADVISORY, not 
 the classification audit raises informative_axis_divergence for calculation_class = \
 informative against tax_domain = iae, and its own detail states the taxonomy label is a \
 free choice carrying no invariant -- an informative declaration inside the IAE domain is a \
-legitimate combination. KNOWN LIMIT NOT FIXED HERE -- the family_dispositions.formulas \
-reason on this revision describes it as "an informational declaration reporting \
+legitimate combination. CORRECTED SINCE -- the family_dispositions.formulas \
+reason on this revision described it as "an informational declaration reporting \
 third-party data to AEAT", which contradicts this file's own header ("administered \
 municipally and is not a return this application emits") and misstates the modelo: the IAE \
 declaration reports the taxpayer's OWN actividad. The conclusion that no formula family \
-applies is correct; the stated reason is not, and the same sentence sits verbatim on eight \
-other revisions. NOT CLAIMED -- all 3 locales are complete for the 2 labels, but the \
+applies was correct and is unchanged; the reason now cites TRLRHL art. 90, which puts the \
+liquidation with the administration. The same sentence sat verbatim on nine other revisions and was checked against each modelo's official name: it stays on 189, 280, 345 and 347, where the declarant reports OTHER people's data, and was corrected on 145, 232 and 720, which like this one report the declarant's own facts. NOT CLAIMED -- all 3 locales are complete for the 2 labels, but the \
 strings were not audited for accuracy."""
 reviewed_at = 2026-08-21
 
 [revisions."2003-y-siguientes".family_dispositions.formulas]
-reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+reason = "The declarant reports its OWN actividad economica, declaring alta, variacion or baja in the matricula del IAE. The cuota is not self-assessed here: TRLRHL art. 90 puts the gestion tributaria of the impuesto with the matricula and the liquidation with the administration, so this form computes no liability and the formula family is inapplicable by this modelo's nature rather than merely absent."
 legal_refs = [
     "orden-hac-2572-2003:apartado-1",
 ]
@@ -120,4 +120,78 @@ source_refs = [
     "aeat-dr-840",
     "aeat-modelo-840-procedure",
     "boe-modelo-840-2003-form",
+]
+
+[revisions."2003-y-siguientes".family_dispositions.parameters]
+reason = """\
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, \
+a coefficient. This revision applies none, because it declares no formula at all: its \
+family_dispositions.formulas records that the IAE cuota is not self-assessed here, TRLRHL art. \
+90 placing the gestion with the matricula and the liquidacion with the administration. The \
+tarifas and cuotas of the impuesto are real regulatory values, but they are applied by the \
+administration liquidating from the matricula, never by a formula of this revision, so there is \
+nothing here for a parameter to feed."""
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+]
+
+[revisions."2003-y-siguientes".family_dispositions.dependency_classifications]
+reason = """\
+A dependency classification declares which OTHER modelo's filing a value here derives from, and \
+modelo 840 derives from none. It declares the taxpayer's own alta, variacion or baja in the \
+matricula del IAE -- facts about the declarant's actividad economica, held by the declarant and \
+reported directly. No value on this form is folded in from another return, and its plazos are \
+anchored to the event rather than to a prior period's filing (Orden HAC/2572/2003 apartado \
+sexto, by remission to RD 243/1995 arts. 5, 6 and 7), so there is no cross-period source for the \
+family to classify."""
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+]
+
+[revisions."2003-y-siguientes".family_dispositions.verification_expectations]
+reason = """\
+A verification expectation reconciles a FILED return against this application's engine, and \
+neither side of that reconciliation exists here. This application does not emit the modelo -- \
+the revision header records that the IAE alta, baja and variacion communication is administered \
+municipally -- and the engine computes no value for it, since family_dispositions.formulas \
+already establishes that no formula applies. An expectation authored here would compare nothing \
+against nothing."""
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+]
+
+[revisions."2003-y-siguientes".family_dispositions.verification_predicates]
+reason = """\
+A verification predicate guards a CALCULATED result, and this revision calculates none. \
+family_dispositions.formulas records why: TRLRHL art. 90 leaves the liquidacion of the IAE with \
+the administration working from the matricula, so this form carries census facts rather than an \
+amount the engine derives. With no derived value there is no result for a predicate to guard, \
+and a predicate over the declared census facts would assert a relationship the modelo does not \
+establish."""
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
 ]

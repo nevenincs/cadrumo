@@ -42,7 +42,7 @@ source_refs = [
 
 
 [revisions."2016-2017".family_dispositions.formulas]
-reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+reason = "The declarant reports its OWN operaciones with related parties and with paraisos fiscales; the valuation of those operations is settled in the Impuesto sobre Sociedades self-assessment, not here. This form carries information about the declarant's own transactions and computes no liability, so the formula family is inapplicable by this modelo's nature rather than merely absent."
 legal_refs = [
     "orden-hfp-816-2017:art-1",
 ]

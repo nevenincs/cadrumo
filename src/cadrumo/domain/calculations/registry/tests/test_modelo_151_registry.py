@@ -143,3 +143,46 @@ def test_modelo_151_carries_base_liquidable_under_declaration_advisory() -> None
         "the guard must stay non-blocking: a legitimately zero cuota must not refuse the draft"
     )
     assert "ley-35-2006:art-93" in tuple(str(r) for r in guard.legal_refs)
+
+
+def test_modelo_151_2015_2022_cites_no_design_from_a_later_era() -> None:
+    """The 2023-and-later design belongs to no surface of the 2015-2022 revision.
+
+    Orden HFP/1338/2023 Disposicion Final Segunda(a) states the successor model
+    applies first for ejercicio 2023, which is outside this span, and AEAT names
+    the bundled file "01-151-ejercicio-2023-y-siguientes". The revision briefly
+    cited that edition alongside its own; the citation was dropped and this pins
+    the ruling across every surface it could return through -- a stray re-add
+    would otherwise reappear silently in one of them.
+    """
+    modelo, catalogues = _load_modelo_151()
+    revision = modelo.revisions["2015-2022"]
+
+    designs = {
+        ref
+        for ref in revision.source_refs
+        if (source := catalogues.sources.get(ref)) is not None and source.kind == "record_design"
+    }
+    assert designs == {"aeat-dr-151-2015"}, designs
+
+    later = {
+        source.id
+        for source in catalogues.sources.values()
+        if source.kind == "record_design"
+        and source.id.startswith("aeat-dr-151-")
+        and source.applies_from is not None
+        and source.applies_from.year > 2022
+    }
+    assert later, "a later-era 151 design must exist for this test to discriminate"
+
+    for casilla in revision.casillas:
+        assert not (set(getattr(casilla, "source_refs", ()) or ()) & later), casilla.id
+    for workbook in revision.workbook_parity_refs:
+        assert workbook.workbook_source not in later
+        assert not (set(workbook.source_refs) & later)
+
+    for layout in revision.export_layouts:
+        assert not (set(layout.source_refs) & later)
+        assert layout.dictionary_source_ref not in later
+        for record in layout.records:
+            assert not (set(getattr(record, "source_refs", ()) or ()) & later), record
