@@ -56,6 +56,15 @@ class _ProofAuthority:
     ) -> str | None:
         return self._evidence_digests.get(evidence.evidence_id)
 
+    def encrypted_revision_matches(
+        self,
+        proof: core.SourceConnectivityEncryptedRevisionProof,
+    ) -> bool:
+        return (
+            proof.persisted_source_identity == proof.connection.source_object_id
+            and proof.persisted_source_fingerprint == _FINGERPRINT
+        )
+
 
 def _grounding(
     reference: str = _TEST_LOCATOR,
@@ -133,7 +142,7 @@ def _connected_proof(
         ),
         encrypted_revision=core.SourceConnectivityEncryptedRevisionProof(
             connection=connection,
-            persisted_source_identity="inventory-source-2026",
+            persisted_source_identity=connection.source_object_id,
             persisted_source_fingerprint=_FINGERPRINT,
             strict_round_trip=True,
             encrypted_at_rest=True,
@@ -198,6 +207,7 @@ def test_core_facade_exposes_every_connectivity_owner() -> None:
         "SourceConnectivityResolverOwnershipProof",
     }
     assert expected <= set(dir(core))
+    assert isinstance(_ProofAuthority(), core.SourceConnectivityProofAuthority)
 
 
 @pytest.mark.parametrize("candidate_id", ["", "Inventory", "inventory stock", "inventory/stock"])
@@ -347,7 +357,10 @@ def test_connected_proof_refuses_every_cross_component_identity_mismatch(mutated
         "calculation_revision_id": "d" * 64,
     }
     different = connection.model_copy(update={mutated_field: mutations[mutated_field]})
-    with pytest.raises(ValidationError, match=r"same connection|asserted connection"):
+    with pytest.raises(
+        ValidationError,
+        match=r"same connection|asserted connection|persisted source identity",
+    ):
         core.SourceConnectivityConnectedProof.model_validate(
             {
                 "resolver_ownership": proof.resolver_ownership,
@@ -377,7 +390,7 @@ def test_role_specific_proof_refuses_unrelated_or_wrong_role_evidence() -> None:
     with pytest.raises(ValidationError, match="must carry role"):
         core.SourceConnectivityEncryptedRevisionProof(
             connection=connection,
-            persisted_source_identity="inventory-source-2026",
+            persisted_source_identity=connection.source_object_id,
             persisted_source_fingerprint=_FINGERPRINT,
             strict_round_trip=True,
             encrypted_at_rest=True,
@@ -398,7 +411,7 @@ def test_proof_truth_claims_reject_coercible_substitutes(truthy: object) -> None
         core.SourceConnectivityEncryptedRevisionProof.model_validate(
             {
                 "connection": connection,
-                "persisted_source_identity": "inventory-source-2026",
+                "persisted_source_identity": connection.source_object_id,
                 "persisted_source_fingerprint": _FINGERPRINT,
                 "strict_round_trip": truthy,
                 "encrypted_at_rest": truthy,
@@ -418,12 +431,35 @@ def test_false_strict_proof_assertion_is_refused() -> None:
     with pytest.raises(ValidationError, match="every strict proof assertion"):
         core.SourceConnectivityEncryptedRevisionProof(
             connection=connection,
-            persisted_source_identity="inventory-source-2026",
+            persisted_source_identity=connection.source_object_id,
             persisted_source_fingerprint=_FINGERPRINT,
             strict_round_trip=True,
             encrypted_at_rest=False,
             anti_tautology_mutation=True,
             evidence=(evidence,),
+        )
+
+
+def test_encrypted_revision_proof_refuses_source_identity_drift() -> None:
+    connection = _connection()
+    proof = _connected_proof(connection).encrypted_revision
+    with pytest.raises(ValidationError, match="persisted source identity"):
+        core.SourceConnectivityEncryptedRevisionProof.model_validate(
+            proof.model_dump() | {"persisted_source_identity": "different-source"},
+        )
+
+
+def test_authority_refuses_persisted_source_fingerprint_drift() -> None:
+    connection = _connection()
+    connected_proof = _connected_proof(connection)
+    changed_revision_proof = connected_proof.encrypted_revision.model_copy(
+        update={"persisted_source_fingerprint": "sha256:" + "d" * 64},
+    )
+    changed_proof = connected_proof.model_copy(update={"encrypted_revision": changed_revision_proof})
+    with pytest.raises(ValidationError, match="does not match persisted source provenance"):
+        core.SourceConnectivityCensusRow.validate_with_authority(
+            _connected_payload(connection=connection, proof=changed_proof),
+            authority=_ProofAuthority(),
         )
 
 

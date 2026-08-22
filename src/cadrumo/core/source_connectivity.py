@@ -246,6 +246,12 @@ class SourceConnectivityProofAuthority(Protocol):
     ) -> bool:
         """Return whether the live operator catalogue owns this workflow identity."""
 
+    def encrypted_revision_matches(
+        self,
+        proof: SourceConnectivityEncryptedRevisionProof,
+    ) -> bool:
+        """Return whether encrypted storage contains the exact asserted source proof."""
+
     def executable_evidence_digest(self, evidence: SourceConnectivityExecutableEvidence) -> ContentDigest | None:
         """Return the verified digest of the existing executable artifact, if any."""
 
@@ -288,6 +294,8 @@ class SourceConnectivityEncryptedRevisionProof(BaseModel):
         """Require true strict-storage claims tied to this exact connection."""
         if not (self.strict_round_trip and self.encrypted_at_rest and self.anti_tautology_mutation):
             raise ValueError("encrypted revision proof requires every strict proof assertion")
+        if self.persisted_source_identity != self.connection.source_object_id:
+            raise ValueError("persisted source identity must match the asserted source object")
         _require_matching_evidence(
             self.connection,
             self.evidence,
@@ -465,6 +473,8 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
             command_id=operator.command_id,
         ):
             raise ValueError("connected proof operator workflow is not supported")
+        if not authority.encrypted_revision_matches(proof.encrypted_revision):
+            raise ValueError("connected proof encrypted revision does not match persisted source provenance")
         for evidence in _connected_executable_evidence(proof):
             verified_digest = authority.executable_evidence_digest(evidence)
             if verified_digest is None or verified_digest != evidence.content_digest:
