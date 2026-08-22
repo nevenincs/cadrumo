@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:fcbed81ba428b5a4b98fb5b28517179d893f5013e370c2d2d25b0faadd1ccf9e'
+body_hash: 'sha256:f976b3258a788098b16927d109330772448bff109c5d2afb2f1f094322ed5db0'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -2414,4 +2414,3 @@ static file is the tell that the reported text is not the text on disk. Several 
 spent on cache-poisoning and peer-mutation theories before that registered. Related: a
 `reviewed_by` change on an already-reviewed revision REQUIRES `--reviewed-at`, because an
 omitted date would carry the previous reviewer's date onto the new claim.
-

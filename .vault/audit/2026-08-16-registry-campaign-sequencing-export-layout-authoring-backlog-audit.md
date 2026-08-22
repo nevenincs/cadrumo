@@ -14587,3 +14587,75 @@ The verdict cache is shared state, which makes it the clearest case. This is the
 loader-cache race the local-execution rule names, and it is now frequent enough
 that a red name from a parallel run should be re-run alone BEFORE anyone spends
 a tick on it. Two of the five reds this tick were real; three were not.
+
+## Tick: the false reds were not a parallel race -- correcting last tick
+
+Re-measured at tick start: authority CLEAN, queue confirmed finished, last
+tick's four fixes committed and green. The first not-done work was the defect
+recorded last tick and taken by nobody: the suite manufacturing red names that
+pass in isolation, which corrupts this campaign's own instrument.
+
+### The attribution recorded last tick was wrong
+
+Last tick this was written up as "the loader-cache race the local-execution rule
+names". That was a plausible reading of a real pattern and it was not the cause.
+
+Reproduced deliberately: the registry package run in parallel fails
+`test_authority_validation_writes_once_then_a_verdict_hit_skips_revalidation`
+and passes it alone. Two candidate mechanisms were eliminated by measurement
+rather than by argument -- the writable verdict cache DOES honour its
+`cadrumo_validation_verdict_cache_dir` override (checked directly), and the
+shipped-verdict stamp test writes only under `tmp_path`.
+
+The actual mechanism was found by snapshotting size and mtime for all 21,097
+files under `_data` either side of a run: **1 file added and 2 changed, all in
+modelo 840**, with a clean working tree and a NEW commit
+`b971b1075e` explaining them. The timestamps close it -- run window 15:40:46 to
+15:45:39, commit at **15:45:32**, seven seconds before the end.
+
+So a peer commit mutates the bundled tree mid-run. The verdict is keyed on that
+tree's fingerprint, so the second construction MISSES and revalidates. The test
+was correct throughout, and every assertion in it was doing its job.
+
+That mechanism also explains the rest of the pattern without needing a race: the
+casilla-label gate failed listing modelo 840 casillas because a peer had just
+committed casillas whose locale strings landed in a later commit, and passed in
+isolation once both had landed.
+
+### The symptom now names its cause
+
+The verdict-cache test records the tree state before its first construction and
+checks it before blaming the cache, so a moving tree fails with what actually
+happened -- how many files were added, removed or changed, and which -- instead
+of a bare `1 == 0` on a write counter.
+
+Proven both ways rather than assumed: silent on a quiescent tree (18,378 files
+walked), and biting on a single doctored size with the diagnostic message. In a
+shipped install the bundled tree is immutable and this can never fire; it exists
+for this worktree.
+
+### Two failures that looked real, and were the same thing again
+
+With the tree quiescent for a full run (0 added, 0 changed), two non-inventory
+failures surfaced: five modelo 840 `local-indirecto` casillas with no Spanish
+label, and a `section` part `local-afecto-indirectamente` that is not
+snake_case. Both were genuine and both were the peer's in-flight Apartado V
+work. Re-reading HEAD before acting -- the standing rule -- found the section
+already snake_case and the labels already authored in commit `3fb39a23af`.
+Nothing needed doing; acting on the run's output would have collided with work
+already done.
+
+### Verified
+
+* registry + generated-tree + application/registry: **8 failed, 5954 passed** --
+  exactly the eight declared inventories and nothing else, with the tree
+  quiescence recorded alongside the run.
+* the verdict-cache module passes; ruff clean.
+
+### The discipline this leaves
+
+A red name from a full run in this worktree is not evidence until the tree is
+known to have held still. Snapshotting `_data` either side of a run costs
+seconds and turns an unattributable red into a fact. Three ticks have now spent
+effort on names that were already fixed or never broken; the cheap guard is to
+re-run alone AND re-read HEAD, in that order, before opening any of them.
