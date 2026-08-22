@@ -17,6 +17,7 @@ profile is real.
 from __future__ import annotations
 
 import unicodedata
+from pathlib import Path
 from uuid import UUID
 
 import pytest
@@ -44,10 +45,17 @@ _TERMINAL_SIZE = (140, 60)
 _TYPED_PASSWORD = "screen-typed-operator-secret"  # noqa: S105 - synthetic test fixture
 
 
+def _storage_entries(storage_root: Path) -> tuple[Path, ...]:
+    """Snapshot storage atomically enough for isolation teardown on Windows."""
+    try:
+        return tuple(storage_root.iterdir())
+    except FileNotFoundError:
+        return ()
+
+
 @pytest.mark.parametrize(
     ("candidate", "reason", "message_key"),
     (
-        ("a" * 14, ProfilePasswordRefusalReason.TOO_FEW_SCALARS, "profile_password_too_few_scalars"),
         ("a" * 257, ProfilePasswordRefusalReason.TOO_MANY_SCALARS, "profile_password_too_many_scalars"),
         (
             "😀" * 255 + "abcde",
@@ -58,24 +66,42 @@ _TYPED_PASSWORD = "screen-typed-operator-secret"  # noqa: S105 - synthetic test 
         ("a" * 15 + "\udc00", ProfilePasswordRefusalReason.CONTAINS_SURROGATE, "profile_password_contains_surrogate"),
     ),
 )
-def test_submission_refusals_stay_typed_secret_free_and_create_nothing(
+@pytest.mark.asyncio
+async def test_live_submission_refusals_stay_typed_secret_free_and_create_nothing(
     tmp_path,
     candidate: str,
     reason: ProfilePasswordRefusalReason,
     message_key: str,
 ) -> None:
-    """Direct attempts cover candidates Textual widgets cannot transport."""
+    """Every non-short invalid boundary traverses the real Textual screen."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        attempt = attempt_registration("Refused candidate", candidate, "en")
+        app = _screen()
+        expected = assessment_refusal(assess_profile_password(candidate))
+        assert expected is not None
+        assert expected.message_key.endswith(message_key)
+        assert dict(expected.context)["reason"] == reason.value
+        exact_message = expected.render()
 
-        assert attempt.outcome is None
-        assert attempt.expected_refusal is not None
-        assert attempt.expected_refusal == assessment_refusal(assess_profile_password(candidate))
-        assert attempt.expected_refusal.message_key.endswith(message_key)
-        assert dict(attempt.expected_refusal.context)["reason"] == reason.value
-        assert candidate not in repr(attempt)
-        assert "INTERNAL" not in repr(attempt)
-        assert not list(storage_root.glob("*/manifest.json"))
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await _fill(pilot, username="Refused candidate", password=candidate, confirm=candidate)
+            live_rendered = str(app.query_one("#strength-line", Static).render())
+            assert live_rendered == exact_message
+            await pilot.click("#btn-create")
+            await pilot.pause()
+
+            status = app.query_one("#credential-status", PinnedStatusBar)
+            assert app.outcome is None
+            assert app.error is None
+            assert status.tone == "error"
+            assert str(status.message) == exact_message
+            rendered_surface = live_rendered + str(status.message)
+            assert candidate not in rendered_surface
+            assert "INTERNAL" not in rendered_surface.upper()
+            assert "profile password must contain 15 to 256 Unicode scalars" not in rendered_surface
+            assert "Traceback" not in rendered_surface
+            app.exit(None)
+
+        assert _storage_entries(storage_root) == ()
 
 
 def _screen(**kwargs) -> RegistrationApp:
@@ -181,7 +207,7 @@ async def test_mismatched_confirmation_refuses_and_creates_nothing(tmp_path) -> 
             assert status.message, "the refusal must be shown in the pinned channel"
             app.exit(None)
 
-        assert not list(storage_root.glob("*/manifest.json"))
+        assert _storage_entries(storage_root) == ()
 
 
 @pytest.mark.asyncio
@@ -213,7 +239,7 @@ async def test_original_fourteen_scalar_failure_is_typed_without_internal_diagno
             assert "Traceback" not in rendered
             app.exit(None)
 
-        assert not list(storage_root.glob("*/manifest.json"))
+        assert _storage_entries(storage_root) == ()
 
 
 @pytest.mark.asyncio
