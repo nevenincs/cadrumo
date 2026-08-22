@@ -62,6 +62,46 @@ temporarily constructible without that proof, but the plan explicitly assigns
 refusal of unsupported connected claims to the S03/S05 contract. S03 must close
 that temporary state before any census persistence or ratchet consumer is added.
 
+### corrective-review | low | Both high-severity S02 findings are closed by the corrective commit
+
+Commit `8351c6b272` removes the ambient clock read and exposes
+`expiry_posture(as_of=...)`. Fixed-date probing confirms the day before expiry is
+`current` and the expiry day and every later day are `expired`; model parsing no
+longer changes with wall-clock time. The corrective commit also replaces prose
+follow-up with `SourceConnectivityFollowUp`, whose stable action identity,
+deadline, completion criterion, explicit-or-inherited owner, and deadline-not-
+after-expiry invariant make the action finite and attributable. A deadline after
+the row expiry is refused. These changes close `ambient-clock-validation` and
+`follow-up-is-unstructured-prose`.
+
+### locator-contract-correction | low | Closed locator kinds and per-kind reference grammar close the original shape finding
+
+Commit `8351c6b272` replaces the unconstrained locator string with a closed kind
+and validates catalogue tokens, production-repository paths, and absolute HTTPS
+references independently. This closes the original `grounding-locator-shape`
+finding at the typed data-shape level. The residual HTTPS trust-boundary concern
+is recorded separately below.
+
+### https-locator-trust-boundary | medium | HTTPS grounding admits private-network targets and secret-bearing URLs
+
+The HTTPS validator proves only scheme, authority presence, and absence of URL
+userinfo. It accepts `https://localhost/admin`, `https://127.0.0.1/private`, and
+URLs containing query credentials such as `?token=secret`. If the promised
+re-fetchability is implemented by an automated resolver, these values create an
+SSRF and credential-persistence boundary; even without automatic fetching, an
+arbitrary authority is not evidence that the project can deterministically
+re-fetch the cited official source. The fetch boundary must either restrict HTTPS
+references to an evidence-domain policy and credential-free canonical URL shape,
+or treat external URLs as operator-opened references and explicitly keep them out
+of automatic resolution.
+
+### s03-boundary-recheck | low | Corrective S02 remains separate from connected-slice proof
+
+The correction adds only grounding, follow-up, ownership, and deterministic
+expiry posture. It introduces no resolver ownership, encrypted revision proof,
+or operator-reachability fields, so it does not leak the separately authorized
+S03 contract.
+
 ## Recommendations
 
 - For `ambient-clock-validation`, remove time-dependent validation from model
@@ -78,3 +118,8 @@ that temporary state before any census persistence or ratchet consumer is added.
 - Preserve the S03 boundary, then require its proof for `connected` before S05
   closes the phase. Do not begin S03 while either high-severity S02 finding is
   open.
+- For `https-locator-trust-boundary`, decide and enforce the HTTPS resolution
+  trust boundary before any loader dereferences census URLs. Reject embedded
+  query/fragment credentials and local/private targets, or use an explicit
+  allowlist of authoritative evidence hosts. This medium finding does not alter
+  the S02/S03 model boundary and does not block S03.
