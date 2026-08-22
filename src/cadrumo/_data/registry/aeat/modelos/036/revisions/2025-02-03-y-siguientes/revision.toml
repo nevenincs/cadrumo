@@ -25,53 +25,55 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the censal alta/modificacion/baja declaration, \
-re-stamped after completing PAGINA 1 and authoring PAGINA 3. DISCLOSURE -- self-review: \
-the same agent authored the forty new casillas across two units and re-grounded the \
-pre-existing causa fragment. VERIFIED -- COVERAGE 29 -> 59 of 288 derived casillas, 71 \
-casillas in total. PAGINA 1 is complete (every box number AEAT prints on it) and PAGINA 3, \
-the two representante blocks, is complete. VERIFIED -- TILING before any offset was \
-trusted: Pag. 1 tiles 1..500 and Pag. 3 tiles 1..1200, each exactly once, no gap, no \
-overlap. All thirteen records of this design tile clean, and they also pass the \
-partial-overlap check a peer shipped as test_cited_design_field_bounds_are_self_consistent \
--- a gap-only check would not have been sufficient, because partial overlap leaves no \
-holes. VERIFIED -- SIX DATES ARE EACH ONE CASILLA, not eighteen integers: 141, 152, 303, \
-313, 353 and 363 are each split by the diseno into dia, mes and ano component fields, and \
-a composite component is not a casilla of its own. This is the convention modelo 840 \
-settled, now applied six times across two modelos without adjustment. VERIFIED -- THE \
-CAUSA FRAGMENT IS RE-GROUNDED. Its numbers and its alta/modificacion/baja section mapping \
-are checkable against aeat-dr-036-2025: every description in the diseno opens \"Alta.\", \
-\"Modificacion.\" or \"Baja.\", so the TIPO axis was grounded all along and merely \
-mis-attributed. NOT CLAIMED -- ITS LABELS ARE NOT DERIVABLE FROM ANY BUNDLED SOURCE. The \
-fragment cited the AEAT Instrucciones Anexo 3 PAGINA 1 table; that bundled file is a 5.4 \
-KB navigation shell with no table, and across all six bundled modelo 036 instruction files \
-the numbers 101, 103, 141, 151 and 152 appear in none. The capture dropped the table -- \
-the file's own title names Anexo 3 -- so the source exists and is unbundled. The labels \
-are NOT re-derived from the diseno on purpose: it carries AEAT's own typo at 130 \
-(\"ata/baja\"), renders 142 and 143 unaccented and lowercase, and abbreviates throughout, \
-so re-grounding labels on it would degrade them. ONE label was corrected on diseno \
-evidence: 137 read \"otros Impuestos\", dropping the \"y registros\" the diseno states, \
-which narrowed what the box covers. Four divergences are recorded and NOT changed -- 124 \
-and 142 carry \"y baja\", 129 says \"alta/baja\" where the diseno says \
-\"inscripcion/baja\", and 145 carries a page reference the diseno does not print. \
-Adjudicating them needs the real Anexo 3 table bundled. NOT CLAIMED -- TWO DISENO DEFECTS \
-ARE RECORDED, NOT CORRECTED. The causa-de-la-representacion fields at @480 and @956 are \
-labelled \"[330 332]\" and \"[380 382]\" -- two box numbers in one bracket -- and the \
-derived-casilla regex matches a single number, so none of 330, 332, 380 or 382 is in the \
-derived set. Verified by enumerating that set. Both fields take slugs rather than claim a \
-box the coverage report cannot see. Separately, the field at @480 is described \"3.2.\" \
-while sitting inside block 3.1, whose neighbours read \"3.1.\"; the offsets are \
-unambiguous so this file follows the offsets. NOT CLAIMED -- 229 OF 288 DERIVED CASILLAS \
-REMAIN UNCOVERED across eleven records, and they are not 229 units of transcription. Pag. \
-6 prints 613 and 614 on twelve positions each and Pag. 8 prints 805 on twelve, so those \
-need the slug convention at scale; Pag. 0, 2A and 2C carry NO box numbers at all and are \
-repeating or structural records rather than flat casilla sets. NOT CLAIMED -- NO CONSTRUCT \
+re-stamped after authoring PAGINA 9. DISCLOSURE -- self-review: the same agent authored \
+the sixty-four new casillas across three units and re-grounded the pre-existing causa \
+fragment. CORRECTION TO THE PREVIOUS STAMPS ON THIS REVISION -- THE DENOMINATOR THEY CITED \
+IS A FLOOR. Earlier stamps reported coverage \"of 288 derived casillas\". The diseno \
+actually prints 348 distinct box numbers. Sixty are invisible to the derived-casilla \
+regex, which matches [NNN] only: 58 carry a MALFORMED bracket (a closing bracket with no \
+opening one, \"921]\") and 4 sit inside multi-number brackets. Every \"of 288\" figure on \
+this revision, including mine, is measured against a floor and the error flatters \
+progress. Scoped by measurement rather than left as a worry: the same scan against \
+aeat-dr-840 and aeat-dr-220-2024 shows ZERO undercount on both, so this defect belongs to \
+the modelo 036 diseno alone -- the same corpus entry whose instructions capture also \
+dropped its table. VERIFIED -- COVERAGE 29 -> 65 of the 288 regex-visible numbers, 95 \
+casillas in total. PAGINAS 1, 3 and 9 are complete. VERIFIED -- TILING before any offset \
+was trusted: Pag. 1 tiles 1..500, Pag. 3 tiles 1..1200 and Pag. 9 tiles 1..1300, each \
+exactly once, no gap, no overlap. All thirteen records tile clean and pass the \
+partial-overlap check test_cited_design_field_bounds_are_self_consistent -- a gap-only \
+check would not suffice, since partial overlap leaves no holes. VERIFIED -- PAGINA 9's \
+NUMBERS 921 TO 943 ARE READ, NOT MINTED. AEAT prints a well-formed [920] on each sucesor \
+block's NIF and then 921], 922], 923] on the three fields following. The run is \
+contiguous, four per block, in offset order, verified across all six blocks 13a to 13f. \
+Those eighteen casillas carry AEAT's real numbers, and they move coverage by ZERO because \
+the derived set cannot see them -- which is the honest signal, not an authoring defect. \
+VERIFIED -- THE OPPOSITE CASE, and it is easy to get backwards. PAGINA 3's causa flags are \
+ONE BYTE each and carry bracket LISTS: [300,301,302], [311,312], [330 332]. The printed \
+form has three separate tick boxes and the fichero collapses them into a single code byte \
+that SELECTS among them, so no single number describes the field and each takes a slug. \
+The tell is field width against number count: one byte holding three numbers is a \
+selector; a 125-byte name field holding one number is a box with a broken bracket. \
+VERIFIED -- SIX DATES are each ONE casilla rather than eighteen integers: 141, 152, 303, \
+313, 353 and 363 are each split by the diseno into dia, mes and ano components. VERIFIED \
+-- TYPES on PAGINA 9 are grounded, not inferred: the diseno states \"(3 ent + 2 decim.)\" \
+and \"(12 ent + 2 decim.)\" explicitly, so the porcentaje is decimal and the cuota is \
+money. NOT CLAIMED -- THE CAUSA FRAGMENT'S LABELS remain underivable from any bundled \
+source. Its cited instructions file is a 5.4 KB navigation shell with no casilla table; \
+the numbers and the alta/modificacion/baja section mapping ARE re-grounded on the diseno, \
+whose descriptions open \"Alta.\", \"Modificacion.\" or \"Baja.\". One label was corrected \
+on diseno evidence (137 had dropped \"y registros\"); four divergences are recorded \
+unchanged and need the real Anexo 3 table to adjudicate. NOT CLAIMED -- 223 OF THE 288 \
+REGEX-VISIBLE NUMBERS REMAIN UNCOVERED, and more than that against the true 348. They are \
+not that many units of transcription: Pag. 4 alone is 87 numbers, Pag. 6 prints 613 and \
+614 on twelve positions each, Pag. 8 prints 805 on twelve, and Pag. 0, 2A and 2C carry no \
+box numbers at all, being repeating or structural records. NOT CLAIMED -- NO CONSTRUCT \
 MEMBERSHIP CHANGE, deliberately: this modelo's construct is a censo-foundation construct \
-listing only profile-bound facts, and every transcribed form box sits outside it. NOT \
-CLAIMED -- NO EXPORT LAYOUT: the application still cannot file this modelo, it stays on \
-the filing-capability worklist, and model_law_authority_scope remains inspection_only. NOT \
-CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- all 71 \
-labels are populated and non-null across es/en/ca/hu, verified by counting VALUES rather \
-than keys; the strings were not audited for accuracy."""
+listing only profile-bound facts. NOT CLAIMED -- NO EXPORT LAYOUT: the application still \
+cannot file this modelo, it stays on the filing-capability worklist, and \
+model_law_authority_scope remains inspection_only. NOT CLAIMED -- \
+independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- all 95 labels are \
+populated and non-null across es/en/ca/hu, verified by counting VALUES rather than keys; \
+the strings were not audited for accuracy."""
 reviewed_at = 2026-08-22
 
 [revisions."2025-02-03-y-siguientes".family_dispositions.deadline_windows]
