@@ -2,7 +2,22 @@
 id = "m840-seed"
 applicable_entity_types = ["legal_entity", "attribution_entity"]
 applicable_fiscal_residencies = ["resident_irpf"]
-applicable_reason = "Modelo 840 (Declaración del Impuesto sobre Actividades Económicas): una entidad jurídica o una entidad en régimen de atribución de rentas que ejerce en territorio nacional una actividad empresarial, profesional o artística es sujeto pasivo del IAE (TRLRHL art. 78) y declara con este modelo su alta, variación o baja en la matrícula del impuesto (TRLRHL art. 90; Orden HAC/2572/2003, apartado primero)."
-not_applicable_reason = "Modelo 840 no aplica: el TRLRHL art. 82.1.c) declara exentas del IAE a las personas físicas, sean o no residentes en territorio español, sin condición de cifra de negocios, de modo que una persona física nunca causa alta en la matrícula por este modelo. Las entidades jurídicas y las entidades del art. 35.4 de la Ley 58/2003 quedan igualmente exentas mientras su importe neto de la cifra de negocios sea inferior a 1.000.000 de euros, y los sujetos pasivos que inician su actividad lo están durante los dos primeros períodos impositivos (art. 82.1.b). La cifra de negocios no es un eje del perfil, por lo que la exención por importe se resuelve fuera de esta regla. La vía NON_RESIDENT_IRNR tampoco se trata aquí: el art. 82.1.c) condiciona su exención a operar mediante establecimiento permanente, y el perfil no modela ese eje."
+applicable_reason = """\
+Modelo 840 (Declaración del Impuesto sobre Actividades Económicas): una entidad \
+jurídica o una entidad en régimen de atribución de rentas que ejerce en territorio \
+nacional una actividad empresarial, profesional o artística es sujeto pasivo del IAE \
+(TRLRHL art. 78) y declara con este modelo su alta, variación o baja en la matrícula \
+del impuesto (TRLRHL art. 90; Orden HAC/2572/2003, apartado primero)."""
+not_applicable_reason = """\
+Modelo 840 no aplica: el TRLRHL art. 82.1.c) declara exentas del IAE a las personas \
+físicas, sean o no residentes en territorio español, sin condición de cifra de \
+negocios, de modo que una persona física nunca causa alta en la matrícula por este \
+modelo. Las entidades jurídicas y las entidades del art. 35.4 de la Ley 58/2003 quedan \
+igualmente exentas mientras su importe neto de la cifra de negocios sea inferior a \
+1.000.000 de euros, y los sujetos pasivos que inician su actividad lo están durante los \
+dos primeros períodos impositivos (art. 82.1.b). La cifra de negocios no es un eje del \
+perfil, por lo que la exención por importe se resuelve fuera de esta regla. La vía \
+NON_RESIDENT_IRNR tampoco se trata aquí: el art. 82.1.c) condiciona su exención a \
+operar mediante establecimiento permanente, y el perfil no modela ese eje."""
 cuota_bearing = false
 legal_refs = ["rdl-2-2004:art-78", "rdl-2-2004:art-82", "rdl-2-2004:art-90", "orden-hac-2572-2003:apartado-1"]

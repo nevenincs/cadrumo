@@ -50,18 +50,18 @@ applicability only, which is what the applicability rung asserts. ADVISORY, not 
 the classification audit raises informative_axis_divergence for calculation_class = \
 informative against tax_domain = iae, and its own detail states the taxonomy label is a \
 free choice carrying no invariant -- an informative declaration inside the IAE domain is a \
-legitimate combination. KNOWN LIMIT NOT FIXED HERE -- the family_dispositions.formulas \
-reason on this revision describes it as "an informational declaration reporting \
+legitimate combination. CORRECTED SINCE -- the family_dispositions.formulas \
+reason on this revision described it as "an informational declaration reporting \
 third-party data to AEAT", which contradicts this file's own header ("administered \
 municipally and is not a return this application emits") and misstates the modelo: the IAE \
 declaration reports the taxpayer's OWN actividad. The conclusion that no formula family \
-applies is correct; the stated reason is not, and the same sentence sits verbatim on eight \
-other revisions. NOT CLAIMED -- all 3 locales are complete for the 2 labels, but the \
+applies was correct and is unchanged; the reason now cites TRLRHL art. 90, which puts the \
+liquidation with the administration. The same sentence sat verbatim on nine other revisions and was checked against each modelo's official name: it stays on 189, 280, 345 and 347, where the declarant reports OTHER people's data, and was corrected on 145, 232 and 720, which like this one report the declarant's own facts. NOT CLAIMED -- all 3 locales are complete for the 2 labels, but the \
 strings were not audited for accuracy."""
 reviewed_at = 2026-08-21
 
 [revisions."2003-y-siguientes".family_dispositions.formulas]
-reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+reason = "The declarant reports its OWN actividad economica, declaring alta, variacion or baja in the matricula del IAE. The cuota is not self-assessed here: TRLRHL art. 90 puts the gestion tributaria of the impuesto with the matricula and the liquidation with the administration, so this form computes no liability and the formula family is inapplicable by this modelo's nature rather than merely absent."
 legal_refs = [
     "orden-hac-2572-2003:apartado-1",
 ]

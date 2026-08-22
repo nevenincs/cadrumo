@@ -51,7 +51,7 @@ source_refs = [
 
 
 [revisions."2013-y-siguientes".family_dispositions.formulas]
-reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+reason = "The declarant reports its OWN bienes y derechos situados en el extranjero. Any tax consequence of those assets arises in the IRPF or Impuesto sobre Sociedades return, never in this one: the form is a holdings inventory and computes no liability, so the formula family is inapplicable by this modelo's nature rather than merely absent."
 legal_refs = [
     "orden-hap-72-2013:art-1",
 ]

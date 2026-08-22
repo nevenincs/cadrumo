@@ -50,7 +50,7 @@ source_refs = [
 
 
 [revisions."2012-01-31-y-siguientes".family_dispositions.formulas]
-reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+reason = "This modelo is not filed with AEAT at all: it is the comunicacion the perceptor hands to the PAGADOR, declaring the personal and family circumstances that let the retenedor set the withholding rate. The taxpayer reports their OWN circumstances, the arithmetic belongs to the payer's retencion calculation rather than to this form, and no liability of the declarant is computed here, so the formula family is inapplicable by this modelo's nature rather than merely absent."
 legal_refs = [
     "resolucion-dgt-2011-01-03-modelo-145:aprobacion",
     "resolucion-dgt-2013-12-17-modelo-145:amendment",
