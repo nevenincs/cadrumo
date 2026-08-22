@@ -45,6 +45,9 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .._export import derive_export_layouts_from_bindings
+from .test_cited_design_field_bounds_are_self_consistent import (
+    _KNOWN_SELF_CONTRADICTING_DESIGN,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -102,6 +105,29 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
 
     Sequencing the remaining work needs that distinction, and deriving it costs
     one directory listing per line.
+
+    What this does NOT establish is that the cited design can be READ reliably.
+    Modelo 038 cites a design whose declared era covers every claimed ejercicio
+    -- so it reads AUTHORABLE here -- while that design's extraction places
+    fields across each other's bytes, which
+    ``test_cited_design_field_bounds_are_self_consistent`` already names and
+    refuses to let a layout cite. Authoring from it produced records that tiled
+    1..250 with no HOLES, because partial overlap leaves none, and the offsets
+    were still untrustworthy.
+
+    That check is deliberately not repeated here in general: it must extract
+    every cited design, which would turn a listing into minutes of parsing --
+    modelo 220's design alone carries 137 sheets and 16,079 fields. The verdict
+    says "AUTHORABLE on era" rather than "AUTHORABLE" so the remaining
+    precondition is named where it will be read.
+
+    The ONE design the corpus already knows to be self-contradicting is named
+    outright, by importing the sibling gate's own anchor rather than copying the
+    string. Modelo 038's bundled artefact is a form DIAGRAM -- a byte ruler and
+    free-floating labels, with no ordinal/offset/length rows anywhere -- so its
+    coordinates are inferred and overlap. Reading AUTHORABLE for it invited an
+    authoring attempt that had to be withdrawn; the anchor moves or retires
+    through the sibling gate, which fails loudly if the corpus changes.
     """
     modelo_id = str(modelo.id)
     designs = _bundled_designs(modelo_id)
@@ -131,6 +157,14 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
             "revision -- the design governing THIS window is not among them"
         )
 
+    if _KNOWN_SELF_CONTRADICTING_DESIGN in cited:
+        return (
+            f"BLOCKED on design extraction: cites {_KNOWN_SELF_CONTRADICTING_DESIGN}, whose "
+            "extraction places fields across each other's bytes -- the bundled artefact is a form "
+            "DIAGRAM with a position ruler, not a field table, so no coordinate read from it can be "
+            "trusted and no parser repair changes that"
+        )
+
     uncovered = _uncovered_claimed_years(revision, cited, sources)
     if uncovered:
         span = f"{uncovered[0]}-{uncovered[-1]}" if len(uncovered) > 1 else str(uncovered[0])
@@ -140,8 +174,9 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
             "from it would write those years at offsets no bundled design evidences"
         )
     return (
-        f"AUTHORABLE: cites {cited[0]}, {len(revision.casillas or ())} casilla(s) declared "
-        "-- needs its semantic map and layout"
+        f"AUTHORABLE on era: cites {cited[0]}, {len(revision.casillas or ())} casilla(s) declared "
+        "-- needs its semantic map and layout, AND its design's extraction checked for partial "
+        "overlap first (see test_cited_design_field_bounds_are_self_consistent)"
     )
 
 
