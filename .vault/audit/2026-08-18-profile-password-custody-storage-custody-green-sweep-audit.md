@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:aca237494b362bceac619bb9f9b3b60391a756ce3bf8f5e95b6b6201efa1f44e'
+body_hash: 'sha256:fe60fc45d2434938486d2d8e13c1edd35820c5c8255ca8cdf7221a1bb1a1712f'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6477,5 +6477,43 @@ order-dependence would have undermined all of them. It does not exist.
 Also corrected: the previous entry called the execution-policy surface "not this campaign's".
 `entrypoints/cli/_config` is one of the three domain lane paths. It is this campaign's, which
 is precisely why the claim was worth re-testing rather than leaving recorded.
+
+No production change this iteration.
+
+### The blocked closure resolver is rotting a committed artefact
+
+The fixture-ownership manifest is generated, and its `[manifest]` header states three totals
+about the records beneath it. Measured against the file:
+
+    header:  fixture_count = 540   retained_current_owner = 257   retained_divergent = 283
+    actual:  536 records            255                            281
+
+Every number is exactly four high -- the signature of a write that did not finish, not of a
+single miscount.
+
+**Nothing catches it, and the reason is a defect already recorded here.** The manifest's
+verifier rebuilds the census and compares it to these records, but it refuses first, at
+`active_profile_isolated_backend_fixture` -- the factory returning a different nested closure
+per `scope` argument. Every downstream check that gate performs is unreachable behind that
+refusal, so the drift is invisible.
+
+**The regeneration path is blocked by the same refusal.** `python -m dev.quality.
+fixture_ownership --write` fails identically. So the artefact cannot be brought back into
+agreement with itself until the closure question is answered, and it will keep drifting as
+fixtures are added and removed.
+
+That materially changes what the closure question is worth. It was recorded twice as a design
+choice someone should make -- teach the resolver which argument selects the closure, or give
+the factory one closure. It is now a blocker actively preventing a committed artefact from
+being regenerated, with no gate able to report the resulting rot.
+
+**A backstop was written and then deliberately NOT committed.** A check reading only the
+committed TOML -- no census, no source walk, no closure resolution -- detects the drift
+immediately and would keep working while the deeper gate is blocked. It is correct and it is
+red, and `dev/quality/tests` is in the per-push lane, so committing it would fail every
+peer's next push over a defect they did not introduce and cannot fix without answering the
+design question first. Enrolling a red gate in a per-push lane is the one thing this campaign
+has consistently refused to do, and being the author of the gate is not an exemption. It can
+land the moment the manifest is regenerable.
 
 No production change this iteration.
