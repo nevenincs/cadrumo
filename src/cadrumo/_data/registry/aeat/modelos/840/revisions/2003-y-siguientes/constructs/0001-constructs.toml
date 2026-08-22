@@ -45,6 +45,22 @@ casilla_ids = [
     "representante.domicilio-codigo-municipio",
     "representante.domicilio-provincia",
     "representante.domicilio-codigo-provincia",
+    "local-indirecto.uso-destino",
+    "local-indirecto.codigo-postal",
+    "local-indirecto.municipio",
+    "local-indirecto.codigo-municipio",
+    "local-indirecto.provincia",
+    "local-indirecto.codigo-provincia",
+    "local-indirecto.sigla-via",
+    "local-indirecto.via-publica",
+    "local-indirecto.codigo-via",
+    "local-indirecto.numero",
+    "local-indirecto.kilometro",
+    "local-indirecto.pto",
+    "local-indirecto.escalera",
+    "local-indirecto.piso",
+    "local-indirecto.puerta",
+    "local-indirecto.telefono",
 ]
 workbook_parity_refs = ["modelo-840-dr"]
 live_cross_references = [

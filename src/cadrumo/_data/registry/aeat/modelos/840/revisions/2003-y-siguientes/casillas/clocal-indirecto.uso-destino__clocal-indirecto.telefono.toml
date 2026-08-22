@@ -1,0 +1,216 @@
+# Modelo 840 Apartado V -- local afecto indirectamente a la actividad, boxes [68]
+# to [83]. Transcribed position-by-position from the bundled aeat-dr-840 design
+# (Pag. 1, re-verified to tile 1..1132 exactly once with no gap and no overlap).
+#
+# Non-monotonic numbering again, and in a new place: [72] Provincia sits at @1018,
+# [70] Municipio at @1020, then [71] C. Mun. at @1055 and [73] C. Prov. at @1061.
+# Sorting by number would mis-assign four of these sixteen.
+#
+# RESERVADO BOXES ARE DECLARED, as in Apartado III: [71], [73] and [76] are filled
+# by the administration rather than the filer, but AEAT numbers them and the
+# coverage report derives them, so they are casillas with `required = false`. The
+# UNNUMBERED Municipio description run at @1025+30 is a table expansion, carries no
+# box number, is not derived, and is correctly not a casilla.
+#
+# [79] IS "Pto." AND ITS LABEL KEEPS THAT ABBREVIATION. The diseno never expands
+# it, and it sits three boxes away from [82] "Pta." -- Puerta. In AEAT address
+# blocks Pto. is ordinarily Portal, but "ordinarily" is not the standard for a
+# filing-grade label, and guessing between Portal and Puerto would put an invented
+# word in four locales. The label carries AEAT's own abbreviation until the
+# expansion is confirmed from an official source.
+#
+# Every field is text: each is a fixed-width code or free text where a leading zero
+# is significant. The whole apartado is optional -- a declaration with no
+# indirectly-affected local leaves all sixteen blank.
+
+# @961+52. Apart. V: Local afecto indirectamente a la act. Uso o destino. [68].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.uso-destino"
+number = "68"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_uso_destino"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1013+5. Apart. V: Local afecto indirectamente a la act. Cod. Postal. [69].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.codigo-postal"
+number = "69"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_codigo_postal"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1020+5. Apart. V: Local afecto indirectamente a la act. Municipio (codigo). [70].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.municipio"
+number = "70"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_municipio"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1055+6. Apart. V: Local afecto indirectamente a la act. C. Mun. (codigo de municipio). [71].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.codigo-municipio"
+number = "71"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_codigo_municipio"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1018+2. Apart. V: Local afecto indirectamente a la act. Provincia (codigo). [72].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.provincia"
+number = "72"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_provincia"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1061+2. Apart. V: Local afecto indirectamente a la act. C. Prov. (codigo de provincia). [73].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.codigo-provincia"
+number = "73"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_codigo_provincia"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1063+2. Apart. V: Local afecto indirectamente a la act. SG (sigla de la via publica). [74].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.sigla-via"
+number = "74"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_sigla_via"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1065+25. Apart. V: Local afecto indirectamente a la act. Nombre de la via publica. [75].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.via-publica"
+number = "75"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_via_publica"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1090+2. Apart. V: Local afecto indirectamente a la act. C. Via (codigo de via). [76].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.codigo-via"
+number = "76"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_codigo_via"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1092+5. Apart. V: Local afecto indirectamente a la act. Num.. [77].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.numero"
+number = "77"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_numero"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1097+5. Apart. V: Local afecto indirectamente a la act. Km. [78].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.kilometro"
+number = "78"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_kilometro"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1102+4. Apart. V: Local afecto indirectamente a la act. Pto.. [79].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.pto"
+number = "79"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_pto"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1106+2. Apart. V: Local afecto indirectamente a la act. Esc.. [80].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.escalera"
+number = "80"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_escalera"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1108+2. Apart. V: Local afecto indirectamente a la act. Piso. [81].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.piso"
+number = "81"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_piso"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1110+2. Apart. V: Local afecto indirectamente a la act. Pta.. [82].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.puerta"
+number = "82"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_puerta"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1112+9. Apart. V: Local afecto indirectamente a la act. Telefono. [83].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.telefono"
+number = "83"
+section = ["local-afecto-indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_telefono"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
