@@ -1,7 +1,7 @@
 """Producer-side lazy-import boundary probe for ``cadrumo.application.user_profile``.
 
 The CLI-side gate at
-:mod:`cadrumo.entrypoints.cli.test_lazy_command_tree` enforces that the
+:mod:`cadrumo.entrypoints.cli.tests.test_lazy_command_tree` enforces that the
 state-free CLI surfaces do not transitively load the registry. This
 module pins the same contract at the *producer* boundary: importing
 :mod:`cadrumo.application.user_profile` alone, in a fresh interpreter,
