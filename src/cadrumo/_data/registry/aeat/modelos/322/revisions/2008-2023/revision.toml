@@ -110,7 +110,7 @@ source_refs = [
 
 [revisions."2008-2023".family_dispositions.parameters]
 reason = """
-A parameter is a regulatory value the engine applies -- a rate, a bracket tranche, a threshold, a reduction coefficient. This revision applies none. Every base and every cuota it carries is declared: the filer enters the base and the cuota AEAT prints side by side in each tipo's row, and the registry's own formulas only ADD those declared cuotas and subtract the deducible total. No formula on this revision multiplies a base by a rate, so there is no versioned regulatory number for it to hold. A \
+A parameter is a regulatory value the engine applies -- a rate, a bracket tranche, a threshold, a reduction coefficient. This revision calculates none. Every base and every cuota it carries is declared: the filer enters the base and the cuota AEAT prints side by side in each tipo's row, and the registry's own formulas only ADD those declared cuotas and subtract the deducible total. No formula on this revision multiplies a base by a rate, so there is no versioned regulatory number for it to hold. A \
 future revision that derived a cuota from a base would author the rate here, and this declaration is what that change would replace."""
 legal_refs = [
     "ley-37-1992:art-88",

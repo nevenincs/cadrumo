@@ -280,8 +280,8 @@ def _administration_reserved(field: RecordDesignField) -> bool:
       contenido says. Modelo 131 ``@627+1`` and Modelo 303 ``@840+1`` are the
       reason this comes first: they are the administración's AND declare a value
       set, so a content-led rule would wrongly hand them to the filer.
-    * Otherwise a contenido declaring AEAT's filer tick ``"X"`` means the row
-      holds a datum despite the label.
+    * Otherwise AEAT's filer tick ``"X"`` means the row holds a datum despite the
+      label -- read from ``Contenido``, or from the description where none exists.
 
     A "Reservado"-labelled row that names no owner and declares no filer tick
     stays reserved -- Modelo 840's forty-odd ``Reservado. Apart. VII: Cuota
@@ -289,34 +289,15 @@ def _administration_reserved(field: RecordDesignField) -> bool:
     depends on that fallback.
 
     Measured over the bundled corpus: 2,953 rows carry the word, and exactly one
-    POSITION is reclassified as a datum by the second signal -- Modelo 111's
-    Colegio Concertado tick, in all three editions that print it. Two are xlsx
-    and declare it in ``Contenido`` at ``@552+1``; the third is the 2012 PDF,
-    recovered from chart geometry with no content column, which states the same
-    tick in its description at ``@732+1``. Widening to that description-only
-    fallback reclassifies exactly that one row and nothing else in the corpus.
+    POSITION -- Modelo 111's Colegio Concertado tick, in the 2016/2019 xlsx
+    ``Contenido`` and in the 2012 PDF's description -- is reclassified.
     """
     description = field.description or ""
     if not _RESERVED_WORD.search(description):
         return False
     if _RESERVED_FOR_ADMINISTRATION.search(description):
         return True
-    content = field.content or ""
-    if not content.strip():
-        # A design recovered from PDF chart geometry has no separate Contenido
-        # column, so AEAT's declaration arrives merged into the description --
-        # the 2012 Modelo 111 edition prints the identical row as ``Reservado.
-        # Administración presentando declaración de Colegio Concertado (CC) "X"
-        # o blanco``. Reading only the content cell made ONE position a filer
-        # datum in the 2016 and 2019 xlsx editions and reserved space in the
-        # 2012 PDF one, which is the same internal inconsistency this predicate
-        # was written to remove, reappearing along the extraction axis.
-        #
-        # The fallback is bounded to a field with NO content cell at all, so a
-        # row that declares a contenido keeps being judged on it and cannot be
-        # handed to the filer by a stray tick in its prose.
-        return not _FILER_MARK.search(description)
-    return not _FILER_MARK.search(content)
+    return not _FILER_MARK.search((field.content or "").strip() or description)
 
 
 #: A ``Nota N`` citation inside a field's own naming cell.
