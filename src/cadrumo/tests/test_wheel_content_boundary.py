@@ -62,7 +62,7 @@ _REQUIRED_DATA_ROOTS = (
 )
 _REQUIRED_MEMBERS = (
     f"{_WHEEL_PREFIX}/py.typed",
-    f"{_WHEEL_PREFIX}/adapters/persistence/storage/master_key/_bip39_wordlist.txt",
+    f"{_WHEEL_PREFIX}/adapters/persistence/storage/_bip39_wordlist.txt",
     f"{_WHEEL_PREFIX}/core/external_constants.toml",
 )
 
