@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:bf23d9812a38d60640ea3c65cd3a8f8d162740ae964b9bb0e08e5748d7f30383'
+body_hash: 'sha256:4f22508aad8057131ed710e420bc3ab1f4d65c58f496ff6ca585b36f4d47bb37'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -12326,3 +12326,82 @@ carry no box at all. Seven unpaired fields is authoring, not derivation.
 The three span findings still need per-design epoch authoring: modelo 200's
 2024, modelo 322's 2022, modelo 347's 2008 and 2010. Forty-nine unregistered
 design files, all needing a ruling or an acquisition.
+
+## Tick: the load census closed, classified by trace rather than by name
+
+Re-measured at tick start: authority CLEAN, registration gate 49 of 218. The
+full registry suite has been cut short by the session ending on three
+consecutive attempts, so it was run in halves; `dev/registry/tests` completed
+at 8 failed, 628 passed, 1 error, and that list is what this tick worked.
+
+### Fifteen modules classified, thirteen of them on measurement
+
+The load census derives its universe from the import graph, so a module added
+yesterday is unclassified today and stays that way until somebody decides what
+runs it. Fifteen had accumulated -- eight new `_validate_*` modules among them.
+
+They were NOT placed by what their names look like. `trace_regime` was run for
+all three regimes and each module put on the rule whose trigger already
+describes where it was seen: ten reached only by the cold regime went to
+"ValidatedRegistryAuthority.load, cold regime", whose reason already says such
+modules are "absent from a warm trace because the verdict short-circuits the
+work"; three reached by warm AND cold went to "both regimes".
+
+Two were reached by NO regime, and that is a trace artifact rather than a
+finding: both are top-level imports of modules that are themselves reached, so
+they execute whenever their importer does and were already in `sys.modules`
+before the traced call began. Absence from a trace is not evidence of
+unreachability when the module may already be imported. They were placed by the
+nearest precedent -- `_withholding296_bindings` beside `_withholding_bindings`,
+same family and same importer; `_validation_memoization` beside its only
+importer `_validate`.
+
+### Twelve stale rule entries removed, with the control that justifies it
+
+Ten named `cadrumo.core` modules that still exist on disk. Removing them
+because they no longer appear in the universe would be circular if the universe
+had simply stopped including `cadrumo.core`, so that was the control: 39 of the
+49 core modules these rules name ARE still in the universe. Core is still in
+scope and exactly those ten left it.
+
+The other two do not exist at all. `_validate_cache` and `_validate_verdict`
+were split into `_verdict_cache` and `_validation_memoization` -- which is why
+those two needed classifying in this same tick, from the other end of the same
+refactor.
+
+### A test that had never run
+
+`test_the_static_closure_matches_what_a_real_load_imports` asks for the
+`registry_authority` fixture, which is defined in the registry package's own
+conftest -- a file pytest never applies to `dev/registry/tests`. Collection
+errored on the missing name, so the check had never executed. The fixture is
+now provided in the dev conftest, same object and same session scope, and the
+test passes: the graph's static closure does match what a real load leaves in
+`sys.modules`.
+
+That is the sharper half of this tick. An unclassified module is visible in a
+red gate; a test that errors at collection reports nothing at all about the
+property it exists to check.
+
+### Verified
+
+* `test_load_census_classification`: 7 passed, from 1 failed plus 1 collection
+  error.
+* census report: 0 unclassified, 0 stale, `clean` True.
+* authority CLEAN.
+
+### Still open
+
+The sibling ledger in `test_modelo_specific_embed_classification` has the same
+drift and is NOT closed: six modules carry modelo-specific content with no
+adjudication (`_errors`, `_gasto193_bindings`, `_m303_orden_census_artefact`,
+`_modelo_localization`, `_validate_previous_filing_year_coverage`,
+`_withholding296_bindings`) and `_schema_exports` is classified but no longer
+derives as modelo-specific. Each entry in that ledger is a judgement about
+whether the modelo-specific content is regulatory data the authoring tree
+should own or machinery carrying a coordinate, written with a justification and
+a destination. Six of those is authoring, not bookkeeping, and it is the next
+item rather than a note.
+
+The three span findings still need per-design epoch authoring: modelo 200's
+2024, modelo 322's 2022, modelo 347's 2008 and 2010.
