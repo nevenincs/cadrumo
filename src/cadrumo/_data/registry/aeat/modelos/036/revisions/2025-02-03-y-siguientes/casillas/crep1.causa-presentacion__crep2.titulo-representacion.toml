@@ -37,7 +37,7 @@
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.causa-presentacion"
 number = "rep1-causa-presentacion"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -53,7 +53,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.fecha-causa"
 number = "303"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "date"
 required = false
 input_kind = "manual"
@@ -68,7 +68,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.nif"
 number = "304"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "nif"
 required = false
 input_kind = "manual"
@@ -83,7 +83,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.apellidos-razon-social"
 number = "305"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "name"
 required = false
 input_kind = "manual"
@@ -98,7 +98,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.residente"
 number = "306"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -114,7 +114,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.designada-causa-presentacion"
 number = "rep1-designada-causa-presentacion"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -130,7 +130,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.designada-fecha-causa"
 number = "313"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "date"
 required = false
 input_kind = "manual"
@@ -145,7 +145,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.designada-nif"
 number = "307"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "nif"
 required = false
 input_kind = "manual"
@@ -160,7 +160,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.designada-apellido-1"
 number = "308"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "name"
 required = false
 input_kind = "manual"
@@ -175,7 +175,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.designada-apellido-2"
 number = "309"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "name"
 required = false
 input_kind = "manual"
@@ -190,7 +190,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.designada-nombre"
 number = "310"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "name"
 required = false
 input_kind = "manual"
@@ -206,7 +206,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.causa-representacion"
 number = "rep1-causa-representacion"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -221,7 +221,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.representacion-legal-clave"
 number = "331"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -236,7 +236,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.tipo-representacion"
 number = "333"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -251,7 +251,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.titulo-representacion"
 number = "334"
-section = ["declaracion", "representantes", "representante-1"]
+section = ["declaracion", "representantes", "representante_1"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -267,7 +267,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.causa-presentacion"
 number = "rep2-causa-presentacion"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -283,7 +283,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.fecha-causa"
 number = "353"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "date"
 required = false
 input_kind = "manual"
@@ -298,7 +298,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.nif"
 number = "354"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "nif"
 required = false
 input_kind = "manual"
@@ -313,7 +313,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.apellidos-razon-social"
 number = "355"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "name"
 required = false
 input_kind = "manual"
@@ -328,7 +328,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.residente"
 number = "356"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -344,7 +344,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.designada-causa-presentacion"
 number = "rep2-designada-causa-presentacion"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -360,7 +360,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.designada-fecha-causa"
 number = "363"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "date"
 required = false
 input_kind = "manual"
@@ -375,7 +375,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.designada-nif"
 number = "357"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "nif"
 required = false
 input_kind = "manual"
@@ -390,7 +390,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.designada-apellido-1"
 number = "358"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "name"
 required = false
 input_kind = "manual"
@@ -405,7 +405,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.designada-apellido-2"
 number = "359"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "name"
 required = false
 input_kind = "manual"
@@ -420,7 +420,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.designada-nombre"
 number = "360"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "name"
 required = false
 input_kind = "manual"
@@ -436,7 +436,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.causa-representacion"
 number = "rep2-causa-representacion"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -451,7 +451,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.representacion-legal-clave"
 number = "381"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -466,7 +466,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.tipo-representacion"
 number = "383"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -481,7 +481,7 @@ source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.titulo-representacion"
 number = "384"
-section = ["declaracion", "representantes", "representante-2"]
+section = ["declaracion", "representantes", "representante_2"]
 data_type = "text"
 required = false
 input_kind = "manual"
