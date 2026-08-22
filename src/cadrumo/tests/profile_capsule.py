@@ -192,7 +192,21 @@ def replace_test_profile_record(
     root: Path | None = None,
     event_type: BucketEventType = BucketEventType.PROFILE_VALUES_UPDATED,
 ) -> UserProfileRecord:
-    """CAS-replace a seeded record through the production capsule writer."""
+    """CAS-replace a seeded record's facts AND its setup state through the production doors.
+
+    The fact writer takes facts and nothing else, so replacing a record through
+    it alone silently dropped every other field the caller declared. A test
+    seeding ``setup_state = COMPLETE`` got its sixteen facts and an INCOMPLETE
+    record back, and the modelo readiness gate then refused the "ready" profile
+    with ``profile_readiness_setup_incomplete`` -- reporting no missing field,
+    because none was missing.
+
+    The promotion goes through :meth:`ProfileRecordRepository.complete_setup`
+    rather than writing the state directly, because that door JUDGES: COMPLETE
+    is the claim that nothing schema-required is absent, and a fixture whose
+    facts do not support the claim must be refused here rather than seeded into
+    a state no production path could produce.
+    """
     identity = UUID(str(record.profile_id))
     storage_root = effective_storage_root(root)
     with bound_test_profile_record(identity, root=storage_root) as repository:
@@ -212,6 +226,15 @@ def replace_test_profile_record(
             event_payload={},
             now=replacement.updated_at,
         )
+        if record.setup_state is ProfileSetupState.COMPLETE:
+            applied = repository.load(identity)
+            if applied.setup_state is not ProfileSetupState.COMPLETE:
+                repository.complete_setup(
+                    identity,
+                    expected_revision=applied.record_revision,
+                    expected_content_digest=applied.content_digest,
+                    now=replacement.updated_at,
+                )
         return repository.load(identity)
 
 

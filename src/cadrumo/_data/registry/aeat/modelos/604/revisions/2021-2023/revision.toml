@@ -50,7 +50,40 @@ source_refs = [
     "enrolled-modelo-604-procedure",
     "aeat-dr-604-2021",
 ]
-
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: review of the modelo 604 (Impuesto sobre las Transacciones Financieras) 2021-2023 \
+era. DISCLOSURE -- self-review: the same agent authored this revision's thirty-six \
+deadline windows, the disposicion-transitoria corpus excerpt and its legal entry in the \
+two immediately preceding commits. No casilla, offset, binding or export position was \
+touched. VERIFIED -- WHY THE WINDOWS EXIST AT ALL: their absence was an omission, not a \
+reasoned absence. The revision's own prose argued no window should be fabricated for a \
+past year, but this registry already carries historical windows on closed spans -- \
+m232/2016-2017 declares windows for exactly its own two years, m184/2015-2024 and \
+m347/2008-2024 likewise -- and this modelo's plazo is a fixed monthly calendar rule its \
+orden states verbatim, so the set is derivable without inventing anything. VERIFIED -- \
+WHEN DUE, AND THE TRAP IN IT: orden-hac-510-2021 art 3 gives the general cadence, dias \
+diez a veinte del mes siguiente. It does NOT govern the whole span. The orden was \
+published 27 May 2021, AFTER the tax's first four liquidation periods had closed, and its \
+disposicion transitoria unica folds enero-abril 2021 into the plazo of the mayo-2021 \
+autoliquidacion. Periods 2021-01 through 2021-05 therefore share ONE window, 10-20 June \
+2021; only 2021-06 onward follows the plain cadence. Twelve ordinary 2021 windows would \
+have fabricated five deadlines AEAT never set. Both provisions were re-fetched from two \
+BOE surfaces that agree verbatim, and the bundled art 3 excerpt was corrected in the same \
+sweep -- it had been abridged, dropping its first paragraph and the RD 366/2021 preamble \
+while carrying a verbatim provenance claim. VERIFIED -- COVERAGE: \
+build_diseno_coverage_report against this era's own design (aeat-dr-604-2021, sha256 \
+262e743d) reads 7 of 7 derived casillas covered, zero gaps. All 3 locales complete, 129 \
+strings, no stale keys. NOT CLAIMED -- EXPORT LAYOUT COMPLETENESS: the layout writes 58 of \
+the 60 positions the design requires; the two entidad-desarrolladora slots @93+4 and \
+@101+9 are deliberately unwritten rather than filled with a wrong identity. NOT CLAIMED -- \
+FILING YEAR 2024: this modelo has NO windows for 2024 at all. The gap is on the sibling \
+2024-y-siguientes revision, which claims valid_from 2024-01-01 but enumerates only 2025. \
+It is a real hole, reported not closed here, and outside this revision's span. NOT CLAIMED \
+-- ART 1 AND ART 3 remain agent-fetched excerpts pending operator re-verification. NOT \
+CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- the 3 \
+locales are complete but their strings were not audited for accuracy."""
+reviewed_at = 2026-08-22
 
 [revisions."2021-2023".family_dispositions.casilla_continuidad_evolutions]
 reason = """
