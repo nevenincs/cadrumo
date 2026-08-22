@@ -26840,10 +26840,6 @@ modelo:
               label: Reducción de rendimientos acogidos al régimen fiscal del acontecimiento
                 "XXXVII Copa América Barcelona" (Disposición final trigésima sexta
                 de la Ley 31/2022 de PGE-2023)
-            0058:
-              help: null
-              label: Prestaciones INSS maternidad/paternidad exentas (Art. 7.h LIRPF).
-                Importe íntegro recibido de la Seguridad Social
             '0060':
               help: null
               label: Suma de rendimientos reducidos del capital mobiliario a integrar
@@ -33903,6 +33899,10 @@ modelo:
             ZRUE2:
               help: null
               label: Pais UE o EEE del conyuge
+            prestacion-inss-maternidad-paternidad-exenta:
+              help: null
+              label: Prestaciones públicas por maternidad y paternidad exentas percibidas
+                del INSS
           construct:
             renta-2024-anexo-c-base-liquidable-negativa-general:
               field:
@@ -34140,10 +34140,6 @@ modelo:
               help: null
               label: Reduccion por rendimientos de actividades artisticas obtenidos
                 de manera excepcional
-            0059:
-              help: null
-              label: Prestaciones INSS maternidad/paternidad exentas (Art. 7.h LIRPF).
-                Importe íntegro recibido de la Seguridad Social
             '0060':
               help: null
               label: Suma de rendimientos reducidos del capital mobiliario en base
@@ -41640,6 +41636,10 @@ modelo:
                 en este único período impositivo (base sobre la que se aplica la reducción
                 del 30 por 100 del artículo 32.1 de la Ley del Impuesto; importe declarado
                 por el operador - véase la casilla [1554])
+            prestacion-inss-maternidad-paternidad-exenta:
+              help: null
+              label: Prestaciones públicas por maternidad y paternidad exentas percibidas
+                del INSS
           construct:
             renta-2025-mini-model-actividades-economicas-objetiva:
               field:

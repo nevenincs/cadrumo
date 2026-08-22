@@ -23260,12 +23260,6 @@ modelo:
                 de l''esdeveniment XXXVII Copa Amèrica Barcelona.'
               label: Reducció per rendiments acollits al règim fiscal de la XXXVII
                 Copa Amèrica Barcelona
-            0058:
-              help: 'Casella 0058: import íntegre rebut de la Seguretat Social per
-                prestacions INSS de maternitat o paternitat exemptes segons l''article
-                7.h de la Llei de l''IRPF.'
-              label: Prestacions INSS de maternitat/paternitat exemptes - import íntegre
-                rebut de la Seguretat Social
             '0060':
               help: 'Casella 0060: suma dels rendiments reduïts del capital mobiliari
                 que s''han d''integrar a la base imposable general, procedent de la
@@ -31783,6 +31777,10 @@ modelo:
             ZRUE2:
               help: null
               label: null
+            prestacion-inss-maternidad-paternidad-exenta:
+              help: null
+              label: Prestacions públiques per maternitat i paternitat exemptes percebudes
+                de l'INSS
           construct:
             renta-2024-anexo-c-base-liquidable-negativa-general:
               field:
@@ -32015,10 +32013,6 @@ modelo:
               help: null
               label: Reducció per rendiments d'activitats artístiques obtinguts de
                 manera excepcional
-            0059:
-              help: null
-              label: Prestacions INSS maternitat/paternitat exemptes (Art. 7.h LIRPF).
-                Import íntegre rebut de la Seguretat Social
             '0060':
               help: null
               label: Suma de rendiments reduïts del capital mobiliari en base general
@@ -39468,6 +39462,10 @@ modelo:
                 en aquest único període impositivo (base sobre la que es s'aplica
                 la reducció del 30 per 100 de l'article 32.1 de la Llei de l'Impost;
                 import declarat per l'operador - véase la casella [1554])
+            prestacion-inss-maternidad-paternidad-exenta:
+              help: null
+              label: Prestacions públiques per maternitat i paternitat exemptes percebudes
+                de l'INSS
           construct:
             renta-2025-mini-model-actividades-economicas-objetiva:
               field:

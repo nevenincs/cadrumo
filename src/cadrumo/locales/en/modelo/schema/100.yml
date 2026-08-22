@@ -23237,12 +23237,6 @@ modelo:
                 the XXXVII America''s Cup Barcelona event.'
               label: Reduction for income under the XXXVII America's Cup Barcelona
                 tax regime
-            0058:
-              help: 'Box 0058: gross amount received from Social Security for exempt
-                INSS maternity or paternity benefits under article 7.h of the Personal
-                Income Tax Law.'
-              label: Exempt INSS maternity/paternity benefits - gross amount received
-                from Social Security
             '0060':
               help: 'Box 0060: sum of reduced movable-capital income amounts to be
                 included in the general tax base, from box 0056.'
@@ -31571,6 +31565,9 @@ modelo:
             ZRUE2:
               help: null
               label: null
+            prestacion-inss-maternidad-paternidad-exenta:
+              help: null
+              label: Tax-exempt INSS public maternity and paternity benefits
           construct:
             renta-2024-anexo-c-base-liquidable-negativa-general:
               field:
@@ -31801,10 +31798,6 @@ modelo:
             0058:
               help: null
               label: Reduction for income from artistic activities obtained exceptionally
-            0059:
-              help: null
-              label: Exempt INSS maternity/paternity benefits (art. 7.h LIRPF). Gross
-                amount received from Social Security
             '0060':
               help: null
               label: Sum of reduced movable-capital income in the general base
@@ -39241,6 +39234,9 @@ modelo:
                 single tax period (the base to which the 30% reduction of article
                 32.1 of the Tax Law applies; amount declared by the filer - see box
                 [1554])
+            prestacion-inss-maternidad-paternidad-exenta:
+              help: null
+              label: Tax-exempt INSS public maternity and paternity benefits
           construct:
             renta-2025-mini-model-actividades-economicas-objetiva:
               field:
