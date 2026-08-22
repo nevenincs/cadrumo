@@ -148,6 +148,219 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Jogszabályi hatály 2025. február 3-tól
+            x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
+              label: Ertesitesek. AEAT-ertesitesek bejegyzese
+            x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
+              label: Ertesitesek. AEAT-ertesitesek torlese
+            x-e1j2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              label: Ertesitesek. Regisztracio az AEAT mobilalkalmazasaban
+            x-e1j2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              label: Ertesitesek. Kiiratkozas az AEAT mobilalkalmazasabol
+            x-e1j2sobmd5pmuspdchjn8bb1dhq62:
+              label: Ertesitesek. DGT-ertesitesek bejegyzese
+            x-e1j2sobmd5pmuspdchjn8bb2c5l62:
+              label: Ertesitesek. DGT-ertesitesek torlese
+            x-e1j2sobmd5pmuspdclmm2qbc:
+              label: Ertesitesek. E-mail
+            x-e1j2sobmd5pmuspdclmm2qbc5lgmot31:
+              label: Ertesitesek. Az ertesitesi e-mail bejegyzese vagy modositasa
+            x-e1j2sobmd5pmuspdclmm2qbc5lh62qj1:
+              label: Ertesitesek. Az ertesitesi e-mail torlese
+            x-e1j2sobmd5pmuspddlnncqbc5lgmot31:
+              label: Ertesitesek. A mobiltelefon bejegyzese vagy modositasa
+            x-e1j2sobmd5pmuspddlnncqbc5lh62qj1:
+              label: Ertesitesek. A mobiltelefon torlese
+            x-e1j2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              label: Ertesitesek. A mobiltelefon orszaghivo szama
+            x-e1j2sobmd5pmuspdehim2bb1dhq62:
+              label: Ertesitesek. TEA-ertesitesek bejegyzese
+            x-e1j2sobmd5pmuspdehim2bb2c5l62:
+              label: Ertesitesek. TEA-ertesitesek torlese
+            x-e1j2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
+              label: Ertesitesek. Mobiltelefon
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
+              label: Spanyolorszagi adougyi lakcim. Tomb
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
+              label: Spanyolorszagi adougyi lakcim. Hazszam kiegeszitoje
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              label: Spanyolorszagi adougyi lakcim. INE telepuleskod
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
+              label: Spanyolorszagi adougyi lakcim. Iranyitoszam
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
+              label: Spanyolorszagi adougyi lakcim. Tartomanykod
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              label: Spanyolorszagi adougyi lakcim. INE kozterulet-kod
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              label: Spanyolorszagi adougyi lakcim. Cim kiegeszitese
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
+              label: Spanyolorszagi adougyi lakcim. Lepcsohaz
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
+              label: Spanyolorszagi adougyi lakcim. Az adougyi lakcim ingatlan-nyilvantartasi
+                jelzoje
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
+              label: Spanyolorszagi adougyi lakcim. Helyseg vagy telepules
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
+              label: Spanyolorszagi adougyi lakcim. Telepules neve
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
+              label: Spanyolorszagi adougyi lakcim. Kozterulet neve
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
+              label: Spanyolorszagi adougyi lakcim. Hazszam
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
+              label: Spanyolorszagi adougyi lakcim. Emelet
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
+              label: Spanyolorszagi adougyi lakcim. Lepcsohaz bejarata
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
+              label: Spanyolorszagi adougyi lakcim. Ajto
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              label: Spanyolorszagi adougyi lakcim. Ingatlan-nyilvantartasi hivatkozas
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
+              label: Spanyolorszagi adougyi lakcim. Hazszam tipusa
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
+              label: Spanyolorszagi adougyi lakcim. Kozterulet jellege
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lh6orrhelig:
+              label: Ugyintezesi cim. Tomb
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhm2r39cpkm6ob4dtp2qrjldlin4ro:
+              label: Ugyintezesi cim. Hazszam kiegeszitoje
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqrbldpkm6qbgd5niqqbeck:
+              label: Ugyintezesi cim. INE telepuleskod
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3fedq62r0:
+              label: Ugyintezesi cim. Iranyitoszam
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3idtr6irj3d5gg:
+              label: Ugyintezesi cim. Tartomanykod
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqtj9c4mmirj5:
+              label: Ugyintezesi cim. INE kozterulet-kod
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmurbgdhimqpbeehniqp3fdlkm6qbcd5ng:
+              label: Ugyintezesi cim. Cim kiegeszitese
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lin6or1dhin4o8:
+              label: Ugyintezesi cim. Lepcsohaz
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lkmsp39cdgm8rri5lh62qj1:
+              label: Ugyintezesi cim. Az ugyintezesi cim torlesenek jelzoje
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lm6uor1dhkm8ob4:
+              label: Ugyintezesi cim. Helyseg vagy telepules
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lmnarj9cdkn0qbf:
+              label: Ugyintezesi cim. Telepules neve
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln6urb2e9iiqtj9c4:
+              label: Ugyintezesi cim. Kozterulet neve
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln7arb5e9niqor1edgg:
+              label: Ugyintezesi cim. Hazszam
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6oobeehgg:
+              label: Ugyintezesi cim. Emelet
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6usjkc5m0:
+              label: Ugyintezesi cim. Lepcsohaz bejarata
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo7apbiehgg:
+              label: Ugyintezesi cim. Ajto
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5ln7arb5e9ng:
+              label: Ugyintezesi cim. Hazszam tipusa
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5lr6io8:
+              label: Ugyintezesi cim. Kozterulet jellege
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
+              label: Ertesitesi cim. Minosege a postafiok tekinteteben
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
+              label: Ertesitesi cim. A postafiok iranyitoszama
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
+              label: Ertesitesi cim. A postafiok tartomanykodja
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
+              label: Ertesitesi cim. Postafiok szama
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
+              label: Ertesitesi cim. A postafiok cimzettje, ha elter a bevallotol
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
+              label: Ertesitesi cim. A postafiok telepulese vagy varosa
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
+              label: Ertesitesi cim. Az ertesitesi cim torlese
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
+              label: Ertesitesi cim. Tomb (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
+              label: Ertesitesi cim. Minosege (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              label: Ertesitesi cim. Hazszam kiegeszitoje (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Ertesitesi cim. INE telepuleskod (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
+              label: Ertesitesi cim. Iranyitoszam (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
+              label: Ertesitesi cim. Tartomanykod (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              label: Ertesitesi cim. INE kozterulet-kod (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              label: Ertesitesi cim. Cim kiegeszitese (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
+              label: Ertesitesi cim. Cimzett, ha elter a bevallotol (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
+              label: Ertesitesi cim. Lepcsohaz (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
+              label: Ertesitesi cim. Helyseg vagy telepules (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
+              label: Ertesitesi cim. Telepules neve (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
+              label: Ertesitesi cim. Kozterulet neve (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
+              label: Ertesitesi cim. Hazszam (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
+              label: Ertesitesi cim. Emelet (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
+              label: Ertesitesi cim. Lepcsohaz bejarata (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
+              label: Ertesitesi cim. Ajto (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
+              label: Ertesitesi cim. Hazszam tipusa (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
+              label: Ertesitesi cim. Kozterulet jellege (1. cim)
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0ob9ec:
+              label: Az illetoseg szerinti allambeli lakcim. Orszagkod
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0rrjehgmo:
+              label: Az illetoseg szerinti allambeli lakcim. Iranyitoszam
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              label: Az illetoseg szerinti allambeli lakcim. Cim kiegeszitese
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdchnmqqb3d5m6iro:
+              label: Az illetoseg szerinti allambeli lakcim. Lakcim
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1gmiso:
+              label: Az illetoseg szerinti allambeli lakcim. Orszag
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1nm4r31cdkmurg:
+              label: Az illetoseg szerinti allambeli lakcim. Telepules vagy varos
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1p6utj9dphmio9de9imeqbfdo:
+              label: Az illetoseg szerinti allambeli lakcim. Tartomany, regio vagy
+                allam
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm6tb1dpq6uso:
+              label: Allando telephelyek. Az allando telephelyek szama
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd64:
+              label: Allando telephelyek. Az 1. allando telephely megnevezese
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd68:
+              label: Allando telephelyek. A 2. allando telephely megnevezese
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd6c:
+              label: Allando telephelyek. A 3. allando telephely megnevezese
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmmus35e9giqpbjehgm4r35cdkmqqb5dpq6ubbgclp6qobecln78p8:
+              label: Allando telephelyek. Allando telephelyen keresztul mukodik-e
+                Spanyolorszagban
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj2:
+              label: Azonositas. Elso vezeteknev
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj4:
+              label: Azonositas. Masodik vezeteknev
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qorfchkmerpde1gmispde9in6qb4cln66qb1:
+              label: Azonositas. Az illetoseg szerinti allam orszagkodja
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
+              label: Azonositas. Internetes domain vagy cim
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              label: Azonositas. Internetes domain vagy cim (masodik)
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmm2r3kc4mm4obac4:
+              label: Azonositas. Bejegyzes vagy torles korlatolt felelossegu vallalkozokent
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmmcpb3d1gg:
+              label: Azonositas. A korlatolt felelossegu vallalkozokent torteno bejegyzes
+                vagy torles datuma
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              label: Azonositas. Az adougyi illetoseg hatalybalepesenek datuma
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj1cdkmurj1dhkm8ob4:
+              label: Azonositas. A kulfoldi illetosegu szemely allampolgarsaga
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9co:
+              label: Azonositas. Adoazonosito szam (NIF vagy NIE)
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
+              label: Azonositas. Az illetoseg szerinti allam adoazonosito kodja vagy
+                kozossegi adoszam
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p8:
+              label: Azonositas. Keresztnev
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p9dcdnmqpbicdkm2r0:
+              label: Azonositas. Kereskedelmi nev
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
+              label: Azonositas. A termeszetes szemely belfoldi vagy kulfoldi illetosegu-e
             x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
               label: A kepviselo vezetek- es keresztneve vagy cegneve (elso kepviselo,

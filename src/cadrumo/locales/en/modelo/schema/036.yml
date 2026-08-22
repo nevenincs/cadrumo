@@ -149,6 +149,224 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Regulation in force from 3 February 2025
+            x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
+              label: Alerts. Registration for AEAT alerts
+            x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
+              label: Alerts. Deregistration from AEAT alerts
+            x-e1j2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              label: Alerts. Registration in the AEAT mobile application
+            x-e1j2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              label: Alerts. Deregistration from the AEAT mobile application
+            x-e1j2sobmd5pmuspdchjn8bb1dhq62:
+              label: Alerts. Registration for DGT alerts
+            x-e1j2sobmd5pmuspdchjn8bb2c5l62:
+              label: Alerts. Deregistration from DGT alerts
+            x-e1j2sobmd5pmuspdclmm2qbc:
+              label: Alerts. E-mail
+            x-e1j2sobmd5pmuspdclmm2qbc5lgmot31:
+              label: Alerts. Registration or change of the alert e-mail
+            x-e1j2sobmd5pmuspdclmm2qbc5lh62qj1:
+              label: Alerts. Deregistration of the alert e-mail
+            x-e1j2sobmd5pmuspddlnncqbc5lgmot31:
+              label: Alerts. Registration or change of the mobile telephone
+            x-e1j2sobmd5pmuspddlnncqbc5lh62qj1:
+              label: Alerts. Deregistration of the mobile telephone
+            x-e1j2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              label: Alerts. Country dialling prefix of the mobile telephone
+            x-e1j2sobmd5pmuspdehim2bb1dhq62:
+              label: Alerts. Registration for TEA alerts
+            x-e1j2sobmd5pmuspdehim2bb2c5l62:
+              label: Alerts. Deregistration from TEA alerts
+            x-e1j2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
+              label: Alerts. Mobile telephone
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
+              label: Tax address in Spain. Block
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
+              label: Tax address in Spain. Number qualifier
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              label: Tax address in Spain. INE municipality code
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
+              label: Tax address in Spain. Postal code
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
+              label: Tax address in Spain. Province code
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              label: Tax address in Spain. INE street code
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              label: Tax address in Spain. Address complement
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
+              label: Tax address in Spain. Stairway
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
+              label: Tax address in Spain. Cadastral reference indicator of the tax
+                address
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
+              label: Tax address in Spain. Locality or town
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
+              label: Tax address in Spain. Municipality name
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
+              label: Tax address in Spain. Street name
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
+              label: Tax address in Spain. House number
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
+              label: Tax address in Spain. Floor
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
+              label: Tax address in Spain. Entrance
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
+              label: Tax address in Spain. Door
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              label: Tax address in Spain. Cadastral reference
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
+              label: Tax address in Spain. Number type
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
+              label: Tax address in Spain. Street type
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lh6orrhelig:
+              label: Administrative management address. Block
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhm2r39cpkm6ob4dtp2qrjldlin4ro:
+              label: Administrative management address. Number qualifier
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqrbldpkm6qbgd5niqqbeck:
+              label: Administrative management address. INE municipality code
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3fedq62r0:
+              label: Administrative management address. Postal code
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3idtr6irj3d5gg:
+              label: Administrative management address. Province code
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqtj9c4mmirj5:
+              label: Administrative management address. INE street code
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmurbgdhimqpbeehniqp3fdlkm6qbcd5ng:
+              label: Administrative management address. Address complement
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lin6or1dhin4o8:
+              label: Administrative management address. Stairway
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lkmsp39cdgm8rri5lh62qj1:
+              label: Administrative management address. Deregistration indicator of
+                the administrative management address
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lm6uor1dhkm8ob4:
+              label: Administrative management address. Locality or town
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lmnarj9cdkn0qbf:
+              label: Administrative management address. Municipality name
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln6urb2e9iiqtj9c4:
+              label: Administrative management address. Street name
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln7arb5e9niqor1edgg:
+              label: Administrative management address. House number
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6oobeehgg:
+              label: Administrative management address. Floor
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6usjkc5m0:
+              label: Administrative management address. Entrance
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo7apbiehgg:
+              label: Administrative management address. Door
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5ln7arb5e9ng:
+              label: Administrative management address. Number type
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5lr6io8:
+              label: Administrative management address. Street type
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
+              label: Address for notifications. Acting as, for the post office box
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
+              label: Address for notifications. Postal code of the post office box
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
+              label: Address for notifications. Province code of the post office box
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
+              label: Address for notifications. Post office box number
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
+              label: Address for notifications. Addressee of the post office box,
+                if different from the filer
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
+              label: Address for notifications. Town or city of the post office box
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
+              label: Address for notifications. Deregistration of the notification
+                address
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
+              label: Address for notifications. Block (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
+              label: Address for notifications. Acting as (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              label: Address for notifications. Number qualifier (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Address for notifications. INE municipality code (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
+              label: Address for notifications. Postal code (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
+              label: Address for notifications. Province code (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              label: Address for notifications. INE street code (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              label: Address for notifications. Address complement (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
+              label: Address for notifications. Addressee, if different from the filer
+                (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
+              label: Address for notifications. Stairway (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
+              label: Address for notifications. Locality or town (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
+              label: Address for notifications. Municipality name (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
+              label: Address for notifications. Street name (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
+              label: Address for notifications. House number (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
+              label: Address for notifications. Floor (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
+              label: Address for notifications. Entrance (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
+              label: Address for notifications. Door (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
+              label: Address for notifications. Number type (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
+              label: Address for notifications. Street type (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0ob9ec:
+              label: Address in the State of residence. Country code
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0rrjehgmo:
+              label: Address in the State of residence. Postal code
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              label: Address in the State of residence. Address complement
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdchnmqqb3d5m6iro:
+              label: Address in the State of residence. Address
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1gmiso:
+              label: Address in the State of residence. Country
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1nm4r31cdkmurg:
+              label: Address in the State of residence. Town or city
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1p6utj9dphmio9de9imeqbfdo:
+              label: Address in the State of residence. Province, region or state
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm6tb1dpq6uso:
+              label: Permanent establishments. Number of permanent establishments
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd64:
+              label: Permanent establishments. Name of permanent establishment 1
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd68:
+              label: Permanent establishments. Name of permanent establishment 2
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd6c:
+              label: Permanent establishments. Name of permanent establishment 3
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmmus35e9giqpbjehgm4r35cdkmqqb5dpq6ubbgclp6qobecln78p8:
+              label: Permanent establishments. Operates in Spain through a permanent
+                establishment
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj2:
+              label: Identification. First surname
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj4:
+              label: Identification. Second surname
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qorfchkmerpde1gmispde9in6qb4cln66qb1:
+              label: Identification. Country code of the State of residence
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
+              label: Identification. Internet domain or address
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              label: Identification. Internet domain or address (second)
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmm2r3kc4mm4obac4:
+              label: Identification. Registration or deregistration as a limited-liability
+                entrepreneur
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmmcpb3d1gg:
+              label: Identification. Date of registration or deregistration as a limited-liability
+                entrepreneur
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              label: Identification. Effective date of tax residence
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj1cdkmurj1dhkm8ob4:
+              label: Identification. Nationality of the non-resident
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9co:
+              label: Identification. Tax identification number (NIF or NIE)
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
+              label: Identification. Tax identification code of the State of residence
+                or VAT number
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p8:
+              label: Identification. Forename
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p9dcdnmqpbicdkm2r0:
+              label: Identification. Trade name
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
+              label: Identification. Whether the natural person is resident or non-resident
+                in Spain
             x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
               label: Surnames and forename, or legal name, of the representative (first

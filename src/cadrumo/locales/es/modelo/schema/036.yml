@@ -156,6 +156,244 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Vigencia normativa desde 3 de febrero de 2025
+            x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
+              label: Avisos. Alta de avisos de la AEAT
+            x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
+              label: Avisos. Baja de avisos de la AEAT
+            x-e1j2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              label: Avisos. Alta en la aplicacion movil de la AEAT
+            x-e1j2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              label: Avisos. Baja en la aplicacion movil de la AEAT
+            x-e1j2sobmd5pmuspdchjn8bb1dhq62:
+              label: Avisos. Alta de avisos de la DGT
+            x-e1j2sobmd5pmuspdchjn8bb2c5l62:
+              label: Avisos. Baja de avisos de la DGT
+            x-e1j2sobmd5pmuspdclmm2qbc:
+              label: Avisos. E-mail
+            x-e1j2sobmd5pmuspdclmm2qbc5lgmot31:
+              label: Avisos. Alta o modificacion del e-mail de avisos
+            x-e1j2sobmd5pmuspdclmm2qbc5lh62qj1:
+              label: Avisos. Baja del e-mail de avisos
+            x-e1j2sobmd5pmuspddlnncqbc5lgmot31:
+              label: Avisos. Alta o modificacion del telefono movil
+            x-e1j2sobmd5pmuspddlnncqbc5lh62qj1:
+              label: Avisos. Baja del telefono movil
+            x-e1j2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              label: Avisos. Prefijo de pais del telefono movil
+            x-e1j2sobmd5pmuspdehim2bb1dhq62:
+              label: Avisos. Alta de avisos del TEA
+            x-e1j2sobmd5pmuspdehim2bb2c5l62:
+              label: Avisos. Baja de avisos del TEA
+            x-e1j2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
+              label: Avisos. Telefono movil
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
+              label: Domicilio fiscal en Espana. Bloque
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
+              label: Domicilio fiscal en Espana. Calificador del numero
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              label: Domicilio fiscal en Espana. Codigo de municipio INE
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
+              label: Domicilio fiscal en Espana. Codigo postal
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
+              label: Domicilio fiscal en Espana. Codigo de provincia
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              label: Domicilio fiscal en Espana. Codigo de via INE
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              label: Domicilio fiscal en Espana. Complemento de domicilio
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
+              label: Domicilio fiscal en Espana. Escalera
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
+              label: Domicilio fiscal en Espana. Indicador de referencia catastral
+                del domicilio fiscal
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
+              label: Domicilio fiscal en Espana. Localidad o poblacion
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
+              label: Domicilio fiscal en Espana. Nombre del municipio
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
+              label: Domicilio fiscal en Espana. Nombre de la via publica
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
+              label: Domicilio fiscal en Espana. Numero de casa
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
+              label: Domicilio fiscal en Espana. Planta
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
+              label: Domicilio fiscal en Espana. Portal
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
+              label: Domicilio fiscal en Espana. Puerta
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              label: Domicilio fiscal en Espana. Referencia catastral
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
+              label: Domicilio fiscal en Espana. Tipo de numero
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
+              label: Domicilio fiscal en Espana. Tipo de via
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lh6orrhelig:
+              label: Domicilio de gestion administrativa. Bloque
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhm2r39cpkm6ob4dtp2qrjldlin4ro:
+              label: Domicilio de gestion administrativa. Calificador del numero
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqrbldpkm6qbgd5niqqbeck:
+              label: Domicilio de gestion administrativa. Codigo de municipio INE
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3fedq62r0:
+              label: Domicilio de gestion administrativa. Codigo postal
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3idtr6irj3d5gg:
+              label: Domicilio de gestion administrativa. Codigo de provincia
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqtj9c4mmirj5:
+              label: Domicilio de gestion administrativa. Codigo de via INE
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmurbgdhimqpbeehniqp3fdlkm6qbcd5ng:
+              label: Domicilio de gestion administrativa. Complemento de domicilio
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lin6or1dhin4o8:
+              label: Domicilio de gestion administrativa. Escalera
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lkmsp39cdgm8rri5lh62qj1:
+              label: Domicilio de gestion administrativa. Indicador de baja del domicilio
+                de gestion administrativa
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lm6uor1dhkm8ob4:
+              label: Domicilio de gestion administrativa. Localidad o poblacion
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lmnarj9cdkn0qbf:
+              label: Domicilio de gestion administrativa. Nombre del municipio
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln6urb2e9iiqtj9c4:
+              label: Domicilio de gestion administrativa. Nombre de la via publica
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln7arb5e9niqor1edgg:
+              label: Domicilio de gestion administrativa. Numero de casa
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6oobeehgg:
+              label: Domicilio de gestion administrativa. Planta
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6usjkc5m0:
+              label: Domicilio de gestion administrativa. Portal
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo7apbiehgg:
+              label: Domicilio de gestion administrativa. Puerta
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5ln7arb5e9ng:
+              label: Domicilio de gestion administrativa. Tipo de numero
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5lr6io8:
+              label: Domicilio de gestion administrativa. Tipo de via
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
+              label: Domicilio a efectos de notificaciones. En calidad de, para el
+                apartado de correos
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
+              label: Domicilio a efectos de notificaciones. Codigo postal del apartado
+                de correos
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
+              label: Domicilio a efectos de notificaciones. Codigo de provincia del
+                apartado de correos
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
+              label: Domicilio a efectos de notificaciones. Numero de apartado de
+                correos
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
+              label: Domicilio a efectos de notificaciones. Destinatario del apartado
+                de correos, si es distinto del declarante
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
+              label: Domicilio a efectos de notificaciones. Poblacion o ciudad del
+                apartado de correos
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
+              label: Domicilio a efectos de notificaciones. Baja del domicilio de
+                notificaciones
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
+              label: Domicilio a efectos de notificaciones. Bloque (domicilio 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
+              label: Domicilio a efectos de notificaciones. En calidad de (domicilio
+                1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              label: Domicilio a efectos de notificaciones. Calificador del numero
+                (domicilio 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Domicilio a efectos de notificaciones. Codigo de municipio INE
+                (domicilio 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
+              label: Domicilio a efectos de notificaciones. Codigo postal (domicilio
+                1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
+              label: Domicilio a efectos de notificaciones. Codigo de provincia (domicilio
+                1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              label: Domicilio a efectos de notificaciones. Codigo de via INE (domicilio
+                1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              label: Domicilio a efectos de notificaciones. Complemento de domicilio
+                (domicilio 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
+              label: Domicilio a efectos de notificaciones. Destinatario, si es distinto
+                del declarante (domicilio 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
+              label: Domicilio a efectos de notificaciones. Escalera (domicilio 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
+              label: Domicilio a efectos de notificaciones. Localidad o poblacion
+                (domicilio 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
+              label: Domicilio a efectos de notificaciones. Nombre del municipio (domicilio
+                1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
+              label: Domicilio a efectos de notificaciones. Nombre de la via publica
+                (domicilio 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
+              label: Domicilio a efectos de notificaciones. Numero de casa (domicilio
+                1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
+              label: Domicilio a efectos de notificaciones. Planta (domicilio 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
+              label: Domicilio a efectos de notificaciones. Portal (domicilio 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
+              label: Domicilio a efectos de notificaciones. Puerta (domicilio 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
+              label: Domicilio a efectos de notificaciones. Tipo de numero (domicilio
+                1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
+              label: Domicilio a efectos de notificaciones. Tipo de via (domicilio
+                1)
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0ob9ec:
+              label: Domicilio en el Estado de residencia. Codigo de pais
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0rrjehgmo:
+              label: Domicilio en el Estado de residencia. Codigo postal
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              label: Domicilio en el Estado de residencia. Complemento de domicilio
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdchnmqqb3d5m6iro:
+              label: Domicilio en el Estado de residencia. Domicilio
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1gmiso:
+              label: Domicilio en el Estado de residencia. Pais
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1nm4r31cdkmurg:
+              label: Domicilio en el Estado de residencia. Poblacion o ciudad
+            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1p6utj9dphmio9de9imeqbfdo:
+              label: Domicilio en el Estado de residencia. Provincia, region o estado
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm6tb1dpq6uso:
+              label: Establecimientos permanentes. Numero de establecimientos permanentes
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd64:
+              label: Establecimientos permanentes. Denominacion del establecimiento
+                permanente 1
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd68:
+              label: Establecimientos permanentes. Denominacion del establecimiento
+                permanente 2
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd6c:
+              label: Establecimientos permanentes. Denominacion del establecimiento
+                permanente 3
+            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmmus35e9giqpbjehgm4r35cdkmqqb5dpq6ubbgclp6qobecln78p8:
+              label: Establecimientos permanentes. Opera en Espana a traves de establecimiento
+                permanente
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj2:
+              label: Identificacion. Primer apellido
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj4:
+              label: Identificacion. Segundo apellido
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qorfchkmerpde1gmispde9in6qb4cln66qb1:
+              label: Identificacion. Codigo de pais del Estado de residencia
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
+              label: Identificacion. Dominio o direccion de internet
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              label: Identificacion. Dominio o direccion de internet (segundo)
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmm2r3kc4mm4obac4:
+              label: Identificacion. Alta o baja como Empresario de Responsabilidad
+                Limitada
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmmcpb3d1gg:
+              label: Identificacion. Fecha de alta o baja como Empresario de Responsabilidad
+                Limitada
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              label: Identificacion. Fecha de efectos de la residencia fiscal
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj1cdkmurj1dhkm8ob4:
+              label: Identificacion. Nacionalidad del no residente
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9co:
+              label: Identificacion. N.I.F. o N.I.E.
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
+              label: Identificacion. Codigo de identificacion fiscal del Estado de
+                residencia o NIF-IVA
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p8:
+              label: Identificacion. Nombre
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p9dcdnmqpbicdkm2r0:
+              label: Identificacion. Nombre comercial
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
+              label: Identificacion. Persona fisica residente o no residente en Espana
             x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
               label: Apellidos y nombre o razon social del representante (primer representante,
