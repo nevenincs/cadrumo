@@ -1,0 +1,793 @@
+# Modelo 036 PAGINA 2B -- personas juridicas y entidades: identificacion,
+# domicilio fiscal, domicilio en el Estado de residencia y datos de aviso.
+#
+# This is the third and last of the modelo's identity records: Pag. 2A is the
+# persona fisica, Pag. 2C the establecimiento permanente of a non-resident entity,
+# and this one the persona juridica or entidad. Like both of those, almost every
+# number here is LETTERED -- [B4], [B25], [B91] -- and therefore invisible to a
+# derived-casilla regex matching digits only. Unlike them, this record ALSO carries
+# a run of plain-digit boxes (65, 68, 69, 70, 71, 73, 75, 77, 78, 79) in its
+# personalidad juridica block, so it is the one identity record the derived set can
+# partly see.
+#
+# Grounded in aeat-dr-036-2025. Pag. 2B tiles 1..2100 exactly once with NO gap and
+# NO PARTIAL OVERLAP -- both checked, since a gap-only check passes over overlapping
+# fields -- and every number, offset, length and type below was read from its own
+# field description.
+#
+# AEAT PRINTS [B72], [B74] AND [B76] TWICE EACH IN THIS ONE RECORD. This is a real
+# collision in the published spreadsheet, not a parsing artefact; the raw cell text
+# was read directly to confirm it. The two homes are:
+#   * the domicilio social block, where B71..B85 form a COMPLETE and coherent run
+#     (B71 tipo de via, B72 nombre de la via, B73 tipo num., B74 num casa, B75
+#     calif., B76 bloque, B77 portal ... B85 codigo de provincia); and
+#   * the personalidad juridica block at @1734, @1737 and @1740, whose surrounding
+#     numbers are PLAIN digits -- 70, 71, 73, 75, 77 -- so the three B-prefixed
+#     entries interrupt an otherwise unbroken plain sequence.
+#
+# The domicilio social fields therefore KEEP B72, B74 and B76: their run is
+# complete and unambiguous. The three personalidad juridica fields take descriptive
+# slugs, following the modelo 604 precedent that a field naming ANOTHER box's number
+# keeps a slug rather than duplicating it -- and (segmento, number) uniqueness is
+# enforced revision-wide, so duplicating was never available anyway.
+#
+# WHAT IS DELIBERATELY *NOT* DONE HERE: the plain run strongly suggests AEAT meant
+# [72], [74] and [76] at those three positions. That reading is an INFERENCE, not a
+# transcription, so those numbers are NOT adopted. If AEAT's instructions or a later
+# design confirm it, the slugs can be replaced with a recorded reason; until then the
+# registry does not assert a box number AEAT did not print.
+#
+# FOUR NUMBERS COLLAPSE THREE COMPONENTS EACH -- B8 (fecha acuerdo de voluntades),
+# B9 (fecha de constitucion), B10 (fecha de inscripcion registral) and B3B (fecha de
+# efectos de residencia fiscal) are each printed on a dia, mes and ano triple. Each
+# becomes ONE date casilla, matching A10/A3B on Pag. 2A and C70/C71 on Pag. 2C.
+#
+# NINETEEN FIELDS CARRY NO PRINTED NUMBER and take descriptive slugs: the twelve
+# one-byte aviso alta/baja flags, the six INE via and municipio codes across the
+# three domicilios, and the domicilio-en-el-extranjero indicator. Their slug numbers
+# are prefixed "pj-", because Pag. 2A and 2C carry fields of the same name.
+#
+# NOT MODELLED, deliberately: the envelope identifiers at @1+9 and @2091+10, the
+# record-level "Tipo declaracion" at @10+1, and the seven "Reservado para la Agencia
+# Tributaria" runs. None is filer-supplied.
+#
+# NOT PRESENT IN THE DESIGN, so not invented: the B series skips B1, B56 to B58, B65
+# to B67, B70, B86 to B89; the plain run skips 66 and 67.
+#
+# This file is the first half of the record, split from its sibling only to stay
+# within the registry reviewability line budget.
+
+# @11+1. Identificacion. Persona juridica o entidad residente o constituida en Espana, o no residente.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.identificacion-residencia-indicador"
+number = "B2"
+section = ["declaracion", "persona_juridica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @12+2. Identificacion. Persona juridica o entidad no residente o constituida en el extranjero.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.identificacion-pais-constitucion"
+number = "B3"
+section = ["declaracion", "persona_juridica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @14+9. Identificacion. N.I.F.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.identificacion-nif"
+number = "B4"
+section = ["declaracion", "persona_juridica", "identificacion"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @23+125. Identificacion. Razon o denominacion social.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.identificacion-razon-social"
+number = "B5"
+section = ["declaracion", "persona_juridica", "identificacion"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @148+25. Identificacion. Anagrama.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.identificacion-anagrama"
+number = "B6"
+section = ["declaracion", "persona_juridica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @173+40. Identificacion. N.I.F. de otros paises.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.identificacion-nif-otros-paises"
+number = "B7"
+section = ["declaracion", "persona_juridica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @213+8. Identificacion. Fecha del acuerdo de voluntades. ONE casilla over three design components at @213+2 dia, @215+2 mes and @217+4 ano, all three printed under the single number B8.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.identificacion-fecha-acuerdo-voluntades"
+number = "B8"
+section = ["declaracion", "persona_juridica", "identificacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @221+8. Identificacion. Fecha de constitucion. ONE casilla over three design components at @221+2 dia, @223+2 mes and @225+4 ano, all three printed under the single number B9.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.identificacion-fecha-constitucion"
+number = "B9"
+section = ["declaracion", "persona_juridica", "identificacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @229+8. Identificacion. Fecha de inscripcion registral. ONE casilla over three design components at @229+2 dia, @231+2 mes and @233+4 ano, all three printed under the single number B10.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.identificacion-fecha-inscripcion-registral"
+number = "B10"
+section = ["declaracion", "persona_juridica", "identificacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @237+5. Domicilio fiscal en Espana. Tipo de via.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-tipo-via"
+number = "B11"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @242+5. Domicilio fiscal en Espana. Codigo de via INE. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-codigo-via-ine"
+number = "pj-domicilio-fiscal-codigo-via-ine"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @247+50. Domicilio fiscal en Espana. Nombre de la via publica.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-nombre-via"
+number = "B12"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @297+3. Domicilio fiscal en Espana. Tipo de numero.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-tipo-numero"
+number = "B13"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @300+5. Domicilio fiscal en Espana. Numero de casa.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-numero-casa"
+number = "B14"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @305+3. Domicilio fiscal en Espana. Calificador del numero.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-calificador-numero"
+number = "B15"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @308+3. Domicilio fiscal en Espana. Bloque.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-bloque"
+number = "B16"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @311+3. Domicilio fiscal en Espana. Portal.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-portal"
+number = "B17"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @314+3. Domicilio fiscal en Espana. Escalera.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-escalera"
+number = "B18"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @317+3. Domicilio fiscal en Espana. Planta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-planta"
+number = "B19"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @320+3. Domicilio fiscal en Espana. Puerta.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-puerta"
+number = "B20"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @323+40. Domicilio fiscal en Espana. Complemento de domicilio (urbanizacion, poligono industrial, centro comercial).
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-complemento-domicilio"
+number = "B21"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @363+30. Domicilio fiscal en Espana. Localidad o poblacion, si es distinta del municipio.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-localidad"
+number = "B22"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @393+5. Domicilio fiscal en Espana. Codigo postal.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-codigo-postal"
+number = "B23"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @398+5. Domicilio fiscal en Espana. Codigo de municipio INE. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-codigo-municipio-ine"
+number = "pj-domicilio-fiscal-codigo-municipio-ine"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "municipality_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @403+30. Domicilio fiscal en Espana. Nombre del municipio.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-municipio"
+number = "B24"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @433+2. Domicilio fiscal en Espana. Codigo de provincia.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-fiscal-codigo-provincia"
+number = "B25"
+section = ["declaracion", "persona_juridica", "domicilio_fiscal"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @435+100. Datos de telefonos y direcciones para recibir avisos. E-mail.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-email"
+number = "B38"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @535+1. Datos de telefonos y direcciones para recibir avisos. Alta de avisos AEAT. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-aeat-alta"
+number = "pj-avisos-aeat-alta"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @536+1. Datos de telefonos y direcciones para recibir avisos. Baja de avisos AEAT. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-aeat-baja"
+number = "pj-avisos-aeat-baja"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @537+1. Datos de telefonos y direcciones para recibir avisos. Alta de avisos TEA. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-tea-alta"
+number = "pj-avisos-tea-alta"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @538+1. Datos de telefonos y direcciones para recibir avisos. Baja de avisos TEA. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-tea-baja"
+number = "pj-avisos-tea-baja"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @539+1. Datos de telefonos y direcciones para recibir avisos. Alta de avisos DGT. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-dgt-alta"
+number = "pj-avisos-dgt-alta"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @540+1. Datos de telefonos y direcciones para recibir avisos. Baja de avisos DGT. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-dgt-baja"
+number = "pj-avisos-dgt-baja"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @541+1. Datos de telefonos y direcciones para recibir avisos. Alta o modificacion del e-mail de avisos. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-email-alta"
+number = "pj-avisos-email-alta"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @542+1. Datos de telefonos y direcciones para recibir avisos. Baja del e-mail de avisos. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-email-baja"
+number = "pj-avisos-email-baja"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @562+50. Domicilio fiscal o social en el Estado de residencia (no residentes). Domicilio.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-residencia-extranjero-domicilio"
+number = "B31"
+section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @612+40. Domicilio fiscal o social en el Estado de residencia (no residentes). Complemento de domicilio.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-residencia-extranjero-complemento-domicilio"
+number = "B32"
+section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @652+30. Domicilio fiscal o social en el Estado de residencia (no residentes). Poblacion o ciudad.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-residencia-extranjero-poblacion"
+number = "B34"
+section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @682+100. Identificacion. Dominio o direccion de internet.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.identificacion-dominio-internet"
+number = "B28"
+section = ["declaracion", "persona_juridica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @782+10. Domicilio fiscal o social en el Estado de residencia (no residentes). Codigo postal del Estado de residencia.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-residencia-extranjero-codigo-postal"
+number = "B33"
+section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @792+30. Domicilio fiscal o social en el Estado de residencia (no residentes). Provincia, region o estado.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-residencia-extranjero-provincia-region"
+number = "B35"
+section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @822+30. Domicilio fiscal o social en el Estado de residencia (no residentes). Pais.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-residencia-extranjero-pais"
+number = "B36"
+section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @852+2. Domicilio fiscal o social en el Estado de residencia (no residentes). Codigo de pais.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.domicilio-residencia-extranjero-codigo-pais"
+number = "B37"
+section = ["declaracion", "persona_juridica", "domicilio_residencia_extranjero"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @854+4. Datos de telefonos y direcciones para recibir avisos. Prefijo de pais del telefono movil.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-prefijo-pais-movil"
+number = "B26"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @858+15. Datos de telefonos y direcciones para recibir avisos. Telefono movil.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-telefono-movil"
+number = "B27"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @873+1. Datos de telefonos y direcciones para recibir avisos. Alta o modificacion del telefono movil. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-movil-alta"
+number = "pj-avisos-movil-alta"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @874+1. Datos de telefonos y direcciones para recibir avisos. Baja del telefono movil. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-movil-baja"
+number = "pj-avisos-movil-baja"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @875+1. Datos de telefonos y direcciones para recibir avisos. Alta en la aplicacion movil AEAT. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-app-aeat-alta"
+number = "pj-avisos-app-aeat-alta"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+# @876+1. Datos de telefonos y direcciones para recibir avisos. Baja en la aplicacion movil AEAT. Carries no printed box number.
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "pj.avisos-app-aeat-baja"
+number = "pj-avisos-app-aeat-baja"
+section = ["declaracion", "persona_juridica", "avisos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
