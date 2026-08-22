@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:397bd2516beb5968835338761634ed48d8cd444ab8a808ae4d6d3a20657ad513'
+body_hash: 'sha256:2321ddeaed92daa99be4b808343c60cb596baa35d767bd0e20fd9c2148c985c3'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6051,3 +6051,29 @@ elsewhere -- `adapters/persistence/profile/_filing_runtime`, `_modelo_runtime`,
 `application/evidence`, `flows`, `modelo`, `domain/iva`, `domain/transactions` and one more
 in `user_profile/_custody_transactions`. They belong to other surfaces and are not part of
 this bounded task.
+
+### The last forward in this domain, and where the boundary now sits
+
+`_custody_transactions.validate_sha256_digest` forwarded to
+`core.hashing.validate_prefixed_digest`, relabelling one keyword on the way -- `subject=`
+passed as `field_name=`. The family-2 contract anticipates exactly that and rules on it:
+"A keyword may be RELABELLED and the call is still a forward: relabelling an argument is not
+translating it." Three call sites, two of them inside the owning module. The value reaching
+the validator is unchanged, so the refusal message is unchanged.
+
+**`application/user_profile` and `adapters/persistence/storage` now contain no forwarding
+wrappers at all.** That is the whole of this campaign's surface.
+
+**The twelve the gate still reports belong to other owners** -- `persistence/profile`'s
+filing and modelo runtimes, `application/evidence`, `flows`, `modelo`, `domain/iva`,
+`domain/transactions`. Each is the same shape and each will want the same treatment, but
+none is storage or custody, and taking them would repeat the drift this campaign was
+explicitly bounded to stop.
+
+**What the six-slice removal is worth as a general result.** Twenty-two wrappers, roughly
+264 call sites, zero behaviour changes, lanes flat at 314 / 1589 from first slice to last.
+Two of the wrappers had no callers whatsoever while still being registered in the package
+facade in two places each; three test modules inside the owning package were already
+bypassing the port they were supposed to use. A forwarding layer does not fail loudly -- it
+decays into a second name that some callers use and others do not, and the only signal is a
+gate counting them.
