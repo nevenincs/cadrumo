@@ -5159,3 +5159,52 @@ dangerous value is spelled entirely in a character every path legitimately conta
 Gate: `bucket/tests/test_layout.py`, beside the empty-id and separator siblings it belongs
 with. Proven to bite by restoring the permissive join from a scratchpad plugin: DID NOT
 RAISE. Lanes 314 integration / 1576 unit (+3).
+
+### The same lens, applied to the sibling validators: two more escapes
+
+The dot-segment finding generalises to a question worth asking of any path
+validator: **which dangerous values contain none of the dangerous characters it
+enumerates?** Asked of the storage domain's other path-composing functions, it found
+`custody/_capsule_data.py:validated_data_path` -- the designated guard for the names in a
+capsule's data inventory, whose refusal text is literally "escapes its staging root".
+
+It is a good validator. It refuses absolute paths, refuses `""`, `"."` and `".."`
+components, refuses backslashes, and parses as `PurePosixPath` because that is the
+capsule's on-wire spelling. Two values still get through.
+
+**A drive qualifier reads as relative on POSIX and absolute on Windows.** Measured against
+a real join with staging root `D:/staging/root`:
+
+    'C:/foo' -> 'C:foo'                 (staging root discarded entirely)
+    'C:foo'  -> 'C:foo'                 (drive-relative: resolves against the CWD on C:)
+    'a/b'    -> 'D:/staging/root/a/b'   (correct)
+
+`PurePosixPath("C:/foo")` is an ordinary two-component RELATIVE path -- not absolute, no
+dot component -- so it cleared every check. The UNC form `//server/share/x` and the
+backslash form were both already refused, and that is what made the gap hard to see: three
+of the four ways to escape were covered, so the guard looked complete from the outside.
+The platform this application runs on is the one where the fourth bites.
+
+**The `"."` clause could never fire.** `PurePosixPath` normalises a lone dot away, so `"."`
+and `"./"` parse to NO components at all and the `{"", ".", ".."}` membership test never
+runs against the value it explicitly names. A validator listing a value it cannot reach is
+worse than one that omits it, because the listing is what stops anyone looking again.
+Contained rather than dangerous -- it resolves to the staging root, a directory, so a write
+fails there -- but the stated rule was not true.
+
+**A wrong test expectation is what surfaced the normalisation.** The first draft asserted
+`"a/./b"` was refused; it is not, because pathlib collapses it to `a/b` before any check
+runs, and accepting it is correct. The failing test was right to fail, and chasing it is
+what exposed the dead `"."` clause. That direction is now pinned in its own test so the
+next reader does not repeat the assumption.
+
+**Neither is live.** The inventory's keys are the constant `profile-label.v1.json` and
+callers passing `{}`; no untrusted name reaches the validator today. Both are fixed at the
+validator because containment is the function's stated contract, not an accident of who
+happens to call it -- the same reasoning as the `bucket_paths` dot segment, and the second
+time in two iterations that a guard's real guarantee lived somewhere other than where it
+was written.
+
+Gate: `custody/tests/test_capsule_data_path_validation.py`, seven tests. Proven to bite by
+restoring the POSIX-only validator from a scratchpad plugin: both new checks fail
+independently. Lanes 314 integration / 1583 unit (+7).
