@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-22'
-body_hash: 'sha256:811ddb6f4cc38547ef13e39e4cd8293c8b34b5735105a67d7c1142b5268b0b49'
+body_hash: 'sha256:b3f89a0c2a5ba55ba386458100f4f8257a8ed521e652a501168da2ac94d72958'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -55,7 +55,7 @@ Make the real installed command tree authoritative for universal enrollment.
 
 Attribute cost per live CLI path using real subprocesses.
 
-- [ ] `W01.P02.S05` - Add a reusable fresh-process profiler for resolution, invocation, imports, Pydantic construction, filesystem changes, and storage operations; `src/cadrumo/tests/cli_performance.py`.
+- [x] `W01.P02.S05` - Add a reusable fresh-process profiler for resolution, invocation, imports, Pydantic construction, filesystem changes, and storage operations; `src/cadrumo/tests/cli_performance.py`.
 - [ ] `W01.P02.S06` - Add quiet-runner calibration and median and ratio budget support without single-sample pass conditions; `src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py`.
 - [ ] `W01.P02.S07` - Capture baseline distributions and ranked outliers for every enrolled node as execution evidence; `dev/benchmarks/cli/`.
 - [ ] `W01.P02.S08` - Prove profiler and census gates bite on injected registry loading, filesystem materialization, and unclassified nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py`.
