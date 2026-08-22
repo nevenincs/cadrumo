@@ -418,3 +418,70 @@ lane passes all 37 registration and rotation tests in 48.19 seconds, consistent 
 execution record's 37-test result. `s07-refusal-context-mutability`,
 `s07-preflight-order-bite`, and `s07-format-evidence` are closed. No unresolved HIGH,
 CRITICAL, or MEDIUM finding remains, and W02.P05.S08 may proceed.
+
+### s08-cli-absent-channel-laundering | high | The CLI relabels every storage fault as a missing password channel
+
+The mandatory S08 review grounded commit `94abc99a67` against the accepted ADR,
+research, incident reference, live plan, current source, commit history, diff, and
+execution evidence. The central application contract is narrow and secret-free:
+`ProfileAuthenticationRefusedError` has one stable translation key and no context;
+the closed `ProfilePasswordProofOperation` enum makes every mapping call explicit; and
+`map_profile_password_proof_failure` at
+`src/cadrumo/application/user_profile/_custody_ports.py:1014-1023` collapses exactly
+`ProfileCustodyPasswordError`, allowing record, integrity, archive, supervision,
+transaction, resource, keyring, and storage faults to propagate. Login preserves the
+throttle write before raising the common refusal. Real malformed and wrong passwords
+are indistinguishable at login, password restore, and recovery export, with no candidate,
+measurement, or prospective-policy guidance and no publication. Rotation retains its
+operation-specific outer error while using the same narrow internal classification.
+Exact search confirms the obsolete broad password predicate and all consumers are gone,
+no recovery-removal capability exists, and this commit makes no locale changes.
+
+The required minimal CLI adjustment is not narrow. In
+`src/cadrumo/entrypoints/cli/_config/_custody.py:253-275`, the handler catches both the
+new authentication refusal and every `SecretStoreError`; when no callback or configured
+passphrase exists, its condition tests only `isinstance(exc, SecretStoreError)`. Thus a
+`KeyringUnavailableError`, unavailable storage, corruption, supervision failure, or
+other operational storage fault occurring during callback-free login is replaced by
+`CliRefusedBoundaryError(application.user_profile.errors.passphrase_channel_absent)`.
+That tells the operator to supply a password channel when the real fault is operational,
+violates the ADR's explicit non-laundering boundary, and can suppress the correct
+retryability/remediation classification. The adjacent comment still claims that only
+the absent-channel custody refusal is selected, but the old predicate that made that
+true was deleted.
+
+Represent absence of an explicit password channel with its own typed application outcome
+before this boundary, or otherwise match only that exact condition without resurrecting
+the broad password predicate. Add a CLI regression injecting `KeyringUnavailableError`
+and at least one corruption/supervision storage error with no callback/configured secret
+and require the original typed fault to escape unchanged; separately prove the genuine
+absent-channel case retains its CLI guidance. This HIGH finding blocks S09.
+
+### s08-operational-distinction-bite | medium | The focused tests do not exercise the closed mapper's negative space
+
+The new real tests cover malformed and wrong credentials for three public doors and
+prove login throttling and mutation safety, but no focused test supplies non-password
+custody failures to `map_profile_password_proof_failure` or through the restore, export,
+rotation, and login catch boundaries. Rotation also lacks the paired malformed-current
+password case that would prove parity with its existing wrong-current-password test.
+The exact `isinstance(ProfileCustodyPasswordError)` implementation is correct today,
+but a future widening to `SecretStoreError` or `CadrumoError` would launder operational
+faults while the new focused tests remained green.
+
+Add a finite negative-space matrix covering representative record/integrity,
+archive/transaction, supervision/resource, and unavailable-storage errors and require
+identity-preserving propagation from the relevant public doors. Pair malformed and
+wrong current-password rotation attempts and assert identical safe outer error facts and
+unchanged whole storage. This is a MEDIUM regression-coverage defect.
+
+Ruff lint and format checks independently pass over all 12 changed source/test files.
+The recovery and rotation integration lane passes all 39 cases. The full login-handover
+lane reproduces the recorded 22 passed and seven failures. All seven failures are
+successful session-resume or crash-recovery assertions with captured
+`KeyringUnavailableError`; none executes the changed password-refusal exception branch,
+and the commit touches only that branch plus the separate wrong/malformed refusal test.
+They are therefore a Windows keyring baseline/environment limitation, not an in-scope
+red, but they also demonstrate why the HIGH CLI laundering path must not ship.
+
+No CRITICAL finding was found. The HIGH and MEDIUM findings block review-clean S08 and
+W03.P06.S09 dispatch until remediated and independently verified.

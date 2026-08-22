@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:7fb27a7b831381cfd2f5cb7dea7638a5c801d5ef6d6a32a4524d7313c6c669f8'
+body_hash: 'sha256:b97015091e799a4d4a1e3187d4d5f0371d7560844843459be0e6bbe7eeaa967a'
 related:
   - "[[2026-08-22-source-casilla-integration-adr]]"
   - "[[2026-08-22-source-casilla-integration-plan]]"

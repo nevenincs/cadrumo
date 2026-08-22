@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:96fe9aa45fbeb3f5524ee0fcfc59ed6f329fd5d215bc8b9080f14acccc1e2e85'
+body_hash: 'sha256:070d329eaf95312df6dd349d188d8adf54f087aeb4cc16653d6fcfc08f3f2341'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -15398,3 +15398,69 @@ Seven partly-read designs: five TABLE lines that remain parser work -- modelo
 100's three editions and modelo 200's three, minus the sheet recovered here --
 and the two DIAGRAM lines that need AEAT acquisition. The next smallest TABLE
 target is modelo 200's 2010 edition at five skipped sheets.
+
+## Tick: modelo 100's doubly-glued row, and an accepted loss that stopped being one
+
+Re-measured at tick start: authority CLEAN, partly-read inventory at 8 of 218.
+
+### The chosen target was abandoned, and the reason is worth keeping
+
+Modelo 200's 2010 edition was last tick's nominated target at five skipped
+sheets. Its holes are structurally awkward -- single positions inside record
+HEADERS (position 10 on two sheets) rather than a droppable row -- and neither
+the plain nor the reversed-column-repaired line view shows two rows straddling
+the gap, so the missing position is not a gap between neighbours at all.
+Diagnosing it properly plus a corpus control did not fit the tick, and starting
+a parser change that could not be verified would repeat a mistake this campaign
+has already paid for twice.
+
+Modelo 100's three editions were checked instead and shared ONE cause.
+
+### One row, three editions, both spaces lost
+
+Each of the 2012, 2013 and 2014 editions loses exactly position 9, always the
+same row: AEAT's ``Indicador de pagina complementaria`` arrives as ``59 1A ...``
+where the printed design reads ``5 9 1 A ...``. Ordinal and offset are fused
+into ``59``; length and naturaleza into ``1A``.
+
+The split is accepted only when the previous row's ordinal-plus-one and its
+end-plus-one, CONCATENATED, reproduce the fused token exactly -- ``4`` at
+position 8 length 1 forces ordinal 5 and position 9, and ``5``+``9`` gives
+``59``. That is the over-determination :func:`_continues` already demands before
+admitting a reversed-column half, not a new licence to guess.
+
+**216 designs compared: 3 improved, 0 regressed, 213 unchanged.** Modelo 100's
+2012 and 2013 editions now read WHOLE (+50 and +51 fields); 2014 drops from two
+skipped sheets to one. The inventory falls from **8 of 218 to 6**.
+
+### A pinned limit that had to be retired, not worked around
+
+`test_the_later_editions_still_lose_one_doubly_glued_row` existed to record this
+byte as an accepted loss, and its docstring gave the reason: separating ``59``
+is "inference from context rather than reading a declared value, and this reader
+does not invent positions". It also left an instruction -- "anyone who does
+ground a fix sees this expectation fail and knows to remove it".
+
+Both were honoured. The expectation is replaced by one asserting the recovery,
+and the new docstring states what actually changed: not the reader's willingness
+to infer, but the strength of evidence demanded before it will. A line whose
+neighbours do not reproduce its exact token is still refused.
+
+### Verified
+
+* the corpus control run before the standing suite, and the guard's refusal
+  path exercised by the 213 designs it left untouched.
+* registry + generated-tree + application/registry: the eight declared
+  inventories, plus a referential-integrity test that passes in isolation
+  (parallel artefact) and `test_production_python_source_ref_literals_resolve_
+  to_catalogue_and_corpus`, which this change cannot have caused -- it adds no
+  source_ref literal to production Python -- but which was NOT attributed to a
+  specific peer commit and should be re-read at HEAD before anyone acts on it.
+* ruff: `_record_design.py` carries the same four findings as before.
+
+### Still open
+
+Six partly-read designs: modelo 100's 2014 edition (a distinct
+record-body-restart cause), modelo 200's three editions, and the two DIAGRAM
+lines needing AEAT acquisition. Modelo 200's remain the largest parser lane and
+the header-position holes described above are where that work starts.
