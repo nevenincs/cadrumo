@@ -1,0 +1,24 @@
+# The fichero AEAT for modelo 194, whose two records the Orden de 18 de noviembre
+# de 1999, apartado cuarto, approves. Every position is carried by a binding.
+[[revisions."2019-y-siguientes".export_layouts]]
+id = "modelo-194-fichero-aeat"
+format = "fixed_width"
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".export_layouts.records]]
+id = "modelo-194-declarante"
+record_type = "declarante"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "crlf"
+binding_record = "declarante"
+
+[[revisions."2019-y-siguientes".export_layouts.records]]
+id = "modelo-194-perceptor"
+record_type = "perceptor"
+order = 1
+encoding = "iso-8859-1"
+line_ending = "crlf"
+repeat = "binding_rows"
+binding_record = "perceptor"

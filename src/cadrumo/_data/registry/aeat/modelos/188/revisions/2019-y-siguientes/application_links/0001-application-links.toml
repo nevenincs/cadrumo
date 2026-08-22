@@ -50,3 +50,13 @@ consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["orden-1999-11-17:apartado-quinto"]
 source_refs = ["aeat-modelo-188-procedure"]
+
+# The export surface the fichero AEAT layout requires: a revision that declares
+# an export layout must name the consumer that emits it.
+[[revisions."2019-y-siguientes".application_links]]
+id = "modelo-188-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
+source_refs = ["aeat-dr-188-2023", "boe-modelo-188-form-layout"]

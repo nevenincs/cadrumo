@@ -1,0 +1,295 @@
+# Field bindings for the two records the Orden de 18 de noviembre de 1999,
+# apartado cuarto, approves for modelo 194: the hoja resumen (Tipo 1) and the
+# registro de perceptor (Tipo 2). Coordinates are read from the bundled diseno
+# aeat-dr-194-2024; its 2023 sibling is coordinate-identical, so either grounds
+# the same layout and the current edition is cited.
+#
+# The perceptor rows are record POSITIONS, not printed boxes -- ANEXO VIII numbers
+# boxes 01 to 05 and no more -- so they are bindings rather than casillas.
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.1-1.tipo-de-registro"
+source = "manual_input"
+selector = { record = "declarante", field = "tipo-de-registro", offset = 1, length = 1, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.2-4.modelo-declaracion"
+source = "manual_input"
+selector = { record = "declarante", field = "modelo-declaracion", offset = 2, length = 3, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.5-8.ejercicio"
+source = "manual_input"
+selector = { record = "declarante", field = "ejercicio", offset = 5, length = 4, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.9-17.nif-del-declarante"
+source = "manual_input"
+selector = { record = "declarante", field = "nif-del-declarante", offset = 9, length = 9, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.18-57.apellidos-y-nombre-o-razon-social-del-declarante"
+source = "manual_input"
+selector = { record = "declarante", field = "apellidos-y-nombre-o-razon-social-del-declarante", offset = 18, length = 40, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.58-58.tipo-de-soporte"
+source = "manual_input"
+selector = { record = "declarante", field = "tipo-de-soporte", offset = 58, length = 1, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.59-107.persona-con-quien-relacionarse"
+source = "manual_input"
+selector = { record = "declarante", field = "persona-con-quien-relacionarse", offset = 59, length = 49, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.108-120.numero-de-justificante-de-la-declaracion"
+source = "manual_input"
+selector = { record = "declarante", field = "numero-de-justificante-de-la-declaracion", offset = 108, length = 13, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.121-122.declaracion-complementaria-o-sustitutiva"
+source = "manual_input"
+selector = { record = "declarante", field = "declaracion-complementaria-o-sustitutiva", offset = 121, length = 2, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.123-135.numero-de-justificante-de-la-declaracion-anterior"
+source = "manual_input"
+selector = { record = "declarante", field = "numero-de-justificante-de-la-declaracion-anterior", offset = 123, length = 13, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.136-144.numero-total-de-perceptores"
+source = "manual_input"
+selector = { record = "declarante", field = "numero-total-de-perceptores", offset = 136, length = 9, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.145-159.base-retenciones-e-ingresos-a-cuenta"
+source = "manual_input"
+selector = { record = "declarante", field = "base-retenciones-e-ingresos-a-cuenta", offset = 145, length = 15, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.160-174.retenciones-e-ingresos-a-cuenta"
+source = "manual_input"
+selector = { record = "declarante", field = "retenciones-e-ingresos-a-cuenta", offset = 160, length = 15, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.175-183.numero-total-de-perceptores"
+source = "manual_input"
+selector = { record = "declarante", field = "numero-total-de-perceptores", offset = 175, length = 9, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.184-198.base-retenciones-e-ingresos-a-cuenta"
+source = "manual_input"
+selector = { record = "declarante", field = "base-retenciones-e-ingresos-a-cuenta", offset = 184, length = 15, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.199-237.blancos"
+source = "manual_input"
+selector = { record = "declarante", field = "blancos", offset = 199, length = 39, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.declarante.238-250.sello-electronico"
+source = "manual_input"
+selector = { record = "declarante", field = "sello-electronico", offset = 238, length = 13, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.1-1.tipo-de-registro"
+source = "manual_input"
+selector = { record = "perceptor", field = "tipo-de-registro", offset = 1, length = 1, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.2-4.modelo-declaracion"
+source = "manual_input"
+selector = { record = "perceptor", field = "modelo-declaracion", offset = 2, length = 3, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.5-8.ejercicio"
+source = "manual_input"
+selector = { record = "perceptor", field = "ejercicio", offset = 5, length = 4, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.9-17.nif-del-declarante"
+source = "manual_input"
+selector = { record = "perceptor", field = "nif-del-declarante", offset = 9, length = 9, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.18-26.nif-del-perceptor"
+source = "manual_input"
+selector = { record = "perceptor", field = "nif-del-perceptor", offset = 18, length = 9, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.27-35.nif-del-representante-legal"
+source = "manual_input"
+selector = { record = "perceptor", field = "nif-del-representante-legal", offset = 27, length = 9, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.36-75.apellidos-y-nombre-razon-social-o-denominacion-del-perceptor"
+source = "manual_input"
+selector = { record = "perceptor", field = "apellidos-y-nombre-razon-social-o-denominacion-del-perceptor", offset = 36, length = 40, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.76-77.codigo-provincia"
+source = "manual_input"
+selector = { record = "perceptor", field = "codigo-provincia", offset = 76, length = 2, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.78-78.origen"
+source = "manual_input"
+selector = { record = "perceptor", field = "origen", offset = 78, length = 1, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.79-79.clave-codigo"
+source = "manual_input"
+selector = { record = "perceptor", field = "clave-codigo", offset = 79, length = 1, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.80-91.codigo-emisor"
+source = "manual_input"
+selector = { record = "perceptor", field = "codigo-emisor", offset = 80, length = 12, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.92-92.tipo-codigo"
+source = "manual_input"
+selector = { record = "perceptor", field = "tipo-codigo", offset = 92, length = 1, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.93-112.codigo-cuenta-valores"
+source = "manual_input"
+selector = { record = "perceptor", field = "codigo-cuenta-valores", offset = 93, length = 20, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.113-113.pendiente"
+source = "manual_input"
+selector = { record = "perceptor", field = "pendiente", offset = 113, length = 1, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.114-117.ejercicio-devengo"
+source = "manual_input"
+selector = { record = "perceptor", field = "ejercicio-devengo", offset = 114, length = 4, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.118-130.valor-adquisicion-o-suscripcion"
+source = "manual_input"
+selector = { record = "perceptor", field = "valor-adquisicion-o-suscripcion", offset = 118, length = 13, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.131-143.valor-transmision-amortizacion-reembolso-canje-o-conversion"
+source = "manual_input"
+selector = { record = "perceptor", field = "valor-transmision-amortizacion-reembolso-canje-o-conversion", offset = 131, length = 13, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.144-156.ceros"
+source = "manual_input"
+selector = { record = "perceptor", field = "ceros", offset = 144, length = 13, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.157-169.base-retenciones-e-ingresos-a-cuenta"
+source = "manual_input"
+selector = { record = "perceptor", field = "base-retenciones-e-ingresos-a-cuenta", offset = 157, length = 13, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.170-173.retencion"
+source = "manual_input"
+selector = { record = "perceptor", field = "retencion", offset = 170, length = 4, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.174-186.retenciones-e-ingresos-a-cuenta"
+source = "manual_input"
+selector = { record = "perceptor", field = "retenciones-e-ingresos-a-cuenta", offset = 174, length = 13, data_type = "integer" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.187-187.vinculacion"
+source = "manual_input"
+selector = { record = "perceptor", field = "vinculacion", offset = 187, length = 1, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.188-188.ceuta-o-melilla-isla-de-la-palma"
+source = "manual_input"
+selector = { record = "perceptor", field = "ceuta-o-melilla-isla-de-la-palma", offset = 188, length = 1, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
+
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-194-2024.perceptor.189-250.blancos"
+source = "manual_input"
+selector = { record = "perceptor", field = "blancos", offset = 189, length = 62, data_type = "text" }
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2024", "boe-modelo-194-form-layout"]
