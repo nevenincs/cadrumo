@@ -25,51 +25,52 @@ source_refs = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
-agent: applicability-grade review of the IAE alta/variacion/baja declaration, re-stamped \
-after completing Pag. 1 apart from Apartado IV, and all of Pag. 2. DISCLOSURE -- \
-self-review: the same agent authored all 75 new casillas, re-grounded the two pre-existing \
-ones onto AEAT bracket numbers, and swept construct membership. VERIFIED -- COVERAGE 0 -> \
-74 of 108 derived casillas, 77 casillas in total. The gap between those two numbers is \
-deliberate and is explained below. VERIFIED -- TILING re-checked before every \
-transcription: Pag. 1 tiles 1..1132 and Pag. 2 tiles 1..1165, each exactly once, no gap, \
-no overlap. VERIFIED -- CONSTRUCT MEMBERSHIP exact, 77 of 77 both directions. VERIFIED -- \
-DATA TYPES COME FROM THE DESIGN type_code (An / Num), never from the label. Box 84 is \
-named Cuota and reads like money; the design types it An because it is a Reservado box the \
-administration fills as text. Reading labels instead would have mis-typed nine of the \
-twenty-four Pag. 2 casillas. VERIFIED -- NON-MONOTONIC NUMBERING: AEAT numbers by printed \
-form, not byte order, and nine fields are out of sequence (11@213 before 10@215; 31@485, \
-29@487, 30@522; 72@1018, 70@1020, 71@1055, 73@1061). Pairing numbers to offsets by sorting \
-would mis-assign every one while the offsets still tiled. VERIFIED -- COLLAPSED BOX \
-NUMBERS are now modelled rather than deferred, on modelo 604's precedent: where N \
-positions share one printed number, ONE casilla carries AEAT's number and each remaining \
-position becomes its own casilla with a descriptive slug, exactly as m604 does for its \
-eight signo casillas. A slug-numbered casilla does NOT count toward coverage, which is why \
-77 casillas cover 74 boxes -- coverage measures AEAT's printed boxes, not casilla count. \
-Applied to box 86 (two unrelated concepts: the Apartado VI B) Suma at @672 and the \
-Apartado VII cuota at @1044, so two casillas) and box 109 (a notification block of five \
-positions where Dia, Mes and Ano are composite components of ONE date, so three casillas: \
-lugar, fecha, calidad). NOT CLAIMED -- 34 OF 108 DERIVED CASILLAS REMAIN UNCOVERED, and \
-they are Apartado IV of Pag. 1 plus the Anexo. NOT CLAIMED -- APARTADO IV IS NOW UNBLOCKED \
-but unauthored: the convention above resolves its 53, 54 and 55 triplets (each three \
-independently-set flags, so three casillas apiece, one numbered and two slugged), its 62 \
-date split into dia/mes/ano components (one date casilla), and its 63 labelling both Causa \
-de la baja and Causa de la variacion (two casillas). It is the next unit of work, not a \
-blocker. NOT CLAIMED -- THE ANEXO IS A REPEATING GROUP, not a flat casilla set: 165 fields \
-carrying only 4 distinct box numbers, almost entirely one relacion-de-locales block \
-restated with no number on any repetition. That is the shape modelo 720 models with \
-binding_record; minting a byte-span number per repetition would model a repeating \
-structure as fixed positions. The same applies to most of Pag. 2, where only 24 of 110 \
-fields are casillas. A record field count is a bad estimate of its casilla count; the \
-ratio of fields to distinct numbers is the tell. NOT CLAIMED -- BOX 79 IS \"Pto.\" AND ITS \
-LABEL KEEPS THAT ABBREVIATION; the diseno never expands it and it sits three boxes from 82 \
-\"Pta.\" (Puerta). Expanding it needs an official source. NOT CLAIMED -- NO EXPORT LAYOUT: \
-the application still cannot file this modelo, it stays on the filing-capability worklist, \
-and model_law_authority_scope remains inspection_only. NOT CLAIMED -- the earlier review \
-reasoning that this modelo is not a return this application emits is NOT relied on; the \
-worklist gate docstring treats an individually-defensible withdrawal record as the \
-historical defect. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. \
-NOT CLAIMED -- locales complete for all 77 labels across es/en/ca/hu, not audited for \
-accuracy."""
+agent: applicability-grade review of the IAE alta/variacion/baja declaration. DISCLOSURE \
+-- self-review: the same agent authored all 119 new casillas across six units, re-grounded \
+the two pre-existing ones onto AEAT bracket numbers, and swept construct membership each \
+time. VERIFIED -- COVERAGE 0 -> 108 of 108 derived casillas, with 121 casillas in total. \
+Every AEAT box number the bundled aeat-dr-840 diseno prints across its three records is \
+now modelled. The two original casillas had carried SLUG numbers, which match no design \
+box and were the sole reason the report once read zero. VERIFIED -- TILING re-checked \
+before every transcription: Pag. 1 tiles 1..1132 and Pag. 2 tiles 1..1165, each exactly \
+once, no gap, no overlap. VERIFIED -- CONSTRUCT MEMBERSHIP exact, 121 of 121 both \
+directions. VERIFIED -- WHY 121 CASILLAS COVER 108 BOXES: where several physical positions \
+share one printed number, ONE casilla carries AEAT's number and each remaining position \
+becomes its own casilla with a descriptive slug, on modelo 604's precedent for its eight \
+signo casillas. A slug-numbered casilla does not count toward coverage, so the casilla \
+count tracks positions and coverage tracks boxes. The shapes differ and the treatment \
+follows the shape: 53, 54 and 55 each head a triplet of independently-set flags (three \
+casillas each, since collapsing loses two facts per triplet); 62 is ONE date split across \
+dia, mes and ano component fields (one date casilla, since splitting invents three facts); \
+63 and 86 each label two different concepts (two casillas each); 109 is a notification \
+block of five positions reduced to three casillas, lugar, fecha and calidad. VERIFIED -- \
+DATA TYPES come from the design type_code (An / Num) with one refinement: a Num field \
+whose value is a fixed-width CODE stays text, because a leading zero is significant and an \
+integer round-trip drops it. Following type_code blindly would have mis-typed five fields; \
+following the label would have mis-typed nine. VERIFIED -- NON-MONOTONIC NUMBERING: AEAT \
+numbers by printed form, not byte order, and nine fields are out of sequence (11@213 \
+before 10@215; 31@485, 29@487, 30@522; 72@1018, 70@1020, 71@1055, 73@1061). Pairing \
+numbers to offsets by sorting would mis-assign every one while the offsets still tiled. \
+NOT CLAIMED -- BOX 56 DOES NOT EXIST and none was invented. The printed sequence runs 55, \
+then two UNNUMBERED flags at @698 and @699 (campamento turistico, recepcion de loterias), \
+then 57. The gap falls exactly where a 56 would sit; both flags carry slugs instead. NOT \
+CLAIMED -- BOXES 79 AND 48 ARE \"Pto.\" AND THEIR LABELS KEEP THAT ABBREVIATION. The \
+diseno never expands it and each sits near a \"Pta.\" (Puerta). Expanding it needs an \
+official source. NOT CLAIMED -- THE ANEXO IS NOT MODELLED AS CASILLAS, and that is its \
+shape rather than an omission: 165 fields carrying only 4 distinct box numbers, almost \
+entirely one relacion-de-locales block restated with no number on any repetition. The same \
+holds for most of Pag. 2, where 24 of 110 fields are casillas. Those repetitions are the \
+binding_record / repeat = binding_rows shape modelo 720 uses; minting a byte-span number \
+per repetition would model a repeating structure as fixed positions. What modelo 840 needs \
+next is a BINDING SET, then a layout -- not more casillas. NOT CLAIMED -- NO EXPORT \
+LAYOUT: the application still cannot file this modelo, it stays on the filing-capability \
+worklist, and model_law_authority_scope remains inspection_only. NOT CLAIMED -- the \
+earlier review reasoning that this modelo is not a return this application emits is NOT \
+relied on; the worklist gate docstring treats an individually-defensible withdrawal record \
+as the historical defect. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not \
+zero. NOT CLAIMED -- all 121 labels are populated and non-null across es/en/ca/hu, \
+verified by counting values rather than keys after an earlier check that counted keys \
+proved unable to fail; the strings were not audited for accuracy."""
 reviewed_at = 2026-08-22
 
 [revisions."2003-y-siguientes".family_dispositions.formulas]
