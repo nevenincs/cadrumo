@@ -47,30 +47,6 @@ def requires_user_interaction(policy: ConfirmationPolicy) -> bool:
     return policy is ConfirmationPolicy.CONFIRM
 
 
-def confirmation_for_tool(*, command_key: str) -> ConfirmationPolicy:
-    """Return the confirmation tier for one tool.
-
-    Reads callback-attached live policy - the same authority the annotation
-    projection reads - so the client hint and server gate cannot drift. Order
-    matters: a forbidden live-write blocks before any
-    approval; a destructive or filing-handoff verb requires confirmation;
-    everything else (reads and non-destructive local mutations) auto-approves.
-
-    Unknown, retired, and unclassified paths fail during live policy resolution;
-    there is no all-false fallback that could reach auto-approve.
-
-    Returns:
-        :class:`ConfirmationPolicy` selected for the command.
-
-    Raises:
-        ValueError: When ``command_key`` names no exposed command and would
-            otherwise auto-approve - an unclassified mutation must never
-            auto-approve through the permissive default.
-    """
-    classification = command_policy(command_key)
-    return confirmation_for_policy(classification)
-
-
 def confirmation_for_policy(classification: CommandPolicyProjection) -> ConfirmationPolicy:
     """Project an already live-grounded policy onto a confirmation tier."""
     if classification.live_write:
@@ -80,6 +56,12 @@ def confirmation_for_policy(classification: CommandPolicyProjection) -> Confirma
     return ConfirmationPolicy.AUTO_APPROVE
 
 
-def is_handoff_command(command_key: str) -> bool:
+def confirmation_for_tool(*, command_key: str) -> ConfirmationPolicy:
+    """Inspect the policy carried by an already materialised live descriptor."""
+    return confirmation_for_policy(command_policy(command_key))
+
+
+def is_handoff_command(policy: CommandPolicyProjection | str) -> bool:
     """True when the command produces the irreversible filing-handoff artefact."""
-    return command_policy(command_key).handoff
+    resolved = command_policy(policy) if isinstance(policy, str) else policy
+    return resolved.handoff

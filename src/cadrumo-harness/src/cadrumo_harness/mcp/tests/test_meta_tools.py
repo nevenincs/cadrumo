@@ -67,7 +67,7 @@ def test_search_ranks_a_named_verb_above_a_mention() -> None:
     assert results
     assert results[0].command_key == "modelo.iva_wallet.balance"
     # The mutability hints ride on the result so the caller sees them before execute.
-    assert results[0].read_only is False
+    assert results[0].read_only is True
     # An empty query matches nothing rather than the whole surface.
     assert search_commands("", descriptors=descriptors) == ()
 
@@ -171,10 +171,10 @@ def test_meta_execute_never_reaches_the_runner_on_a_handoff_denied_command() -> 
 
 def test_meta_execute_dispatches_a_read_only_command_end_to_end() -> None:
     descriptors = build_tool_descriptors()
-    outcome = meta_execute("registry.inspect", {}, descriptors=descriptors, persona=None, run=_run_subprocess_tool)
+    outcome = meta_execute("config.profile.list", {}, descriptors=descriptors, persona=None, run=_run_subprocess_tool)
     assert outcome.refused is None
     assert outcome.envelope is not None
-    assert outcome.envelope.get("command") == "registry.inspect"
+    assert outcome.envelope.get("command") == "config.profile.list"
     assert outcome.is_error is False
 
 

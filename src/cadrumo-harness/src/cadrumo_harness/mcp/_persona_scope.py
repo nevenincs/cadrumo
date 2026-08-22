@@ -59,7 +59,7 @@ from cadrumo.application.operator_surface import (
 )
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 
-from ._command_policy import command_policy
+from ._command_policy import CommandPolicyProjection, command_policy
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -269,7 +269,9 @@ PERSONA_HANDOFF_DENIALS: frozenset[AgentPersona] = frozenset(
 _HANDOFF_FAMILY = "modelo"
 
 
-def is_handoff_denied(*, persona: AgentPersona, command_key: str) -> bool:
+def is_handoff_denied(
+    *, persona: AgentPersona, command_key: str, execution_policy: CommandPolicyProjection | None = None
+) -> bool:
     """True when ``command_key`` is a handoff leaf this persona is structurally denied.
 
     The denial is the irreversible *modelo* filing handoff, so it fires only for
@@ -286,7 +288,8 @@ def is_handoff_denied(*, persona: AgentPersona, command_key: str) -> bool:
         return False
     if _family_token_for_command_key(command_key) != _HANDOFF_FAMILY:
         return False
-    return command_policy(command_key).handoff
+    attached_policy = execution_policy or command_policy(command_key)
+    return attached_policy.handoff
 
 
 def handoff_denial_message(*, persona: AgentPersona, command_key: str) -> str:

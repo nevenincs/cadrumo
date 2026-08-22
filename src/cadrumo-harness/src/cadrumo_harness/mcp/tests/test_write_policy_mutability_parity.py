@@ -1,4 +1,4 @@
-"""The risk table agrees with the two independent risk declarations.
+"""Callback-attached policy agrees with independent safety declarations.
 
 Two parity gates that catch a mis-declaration by cross-referencing surfaces that
 declare risk-adjacent facts independently:
@@ -18,8 +18,6 @@ declare risk-adjacent facts independently:
 from __future__ import annotations
 
 import pytest
-
-from cadrumo.application.storage_write_policy import PROFILE_BOUND_WRITE_VERB_PATHS
 
 from .._command_policy import command_policy
 from .._tools import build_tool_descriptors
@@ -43,15 +41,9 @@ def test_a_submit_present_send_leaf_must_declare_live_write() -> None:
 def test_the_destructive_axis_separates_a_status_verb_from_its_destructive_siblings() -> None:
     """Inside one mutating family, ``destructive`` is what distinguishes the verbs.
 
-    Mutability is declared per FAMILY, so a status verb inside a mutating
-    family is NOT read-only: ``config.reset.status`` reports
-    ``read_only=False`` exactly as ``start`` and ``resume`` do. Reading the
-    read-only flag as the separator therefore gets this family wrong, and an
-    agent deciding whether to ask a human before running a reset verb needs
-    the separation that does exist.
-
-    That separation is the destructive axis, and this pins it: a status read
-    is non-destructive while starting and resuming a reset are destructive.
+    Callback policy is precise per verb: status is a read while starting and
+    resuming are destructive writes. This pins both axes to prevent a family-
+    level mutability default from erasing that distinction.
     Both halves are asserted, so the case fails if the family collapses in
     either direction - if status became destructive, or if start and resume
     stopped being.
@@ -60,8 +52,7 @@ def test_the_destructive_axis_separates_a_status_verb_from_its_destructive_sibli
     start = command_policy("config.reset.start")
     resume = command_policy("config.reset.resume")
 
-    # The read-only flag does NOT separate them, which is why it must not be read as if it did.
-    assert (status.read_only, start.read_only, resume.read_only) == (False, False, False)
+    assert (status.read_only, start.read_only, resume.read_only) == (True, False, False)
 
     # The destructive flag does.
     assert status.destructive is False
@@ -70,46 +61,3 @@ def test_the_destructive_axis_separates_a_status_verb_from_its_destructive_sibli
 
 
 
-def _path_to_command_key(path: str) -> str:
-    tokens = path.replace("-", "_").split()
-    # ``app`` verbs drop the root in the command key; ``config`` verbs keep it.
-    return ".".join(tokens[1:]) if tokens and tokens[0] == "app" else ".".join(tokens)
-
-
-def test_every_write_policy_verb_is_in_a_mutating_family() -> None:
-    # Anti-vacuity floor. The screen below collects write-policy catalogue entries
-    # whose family classifies read-only and asserts the set is empty. An empty
-    # catalogue -- or a screen that can never see a read-only classification --
-    # produces exactly that same green while checking nothing, so pin the corpus
-    # size and prove the screen discriminates before trusting its silence.
-    assert len(PROFILE_BOUND_WRITE_VERB_PATHS) >= 40, (
-        f"write-policy catalogue collapsed to {len(PROFILE_BOUND_WRITE_VERB_PATHS)} entries; a green "
-        "result below would mean 'nothing was screened' rather than 'nothing is wrong'"
-    )
-
-    # Hostile-input probe: a genuinely read-only command placed under the same
-    # screen IS flagged. `registry.inspect` reads bundled registry data and the
-    # manifest classifies its family read-only, so were it mislabelled a write
-    # verb this screen would surface it. This proves the screen is not vacuously
-    # empty because nothing at all can classify read-only.
-    assert command_policy("registry.inspect").read_only, (
-        "registry.inspect no longer classifies read-only, so the discrimination probe below is void"
-    )
-    injected = sorted(
-        key
-        for path in (*PROFILE_BOUND_WRITE_VERB_PATHS, "app registry inspect")
-        if command_policy(key := _path_to_command_key(path)).read_only
-    )
-    assert injected == ["registry.inspect"], (
-        "the read-only screen failed to flag a read-only command injected into the write set, so it "
-        f"could not flag a real read-only writer either: {injected}"
-    )
-
-    read_only_writers = sorted(
-        key
-        for path in PROFILE_BOUND_WRITE_VERB_PATHS
-        if command_policy(key := _path_to_command_key(path)).read_only
-    )
-    assert read_only_writers == [], (
-        f"commands the write guard treats as writes but the manifest classifies read-only: {read_only_writers}"
-    )

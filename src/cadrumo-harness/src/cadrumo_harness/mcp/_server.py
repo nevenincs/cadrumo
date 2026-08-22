@@ -81,7 +81,7 @@ from ._harness_tools import (
 )
 from ._hitl import (
     REQUIRES_USER_INTERACTION_META_KEY,
-    confirmation_for_tool,
+    confirmation_for_policy,
     is_handoff_command,
     requires_user_interaction,
 )
@@ -178,7 +178,7 @@ _META_EXECUTE_TOOL = "execute"
 _META_TOOLSETS_TOOL = "toolsets"
 # The per-command descriptor meta-tool:
 # returns one command's full shape by key - schema, annotations, confirmation
-# tier, declared risk, owning toolset, and reachable personas - so a model can
+# tier, callback-attached policy, owning toolset, and reachable personas - so a model can
 # inspect a verb fully before spending an ``execute`` round-trip on it.
 _META_DESCRIBE_TOOL = "describe"
 
@@ -319,7 +319,7 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
         # server's PreToolUse path enforces, so a tool that would be confirmed
         # server-side also forces the client's permission prompt. Non-CONFIRM tools
         # carry no ``_meta`` (``None`` omits it from the wire descriptor).
-        policy = confirmation_for_tool(command_key=descriptor.command_key)
+        policy = confirmation_for_policy(descriptor.execution_policy)
         meta = {REQUIRES_USER_INTERACTION_META_KEY: True} if requires_user_interaction(policy) else None
         tools.append(
             Tool(
@@ -666,7 +666,12 @@ def build_server(
     scoped_descriptors = tuple(
         descriptor
         for descriptor in filter_descriptors_for_persona(descriptors, persona=persona)
-        if persona is None or not is_handoff_denied(persona=persona, command_key=descriptor.command_key)
+        if persona is None
+        or not is_handoff_denied(
+            persona=persona,
+            command_key=descriptor.command_key,
+            execution_policy=descriptor.execution_policy,
+        )
     )
     by_name = {descriptor.name: descriptor for descriptor in descriptors}
     # command-key -> descriptor: the resource read handler resolves a bulk
@@ -737,19 +742,30 @@ def build_server(
         :func:`_run_tool`, so meta-execute and the direct path share it.
         """
         key = descriptor.command_key
-        identity_refusal = identity_gate_refusal(key, state=identity_state)
+        identity_refusal = identity_gate_refusal(
+            key, execution_policy=descriptor.execution_policy, state=identity_state
+        )
         if identity_refusal is not None:
             _record_telemetry(
                 telemetry, tool_name=descriptor.name, command_key=key, route="identity_block", is_error=True
             )
             return _refused_tool_outcome(identity_refusal)
-        policy = confirmation_for_tool(command_key=key)
-        route = resolve_confirm_route(policy=policy, command_key=key, client_supports_elicitation=False)
+        policy = confirmation_for_policy(descriptor.execution_policy)
+        route = resolve_confirm_route(
+            policy=policy,
+            command_key=key,
+            execution_policy=descriptor.execution_policy,
+            client_supports_elicitation=False,
+        )
         if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
             _record_telemetry(telemetry, tool_name=descriptor.name, command_key=key, route=route.value, is_error=True)
             return _refused_tool_outcome(refusal_message(route, command_key=key))
         arguments_json = json.dumps(arguments, ensure_ascii=False, sort_keys=True)
-        faith = arguments_faithfulness(arguments_json=arguments_json, window=window, blocking=is_handoff_command(key))
+        faith = arguments_faithfulness(
+            arguments_json=arguments_json,
+            window=window,
+            blocking=is_handoff_command(descriptor.execution_policy),
+        )
         if faith.blocks:
             _record_telemetry(
                 telemetry,
@@ -947,14 +963,17 @@ def build_server(
         gate = gate_refusal(persona=persona, descriptor=descriptor)
         if gate is not None:
             return CallToolResult(content=[TextContent(type="text", text=gate)], is_error=True)
-        identity_refusal = identity_gate_refusal(key, state=identity_state)
+        identity_refusal = identity_gate_refusal(
+            key, execution_policy=descriptor.execution_policy, state=identity_state
+        )
         if identity_refusal is not None:
             _record_telemetry(telemetry, tool_name=name, command_key=key, route="identity_block", is_error=True)
             return CallToolResult(content=[TextContent(type="text", text=identity_refusal)], is_error=True)
-        policy = confirmation_for_tool(command_key=key)
+        policy = confirmation_for_policy(descriptor.execution_policy)
         route = resolve_confirm_route(
             policy=policy,
             command_key=key,
+            execution_policy=descriptor.execution_policy,
             client_supports_elicitation=_client_supports_elicitation(ctx),
         )
         if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
@@ -965,7 +984,7 @@ def build_server(
             )
         route_label = route.value
         if route is ConfirmRoute.ELICIT:
-            request = confirmation_request(command_key=key)
+            request = confirmation_request(command_key=key, execution_policy=descriptor.execution_policy)
             # Name the active-taxpayer LABEL in the human-facing prompt
             # so the person approving a destructive/handoff verb sees whose data
             # it touches and can catch an Erik/Erika mismatch at the gate.
@@ -991,7 +1010,11 @@ def build_server(
                     is_error=True,
                 )
         arguments_json = json.dumps(arguments, ensure_ascii=False, sort_keys=True)
-        faith = arguments_faithfulness(arguments_json=arguments_json, window=window, blocking=is_handoff_command(key))
+        faith = arguments_faithfulness(
+            arguments_json=arguments_json,
+            window=window,
+            blocking=is_handoff_command(descriptor.execution_policy),
+        )
         if faith.blocks:
             _record_telemetry(
                 telemetry,
