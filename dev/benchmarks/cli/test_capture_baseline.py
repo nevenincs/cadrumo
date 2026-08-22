@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
+from pathlib import Path
 from typing import cast
 
 import pytest
+from dev.benchmarks.cli.capture_baseline import DEFAULT_OUTPUT, _copy_source_snapshot, check_baseline
 
 from cadrumo.entrypoints.cli import app
 from cadrumo.entrypoints.cli._command_suggestions import walk_live_command_tree
-
-from .capture_baseline import DEFAULT_OUTPUT, check_baseline
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -59,3 +62,29 @@ def test_live_census_has_no_fixed_count_assumption() -> None:
     assert isinstance(commands, dict)
 
     assert {tuple(path.split(" ")) for path in commands} == paths
+
+
+def test_frozen_import_root_ignores_later_live_source_mutation(tmp_path: Path) -> None:
+    """A later shared-tree edit cannot alter subsequent snapshot imports."""
+    live_package = tmp_path / "live" / "cadrumo"
+    live_package.mkdir(parents=True)
+    live_module = live_package / "__init__.py"
+    live_module.write_text("IDENTITY = 'before'\n", encoding="utf-8")
+    snapshot_package = tmp_path / "snapshot" / "cadrumo"
+    _copy_source_snapshot(live_package, snapshot_package)
+
+    live_module.write_text("IDENTITY = 'after'\n", encoding="utf-8")
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(snapshot_package.parent)
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    completed = subprocess.run(
+        [sys.executable, "-P", "-c", "import cadrumo; print(cadrumo.IDENTITY)"],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        env=env,
+    )
+
+    assert completed.returncode == 0
+    assert completed.stdout.strip() == "before"
