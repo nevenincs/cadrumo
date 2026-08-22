@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:4536f4e8ecfcf9c460324164ade5f7fc501ff948e320af7d10e1e451c9c6eb23'
+body_hash: 'sha256:c29669356ebb130cbfea0d3c1b0906cc036ed8836c000cfc667619f30129bcd1'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6553,3 +6553,42 @@ in the pytest arguments, which is not a test module and should not have been the
 my error, not the tree's.
 
 Lanes 340 integration / 1637 unit.
+
+### The per-push dev lane is red, and mostly not from here
+
+Unblocking the census moved `test_fixture_census` from two failures to one, and the remaining
+message changed from the closure refusal to *"ownership manifest does not exactly match stable
+generation"* -- the drift itself, now visible to the gate that owns it. That thread is now
+blocked on the registry campaign: `--write` refuses while two substitutable duplicates
+(`bundled_root_pointing_at`) stand in `domain/calculations/registry/tests`.
+
+Since `dev/quality/tests` sits in the per-push lane, the obvious next question was whether
+peers' pushes are currently failing. Run exactly as `test-dev-ci` runs it: **18 failed, 7
+errors** across 25 items.
+
+    dev/ci/tests/test_overview_verbs.py                   7
+    dev/packaging/tests/ (eight modules)                  11
+    dev/quality/tests/test_fixture_census.py               1
+    dev/quality/tests/test_doc_privacy.py                  1
+    dev/docs/tests/test_api_stubs.py                       1
+
+**One of those is this campaign's enrollment, and it is the gate working.** `test_api_stubs`
+was enrolled here deliberately, because it is the only check whose subject is the COMMITTED
+stub tree and no per-push lane ran it. It now reports three modules with no stub --
+`application/operator_surface/_calculation_workflows`,
+`application/registry/_source_connectivity_authority`, `core.source_connectivity` -- plus two
+orphan stubs. Those modules are silently absent from the published documentation right now,
+which is precisely the quiet failure the enrollment was for. The remedy is one command,
+`python -m dev.docs.apidocs scaffold`, run by whoever owns them: the docs rule is explicit
+that a scaffold run also emits stubs for peers' modules and that only one's OWN modules may
+be staged.
+
+**The other 24 predate and surround it.** Packaging and CI-verb failures are in packages this
+campaign has never touched, so the lane was red before the enrollment and would be red without
+it. Worth stating plainly rather than leaving the enrollment looking like the cause: adding a
+gate to a lane that is already failing does not break it, and this one is reporting a real
+absence.
+
+No production change this iteration. The finding is that a lane the whole team pushes through
+is failing on 25 items with at least four owners, which nobody is likely to see while it stays
+red for reasons each of them treats as somebody else's.
