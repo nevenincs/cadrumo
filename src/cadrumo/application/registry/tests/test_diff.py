@@ -118,11 +118,18 @@ def _referenced_casilla_ids(expression: object) -> set[str]:
 
 
 def test_diff_registry_revisions_reports_no_change_within_one_revision() -> None:
-    """Two years covered by the same declared revision report no changes."""
-    report = diff_registry_revisions("303", from_year=2015, to_year=2020)
+    """Two years covered by the same declared revision report no changes.
+
+    Driven on the open-ended ``2026-y-siguientes`` revision. This used to diff
+    2015 against 2020 and expect both to land on ``2022``, which only held while
+    that revision started open-ended; modelo 303's spans have since been
+    narrowed to the years its bundled designs prove, so both those years now
+    correctly resolve to no revision at all.
+    """
+    report = diff_registry_revisions("303", from_year=2026, to_year=2027)
 
     assert report.same_revision is True
-    assert report.from_revision_id == report.to_revision_id == "2022"
+    assert report.from_revision_id == report.to_revision_id == "2026-y-siguientes"
     assert report.added_casillas == ()
     assert report.removed_casillas == ()
     assert report.renumbered_casillas == ()
@@ -308,18 +315,24 @@ def test_diff_registry_revisions_surfaces_real_added_bindings() -> None:
 
 
 def test_diff_registry_revisions_surfaces_real_added_parameters() -> None:
-    """Rate parameters the 2023 transitional reduced-rate regime introduces.
+    """The rate parameter the 2023 transitional reduced-rate regime introduces.
 
-    The two ``dr303`` transitional rate percentages carry the 5.00 and 7.50
-    values that only exist because a temporary reduced rate was in force for
-    part of the window the 2023 revision covers.  The 2009 revision has no such
-    parameter to declare, so the addition is forced by the rulebook rather than
-    read off the diff's own output.
+    Box ``[154]`` carries the RD-ley 20/2022 art. 72 reducido rung, whose 5,00
+    value exists only because a temporary reduced rate was in force across the
+    window the 2023 revision covers. The predecessor revision declares no such
+    parameter, so the addition is forced by the rulebook rather than read off
+    the diff's own output.
+
+    Box ``[166]``, the super-reducido rung, is asserted ABSENT here rather than
+    present. The bundled 2023 diseño declares the reducido rung's constant
+    directly and carries no super-reducido one: that rung, the 7,5 % step and
+    every dated window beyond 2024 belong to the two 2024-covering revisions.
+    Expecting it in this diff asserted a rate the 2023 design never carried.
     """
     report = diff_registry_revisions("303", from_year=_M303_PRE_YEAR, to_year=_M303_POST_YEAR)
 
     assert "m303-dr303-154-transitional-rate-percent" in report.added_parameters
-    assert "m303-dr303-166-transitional-rate-percent" in report.added_parameters
+    assert "m303-dr303-166-transitional-rate-percent" not in report.added_parameters
     assert report.removed_parameters == ()
 
 

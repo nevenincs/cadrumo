@@ -179,6 +179,28 @@ def test_governance_stamp_is_read_from_the_revision_not_defaulted(
     modelo = _modelo(tree_modelos, _MULTI_REVISION_MODELO)
     revision_id = sorted(modelo.revisions)[0]
 
+    # BOTH ends of this mutation proof are constructed. The baseline used to
+    # assume the bundled tree left every modelo 100 revision unstamped, so a
+    # test about the COMPOSER broke the moment the campaign legitimately
+    # stamped one -- and the stamping it was reading is exactly the work this
+    # project is here to do. Forcing the pending end makes the assertion "the
+    # composer reads the field" rather than "nobody has reviewed anything yet".
+    modelo = modelo.model_copy(
+        update={
+            "revisions": {
+                candidate_id: revision.model_copy(
+                    update={
+                        "review_status": RevisionReviewStatus.PENDING_REVIEW,
+                        "reviewed_by": None,
+                        "reviewed_at": None,
+                        "engineered_by": None,
+                    },
+                )
+                for candidate_id, revision in modelo.revisions.items()
+            },
+        },
+    )
+
     baseline = _compose((modelo,))
     baseline_row = next(row for row in baseline.rows if row.revision == revision_id)
     assert baseline_row.governance.review_status is RevisionReviewStatus.PENDING_REVIEW
@@ -229,9 +251,17 @@ def test_independent_check_coverage_distinguishes_absent_from_zero(
         inventory=load_bundled_external_oracle_inventory(),
         registry_validated=False,
     )
-    subject = max(grounding.rows, key=lambda row: len(row.reconciled_casilla_ids))
+    # The subject must DECLARE grounding, because the mutations below remove it
+    # and compare. Selecting purely by "reconciles the most casillas" picked a
+    # revision that legitimately declares none: modelo 303's 2024 is split at
+    # September, and the external grounding belongs to the EARLY half because
+    # its oracle is the AEAT Manual practico IVA 2024 first-trimester supuesto
+    # practico. Declaring it on the September-onward half would ground a figure
+    # that worked example never covers.
+    grounded_rows = tuple(row for row in grounding.rows if row.declared_grounded_casilla_ids)
+    assert grounded_rows, "modelo 303 no longer declares external grounding on any revision"
+    subject = max(grounded_rows, key=lambda row: len(row.reconciled_casilla_ids))
     assert subject.reconciled_casilla_ids, "modelo 303 no longer reconciles any casilla"
-    assert subject.declared_grounded_casilla_ids, "modelo 303 no longer declares external grounding"
 
     baseline_row = next(
         row for row in _compose((modelo,), external_grounding=grounding).rows if row.revision == subject.revision
