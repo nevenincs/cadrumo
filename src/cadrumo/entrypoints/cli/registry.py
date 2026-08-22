@@ -7,6 +7,9 @@ from typing import Annotated
 
 import typer
 
+from ._app_execution_policies import REGISTRY_READ, declare_metadata_group
+from ._command_policy import command_execution_policy
+
 from ...application.registry import (
     RegistryRevisionDiffReport,
     RegistryTreeReport,
@@ -32,6 +35,7 @@ app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(app)
 app.add_typer(citations_app, name="citations")
 app.add_typer(manuals_app, name="manuals")
 
@@ -283,6 +287,10 @@ def _diff_revisions_lines(report: RegistryRevisionDiffReport) -> list[str]:
     for binding in report.removed_bindings:
         lines.append("\t".join(("removed_binding", binding.id, binding.source)))
     return lines
+
+
+for _callback in (inspect_registry_cmd, verify_registry_cmd, verify_filed_state_cmd, diff_revisions_cmd):
+    command_execution_policy(REGISTRY_READ)(_callback)
 
 
 __all__ = [

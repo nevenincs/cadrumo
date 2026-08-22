@@ -4,6 +4,9 @@ from decimal import Decimal
 
 import typer
 
+from ._app_execution_policies import ENCRYPTED_READ, declare_metadata_group
+from ._command_policy import command_execution_policy
+
 from ...application.review import (
     ReviewError,
     ReviewQueueReport,
@@ -76,6 +79,7 @@ app = typer.Typer(
     help=tr("cli.review.app_help"),
     no_args_is_help=True,
 )
+declare_metadata_group(app)
 
 
 @app.command("queue", help=tr("cli.review.queue.help"))
@@ -217,3 +221,7 @@ def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[st
     if not report.rows:
         lines.append(tr("cli.review.queue.empty"))
     return lines
+
+
+command_execution_policy(ENCRYPTED_READ)(review_queue)
+command_execution_policy(ENCRYPTED_READ)(review_show)

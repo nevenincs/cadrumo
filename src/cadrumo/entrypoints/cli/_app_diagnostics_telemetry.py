@@ -37,6 +37,9 @@ from __future__ import annotations
 
 import typer
 
+from ._app_execution_policies import LOCAL_STORAGE_READ, LOCAL_STORAGE_WRITE, declare_metadata_group
+from ._command_policy import command_execution_policy
+
 from ...core.i18n import tr
 from ...core.telemetry import TelemetryTier
 from ._common import _emit_envelope, case_insensitive_choice
@@ -53,6 +56,7 @@ telemetry_app = typer.Typer(
     ),
     no_args_is_help=True,
 )
+declare_metadata_group(telemetry_app)
 
 
 @telemetry_app.command(
@@ -304,3 +308,7 @@ def diagnostics_telemetry_flush(
         )
 
     _emit_envelope(ctx, command="diagnostics.telemetry.flush", result=result, lines=lines, notices=notices)
+
+
+command_execution_policy(LOCAL_STORAGE_READ)(diagnostics_telemetry_status)
+command_execution_policy(LOCAL_STORAGE_WRITE)(diagnostics_telemetry_flush)

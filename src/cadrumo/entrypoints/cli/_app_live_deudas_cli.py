@@ -23,6 +23,9 @@ from typing import Annotated
 
 import typer
 
+from ._app_execution_policies import LIVE_PROFILE_WRITE, declare_metadata_group
+from ._command_policy import command_execution_policy
+
 from ...core.i18n import tr
 from ._app_live_auth_preflight import resolve_active_bucket
 from ._common import _emit_envelope
@@ -35,6 +38,7 @@ deudas_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(deudas_app)
 
 
 def register_deudas_commands(
@@ -204,3 +208,7 @@ def deudas_latest(ctx: typer.Context) -> None:
         f"deuda_count\t{len(record.deudas)}",
     ]
     _emit_envelope(ctx, command="app.live.deudas.latest", result=result, lines=lines)
+
+
+for _callback in (deudas_list, deudas_view, deudas_latest):
+    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)

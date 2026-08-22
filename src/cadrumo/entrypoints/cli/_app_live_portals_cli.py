@@ -12,6 +12,9 @@ from typing import Annotated, TypedDict
 
 import typer
 
+from ._app_execution_policies import LIVE_PROFILE_WRITE, declare_metadata_group
+from ._command_policy import command_execution_policy
+
 from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ...domain.portals import PortalCategory
@@ -36,6 +39,7 @@ portals_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(portals_app)
 
 
 def register_portals_commands(app: typer.Typer) -> None:
@@ -147,6 +151,10 @@ def portals_show(
     result = PortalsViewResult(**payload)
     lines = [f"{key}\t{value}" for key, value in payload.items() if value != ""]
     _emit_envelope(ctx, command="app.live.portals.view", result=result, lines=lines)
+
+
+for _callback in (portals_list, portals_show):
+    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)
 
 
 # ─────────────────────────────────────────────────────────────────────────

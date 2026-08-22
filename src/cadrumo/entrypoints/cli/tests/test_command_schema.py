@@ -65,6 +65,7 @@ def test_declared_schema_modules_reconcile_exactly_to_registry_projection() -> N
 def test_command_capability_taxonomy_is_closed_and_serialisable() -> None:
     expected_capabilities = {
         "state-free",
+        "local-storage",
         "registry",
         "profile-custody",
         "encrypted-facts",

@@ -28,6 +28,9 @@ from typing import TYPE_CHECKING, Annotated, Literal, TypedDict
 
 import typer
 
+from ._app_execution_policies import LIVE_PROFILE_WRITE, declare_metadata_group
+from ._command_policy import command_execution_policy
+
 from ...adapters.inbound.notificacion import NotificationDocumentReader
 from ...adapters.outbound.aeat.sede import assert_notification_content_readable, fetch_notification_document
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
@@ -127,6 +130,7 @@ notifications_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(notifications_app)
 
 
 @notifications_app.command(
@@ -306,6 +310,7 @@ document_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(document_app)
 notifications_app.add_typer(document_app, name="document")
 
 
@@ -645,3 +650,15 @@ def notifications_document_history(ctx: typer.Context) -> None:
         lines=lines,
         notices=notices,
     )
+
+
+for _callback in (
+    notifications_pull,
+    notifications_list,
+    notifications_show,
+    notifications_latest,
+    notifications_document_pull,
+    notifications_document_view,
+    notifications_document_history,
+):
+    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)

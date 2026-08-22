@@ -46,6 +46,9 @@ from datetime import date as _date
 
 import typer
 
+from ._app_execution_policies import LOCAL_STORAGE_READ
+from ._command_policy import command_execution_policy
+
 from ...core.i18n import tr
 from ._app_diagnostics_telemetry import telemetry_app
 from ._common import _emit_envelope, optional_decimal_text
@@ -615,3 +618,13 @@ def diagnostics_llm_usage(
 
 
 app.add_typer(telemetry_app, name="telemetry")
+
+for _callback in (
+    _diagnostics_root,
+    diagnostics_run_health,
+    diagnostics_runs,
+    diagnostics_latency,
+    diagnostics_errors,
+    diagnostics_llm_usage,
+):
+    command_execution_policy(LOCAL_STORAGE_READ)(_callback)

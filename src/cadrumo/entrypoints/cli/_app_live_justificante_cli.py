@@ -14,6 +14,9 @@ from typing import Annotated
 
 import typer
 
+from ._app_execution_policies import LIVE_PROFILE_WRITE, declare_metadata_group
+from ._command_policy import command_execution_policy
+
 from ...core import Modelo, Period, PeriodError
 from ...core.i18n import tr
 from ._app_live_auth_preflight import resolve_active_bucket, run_auth_preflight
@@ -31,6 +34,7 @@ justificante_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(justificante_app)
 
 
 def register_justificante_commands(
@@ -239,3 +243,7 @@ def justificante_view(
         f"captured_at\t{record.captured_at.isoformat()}",
     ]
     _emit_envelope(ctx, command="app.live.justificante.view", result=result, lines=lines)
+
+
+for _callback in (justificante_pull, justificante_list, justificante_view):
+    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)

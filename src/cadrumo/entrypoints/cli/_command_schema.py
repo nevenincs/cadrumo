@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 
 CommandCapability = Literal[
     "state-free",
+    "local-storage",
     "registry",
     "profile-custody",
     "encrypted-facts",
@@ -45,7 +46,8 @@ CommandCapability = Literal[
 """Authority families a command may enter while it executes.
 
 ``state-free`` is an affirmative declaration that a node needs none of the
-other authorities. The remaining values are composable. Capability
+other authorities. ``local-storage`` covers application-local files such as
+telemetry that are neither profile custody nor encrypted taxpayer facts. The remaining values are composable. Capability
 implications keep registrations concise while preserving the full import
 boundary used by gates.
 """

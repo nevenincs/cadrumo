@@ -30,6 +30,9 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ._app_execution_policies import CALCULATION_READ, declare_metadata_group
+from ._command_policy import command_execution_policy
+
 from ...application import overview as _overview_application
 from ...application.overview import (
     OverviewCalendar,
@@ -102,6 +105,7 @@ app = typer.Typer(
     help=tr("cli.overview.app_help"),
     no_args_is_help=True,
 )
+declare_metadata_group(app)
 
 
 def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
@@ -1123,3 +1127,15 @@ def overview_pipeline(
         ledger=strict_round_trip(LedgerStatusResult, report.ledger),
     )
     _emit_envelope(ctx, command="overview.pipeline", result=typed_result, lines=lines, notices=notices)
+
+
+for _callback in (
+    overview_status,
+    overview_calendar,
+    overview_agenda,
+    overview_backlog,
+    overview_explain,
+    overview_prepare,
+    overview_pipeline,
+):
+    command_execution_policy(CALCULATION_READ)(_callback)

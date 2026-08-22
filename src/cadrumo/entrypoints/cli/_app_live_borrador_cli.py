@@ -15,6 +15,9 @@ from typing import Annotated, Literal, TypedDict
 
 import typer
 
+from ._app_execution_policies import LIVE_PROFILE_WRITE, declare_metadata_group
+from ._command_policy import command_execution_policy
+
 from ...application.live import (
     Borrador100SnapshotService,
     SnapshotLifecycleState,
@@ -52,6 +55,8 @@ borrador_100_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(borrador_app)
+declare_metadata_group(borrador_100_app)
 borrador_app.add_typer(borrador_100_app, name="100")
 
 
@@ -200,6 +205,7 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
             binding_count=len(record.binding_values),
             state=_active_borrador_state(record.state),
         )
+
         lines = [
             f"bucket\t{bucket_id}",
             f"snapshot_id\t{record.snapshot_id}",
@@ -209,6 +215,9 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
             f"binding_count\t{len(record.binding_values)}",
         ]
         _emit_envelope(ctx, command="app.live.borrador.100.latest", result=result, lines=lines)
+
+    for callback in (borrador_100_list, borrador_100_show, borrador_100_latest):
+        command_execution_policy(LIVE_PROFILE_WRITE)(callback)
 
 
 def _borrador_row(snapshot) -> _BorradorRow:

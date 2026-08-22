@@ -14,6 +14,9 @@ from typing import Annotated, TypedDict
 
 import typer
 
+from ._app_execution_policies import LIVE_PROFILE_WRITE, declare_metadata_group
+from ._command_policy import command_execution_policy
+
 from ...application.live import VerifySurface, VerifyVerdict
 from ...core.i18n import tr
 from ...core.identity import tax_id_identity_token
@@ -41,6 +44,7 @@ verify_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+declare_metadata_group(verify_app)
 
 
 def register_verify_commands(
@@ -339,6 +343,10 @@ def verify_tgvi(
     result = VerifyTgviResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.tgvi", result=result, lines=lines)
+
+
+for _callback in (verify_list, verify_show, verify_latest, verify_nif_iva, verify_tgvi):
+    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)
 
 
 __all__ = ["register_verify_commands", "verify_app"]

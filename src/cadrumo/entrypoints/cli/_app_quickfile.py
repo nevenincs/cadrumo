@@ -22,6 +22,9 @@ from typing import Annotated
 
 import typer
 
+from ._app_execution_policies import QUICKFILE_HANDOFF
+from ._command_policy import command_execution_policy
+
 from ...application.modelo import QuickfileCommand, run_modelo_quickfile
 from ...application.workflow import workflow_state_repository
 from ...core import PaymentElection, Period, PeriodError, PriorDomiciliationElection, RefundElection
@@ -78,6 +81,7 @@ def _resolve_period(*, modelo: str, year: int, period: str) -> Period:
 
 
 @app.callback()
+@command_execution_policy(QUICKFILE_HANDOFF)
 def quickfile(
     ctx: typer.Context,
     modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))],

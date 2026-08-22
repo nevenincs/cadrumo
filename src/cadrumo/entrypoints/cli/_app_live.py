@@ -32,6 +32,9 @@ from typing import TYPE_CHECKING, Annotated, Any, Final
 
 import typer
 
+from ._app_execution_policies import LIVE_PROFILE_WRITE, LIVE_READ, declare_metadata_group
+from ._command_policy import command_execution_policy
+
 from ...adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ...application.live import (
     BulkFiledDataCaptureReport,
@@ -121,6 +124,10 @@ iva_wallet_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+
+declare_metadata_group(app)
+declare_metadata_group(filed_app)
+declare_metadata_group(iva_wallet_app)
 app.add_typer(iva_wallet_app, name="iva-wallet")
 
 
@@ -1864,6 +1871,19 @@ register_verify_commands(app, active_bucket_id=active_bucket_id_or_refuse, verif
 
 
 register_borrador_commands(app, active_bucket_id=active_bucket_id_or_refuse)
+
+for _callback in (
+    iva_wallet_pull_cmd,
+    iva_wallet_history_cmd,
+    iva_wallet_pull_history_cmd,
+    iva_wallet_pull_evidence_cmd,
+    filed_list_cmd,
+    filed_pull_all_cmd,
+    filed_pull_cmd,
+    filed_pull_sources_cmd,
+):
+    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)
+command_execution_policy(LIVE_READ)(filed_discover_cmd)
 
 __all__ = [
     "app",
