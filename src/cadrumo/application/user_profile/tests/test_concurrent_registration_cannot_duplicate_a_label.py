@@ -76,10 +76,7 @@ def test_two_processes_registering_one_label_produce_one_capsule(tmp_path: Path)
     context = get_context("spawn")
     barrier = context.Barrier(2)
     results: Queue = context.Queue()
-    workers = [
-        context.Process(target=_register_in_sibling, args=(str(tmp_path), barrier, results))
-        for _ in range(2)
-    ]
+    workers = [context.Process(target=_register_in_sibling, args=(str(tmp_path), barrier, results)) for _ in range(2)]
     for worker in workers:
         worker.start()
     try:
@@ -113,10 +110,7 @@ def test_the_race_actually_reached_the_registration_path(tmp_path: Path) -> None
     context = get_context("spawn")
     barrier = context.Barrier(2)
     results: Queue = context.Queue()
-    workers = [
-        context.Process(target=_register_in_sibling, args=(str(tmp_path), barrier, results))
-        for _ in range(2)
-    ]
+    workers = [context.Process(target=_register_in_sibling, args=(str(tmp_path), barrier, results)) for _ in range(2)]
     for worker in workers:
         worker.start()
     try:

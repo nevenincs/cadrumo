@@ -106,10 +106,7 @@ def test_the_permanent_case_is_caught_ahead_of_the_transient_one() -> None:
     for node in ast.walk(ast.parse(source)):
         if not isinstance(node, ast.Try):
             continue
-        names = [
-            handler.type.id if isinstance(handler.type, ast.Name) else None
-            for handler in node.handlers
-        ]
+        names = [handler.type.id if isinstance(handler.type, ast.Name) else None for handler in node.handlers]
         if "ProfileCustodyDuplicateLabelError" in names and "ProfileCustodyTransactionConflictError" in names:
             orders.append(
                 (

@@ -35,8 +35,7 @@ _PACKAGE = Path(__file__).resolve().parents[1]
 
 #: A delete step that destroys without checking, used to prove the detector.
 _UNGUARDED_SAMPLE = (
-    "def remove_step(self):\n"
-    "    self._adapters.remove_profile_custody_deletion_tombstone(profile_id=1)\n"
+    "def remove_step(self):\n    self._adapters.remove_profile_custody_deletion_tombstone(profile_id=1)\n"
 )
 
 #: The same step with the verification restored ahead of it.
@@ -74,19 +73,13 @@ def _unverified_removals(tree: ast.AST) -> list[int]:
         calls = _called_names(node)
         removals = [line for line, name in calls if name == _REMOVE]
         verifications = [line for line, name in calls if name == _VERIFY]
-        offending.extend(
-            line for line in removals if not any(seen < line for seen in verifications)
-        )
+        offending.extend(line for line in removals if not any(seen < line for seen in verifications))
     return offending
 
 
 def _production_modules() -> list[Path]:
     """Return the package's production modules, excluding its own tests."""
-    return [
-        path
-        for path in _PACKAGE.rglob("*.py")
-        if "tests" not in path.parts and path.name != "conftest.py"
-    ]
+    return [path for path in _PACKAGE.rglob("*.py") if "tests" not in path.parts and path.name != "conftest.py"]
 
 
 def _removal_sites() -> list[tuple[Path, int]]:

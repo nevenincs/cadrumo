@@ -149,8 +149,7 @@ _EXPORTED_BUT_UNCONSTRUCTED: dict[str, str] = {
         "it is recorded rather than retired."
     ),
     "restore_profile_from_source_with_recovery_artifact": (
-        "The recovery-credential sibling of the entry point above, in the same state and owned by "
-        "the same rebuild."
+        "The recovery-credential sibling of the entry point above, in the same state and owned by the same rebuild."
     ),
     "export_profile_recovery_artifact": (
         "Writes the portable recovery artifact. Three test modules drive it; no shipped verb does. "
@@ -199,9 +198,7 @@ def test_no_exported_name_is_used_nowhere() -> None:
     """A declared contract that nothing constructs is not a boundary."""
     loaded = _loaded_names()
     unused = sorted(
-        name
-        for name in _exported_names()
-        if name not in loaded and name not in _EXPORTED_BUT_UNCONSTRUCTED
+        name for name in _exported_names() if name not in loaded and name not in _EXPORTED_BUT_UNCONSTRUCTED
     )
 
     assert not unused, (
@@ -220,9 +217,7 @@ def test_the_detector_does_not_count_a_definition_as_a_use() -> None:
     catch.
     """
     tree = ast.parse("class OnlyDefined:\n    pass\n\n\ndef only_defined():\n    return None\n")
-    loaded = {
-        node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
-    }
+    loaded = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)}
 
     assert "OnlyDefined" not in loaded
     assert "only_defined" not in loaded
@@ -237,11 +232,7 @@ def test_no_record_outlives_the_name_it_describes() -> None:
     """
     loaded = _loaded_names()
     exported = set(_exported_names())
-    stale = sorted(
-        name
-        for name in _EXPORTED_BUT_UNCONSTRUCTED
-        if name in loaded or name not in exported
-    )
+    stale = sorted(name for name in _EXPORTED_BUT_UNCONSTRUCTED if name in loaded or name not in exported)
 
     assert not stale, f"these records no longer describe an exported-but-unconstructed name: {stale}"
 
