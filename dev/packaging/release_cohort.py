@@ -49,7 +49,7 @@ from .python_cohort import (  # noqa: E402
 _UTF_8: Final[str] = UTF_8
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
 _RELEASE_BASE: Final[str] = "https://github.com/nevenincs/cadrumo/releases/download"
-_REQUIRED_PYTHON_VERSION: Final[str] = "3.13.11"
+_REQUIRED_PYTHON_VERSION: Final[str] = (_REPO_ROOT / ".python-version").read_text(encoding=UTF_8).strip()
 _BUILD_CONSTRAINTS: Final[Path] = Path("packaging/build-system-constraints.txt")
 
 
