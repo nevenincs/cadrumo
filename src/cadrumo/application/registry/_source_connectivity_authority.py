@@ -147,7 +147,8 @@ class LiveSourceConnectivityProofAuthority:
         identity_rows = tuple(
             row
             for row in revision.source_provenance
-            if row.binding_source is connection.source_kind
+            if row.resolver_id == connection.resolver_id
+            and row.binding_source is connection.source_kind
             and row.source_ref == proof.persisted_source_identity
         )
         return len(identity_rows) == 1 and identity_rows[0].fingerprint == proof.persisted_source_fingerprint

@@ -615,10 +615,12 @@ def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate()
         relation_values={reused_relation_id: Decimal("17.00")},
         provenance=(
             CalculationSourceProvenance(
+                resolver_id="previous_filing",
                 source_kind="previous_filing",
                 source_ref=f"100:2025:0A:{reused_binding_id}",
             ),
             CalculationSourceProvenance(
+                resolver_id="relation_prefill",
                 source_kind="relation_prefill",
                 source_ref=f"{reused_relation_id}:100:2025:0A",
             ),

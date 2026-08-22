@@ -186,9 +186,7 @@ def _basic_row_payload(disposition: core.SourceConnectivityDisposition) -> dict[
 
 
 def test_core_facade_exposes_every_connectivity_owner() -> None:
-    expected = {
-        name for name in core.__all__ if name.startswith("SourceConnectivity")
-    }
+    expected = {name for name in core.__all__ if name.startswith("SourceConnectivity")}
     assert expected == {
         "SourceConnectivityCandidateId",
         "SourceConnectivityCandidateIdentity",
@@ -220,8 +218,7 @@ def test_candidate_identity_refuses_noncanonical_ids(candidate_id: str) -> None:
 def test_census_row_refuses_an_unknown_disposition() -> None:
     with pytest.raises(ValidationError):
         core.SourceConnectivityCensusRow.model_validate(
-            _basic_row_payload(core.SourceConnectivityDisposition.NOT_APPLICABLE)
-            | {"disposition": "invented"},
+            _basic_row_payload(core.SourceConnectivityDisposition.NOT_APPLICABLE) | {"disposition": "invented"},
         )
 
 
@@ -355,6 +352,7 @@ def test_authority_admits_a_complete_supported_connected_claim() -> None:
 )
 def test_connectivity_source_reference_acceptance_matches_persisted_model_exactly(source_ref: str) -> None:
     persisted = CalculationSourceRef(
+        resolver_id="invoice-source-resolver",
         source_kind=core.BindingSourceKind.COLLECTIBLE_INVOICE.value,
         binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
         source_ref=source_ref,
@@ -370,6 +368,7 @@ def test_connectivity_source_reference_acceptance_matches_persisted_model_exactl
 def test_connectivity_source_reference_rejection_matches_persisted_model(source_ref: str) -> None:
     with pytest.raises(ValidationError):
         CalculationSourceRef(
+            resolver_id="invoice-source-resolver",
             source_kind=core.BindingSourceKind.COLLECTIBLE_INVOICE.value,
             binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
             source_ref=source_ref,

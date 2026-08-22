@@ -76,6 +76,7 @@ def _source_provenance() -> tuple[CalculationSourceRef, ...]:
     """
     return (
         CalculationSourceRef(
+            resolver_id="invoice_catalogue",
             source_kind="collectible_invoice",
             binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
             source_ref="collectible_invoice:inv-0001",
@@ -83,6 +84,7 @@ def _source_provenance() -> tuple[CalculationSourceRef, ...]:
             dependency_treatment="direct_annual_settlement",
         ),
         CalculationSourceRef(
+            resolver_id="invoice_catalogue",
             source_kind="payable_invoice",
             binding_source=BindingSourceKind.PAYABLE_INVOICE,
             source_ref="payable_invoice:inv-0002",
@@ -142,6 +144,7 @@ def test_source_provenance_roundtrips_through_encrypted_revision(secure_objects:
     assert loaded == original
     assert loaded.source_provenance == provenance
     assert loaded.source_provenance[0].binding_source is BindingSourceKind.COLLECTIBLE_INVOICE
+    assert loaded.source_provenance[0].resolver_id == "invoice_catalogue"
     assert loaded.source_provenance[0].fingerprint == provenance[0].fingerprint
     assert loaded.source_provenance[1].source_ref == "payable_invoice:inv-0002"
     # Both declared carry classifications survive the encrypted cycle intact and
@@ -155,6 +158,54 @@ def test_source_provenance_roundtrips_through_encrypted_revision(secure_objects:
     stripped = original.model_copy(update={"source_provenance": ()})
     assert stripped != original
     assert stripped.calculation_revision_id == original.calculation_revision_id
+    resolver_changed = original.model_copy(
+        update={
+            "source_provenance": (
+                original.source_provenance[0].model_copy(update={"resolver_id": "different-resolver"}),
+                *original.source_provenance[1:],
+            ),
+        },
+    )
+    assert resolver_changed != original
+    assert resolver_changed.calculation_revision_id == original.calculation_revision_id
+
+
+def test_legacy_source_provenance_without_resolver_id_is_rejected_at_encrypted_load(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    import json as _json
+
+    from ...storage import SensitivityClass
+    from ..modelos_calculation import (
+        _CALCULATION_CATALOGUE_VERSION,
+        _CALCULATION_NAMESPACE,
+        _CALCULATION_OBJECT_KEY,
+    )
+
+    original = _revision(_source_provenance())
+    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
+    record = secure_objects.load(
+        _CALCULATION_NAMESPACE,
+        _CALCULATION_OBJECT_KEY,
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+    )
+    assert record is not None
+    envelope = _json.loads(record.payload.decode("utf-8"))
+    row = envelope["payload"]["revisions"][original.calculation_revision_id]["source_provenance"][0]
+    assert row.pop("resolver_id") == "invoice_catalogue"
+    secure_objects.save(
+        namespace=_CALCULATION_NAMESPACE,
+        object_key=_CALCULATION_OBJECT_KEY,
+        classification=record.classification,
+        schema_version=record.schema_version,
+        written_at=record.written_at,
+        payload=_json.dumps(envelope).encode("utf-8"),
+    )
+
+    with pytest.raises(ValidationError):
+        CalculationRevisionCatalogueRepository(objects=secure_objects).load()
 
 
 def test_source_provenance_blank_source_ref_payload_rejected_at_load(secure_objects: SecureObjectRepository) -> None:

@@ -13,6 +13,7 @@ from .. import (
     CALCULATION_ROUTE_ENROLLED_SOURCES,
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
+    MANUAL_INPUT_RESOLVER_ID,
     CalculationRouteResolverOwnership,
     validate_calculation_route_resolver_ownership,
 )
@@ -57,7 +58,7 @@ def test_route_reads_class_level_identity_and_declares_every_stage_and_manual_ow
         CalculationRouteResolverOwnership(
             stage="manual",
             resolver_type=None,
-            resolver_id="manual_input",
+            resolver_id=MANUAL_INPUT_RESOLVER_ID,
             owned_sources=(BindingSourceKind.MANUAL_INPUT,),
         ),
     )

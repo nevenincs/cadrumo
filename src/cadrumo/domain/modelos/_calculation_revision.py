@@ -584,6 +584,7 @@ class CalculationSourceRef(BaseModel):
     surfaces.
 
     Attributes:
+        resolver_id: Exact canonical resolver identity that produced this row.
         source_kind: Free-form resolver source token (e.g. ``collectible_invoice``).
             Always the token the resolver declared for the contributing source.
         binding_source: The canonical :class:`BindingSourceKind` when
@@ -607,6 +608,7 @@ class CalculationSourceRef(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
+    resolver_id: str = Field(min_length=1, max_length=128)
     source_kind: str = Field(min_length=1, max_length=64)
     binding_source: BindingSourceKind | None = None
     source_ref: str = Field(min_length=1, max_length=256)

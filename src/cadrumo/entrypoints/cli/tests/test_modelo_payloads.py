@@ -488,11 +488,13 @@ def test_calculation_revision_projection_carries_dependency_treatment_without_di
         ),
         source_provenance=(
             CalculationSourceRef(
+                resolver_id="previous_filing",
                 source_kind="previous_filing",
                 source_ref="193:2024:0A:withholding-total",
                 dependency_treatment="factual_evidence",
             ),
             CalculationSourceRef(
+                resolver_id="relation_prefill",
                 source_kind="relation_prefill",
                 source_ref="modelo-130-rel-100-previous-year:100:2024:0A",
                 dependency_treatment="direct_annual_settlement",
@@ -506,6 +508,7 @@ def test_calculation_revision_projection_carries_dependency_treatment_without_di
     payload = calculation_revision_payload(revision)
     by_source_ref = {row.source_ref: row for row in payload.source_provenance}
 
+    assert by_source_ref["193:2024:0A:withholding-total"].resolver_id == "previous_filing"
     assert by_source_ref["193:2024:0A:withholding-total"].dependency_treatment == "factual_evidence"
     assert (
         by_source_ref["modelo-130-rel-100-previous-year:100:2024:0A"].dependency_treatment == "direct_annual_settlement"

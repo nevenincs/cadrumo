@@ -36,6 +36,7 @@ from ..invoices import InvoiceCatalogueSourceResolver
 from ._borrador_binding import Modelo100BorradorSourceResolver
 
 type CalculationRouteStage = Literal["pre_mesh", "mesh", "conditional", "post_mesh", "manual"]
+MANUAL_INPUT_RESOLVER_ID = "manual_input"
 
 
 class _ResolverClass(Protocol):
@@ -91,7 +92,7 @@ _CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteStage, type[_ResolverCla
 _MANUAL_INPUT_OWNER = CalculationRouteResolverOwnership(
     stage="manual",
     resolver_type=None,
-    resolver_id="manual_input",
+    resolver_id=MANUAL_INPUT_RESOLVER_ID,
     owned_sources=(BindingSourceKind.MANUAL_INPUT,),
 )
 
@@ -186,6 +187,7 @@ __all__ = [
     "CALCULATION_ROUTE_PRE_MESH_SOURCES",
     "CALCULATION_ROUTE_RESOLVER_OWNERSHIP",
     "CALCULATION_ROUTE_SOURCE_DISPOSITIONS",
+    "MANUAL_INPUT_RESOLVER_ID",
     "CalculationRouteResolverOwnership",
     "CalculationRouteStage",
     "require_calculation_route_resolver",

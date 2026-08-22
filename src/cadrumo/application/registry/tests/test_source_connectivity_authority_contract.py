@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from hashlib import sha256
+from types import SimpleNamespace
+from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
 
-from ....core import BindingSourceKind
+from ....core import BindingSourceKind, SourceConnectivityConnectionIdentity
+from ....domain.modelos import CalculationSourceRef
 from ...aggregation import BindingSourceDisposition
 from .. import (
     LiveSourceConnectivityProofAuthority,
@@ -77,3 +80,51 @@ def test_registry_facade_exposes_authority_and_injected_verifier_port() -> None:
     assert isinstance(RepositoryRootEvidenceDigestVerifier, type)
     assert isinstance(LiveSourceConnectivityProofAuthority, type)
     assert RepositoryEvidenceDigestVerifier.__name__ == "RepositoryEvidenceDigestVerifier"
+
+
+class _RevisionRepository:
+    def __init__(self, revision: object) -> None:
+        self._revision = revision
+
+    def exists(self) -> bool:
+        return True
+
+    def load(self) -> object:
+        return SimpleNamespace(revisions={self._revision.calculation_revision_id: self._revision})
+
+
+def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -> None:
+    revision_id = "a" * 64
+    persisted = CalculationSourceRef(
+        resolver_id="invoice-source-resolver",
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        source_ref="collectible_invoice:inv-0001",
+        fingerprint="sha256:" + "b" * 64,
+    )
+    revision = SimpleNamespace(calculation_revision_id=revision_id, source_provenance=(persisted,))
+    authority = LiveSourceConnectivityProofAuthority(
+        source_resolvers=cast(Any, object()),
+        workflows=cast(Any, object()),
+        calculation_revisions=cast(Any, _RevisionRepository(revision)),
+        evidence_verifier=cast(Any, object()),
+    )
+    connection = SourceConnectivityConnectionIdentity(
+        candidate_id="invoice.collectible",
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        source_ref=persisted.source_ref,
+        resolver_id=persisted.resolver_id,
+        calculation_revision_id=revision_id,
+    )
+
+    def proof(asserted_connection: SourceConnectivityConnectionIdentity) -> object:
+        return SimpleNamespace(
+            connection=asserted_connection,
+            persisted_source_identity=persisted.source_ref,
+            persisted_source_fingerprint=persisted.fingerprint,
+        )
+
+    assert authority.encrypted_revision_matches(cast(Any, proof(connection)))
+    assert not authority.encrypted_revision_matches(
+        cast(Any, proof(connection.model_copy(update={"resolver_id": "wrong-resolver"}))),
+    )

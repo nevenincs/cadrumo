@@ -415,6 +415,7 @@ class BienesInversionRegularizacionSourceResolver:
         if annual_projection.rows or disposal_projection.rows:
             provenance = (
                 CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
                     source_kind=_SOURCE_KIND.value,
                     source_ref=f"bienes-inversion-register:{context.filing_year}",
                     legal_refs=(

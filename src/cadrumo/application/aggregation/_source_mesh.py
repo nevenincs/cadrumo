@@ -671,10 +671,11 @@ def casilla_registry_legal_refs(revision: ModeloRevision, casilla_id: CasillaId)
 
 
 class CalculationSourceProvenance(BaseModel):
-    """Stable source object provenance produced by a resolver."""
+    """Stable source object provenance naming its exact producing resolver."""
 
     model_config = _STRICT_FROZEN
 
+    resolver_id: str = Field(min_length=1, max_length=128)
     source_kind: str = Field(min_length=1, max_length=64)
     binding_source: BindingSourceKind | None = None
     """Canonical binding source when ``source_kind`` names one; ``None`` for non-binding provenance."""
@@ -974,6 +975,15 @@ class CalculationSourceResolution(BaseModel):
         if len(normalized) != len(set(normalized)):
             raise SourceMeshError("aggregation.source_mesh.errors.source_transaction_ids_duplicate")
         return tuple(sorted(normalized))
+
+    @model_validator(mode="after")
+    def _provenance_names_its_producing_resolver(self) -> CalculationSourceResolution:
+        if self.resolver_id in {"source_mesh", "source_mesh_precedence"}:
+            return self
+        mismatched = tuple(row.resolver_id for row in self.provenance if row.resolver_id != self.resolver_id)
+        if mismatched:
+            raise SourceMeshError("aggregation.source_mesh.errors.provenance_resolver_mismatch")
+        return self
 
     @field_serializer("binding_values")
     def _serialize_binding_values(self, value: Mapping[BindingId, Decimal]) -> dict[BindingId, Decimal]:

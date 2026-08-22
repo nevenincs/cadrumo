@@ -944,6 +944,7 @@ def _source_provenance_refs(
     """
     return tuple(
         CalculationSourceRef(
+            resolver_id=provenance.resolver_id,
             source_kind=provenance.source_kind,
             binding_source=provenance.binding_source,
             source_ref=provenance.source_ref,

@@ -54,6 +54,7 @@ def _revision_declares_withholding_scalar(revision: ModeloRevision) -> bool:
 def _provenance(observations: tuple[WithholdingObservation, ...]) -> tuple[CalculationSourceProvenance, ...]:
     return tuple(
         CalculationSourceProvenance(
+            resolver_id=WithholdingSourceResolver.resolver_id,
             source_kind=_WITHHOLDING_SOURCE,
             source_ref=f"percepcion:{observation.perceptor_tax_id}:{observation.clave}:{observation.subclave or '-'}",
         )
