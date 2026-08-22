@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:347368d908d3484c6e3f9f2470baa57a1ea04f3fe8ca6fdf4c5849bfab83f71c'
+body_hash: 'sha256:f222da9a2a69b71ea89ebc3a9f44dcb9722c54ea4e26ab199c2061e11213d3c2'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -6407,3 +6407,38 @@ entry from outside the repo: the guard fires. An allowlist that cannot go stale 
 than one that merely holds reasons.
 
 Lanes 314 integration / 1592 unit.
+
+### Four unearned re-exports, chosen by the strictest bar
+
+The de-export in the previous entry set a usable test, so it was applied to the storage
+facade: which exports have NO consumer anywhere -- production or test -- outside the module
+that defines them? Four of 255.
+
+All four turned out to be `core` symbols the storage facade re-exported: `CorpusManifestDiff`
+(`core.corpus_manifest`), `DEFAULT_LOCK_TIMEOUT` (`core.locks`), `RetentionPolicy` and
+`default_policy_table` (`core.classification`). Each gave a name with a canonical home a
+second import path, and not one consumer across `src/` or `dev/` used it. Removed, and
+verified after: none resolves from the storage facade, `RetentionPolicy` still resolves from
+`core.classification`, and the facade imports cleanly at 251 exports.
+
+**This is deliberately not the facade narrowing this campaign declined.** That work was
+sweeping over-exported names with real internal consumers -- a broad mechanical change over
+dozens of symbols. This is four names with zero consumers by measurement, the same bar that
+settled `bound_profile_record_session`. The distinction is the evidence available per symbol,
+not the size of the diff.
+
+**One measurement caution worth recording.** A display grep for `RetentionPolicy` matched
+`RetentionPolicyError` and briefly suggested the symbol lived in storage's `errors.py`. The
+detector itself was correct -- it used a word boundary -- but the confirming grep did not,
+and the two disagreed. The exact search found it in `core.classification`. A confirming
+command that is looser than the detector it is confirming will invent disagreements.
+
+**A test-isolation defect found on the way, not caused by this change.**
+`test_execution_policy` fails order-dependently: different tests fail on different runs, all
+pass in isolation, and it reproduces under `-n0`, so the `serial` marker would not help --
+the dependence is on ordering WITHIN one process, not on xdist workers. The module reads the
+process-global Typer command tree, so something earlier in a run leaves that tree modified.
+It appeared in failures before this change as well. Recorded rather than chased: finding the
+polluting test is a bisect, and the execution-policy surface is not this campaign's.
+
+Lanes 314 integration / 1612 unit sequential.
