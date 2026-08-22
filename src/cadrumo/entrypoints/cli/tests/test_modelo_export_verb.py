@@ -83,6 +83,7 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
         binding_overrides={},
         casilla_values={},
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -91,6 +92,7 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
         created_at=now,
         updated_at=now,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -129,6 +131,7 @@ def _seed_verified_revision_without_inputs(*, modelo: str, filing_year: int, per
         binding_overrides={},
         casilla_values={},
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -139,6 +142,7 @@ def _seed_verified_revision_without_inputs(*, modelo: str, filing_year: int, per
         verified_at=now,
         verified_by="operator",
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -248,6 +252,7 @@ def _seed_modelo_111_revisions(
             binding_overrides={},
             casilla_values={},
             filing_instance_evidence=None,
+            source_provenance=(),
         )
         revision_ids.append(calculation_revision_id)
         revisions.append(
@@ -267,6 +272,7 @@ def _seed_modelo_111_revisions(
                 filed_at=now if state_value is CalculationRevisionState.PRESENTADO else None,
                 filed_by="operator" if state_value is CalculationRevisionState.PRESENTADO else None,
                 filing_instance_evidence=None,
+                source_provenance=(),
             ),
         )
 
@@ -317,6 +323,7 @@ def _seed_exportable_modelo_202_2024_revision() -> tuple[str, str]:
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     now = datetime.now(UTC)
     work_unit = WorkUnit(
@@ -350,6 +357,7 @@ def _seed_exportable_modelo_202_2024_revision() -> tuple[str, str]:
         verified_at=now,
         verified_by="Emilio",
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))

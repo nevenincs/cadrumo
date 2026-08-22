@@ -98,6 +98,7 @@ def _build_revision(work_unit: WorkUnit, casilla_values: dict[CasillaId, Decimal
         binding_overrides={},
         casilla_values=casilla_values,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -113,6 +114,7 @@ def _build_revision(work_unit: WorkUnit, casilla_values: dict[CasillaId, Decimal
         created_at=_CLOCK,
         updated_at=_CLOCK,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
 
 

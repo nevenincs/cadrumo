@@ -244,6 +244,7 @@ def _seed_verified_revision(
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -262,6 +263,7 @@ def _seed_verified_revision(
         verified_at=_CLOCK,
         verified_by="operator-test",
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
@@ -324,6 +326,7 @@ def _seed_draft_revision(
         relation_overrides=resolved_relation_overrides,
         casilla_values=resolved_casilla_values,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -335,6 +338,7 @@ def _seed_draft_revision(
         created_at=_CLOCK,
         updated_at=_CLOCK,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
@@ -639,6 +643,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
                     relation_overrides={},
                     casilla_values=casilla_values,
                     filing_instance_evidence=filing_instance_evidence,
+                    source_provenance=(),
                 )
                 calculation_repository = CalculationRevisionCatalogueRepository()
                 calculation_repository.save(
@@ -657,6 +662,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
                             filed_at=_CLOCK,
                             filed_by="aeat-import-test",
                             filing_instance_evidence=filing_instance_evidence,
+                            source_provenance=(),
                         ),
                     )
                 )

@@ -218,9 +218,7 @@ class TestReclaimUsesAreaVocabulary:
             # -- the refusal was naming the area correctly all along, in the
             # operator's language. The sibling text assertions above pin it for
             # the same reason.
-            result = invoke_cached_cli(
-                ["config", "storage", "reclaim", area.value, "--yes", "--output-language", "en"]
-            )
+            result = invoke_cached_cli(["config", "storage", "reclaim", area.value, "--yes", "--output-language", "en"])
 
         assert result.exit_code != 0
         assert marker.read_bytes() == b"preserve"

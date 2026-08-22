@@ -135,9 +135,7 @@ def _scoped_modules() -> list[Path]:
     modules: list[Path] = []
     for package in _SCOPED_PACKAGES:
         root = SRC_CADRUMO / Path(package)
-        modules.extend(
-            path for path in root.rglob("*.py") if "tests" not in path.parts and path.name != "conftest.py"
-        )
+        modules.extend(path for path in root.rglob("*.py") if "tests" not in path.parts and path.name != "conftest.py")
     return modules
 
 
@@ -147,9 +145,7 @@ def test_no_scoped_handler_applies_one_answer_to_two_situations() -> None:
     offenders = [
         f"{repo_relative(path)}:{line}: except {caught} translates without routing {unrouted}"
         for path in _scoped_modules()
-        for line, caught, unrouted in _flattening_handlers(
-            ast.parse(path.read_text(encoding="utf-8")), divergent
-        )
+        for line, caught, unrouted in _flattening_handlers(ast.parse(path.read_text(encoding="utf-8")), divergent)
     ]
 
     assert not offenders, (

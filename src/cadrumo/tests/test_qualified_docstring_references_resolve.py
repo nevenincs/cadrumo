@@ -118,9 +118,7 @@ def _references() -> list[tuple[str, int, str]]:
 
 def test_no_qualified_reference_names_something_that_does_not_exist() -> None:
     """DISCRIMINATING: a confident name is trusted more than an absence would be."""
-    dangling = [
-        f"{path}:{line}: {target}" for path, line, target in _references() if not _resolves(target)
-    ]
+    dangling = [f"{path}:{line}: {target}" for path, line, target in _references() if not _resolves(target)]
 
     assert not dangling, (
         "these docstrings name a fully-qualified target that does not resolve:\n  "

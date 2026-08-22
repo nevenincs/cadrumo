@@ -48,6 +48,7 @@ def _draft_revision() -> CalculationRevision:
         binding_overrides={},
         casilla_values={},
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -56,6 +57,7 @@ def _draft_revision() -> CalculationRevision:
         created_at=_NOW,
         updated_at=_NOW,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
 
@@ -69,6 +71,7 @@ def _verified_revision() -> CalculationRevision:
         verified_at=_NOW,
         verified_by="operator",
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
 

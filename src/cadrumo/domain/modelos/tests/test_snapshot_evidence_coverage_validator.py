@@ -82,6 +82,7 @@ def _revision(*, snapshot_ids: tuple[str, ...], evidence_ids: tuple[str, ...]) -
         casilla_values={},
         source_transaction_ids=snapshot_ids,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -96,6 +97,7 @@ def _revision(*, snapshot_ids: tuple[str, ...], evidence_ids: tuple[str, ...]) -
         verified_at=_T0,
         verified_by="aeat.cli.modelo.verify",
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
 
@@ -133,6 +135,7 @@ def test_non_ledger_revision_passes_trivially() -> None:
         casilla_values={},
         source_transaction_ids=(),
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -142,5 +145,6 @@ def test_non_ledger_revision_passes_trivially() -> None:
         created_at=_T0,
         updated_at=_T0,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     assert_revision_snapshot_evidence_coverage(revision)  # does not raise

@@ -229,6 +229,7 @@ def test_review_package_build_refuses_draft_revision(tmp_path: Path) -> None:
         binding_overrides={},
         casilla_values={},
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -237,6 +238,7 @@ def test_review_package_build_refuses_draft_revision(tmp_path: Path) -> None:
         created_at=now,
         updated_at=now,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))

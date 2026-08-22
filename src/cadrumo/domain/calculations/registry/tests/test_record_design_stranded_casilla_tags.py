@@ -81,11 +81,7 @@ def test_that_tag_is_stranded_before_the_fold_runs() -> None:
 
     assert f"[{_CASILLA}]" in stranded, "this design no longer strands the tag under test"
 
-    remaining = [
-        line.strip()
-        for line in _reattach_stranded_casilla_tags(prepared)
-        if _STRANDED.match(line)
-    ]
+    remaining = [line.strip() for line in _reattach_stranded_casilla_tags(prepared) if _STRANDED.match(line)]
 
     assert f"[{_CASILLA}]" not in remaining, "the fold left the tag under test stranded"
     assert len(remaining) < len(stranded), "the fold recovered nothing at all"
@@ -99,7 +95,11 @@ def test_the_fold_declines_a_neighbour_that_is_not_field_shaped() -> None:
     already been shown to pass quietly through the contiguity check.
     """
     design = bundled_path(
-        "corpus", "aeat_official", "disenos_registro", "modelo_390", "files",
+        "corpus",
+        "aeat_official",
+        "disenos_registro",
+        "modelo_390",
+        "files",
         "08-390-ejercicio-2015-103-kb-pdf.pdf",
     )
     heading = next(

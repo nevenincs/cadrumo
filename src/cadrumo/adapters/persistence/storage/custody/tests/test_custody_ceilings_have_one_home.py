@@ -78,7 +78,11 @@ def _defining_modules(name: str) -> tuple[str, ...]:
         except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - unparsable file is its own failure
             continue
         for node in tree.body:
-            targets = node.targets if isinstance(node, ast.Assign) else ([node.target] if isinstance(node, ast.AnnAssign) else [])
+            targets = (
+                node.targets
+                if isinstance(node, ast.Assign)
+                else ([node.target] if isinstance(node, ast.AnnAssign) else [])
+            )
             if any(isinstance(target, ast.Name) and target.id == name for target in targets):
                 homes.append(path.relative_to(_CUSTODY_PACKAGE).as_posix())
     return tuple(homes)
@@ -139,7 +143,9 @@ def _defining_modules_under(root: Path, name: str) -> tuple[str, ...]:
             continue
         for node in tree.body:
             targets = (
-                node.targets if isinstance(node, ast.Assign) else ([node.target] if isinstance(node, ast.AnnAssign) else [])
+                node.targets
+                if isinstance(node, ast.Assign)
+                else ([node.target] if isinstance(node, ast.AnnAssign) else [])
             )
             if any(isinstance(target, ast.Name) and target.id == name for target in targets):
                 homes.append(path.relative_to(root).as_posix())
@@ -177,7 +183,6 @@ def test_the_storage_scan_reaches_the_crypto_module() -> None:
     assert "master_key/_bucket_session.py" in modules
 
 
-
 def _defining_function_modules(name: str) -> tuple[str, ...]:
     """Return every module in this package that DEFINES a function ``name``.
 
@@ -192,9 +197,7 @@ def _defining_function_modules(name: str) -> tuple[str, ...]:
             tree = ast.parse(path.read_text(encoding="utf-8"))
         except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - unparsable file is its own failure
             continue
-        if any(
-            isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == name for node in tree.body
-        ):
+        if any(isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == name for node in tree.body):
             homes.append(path.name)
     return tuple(homes)
 
@@ -208,6 +211,7 @@ def test_the_function_scan_finds_a_function_the_constant_scan_cannot() -> None:
     """
     assert _defining_function_modules("_read_regular_file") == ("_filesystem.py",)
     assert _defining_modules("_read_regular_file") == ()
+
 
 def test_the_anchored_reader_name_has_one_implementation() -> None:
     """One reader name must mean one guarantee.

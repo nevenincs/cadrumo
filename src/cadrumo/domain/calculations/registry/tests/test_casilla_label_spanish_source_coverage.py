@@ -55,8 +55,7 @@ def test_every_casilla_label_resolves_in_the_mandatory_spanish_source() -> None:
     # 36x is worse than a long list, because the reader sizes the work from it.
     assert unresolved == (), (
         f"{len(unresolved)} casilla label(s) unresolved in the mandatory Spanish "
-        f"source (showing the first {min(len(unresolved), 50)}):\n  "
-        + "\n  ".join(unresolved[:50])
+        f"source (showing the first {min(len(unresolved), 50)}):\n  " + "\n  ".join(unresolved[:50])
     )
 
 

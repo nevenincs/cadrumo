@@ -36,7 +36,12 @@ from .test_revision_span_matches_published_designs import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: Revisions scoped to part of one year, each citing a single design.
-_MID_YEAR_HALVES = {("303", "2024-hasta-08-y-2t"), ("303", "2024-desde-09-y-3t"), ("490", "2022-1t"), ("490", "2022-2t-4t")}
+_MID_YEAR_HALVES = {
+    ("303", "2024-hasta-08-y-2t"),
+    ("303", "2024-desde-09-y-3t"),
+    ("490", "2022-1t"),
+    ("490", "2022-2t-4t"),
+}
 #: Revisions that genuinely cross a design re-layout between YEARS.
 _CROSS_YEAR_SPANS = {("200", "2024-y-siguientes"), ("322", "2008-2023"), ("347", "2008-2024")}
 
@@ -60,9 +65,7 @@ def test_the_genuine_cross_year_spans_still_report() -> None:
 
 def test_only_a_partial_span_inside_one_year_is_narrowed() -> None:
     """Full-year, multi-year and open-ended revisions are untouched by construction."""
-    spans = {
-        (modelo.id, rid): _mid_year_span(revision) for modelo, rid, revision in _exporting_revisions()
-    }
+    spans = {(modelo.id, rid): _mid_year_span(revision) for modelo, rid, revision in _exporting_revisions()}
 
     for subject in _MID_YEAR_HALVES:
         assert spans[subject] is not None, subject

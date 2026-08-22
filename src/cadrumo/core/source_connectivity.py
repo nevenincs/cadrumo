@@ -155,8 +155,11 @@ class SourceConnectivityGrounding(BaseModel):
 
 def _is_stable_token(value: str) -> bool:
     """Return whether ``value`` follows the canonical stable-token grammar."""
-    return bool(value) and len(value) <= 160 and value[0].isalnum() and all(
-        character.islower() or character.isdigit() or character in "._:-" for character in value
+    return (
+        bool(value)
+        and len(value) <= 160
+        and value[0].isalnum()
+        and all(character.islower() or character.isdigit() or character in "._:-" for character in value)
     )
 
 
@@ -423,10 +426,7 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
                 raise ValueError(
                     "connectivity candidate requires review_condition and bounded_follow_up",
                 )
-        elif (
-            self.disposition is SourceConnectivityDisposition.MANUAL_BY_DESIGN
-            and self.review_condition is None
-        ):
+        elif self.disposition is SourceConnectivityDisposition.MANUAL_BY_DESIGN and self.review_condition is None:
             raise ValueError("manual-by-design connectivity row requires review_condition")
         if self.disposition is SourceConnectivityDisposition.CONNECTED:
             if self.connected_proof is None:

@@ -59,6 +59,7 @@ def _seed_revision_citing_transaction(
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         source_transaction_ids=(transaction_id,),
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -103,6 +104,7 @@ def _seed_revision_citing_transaction(
         discarded_at=discarded_at,
         discarded_by=discarded_by,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     WorkUnitCatalogueRepository(objects=objects).save(WorkUnitCatalogue.from_work_units((work_unit,)))
     catalogue = CalculationRevisionCatalogueRepository(objects=objects).load()

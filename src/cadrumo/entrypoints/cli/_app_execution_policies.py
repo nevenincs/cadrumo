@@ -38,13 +38,9 @@ METADATA = _policy(frozenset({"state-free"}), frozenset({"none"}), "metadata")
 REGISTRY_READ = _policy(frozenset({"registry"}), frozenset({"none"}), "compute")
 PROFILE_READ = _policy(frozenset({"profile-custody"}), frozenset({"none"}), "local-io")
 LOCAL_STORAGE_READ = _policy(frozenset({"local-storage"}), frozenset({"none"}), "local-io")
-LOCAL_STORAGE_WRITE = _policy(
-    frozenset({"local-storage"}), frozenset({"local-state"}), "local-io"
-)
+LOCAL_STORAGE_WRITE = _policy(frozenset({"local-storage"}), frozenset({"local-state"}), "local-io")
 ENCRYPTED_READ = _policy(frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io")
-CALCULATION_READ = _policy(
-    frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute"
-)
+CALCULATION_READ = _policy(frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute")
 PROFILE_LOCAL_WRITE = _policy(
     frozenset({"profile-custody"}),
     frozenset({"local-state"}),
@@ -58,9 +54,7 @@ PROFILE_LOCAL_DESTRUCTIVE = _policy(
     write_route="profile-bound",
     destructive=True,
 )
-LIVE_READ = _policy(
-    frozenset({"network", "encrypted-facts"}), frozenset({"network"}), "external-io"
-)
+LIVE_READ = _policy(frozenset({"network", "encrypted-facts"}), frozenset({"network"}), "external-io")
 LIVE_PROFILE_WRITE = _policy(
     frozenset({"network", "encrypted-facts"}),
     frozenset({"network", "local-state"}),

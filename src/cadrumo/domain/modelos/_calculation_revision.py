@@ -309,7 +309,7 @@ def _source_issues_revision_id_payload(
 def _source_provenance_revision_id_payload(
     source_provenance: Sequence[CalculationSourceRef],
 ) -> dict[str, object]:
-    """Build the complete order-independent persisted source identity payload."""
+    """Build the required, complete order-independent source identity payload."""
     canonical_source_provenance = tuple(
         sorted(
             (
@@ -323,9 +323,7 @@ def _source_provenance_revision_id_payload(
             for ref in source_provenance
         )
     )
-    if canonical_source_provenance:
-        return {"source_provenance": canonical_source_provenance}
-    return {}
+    return {"source_provenance": canonical_source_provenance}
 
 
 def _filing_instance_evidence_revision_id_payload(
@@ -383,7 +381,7 @@ def calculation_revision_identity_inputs(
     bindings_sourced_from_borrador: Sequence[BindingId] = (),
     detail_rows: Sequence[ModeloDetailRow] = (),
     source_issues: Sequence[CalculationSourceIssue] = (),
-    source_provenance: Sequence[CalculationSourceRef] = (),
+    source_provenance: Sequence[CalculationSourceRef],
     filing_instance_evidence: FilingInstanceEvidence | None,
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
@@ -431,7 +429,7 @@ def derive_calculation_revision_id(
     bindings_sourced_from_borrador: Sequence[BindingId] = (),
     detail_rows: Sequence[ModeloDetailRow] = (),
     source_issues: Sequence[CalculationSourceIssue] = (),
-    source_provenance: Sequence[CalculationSourceRef] = (),
+    source_provenance: Sequence[CalculationSourceRef],
     filing_instance_evidence: FilingInstanceEvidence | None,
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
@@ -981,7 +979,7 @@ class CalculationRevision(BaseModel):
     # connectivity and detect upstream drift. The complete canonical trace is an
     # immutable identity axis in ``derive_calculation_revision_id`` so rival source
     # facts cannot collide under first-write-wins catalogue persistence.
-    source_provenance: tuple[CalculationSourceRef, ...] = Field(default_factory=tuple)
+    source_provenance: tuple[CalculationSourceRef, ...]
     # Durable source-resolution conditions that prevented an observation from
     # reaching any declared binding.  These are distinct from provenance: an
     # unrouted observation did not produce a calculated output and therefore

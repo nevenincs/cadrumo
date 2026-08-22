@@ -143,6 +143,7 @@ def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         source_transaction_ids=(tx_id,),
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -164,6 +165,7 @@ def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
         verified_by="operator",
         ledger_filing_snapshot=snapshot,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
 
 

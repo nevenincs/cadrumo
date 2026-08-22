@@ -78,10 +78,7 @@ _WIDENED_SAMPLE = (
 )
 
 #: The same decision drawing only on the declared vocabulary.
-_DECLARED_SAMPLE = (
-    "def may_erase(retention):\n"
-    "    return not retention.blocks_erase or retention.override_approved\n"
-)
+_DECLARED_SAMPLE = "def may_erase(retention):\n    return not retention.blocks_erase or retention.override_approved\n"
 
 
 def _decision_expressions(tree: ast.AST) -> list[ast.expr]:
@@ -136,11 +133,7 @@ def _undeclared_terms(tree: ast.AST) -> list[tuple[int, list[str]]]:
 
 def _production_modules() -> list:
     """Return the package's production modules."""
-    return [
-        path
-        for path in SRC_CADRUMO.rglob("*.py")
-        if "tests" not in path.parts and path.name != "conftest.py"
-    ]
+    return [path for path in SRC_CADRUMO.rglob("*.py") if "tests" not in path.parts and path.name != "conftest.py"]
 
 
 def _decision_sites() -> list[str]:

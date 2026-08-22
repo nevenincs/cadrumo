@@ -94,9 +94,7 @@ GOOGLE_HANDOFF = _policy(
     write_route="profile-bound",
     handoff=True,
 )
-CALCULATION_READ = _policy(
-    frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute"
-)
+CALCULATION_READ = _policy(frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute")
 REGISTRY_READ = _policy(frozenset({"calculation"}), frozenset({"none"}), "compute")
 CALCULATION_WRITE = _policy(
     frozenset({"calculation", "encrypted-facts"}),

@@ -37,6 +37,7 @@ from ._command_policy_semantic_oracle import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+
 def _require_complete_policy(nodes: Iterable[LiveCommandNode]) -> None:
     missing = tuple(" ".join(node.path) for node in nodes if node.execution_policy is None)
     assert missing == ()
@@ -223,8 +224,10 @@ def test_legacy_path_keyed_policy_authorities_are_physically_absent() -> None:
                 if not isinstance(node, ast.Dict):
                     continue
                 for key, value in zip(node.keys, node.values, strict=True):
-                    tuple_path = isinstance(key, ast.Tuple) and key.elts and all(
-                        isinstance(item, ast.Constant) and isinstance(item.value, str) for item in key.elts
+                    tuple_path = (
+                        isinstance(key, ast.Tuple)
+                        and key.elts
+                        and all(isinstance(item, ast.Constant) and isinstance(item.value, str) for item in key.elts)
                     )
                     if tuple_path and "policy" in ast.unparse(value).casefold():
                         duplicate_path_authorities.append(str(source.relative_to(source_root)))

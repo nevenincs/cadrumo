@@ -251,6 +251,7 @@ def _seed_legacy_zero_m202_revision(
         binding_overrides={},
         casilla_values=_ZERO_M202_CASILLA_VALUES,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -268,6 +269,7 @@ def _seed_legacy_zero_m202_revision(
         verified_at=_CLOCK if state is not CalculationRevisionState.BORRADOR else None,
         verified_by="operator-test" if state is not CalculationRevisionState.BORRADOR else None,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     calculation_repository.save(upsert_calculation_revision(calculation_repository.load(), revision))
     return revision

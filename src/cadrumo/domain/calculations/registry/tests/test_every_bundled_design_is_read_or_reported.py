@@ -401,10 +401,8 @@ def test_every_correction_is_visibly_distinct_from_complete_and_carries_its_grou
             # two kinds -- a gate that crashes instead of reporting exactly when
             # it has something to report.
             assert correction.editions_read, (
-                f"modelo {outcome.modelo} {outcome.design!r} {_correction_locus(correction)} "
-                "names no editions read"
+                f"modelo {outcome.modelo} {outcome.design!r} {_correction_locus(correction)} names no editions read"
             )
             assert correction.reason.strip(), (
-                f"modelo {outcome.modelo} {outcome.design!r} {_correction_locus(correction)} "
-                "states no reason"
+                f"modelo {outcome.modelo} {outcome.design!r} {_correction_locus(correction)} states no reason"
             )

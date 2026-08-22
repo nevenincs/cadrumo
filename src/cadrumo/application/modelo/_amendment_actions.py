@@ -384,6 +384,7 @@ def amend_modelo_revision[CasillaKey](
         source_transaction_ids=baseline_revision.source_transaction_ids,
         borrador_snapshot_id=baseline_revision.borrador_snapshot_id,
         bindings_sourced_from_borrador=baseline_revision.bindings_sourced_from_borrador,
+        source_provenance=baseline_revision.source_provenance,
         filing_instance_evidence=baseline_revision.filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=None,
         amendment_identity=amendment_identity,

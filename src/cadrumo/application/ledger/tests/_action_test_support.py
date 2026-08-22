@@ -327,6 +327,7 @@ def _persist_verified_revision_citing_transaction(
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         source_transaction_ids=source_transaction_ids,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -359,6 +360,7 @@ def _persist_verified_revision_citing_transaction(
         verified_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
         verified_by="operator-A",
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     WorkUnitCatalogueRepository(objects=objects).save(WorkUnitCatalogue.from_work_units((work_unit,)))
     CalculationRevisionCatalogueRepository(objects=objects).save(

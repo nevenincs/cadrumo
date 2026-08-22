@@ -117,9 +117,7 @@ def test_modelo_151_position_keyed_casillas_stay_uncovered() -> None:
     """
     revision, report = _coverage_report("151", "2015-2022")
 
-    ranged = [
-        casilla for casilla in revision.casillas if "-" in str(casilla.form_number or casilla.number or "")
-    ]
+    ranged = [casilla for casilla in revision.casillas if "-" in str(casilla.form_number or casilla.number or "")]
     assert len(ranged) > len(revision.casillas) // 2, "151 must be position-keyed for this test to mean anything"
     assert report.coverage_gap_count > report.covered_count, (
         "151's design boxes cannot be covered by position ranges; a high covered "

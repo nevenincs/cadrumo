@@ -71,9 +71,7 @@ def test_the_roundtrip_actually_exercises_projection_references() -> None:
         f"{modelo_id}/{revision_id}"
         for modelo_id, revision_id, layout in _committed_layouts()
         if any(
-            getattr(field, "projection_ref", None) is not None
-            for record in layout.records
-            for field in record.fields
+            getattr(field, "projection_ref", None) is not None for record in layout.records for field in record.fields
         )
     ]
     assert with_projections, (

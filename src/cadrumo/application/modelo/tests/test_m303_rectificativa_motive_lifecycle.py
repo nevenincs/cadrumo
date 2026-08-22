@@ -154,6 +154,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
         binding_overrides={},
         casilla_values={},
         filing_instance_evidence=evidence,
+        source_provenance=(),
     )
     baseline_revision = CalculationRevision(
         calculation_revision_id=baseline_revision_id,
@@ -165,6 +166,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
         filing_instance_evidence=evidence,
         created_at=_NOW,
         updated_at=_NOW,
+        source_provenance=(),
     )
     filing_record_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
@@ -222,6 +224,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
         casilla_values={},
         filing_instance_evidence=evidence,
         amendment_identity=identity,
+        source_provenance=(),
     )
     revision = CalculationRevision.model_validate(
         {
@@ -288,6 +291,7 @@ def test_closed_enum_refuses_free_text_and_every_identity_axis_diverges() -> Non
             casilla_values={},
             filing_instance_evidence=revision.filing_instance_evidence,
             amendment_identity=identity,
+            source_provenance=(),
         )
         for identity in identities
     }
@@ -312,6 +316,7 @@ def test_context_free_missing_and_cross_context_rectificativa_refuse() -> None:
             casilla_values={},
             filing_instance_evidence=revision.filing_instance_evidence,
             amendment_identity=missing_motive,
+            source_provenance=(),
         ),
     }
     with pytest.raises(ValidationError, match="requires exactly one persisted motive"):

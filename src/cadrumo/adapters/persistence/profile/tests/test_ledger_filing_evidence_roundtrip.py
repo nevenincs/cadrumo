@@ -110,6 +110,7 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
         casilla_values={_EVIDENCE_CASILLA: Decimal("140000.00")},
         source_transaction_ids=(_TX_ID,),
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -132,6 +133,7 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
         verified_at=_NOW,
         verified_by="operator",
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
 
 

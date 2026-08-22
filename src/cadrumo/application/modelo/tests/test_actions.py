@@ -320,6 +320,7 @@ def _minimal_calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
         binding_overrides={},
         casilla_values={},
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -330,6 +331,7 @@ def _minimal_calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
         created_at=_T0,
         updated_at=_T0,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
 
@@ -942,6 +944,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         relation_overrides=relation_overrides,
         casilla_values=result.values,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -955,6 +958,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         created_at=_T0,
         updated_at=_T0,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
     informational_replay_inputs = _informational_casilla_replay_inputs(

@@ -154,6 +154,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
 
     observations = (
@@ -209,6 +210,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
         updated_at=verified_at,
         verified_at=verified_at,
         verified_by="aeat.cli.modelo.verify",
+        source_provenance=(),
     )
     return CalculationRevisionCatalogue(revisions={revision_id: revision})
 
@@ -280,6 +282,7 @@ def test_changed_filing_evidence_persists_as_a_distinct_revision_without_replaci
         casilla_values=original.casilla_values,
         source_transaction_ids=original.source_transaction_ids,
         filing_instance_evidence=changed_evidence,
+        source_provenance=(),
     )
     changed = original.model_copy(
         update={
@@ -476,6 +479,7 @@ def test_pre_s58_evidence_less_catalogue_is_rejected_at_encrypted_load(
         casilla_values=original.casilla_values,
         source_transaction_ids=original.source_transaction_ids,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     legacy_revision = original.model_copy(
         update={

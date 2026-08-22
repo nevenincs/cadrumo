@@ -61,6 +61,7 @@ def _revision(
         casilla_values={_CUOTA_CASILLA: Decimal("21.00")},
         source_transaction_ids=source_transaction_ids,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -83,6 +84,7 @@ def _revision(
         verified_at=_NOW,
         verified_by="operator",
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
 
 

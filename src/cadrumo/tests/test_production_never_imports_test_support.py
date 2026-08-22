@@ -154,6 +154,7 @@ def test_the_synthetic_bucket_exemption_is_still_what_makes_this_matter() -> Non
 
     assert "ephemeral" in _SYNTHETIC_SESSION_BUCKET_IDS
 
+
 def test_a_dynamic_import_of_test_support_is_still_seen() -> None:
     """DISCRIMINATING: an import no ``ast.Import`` node describes.
 

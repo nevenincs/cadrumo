@@ -108,6 +108,7 @@ def _persist_filed_revision(work_unit: WorkUnit, *, total_ingresar: Decimal) -> 
         binding_overrides={},
         casilla_values=casilla_values,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(
@@ -131,6 +132,7 @@ def _persist_filed_revision(work_unit: WorkUnit, *, total_ingresar: Decimal) -> 
                 filed_at=_CLOCK,
                 filed_by="test",
                 filing_instance_evidence=None,
+                source_provenance=(),
             ),
         ),
     )

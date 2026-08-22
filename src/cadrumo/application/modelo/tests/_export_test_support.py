@@ -193,6 +193,7 @@ def _seed_revision(
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -214,6 +215,7 @@ def _seed_revision(
         else (),
         verified_at=_SEEDED_REVISION_AT if state is not CalculationRevisionState.BORRADOR else None,
         verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
+        source_provenance=(),
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))

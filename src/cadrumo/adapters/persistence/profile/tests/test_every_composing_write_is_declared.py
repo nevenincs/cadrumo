@@ -248,9 +248,7 @@ def _has_bare_composing_call(scope: ast.FunctionDef | ast.AsyncFunctionDef) -> b
     """Whether ``scope`` composes a write without asserting a revision."""
     aliases = _composing_aliases(scope)
     return any(
-        isinstance(node, ast.Call)
-        and _composing_call_name(node, aliases) is not None
-        and not _asserts_a_revision(node)
+        isinstance(node, ast.Call) and _composing_call_name(node, aliases) is not None and not _asserts_a_revision(node)
         for node in ast.walk(scope)
     )
 

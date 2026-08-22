@@ -82,6 +82,7 @@ def seed_exportable_modelo_revision(
         binding_overrides={},
         casilla_values={},
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -93,6 +94,7 @@ def seed_exportable_modelo_revision(
         verified_at=now,
         verified_by="operator",
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revisions = CalculationRevisionCatalogueRepository()
     revisions.save(upsert_calculation_revision(revisions.load(), revision))

@@ -63,8 +63,12 @@ def test_the_bundled_modelo_390_design_names_its_eight_page_records() -> None:
 
 def _field(offset: int, length: int, description: str) -> RecordDesignField:
     return RecordDesignField(
-        sheet="body", row=offset, offset=offset, length=length,
-        type_code="An", description=description,
+        sheet="body",
+        row=offset,
+        offset=offset,
+        length=length,
+        type_code="An",
+        description=description,
     )
 
 

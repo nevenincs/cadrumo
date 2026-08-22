@@ -33,6 +33,7 @@ def _m303_revision() -> CalculationRevision:
         binding_overrides={},
         casilla_values=outputs,
         filing_instance_evidence=evidence,
+        source_provenance=(),
     )
     instant = datetime(2026, 4, 20, 10, 0, tzinfo=UTC)
     return CalculationRevision(
@@ -45,6 +46,7 @@ def _m303_revision() -> CalculationRevision:
         filing_instance_evidence=evidence,
         created_at=instant,
         updated_at=instant,
+        source_provenance=(),
     )
 
 

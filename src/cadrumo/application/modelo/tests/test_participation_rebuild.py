@@ -86,6 +86,7 @@ def _revision(*, work_unit: WorkUnit, state: CalculationRevisionState, txids: tu
         casilla_values={},
         source_transaction_ids=txids,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     verified_at: datetime | None = None
     verified_by: str | None = None
@@ -110,6 +111,7 @@ def _revision(*, work_unit: WorkUnit, state: CalculationRevisionState, txids: tu
         filed_at=filed_at,
         filed_by=filed_by,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
 

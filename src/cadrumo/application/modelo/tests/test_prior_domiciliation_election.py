@@ -111,6 +111,7 @@ def _revision(
             binding_overrides={},
             casilla_values={},
             filing_instance_evidence=None,
+            source_provenance=(),
         ),
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.BORRADOR,
@@ -120,6 +121,7 @@ def _revision(
         amends_filing_record_id=baseline_filing_record_id,
         amendment_reason="correct prior direct-debit election" if amendment_kind is not None else None,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
 

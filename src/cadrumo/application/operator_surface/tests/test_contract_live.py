@@ -165,7 +165,8 @@ def _live_reconciliation() -> OperatorSurfaceReconciliation:
                     if key in ROOT_LANDING_SCHEMA_KEYS
                     else (
                         "profile_bound_write"
-                        if command_execution_policy_for_cli_path(primary_path_by_key[key]).write_route == "profile-bound"
+                        if command_execution_policy_for_cli_path(primary_path_by_key[key]).write_route
+                        == "profile-bound"
                         else "non_profile_bound"
                     )
                 ),

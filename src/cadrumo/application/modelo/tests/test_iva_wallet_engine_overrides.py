@@ -175,6 +175,7 @@ def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> 
                     binding_overrides={},
                     casilla_values=casilla_values,
                     filing_instance_evidence=sealed_filing_instance_evidence,
+                    source_provenance=(),
                 ),
                 "work_unit_id": work_unit.work_unit_id,
                 "state": CalculationRevisionState.VERIFICADO_COMPLETO,

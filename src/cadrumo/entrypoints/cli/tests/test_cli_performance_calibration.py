@@ -15,9 +15,7 @@ _MINIMUM_POLICY = PerformanceCalibrationPolicy(warmup_runs=1, sample_count=3)
 
 
 def test_calibration_excludes_warmup_and_retains_fresh_alternating_pairs(tmp_path: Path) -> None:
-    calibration = calibrate_cli_path(
-        (), invocation_args=("--version",), storage_root=tmp_path, policy=_MINIMUM_POLICY
-    )
+    calibration = calibrate_cli_path((), invocation_args=("--version",), storage_root=tmp_path, policy=_MINIMUM_POLICY)
 
     assert len(calibration.command_profiles) == _MINIMUM_POLICY.sample_count
     assert len(calibration.control_profiles) == _MINIMUM_POLICY.sample_count

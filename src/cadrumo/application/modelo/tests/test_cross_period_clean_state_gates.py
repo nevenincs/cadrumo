@@ -135,6 +135,7 @@ def _persist_390_draft(
         binding_overrides={},
         casilla_values=casilla_values,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -144,6 +145,7 @@ def _persist_390_draft(
         created_at=_CLOCK,
         updated_at=_CLOCK,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     calculation_repository.save(upsert_calculation_revision(calculation_repository.load(), revision))
     return revision_id
@@ -277,6 +279,7 @@ def _seed_source_filing_record_without_import_flow(
         binding_overrides={},
         casilla_values=casilla_values,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revisions = calculation_repository.load()
     calculation_repository.save(
@@ -300,6 +303,7 @@ def _seed_source_filing_record_without_import_flow(
                 filed_at=_CLOCK,
                 filed_by="aeat-import-test",
                 filing_instance_evidence=None,
+                source_provenance=(),
             ),
         ),
     )

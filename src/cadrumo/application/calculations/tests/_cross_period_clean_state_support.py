@@ -225,6 +225,7 @@ def _seed_member_322_filing(
         binding_overrides={},
         casilla_values=values,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -244,6 +245,7 @@ def _seed_member_322_filing(
         filed_at=_CLOCK,
         filed_by="aeat-import-test",
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     calculation_repository = CalculationRevisionCatalogueRepository()
     calculation_catalogue = calculation_repository.load()
@@ -479,6 +481,7 @@ def _seed_source_filing_record_without_import_flow(
         binding_overrides={},
         casilla_values=casilla_values,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -498,6 +501,7 @@ def _seed_source_filing_record_without_import_flow(
         filed_at=_CLOCK,
         filed_by="aeat-import-test",
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     calculation_repository = CalculationRevisionCatalogueRepository()
     calculation_catalogue = calculation_repository.load()

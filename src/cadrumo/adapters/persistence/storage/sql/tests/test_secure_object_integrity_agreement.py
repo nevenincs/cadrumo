@@ -255,11 +255,7 @@ def test_the_delegation_check_rejects_a_docstring_mention() -> None:
     for.
     """
     calling = "def surface(row):\n    return shared_routine(row)\n"
-    mentioning = (
-        "def surface(row):\n"
-        '    """Delegates to shared_routine( ) in the core."""\n'
-        "    return row\n"
-    )
+    mentioning = 'def surface(row):\n    """Delegates to shared_routine( ) in the core."""\n    return row\n'
 
     assert _calls(calling, "shared_routine")
     assert not _calls(mentioning, "shared_routine")

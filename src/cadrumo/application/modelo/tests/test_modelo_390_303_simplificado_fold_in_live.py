@@ -229,6 +229,7 @@ def _persist_presentado_source(
         binding_overrides={},
         casilla_values=casilla_values,
         filing_instance_evidence=evidence,
+        source_provenance=(),
     )
     source_revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -248,6 +249,7 @@ def _persist_presentado_source(
         verified_by="operator",
         filed_at=_T2,
         filed_by="operator",
+        source_provenance=(),
     )
     filing_record_id = derive_filing_record_id(
         work_unit_id=source_work_unit.work_unit_id,
@@ -300,6 +302,7 @@ def _replace_source_with_new_filed_revision(
         binding_overrides={},
         casilla_values=casilla_values,
         filing_instance_evidence=evidence,
+        source_provenance=(),
     )
     replacement = CalculationRevision(
         calculation_revision_id=replacement_id,
@@ -319,6 +322,7 @@ def _replace_source_with_new_filed_revision(
         verified_by="operator",
         filed_at=_T2,
         filed_by="operator-replacement",
+        source_provenance=(),
     )
     replacement_filing_id = derive_filing_record_id(
         work_unit_id=source_work_unit.work_unit_id,

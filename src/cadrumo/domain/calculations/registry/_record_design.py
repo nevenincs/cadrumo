@@ -533,7 +533,9 @@ def _undouble_struck_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
             continue
         candidate = " ".join(
             token[::2]
-            if len(token) >= 2 and len(token) % 2 == 0 and all(token[i] == token[i + 1] for i in range(0, len(token), 2))
+            if len(token) >= 2
+            and len(token) % 2 == 0
+            and all(token[i] == token[i + 1] for i in range(0, len(token), 2))
             else token
             for token in line.split(" ")
         )
@@ -753,18 +755,13 @@ def _recover_coordinate_stutter_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
         offset = int(stutter.group("offset"))
         if not _continues(anchor, ordinal, offset):
             continue
-        rebuilt[donor_index] = (
-            f"{ordinal} {offset} {length} {naturaleza} {description} {stutter.group('rest')}"
-        )
+        rebuilt[donor_index] = f"{ordinal} {offset} {length} {naturaleza} {description} {stutter.group('rest')}"
         dropped.add(index)
 
     if not rebuilt:
         return lines
-    return tuple(
-        rebuilt.get(index, line)
-        for index, line in enumerate(lines)
-        if index not in dropped
-    )
+    return tuple(rebuilt.get(index, line) for index, line in enumerate(lines) if index not in dropped)
+
 
 #: A field row whose four tokens are complete but whose DESCRIPTION wrapped onto
 #: the next line. AEAT does this often enough to matter: modelo 202 writes
@@ -985,12 +982,7 @@ def _split_fused_ordinal_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
             split.append(line)
             continue
         fused = _FUSED_ROW_RE.match(line)
-        if (
-            fused is not None
-            and previous is not None
-            and previous.ordinal is not None
-            and previous.ordinal.isdigit()
-        ):
+        if fused is not None and previous is not None and previous.ordinal is not None and previous.ordinal.isdigit():
             ordinal = int(previous.ordinal) + 1
             offset = previous.offset + previous.length
             if fused.group(1) == f"{ordinal}{offset}":
@@ -3088,11 +3080,7 @@ def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
         # for a page: a FOUR-digit constant at this position is an ejercicio,
         # ``Constante "2011"``, and self-consistency alone would happily read it
         # as page 2011.
-        if (
-            candidate is not None
-            and len(candidate) == page_field.length
-            and page_field.length in _PAGE_CONSTANT_WIDTHS
-        ):
+        if candidate is not None and len(candidate) == page_field.length and page_field.length in _PAGE_CONSTANT_WIDTHS:
             declared_page = candidate
 
     for field in reversed(sheet.fields):
@@ -3290,7 +3278,6 @@ class _PdfParseState:
         declared = self.corrections.single_position_corrections.get((self.current.name, candidate.offset))
         if declared is not None and candidate.length == 1:
             self.current.applied_corrections.append(declared)
-
 
     def _stage_headless_tail(self, line: str, row_number: int) -> None:
         """Hold a row that kept its length and naturaleza but lost its position.

@@ -152,9 +152,7 @@ def test_a_production_session_open_is_actually_found() -> None:
 
 def test_every_production_session_open_runs_the_canary() -> None:
     """A new session-opening path cannot skip the published-key refusal."""
-    unguarded = sorted(
-        site for site in _functions_opening_a_session() if not _runs_the_canary(site[0], site[1])
-    )
+    unguarded = sorted(site for site in _functions_opening_a_session() if not _runs_the_canary(site[0], site[1]))
 
     assert not unguarded, (
         f"these functions open a BucketSession without running {_CANARY}: {unguarded}. An unsecured "
@@ -187,6 +185,7 @@ def test_the_detector_notices_an_unguarded_open() -> None:
         and (n.func.attr if isinstance(n.func, ast.Attribute) else getattr(n.func, "id", None)) == _CANARY
         for n in ast.walk(tree)
     )
+
 
 def _scope(*lines: str) -> ast.FunctionDef:
     """Parse a snippet holding exactly one function and return it."""

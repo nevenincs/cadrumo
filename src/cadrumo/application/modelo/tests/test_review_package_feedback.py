@@ -111,6 +111,7 @@ _PLACEHOLDER_REVISION_ID = derive_calculation_revision_id(
     casilla_values={_CUOTA_CASILLA: Decimal("0.00")},
     source_transaction_ids=(),
     filing_instance_evidence=None,
+    source_provenance=(),
 )
 
 
@@ -145,6 +146,7 @@ def _revision(work_unit: WorkUnit) -> CalculationRevision:
         casilla_values={_CUOTA_CASILLA: Decimal("21.00")},
         source_transaction_ids=(),
         filing_instance_evidence=None,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -169,6 +171,7 @@ def _revision(work_unit: WorkUnit) -> CalculationRevision:
         filed_by=None,
         superseded_at=None,
         filing_instance_evidence=None,
+        source_provenance=(),
     )
 
 

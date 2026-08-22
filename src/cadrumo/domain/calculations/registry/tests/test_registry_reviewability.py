@@ -122,5 +122,3 @@ def test_registry_validator_modules_stay_below_complexity_baselines() -> None:
             oversize.append(f"{path.name}: {line_count} lines exceeds {ceiling}")
 
     assert oversize == []
-
-

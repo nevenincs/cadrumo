@@ -251,6 +251,7 @@ def _app_filed_revision(work_unit: WorkUnit) -> CalculationRevision:
         binding_overrides={},
         casilla_values=casilla_values,
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -265,6 +266,7 @@ def _app_filed_revision(work_unit: WorkUnit) -> CalculationRevision:
         filed_at=_APP_FILED_AT,
         filed_by="provenance-population-control",
         filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
     )
 
 

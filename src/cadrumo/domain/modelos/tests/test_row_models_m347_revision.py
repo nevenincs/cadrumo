@@ -160,7 +160,10 @@ class TestRevisionIdAcrossAllFourRowTypes:
     def test_each_row_type_derives_without_crash(self) -> None:
         for case_id, row_factory in _REVISION_ROW_FACTORIES:
             rev_id = derive_calculation_revision_id(
-                **_revision_base("a" * 64), detail_rows=(row_factory(),), filing_instance_evidence=None
+                **_revision_base("a" * 64),
+                detail_rows=(row_factory(),),
+                filing_instance_evidence=None,
+                source_provenance=(),
             )
             assert len(rev_id) == 64, case_id
             assert rev_id == rev_id.lower(), case_id
@@ -170,6 +173,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
             **_revision_base("b" * 64),
             detail_rows=_all_revision_rows(),
             filing_instance_evidence=None,
+            source_provenance=(),
         )
         assert len(rev_id) == 64
 
@@ -187,6 +191,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
                 ),
             ),
             filing_instance_evidence=None,
+            source_provenance=(),
         )
         id_fr = derive_calculation_revision_id(
             **base,
@@ -200,6 +205,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
                 ),
             ),
             filing_instance_evidence=None,
+            source_provenance=(),
         )
         assert id_de != id_fr
 
@@ -210,10 +216,12 @@ class TestRevisionIdAcrossAllFourRowTypes:
             **base,
             detail_rows=(member, vinculada, operador, contraparte),
             filing_instance_evidence=None,
+            source_provenance=(),
         )
         id_reversed = derive_calculation_revision_id(
             **base,
             detail_rows=(contraparte, operador, vinculada, member),
             filing_instance_evidence=None,
+            source_provenance=(),
         )
         assert id_forward == id_reversed

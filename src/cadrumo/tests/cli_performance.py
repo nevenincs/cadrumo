@@ -267,6 +267,7 @@ def calibrate_cli_path(
     control_profiles: list[CliPerformanceProfile] = []
     measured_pair_orders: list[Literal["command-first", "control-first"]] = []
     for index in range(calibration_policy.warmup_runs + calibration_policy.sample_count):
+
         def measure_command() -> CliPerformanceProfile:
             return profile_cli_path(
                 command_path,
@@ -610,12 +611,16 @@ def _child_main(payload: Mapping[str, Any]) -> int:
         if event == "open" and len(args) > 1:
             mode = args[1]
             native_flags = args[2] if len(args) > 2 else None
-            writes = (isinstance(mode, str) and any(flag in mode for flag in "wax+")) or (
-                isinstance(mode, int)
-                and bool(mode & (os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREAT | os.O_TRUNC))
-            ) or (
-                isinstance(native_flags, int)
-                and bool(native_flags & (os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREAT | os.O_TRUNC))
+            writes = (
+                (isinstance(mode, str) and any(flag in mode for flag in "wax+"))
+                or (
+                    isinstance(mode, int)
+                    and bool(mode & (os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREAT | os.O_TRUNC))
+                )
+                or (
+                    isinstance(native_flags, int)
+                    and bool(native_flags & (os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREAT | os.O_TRUNC))
+                )
             )
             operation = "open.write" if writes else "open.read"
         filesystem_operations[operation] += 1

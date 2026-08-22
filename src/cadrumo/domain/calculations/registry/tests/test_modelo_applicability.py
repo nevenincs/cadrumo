@@ -74,9 +74,7 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
 
     modelos, _catalogues = _committed_registry_tree()
     authored = {
-        modelo.id
-        for modelo in modelos
-        if any(revision.applicability for revision in modelo.revisions.values())
+        modelo.id for modelo in modelos if any(revision.applicability for revision in modelo.revisions.values())
     }
     assert authored, "no modelo authors an applicability rule, so this assertion would be vacuous"
 

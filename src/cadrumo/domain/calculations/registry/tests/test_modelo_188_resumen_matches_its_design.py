@@ -38,9 +38,7 @@ _SUMMARY_FIRST_OFFSET = 136
 
 
 def _summary_fields():
-    design = bundled_path(
-        "corpus", "aeat_official", "disenos_registro", "modelo_188", "files", _DESIGN
-    )
+    design = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_188", "files", _DESIGN)
     extraction = extract_record_design(design)
     sheet = next(s for s in extraction.sheets if s.name == _SUMMARY_SHEET)
     return tuple(
@@ -91,6 +89,5 @@ def test_the_two_perceptor_counts_sit_where_the_registry_says_they_do() -> None:
     counts = tuple(field.offset for field in _summary_fields() if field.length == _COUNT_WIDTH)
 
     assert counts == (136, 175), (
-        f"the registry documents the two perceptor counts at offsets 136 and 175; the diseño "
-        f"carries counts at {counts}"
+        f"the registry documents the two perceptor counts at offsets 136 and 175; the diseño carries counts at {counts}"
     )

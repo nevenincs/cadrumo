@@ -923,9 +923,7 @@ def _corpus_path_by_source_ref() -> dict[str, str]:
     """Every source ref mapped to the corpus path it records, unparsed."""
     _modelos, catalogues = bundled_registry_tree()
     return {
-        ref: str(entry.corpus_path)
-        for ref, entry in catalogues.sources.items()
-        if getattr(entry, "corpus_path", None)
+        ref: str(entry.corpus_path) for ref, entry in catalogues.sources.items() if getattr(entry, "corpus_path", None)
     }
 
 
@@ -1888,8 +1886,8 @@ def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio()
         "still names no boundary inside a single year, so an inventory is back to keeping one "
         "design per year and its silence about that boundary means nothing"
     )
-    assert not mid_course_reported, (
-        "a DECLARED revision spans a mid-course boundary: " + ", ".join(sorted(set(mid_course_reported)))
+    assert not mid_course_reported, "a DECLARED revision spans a mid-course boundary: " + ", ".join(
+        sorted(set(mid_course_reported))
     )
 
 
