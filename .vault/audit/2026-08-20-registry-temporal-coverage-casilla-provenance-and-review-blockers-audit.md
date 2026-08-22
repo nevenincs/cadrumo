@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:ac4ba5157c6e556cd3ebf03e5814833b53bb3f63eab8e399854414b82f8e3ab9'
+body_hash: 'sha256:9392ae3624420729208f5cccc97b574e28961c0fea98062c0e325a4113327152'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -1771,7 +1771,6 @@ it, and several ended by refusing a stamp that looked available. That is the int
 shape: the pending count is not the deliverable, and a revision moved across it without
 evidence would be worse than one left behind.
 
-
 ### splitting-a-revision-does-not-clear-the-layout-coverage-gate | high | feedback for work currently in flight
 
 Peers are splitting revisions right now -- m184, m322 and m347 all landed splits during
@@ -1807,7 +1806,6 @@ Modelo 720 case it records.
 Recorded here because the splits are landing now and the next natural step after them --
 re-running this gate and expecting improvement -- will show none, which reads as the work
 having failed when it did not.
-
 
 ## Recommendations
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:e3d7d2918555c965ed59d8f08aa11645ab01201e32312852ec3a19ba11c10479'
+body_hash: 'sha256:d138e98400a9183afee42ad7340bdd510a57ec4a6057e0ad58535672145f051a'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -11714,3 +11714,148 @@ failed for a stated reason.
 Sixty-four designs across fifteen other modelos remain unregistered, with
 modelo 202 (12) and modelo 111 (7) the largest. The same manifest-grounded
 method applies to each.
+
+## Tick: a reader artifact in the Tipo column, and why the twin files cannot be registered
+
+Re-measured at tick start: authority CLEAN, locale catalogue clean, registration
+gate at 82 of 218 unregistered.
+
+### The defect, found by comparing a design against itself
+
+The corpus ships some diseños twice -- the AEAT `.xls` and a converted `.xlsx`.
+Comparing a pair field for field was meant to establish whether a twin is the
+same design. Modelo 100's 2015 pair matched exactly; its 2016 pair did not,
+despite identical field counts, and the whole difference was one `type_code`:
+`"6.0"` from the `.xls` against `"6"` from the `.xlsx`.
+
+A spreadsheet hands a whole-number cell back as a float, so a `Tipo` of 6
+arrives as `6.0`. AEAT prints no such type code, and the value depended on which
+copy of the same file was opened -- the reader describing itself rather than the
+modelo. The sibling ordinal column already carried the coercion for this exact
+hazard, with a docstring naming it, so the fix was precedented rather than
+invented: both `Tipo` read paths now coerce an integral float to its integer
+form. `_required_text` serves only that column, and the second path
+(`_required_type_code`, the correction-sidecar route) was fixed alongside it so
+the rendered code cannot depend on whether a sidecar happens to exist.
+
+Blast radius, measured before fixing: one field in one registered design
+(`aeat-dr-100-2016`) across 86 registered spreadsheet designs.
+
+### Proven, and a caching trap on the way
+
+The control is the pair itself: two encodings of one design must read
+identically. After the fix they do, and no registered design yields a
+float-rendered type code.
+
+The first attempt to prove the gate BITES reported that it does not, which was
+wrong: the script read the files before installing the mutation, so a cached
+parse was compared. Re-run with the coercion disabled from the start, the
+encodings disagree and `6.0` returns. Worth remembering -- against a cached
+reader, a bite proof that patches after the first read measures the cache.
+
+Regression: 40 generated-tree gates plus 81 record-design tests, 121 passed.
+
+### The twins cannot be registered, and the gate cannot be narrowed
+
+With the fix in, 20 of the 22 twin pairs parse to byte-identical field lists, 0
+diverge, and 2 cannot be read at all. That looked like grounds for treating a
+twin as a false positive in the registration gate. It is not, for two
+independent reasons, and both were checked rather than assumed:
+
+* the gate's own docstring forbids it. Its enumeration is deliberately
+  independent so it "cannot inherit a narrowing the catalogue or its consumers
+  acquired", and it states that it is EXPECTED to land red over a genuine
+  unregistered-file population, because scoping it would make it pass vacuously
+  and remove the visibility it exists to provide;
+* registering them instead would fabricate provenance. The `.xlsx` twins have
+  NO manifest artefact: the manifest records the AEAT-retrieved `.xls`, and the
+  `.xlsx` is a local conversion with no URL and no retrieval date of its own.
+  Writing one as an `authority = "aeat"` source with a `source_url` and a
+  `retrieved_at` would attest to a retrieval that never happened.
+
+So neither move is available, and the registration script refuses rather than
+inventing the missing facts -- it stopped at the first twin and wrote nothing.
+
+**This one is recorded rather than fixed, and the reason is an operator
+decision:** whether locally converted derivatives belong in the corpus at all.
+Removing them, moving them out of the design root, or giving the sources schema
+a way to say "derived from this other source" are all defensible, and each
+changes what the corpus claims to be. That is not a call to make from inside a
+tick.
+
+### Still open
+
+Sixty-two genuinely unregistered design files remain beyond the twins, of which
+30 carry an Orden title. Those cannot be dismissed as non-designs -- last tick
+established that an orden PDF can carry the diseño in its anexo -- and each
+needs the ejercicio it governs read out of the orden rather than inferred from
+a filename.
+
+The three span findings still need per-design epoch authoring: modelo 200's
+2024, modelo 322's 2022, modelo 347's 2008 and 2010.
+
+## Tick: ten designs registered, seven refused, and the refusals are the substance
+
+Re-measured at tick start: authority CLEAN, locale catalogue clean, registration
+gate at 82 of 218.
+
+### What was registered
+
+Ten bundled designs across modelos 111, 115, 123, 130 and 131 now carry a
+`SourceReference`. Every window comes from a title stating a CLOSED range of
+whole ejercicios -- `Ejercicios 2004 a 2009`, `Ejercicios 2016 hasta 2018`,
+`Ejercicios 2015, 2016, 2017 y 2018` -- and every fact comes from the corpus
+manifest, with sha256 and byte count re-verified against the file on disk
+first.
+
+Nine of the ten load through the real parser. The tenth, modelo 131's 2009-2014
+design, is a PARTIAL read: the parser reads no sheet and refuses one that
+declares 1012 positions with 465 unread. That is the corpus condition the
+sibling read gate already tracks over BUNDLED designs, so registration neither
+caused it nor changed its population.
+
+### What was refused, and why each refusal is the right answer
+
+Seven candidates were refused by the registrar rather than interpreted, and
+this is the part worth keeping:
+
+* `Ejercicios anteriores al 2001` and `Ejercicios 2014 y anteriores` are open
+  BACKWARDS. There is no start year to write, and choosing one would assert a
+  window AEAT never stated.
+* `Ejercicio 2008 (Trimestre 2º, 3º y 4º)` and `Ejercicio 2007 y 2008 (Primer
+  Trimestre)` are SUB-YEAR. So is all of modelo 202's unregistered set, which
+  is why that modelo was set aside entirely: its titles carry `1P`, `2P` and
+  `3P` qualifiers, and one of them would overlap the already-registered
+  2019-2022 window. The sources schema expresses a window as DATES, so
+  encoding a pagos-fraccionados period means deciding where a trimester starts
+  and how two designs sharing one year are ordered. That is schema semantics to
+  be decided, not a fact to be copied out of a manifest.
+
+The registrar also refuses any window overlapping one already registered for
+the same modelo, and updates its own running window set as it plans, so two
+candidates cannot both claim a year within a single run.
+
+### Verified
+
+* authority CLEAN with the ten new sources.
+* the registration gate moved 82 -> 72, exactly the ten.
+* nine of ten resolve through `load_record_design_intermediate` with plausible
+  field counts (22 to 56 fields for these small withholding and pago
+  fraccionado designs).
+
+### Still open
+
+Sixty-two bundled design files remain unregistered. The population is now
+understood rather than merely counted:
+
+* 22 are encoding twins, which the previous tick established can be neither
+  registered (no manifest provenance -- they are local conversions) nor
+  exempted (the gate forbids narrowing), and which need an operator decision
+  about whether converted derivatives belong in the corpus;
+* the sub-year and open-backwards titles above need a ruling on how a
+  trimester or an unbounded past maps to a date window;
+* the remaining orden-titled files need the ejercicio read out of the orden
+  text rather than inferred from a filename.
+
+The three span findings still need per-design epoch authoring: modelo 200's
+2024, modelo 322's 2022, modelo 347's 2008 and 2010.
