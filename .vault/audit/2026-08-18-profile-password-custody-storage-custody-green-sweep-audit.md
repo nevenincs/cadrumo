@@ -5038,3 +5038,46 @@ both files back out of `HEAD` -- but it is filed under an unrelated subject, and
 pathspec discipline on this side could have prevented it. This is the third time the shared
 worktree has absorbed in-flight work; the durable lesson is that verifying the change
 landed has to be done by reading `HEAD`, never by trusting the commit to be one's own.
+
+### An iteration that found nothing, and the four axes it closes
+
+Recorded so none of these is re-derived. Nothing was changed in the tree.
+
+**The `str(error)` sweep is complete in both spellings.** The earlier explicit sweep matched
+only `str(...)` calls, which cannot see an f-string interpolating an exception -- `f"{exc}"`
+calls `str()` implicitly. Re-run for that shape, the domain yields twenty-odd sites and all
+but one interpolate a THIRD-PARTY exception (keyring, tarfile, cryptography, pydantic) into
+a diagnostic, where `str()` genuinely is the prose. The exception,
+`_manager_actions.py:246`, splices a variable named `refusal` straight after a translated
+string, which looks exactly like the defect fixed two iterations ago -- but `_clave_refusal`
+is annotated `-> str | None` and returns the refusal text already. Not a bug. The name
+matched the pattern; the type did not.
+
+**The sealed-archive pair is LIVE, and the claim that it was not was a tooling error.**
+Searching for `read_sealed_archive` / `write_sealed_archive` outside their own modules
+appeared to show only tests -- but the search was piped through `head -6`, and the test
+module's many matches filled all six lines, hiding the production consumer below the cut.
+`application/user_profile/_capsule_archive.py` calls `write_sealed_archive` at line 161 and
+`read_sealed_archive` at 177 and 206; it is the `config profile archive` / `restore`
+surface, documented in `docs/how-to/protect-data-access.md`. The pair is not dead code and
+must not be treated as such. **The method lesson is one this campaign has now paid for
+twice: never truncate the output of a completeness search.** `head` is for reading, not for
+deciding, and a bounded window over an unsorted result set is indistinguishable from a
+complete one.
+
+**The archive's label-disclosure guard has its read sibling.** The surface carries a real
+disclosure risk, stated in its own words: a published capsule keeps the operator's chosen
+label in plaintext beside the ciphertext, so an archive built by packing the directory
+verbatim would leak it to anyone holding the file. The obvious hole would be a guard that
+proves only what `inspect` PRINTS -- and one assertion is exactly that. But it is not the
+only one: `test_profile_archive_roundtrip.py:186` opens the tar, pins the member set to
+`{header.json, payload.envelope}`, and asserts the label, the NIF, and the name and surname
+tokens are absent from the joined member payloads. The bytes-level sibling is present, so
+the axis that usually fails toward disclosure does not fail here.
+
+**Conclusion.** No item in the selection order produced actionable work this iteration. The
+directive's own instruction applies -- say so rather than manufacture a gate -- and it is
+worth stating why the well is running dry rather than treating it as a temporary result:
+the domain's remaining named items are not defects but DECISIONS (the profile-bundle import
+half, the over-exported `user_profile` names), and a decision cannot be closed by testing
+harder at it.
