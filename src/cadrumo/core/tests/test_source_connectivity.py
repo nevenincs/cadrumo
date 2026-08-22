@@ -20,8 +20,8 @@ _ENTRYPOINT_ID = "modelo-work-calculate"
 _COMMAND_ID = "app.modelo.work.calculate"
 
 
-class _ProofAuthority:
-    """Deterministic representative of the application-owned authority seam."""
+class _CoreProtocolTestAuthority:
+    """Core-only protocol probe; production authority behavior is tested in application."""
 
     def __init__(
         self,
@@ -64,7 +64,7 @@ class _ProofAuthority:
         )
 
 
-class _WorkflowAuthorityWithoutConnection(_ProofAuthority):
+class _WorkflowAuthorityWithoutConnection(_CoreProtocolTestAuthority):
     """Deliberately stale implementation of the pre-S141 workflow seam."""
 
     def operator_workflow_reaches_source(  # type: ignore[override]
@@ -215,7 +215,7 @@ def test_core_facade_exposes_every_connectivity_owner() -> None:
         "SourceConnectivityResolverOwnershipProof",
     }
     assert expected <= set(dir(core))
-    assert isinstance(_ProofAuthority(), core.SourceConnectivityProofAuthority)
+    assert isinstance(_CoreProtocolTestAuthority(), core.SourceConnectivityProofAuthority)
 
 
 def test_workflow_authority_without_connection_fails_at_protocol_usage() -> None:
@@ -227,7 +227,7 @@ def test_workflow_authority_without_connection_fails_at_protocol_usage() -> None
 
 
 def test_workflow_authority_can_refuse_a_cross_connection_proof() -> None:
-    authority = _ProofAuthority()
+    authority = _CoreProtocolTestAuthority()
     connection = _connection()
     rival_connection = _connection(source_ref="collectible_invoice:inv-0002")
     rival_proof = _connected_proof(rival_connection).operator_reachability
@@ -359,7 +359,7 @@ def test_connected_claim_cannot_be_constructed_from_shape_without_authority() ->
 def test_authority_admits_a_complete_supported_connected_claim() -> None:
     row = core.SourceConnectivityCensusRow.validate_with_authority(
         _connected_payload(),
-        authority=_ProofAuthority(),
+        authority=_CoreProtocolTestAuthority(),
     )
     assert row.disposition is core.SourceConnectivityDisposition.CONNECTED
     assert row.connected_proof is not None
@@ -371,7 +371,9 @@ def test_authority_admits_a_complete_supported_connected_claim() -> None:
     [
         "percepcion:12345678Z:A:-",
         "invoice:INV-2026/0001",
-        "foreign_asset:Opaque Asset Ref #1",
+        # Foreign-asset aggregation emits the actual contributing source kind
+        # and object id, not a synthetic foreign_asset envelope.
+        "payable_invoice:INV-2025-0007",
         " invoice:Case-And-Space/0002 ",
         "R" * 256,
     ],
@@ -533,7 +535,7 @@ def test_authority_refuses_persisted_source_fingerprint_drift() -> None:
     with pytest.raises(ValidationError, match="does not match persisted source provenance"):
         core.SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection, proof=changed_proof),
-            authority=_ProofAuthority(),
+            authority=_CoreProtocolTestAuthority(),
         )
 
 
@@ -542,7 +544,7 @@ def test_authority_refuses_a_deferred_source_kind() -> None:
     with pytest.raises(ValidationError, match="not enrolled"):
         core.SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection),
-            authority=_ProofAuthority(),
+            authority=_CoreProtocolTestAuthority(),
         )
 
 
@@ -552,7 +554,7 @@ def test_authority_refuses_an_arbitrary_operator_command_identity() -> None:
     with pytest.raises(ValidationError, match="workflow is not supported"):
         core.SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection, proof=proof),
-            authority=_ProofAuthority(),
+            authority=_CoreProtocolTestAuthority(),
         )
 
 
@@ -565,7 +567,7 @@ def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
     with pytest.raises(ValidationError, match="absent or changed"):
         core.SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection, proof=missing_proof),
-            authority=_ProofAuthority(
+            authority=_CoreProtocolTestAuthority(
                 evidence_digests={
                     "resolver-enrollment": _EVIDENCE_DIGEST,
                     "encrypted-revision": _EVIDENCE_DIGEST,
@@ -575,7 +577,7 @@ def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
     with pytest.raises(ValidationError, match="absent or changed"):
         core.SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection),
-            authority=_ProofAuthority(
+            authority=_CoreProtocolTestAuthority(
                 evidence_digests={
                     "resolver-enrollment": _EVIDENCE_DIGEST,
                     "encrypted-revision": _EVIDENCE_DIGEST,
