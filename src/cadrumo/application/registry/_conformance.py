@@ -246,10 +246,11 @@ class DictionaryLayoutCasillaComparison(ConformanceModel):
 class AnnualCasillaPopulationComparison(ConformanceModel):
     """Year-specific casilla/layout evidence for one authority-selected read.
 
-    The caller supplies a filing :class:`RegistrySnapshot` or a typed
-    non-filing :class:`RegistryRevisionInspection` for the law-selected
-    ``filing_year`` and ``period``.  This function never selects a latest or
-    largest revision and never compares two annual revisions to one another.
+    The caller supplies a filing :class:`RegistrySnapshot`, or -- from a static
+    compiler consumer, whose non-filing revision projection must not reach this
+    boundary -- the coordinate and compiled revision as explicit values.  This
+    function never selects a latest or largest revision and never compares two
+    annual revisions to one another.
 
     ``printed_form_membership`` is intentionally not derived from dictionary
     identities.  A declared BOE/form source is visible as ``unsupported``

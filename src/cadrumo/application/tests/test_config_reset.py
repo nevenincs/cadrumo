@@ -12,6 +12,7 @@ from uuid import UUID
 import pytest
 from pydantic import SecretStr
 
+from ...adapters.persistence.storage.custody import profile_session_path
 from ...core import iter_directory, scan_directory
 from ...tests.profile_capsule import open_test_profile_session
 
@@ -228,7 +229,6 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         set_operator_certificate_source_secret,
     )
     from ..config_reset import start_config_reset
-    from ..user_profile import profile_session_path
 
     with _isolated_reset_root(tmp_path) as root:
         root.mkdir(parents=True, exist_ok=True)
