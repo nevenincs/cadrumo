@@ -2670,3 +2670,54 @@ component fields — the m840 convention now applied six times across two modelo
 adjustment. m036's construct is deliberately left alone: it is a censo-foundation
 construct listing only profile-bound facts, and all the transcribed form boxes sit
 outside it. Copying m840's construct shape here would have been wrong.
+
+## 2026-08-22 — the coverage DENOMINATOR undercounts, and it is not a modelo 036 quirk
+
+Every coverage figure this campaign has reported takes `build_diseno_coverage_report`'s
+derived set as the number of boxes a diseño prints. For modelo 036 that is **288**. The
+diseño actually prints **348**.
+
+Sixty numbers are invisible to the derived-casilla regex, which matches `[NNN]`:
+
+| shape | count | example |
+|---|---|---|
+| malformed bracket — closing only, no opening | 58 | `921]`, `922]`, `923]` |
+| multi-number bracket | 4 | `[330 332]`, `[300,301,302]` |
+
+**So "N of 288" is measured against a floor, not the true box set** — including the stamps
+already written on this revision. The direction of the error flatters progress.
+
+### The two shapes look identical in a dump and need opposite treatment
+
+This is the part worth carrying, because getting it backwards is easy.
+
+**A malformed bracket holds ONE number for ONE field.** PÁGINA 9 prints a well-formed
+`[920]` on each sucesor block's N.I.F. and then `921]`, `922]`, `923]` on the three fields
+that follow. The run 920–943 is contiguous, four per block, in offset order, verified
+across all six blocks. Those casillas carry AEAT's **real numbers** — reading them is not
+minting them. The regex sees 6 numbers where AEAT prints 24.
+
+**A multi-number bracket is a SELECTOR, not a field's number.** PÁGINA 3's causa flags are
+one byte each and carry `[300,301,302]`, `[311,312]`, `[330 332]`. The printed form has
+three separate tick boxes (300 Alta / 301 Baja / 302 Modificación) and the fichero
+collapses them into a single code byte that selects among them. **No single number
+describes that field**, so it takes a slug. Assigning it "300" would claim a box the field
+is not.
+
+The tell is the field width against the count of numbers: one byte carrying three numbers
+is a selector; a 125-byte name field carrying one number is a box with a broken bracket.
+
+### What this does not change
+
+Coverage arithmetic stays honest as authored: the 18 PÁGINA 9 casillas holding 921–943
+moved coverage by **zero**, because the derived set cannot see those numbers. Casilla
+counts track positions, coverage tracks regex-visible boxes, and the gap between them is
+now explained by two distinct causes rather than one.
+
+### Where else to look
+
+The malformed-bracket scan was run only against `aeat-dr-036-2025`. **Modelo 840's design
+was never checked for it** — its 108-number derived set may be a floor too, and the same
+is true of every design this loop has measured against. The scan is three lines: match
+`(?<!\[)\b(\d{3,4})\]` and `\[(\d+)[\s,]+(\d+)\]` beside the normal `\[(\d+)\]` and diff
+the sets.
