@@ -550,6 +550,8 @@ class PreviousFilingSourceResolver:
             ),
             provenance=tuple(
                 CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
+                    binding_source=BindingSourceKind.PREVIOUS_FILING,
                     source_kind="previous_filing",
                     source_ref=(
                         f"{item.source_modelo}:{item.source_filing_year}:"

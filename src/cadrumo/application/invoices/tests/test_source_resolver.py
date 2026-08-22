@@ -236,6 +236,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1000.00")
     assert resolution.source_transaction_ids == ("1" * 64,)
     assert {item.source_kind for item in resolution.provenance} == {"collectible_invoice"}
+    assert {item.resolver_id for item in resolution.provenance} == {"invoice_catalogue"}
     assert {item.source_ref for item in resolution.provenance} == {f"collectible_invoice:{declarable.invoice_id}"}
     assert all(item.fingerprint and item.fingerprint.startswith("sha256:") for item in resolution.provenance)
 

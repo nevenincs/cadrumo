@@ -34,7 +34,12 @@ from ...domain.modelos import (
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ...domain.period import calculation_filing_date
-from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions import (
+    BusinessClassification,
+    TransactionCatalogueRepositoryProtocol,
+    TransactionDirection,
+    TransactionLifecycleState,
+)
 from ..calculations import IvaWalletDecisionRepository
 from ._action_errors import ModeloAggregationBindingError
 from ._calculation_helpers import load_work_unit_for_calculation as _load_work_unit_for_calculation
@@ -93,7 +98,7 @@ def prepare_calculation(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     casilla_inputs: Mapping[CasillaId, Decimal],
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
-    ledger_preflight_transaction_repository: TransactionCatalogueRepository | None,
+    ledger_preflight_transaction_repository: TransactionCatalogueRepositoryProtocol | None,
     iva_compensation_decision: object | None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
     binding_values: Mapping[BindingId, Decimal] | None,
@@ -284,7 +289,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
     *,
     work_unit: WorkUnit,
     revision: ModeloRevision,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> None:
     """Refuse ledger-backed calculations whose period ledger readiness blocks."""
     ledger_preflight_sources = frozenset(
@@ -366,7 +371,7 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
     work_unit: WorkUnit,
     casilla_inputs: Mapping[CasillaId, Decimal],
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
 ) -> None:
     """Refuse Modelo 200 ledger-backed calculation without accounting-result input."""
     if str(work_unit.modelo) != Modelo.M200.value:
@@ -411,7 +416,7 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
 def _m200_accounting_ledger_transaction_count(
     *,
     work_unit: WorkUnit,
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
 ) -> int:
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
     period = work_unit.period

@@ -53,7 +53,7 @@ from ...storage.sql.engine import get_engine
 from ...storage.sql.session import session_scope
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 from ..prorrata_register import ProrrataRegisterRepository
-from ..transactions import TransactionCatalogueRepository
+from ..transactions import LedgerStorageError, TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -403,6 +403,38 @@ def test_authoritative_v1_rows_upgrade_and_roundtrip_through_real_secure_reposit
     assert loaded_register == original_register
     assert loaded_register.records[0].acquisition_ledger_id == transaction.transaction_id
     assert loaded_register.records[0].prorrata_sector_id == "sector-a"
+
+
+def test_exact_id_read_refuses_v1_until_authoritative_atomic_migration(tmp_path: Path) -> None:
+    """Full and exact-ID reads enforce the same explicit v1 cutover."""
+    bucket_id = "db42333e-64c8-4686-a2b0-67d24225ab61"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
+        engine = get_engine(profile.settings)
+        repository = TransactionCatalogueRepository(bucket_id=bucket_id)
+        transaction = _authoritative_transaction()
+        _seed_v1_catalogue(repository, engine=engine, bucket_id=bucket_id, transaction=transaction)
+        BienesInversionIvaRegisterRepository(bucket_id=bucket_id).save(BienesInversionIvaRegister())
+
+        with pytest.raises(LedgerStorageError, match="requires explicit IVA authority migration"):
+            repository.load()
+        with pytest.raises(LedgerStorageError, match="requires explicit IVA authority migration"):
+            repository.load_by_ids((transaction.transaction_id,))
+        assert {
+            row.schema_version
+            for row in repository._objects.iter_all_records_raw()
+            if row.namespace == TRANSACTION_CATALOGUE_NAMESPACE.namespace
+        } == {1}
+
+        repository.migrate_iva_deduction_authority(asset_profile_id=bucket_id)
+
+        assert repository.load().get(transaction.transaction_id) == transaction
+        assert repository.load_by_ids((transaction.transaction_id,)).get(transaction.transaction_id) == transaction
+        transaction_versions = {
+            row.schema_version
+            for row in repository._objects.iter_all_records_raw()
+            if row.namespace == TRANSACTION_CATALOGUE_NAMESPACE.namespace
+        }
+        assert transaction_versions == {2}
 
 
 def test_v1_rows_without_authoritative_backfill_evidence_refuse_through_real_secure_repository(tmp_path: Path) -> None:

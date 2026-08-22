@@ -871,8 +871,8 @@ def _current_operator_surface_schema_rows(
         ResultSchemaInventoryRow,
         get_operator_surface_contract,
     )
-    from ...application.storage_write_policy import is_profile_bound_write_verb_path
     from ...entrypoints.schema_surface import ROOT_LANDING_SCHEMA_KEYS
+    from . import command_execution_policy_for_cli_path
 
     return _CurrentOperatorSurfaceSchemaInventory(
         command_keys=command_keys,
@@ -914,12 +914,17 @@ def _current_operator_surface_schema_rows(
             ProfilePolicyInventoryRow(
                 subject_leaf_key=command_key,
                 classification=(
-                    "profile_bound_write"
-                    if is_profile_bound_write_verb_path(" ".join(primary_paths[command_key]))
-                    else "non_profile_bound"
+                    "non_profile_bound"
+                    if command_key in ROOT_LANDING_SCHEMA_KEYS
+                    else (
+                        "profile_bound_write"
+                        if command_execution_policy_for_cli_path(primary_paths[command_key]).write_route
+                        == "profile-bound"
+                        else "non_profile_bound"
+                    )
                 ),
                 should_expose_via_mcp=command_key not in ROOT_LANDING_SCHEMA_KEYS,
-                provenance="application storage policy plus root landing exposure contract",
+                provenance="callback-attached command policy plus root landing exposure contract",
             )
             for command_key in sorted(command_keys)
         ),

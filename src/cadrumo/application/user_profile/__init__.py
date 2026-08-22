@@ -461,7 +461,7 @@ if TYPE_CHECKING:
         ensure_profile_custody_owner_root as ensure_profile_custody_owner_root,
     )
     from ._custody_ports import (
-        map_profile_password_proof_failure as map_profile_password_proof_failure,
+        map_profile_authentication_proof_failure as map_profile_authentication_proof_failure,
     )
     from ._custody_ports import (
         profile_advance_session_idle_deadline as profile_advance_session_idle_deadline,
@@ -811,7 +811,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "profile_custody_secure_object_repository": "._custody_ports",
     "profile_is_authentication_failure": "._custody_ports",
     "profile_is_keyring_unavailable": "._custody_ports",
-    "map_profile_password_proof_failure": "._custody_ports",
+    "map_profile_authentication_proof_failure": "._custody_ports",
     "profile_is_persisted_session": "._custody_ports",
     "profile_session_serves_bucket": "._custody_ports",
     "prove_profile_recovery_artifact": "._custody_ports",

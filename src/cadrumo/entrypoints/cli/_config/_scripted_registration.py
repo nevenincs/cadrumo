@@ -59,10 +59,10 @@ class _CreationSecrets(BaseModel):
 def resolve_creation_passphrase(*, secrets_stdin: bool = False) -> str:
     """Return the passphrase for a scripted registration, or refuse.
 
-    Ordered console-first so an operator running the verb by hand on a
-    headless host is asked rather than being told to export a variable. The
-    environment value is a fallback for the genuinely unattended case, not
-    the advertised interface.
+    An explicitly requested bounded stdin payload wins. Without it, a real
+    interactive terminal receives the no-echo prompt; the configured
+    ``CADRUMO_SECRET_PASSPHRASE`` value (which may be supplied by the sanctioned
+    environment/keyring configuration path) is the unattended fallback.
     """
     from .. import _headless_secret_channel_active
     from ._secure_input import prompt_secret_no_echo, read_secrets_stdin, terminal_can_prompt_for_secrets

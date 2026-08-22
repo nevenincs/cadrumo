@@ -52,6 +52,10 @@ class WorkUnitCatalogueRepositoryProtocol(Protocol):
         """Return the persisted :class:`WorkUnitCatalogue` or an empty catalogue if absent."""
         ...
 
+    def load_revisioned(self) -> tuple[WorkUnitCatalogue, str]:
+        """Return the catalogue together with its current persistence revision."""
+        ...
+
     def save(self, catalogue: WorkUnitCatalogue) -> None:
         """Persist ``catalogue`` as the encrypted singleton object."""
         ...

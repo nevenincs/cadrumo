@@ -46,6 +46,7 @@ from ...domain.calculations.registry import (
 from ...domain.modelos import ModeloError
 from ..aggregation import CalculationSourceResolution
 from ._borrador_binding import Modelo100BorradorSourceResolver
+from ._calculation_route import require_calculation_route_resolver
 
 if TYPE_CHECKING:
     from ..live import Borrador100SnapshotRepository
@@ -141,10 +142,12 @@ def resolve_profile_source_tier(
         | set(borrador_resolution.enum_binding_values)
         | set(backend_binding_values)
     )
-    return ProfileSourceResolver(
+    resolver = ProfileSourceResolver(
         caller_binding_ids=caller_owned,
         registry_snapshot=snapshot,
-    ).resolve(
+    )
+    require_calculation_route_resolver("pre_mesh", resolver)
+    return resolver.resolve(
         CalculationSourceContext(
             bucket_id=bucket_id,
             modelo=snapshot.modelo.id,
@@ -297,13 +300,15 @@ def _resolve_borrador_bindings_for_calculation(
     """
     from ..aggregation import CalculationSourceContext
 
-    return Modelo100BorradorSourceResolver(
+    resolver = Modelo100BorradorSourceResolver(
         borrador_snapshot_id=borrador_snapshot_id,
         caller_binding_values=caller_binding_values,
         caller_enum_binding_values=caller_enum_binding_values,
         registry_snapshot=registry_snapshot,
         snapshot_repository=snapshot_repository,
-    ).resolve(
+    )
+    require_calculation_route_resolver("pre_mesh", resolver)
+    return resolver.resolve(
         CalculationSourceContext(
             bucket_id=bucket_id,
             modelo=modelo,

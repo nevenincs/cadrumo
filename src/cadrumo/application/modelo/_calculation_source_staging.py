@@ -61,6 +61,7 @@ from ..calculations import (
 )
 from ._calculation_modelo_adjustments import m131_objective_estimation_data_base_inputs
 from ._calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
+from ._calculation_route import CALCULATION_ROUTE_PRE_MESH_SOURCES, require_calculation_route_resolver
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,20 +177,24 @@ def resolve_prorrata_regularizacion_sources(
         ),
         filing_period_date=filing_period_date,
     )
-    prorrata_resolution = ProrrataRegularizacionSourceResolver(
+    prorrata_resolver = ProrrataRegularizacionSourceResolver(
         current_year_values=materialised.values,
         missing_current_year_casilla_ids=materialised.missing_casilla_ids,
         unresolved_current_year_casilla_ids=materialised.unresolved_casilla_ids,
         prorrata_register_repository=prorrata_register_repository,
         observation_repository=observation_repository,
         registry_snapshot=registry_snapshot,
-    ).resolve(context)
-    bienes_resolution = BienesInversionRegularizacionSourceResolver(
+    )
+    bienes_resolver = BienesInversionRegularizacionSourceResolver(
         current_year_values=materialised.values,
         missing_current_year_casilla_ids=materialised.missing_casilla_ids,
         unresolved_current_year_casilla_ids=materialised.unresolved_casilla_ids,
         observation_repository=observation_repository,
-    ).resolve(context)
+    )
+    require_calculation_route_resolver("post_mesh", prorrata_resolver)
+    require_calculation_route_resolver("post_mesh", bienes_resolver)
+    prorrata_resolution = prorrata_resolver.resolve(context)
+    bienes_resolution = bienes_resolver.resolve(context)
     return merge_source_resolutions((source_resolution, prorrata_resolution, bienes_resolution))
 
 
@@ -355,16 +360,9 @@ def add_unhandled_source_diagnostics(
     ``revision`` is the compiled :class:`ModeloRevision` whose declared binding
     sources are checked against the mesh's owned-source set.
     """
-    pre_mesh_handled = frozenset(
-        {
-            BindingSourceKind.PROFILE,
-            BindingSourceKind.BORRADOR,
-            BindingSourceKind.IVA_WALLET_DECISION,
-        },
-    )
     diagnostics = collect_unhandled_source_diagnostics(
         revision,
-        handled_sources=frozenset(source_resolution.owned_sources) | pre_mesh_handled,
+        handled_sources=frozenset(source_resolution.owned_sources) | CALCULATION_ROUTE_PRE_MESH_SOURCES,
         manual_sources=frozenset({"manual_input"}),
     )
     if not diagnostics:

@@ -11,7 +11,14 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId, M210GrossIncomeSourceMode, Period, scan_directory, validated_casilla_id
+from ....core import (
+    BindingSourceKind,
+    CasillaId,
+    M210GrossIncomeSourceMode,
+    Period,
+    scan_directory,
+    validated_casilla_id,
+)
 from ....core.resources import resources
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...calculations.registry import RelationId, resolve_m303_regimen_simplificado_snapshot
@@ -24,6 +31,7 @@ from ...iva import (
 from .._calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
+    CalculationSourceRef,
     FilingInstanceEvidence,
     M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
@@ -570,6 +578,55 @@ def test_revision_id_changes_when_work_unit_id_changes() -> None:
         filing_instance_evidence=None,
     )
     assert id_a != id_b
+
+
+def test_revision_id_canonicalizes_complete_source_provenance_and_refuses_identity_collisions() -> None:
+    first = CalculationSourceRef(
+        resolver_id="invoice_catalogue",
+        binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        source_ref="collectible_invoice:inv-0001",
+        fingerprint="sha256:" + "a" * 64,
+        dependency_treatment="factual_evidence",
+    )
+    second = CalculationSourceRef(
+        resolver_id="foreign_assets_aggregation",
+        binding_source=BindingSourceKind.FOREIGN_ASSET,
+        source_kind=BindingSourceKind.FOREIGN_ASSET.value,
+        source_ref="foreign_asset:asset-0001",
+        fingerprint="sha256:" + "b" * 64,
+    )
+    common = {
+        "work_unit_id": "a" * 64,
+        "input_values_by_casilla_id": {},
+        "binding_overrides": {},
+        "casilla_values": {},
+        "filing_instance_evidence": None,
+    }
+    canonical = derive_calculation_revision_id(**common, source_provenance=(first, second))
+    assert canonical == derive_calculation_revision_id(**common, source_provenance=(second, first))
+    assert canonical != derive_calculation_revision_id(
+        **common,
+        source_provenance=(first.model_copy(update={"resolver_id": "rival-resolver"}), second),
+    )
+    assert canonical != derive_calculation_revision_id(
+        **common,
+        source_provenance=(first.model_copy(update={"fingerprint": "sha256:" + "c" * 64}), second),
+    )
+
+
+def test_persisted_source_ref_requires_a_coherent_explicit_binding_axis() -> None:
+    payload = {
+        "resolver_id": "invoice_catalogue",
+        "source_kind": BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        "source_ref": "collectible_invoice:inv-0001",
+    }
+    with pytest.raises(ValidationError):
+        CalculationSourceRef.model_validate(payload)
+    with pytest.raises(ValidationError, match="must equal source_kind"):
+        CalculationSourceRef.model_validate(
+            {**payload, "binding_source": BindingSourceKind.PAYABLE_INVOICE},
+        )
 
 
 def test_revision_id_changes_when_row_binding_value_changes() -> None:

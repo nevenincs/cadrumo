@@ -36,12 +36,12 @@ from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._execution_policies import (
+    BOOTSTRAP_DESTRUCTIVE,
+    BOOTSTRAP_WRITE,
     BROWSER_CONNECTIVITY,
     CALCULATION_READ,
     ENCRYPTED_READ,
-    ENCRYPTED_WRITE,
     LOCAL_READ,
-    PROFILE_DESTRUCTIVE,
     REGISTRY_READ,
     declare_metadata_group,
 )
@@ -196,7 +196,7 @@ def _register_repair_logs_command(repair_app: typer.Typer) -> None:
 
 def _register_repair_quarantine_command(repair_app: typer.Typer) -> None:
     @repair_app.command("quarantine", help=tr("cli.config.repair.quarantine_help"))
-    @command_execution_policy(ENCRYPTED_WRITE)
+    @command_execution_policy(BOOTSTRAP_WRITE)
     def repair_quarantine(
         ctx: typer.Context,
         yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.quarantine_yes_help")),
@@ -283,7 +283,7 @@ def _register_repair_quarantine_command(repair_app: typer.Typer) -> None:
 
 def _register_repair_reset_progress_command(repair_app: typer.Typer) -> None:
     @repair_app.command("reset-progress", help=tr("cli.config.repair.reset_progress_help"))
-    @command_execution_policy(PROFILE_DESTRUCTIVE)
+    @command_execution_policy(BOOTSTRAP_DESTRUCTIVE)
     def repair_reset_progress(
         ctx: typer.Context,
         yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.reset_progress_yes_help")),

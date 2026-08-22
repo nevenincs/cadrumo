@@ -677,6 +677,95 @@ def _collapse_stuttered_row_prefix(lines: tuple[str, ...]) -> tuple[str, ...]:
     )
 
 
+#: The TRUE ordinal and position of a damaged row, restated on a line of its
+#: own: ``54 827 Ajustes por valoracion [380]``. The line is not itself a row --
+#: it carries no length and no naturaleza -- so it can only be read together
+#: with the half that does.
+_COORDINATE_STUTTER_RE = re.compile(
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<rest>\S.*)$",
+)
+
+#: The other half: length, naturaleza and description with no coordinates at
+#: all, which is what a row whose coordinate column was lost leaves behind.
+_ORPHAN_MEASURE_RE = re.compile(
+    r"^\s*(?P<length>\d+)\s+(?P<naturaleza>An|Num|N|A)\.?\s+(?P<description>\S.*)$",
+    re.IGNORECASE,
+)
+
+#: A casilla reference anywhere in a line.
+_ANY_CASILLA_TAG_RE = re.compile(r"\[\d+\]")
+
+
+def _recover_coordinate_stutter_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Rebuild a row whose coordinate column was damaged, from the stutter restating it.
+
+    Modelo 200's 2010 and 2011 editions lose the coordinate column on some rows
+    and then restate it. The damage takes two forms: the coordinates vanish
+    entirely, leaving ``17 N <description>``; or they survive mangled, so
+    ``54 827`` arrives as ``4 82`` and parses as a real but WRONG row at
+    ordinal 4, position 82. Either way a following line states the true pair.
+
+    Both halves are required, and that is the whole guard. The coordinates are
+    admitted only when they are OVER-DETERMINED against the last undamaged row
+    -- the ordinal must follow by one AND the position must resume where that
+    row ended, the same two independent facts :func:`_continues` checks
+    everywhere else. The length and naturaleza are never inferred: they must be
+    stated by the donor half. Where no donor exists the site is left alone,
+    which is why this declines the three sites in these same two editions that
+    state coordinates and a casilla tag but nothing else -- recovering those
+    would mean inventing a naturaleza and truncating a description.
+    """
+    parsed = tuple(_parse_pdf_row(line, index + 1) for index, line in enumerate(lines))
+
+    def _anchor(before: int) -> _PdfRow | None:
+        for index in range(before - 1, -1, -1):
+            if parsed[index] is not None:
+                return parsed[index]
+        return None
+
+    rebuilt: dict[int, str] = {}
+    dropped: set[int] = set()
+    for index, line in enumerate(lines):
+        if parsed[index] is not None or index == 0:
+            continue
+        stutter = _COORDINATE_STUTTER_RE.match(line)
+        if stutter is None or not _ANY_CASILLA_TAG_RE.search(line):
+            continue
+        donor_index = index - 1
+        if donor_index in dropped or donor_index in rebuilt:
+            continue
+        anchor = _anchor(donor_index)
+        donor_row = parsed[donor_index]
+        if donor_row is None:
+            measure = _ORPHAN_MEASURE_RE.match(lines[donor_index])
+            if measure is None:
+                continue
+            length = measure.group("length")
+            naturaleza = measure.group("naturaleza")
+            description = measure.group("description")
+        else:
+            if _continues(anchor, donor_row.ordinal or "", donor_row.offset):
+                continue  # the neighbour is a healthy row, not a damaged half
+            length = str(donor_row.length)
+            naturaleza = donor_row.type_code
+            description = donor_row.description
+        ordinal = stutter.group("ordinal")
+        offset = int(stutter.group("offset"))
+        if not _continues(anchor, ordinal, offset):
+            continue
+        rebuilt[donor_index] = (
+            f"{ordinal} {offset} {length} {naturaleza} {description} {stutter.group('rest')}"
+        )
+        dropped.add(index)
+
+    if not rebuilt:
+        return lines
+    return tuple(
+        rebuilt.get(index, line)
+        for index, line in enumerate(lines)
+        if index not in dropped
+    )
+
 #: A field row whose four tokens are complete but whose DESCRIPTION wrapped onto
 #: the next line. AEAT does this often enough to matter: modelo 202 writes
 #: ``15 80 1 Num`` and puts "Datos adicionales (3) - Cooperativa fiscalmente
@@ -749,6 +838,126 @@ def _reattach_stranded_casilla_tags(lines: tuple[str, ...]) -> tuple[str, ...]:
 #: and NATURALEZA arrived fused into another: ``59 1A Indicador ...`` for what
 #: AEAT prints as ``5 9 1 A Indicador ...``.
 _FUSED_ROW_RE = re.compile(r"^\s*(\d+)\s+(\d+)([A-Za-z][A-Za-z.]*)\s+(\S.*)$")
+
+
+#: A row whose OFFSET and LENGTH were emitted twice and whose naturaleza was
+#: glued to the description's opening column marker:
+#: ``137 1777 15 1777 15 AnC B Participaciones ...`` for AEAT's
+#: ``137 1777 15 An C B Participaciones ...``.
+_DOUBLED_COORDINATE_ROW_RE = re.compile(
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s+"
+    r"(?P=offset)\s+(?P=length)\s+(?P<naturaleza>An|Num|Tit|N|A)(?P<rest>\S.*)$",
+)
+
+
+def _split_tail_from_leading_fragment(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Separate a reversed-column TAIL from the previous row's trailing fragment.
+
+    Modelo 200's 2010 edition prints two consecutive RIC rows whose descriptions
+    differ only by a footnote marker, and the extraction runs the first row's
+    trailing ``(1) [020]`` into the second row's tail::
+
+        '78 1219 17 Num Reg.reserva ... Inv.anticipadas futuras dotaciones R'
+        '(1) [020] 17 Num Reg.reserva ... Inv.anticipadas futuras dotaciones'
+        '79 1236 (2 a 6) [021]'
+
+    The middle line is row 79's length, naturaleza and description; the last is
+    its ordinal and position. :func:`_rejoin_reversed_column_rows` pairs a tail
+    with an adjacent head, but that tail cannot match
+    :data:`_REVERSED_ROW_TAIL_RE` while a footnote and a casilla tag sit in
+    front of it, so the pair is never formed and position 1236 is lost.
+
+    Two independent facts are required before splitting, neither read off the
+    line being changed. The SUFFIX must be a well-formed tail, and the FOLLOWING
+    line must be a head whose ordinal follows the last row read by one and whose
+    offset resumes exactly where that row ended. A fragment that happens to
+    precede tail-shaped text, with no head continuing the sequence after it, is
+    left alone.
+
+    The fragment is emitted as its own line rather than dropped: it is the
+    previous row's own content, and discarding text to make a row appear is the
+    defect this repair exists to undo, inverted.
+    """
+    split: list[str] = []
+    previous: _PdfRow | None = None
+    for index, line in enumerate(lines):
+        parsed = _parse_pdf_row(line, index + 1)
+        if parsed is not None:
+            previous = parsed
+            split.append(line)
+            continue
+        recovered = False
+        if (
+            previous is not None
+            and previous.ordinal is not None
+            and previous.ordinal.isdigit()
+            and index + 1 < len(lines)
+            and _REVERSED_ROW_TAIL_RE.match(line) is None
+        ):
+            head = _REVERSED_ROW_HEAD_RE.match(lines[index + 1]) or _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(
+                lines[index + 1],
+            )
+            if head is not None and _continues(previous, head.group("ordinal"), int(head.group("offset"))):
+                tokens = line.split()
+                for cut in range(1, len(tokens)):
+                    suffix = " ".join(tokens[cut:])
+                    if _REVERSED_ROW_TAIL_RE.match(suffix) is not None:
+                        split.append(" ".join(tokens[:cut]))
+                        split.append(suffix)
+                        recovered = True
+                        break
+        if not recovered:
+            split.append(line)
+    return tuple(split)
+
+
+def _collapse_doubled_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Collapse a row whose position and length were printed twice.
+
+    Modelo 200's 2010 edition emits some rows with the coordinate pair repeated
+    and the naturaleza run into the description's stray column marker, which
+    matches no column shape and is refused -- leaving a hole the width of the
+    row it lost.
+
+    Two independent confirmations are required, and the first is what makes this
+    safe: the repeat must be EXACT, matched by backreference rather than by
+    re-reading two numbers that merely look similar, so the source itself states
+    the coordinate twice. The row must then also continue the previous one --
+    ordinal by one, offset resuming where it ended -- so a doubled pair that
+    lands in the wrong place is still refused.
+
+    The naturaleza is separated on its own evidence: it is a closed set, so a
+    token beginning with one of its members and continuing into text can only be
+    that member followed by description. No position is inferred anywhere; every
+    number written out here was read from the line.
+    """
+    collapsed: list[str] = []
+    previous: _PdfRow | None = None
+    for index, line in enumerate(lines):
+        parsed = _parse_pdf_row(line, index + 1)
+        if parsed is not None:
+            previous = parsed
+            collapsed.append(line)
+            continue
+        doubled = _DOUBLED_COORDINATE_ROW_RE.match(line)
+        if (
+            doubled is not None
+            and previous is not None
+            and previous.ordinal is not None
+            and previous.ordinal.isdigit()
+            and _continues(previous, doubled.group("ordinal"), int(doubled.group("offset")))
+        ):
+            rebuilt = (
+                f"{doubled.group('ordinal')} {doubled.group('offset')} {doubled.group('length')} "
+                f"{doubled.group('naturaleza')} {doubled.group('rest').strip()}"
+            )
+            candidate = _parse_pdf_row(rebuilt, index + 1)
+            if candidate is not None:
+                previous = candidate
+                collapsed.append(rebuilt)
+                continue
+        collapsed.append(line)
+    return tuple(collapsed)
 
 
 def _split_fused_ordinal_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
@@ -925,7 +1134,9 @@ def _extract_record_design_pdf_stream(
     lines = _reattach_stranded_casilla_tags(
         _split_row_from_wrapped_content(
             _split_fused_ordinal_offset_rows(
-                _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(base_lines)),
+                _collapse_doubled_coordinate_rows(
+                    _collapse_stuttered_row_prefix(_join_wrapped_row_descriptions(base_lines)),
+                ),
             ),
         ),
     )
@@ -1077,9 +1288,15 @@ def _read_with_reversed_column_repair(
     first = _extract_pdf_lines(lines, source_label=source_label, corrections=corrections)
     if not first.skipped:
         return first
-    repaired_lines = _reattach_stranded_casilla_tags(
-        _collapse_stuttered_row_prefix(
-            _join_wrapped_row_descriptions(_rejoin_reversed_column_rows(_undouble_struck_rows(lines))),
+    repaired_lines = _recover_coordinate_stutter_rows(
+        _reattach_stranded_casilla_tags(
+            _collapse_stuttered_row_prefix(
+                _join_wrapped_row_descriptions(
+                    _rejoin_reversed_column_rows(
+                        _split_tail_from_leading_fragment(_undouble_struck_rows(lines)),
+                    ),
+                ),
+            ),
         ),
     )
     try:

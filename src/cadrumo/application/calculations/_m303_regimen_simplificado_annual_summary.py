@@ -112,8 +112,9 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             m303_regimen_simplificado_annual_summary_handoff=handoff,
             provenance=(
                 CalculationSourceProvenance(
-                    source_kind=_SOURCE_KIND.value,
+                    resolver_id=self.resolver_id,
                     binding_source=_SOURCE_KIND,
+                    source_kind=_SOURCE_KIND.value,
                     source_ref=(
                         "m303-regimen-simplificado-annual-summary:"
                         f"{source.work_unit_id}:{source_revision.calculation_revision_id}"

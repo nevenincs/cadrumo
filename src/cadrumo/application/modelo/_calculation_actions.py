@@ -93,6 +93,7 @@ from ...domain.modelos import (
     WorkUnitCatalogueRepositoryProtocol,
     upsert_calculation_revision,
 )
+from ...domain.transactions import TransactionCatalogueRepositoryProtocol
 from ..calculations import CalculationObservationRepository
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
 from ..filing import modelo_record_repository_for_application
@@ -135,6 +136,8 @@ from ._calculation_resolution import (
 from ._calculation_resolution import (
     resolve_calculation_inputs as _resolve_calculation_inputs,
 )
+from ._calculation_route import CalculationRouteStage as _CalculationRouteStage
+from ._calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
 from ._calculation_source_policy import (
     ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS,
     BUCKET_AGGREGATION_LOCK_SOURCES,
@@ -323,7 +326,7 @@ def _draft_ledger_anchor(
     *,
     work_unit: WorkUnit,
     source_transaction_ids: tuple[str, ...],
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
     captured_at: datetime,
 ) -> LedgerFilingSnapshot | None:
     """Return the ledger snapshot this calculation consumed, or ``None``.
@@ -352,7 +355,7 @@ def _draft_ledger_anchor(
     tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
     return compute_ledger_filing_snapshot(
         source_transaction_ids=source_transaction_ids,
-        catalogue=tx_repo.load(),
+        catalogue=tx_repo.load_by_ids(source_transaction_ids),
         captured_at=captured_at,
     )
 
@@ -370,7 +373,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
-    ledger_preflight_transaction_repository: TransactionCatalogueRepository | None = None,
+    ledger_preflight_transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
     unresolved_relation_ids: tuple[RelationId, ...] = (),
@@ -686,6 +689,7 @@ def _resolve_bucket_source_mesh(
     work_unit: WorkUnit,
     *,
     transaction_repository: TransactionCatalogueRepository | None,
+    transaction_read_repository: TransactionCatalogueRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepository | None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
@@ -718,7 +722,9 @@ def _resolve_bucket_source_mesh(
     resolved_transaction_repository = transaction_repository or TransactionCatalogueRepository(
         bucket_id=work_unit.bucket_id,
     )
-    memoized_transaction_repository = MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
+    memoized_transaction_repository = transaction_read_repository or MemoizedTransactionCatalogueRepository(
+        resolved_transaction_repository,
+    )
     prorrata_register_repository = ProrrataRegisterRepository(bucket_id=work_unit.bucket_id)
     iva_investment_asset_register = None
     iva_investment_asset_profile_id = None
@@ -737,6 +743,7 @@ def _resolve_bucket_source_mesh(
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
         LedgerRentaIncomeAggregationSourceResolver,
+        ModeloSourceResolver,
         OssIossLedgerSourceResolver,
         RetencionesAggregationSourceResolver,
         WithholdingSourceResolver,
@@ -762,83 +769,111 @@ def _resolve_bucket_source_mesh(
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
     )
+
+    def resolve_declared(
+        resolver: ModeloSourceResolver,
+        *,
+        stage: _CalculationRouteStage = "mesh",
+    ) -> CalculationSourceResolution:
+        _require_calculation_route_resolver(stage, resolver)
+        return resolver.resolve(context)
+
     annual_summary_resolutions: tuple[CalculationSourceResolution, ...] = ()
     if filing_repository is not None:
         annual_summary_resolutions = (
-            M303RegimenSimplificadoAnnualSummarySourceResolver(
-                registry_snapshot=snapshot,
-                work_unit_repository=resolved_work_unit_repository,
-                calculation_repository=resolved_calculation_repository,
-                filing_repository=filing_repository,
-            ).resolve(context),
+            resolve_declared(
+                M303RegimenSimplificadoAnnualSummarySourceResolver(
+                    registry_snapshot=snapshot,
+                    work_unit_repository=resolved_work_unit_repository,
+                    calculation_repository=resolved_calculation_repository,
+                    filing_repository=filing_repository,
+                ),
+                stage="conditional",
+            ),
         )
     source_resolution = merge_source_resolutions(
         (
-            LedgerIvaAggregationSourceResolver(
-                transaction_repository=memoized_transaction_repository,
-                prorrata_register_repository=prorrata_register_repository,
-                investment_asset_register=iva_investment_asset_register,
-                investment_asset_profile_id=iva_investment_asset_profile_id,
-            ).resolve(context),
-            LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-                transaction_repository=memoized_transaction_repository,
-                invoice_repository=invoice_repository,
-                prorrata_register_repository=prorrata_register_repository,
-            ).resolve(context),
+            resolve_declared(
+                LedgerIvaAggregationSourceResolver(
+                    transaction_repository=memoized_transaction_repository,
+                    prorrata_register_repository=prorrata_register_repository,
+                    investment_asset_register=iva_investment_asset_register,
+                    investment_asset_profile_id=iva_investment_asset_profile_id,
+                )
+            ),
+            resolve_declared(
+                LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
+                    transaction_repository=memoized_transaction_repository,
+                    invoice_repository=invoice_repository,
+                    prorrata_register_repository=prorrata_register_repository,
+                )
+            ),
             # M130 actividad-económica income (ledger_renta_income_aggregation).
-            LedgerRentaIncomeAggregationSourceResolver(
-                transaction_repository=memoized_transaction_repository,
-            ).resolve(context),
+            resolve_declared(
+                LedgerRentaIncomeAggregationSourceResolver(
+                    transaction_repository=memoized_transaction_repository,
+                )
+            ),
             # M130 deductible-expense / gasto into casilla 02
             # (ledger_renta_gastos_pago_fraccionado_aggregation) — the OUTGOING sibling of the
             # income resolver, same cumulative quarterly window.
-            LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
-                transaction_repository=memoized_transaction_repository,
-                prorrata_register_repository=prorrata_register_repository,
-            ).resolve(context),
+            resolve_declared(
+                LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
+                    transaction_repository=memoized_transaction_repository,
+                    prorrata_register_repository=prorrata_register_repository,
+                )
+            ),
             # M151 impatriado (Ley Beckham) Spanish-source base
             # (ledger_impatriado_income_aggregation): folds only ES-source income
             # into impatriado.base-liquidable-general over the annual ejercicio and
             # segregates every foreign / jurisdiction-unresolved row as a typed
             # BECKHAM_FOREIGN_SOURCE_SEGREGATED source diagnostic (art. 93.2 LIRPF).
-            LedgerImpatriadoIncomeAggregationSourceResolver(
-                transaction_repository=memoized_transaction_repository,
-            ).resolve(context),
+            resolve_declared(
+                LedgerImpatriadoIncomeAggregationSourceResolver(
+                    transaction_repository=memoized_transaction_repository,
+                )
+            ),
             # M210 explicit IRNR income: the registry-bound gross-income source
             # admits only ES transactions carrying the selected official code.
-            LedgerIrnrIncomeAggregationSourceResolver(
-                transaction_repository=memoized_transaction_repository,
-            ).resolve(context),
+            resolve_declared(
+                LedgerIrnrIncomeAggregationSourceResolver(
+                    transaction_repository=memoized_transaction_repository,
+                )
+            ),
             # M369 OSS/IOSS (ledger_oss_aggregation).  The live path projects
             # OSS/IOSS-tagged issued invoices into validated ledger candidates;
             # pre-classified callers can still pass candidates directly through
             # the resolver constructor.
-            OssIossLedgerSourceResolver(invoice_repository=invoice_repository).resolve(context),
+            resolve_declared(OssIossLedgerSourceResolver(invoice_repository=invoice_repository)),
             # Retenciones family source (retenciones_aggregation): M115 reads the
             # dedicated per-perceptor store for quarterly count/base, while M180/M193
             # read it for distinct perceptor-NIF counts. Empty store on a declaring
             # revision surfaces a no-silent advisory.
-            RetencionesAggregationSourceResolver().resolve(context),
+            resolve_declared(RetencionesAggregationSourceResolver()),
             # M190 distinct percepción count (withholding): reads the dedicated
             # per-perceptor-clave withholding store and materialises scalar
             # withholding bindings. Empty store on a declaring revision surfaces
             # a no-silent advisory while still materialising an explicit zero.
-            WithholdingSourceResolver().resolve(context),
+            resolve_declared(WithholdingSourceResolver()),
             # M349 collectible / payable invoices (collectible_invoice,
             # payable_invoice).  Loads the encrypted invoice catalogue and resolves
             # binding values for intra-community transactions in scope.
-            InvoiceCatalogueSourceResolver(
-                invoice_repository=invoice_repository,
-            ).resolve(context),
+            resolve_declared(
+                InvoiceCatalogueSourceResolver(
+                    invoice_repository=invoice_repository,
+                )
+            ),
             # Modelo 720 foreign assets (foreign_asset). This resolver is
             # repository-free: callers pass typed observations explicitly when a
             # calculation should include M720 asset rows.
-            ForeignAssetsAggregationSourceResolver(
-                observations=foreign_asset_observations,
-            ).resolve(context),
+            resolve_declared(
+                ForeignAssetsAggregationSourceResolver(
+                    observations=foreign_asset_observations,
+                )
+            ),
             # Modelo 184 attribution members are declared on the attribution-entity
             # profile as repeatable socios with explicit assigned base amounts.
-            AtribucionMemberSourceResolver().resolve(context),
+            resolve_declared(AtribucionMemberSourceResolver()),
             # Cross-period carry: prior-filing observations flow through the
             # backend-binding channel so an automatically-carried previous_filing
             # value fills the binding gap, while a caller --binding still
@@ -846,14 +881,16 @@ def _resolve_bucket_source_mesh(
             # rejection set below — ruling D2). The 303 IVA-compensation
             # binding is excluded here because the iva-wallet compensación
             # decision owns it (ruling D3).
-            PreviousFilingSourceResolver(
-                registry_snapshot=snapshot,
-                excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
-                    modelo_id=str(snapshot.modelo.id),
-                    revision_id=str(snapshot.revision.id),
-                    relations=snapshot.revision.relations,
-                ),
-            ).resolve(context),
+            resolve_declared(
+                PreviousFilingSourceResolver(
+                    registry_snapshot=snapshot,
+                    excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
+                        modelo_id=str(snapshot.modelo.id),
+                        revision_id=str(snapshot.revision.id),
+                        relations=snapshot.revision.relations,
+                    ),
+                )
+            ),
             # Relation canonical for cross-modelo fold-in. The relation resolver
             # folds prior filed observations through each declared relation's
             # aggregation op and MATERIALISES the result into the relation's
@@ -864,11 +901,11 @@ def _resolve_bucket_source_mesh(
             # entire relation corpus (M100 pagos-fraccionados + retenciones
             # credits, M180/M190/M193 reconciliations, M200/M202 carries) live on
             # the operator calculate path.
-            RelationPrefillSourceResolver(registry_snapshot=snapshot).resolve(context),
+            resolve_declared(RelationPrefillSourceResolver(registry_snapshot=snapshot)),
             # Modelo 390 annual compensation carry boxes 97 / 662 are one FIFO
             # partition over filed Modelo 303 compensation states, not two
             # independent relation copy/sum folds.
-            IvaCompensationAnnualPartitionSourceResolver(registry_snapshot=snapshot).resolve(context),
+            resolve_declared(IvaCompensationAnnualPartitionSourceResolver(registry_snapshot=snapshot)),
             *annual_summary_resolutions,
         ),
     )
@@ -911,6 +948,7 @@ def _source_provenance_refs(
     """
     return tuple(
         CalculationSourceRef(
+            resolver_id=provenance.resolver_id,
             source_kind=provenance.source_kind,
             binding_source=provenance.binding_source,
             source_ref=provenance.source_ref,
@@ -1150,6 +1188,7 @@ def _resolve_bucket_aggregation_source_resolution(
     *,
     preparation: _BucketAggregationPreparation,
     transaction_repository: TransactionCatalogueRepository | None,
+    transaction_read_repository: TransactionCatalogueRepositoryProtocol | None,
     invoice_repository: InvoiceCatalogueRepository | None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
@@ -1165,6 +1204,7 @@ def _resolve_bucket_aggregation_source_resolution(
         preparation.snapshot,
         preparation.work_unit,
         transaction_repository=transaction_repository,
+        transaction_read_repository=transaction_read_repository,
         invoice_repository=invoice_repository,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
@@ -1316,9 +1356,14 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         text_casilla_inputs=text_casilla_inputs,
         detail_rows=detail_rows,
     )
+    resolved_transaction_repository = transaction_repository or TransactionCatalogueRepository(
+        bucket_id=preparation.work_unit.bucket_id,
+    )
+    transaction_reads = MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
     source_resolution = _resolve_bucket_aggregation_source_resolution(
         preparation=preparation,
-        transaction_repository=transaction_repository,
+        transaction_repository=resolved_transaction_repository,
+        transaction_read_repository=transaction_reads,
         invoice_repository=invoice_repository,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -1332,7 +1377,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     channels = _bucket_aggregation_channels(
         preparation=preparation,
         source_resolution=source_resolution,
-        transaction_repository=transaction_repository,
+        transaction_repository=resolved_transaction_repository,
         detail_rows=detail_rows,
     )
     revision = _calculate_modelo_revision_with_trusted_mesh_sources(
@@ -1348,7 +1393,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         backend_casilla_inputs=channels.backend_casilla_inputs,
         iva_compensation_decision=iva_compensation_decision,
         iva_compensation_decision_repository=iva_compensation_decision_repository,
-        ledger_preflight_transaction_repository=transaction_repository,
+        ledger_preflight_transaction_repository=transaction_reads,
         enum_binding_values=enum_binding_values,
         borrador_snapshot_id=borrador_snapshot_id,
         relation_values=channels.reconciliation.merged_relation_values,

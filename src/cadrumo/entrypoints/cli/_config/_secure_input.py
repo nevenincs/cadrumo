@@ -1,12 +1,13 @@
-"""Secure operator secret input for custody commands.
+"""Secure explicit operator-secret input helpers for custody commands.
 
-Secrets reach the custody verbs through exactly three channels, never the
-command line and never the process environment: interactive no-echo prompts on
-the controlling terminal, a single bounded strict-JSON object read from standard
-input under ``--secrets-stdin``, or the same object read exactly once from an
-inherited file descriptor under ``--secrets-fd``. No secret value is ever
-accepted as an ``argv`` option, so passphrases and recovery mnemonics never
-appear in the process table, shell history, or logs.
+This module owns three explicit input helpers: a bounded strict-JSON object from
+standard input under ``--secrets-stdin``, the same object read exactly once from
+an inherited descriptor under ``--secrets-fd``, and an interactive no-echo
+prompt on the controlling terminal. Command-specific resolvers choose among
+these helpers and configured secret sources such as the sanctioned environment
+or keyring according to their own precedence. No secret value is accepted as an
+``argv`` option, so passphrases and recovery mnemonics do not appear in the
+process table or shell history.
 
 Both machine channels read at most :data:`_MAX_SECRETS_BYTES` and validate the
 parsed object against a strict ``extra="forbid"`` pydantic model whose secret

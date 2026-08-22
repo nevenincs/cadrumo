@@ -482,7 +482,7 @@ def _load_profile_record_row(
     """
     object_key = profile_record_object_key(profile_id)
     expected_key = crypto.secure_object_key_digest(object_key)
-    rows = tuple(row for row in objects.iter_all_records_raw() if row.namespace == _RECORD_NAMESPACE)
+    rows = tuple(objects.iter_all_records_raw(namespace=_RECORD_NAMESPACE))
     if len(rows) != 1:
         raise ProfileRecordIntegrityError(
             f"profile capsule must contain exactly one current record row; it holds {len(rows)}"

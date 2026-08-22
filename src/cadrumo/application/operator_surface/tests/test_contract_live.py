@@ -25,7 +25,13 @@ from ._contract_locale_fixture import pin_english_locale
 
 __all__ = ["pin_english_locale"]
 
-from ....entrypoints.cli import VerbLeafKind, build_verb_input_schemas, command_schema_refs, is_exposable_command
+from ....entrypoints.cli import (
+    VerbLeafKind,
+    build_verb_input_schemas,
+    command_execution_policy_for_cli_path,
+    command_schema_refs,
+    is_exposable_command,
+)
 from ....entrypoints.cli import app as cli_app
 from ....entrypoints.schema_surface import (
     CALLBACK_EXCLUSION_REASON_BY_CLI_PATH,
@@ -35,7 +41,6 @@ from ....entrypoints.schema_surface import (
     ROOT_LANDING_SCHEMA_KEYS,
     normalise_cli_path_to_schema_key,
 )
-from ...storage_write_policy import is_profile_bound_write_verb_path
 from .. import (
     MountedCommandDomain,
     OperatorMutability,
@@ -156,12 +161,16 @@ def _live_reconciliation() -> OperatorSurfaceReconciliation:
             ProfilePolicyInventoryRow(
                 subject_leaf_key=key,
                 classification=(
-                    "profile_bound_write"
-                    if is_profile_bound_write_verb_path(" ".join(primary_path_by_key[key]))
-                    else "non_profile_bound"
+                    "non_profile_bound"
+                    if key in ROOT_LANDING_SCHEMA_KEYS
+                    else (
+                        "profile_bound_write"
+                        if command_execution_policy_for_cli_path(primary_path_by_key[key]).write_route == "profile-bound"
+                        else "non_profile_bound"
+                    )
                 ),
                 should_expose_via_mcp=key not in ROOT_LANDING_SCHEMA_KEYS,
-                provenance="application storage policy plus root landing exposure contract",
+                provenance="callback-attached command policy plus root landing exposure contract",
             )
             for key in keys
         ),
@@ -293,12 +302,16 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
         ProfilePolicyInventoryRow(
             subject_leaf_key=key,
             classification=(
-                "profile_bound_write"
-                if is_profile_bound_write_verb_path(" ".join(primary_path_by_key[key]))
-                else "non_profile_bound"
+                "non_profile_bound"
+                if key in ROOT_LANDING_SCHEMA_KEYS
+                else (
+                    "profile_bound_write"
+                    if command_execution_policy_for_cli_path(primary_path_by_key[key]).write_route == "profile-bound"
+                    else "non_profile_bound"
+                )
             ),
             should_expose_via_mcp=key not in ROOT_LANDING_SCHEMA_KEYS,
-            provenance="application storage policy plus root landing exposure contract",
+            provenance="callback-attached command policy plus root landing exposure contract",
         )
         for key, schema in sorted(input_schemas.items())
     )

@@ -137,6 +137,8 @@ class IvaWalletDecisionSourceResolver:
             binding_values={self.binding_id: Decimal(decision.selected_amount)},
             provenance=tuple(
                 CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
+                    binding_source=None,
                     source_kind=source.source_kind,
                     source_ref=source.source_locator,
                     fingerprint=fingerprint,

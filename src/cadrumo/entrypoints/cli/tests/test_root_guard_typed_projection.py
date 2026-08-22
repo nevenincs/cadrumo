@@ -60,8 +60,7 @@ def test_schema_alias_identity_comes_from_the_shared_live_path_projection() -> N
 def test_root_fallback_verdict_projects_the_catalogue_action_and_missing_input(tmp_path: Path) -> None:
     leaf = _resolve_real_leaf("app", "modelo", "work", "verify", "revision-id")
     decision = inspect_storage_write_policy(
-        " ".join(leaf.canonical_cli_path),
-        bootstrap_exempt=False,
+        "profile-bound",
         settings=Settings(cadrumo_local_storage_root=tmp_path),
     )
     assert decision.verdict is not None
@@ -101,8 +100,7 @@ def test_root_fallback_verdict_projects_the_catalogue_action_and_missing_input(t
 def test_explicit_database_verdict_projects_a_closed_operator_decision(tmp_path: Path) -> None:
     leaf = _resolve_real_leaf("config", "google", "login")
     decision = inspect_storage_write_policy(
-        " ".join(leaf.canonical_cli_path),
-        bootstrap_exempt=False,
+        "profile-bound",
         settings=Settings(
             cadrumo_local_storage_root=tmp_path,
             cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",

@@ -29,6 +29,8 @@ import inspect
 
 import pytest
 
+from cadrumo.application.modelo import CALCULATION_ROUTE_RESOLVER_OWNERSHIP
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # Modules that publish resolver symbols through their ``__all__`` surface.
@@ -46,34 +48,23 @@ _SOURCE_MESH_MEMBERS = ("resolver_id", "owned_sources", "resolve")
 # contract, not a concrete resolver, so it is excluded from the enrolled sweep.
 _PROTOCOL_QUALNAME = "cadrumo.application.aggregation.ModeloSourceResolver"
 
-# Concrete source-mesh resolvers that are live on the production calculate path.
-# Seventeen are wired into the ``merge_source_resolutions`` tuple inside
-# ``_resolve_bucket_source_mesh``; three are pre-mesh resolvers invoked directly
-# on the production calculate path (the iva-wallet gate and the binding-resolution
-# gate). All twenty are enrolled — none may resolve to a silent blank.
+
+# Concrete source-mesh resolvers live on the production calculate path. This gate
+# projects from the route declaration consumed by runtime composition, so it cannot
+# become a second hand-maintained census. The typed manual-input owner has no
+# resolver class and is therefore intentionally absent from reflective discovery.
+def _public_qualified_name(resolver_type: type[object]) -> str:
+    for module_name in _RESOLVER_MODULES:
+        module = importlib.import_module(module_name)
+        if getattr(module, resolver_type.__name__, None) is resolver_type:
+            return f"{module_name}.{resolver_type.__name__}"
+    raise AssertionError(f"Production resolver is not publicly exported: {resolver_type!r}")
+
+
 _ENROLLED_SOURCE_MESH_RESOLVERS = frozenset(
-    {
-        "cadrumo.application.aggregation.AtribucionMemberSourceResolver",
-        "cadrumo.application.aggregation.ForeignAssetsAggregationSourceResolver",
-        "cadrumo.application.aggregation.LedgerImpatriadoIncomeAggregationSourceResolver",
-        "cadrumo.application.aggregation.LedgerIrnrIncomeAggregationSourceResolver",
-        "cadrumo.application.aggregation.LedgerIvaAggregationSourceResolver",
-        "cadrumo.application.aggregation.LedgerRentaGastosEstimacionDirectaAggregationSourceResolver",
-        "cadrumo.application.aggregation.LedgerRentaGastosPagoFraccionadoAggregationSourceResolver",
-        "cadrumo.application.aggregation.LedgerRentaIncomeAggregationSourceResolver",
-        "cadrumo.application.aggregation.OssIossLedgerSourceResolver",
-        "cadrumo.application.aggregation.ProfileSourceResolver",
-        "cadrumo.application.aggregation.RetencionesAggregationSourceResolver",
-        "cadrumo.application.aggregation.WithholdingSourceResolver",
-        "cadrumo.application.calculations.BienesInversionRegularizacionSourceResolver",
-        "cadrumo.application.calculations.IvaCompensationAnnualPartitionSourceResolver",
-        "cadrumo.application.calculations.IvaWalletDecisionSourceResolver",
-        "cadrumo.application.calculations.PreviousFilingSourceResolver",
-        "cadrumo.application.calculations.ProrrataRegularizacionSourceResolver",
-        "cadrumo.application.calculations.RelationPrefillSourceResolver",
-        "cadrumo.application.invoices.InvoiceCatalogueSourceResolver",
-        "cadrumo.application.modelo.Modelo100BorradorSourceResolver",
-    }
+    _public_qualified_name(ownership.resolver_type)
+    for ownership in CALCULATION_ROUTE_RESOLVER_OWNERSHIP
+    if ownership.resolver_type is not None
 )
 
 # Exported ``resolve``-bearing classes that are deliberately NOT source-mesh
@@ -195,9 +186,9 @@ def test_known_non_mesh_resolvers_still_exported() -> None:
 def test_discovery_count_is_pinned() -> None:
     """The exported resolver surface is pinned so a new resolver fails loudly.
 
-    Twenty concrete source-mesh resolvers (all enrolled) plus the protocol
-    contract plus zero known non-mesh resolvers. A new resolver added without
-    updating the enrolled or non-mesh set changes this count and fails here.
+    Every production-declared concrete resolver plus the protocol contract and
+    zero known non-mesh resolvers. A new resolver added without production route
+    ownership changes this count and fails here.
     """
     discovered = _discover_resolve_bearing_classes()
     source_mesh = [name for name, is_mesh in discovered.items() if is_mesh and name != _PROTOCOL_QUALNAME]

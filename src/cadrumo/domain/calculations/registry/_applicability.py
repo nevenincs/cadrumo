@@ -884,7 +884,11 @@ def resolve_applicability_rule_from_authority(
     )
 
 
-def _resolve_registry_applicability_rule(modelo: Modelo) -> ModeloApplicabilityRule:
+def _resolve_registry_applicability_rule(
+    modelo: Modelo,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> ModeloApplicabilityRule:
     """Resolve one modelo's applicability rule from the bundled registry authoring tree.
 
     The import is function-local by necessity, not preference: ``_authority``
@@ -904,12 +908,19 @@ def _resolve_registry_applicability_rule(modelo: Modelo) -> ModeloApplicabilityR
     next call. Caching here would re-introduce the path-only registry cache
     the authority-flow rule forbids -- exactly the defect S28 removed.
     """
+    if authority is not None:
+        return resolve_applicability_rule_from_authority(authority, modelo)
+
     from ._authority import bundled_authority
 
     return resolve_applicability_rule_from_authority(bundled_authority(), modelo)
 
 
-def _modelo_applicability_rule(modelo: str) -> ModeloApplicabilityRule | None:
+def _modelo_applicability_rule(
+    modelo: str,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> ModeloApplicabilityRule | None:
     """Return ``modelo``'s applicability rule, resolved from the registry or the literal table.
 
     The single seam every consumer (:func:`derive_modelo_applicability`,
@@ -921,7 +932,7 @@ def _modelo_applicability_rule(modelo: str) -> ModeloApplicabilityRule | None:
     error to ask about an unruled modelo.
     """
     if modelo in REGISTRY_RESOLVED_APPLICABILITY_MODELOS:
-        return _resolve_registry_applicability_rule(Modelo(modelo))
+        return _resolve_registry_applicability_rule(Modelo(modelo), authority=authority)
     return _MODELO_APPLICABILITY_RULES.get(modelo)
 
 
@@ -995,6 +1006,7 @@ def derive_modelo_applicability(
     modelo: str,
     *,
     today: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> ModeloApplicability:
     """Derive a modelo's applicability from the taxpayer model.
 
@@ -1016,6 +1028,8 @@ def derive_modelo_applicability(
             the Europe/Madrid civil date (``today_madrid()``) when ``None`` —
             the six-year window is a Spanish-calendar boundary. Pass an explicit
             date in tests so results are deterministic.
+        authority: Already-resolved validated authority to reuse. Omitting it
+            preserves the standalone fingerprint-bounded bundled-tree lookup.
 
     Returns:
         The :class:`ModeloApplicability` for ``modelo`` and ``profile``.
@@ -1061,7 +1075,7 @@ def derive_modelo_applicability(
             reason=_IMPATRIADO_M720_EXEMPT_REASON,
             legal_refs=_IMPATRIADO_M720_LEGAL_REFS,
         )
-    rule = _modelo_applicability_rule(modelo)
+    rule = _modelo_applicability_rule(modelo, authority=authority)
     if rule is None:
         return _incomplete_applicability(modelo, unruled=True)
     return rule.evaluate(profile)

@@ -42,6 +42,7 @@ from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
     TransactionValidationError,
@@ -150,7 +151,7 @@ def preflight_ledger_tax_readiness(
     *,
     bucket_id: str,
     period: Period,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     raw_afectacion_ratio: Decimal | None = None,
 ) -> LedgerPreflightReport:
     """Load a bucket-local catalogue and report modelo-readiness gaps.

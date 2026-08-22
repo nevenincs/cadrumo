@@ -471,8 +471,11 @@ def _apply_wallet_resolution(
 ) -> None:
     from ..aggregation import CalculationSourceContext
     from ..calculations import IvaWalletDecisionSourceResolver
+    from ._calculation_route import require_calculation_route_resolver
 
-    resolution = IvaWalletDecisionSourceResolver(decision).resolve(
+    resolver = IvaWalletDecisionSourceResolver(decision)
+    require_calculation_route_resolver("pre_mesh", resolver)
+    resolution = resolver.resolve(
         CalculationSourceContext(
             bucket_id=target.bucket_id,
             modelo=target.modelo,

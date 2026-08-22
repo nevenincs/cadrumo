@@ -298,6 +298,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
             ),
             provenance=tuple(
                 CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
                     source_kind=_SOURCE_KIND.value,
                     source_ref=(
                         "303:"

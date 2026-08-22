@@ -25,6 +25,7 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, cast
 
 import typer
+from typer._click.core import Command as _TyCommand
 
 if TYPE_CHECKING:
     import click
@@ -67,7 +68,10 @@ from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip as _strict_round_trip
 from ...core.output_rendering import OutputFormat as _OutputFormat
 from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
+from ._app_execution_policies import CALCULATION_READ as _ROOT_STATUS_POLICY
+from ._app_execution_policies import METADATA as _APP_HELP_POLICY
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
+from ._command_policy import command_execution_policy as _command_execution_policy
 from ._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
 from ._command_suggestions import (
     LazySubcommand as _LazySubcommand,
@@ -128,6 +132,7 @@ app = typer.Typer(
 
 
 @app.callback()
+@_command_execution_policy(_ROOT_STATUS_POLICY)
 def _root(
     ctx: typer.Context,
     language: str | None = typer.Option(
@@ -508,10 +513,11 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     refuses, naming the verb that fixes it.
 
     The per-verb guards remain the primary refusal surface. This root
-    callback adds only one fail-closed guard before the verb body: a
-    real operator invocation of a guarded profile-bound mutation verb
-    may not proceed when settings route the primary SQL store to the
-    root fallback database.
+    callback adds one fail-closed guard before the verb body: a callback whose
+    attached execution policy declares ``profile-bound`` may not proceed when
+    settings route the primary SQL store to the root fallback database. The
+    selected live callback is resolved by canonical path; no parallel path
+    catalogue or mutation-name heuristic participates.
     ``_full_invocation_verb_path`` returns ``None`` for in-process test
     runner invocations (``sys.argv[0]`` is not the ``aeat`` console
     script). In that case we fall back to
@@ -522,21 +528,24 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     bare and the session would never open.
     """
     from ...adapters.persistence.storage import active_bucket_session_serves
-    from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
-    from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 
     verb_path = _resolve_invocation_verb_path(ctx)
     exempt = is_bootstrap_exempt(verb_path)
     explicit_profile_target = _is_explicit_profile_target_invocation(ctx, verb_path)
-    argv_tokens = _full_invocation_tokens() or tuple(
-        str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ())
-    )
-    write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt, argv_tokens=argv_tokens)
-    if not write_policy.allowed:
-        leaf = requested_cli_leaf(ctx)
-        if leaf is None or write_policy.verdict is None:
+    leaf = requested_cli_leaf(ctx)
+    if leaf is None:
+        raise RuntimeError("root dispatch cannot resolve execution policy without a requested CLI leaf")
+    execution_policy = _execution_policy_for_cli_path(app, leaf.canonical_cli_path)
+    if execution_policy.write_route == "profile-bound":
+        from ...application.storage_write_policy import inspect_storage_write_policy
+
+        write_policy = inspect_storage_write_policy(execution_policy.write_route)
+    else:
+        write_policy = None
+    if write_policy is not None and not write_policy.allowed:
+        if write_policy.verdict is None:
             raise RuntimeError("root write-policy refusal is missing its requested leaf or verdict")
         projection = project_cli_policy_refusal(
             requested_leaf=leaf,
@@ -1147,6 +1156,7 @@ app_app = typer.Typer(
 
 
 @app_app.callback()
+@_command_execution_policy(_APP_HELP_POLICY)
 def _app_root(
     ctx: typer.Context,
     help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.root.app_help_help"), is_eager=True),
@@ -1234,7 +1244,7 @@ app.add_typer(app_app, name="app")
 _decorate_typer_app(app)
 
 
-def full_command_tree() -> click.Command:
+def full_command_tree() -> _TyCommand:
     """Materialise the whole CLI as one fully-loaded Click command tree.
 
     Drains every lazily-registered subtree reachable from :data:`app`, converts

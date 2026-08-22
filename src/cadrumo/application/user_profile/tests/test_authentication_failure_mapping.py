@@ -6,11 +6,17 @@ import pytest
 
 from ....adapters.persistence.storage import KeyringUnavailableError
 from ....adapters.persistence.storage.custody import (
+    ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
+    ProfileCustodyRecoverySecretError,
     ProfileCustodyRefusal,
     ProfileCustodyRefusedError,
 )
-from .. import ProfilePasswordProofOperation, map_profile_password_proof_failure
+from .. import (
+    ProfileAuthenticationRefusedError,
+    ProfilePasswordProofOperation,
+    map_profile_authentication_proof_failure,
+)
 from .._custody_transactions import ProfileCustodyTransactionConflictError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -32,4 +38,26 @@ def test_operational_failures_never_map_to_authentication_refusal(
     operation: ProfilePasswordProofOperation,
 ) -> None:
     """Every representative non-password family keeps its original classification."""
-    assert map_profile_password_proof_failure(fault, operation=operation) is None
+    assert map_profile_authentication_proof_failure(fault, operation=operation) is None
+
+
+def test_only_recovery_restore_maps_recovery_secret_refusal() -> None:
+    fault = ProfileCustodyRecoverySecretError("internal recovery diagnostic")
+
+    for operation in ProfilePasswordProofOperation:
+        mapped = map_profile_authentication_proof_failure(fault, operation=operation)
+        if operation is ProfilePasswordProofOperation.RECOVERY_RESTORE:
+            assert isinstance(mapped, ProfileAuthenticationRefusedError)
+            assert mapped.context is None
+        else:
+            assert mapped is None
+
+
+def test_recovery_restore_does_not_map_password_refusal() -> None:
+    assert (
+        map_profile_authentication_proof_failure(
+            ProfileCustodyPasswordError("internal password diagnostic"),
+            operation=ProfilePasswordProofOperation.RECOVERY_RESTORE,
+        )
+        is None
+    )

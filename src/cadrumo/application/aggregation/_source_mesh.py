@@ -406,6 +406,13 @@ class BindingSourceDisposition(StrEnum):
     RESERVED = "reserved"  # in the taxonomy but no binding and no resolver yet (counterpart/invoice headroom)
 
 
+class CompositeSourceResolverId(StrEnum):
+    """Closed identities owned only by source-resolution composition."""
+
+    EXCLUSIVE_MESH = "source_mesh"
+    PRECEDENCE_MESH = "source_mesh_precedence"
+
+
 def build_binding_source_dispositions(
     enrolled_sources: frozenset[BindingSourceKind],
 ) -> Mapping[BindingSourceKind, BindingSourceDisposition]:
@@ -671,12 +678,13 @@ def casilla_registry_legal_refs(revision: ModeloRevision, casilla_id: CasillaId)
 
 
 class CalculationSourceProvenance(BaseModel):
-    """Stable source object provenance produced by a resolver."""
+    """Stable source object provenance naming its exact producing resolver."""
 
     model_config = _STRICT_FROZEN
 
+    resolver_id: str = Field(min_length=1, max_length=128)
     source_kind: str = Field(min_length=1, max_length=64)
-    binding_source: BindingSourceKind | None = None
+    binding_source: BindingSourceKind | None
     """Canonical binding source when ``source_kind`` names one; ``None`` for non-binding provenance."""
     source_ref: str = Field(min_length=1, max_length=256)
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
@@ -697,10 +705,18 @@ class CalculationSourceProvenance(BaseModel):
     #: particular one and must never be read as one.
     dependency_treatment: str = ""
 
-    @model_validator(mode="before")
-    @classmethod
-    def _set_binding_source(cls, value: object) -> object:
-        return _infer_binding_source(value)
+    @model_validator(mode="after")
+    def _require_coherent_binding_source(self) -> CalculationSourceProvenance:
+        try:
+            source_kind = BindingSourceKind(self.source_kind)
+        except ValueError:
+            source_kind = None
+        if self.binding_source is None:
+            if source_kind is not None:
+                raise SourceMeshError("aggregation.source_mesh.errors.provenance_binding_source_missing")
+        elif source_kind is not self.binding_source:
+            raise SourceMeshError("aggregation.source_mesh.errors.provenance_binding_source_mismatch")
+        return self
 
     @model_validator(mode="after")
     def _relation_provenance_is_complete(self) -> CalculationSourceProvenance:
@@ -815,7 +831,7 @@ class CalculationSourceResolution(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    resolver_id: str = Field(min_length=1, max_length=128)
+    resolver_id: str | CompositeSourceResolverId = Field(min_length=1, max_length=128)
     owned_sources: tuple[BindingSourceKind, ...] = Field(default_factory=tuple)
     binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
     enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
@@ -974,6 +990,17 @@ class CalculationSourceResolution(BaseModel):
         if len(normalized) != len(set(normalized)):
             raise SourceMeshError("aggregation.source_mesh.errors.source_transaction_ids_duplicate")
         return tuple(sorted(normalized))
+
+    @model_validator(mode="after")
+    def _provenance_names_its_producing_resolver(self) -> CalculationSourceResolution:
+        if isinstance(self.resolver_id, CompositeSourceResolverId):
+            return self
+        if self.resolver_id in set(CompositeSourceResolverId):
+            raise SourceMeshError("aggregation.source_mesh.errors.reserved_composite_resolver_id")
+        mismatched = tuple(row.resolver_id for row in self.provenance if row.resolver_id != self.resolver_id)
+        if mismatched:
+            raise SourceMeshError("aggregation.source_mesh.errors.provenance_resolver_mismatch")
+        return self
 
     @field_serializer("binding_values")
     def _serialize_binding_values(self, value: Mapping[BindingId, Decimal]) -> dict[BindingId, Decimal]:
@@ -1170,7 +1197,7 @@ class _SourceResolutionMergeState:
 def merge_source_resolutions(
     resolutions: Sequence[CalculationSourceResolution],
     *,
-    resolver_id: str = "source_mesh",
+    resolver_id: CompositeSourceResolverId = CompositeSourceResolverId.EXCLUSIVE_MESH,
 ) -> CalculationSourceResolution:
     """Merge resolver outputs and reject ambiguous ownership.
 
@@ -1185,7 +1212,7 @@ def merge_source_resolutions(
 def merge_source_resolutions_by_precedence(
     tiers: Sequence[CalculationSourceResolution],
     *,
-    resolver_id: str = "source_mesh_precedence",
+    resolver_id: CompositeSourceResolverId = CompositeSourceResolverId.PRECEDENCE_MESH,
 ) -> CalculationSourceResolution:
     """Overlay tiers into one :class:`CalculationSourceResolution`.
 

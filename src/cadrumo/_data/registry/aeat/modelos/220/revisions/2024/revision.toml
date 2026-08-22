@@ -60,35 +60,57 @@ source_refs = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
-agent: review of the modelo 220 (IS, regimen de consolidacion fiscal) 2024 era. DISCLOSURE \
--- self-review: the same agent split this revision out of the former open-ended \
-'2024-y-siguientes' in the immediately preceding commits, and swept the split's fallout \
-(locale keys, a record-design exception key, a pinned revision id in a sibling test). No \
-casilla, window date or offset was altered by the split; the 2024 window and both casillas \
-are the ones this revision already carried. VERIFIED -- SPAN: valid_to is now 2024-12-31 \
-and the revision cites only aeat-dr-220-2024. Before the split one revision spanned AEAT's \
-2024/2025 re-layout, which moves 4,524 of 7,466 shared boxes, adds 216, removes 130 and \
-changes the record set 137 -> 141; the span gate no longer reports a spanned re-layout for \
-this modelo. VERIFIED -- WHEN DUE: LIS art 124.1, 25 dias naturales tras los 6 meses \
-posteriores a la conclusion del periodo impositivo, so a calendar-year group closing 31 \
-Dec 2024 files 1-25 July 2025. The window stores those NOMINAL dates. Its \
-payment_cutoff_on 2025-07-22 is grounded in the bundled orden-hac-657-2025 art 3.2, 'desde \
-el dia 1 de julio hasta el 22 de julio de 2025, ambos inclusive'. NOT CLAIMED -- THE \
-APPROVING CLAUSE: this era's only bundled provision naming Modelo 220 is art 3, whose \
-subject is domiciliacion bancaria. That is DISTRIBUTION evidence, not the approving \
-clause; the dedicated 'Se aprueba el modelo 220' text of orden-hac-657-2025 art 1 is NOT \
-bundled. The sibling 2025 era has strictly better grounding on this point. NOT CLAIMED -- \
-RECORD DESIGN: 0 of 7,596 casillas the bundled 2024 diseno derives are modelled. This \
-revision is applicability grade and declares only the declaration header (ejercicio, tipo \
-de declaracion); no casilla number is fabricated. That is a scheduling and applicability \
-claim ONLY, not a claim about the form's content. NOT CLAIMED -- FILING: no export layout, \
-so this application cannot file the modelo; it sits on the filing-capability worklist \
-alongside modelos 038, 182, 187, 222 and 840, which the worklist gate states explicitly is \
-a backlog and not a defect to suppress. model_law_authority_scope stays inspection_only. \
-NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- the \
-audited locales are complete but their strings were not audited for accuracy; the four \
-catalogues were re-authored under the new revision id in this same sweep because locale \
-keys derive from that id."""
+agent: applicability-grade review of the Impuesto sobre Sociedades grupo-fiscal \
+consolidated declaration. DISCLOSURE -- self-review: the same agent authored the casillas \
+being reviewed. VERIFIED -- RECORD T22001000 IS AUTHORED, 77 casillas, taking this \
+revision from 2 to 79. It is the grupo fiscal declarante record: identificacion of the \
+representante or dominante entity, periodo impositivo, the entidad dominante, the group's \
+fourteen CNAE activities, its twelve tipo-de-grupo and otros-caracteres flags, the INCN \
+tranche, three legal representatives and the incidencias contact. THIS IS THE FIRST \
+CASILLA-TO-POSITION MAPPING EVER AUTHORED FOR THIS MODELO. The revision previously held \
+only two applicability-grade header casillas, and its own fragment recorded that no \
+position mapping existed so a number was not invented; that prose was corrected in the \
+same change rather than left describing a state that no longer holds. VERIFIED BEFORE ANY \
+OFFSET WAS TRUSTED -- T22001000 tiles 1..1684 exactly once with NO gap and NO PARTIAL \
+OVERLAP. Both were checked, because a gap-only check passes on overlapping fields, and the \
+filing-capability worklist names that check by name as the precondition for authoring \
+against this design. MEASURED FURTHER, and worth recording because it de-risks every \
+future iteration on this modelo: ALL 137 RECORDS of aeat-dr-220-2024, 16079 fields, carry \
+ZERO partial overlaps. The precondition is satisfied for the whole design, not merely for \
+the record authored here. VERIFIED AFTER -- every authored row was cross-checked against \
+the design row it claims: zero length mismatches, zero numbers invented, zero numbers \
+missed. Stronger than a spot check, EVERY ONE of the record's 91 fields is now either \
+authored or explicitly excluded with a stated reason, so nothing is unaccounted for. The \
+fourteen excluded are the modelo/pagina identifier envelope, the two pagina-complementaria \
+mechanics fields, the administration-reserved tipo de declaracion, the ejercicio at @106, \
+the filing-program \"inoperatividad de la ayuda al calculo\" flag, and the reservado, \
+sello electronico and fin-de-registro runs. VERIFIED -- NUMBERING IS AEAT'S WHERE AEAT \
+PRINTS ONE. Twelve fields carry a real bracket number -- 007, 012, 016, 020, 006, 065, \
+066, 067, 068, 069, 070, 083 -- and keep it. The other sixty-five carry none and take the \
+sheet-qualified byte span convention modelo 181 established, t22001000.17-25 for a field \
+at offset 17 length 9 and a bare offset for a single byte. No number was minted that AEAT \
+prints elsewhere. VERIFIED -- THE TWO GENERATED RUNS ARE PROVEN, NOT ASSUMED. The fourteen \
+CNAE epigrafe/descripcion pairs step 65 positions from 258 and land exactly on 1168, where \
+the caracteres flags begin; the three representante legal blocks step 65 from 1196 and \
+land exactly on the contacto block at 1391. Each generated offset was nonetheless \
+cross-checked individually against its own design row rather than trusted to the \
+arithmetic. VERIFIED -- YEAR-CLEAN. aeat-dr-220-2024 applies from 2024-01-01 to \
+2024-12-31, exactly the single ejercicio this revision claims, so no casilla here carries \
+a byte span for a year the design does not evidence. VERIFIED -- @106 \"Ejercicio. Campana \
+del registro\" is deliberately NOT a new casilla: it is the same fact as the existing \
+decl.ejercicio, which a layout will bind to that position. A second casilla would \
+double-declare one value. NOT CLAIMED -- 136 OF THE DESIGN'S 137 RECORDS REMAIN \
+UNAUTHORED, and 7592 of its 7604 distinct AEAT box numbers remain unmodelled. This record \
+alone does not make the modelo fileable and is roughly one half of one percent of the box \
+set. NOT CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT MEMBERSHIP CHANGE. \
+model_law_authority_scope remains inspection_only, so this stamp is made under the LOWER \
+inspection bar; if a layout ever lands the derived scope becomes filing and this stamp \
+MUST be re-made or it silently over-claims. NOT CLAIMED -- NO MONEY-CLOSURE CASILLA IS \
+DECLARED anywhere in this revision; the liquidacion records of the group declaration are \
+untouched, so nothing here supports a computed result. NOT CLAIMED -- LOCALES COMPLETE BUT \
+UNAUDITED: 308 strings across es/en/ca/hu, all 79 label keys verified non-null by counting \
+VALUES rather than keys, but the translations themselves were not reviewed by a second \
+party. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero."""
 reviewed_at = 2026-08-22
 
 [revisions."2024".family_dispositions.casilla_continuidad_evolutions]

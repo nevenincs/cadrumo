@@ -99,6 +99,7 @@ class SourceProvenancePayload(OutputSchema):
     accompanies.
     """
 
+    resolver_id: str
     source_kind: str
     binding_source: BindingSourceKind | None = None
     source_ref: str
