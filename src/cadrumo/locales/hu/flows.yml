@@ -75,7 +75,9 @@ flows:
       certificate_done: 'Azonosítás: %{provider}; aktív tanúsítvány: %{name}.'
       export: Másolat exportálása
       export_destination: A célfájl elérési útja
-      export_done: 'A titkosított másolat ide került: %{destination}.'
+      export_done: 'Titkosított másolat írva ide: %{destination}. A termék nem tudja
+        visszaimportálni; visszaállítható mentéshez használd az ''aeat config profile
+        archive export'' parancsot.'
       export_passphrase: A másolatot védő jelszó
       failed: A művelet nem fejeződött be.
       filed_history_pull_all: AEAT bevallási előzmények lekérése

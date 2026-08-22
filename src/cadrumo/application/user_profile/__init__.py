@@ -102,6 +102,8 @@ if TYPE_CHECKING:
     )
     from ._aggregate import (
         CommittedProfileView as CommittedProfileView,
+    )
+    from ._aggregate import (
         ProfileRestoreAuthority as ProfileRestoreAuthority,
     )
     from ._bundle import (
@@ -341,6 +343,9 @@ if TYPE_CHECKING:
     from ._custody_carry import (
         serialize_carried_objects as serialize_carried_objects,
     )
+    from ._custody_hold_models import (
+        ProfileCustodyRetentionOverride as ProfileCustodyRetentionOverride,
+    )
     from ._custody_pointer import (
         ProfileCustodyPointerSnapshot as ProfileCustodyPointerSnapshot,
     )
@@ -411,9 +416,6 @@ if TYPE_CHECKING:
         ProfileRecordEncryptedBlob as ProfileRecordEncryptedBlob,
     )
     from ._custody_ports import (
-        ProfileRecoveryArtifactWarning as ProfileRecoveryArtifactWarning,
-    )
-    from ._custody_ports import (
         ProfileSecureObjectInventoryPort as ProfileSecureObjectInventoryPort,
     )
     from ._custody_ports import (
@@ -427,9 +429,6 @@ if TYPE_CHECKING:
     )
     from ._custody_ports import (
         canonical_snapshot_payload as canonical_snapshot_payload,
-    )
-    from ._custody_ports import (
-        committed_profile_custody_inventory as committed_profile_custody_inventory,
     )
     from ._custody_ports import (
         create_profile_custody_registration_material as create_profile_custody_registration_material,
@@ -456,34 +455,10 @@ if TYPE_CHECKING:
         ensure_profile_custody_owner_root as ensure_profile_custody_owner_root,
     )
     from ._custody_ports import (
-        load_profile_custody_data_file as load_profile_custody_data_file,
-    )
-    from ._custody_ports import (
-        load_profile_custody_password_material as load_profile_custody_password_material,
-    )
-    from ._custody_ports import (
-        parse_profile_custody_envelope as parse_profile_custody_envelope,
-    )
-    from ._custody_ports import (
-        parse_profile_custody_recovery_envelope as parse_profile_custody_recovery_envelope,
-    )
-    from ._custody_ports import (
-        parse_profile_custody_sentinel as parse_profile_custody_sentinel,
-    )
-    from ._custody_ports import (
         profile_advance_session_idle_deadline as profile_advance_session_idle_deadline,
     )
     from ._custody_ports import (
         profile_bind_bucket_session as profile_bind_bucket_session,
-    )
-    from ._custody_ports import (
-        profile_bucket_session_open_resumed as profile_bucket_session_open_resumed,
-    )
-    from ._custody_ports import (
-        profile_close_bucket_session as profile_close_bucket_session,
-    )
-    from ._custody_ports import (
-        profile_current_bucket_session as profile_current_bucket_session,
     )
     from ._custody_ports import (
         profile_custody_owner_root as profile_custody_owner_root,
@@ -495,19 +470,10 @@ if TYPE_CHECKING:
         profile_custody_recovery_envelope_path as profile_custody_recovery_envelope_path,
     )
     from ._custody_ports import (
-        profile_custody_secure_object_key_digest as profile_custody_secure_object_key_digest,
-    )
-    from ._custody_ports import (
         profile_custody_secure_object_namespace as profile_custody_secure_object_namespace,
     )
     from ._custody_ports import (
         profile_custody_secure_object_repository as profile_custody_secure_object_repository,
-    )
-    from ._custody_ports import (
-        profile_delete_session as profile_delete_session,
-    )
-    from ._custody_ports import (
-        profile_evaluate_login_throttle as profile_evaluate_login_throttle,
     )
     from ._custody_ports import (
         profile_is_authentication_failure as profile_is_authentication_failure,
@@ -522,37 +488,13 @@ if TYPE_CHECKING:
         profile_is_persisted_session as profile_is_persisted_session,
     )
     from ._custody_ports import (
-        profile_mint_session as profile_mint_session,
-    )
-    from ._custody_ports import (
-        profile_record_login_failure as profile_record_login_failure,
-    )
-    from ._custody_ports import (
-        profile_reset_login_throttle as profile_reset_login_throttle,
-    )
-    from ._custody_ports import (
-        profile_resume_session as profile_resume_session,
-    )
-    from ._custody_ports import (
-        profile_session_path as profile_session_path,
-    )
-    from ._custody_ports import (
         profile_session_serves_bucket as profile_session_serves_bucket,
-    )
-    from ._custody_ports import (
-        profile_zeroise as profile_zeroise,
     )
     from ._custody_ports import (
         prove_profile_recovery_artifact as prove_profile_recovery_artifact,
     )
     from ._custody_ports import (
         refuse_profile_login_without_password_channel as refuse_profile_login_without_password_channel,
-    )
-    from ._custody_ports import (
-        replace_profile_custody_data_file as replace_profile_custody_data_file,
-    )
-    from ._custody_ports import (
-        replace_profile_custody_envelope as replace_profile_custody_envelope,
     )
     from ._custody_ports import (
         unlock_profile_custody_password as unlock_profile_custody_password,
@@ -857,37 +799,23 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileRecordCryptoError": "._custody_ports",
     "ProfileRecordCryptoPort": "._custody_ports",
     "ProfileRecordEncryptedBlob": "._custody_ports",
-    "ProfileRecoveryArtifactWarning": "._custody_ports",
     "ProfileSecureObjectInventoryPort": "._custody_ports",
     "create_profile_custody_registration_material": "._custody_ports",
     "create_profile_recovery_enrollment_material": "._custody_ports",
     "default_profile_bucket_event_history_repository": "._custody_ports",
     "default_profile_record_crypto_port": "._custody_ports",
     "export_profile_recovery_artifact": "._recovery_custody",
-    "load_profile_custody_data_file": "._custody_ports",
-    "parse_profile_custody_envelope": "._custody_ports",
-    "parse_profile_custody_recovery_envelope": "._custody_ports",
-    "parse_profile_custody_sentinel": "._custody_ports",
     "profile_advance_session_idle_deadline": "._custody_ports",
     "profile_custody_record_session_material": "._custody_ports",
-    "profile_custody_secure_object_key_digest": "._custody_ports",
     "profile_custody_secure_object_namespace": "._custody_ports",
     "profile_custody_secure_object_repository": "._custody_ports",
-    "profile_delete_session": "._custody_ports",
-    "profile_evaluate_login_throttle": "._custody_ports",
     "profile_is_authentication_failure": "._custody_ports",
     "profile_is_keyring_unavailable": "._custody_ports",
     "profile_is_password_authentication_failure": "._custody_ports",
     "profile_is_persisted_session": "._custody_ports",
-    "profile_mint_session": "._custody_ports",
-    "profile_reset_login_throttle": "._custody_ports",
-    "profile_resume_session": "._custody_ports",
     "profile_session_serves_bucket": "._custody_ports",
-    "profile_zeroise": "._custody_ports",
     "prove_profile_recovery_artifact": "._custody_ports",
     "refuse_profile_login_without_password_channel": "._custody_ports",
-    "replace_profile_custody_data_file": "._custody_ports",
-    "replace_profile_custody_envelope": "._custody_ports",
     "unlock_profile_custody_password": "._custody_ports",
     "verify_profile_custody_dek_against_sentinel": "._custody_ports",
     "profile_custody_recovery_envelope_path": "._custody_ports",
@@ -898,16 +826,9 @@ _LAZY_EXPORTS: dict[str, str] = {
     "default_profile_custody_local_record_store": "._custody_ports",
     "ensure_profile_custody_owner_root": "._custody_ports",
     "profile_custody_owner_root": "._custody_ports",
-    "committed_profile_custody_inventory": "._custody_ports",
     "default_profile_bucket_storage": "._custody_ports",
     "default_profile_secure_object_inventory": "._custody_ports",
-    "load_profile_custody_password_material": "._custody_ports",
-    "profile_close_bucket_session": "._custody_ports",
-    "profile_current_bucket_session": "._custody_ports",
-    "profile_session_path": "._custody_ports",
-    "profile_record_login_failure": "._custody_ports",
     "profile_bind_bucket_session": "._custody_ports",
-    "profile_bucket_session_open_resumed": "._custody_ports",
     "CENSAL_ADOPTABLE_PATHS": "._censo_sync",
     "CENSO_CERTIFICATE_AXIS_PREFIX": "._cotejo_apply",
     "CENSO_DIVERGENCE_NOTICE_CODE": "._cotejo_apply",
@@ -943,6 +864,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileCustodyDeleteConfirmation": "._custody_transactions",
     "ProfileCustodyEnvelopePort": "._custody_ports",
     "ProfileCustodyHoldAssessment": "._custody_transactions",
+    "ProfileCustodyRetentionOverride": "._custody_hold_models",
     "ProfileCustodyHoldEvidence": "._custody_transactions",
     "ProfileCustodyInventoryWitness": "._custody_transactions",
     "ProfileCustodyPasswordMaterialPort": "._custody_ports",
@@ -1049,6 +971,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "record_to_path_values": "._projections",
     "record_to_values": "._projections",
     "register_imported_profile_bundle": "._bundle",
+    "PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES": "._capsule_archive",
     "ProfileCapsuleArchiveError": "._capsule_archive",
     "ProfileCapsuleArchiveInspection": "._capsule_archive",
     "ProfileCapsuleArchiveReceipt": "._capsule_archive",
@@ -1115,9 +1038,9 @@ __all__ = [
     "CENSO_SOURCE_TAG",
     "CENSO_UNADOPTED_EVIDENCE_FIELDS",
     "COMPLETENESS_ISSUE_CODES",
-    "CommittedProfileView",
     "MASKED_PLACEHOLDER",
     "PASSPHRASE_MINIMUM_LENGTH",
+    "PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES",
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "TYPED_CATEGORY_NAMESPACES",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
@@ -1129,6 +1052,7 @@ __all__ = [
     "CensoSyncError",
     "CensoSyncService",
     "CommittedProfileRepository",
+    "CommittedProfileView",
     "EffectiveFact",
     "EncryptedProfileBundleError",
     "EncryptedProfileBundleExport",
@@ -1157,6 +1081,7 @@ __all__ = [
     "ProfileCustodyPasswordMaterialPort",
     "ProfileCustodyPointerSnapshot",
     "ProfileCustodyRecoveryEnvelopePort",
+    "ProfileCustodyRetentionOverride",
     "ProfileCustodySecureObjectRepositoryPort",
     "ProfileCustodySentinelPort",
     "ProfileCustodyTransactionConflictError",

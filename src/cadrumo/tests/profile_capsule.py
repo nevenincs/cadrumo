@@ -16,6 +16,7 @@ from hashlib import sha256
 from pathlib import Path
 from uuid import UUID
 
+from ..adapters.persistence.storage import custody
 from ..adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
@@ -24,7 +25,6 @@ from ..adapters.persistence.storage.custody import (
     list_current_profile_custody_capsule_ids,
 )
 from ..adapters.persistence.storage.master_key import current_active_bucket_session, session_serves_bucket
-from ..application.user_profile import load_profile_custody_password_material
 from ..application.user_profile._capsule_record import ProfileRecordSession
 from ..application.user_profile._lifecycle import ProfileCapsuleLifecycle
 from ..application.user_profile._profile_record_repository import (
@@ -34,7 +34,12 @@ from ..application.user_profile._profile_record_repository import (
 from ..core.identity import canonical_profile_bucket_id
 from ..core.paths import effective_storage_root
 from ..domain.buckets import BucketEventType
-from ..domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ..domain.user_profile import (
+    ProfileSchemaValidationError,
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+)
 
 
 def _active_bucket_dek(profile_id: UUID) -> bytes:
@@ -144,7 +149,7 @@ def _new_test_envelope(profile_id: UUID) -> ProfileCustodyEnvelope:
 
 
 def _record_session(profile_id: UUID, *, root: Path) -> ProfileRecordSession:
-    material = load_profile_custody_password_material(profile_id, root=root)
+    material = custody.load_committed_profile_password_material(profile_id, root=root)
     return ProfileRecordSession.from_envelope(
         envelope=material.envelope,
         dek=_active_bucket_dek(profile_id),
@@ -192,7 +197,21 @@ def replace_test_profile_record(
     root: Path | None = None,
     event_type: BucketEventType = BucketEventType.PROFILE_VALUES_UPDATED,
 ) -> UserProfileRecord:
-    """CAS-replace a seeded record through the production capsule writer."""
+    """CAS-replace a seeded record's facts AND its setup state through the production doors.
+
+    The fact writer takes facts and nothing else, so replacing a record through
+    it alone silently dropped every other field the caller declared. A test
+    seeding ``setup_state = COMPLETE`` got its sixteen facts and an INCOMPLETE
+    record back, and the modelo readiness gate then refused the "ready" profile
+    with ``profile_readiness_setup_incomplete`` -- reporting no missing field,
+    because none was missing.
+
+    The promotion goes through :meth:`ProfileRecordRepository.complete_setup`
+    rather than writing the state directly, because that door JUDGES: COMPLETE
+    is the claim that nothing schema-required is absent, and a fixture whose
+    facts do not support the claim must be refused here rather than seeded into
+    a state no production path could produce.
+    """
     identity = UUID(str(record.profile_id))
     storage_root = effective_storage_root(root)
     with bound_test_profile_record(identity, root=storage_root) as repository:
@@ -212,6 +231,29 @@ def replace_test_profile_record(
             event_payload={},
             now=replacement.updated_at,
         )
+        if record.setup_state is ProfileSetupState.COMPLETE:
+            applied = repository.load(identity)
+            if applied.setup_state is not ProfileSetupState.COMPLETE:
+                try:
+                    repository.complete_setup(
+                        identity,
+                        expected_revision=applied.record_revision,
+                        expected_content_digest=applied.content_digest,
+                        now=replacement.updated_at,
+                    )
+                except ProfileSchemaValidationError:
+                    # The caller's facts cannot support the claim, and NO production
+                    # path can mint that record either -- COMPLETE asserts that
+                    # nothing schema-required is absent. Leaving the record as
+                    # applied is the honest answer rather than a silent one: many
+                    # fixtures seed a deliberately minimal fact set for the
+                    # behaviour under test and never read the state, and a fixture
+                    # that DOES depend on it meets the readiness gate's
+                    # missing-field refusal, which names what to add. The case this
+                    # promotion exists for is the opposite one -- a schema-complete
+                    # fact set whose state was dropped, where that gate could only
+                    # say "incomplete" and enumerate nothing.
+                    pass
         return repository.load(identity)
 
 

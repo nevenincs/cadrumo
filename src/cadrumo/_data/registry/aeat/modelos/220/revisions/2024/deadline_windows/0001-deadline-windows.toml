@@ -1,0 +1,23 @@
+# Modelo 220 annual deadline windows, grounded in the general IS declaration
+# plazo of art. 124.1 LIS: "La declaración se presentará en el plazo de los 25
+# días naturales siguientes a los 6 meses posteriores a la conclusión del período
+# impositivo." The windows below assume a calendar-year período impositivo
+# (ending 31 December), so the plazo runs from 1 July and closes on the 25th
+# natural day. The window carries the NOMINAL statutory date even when it falls
+# on a weekend: shifting it to the next dia habil is owned by
+# cadrumo.domain.deadlines.shift_deadline, which knows the BOE national and CCAA
+# holiday calendars this authoring tree does not, and which reports WHY a deadline
+# moved. A pre-shifted window silently drops that reason. Mirroring the sibling Modelo 200 windows. Groups whose período
+# impositivo ends on another date file within the same statutory 25-día window
+# measured from their own cierre.
+
+[[revisions."2024".deadline_windows]]
+id = "modelo-220-2024-0a"
+filing_year = 2024
+period = "2024 0A"
+period_kind = "annual"
+opens_on = 2025-07-01
+closes_on = 2025-07-25
+payment_cutoff_on = 2025-07-22
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["boe-modelo-200-2025-form", "aeat-modelo-200-manual-2024"]

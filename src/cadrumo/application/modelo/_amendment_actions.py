@@ -48,7 +48,7 @@ from ...core import CasillaId, Modelo
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
-from ...domain.calculations.registry import CasillaObservation, RegistryRevisionInspection, bundled_revision_inspection
+from ...domain.calculations.registry import CasillaObservation, RegistrySnapshot, bundled_authority
 from ...domain.justificante import JustificanteRepositoryProtocol
 from ...domain.modelos import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
@@ -227,7 +227,7 @@ def _m303_rectificativa_motive_is_applicable(
             context={"work_unit_id": work_unit.work_unit_id, "filing_instance_evidence_present": False},
         )
     regimen_snapshot = filing_evidence.m303.regimen_simplificado.regimen_snapshot
-    inspection = bundled_revision_inspection(
+    snapshot = bundled_authority().snapshot(
         Modelo.M303.value,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -235,7 +235,7 @@ def _m303_rectificativa_motive_is_applicable(
     record_design = regimen_snapshot.record_design
     if not _m303_rectificativa_evidence_matches_coordinate(
         filing_evidence=filing_evidence,
-        inspection=inspection,
+        snapshot=snapshot,
         work_unit=work_unit,
     ):
         return False
@@ -248,19 +248,19 @@ def _m303_rectificativa_motive_is_applicable(
 def _m303_rectificativa_evidence_matches_coordinate(
     *,
     filing_evidence: FilingInstanceEvidence,
-    inspection: RegistryRevisionInspection,
+    snapshot: RegistrySnapshot,
     work_unit: WorkUnit,
 ) -> bool:
     regimen_snapshot = filing_evidence.m303.regimen_simplificado.regimen_snapshot
     record_design = regimen_snapshot.record_design
-    inspected_source = inspection.sources.get(record_design.id)
+    inspected_source = snapshot.sources.get(record_design.id)
     return all(
         (
             filing_evidence.m303.period == work_unit.period,
             regimen_snapshot.filing_year == work_unit.filing_year,
-            regimen_snapshot.registry_revision_id == work_unit.revision_id == inspection.revision_id,
+            regimen_snapshot.registry_revision_id == work_unit.revision_id == snapshot.revision.id,
             inspected_source == record_design,
-            record_design.id in inspection.revision_source_refs,
+            record_design.id in snapshot.revision.source_refs,
         )
     )
 
@@ -418,8 +418,8 @@ def amend_modelo_revision[CasillaKey](
         work_units=work_units,
         filing_records=filing_catalogue,
         justificantes=justificantes,
-        registry_inspections={
-            work_unit.work_unit_id: bundled_revision_inspection(
+        registry_snapshots={
+            work_unit.work_unit_id: bundled_authority().snapshot(
                 Modelo.M303.value,
                 filing_year=work_unit.filing_year,
                 period=work_unit.period.registry_token,

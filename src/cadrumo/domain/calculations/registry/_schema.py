@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import (
     BaseModel,
@@ -868,7 +868,7 @@ class CasillaProducerProvenance:
             return tuple(self.binding.legal_refs)
         if self.formula is not None:
             return tuple(self.formula.legal_refs)
-        if self.producer_kind in {"manual", "informational"}:
+        if self.producer_kind in _CASILLA_GROUNDED_PRODUCER_KINDS:
             return tuple(self.casilla.legal_refs)
         return ()
 
@@ -881,9 +881,21 @@ class CasillaProducerProvenance:
             return tuple(self.binding.source_refs)
         if self.formula is not None:
             return tuple(self.formula.source_refs)
-        if self.producer_kind in {"manual", "informational"}:
+        if self.producer_kind in _CASILLA_GROUNDED_PRODUCER_KINDS:
             return tuple(self.casilla.source_refs)
         return ()
+
+
+#: Producer kinds whose grounding lives on the CASILLA itself. None of them has a
+#: producer declaration of its own to carry legal or source refs: a manual value
+#: is operator-supplied, an informational casilla produces nothing, and a
+#: projection-only casilla is populated from its canonical typed row, which is a
+#: runtime projection rather than a registry row with provenance. Omitting
+#: projection_only dropped the grounding of 366 Modelo 303 casillas -- every one
+#: of which declares legal_refs -- from their producer trace.
+_CASILLA_GROUNDED_PRODUCER_KINDS: Final[frozenset[str]] = frozenset(
+    {"manual", "informational", "projection_only"},
+)
 
 
 @dataclass(frozen=True, slots=True)

@@ -29,15 +29,11 @@ from textwrap import dedent
 
 import pytest
 
+from ....adapters.persistence.storage import master_key
 from ....core import BucketPointer, write_pointer
 from ....core.config import override_settings
 from ....tests.subprocess_cli import run_subprocess_cli_harness
-from ...user_profile import (
-    close_active_profile_record_session,
-    profile_bind_bucket_session,
-    profile_bucket_session_open_resumed,
-    profile_close_bucket_session,
-)
+from ...user_profile import close_active_profile_record_session, profile_bind_bucket_session
 from .._profile_health import assess_active_profile_health
 from ._locked_profile_support import DEK, PROFILE_ID, PROFILE_LABEL, RECORD_NAMESPACE
 
@@ -68,10 +64,10 @@ def _no_inherited_session() -> Iterator[None]:
     describe test ordering rather than the code.
     """
     close_active_profile_record_session()
-    profile_close_bucket_session()
+    master_key.close_active_bucket_session()
     yield
     close_active_profile_record_session()
-    profile_close_bucket_session()
+    master_key.close_active_bucket_session()
 
 
 def _publish_in_a_separate_process(root: Path) -> None:
@@ -88,7 +84,7 @@ def _bind_real_custody_session(root: Path) -> None:
     """Authenticate this process against the published capsule for real."""
     instant = datetime.now(UTC)
     profile_bind_bucket_session(
-        profile_bucket_session_open_resumed(
+        master_key.BucketSession.open_resumed(
             bucket_id=PROFILE_ID,
             dek=DEK,
             idle_minutes=15,

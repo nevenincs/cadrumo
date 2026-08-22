@@ -296,6 +296,33 @@ def profile_custody_deletion_path(
     return destination.parent / f".{profile_id}.deleting-{transaction_id}"
 
 
+def _release_bucket_file_handles(profile_id: UUID) -> None:
+    """Release this bucket's cached SQLite handles before destroying its directory.
+
+    A capsule directory holds the profile's own database, and an engine cached
+    for that bucket keeps the file open. Windows refuses to rename or remove a
+    directory whose files are open, so a reset running in a process that has
+    touched the profile fails at the rename with an opaque OS error rather than
+    completing.
+
+    Called here rather than left to callers because the two functions below ARE
+    the destruction path: putting it at the boundary means no caller can forget,
+    and there is nothing to forget on the platforms that would have tolerated
+    the open handle -- which is exactly what would have kept the defect hidden.
+
+    Disposal is idempotent and bucket-scoped: engines cached for other buckets
+    and for explicit database URLs are untouched, and disposing when nothing is
+    cached does nothing. It is safe to call on both steps because a handle can
+    be re-opened between the rename and the removal.
+
+    The import is deferred to keep this module's import graph free of the SQL
+    engine, mirroring the only other disposal owner, ``BucketSession.close``.
+    """
+    from ..sql import dispose_engines_for_bucket
+
+    dispose_engines_for_bucket(str(profile_id))
+
+
 def rename_profile_custody_capsule_for_deletion(
     *,
     profile_id: UUID,
@@ -307,6 +334,7 @@ def rename_profile_custody_capsule_for_deletion(
     source = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
     if source is None:
         raise ProfileCustodyRecordError("profile capsule is not committed")
+    _release_bucket_file_handles(profile_id)
     destination = profile_custody_deletion_path(
         profile_id=profile_id,
         transaction_id=transaction_id,
@@ -344,6 +372,7 @@ def remove_profile_custody_deletion_tombstone(
     root: Path | None = None,
 ) -> None:
     """Remove only a matching transaction tombstone without following links."""
+    _release_bucket_file_handles(profile_id)
     tombstone = profile_custody_deletion_path(
         profile_id=profile_id,
         transaction_id=transaction_id,

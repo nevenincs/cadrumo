@@ -17,6 +17,7 @@ from ...core import BucketPointer
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.paths import effective_storage_root
 from ._custody_hold import ProfileCustodyHoldAuthority
+from ._custody_hold_models import ProfileCustodyRetentionOverride, hold_permits_local_deletion
 from ._custody_pointer import ProfileCustodyPointerSnapshot
 from ._custody_ports import (
     ProfileCustodyEnvelopePort,
@@ -90,6 +91,7 @@ class _ProfileCustodyTransactionCapability:
         *,
         profile_id: UUID,
         transaction_id: UUID | None = None,
+        retention_override: ProfileCustodyRetentionOverride | None = None,
         now: datetime | None = None,
     ) -> ProfileCustodyTransactionJournal:
         """Record all local preflight evidence before any destructive action.
@@ -98,12 +100,23 @@ class _ProfileCustodyTransactionCapability:
         challenge are written into one journal before the deletion marker exists.
         A later executor therefore either has the complete authorization record
         or cannot begin the destructive sequence.
+
+        ``retention_override`` is an operator authorisation to proceed past an
+        asserted FILING hold -- the statutory retention floor. It is recorded
+        into the journal so the executor re-validates against the same
+        authorisation this preparation weighed, and it is refused outright when
+        no filing hold blocks the deletion: an override answers an assessed
+        block, and one carried where nothing blocks is a free pass.
         """
         transaction = transaction_id or uuid4()
         instant = (now or datetime.now(UTC)).astimezone(UTC)
         with profile_custody_transaction_lock(self._root, profile_id):
             hold_assessment = self._holds.assess(profile_id, now=instant)
-            if not hold_assessment.permits_local_deletion:
+            if retention_override is not None and not hold_assessment.filing_hold:
+                raise ProfileCustodyTransactionRefusalError(
+                    "retention override presented where no filing hold blocks deletion"
+                )
+            if not hold_permits_local_deletion(hold_assessment, retention_override=retention_override):
                 raise ProfileCustodyTransactionRefusalError("a legal or filing hold blocks local profile deletion")
             inventory = self._adapters.inventory_committed_profile_custody_capsule(profile_id, root=self._root)
             journal = ProfileCustodyTransactionJournal.create(
@@ -117,6 +130,7 @@ class _ProfileCustodyTransactionCapability:
                 expected_custody_digest=inventory.digest,
                 inventory=ProfileCustodyInventoryWitness.from_inventory(inventory),
                 hold_assessment=hold_assessment,
+                retention_override=retention_override,
                 confirmation_challenge=secrets.token_hex(32),
             )
             self._repository.create_journal(journal)
@@ -645,7 +659,11 @@ class _ProfileCustodyTransactionCapability:
         still refuses, and an unchanged ``cleared`` is a state deletion is
         legitimately permitted in.
         """
-        if journal.hold_assessment is None or not journal.hold_assessment.permits_local_deletion:
+        override = journal.retention_override
+        if journal.hold_assessment is None or not hold_permits_local_deletion(
+            journal.hold_assessment,
+            retention_override=override,
+        ):
             raise ProfileCustodyTransactionRefusalError("a legal or filing hold blocks local profile deletion")
         current_hold = self._holds.assess(journal.profile_id, now=instant)
         recorded = journal.hold_assessment
@@ -654,7 +672,7 @@ class _ProfileCustodyTransactionCapability:
             or current_hold.legal_hold != recorded.legal_hold
             or current_hold.filing_hold != recorded.filing_hold
         )
-        if dispositions_changed or not current_hold.permits_local_deletion:
+        if dispositions_changed or not hold_permits_local_deletion(current_hold, retention_override=override):
             raise ProfileCustodyTransactionRefusalError(
                 "canonical legal or filing hold evidence changed after delete preflight"
             )

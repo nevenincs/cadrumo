@@ -11,6 +11,7 @@ from uuid import UUID
 
 import pytest
 
+from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
@@ -25,11 +26,7 @@ from ....application.user_profile._profile_record_repository import bound_profil
 from ....core import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ...user_profile import (
-    profile_bind_bucket_session,
-    profile_bucket_session_open_resumed,
-    profile_close_bucket_session,
-)
+from ...user_profile import profile_bind_bucket_session
 from .._models import WorkflowState
 from .._profile_health import assess_active_profile_health, repair_active_profile_pointer
 
@@ -239,7 +236,7 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
     previous_profile = sys.getprofile()
     sys.setprofile(observe_filesystem_calls)
     instant = datetime.now(UTC)
-    ready_custody_session = profile_bucket_session_open_resumed(
+    ready_custody_session = master_key.BucketSession.open_resumed(
         bucket_id=_PROFILE_ID,
         dek=_DEK,
         idle_minutes=15,
@@ -256,7 +253,7 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
             cadrumo_active_profile=_PROFILE_ID,
         ):
             ready = assess_active_profile_health()
-        profile_close_bucket_session()
+        master_key.close_active_bucket_session()
 
         with override_settings(
             cadrumo_local_storage_root=absent_root,
@@ -277,7 +274,7 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
         ):
             cold = assess_active_profile_health()
     finally:
-        profile_close_bucket_session()
+        master_key.close_active_bucket_session()
         sys.setprofile(previous_profile)
 
     assert ready.status == "ready"

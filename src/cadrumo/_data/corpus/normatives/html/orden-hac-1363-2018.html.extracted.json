@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-1363-2018.html",
+  "source_sha256": "a81f2e096a0eaa6e7010eb8fbbe64d6dbc8d41163c3f8020a0bf1739a47df98d",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se sustituye el anexo I de la Orden EHA/1881/2011, de 5 de julio, correspondiente al modelo 763, por el que figura como anexo de la presente orden.\nSerá de aplicación para las autoliquidaciones correspondientes al cuarto trimestre del año 2018 y siguientes.",
+      "title": "Articulo unico. Modificacion de la Orden EHA/1881/2011, de 5 de julio.",
+      "section": "Articulo unico. Modificacion de la Orden EHA/1881/2011, de 5 de julio.",
+      "anchor": "#au"
+    },
+    {
+      "text": "La presente orden entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado».\nProvenance: excerpt of Orden HAC/1363/2018 (BOE-A-2018-17602), fetched 2026-08-22 from two BOE surfaces -- buscar/act.php and diario_boe/txt.php -- which agree on the title, the applicability clause and the entrada en vigor verbatim. TRANSCRIPTION CAVEAT, read before citing: the applicability clause and the entrada en vigor are verbatim. The anexo-substitution sentence is NOT -- both fetches elided the referenced orden's full title mid-sentence, and rather than join the two halves across that elision and call the result verbatim, the sentence here is a faithful restatement of the substitution it makes. Cite this reference for WHEN the modification applies (cuarto trimestre de 2018 y siguientes), which is the load-bearing fact and is verbatim; do not quote the substitution sentence as the orden's own words. The full articulo unico remains to be acquired from a surface that will serve it whole. Pending operator re-verification.",
+      "title": "Disposicion final unica. Entrada en vigor.",
+      "section": "Disposicion final unica. Entrada en vigor.",
+      "anchor": "#dfunica"
+    }
+  ]
+}

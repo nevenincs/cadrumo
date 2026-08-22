@@ -28,7 +28,11 @@ _SUPPORTED_RECORD_DESIGN_YEARS = range(2023, 2027)
 _PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS = {
     ("184", "2025-y-siguientes", 2026): "aeat-dr-184-2025",
     ("200", "2024-y-siguientes", 2026): "aeat-dr-200-2025",
-    ("220", "2024-y-siguientes", 2026): "aeat-dr-220-2025",
+    # Re-keyed 2026-08-22: modelo 220's span was split at the 2024/2025 re-layout,
+    # so the revision carrying aeat-dr-220-2025 is now "2025-y-siguientes". The
+    # exception is unchanged in substance -- that design is still the one a 2026
+    # filing year resolves to -- only the revision id it is keyed by moved.
+    ("220", "2025-y-siguientes", 2026): "aeat-dr-220-2025",
 }
 
 

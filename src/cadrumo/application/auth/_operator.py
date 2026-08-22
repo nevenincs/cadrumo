@@ -622,13 +622,13 @@ def build_live_auth_preflight_report(
         :func:`test_operator_auth`
             Shared provider-readiness probe that supplies the preflight base.
     """
-    from ..user_profile import profile_current_bucket_session
+    from ...adapters.persistence.storage import master_key
     from ._operator_results import AuthOperationRequiresCustodySessionError
 
     try:
         return _build_live_auth_preflight_report(provider, settings=settings)
     except AuthOperationRequiresCustodySessionError:
-        if profile_current_bucket_session() is not None:
+        if master_key.current_active_bucket_session() is not None:
             raise
         # Guard the RESOLVED kind, not the supplied string: the resolver
         # returns None for a provider it does not implement, so a non-empty

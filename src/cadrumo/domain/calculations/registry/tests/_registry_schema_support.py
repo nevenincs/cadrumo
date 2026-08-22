@@ -90,10 +90,10 @@ def _committed_snapshot(
         # M303 snapshots include the compiled annual-Orden authority.  The
         # production access point is the only source of that cross-cutting
         # projection, so bypassing it here would produce a partial fixture.
-        # ``ValidatedRegistryAuthority.snapshot`` has no grade parameter, so
-        # M303 stays FILING-grade regardless -- it also has no declared
-        # export layout today, so it fails on that honest capability gap
-        # rather than the grade question.
+        # M303 stays FILING-grade regardless. It does declare export layouts
+        # -- one per revision, all six -- so the rung costs it nothing; the
+        # reason it cannot take a lower one is that this branch goes through
+        # the authority accessor for the annual-Orden projection.
         return bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
     modelo, catalogues = _committed_modelo(modelo_id)
     return build_snapshot(

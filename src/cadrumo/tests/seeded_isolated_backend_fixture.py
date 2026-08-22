@@ -50,6 +50,7 @@ def seeded_isolated_backend_fixture(
     bucket_id: str = DEFAULT_BUCKET_ID,
     autouse: bool = True,
     name: str = "_isolated_backend",
+    origin_name: str = "_isolated_backend_origin",
     settings_overrides: Mapping[str, object] | None = None,
     profile_overrides: Mapping[str, str] | None = None,
     display_name: str | None = None,
@@ -66,8 +67,18 @@ def seeded_isolated_backend_fixture(
 
         _seeded_origin, live_fx_seeded_backend = seeded_isolated_backend_fixture(seed=_import_corpus)
         __all__ = ["_seeded_origin", "live_fx_seeded_backend"]
+
+    ``name`` and ``origin_name`` are the two pytest fixture names this returns,
+    and they are stated rather than derived one from the other. A module using
+    this factory twice must give BOTH a distinct value, or the second origin
+    silently shadows the first -- which is the hazard the derivation was
+    guarding, now visible in the signature instead of implied by it.
+
+    Derivation also made the effective name unstateable to the static fixture
+    census: it defers a bare parameter, because the call site supplies that,
+    but ``f"{name}_origin"`` is neither a literal nor a parameter, so the
+    ownership manifest could not name a fixture pytest really registers.
     """
-    origin_name = f"{name}_origin"
 
     @contextmanager
     def _open_world(root: Path) -> Iterator[None]:

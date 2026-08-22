@@ -12,6 +12,7 @@ from uuid import UUID
 import pytest
 from pydantic import SecretStr
 
+from ...adapters.persistence.storage.custody import profile_session_path
 from ...core import iter_directory, scan_directory
 from ...tests.profile_capsule import open_test_profile_session
 
@@ -45,13 +46,15 @@ def _create_profile(
     calls, so every suite that seeds a profile gets the fact rather than only
     the ones that remembered to restore it.
 
-    The empty LEGAL case snapshot is still recorded here, and deliberately not
-    at that door, because no production door records it either: the deletion
-    preflight demands both hold owners' facts and only the filing owner has a
-    creation-time writer. Recording it at the seeding door would make every
-    seeded profile carry a fact a real one does not, hiding that gap behind
-    green suites. It is scaffolding for a production gap this suite does not
-    own, which is why it stays visible here.
+    The empty LEGAL case snapshot is still recorded here rather than at that
+    door. Registration DOES now record one -- ``try_record_legal_hold_snapshot``
+    runs on the production registration path -- so the older claim that no
+    production door writes it is no longer true. What remains true, and is why
+    this stays visible, is that the recorded value is always the empty tuple:
+    nothing in the product ever records an OPEN case, so a legal hold cannot
+    become true outside a test. Seeding it here keeps that gap where a reader
+    of this suite meets it, instead of behind a door that makes every seeded
+    profile look like a real one.
     """
     from ...tests.user_profile import register_minimal_profile
     from ..evidence import LegalHoldCaseAuthority
@@ -112,9 +115,20 @@ def _remove_bucket_directory_out_of_band(profile_id: str, *, root: Path) -> None
     Replaces the retired ``remove_profile_bucket_directory``. No supported path
     produces this state; forging it is the only way to exercise the detector.
     """
+    from ...adapters.persistence.storage import BUCKETS_DIRNAME, dispose_engines_for_bucket
+
+    # An out-of-band remover is some OTHER actor, which would not be holding
+    # this process's SQLite handle on the bucket. Releasing it first is what
+    # makes the forgery faithful; without it the removal fails on Windows for a
+    # reason the scenario under test does not contain.
+    dispose_engines_for_bucket(profile_id)
+    shutil.rmtree(root / BUCKETS_DIRNAME / profile_id)
+
+
+def _capsule_dir_for(root: Path, profile_id: str) -> Path:
     from ...adapters.persistence.storage import BUCKETS_DIRNAME
 
-    shutil.rmtree(root / BUCKETS_DIRNAME / profile_id)
+    return root / BUCKETS_DIRNAME / profile_id
 
 
 def _write_active_pointer(root: Path, bucket_id: str) -> None:
@@ -226,7 +240,6 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         set_operator_certificate_source_secret,
     )
     from ..config_reset import start_config_reset
-    from ..user_profile import profile_session_path
 
     with _isolated_reset_root(tmp_path) as root:
         root.mkdir(parents=True, exist_ok=True)
@@ -542,14 +555,18 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
     from .._config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
     from ..config_reset import resume_config_reset, start_config_reset
 
-    with _isolated_reset_root(tmp_path):
+    with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
         _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="e")
         operation = start_config_reset(confirmed=True)
         original_fingerprint = operation.targets[0].fingerprint
         assert original_fingerprint is not None
 
-        _persist_filing(_PROFILE_A_ID, filing_year=2024, seed="1")
+        # A filing does NOT move the capsule digest: it lands in the database,
+        # which the inventory covers by path only, and in a retention snapshot
+        # that lives outside the capsule. Planting a file inside the capsule is
+        # what actually changes the target this reset snapshotted.
+        (_capsule_dir_for(root, _PROFILE_A_ID) / "planted.v1.json").write_bytes(b'{"planted": true}')
         changed = resume_config_reset(
             operation.operation_id,
             confirmed=True,

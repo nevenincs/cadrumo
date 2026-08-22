@@ -3,7 +3,7 @@
 #
 # ALLOWLIST, not a denylist. This is a shared factory worktree: concurrent
 # agents leave dozens of untracked `tmp-*` probe trees, plus `scratch/`,
-# `logs/`, `bucket/`, `pagefind/` and a 15 GB `var/` at the repo root. A
+# `logs/`, `bucket/` and a 15 GB `var/` at the repo root. A
 # denylist silently re-admits every new one — the previous denylist shipped a
 # 1.12 GB context that took 53 s to transfer on every build. Ignoring
 # everything and re-admitting the build's real inputs keeps the context small

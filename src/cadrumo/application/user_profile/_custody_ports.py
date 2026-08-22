@@ -758,28 +758,6 @@ class ProfileSecureObjectInventoryPort(Protocol):
         ...
 
 
-def committed_profile_custody_inventory(
-    profile_id: UUID,
-    *,
-    root: Path | None = None,
-) -> custody.ProfileCustodyInventory:
-    """Return the exact bounded inventory of one profile's committed capsule.
-
-    The application-owned door onto the capsule content fold, so a service that
-    needs a capsule's exact digest, file count and byte total gets it from this
-    port rather than importing the persistence adapter. The inventory follows no
-    link and opens no encrypted payload; it observes file identity and size
-    only, which is what makes it usable against a capsule nobody has unlocked.
-
-    Raises:
-        Exception: Whatever the custody adapter raises when the capsule is not
-            committed or cannot be walked. Deliberately not narrowed here: a
-            deletion caller must treat every failure as unassessable rather
-            than substitute a fingerprint it did not observe.
-    """
-    return custody.inventory_committed_profile_custody_capsule(profile_id, root=root)
-
-
 class _PersistenceProfileBucketStorage:
     """Adapt canonical bucket layout and locking to the application port."""
 
@@ -882,7 +860,6 @@ def create_profile_custody_registration_material(
     return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
 
 
-ProfileRecoveryArtifactWarning = custody.ProfileCustodyRecoveryArtifactWarning
 """The closed set of warnings every recovery-artifact export must surface.
 
 Re-exported at the boundary rather than flattened to plain strings on the
@@ -1003,89 +980,9 @@ def verify_profile_custody_dek_against_sentinel(
     )
 
 
-def load_profile_custody_password_material(
-    profile_id: UUID,
-    *,
-    root: Path | None = None,
-) -> ProfileCustodyPasswordMaterialPort:
-    """Load the normal-password envelope through the custody provider."""
-    return custody.load_committed_profile_password_material(profile_id, root=root)
-
-
-def replace_profile_custody_envelope(
-    profile_id: UUID,
-    payload: bytes,
-    *,
-    expected_sha256: str,
-    root: Path | None = None,
-) -> None:
-    """CAS-replace one committed capsule's password envelope.
-
-    The application layer holds the transaction lock and supplies the digest
-    of the envelope it believes it is replacing; the provider owns the
-    filesystem discipline and refuses a payload that would change the DEK
-    epoch or name another profile. Re-wrapping is the only sanctioned edit to
-    a committed envelope -- there is no path here that re-keys one.
-    """
-    custody.replace_committed_profile_custody_envelope(
-        profile_id,
-        payload,
-        expected_sha256=expected_sha256,
-        root=root,
-    )
-
-
-def parse_profile_custody_envelope(payload: bytes) -> ProfileCustodyEnvelopePort:
-    """Parse one canonical password envelope from bytes the caller holds.
-
-    The committed-capsule reader cannot serve a restore, whose capsule is by
-    definition unpublished, so its material arrives as bytes and is parsed
-    here through the same strict record the publisher wrote. Parsing rather
-    than trusting is the point: a torn member is refused before anything is
-    republished, not discovered as a decryption failure afterwards.
-    """
-    return custody.parse_profile_custody_envelope(payload)
-
-
-def parse_profile_custody_sentinel(payload: bytes) -> ProfileCustodySentinelPort:
-    """Parse one canonical DEK sentinel from bytes the caller holds."""
-    return custody.parse_profile_custody_sentinel_record(payload)
-
-
-def parse_profile_custody_recovery_envelope(payload: bytes) -> ProfileCustodyRecoveryEnvelopePort:
-    """Parse one canonical optional recovery wrapper from bytes the caller holds."""
-    return custody.parse_profile_custody_recovery_envelope(payload)
-
-
 #: Per-member ceilings for a capsule directory, re-exported so the restore path
 #: bounds each member with the SAME value the published capsule reader uses
 #: rather than forming a second opinion about the same record.
-PROFILE_CAPSULE_ENVELOPE_MAX_BYTES = custody.PROFILE_CUSTODY_ENVELOPE_MAX_BYTES
-PROFILE_CAPSULE_SENTINEL_MAX_BYTES = custody.PROFILE_CUSTODY_SENTINEL_MAX_BYTES
-PROFILE_CAPSULE_RECOVERY_MAX_BYTES = custody.PROFILE_CUSTODY_RECOVERY_MAX_BYTES
-PROFILE_CAPSULE_DATABASE_MAX_BYTES = custody.PROFILE_CUSTODY_DATA_FILE_MAX_BYTES
-
-
-def profile_custody_read_member(path: Path, *, maximum_bytes: int) -> bytes:
-    """Read one capsule member through the anchored, bounded, no-follow primitive.
-
-    The same read the published capsule uses. It matters MORE for the source an
-    operator hands to ``config profile restore``, which is the less trusted of
-    the two: a published capsule lives inside this product's own storage root,
-    while a restore source is a directory from anywhere.
-    """
-    return custody.read_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
-
-
-def profile_custody_read_optional_member(path: Path, *, maximum_bytes: int) -> bytes | None:
-    """Read an optional capsule member, or prove its absence, in one operation.
-
-    Absence is resolved INSIDE the anchored read rather than by a preceding
-    ``is_file()``. Inspecting a pathname and then reopening it is two
-    operations on a name, not one on a file, and the primitive's own contract
-    says exactly that.
-    """
-    return custody.read_optional_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
 
 
 def profile_custody_recovery_envelope_path(capsule_path: Path) -> Path:
@@ -1132,35 +1029,8 @@ def profile_custody_record_session_material(
     session = master_key.current_active_bucket_session()
     if session is None or not master_key.session_serves_bucket(session, str(profile_id)):
         return None
-    material = load_profile_custody_password_material(profile_id, root=root)
+    material = custody.load_committed_profile_password_material(profile_id, root=root)
     return ProfileCustodyRecordSessionMaterial(envelope=material.envelope, dek=session.dek)
-
-
-def profile_bucket_session_open_resumed(
-    *,
-    bucket_id: str,
-    dek: bytes,
-    idle_minutes: int,
-    opened_at: datetime,
-    idle_deadline: datetime,
-    absolute_deadline: datetime,
-    storage_root: Path,
-) -> ProfileBucketSessionPort:
-    """Re-open a persisted DEK-only bucket session through custody."""
-    return master_key.BucketSession.open_resumed(
-        bucket_id=bucket_id,
-        dek=dek,
-        idle_minutes=idle_minutes,
-        opened_at=opened_at,
-        idle_deadline=idle_deadline,
-        absolute_deadline=absolute_deadline,
-        storage_root=storage_root,
-    )
-
-
-def profile_current_bucket_session() -> ProfileBucketSessionPort | None:
-    """Return the process's current live bucket session, if any."""
-    return master_key.current_active_bucket_session()
 
 
 def profile_session_serves_bucket(session: ProfileBucketSessionPort | None, bucket_id: str) -> bool:
@@ -1172,16 +1042,6 @@ def profile_session_serves_bucket(session: ProfileBucketSessionPort | None, buck
 def profile_bind_bucket_session(session: ProfileBucketSessionPort) -> None:
     """Bind one authenticated bucket session to the process context."""
     master_key.bind_active_bucket_session(_substrate_handle(session, master_key.BucketSession, "bucket session"))
-
-
-def profile_close_bucket_session() -> None:
-    """Close and clear the current live bucket session."""
-    master_key.close_active_bucket_session()
-
-
-def profile_zeroise(buffer: object) -> None:
-    """Zeroise one custody-owned mutable key buffer."""
-    custody.zeroise(buffer)
 
 
 def profile_is_authentication_failure(error: BaseException) -> bool:
@@ -1200,58 +1060,6 @@ def profile_is_keyring_unavailable(error: BaseException) -> bool:
     return isinstance(error, KeyringUnavailableError)
 
 
-def profile_evaluate_login_throttle(
-    *,
-    storage_root: Path,
-    bucket_id: str,
-    now: datetime,
-) -> ProfileLoginThrottleEvaluationPort:
-    """Evaluate the shared failed-login backoff."""
-    return master_key.evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now)
-
-
-def profile_record_login_failure(*, storage_root: Path, bucket_id: str, now: datetime) -> None:
-    """Record one failed authentication attempt in the shared backoff."""
-    master_key.record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
-
-
-def profile_reset_login_throttle(*, storage_root: Path, bucket_id: str) -> None:
-    """Clear the failed-login backoff after successful authentication."""
-    master_key.reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
-
-
-def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
-    """Return the persisted profile-session sidecar path."""
-    return custody.profile_session_path(storage_root=storage_root, profile_id=profile_id)
-
-
-def profile_delete_session(*, storage_root: Path, profile_id: UUID) -> None:
-    """Revoke the exact persisted session acceleration for one profile."""
-    custody.delete_profile_session(storage_root=storage_root, profile_id=profile_id)
-
-
-def profile_resume_session(
-    *,
-    storage_root: Path,
-    profile_id: UUID,
-    custody_generation: int,
-    dek_epoch: str,
-    now: datetime,
-) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-    """Evaluate and, when valid, unwrap a persisted profile session.
-
-    The key is yielded as a wipeable buffer the caller owns; see the substrate
-    function for why the type is not narrowed to ``bytes`` on the way through.
-    """
-    return custody.resume_profile_session(
-        storage_root=storage_root,
-        profile_id=profile_id,
-        custody_generation=custody_generation,
-        dek_epoch=dek_epoch,
-        now=now,
-    )
-
-
 def profile_advance_session_idle_deadline(
     *,
     storage_root: Path,
@@ -1268,30 +1076,6 @@ def profile_advance_session_idle_deadline(
     )
 
 
-def profile_mint_session(
-    *,
-    storage_root: Path,
-    profile_id: UUID,
-    custody_generation: int,
-    dek_epoch: str,
-    dek: bytes,
-    now: datetime,
-    idle_minutes: int,
-    absolute_minutes: int,
-) -> ProfilePersistedSessionPort:
-    """Mint and custody one optional keyring-accelerated DEK session."""
-    return custody.mint_profile_session(
-        storage_root=storage_root,
-        profile_id=profile_id,
-        custody_generation=custody_generation,
-        dek_epoch=dek_epoch,
-        dek=dek,
-        now=now,
-        idle_minutes=idle_minutes,
-        absolute_minutes=absolute_minutes,
-    )
-
-
 def profile_is_persisted_session(record: object) -> TypeGuard[ProfilePersistedSessionPort]:
     """Return whether an outcome record is the custody-owned persisted model."""
     return isinstance(record, custody.PersistedProfileSession)
@@ -1304,11 +1088,6 @@ def profile_custody_secure_object_namespace() -> ProfileCustodySecureObjectNames
         sensitivity=USER_PROFILE_VALUE_NAMESPACE.sensitivity,
         schema_version=USER_PROFILE_VALUE_NAMESPACE.schema_version,
     )
-
-
-def profile_custody_secure_object_key_digest(object_key: str) -> bytes:
-    """Derive the opaque object-key digest through the custody provider."""
-    return crypto.secure_object_key_digest(object_key)
 
 
 @contextmanager
@@ -1364,34 +1143,6 @@ def _temporary_profile_custody_session(*, profile_id: UUID, dek: bytes, root: Pa
         bridge.close()
 
 
-def load_profile_custody_data_file(
-    profile_id: UUID,
-    relative_name: str,
-    *,
-    root: Path | None = None,
-) -> bytes:
-    """Read one committed capsule data member through the custody provider."""
-    return custody.load_committed_profile_custody_data_file(profile_id, relative_name, root=root)
-
-
-def replace_profile_custody_data_file(
-    profile_id: UUID,
-    relative_name: str,
-    payload: bytes,
-    *,
-    expected_sha256: str,
-    root: Path | None = None,
-) -> None:
-    """CAS-replace one committed capsule data member through custody."""
-    custody.replace_committed_profile_custody_data_file(
-        profile_id,
-        relative_name,
-        payload,
-        expected_sha256=expected_sha256,
-        root=root,
-    )
-
-
 def default_profile_bucket_event_history_repository(
     *,
     objects: ProfileCustodySecureObjectRepositoryPort | None = None,
@@ -1426,13 +1177,11 @@ __all__ = [
     "ProfileRecordCryptoError",
     "ProfileRecordCryptoPort",
     "ProfileRecordEncryptedBlob",
-    "ProfileRecoveryArtifactWarning",
     "ProfileSecureObjectInventoryPort",
     "ProfileSessionResumeOutcomePort",
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",
     "canonical_snapshot_payload",
-    "committed_profile_custody_inventory",
     "create_profile_custody_registration_material",
     "create_profile_recovery_enrollment_material",
     "default_profile_bucket_event_history_repository",
@@ -1442,39 +1191,20 @@ __all__ = [
     "default_profile_secure_object_inventory",
     "ensure_profile_custody_owner_root",
     "export_profile_recovery_artifact",
-    "load_profile_custody_data_file",
-    "load_profile_custody_password_material",
-    "parse_profile_custody_envelope",
-    "parse_profile_custody_recovery_envelope",
-    "parse_profile_custody_sentinel",
     "profile_advance_session_idle_deadline",
     "profile_bind_bucket_session",
-    "profile_bucket_session_open_resumed",
-    "profile_close_bucket_session",
-    "profile_current_bucket_session",
     "profile_custody_owner_root",
     "profile_custody_record_session_material",
     "profile_custody_recovery_envelope_path",
-    "profile_custody_secure_object_key_digest",
     "profile_custody_secure_object_namespace",
     "profile_custody_secure_object_repository",
-    "profile_delete_session",
-    "profile_evaluate_login_throttle",
     "profile_is_authentication_failure",
     "profile_is_keyring_unavailable",
     "profile_is_password_authentication_failure",
     "profile_is_persisted_session",
-    "profile_mint_session",
-    "profile_record_login_failure",
-    "profile_reset_login_throttle",
-    "profile_resume_session",
-    "profile_session_path",
     "profile_session_serves_bucket",
-    "profile_zeroise",
     "prove_profile_recovery_artifact",
     "refuse_profile_login_without_password_channel",
-    "replace_profile_custody_data_file",
-    "replace_profile_custody_envelope",
     "unlock_profile_custody_password",
     "verify_profile_custody_dek_against_sentinel",
 ]

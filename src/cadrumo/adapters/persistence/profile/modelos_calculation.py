@@ -42,7 +42,7 @@ from ....core import Modelo
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.identity import SubjectTaxId
 from ....core.logging import get_logger
-from ....domain.calculations.registry import RegistryRevisionInspection, bundled_revision_inspection
+from ....domain.calculations.registry import RegistrySnapshot, bundled_authority
 from ....domain.modelos import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
     CalculationRevisionAggregateContext,
@@ -241,8 +241,8 @@ class CalculationRevisionCatalogueRepository:
         work_units = WorkUnitCatalogueRepository(objects=self._objects).load()
         filing_records = ModeloRecordCatalogueRepository(objects=self._objects).load()
         justificantes = tuple(JustificanteRepository(objects=self._objects).iter_justificantes())
-        inspections: dict[str, RegistryRevisionInspection] = {
-            unit.work_unit_id: bundled_revision_inspection(
+        snapshots: dict[str, RegistrySnapshot] = {
+            unit.work_unit_id: bundled_authority().snapshot(
                 Modelo.M303.value,
                 filing_year=unit.filing_year,
                 period=unit.period.registry_token,
@@ -254,7 +254,7 @@ class CalculationRevisionCatalogueRepository:
             work_units=work_units,
             filing_records=filing_records,
             justificantes=justificantes,
-            registry_inspections=inspections,
+            registry_snapshots=snapshots,
             expected_taxpayer_tax_id=self._m303_rectificativa_taxpayer_tax_id,
         )
 

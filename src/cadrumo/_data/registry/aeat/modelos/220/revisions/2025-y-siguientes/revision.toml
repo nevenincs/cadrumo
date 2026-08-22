@@ -1,0 +1,114 @@
+[revisions."2025-y-siguientes"]
+authority_grade = "applicability"
+# Modelo 220 declaración anual del Impuesto sobre Sociedades del grupo fiscal en
+# régimen de consolidación fiscal. The IS declaration models for períodos
+# impositivos iniciados en 2024 are approved by Orden HAC/657/2025
+# (BOE-A-2025-12818); the bundled excerpt's art 3 names "Modelos 200 y 220"
+# verbatim, evidencing that Modelo 220 is one of the approved models. The filing
+# plazo is the general IS declaration plazo of art. 124.1 LIS (25 días naturales
+# tras los 6 meses posteriores a la conclusión del período impositivo). This is a
+# scheduling/applicability-grade revision carrying declaration-header casillas
+# only; the money-closure casillas of the group declaration are deferred, and no
+# casilla number is fabricated.
+#
+# CORRECTED REASON. This previously read "deferred until an authoritative Modelo
+# 220 diseño de registro is bundled". FOUR are bundled and all four load through
+# the real record-design IR -- aeat-dr-220-2022 (124 sheets / 14,851 fields),
+# -2023 (127 / 15,648), -2024 (136 / 16,066) and -2025 (140 / 16,707) -- and the
+# 2024 and 2025 ones are named in this revision's own source_refs above. Design
+# availability is not what blocks the casillas.
+#
+# What blocks them is that this single open-ended revision SPANS A RE-LAYOUT.
+# test_revision_span_matches_published_designs measures the 2024/2025 boundary as
+# 4,524 of 7,466 shared boxes moved, 216 boxes added and 130 removed, and the
+# record set changing 137 -> 141; it reports "needs 2 revisions" and its stated
+# fix is to split at that boundary. Authoring one layout across the span would be
+# wrong for whichever year it did not follow.
+#
+# AMENDING ORDEN ACQUIRED AND CITED (2026-08-22). The gate's instruction was
+# explicit -- acquire and cite the BOE orden that authorises the later layout,
+# and do NOT satisfy it with design evidence alone. Orden HAC/529/2026
+# (BOE-A-2026-11583) is that orden: it approves the IS declaration models for
+# períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de
+# 2025, the successor to orden-hac-657-2025's 2024 models. Its art 6.3 is the
+# Modelo 220-specific plazo, grounding the group declaration in LIS art 75.2 --
+# the plazo of the representante's individual declaration -- rather than the
+# general art 124.1 plazo, and it names «el Modelo 220 de declaración aprobado
+# en el artículo 1 de la presente orden», which is itself operative evidence
+# that art 1 approves this modelo. That is firmer grounding than the 2024-era
+# citation, whose only bundled provision naming 220 is art 3's domiciliación
+# heading. Its disposición final segunda fixes the 2025 temporal boundary.
+#
+# NOT SPLIT YET. The split gate (test_no_revision_spans_a_design_relayout) does
+# not flag this revision: it carries no export layout, so there are no byte
+# offsets for a re-layout to write wrongly, and the harm the split prevents does
+# not yet exist here. The split becomes required the moment an export layout is
+# authored, and the 4,524-of-7,466 moved boxes at the 2024/2025 boundary say
+# which side any such layout would have to pick.
+valid_from = 2025-01-01
+period_selector = { year_from = 2025, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hac-529-2026:art-6-3"]
+legal_refs = [
+    "orden-hac-529-2026:art-6-3",
+    "orden-hac-529-2026:df-segunda",
+    "ley-27-2014:art-124",
+]
+source_refs = [
+    "boe-modelo-220-2026-form",
+    "aeat-dr-220-2025",
+    "aeat-modelo-200-manual-2025",
+]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: review of the modelo 220 (IS, regimen de consolidacion fiscal) 2025-y-siguientes \
+era. DISCLOSURE -- self-review: the same agent acquired and bundled Orden HAC/529/2026, \
+split this revision out of the former open-ended '2024-y-siguientes', and swept the \
+split's fallout, all in the immediately preceding commits. VERIFIED -- APPLICABILITY, and \
+it is firmer than the 2024 era's: orden-hac-529-2026 art 6.3 speaks of 'el Modelo 220 de \
+declaracion aprobado en el articulo 1 de la presente orden', an operative clause naming \
+this modelo, where the 2024 era has only art 3's domiciliacion-bancaria heading -- \
+distribution evidence rather than an approving clause. Both provisions were fetched from \
+two BOE surfaces that reproduce them identically. VERIFIED -- WHEN DUE: art 6.3 grounds \
+the group declaration in LIS art 75.2, 'dentro del plazo correspondiente a la declaracion \
+en regimen de tributacion individual de la entidad representante del grupo fiscal', which \
+routes to the representante's own art 124.1 plazo: a calendar-year group closing 31 Dec \
+2025 files 1-25 July 2026. NOMINAL dates stored. The payment_cutoff_on 2026-07-22 is now \
+grounded in art 3.2, 'desde el dia 1 de julio hasta el 22 de julio de 2026, ambos \
+inclusive' -- that date had been carried across the split from the 2024 orden's clause by \
+pattern and was verified only in this sweep; it was right, but nothing in the tree said \
+so. VERIFIED -- SPAN BOUNDARY: the disposicion final segunda makes the orden applicable to \
+periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025, which is \
+the boundary the split was cut at. NOT CLAIMED -- ARTICULO 1 IS NOT BUNDLED. No fetch \
+returned its enumerated list without elision, and bundling an abridged provision as \
+verbatim is the exact defect corrected in orden-hac-510-2021 the same day. Art 6.3 attests \
+art 1's approval of this modelo; the approving text itself remains to be acquired whole. \
+NOT CLAIMED -- RECORD DESIGN: 0 of 7,682 casillas the bundled 2025 diseno derives are \
+modelled. Applicability grade, declaration header only, no casilla number fabricated. A \
+scheduling and applicability claim ONLY. NOT CLAIMED -- SPAN EVIDENCE IS THIN: the gate \
+reports only 1 comparable bundled design year inside this open-ended span; that is \
+ABSENT-class evidence, not the contrary-evidence class. NOT CLAIMED -- FILING: no export \
+layout; on the filing-capability worklist, which its gate states is a backlog and not a \
+defect to suppress. Scope stays inspection_only. NOT CLAIMED -- independent_check_coverage \
+is n/a: NO CLAIM, not zero. NOT CLAIMED -- locales complete but not audited for accuracy."""
+reviewed_at = 2026-08-22
+
+[revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision. Revision '2025-y-siguientes' of \
+modelo 220 DOES have a strictly-earlier sibling ('2024'), so a within-modelo continuity transition is \
+structurally possible here. None is declared because the two eras are not a renumbering of one another: at the \
+2024/2025 boundary AEAT's record designs move 4,524 of 7,466 shared boxes, add 216 and remove 130, and the \
+record set changes 137 -> 141. Asserting continuity across that would claim an identity the designs \
+contradict, and this revision declares only declaration-header casillas in any case. The family is empty on a \
+reviewed judgement, not by omission.
+"""
+legal_refs = [
+    "orden-hac-529-2026:art-6-3",
+    "orden-hac-529-2026:df-segunda",
+    "ley-27-2014:art-124",
+]
+source_refs = [
+    "boe-modelo-220-2026-form",
+    "aeat-dr-220-2025",
+    "aeat-modelo-200-manual-2025",
+]

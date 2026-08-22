@@ -45,11 +45,16 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from ...adapters.persistence.storage import custody
 from ...adapters.persistence.storage.bucket import (
     ARCHIVE_SCHEMA_VERSION,
     ExportArchiveHeader,
     read_sealed_archive,
     write_sealed_archive,
+)
+from ...adapters.persistence.storage.custody import (
+    parse_profile_custody_envelope,
+    parse_profile_custody_recovery_envelope,
 )
 from ...core import PRODUCT_IDENTITY
 from ...core.errors import CadrumoError
@@ -58,12 +63,6 @@ from ...core.hashing import bounded_canonical_json_bytes, sha256_hex
 from ...core.identity import BucketId
 from ...core.time import now as _now
 from ._capsule_restore import ProfileCapsuleSource, read_profile_capsule_source
-from ._custody_ports import (
-    load_profile_custody_password_material,
-    parse_profile_custody_envelope,
-    parse_profile_custody_recovery_envelope,
-    parse_profile_custody_sentinel,
-)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -84,7 +83,16 @@ loudly as omitting it.
 
 _ABSENT_RECOVERY_LENGTH: Final[int] = 0
 _SLOT_LENGTH_PREFIX_BYTES: Final[int] = 4
-_MAX_PAYLOAD_BYTES: Final[int] = 512 * 1024 * 1024
+#: The largest capsule-archive payload this product will write.
+#:
+#: Public because it is a CROSS-LAYER contract, not an internal bound: the
+#: sealed-archive reader in the storage adapter sets its own member ceiling at
+#: or above this value, so no archive this product produced can carry a member
+#: the reader refuses. The adapter deliberately keeps its own constant rather
+#: than importing this one -- an adapter importing the application layer would
+#: invert the dependency -- so the two are held equal by a test, and that test
+#: needs a public name to compare against.
+PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES: Final[int] = 512 * 1024 * 1024
 
 
 class ProfileCapsuleArchiveError(CadrumoError):
@@ -146,7 +154,7 @@ def export_profile_capsule_archive(
         ProfileCapsuleArchiveError: When the capsule is not published, or a
             member does not fit the archive's invariant layout.
     """
-    material = load_profile_custody_password_material(profile_id, root=root)
+    material = custody.load_committed_profile_password_material(profile_id, root=root)
     source = read_profile_capsule_source(material.capsule_path)
     if source.password_envelope.profile_id != profile_id:
         raise ProfileCapsuleArchiveError("published capsule names a different profile than the export target")
@@ -221,7 +229,7 @@ def _encode_payload(source: ProfileCapsuleSource) -> bytes:
             "recovery_slot": b64encode(_encode_recovery_slot(source)).decode("ascii"),
             "database": b64encode(source.database_bytes).decode("ascii"),
         },
-        maximum_bytes=_MAX_PAYLOAD_BYTES,
+        maximum_bytes=PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES,
         subject="profile capsule archive payload",
     )
 
@@ -252,7 +260,7 @@ def _decode_payload(payload: bytes, *, expected_bucket_id: str) -> ProfileCapsul
     if payload.get("profile_id") != expected_bucket_id:
         raise ProfileCapsuleArchiveError("archive payload names a different profile than its header")
     envelope = parse_profile_custody_envelope(_member(payload, "password_envelope"))
-    sentinel = parse_profile_custody_sentinel(_member(payload, "sentinel"))
+    sentinel = custody.parse_profile_custody_sentinel_record(_member(payload, "sentinel"))
     database_bytes = _member(payload, "database")
     recovery = _decode_recovery_slot(_member(payload, "recovery_slot"))
     if str(envelope.profile_id) != expected_bucket_id or sentinel.profile_id != envelope.profile_id:

@@ -6,7 +6,7 @@ modelo:
           fiscal. Declaración.
         title: IS autoliquidación anual régimen de consolidación fiscal (grupos)
       revision:
-        2024-y-siguientes:
+        '2024':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
@@ -20,4 +20,19 @@ modelo:
                 title: Modelo 220 declaración anual del grupo fiscal en régimen de
                   consolidación fiscal
           field:
-            label: Orden HAC/657/2025 (modelo 220), ejercicios 2024 y siguientes
+            label: Orden HAC/657/2025 (modelo 220), ejercicio 2024
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaración del grupo fiscal
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-220-declaration-construct:
+              field:
+                title: Modelo 220 declaración anual del grupo fiscal en régimen de
+                  consolidación fiscal
+          field:
+            label: Orden HAC/529/2026 (modelo 220), ejercicios 2025 y siguientes

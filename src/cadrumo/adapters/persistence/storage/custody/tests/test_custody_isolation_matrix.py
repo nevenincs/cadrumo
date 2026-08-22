@@ -25,7 +25,6 @@ from ......application.user_profile import (
     create_profile_custody_registration_material,
     enroll_profile_recovery,
     export_profile_recovery_artifact,
-    load_profile_custody_password_material,
     register_profile_with_credentials,
     restore_profile_from_source_with_recovery_artifact,
     unlock_profile_custody_password,
@@ -36,6 +35,7 @@ from .. import (
     ProfileCustodyEnvelope,
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
+    load_committed_profile_password_material,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -113,7 +113,7 @@ def test_one_profiles_password_envelope_cannot_unlock_another(tmp_path: Path) ->
         profile_a = _register("Isolation A", _PASSPHRASE_A)
         _register("Isolation B", _PASSPHRASE_B)
 
-        material = load_profile_custody_password_material(profile_a)
+        material = load_committed_profile_password_material(profile_a)
         with pytest.raises(ProfileCustodyPasswordError):
             unlock_profile_custody_password(material, password=_PASSPHRASE_B)
 

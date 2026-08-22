@@ -1,0 +1,103 @@
+# Modelo 840 Pag. 2 -- the two box numbers that label MORE THAN ONE physical
+# position: [86] and [109]. This fragment settles the convention those needed, and
+# the same convention unblocks Apartado IV of Pag. 1.
+#
+# THE PROBLEM. build_diseno_coverage_report keys a derived casilla on
+# (segmento, number), so several fields printing the same [NN] collapse to ONE
+# derived casilla. Declaring a single casilla per number would satisfy the coverage
+# report while the other physical positions stayed unmodelled -- covered on paper,
+# absent in fact.
+#
+# THE CONVENTION, taken from modelo 604 rather than invented here. Modelo 604 has
+# eight "signo" casillas that qualify another box; each carries a DESCRIPTIVE SLUG
+# in `number` (liq-03-signo-base-rectificaciones) instead of duplicating the box
+# number it refers to, because (segmento, number) is uniqueness-enforced. Applied
+# here: where N positions share one printed number, ONE casilla carries AEAT's
+# number and the remaining positions are their own casillas with slug numbers. The
+# derived box is covered exactly once, and no position is dropped.
+#
+# A slug-numbered casilla does NOT count toward diseno coverage, and that is
+# correct: coverage measures how many of AEAT's printed boxes are modelled, not how
+# many casillas exist. The slug siblings are modelling beyond that measure.
+#
+# [86] IS TWO UNRELATED CONCEPTS, not one repeated. AEAT prints it on the Apartado
+# VI "B) Suma" of maquinas recreativas at @672 and again on the Apartado VII "Cuota
+# maquinas recreativas o autoventa" at @1044 -- a sub-total and a cuota line in
+# different apartados. The number stays with the Apartado VI occurrence, which is
+# where the box is defined; the Apartado VII line takes a slug.
+#
+# [109] IS ONE NOTIFICATION BLOCK across five positions: Lugar, then Dia, Mes and
+# Ano, then the titular-or-representante capacity. Dia/Mes/Ano are COMPOSITE
+# COMPONENTS of a single date -- the kind of design row that is legitimately not a
+# casilla of its own -- so they are ONE `date` casilla rather than three integers.
+# That yields three casillas for five positions, which is the honest count: two
+# independent facts plus one date.
+
+# @672+13, type_code An. Apartado VI: Maquinas recreativas o autoventa. B) Suma. [86].
+# Carries AEAT's number: this is where the box is defined.
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "maquinas.suma"
+number = "86"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "maquinas_recreativas_autoventa_suma"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1044+13, type_code An. Apartado VII: Cuota maquinas recreativas o autoventa. [86].
+# Slug number: the printed [86] already belongs to the Apartado VI sub-total above,
+# and a second casilla cannot repeat it under (segmento, number) uniqueness.
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.maquinas-recreativas-autoventa"
+number = "cuota-maquinas-recreativas-autoventa"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_maquinas_recreativas_autoventa"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1070+25, type_code An. Notificacion. Lugar. [109].
+# Carries AEAT's number for the notification block.
+[[revisions."2003-y-siguientes".casillas]]
+id = "notificacion.lugar"
+number = "109"
+section = ["notificacion"]
+data_type = "text"
+semantic_role = "notificacion_lugar"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1095+2 Dia, @1097+2 Mes, @1099+4 Ano, all type_code Num. [109].
+# ONE date casilla, not three integers: the diseno splits a single fecha into three
+# composite component fields, and a composite component is not a casilla of its own.
+[[revisions."2003-y-siguientes".casillas]]
+id = "notificacion.fecha"
+number = "notificacion-fecha"
+section = ["notificacion"]
+data_type = "date"
+semantic_role = "notificacion_fecha"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @1103+1, type_code An. Notificacion. En calidad de titular o representante. [109].
+# Values "T", "R" or blank. An independent fact, so its own casilla with a slug.
+[[revisions."2003-y-siguientes".casillas]]
+id = "notificacion.calidad"
+number = "notificacion-calidad"
+section = ["notificacion"]
+data_type = "text"
+semantic_role = "notificacion_calidad_firmante"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]

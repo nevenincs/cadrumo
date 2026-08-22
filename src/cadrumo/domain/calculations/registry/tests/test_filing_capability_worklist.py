@@ -40,13 +40,14 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .._export import derive_export_layouts_from_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _revisions_that_cannot_emit() -> tuple[tuple[str, str], ...]:
+def _revisions_that_cannot_emit() -> tuple[tuple[str, str, str], ...]:
     """Return every ``(modelo, revision)`` that can produce no filing artifact.
 
     Capability is read exactly as the filing boundary reads it: layouts are derived
@@ -60,14 +61,76 @@ def _revisions_that_cannot_emit() -> tuple[tuple[str, str], ...]:
     in the tree would replace this enumeration with someone else's error, and the
     list of modelos that cannot file would silently stop being reported.
     """
-    modelos, _catalogues = bundled_registry_tree()
+    modelos, catalogues = bundled_registry_tree()
     return tuple(
         sorted(
-            (str(modelo.id), str(revision.id))
+            (str(modelo.id), str(revision.id), _blocker(modelo, revision, catalogues.sources))
             for modelo in modelos
             for revision in modelo.revisions.values()
             if not derive_export_layouts_from_bindings(revision)
         ),
+    )
+
+
+def _bundled_designs(modelo_id: str) -> tuple[str, ...]:
+    """Return the record-design files the corpus holds for one modelo."""
+    directory = bundled_path("corpus", "aeat_official", "disenos_registro", f"modelo_{modelo_id}", "files")
+    if not directory.is_dir():
+        return ()
+    return tuple(
+        sorted(path.name for path in directory.iterdir() if path.suffix.lower() in {".pdf", ".xls", ".xlsx"})
+    )
+
+
+def _blocker(modelo: object, revision: object, sources: object) -> str:
+    """Return what this revision actually needs before a layout can be authored.
+
+    Derived on every run, never listed. The bare worklist said only "no export
+    layout" for every line, which reads as one backlog of one kind of work. It
+    is three. A revision whose modelo has no bundled design cannot be authored
+    at all until the corpus carries one. A revision whose designs are bundled
+    but unregistered needs the era each governs grounded first, and that is not
+    mechanical: a design may state no orden, no BOE reference and no ejercicio
+    anywhere in its text, leaving only AEAT's update date, which this campaign
+    has twice had to undo reading as a governed period. A revision whose modelo
+    HAS registered designs but cites none of them is waiting on the design for
+    its own window, which is modelo 185's 2003-2025 case: the one bundled design
+    governs 2026 onward and correctly grounds its sibling revision instead. A
+    revision already citing a registered design is authorable now.
+
+    Sequencing the remaining work needs that distinction, and deriving it costs
+    one directory listing per line.
+    """
+    modelo_id = str(modelo.id)
+    designs = _bundled_designs(modelo_id)
+    registered = tuple(
+        ref
+        for ref, source in sources.items()
+        if getattr(source, "kind", None) == "record_design"
+        and source.corpus_path
+        and f"modelo_{modelo_id}/" in str(source.corpus_path).replace("\\", "/")
+    )
+    cited = tuple(
+        str(ref)
+        for ref in (revision.source_refs or ())
+        if (source := sources.get(str(ref))) is not None
+        and getattr(source, "kind", None) == "record_design"
+    )
+    if not designs:
+        return "BLOCKED on corpus: no record design is bundled for this modelo"
+    if not registered:
+        return (
+            f"BLOCKED on grounding: {len(designs)} design(s) bundled, none registered -- the era each "
+            "governs must be grounded before it can become a source_ref"
+        )
+    if not cited:
+        return (
+            f"BLOCKED on era: {len(registered)} registered design(s) for this modelo, none cited by this "
+            "revision -- the design governing THIS window is not among them"
+        )
+    return (
+        f"AUTHORABLE: cites {cited[0]}, {len(revision.casillas or ())} casilla(s) declared "
+        "-- needs its semantic map and layout"
     )
 
 
@@ -77,8 +140,11 @@ def test_every_registry_revision_can_produce_a_filing_artifact() -> None:
 
     assert not unable, (
         f"{len(unable)} registry revision(s) across "
-        f"{len({modelo for modelo, _revision in unable})} modelo(s) declare no export layout, so this "
+        f"{len({modelo for modelo, _revision, _blocked in unable})} modelo(s) declare no export layout, so this "
         "application cannot file them. This is the capability worklist, not a defect to suppress: each "
-        "line needs its fixed-width export layout authored before the modelo can be filed.\n"
-        + "\n".join(f"  modelo {modelo} revision {revision}: no export layout" for modelo, revision in unable)
+        "line needs its fixed-width export layout authored before the modelo can be filed, and each states what it is waiting on.\n"
+        + "\n".join(
+            f"  modelo {modelo} revision {revision}: no export layout -- {blocked}"
+            for modelo, revision, blocked in unable
+        )
     )

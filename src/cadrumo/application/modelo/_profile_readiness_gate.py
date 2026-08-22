@@ -487,6 +487,19 @@ def _require_profile_filing_ready(
     )
 
 
+def _render_missing_requirement(requirement: ProfilePreflightRequirement) -> str:
+    """Render one missing requirement as its label plus the articles demanding it.
+
+    A label alone tells an operator WHICH field is missing; the refusal's job is
+    also to say on whose authority. Where the registry grounds the field, the
+    refs follow the label in parentheses; where it grounds nothing, the label
+    stands alone rather than trailing an empty bracket.
+    """
+    if not requirement.legal_refs:
+        return requirement.label
+    return f"{requirement.label} ({', '.join(requirement.legal_refs)})"
+
+
 def require_profile_ready_for_modelo_work(
     *,
     bucket_id: str,
@@ -532,8 +545,17 @@ def require_profile_ready_for_modelo_work(
         schema = resources().user_profile_schema.singleton
         missing_paths = missing_required_field_paths(schema, record_to_path_values(record))
         if missing_paths:
+            # Grounded, not a bare label. This composed the list without a
+            # grounding index -- which is built further down, AFTER this raise --
+            # so the refusal named the fields and dropped the articles that make
+            # them required, on the one surface whose whole purpose is telling an
+            # operator why a field is demanded of them.
+            grounding = build_profile_grounding_index(resources().modelos.authority)
             missing_labels = ", ".join(
-                build_profile_preflight_requirement(path, schema=schema).label for path in missing_paths
+                _render_missing_requirement(
+                    build_profile_preflight_requirement(path, schema=schema, grounding_index=grounding),
+                )
+                for path in missing_paths
             )
             raise ModeloProfileReadinessError(
                 translated_message="application.modelo.errors.profile_readiness_setup_incomplete_missing",

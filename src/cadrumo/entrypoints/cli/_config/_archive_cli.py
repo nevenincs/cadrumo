@@ -88,9 +88,9 @@ def register_archive_commands(
     def archive_export(
         ctx: typer.Context,
         name: str = typer.Argument(..., help=tr("cli.config.profile.archive.export_name_help")),
-        to: Path = typer.Option(
+        output: Path = typer.Option(
             ...,
-            "--to",
+            "--output",
             help=tr("cli.config.profile.archive.export_out_help"),
             dir_okay=False,
             writable=True,
@@ -113,7 +113,7 @@ def register_archive_commands(
         pointer = resolve_profile_by_label(name)
         receipt = export_profile_capsule_archive(
             profile_id=UUID(str(pointer.bucket_id)),  # type: ignore[attr-defined]  # reason: the injected resolver returns a ProfileBucketPointer; typing it here would import the workflow package into this module's import-time surface
-            target=to,
+            target=output,
         )
 
         _emit_envelope(

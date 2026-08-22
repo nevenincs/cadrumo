@@ -1,6 +1,10 @@
+# `number` re-grounded 2026-08-22 from slug values to AEAT's own bracket numbers,
+# read off the bundled aeat-dr-840 design: Ejercicio is [14] at @270+4 and
+# "Declaracion de:" is [15] at @274+1. Before this the coverage report read 0 of
+# 108 derived casillas covered, because a slug matches no design box.
 [[revisions."2003-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
-number = "tipo-declaracion"
+number = "15"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "tipo_evento_censal_iae"
@@ -11,7 +15,7 @@ source_refs = ["aeat-dr-840"]
 
 [[revisions."2003-y-siguientes".casillas]]
 id = "decl.ejercicio"
-number = "ejercicio"
+number = "14"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"

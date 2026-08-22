@@ -8,7 +8,7 @@ which takes a path. An archive can be corrupted in place, or handed to an
 operator by someone else.
 
 The ceiling is not arbitrary. The writer caps a capsule payload at
-``_MAX_PAYLOAD_BYTES``, so no archive this product produced can carry a larger
+``PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES``, so no archive this product produced can carry a larger
 member -- refusing above it rejects nothing legitimate. Both halves are pinned
 here, because the danger runs in two directions: a missing ceiling admits a
 bomb, and a ceiling that drifted BELOW the writer's cap would start refusing
@@ -86,6 +86,6 @@ def test_sealed_archive_member_bound_matches_the_writer_cap() -> None:
     produced -- a failure that would surface as an operator unable to restore a
     legitimate backup, long after the change that caused it.
     """
-    from ......application.user_profile._capsule_archive import _MAX_PAYLOAD_BYTES
+    from ......application.user_profile import PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES
 
-    assert _MAX_MEMBER_BYTES == _MAX_PAYLOAD_BYTES
+    assert _MAX_MEMBER_BYTES == PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES

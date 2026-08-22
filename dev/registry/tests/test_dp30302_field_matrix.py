@@ -155,6 +155,29 @@ def test_persisted_matrix_reflects_the_two_corrected_constants() -> None:
     assert tuple(by_epoch[epoch].simplified for epoch in DP30302_EPOCHS) == (134, 130, 140, 142, 142)
 
 
+def _projection_endpoints(revision_id: str) -> tuple[dict, ...]:
+    """Return every projection endpoint a revision declares, across its fragments.
+
+    A revision declares its sections in fragmented files, and the modelo tree's
+    multi-casilla fragments were split into per-casilla ones, so this directory
+    now holds more than one part. Reading only ``0001-`` silently halved five
+    revisions to an identical count and made real per-revision differences
+    invisible -- a file-shape assumption reporting a data loss that had not
+    happened.
+    """
+    directory = (
+        REPO_ROOT
+        / "src/cadrumo/_data/registry/aeat/modelos/303/revisions"
+        / revision_id
+        / "projection_endpoints"
+    )
+    endpoints: list[dict] = []
+    for fragment in sorted(directory.glob("*.toml")):
+        payload = tomllib.loads(fragment.read_text(encoding="utf-8"))
+        endpoints.extend(payload["revisions"][revision_id]["projection_endpoints"])
+    return tuple(endpoints)
+
+
 def test_real_dp30302_anchors_keep_other_countries_refund_distinct_from_quarterly_quotas() -> None:
     """The two adjacent 4T concepts are distinct typed declarations, never a shared fact."""
     fields = _dp30302_sheets()["2023"]
@@ -162,15 +185,9 @@ def test_real_dp30302_anchors_keep_other_countries_refund_distinct_from_quarterl
     assert any("Devolución cuotas soportadas otros países" in item for item in descriptions)
     assert any("Cuotas soportadas - 4T" in item for item in descriptions)
 
-    endpoint_path = (
-        REPO_ROOT
-        / "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/projection_endpoints"
-        / "0001-projection-endpoints.toml"
-    )
-    payload = tomllib.loads(endpoint_path.read_text(encoding="utf-8"))
     refs = tuple(
         compile_filing_projection_ref(item["projection_ref"])
-        for item in payload["revisions"]["2023"]["projection_endpoints"]
+        for item in _projection_endpoints("2023")
     )
     non_agricultural_slot_one = {
         ref.fact
@@ -185,7 +202,6 @@ def test_real_dp30302_anchors_keep_other_countries_refund_distinct_from_quarterl
 
 def test_real_dp30302_declarations_keep_the_reviewed_epoch_multiplicity() -> None:
     """The hash-pinned designs, rather than a generated count, govern every repeated fact."""
-    root = REPO_ROOT / "src/cadrumo/_data/registry/aeat/modelos/303/revisions"
     expected = {
         "2023": (208, 134, {"superficie_horno_dias_cuarto_trimestre": {None}}),
         "2024-hasta-08-y-2t": (204, 130, {"superficie_horno_dias_cuarto_trimestre": {None}}),
@@ -214,9 +230,7 @@ def test_real_dp30302_declarations_keep_the_reviewed_epoch_multiplicity() -> Non
     }
 
     for revision_id, (total, simplified, epoch_specific) in expected.items():
-        path = root / revision_id / "projection_endpoints/0001-projection-endpoints.toml"
-        payload = tomllib.loads(path.read_text(encoding="utf-8"))
-        endpoints = payload["revisions"][revision_id]["projection_endpoints"]
+        endpoints = _projection_endpoints(revision_id)
         simplified_endpoints = tuple(
             item
             for item in endpoints

@@ -39,9 +39,8 @@ from ....core import (
 )
 from ....domain.calculations.registry import (
     M303RegimenSimplificadoSnapshot,
-    RegistryRevisionInspection,
+    RegistrySnapshot,
     bundled_authority,
-    bundled_revision_inspection,
     load_m303_annual_orden_authority,
     m303_annual_orden_snapshot_from_projection,
 )
@@ -67,7 +66,7 @@ from ....domain.modelos import (
     derive_filing_record_id,
     derive_work_unit_id,
     m303_rectificativa_motive_is_applicable,
-    m303_rectificativa_record_design_from_inspection,
+    m303_rectificativa_record_design_from_snapshot,
 )
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ....tests.cli_runner import invoke_cached_cli
@@ -90,15 +89,15 @@ _NOW = datetime(2026, 8, 14, 8, 0, 0, tzinfo=UTC)
 
 
 @lru_cache(maxsize=1)
-def _inspection() -> RegistryRevisionInspection:
-    return bundled_revision_inspection(Modelo.M303.value, filing_year=2025, period="1T")
+def _snapshot() -> RegistrySnapshot:
+    return bundled_authority().snapshot(Modelo.M303.value, filing_year=2025, period="1T")
 
 
 @lru_cache(maxsize=1)
 def _filing_evidence():
     authority = bundled_authority()
-    inspection = _inspection()
-    record_design = m303_rectificativa_record_design_from_inspection(inspection)
+    snapshot = _snapshot()
+    record_design = m303_rectificativa_record_design_from_snapshot(snapshot)
     assert record_design is not None
     compilation = load_m303_annual_orden_authority(
         authority.root,
@@ -108,14 +107,14 @@ def _filing_evidence():
     )
     projection = compilation.authority.require_projection(
         ejercicio=2025,
-        registry_revision_id=inspection.revision_id,
+        registry_revision_id=snapshot.revision.id,
     )
     scope = M303RegimenSimplificadoScopeDecision(
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
     regimen_snapshot = M303RegimenSimplificadoSnapshot(
         filing_year=2025,
-        registry_revision_id=inspection.revision_id,
+        registry_revision_id=snapshot.revision.id,
         scope_decision=scope,
         orden=m303_annual_orden_snapshot_from_projection(projection),
         record_design=record_design,
@@ -129,13 +128,13 @@ def _filing_evidence():
 
 def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RECTIFICACIONES):
     period = Period.from_year_and_code(2025, "1T")
-    inspection = _inspection()
+    snapshot = _snapshot()
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo=Modelo.M303.value,
         filing_year=2025,
         period=period,
-        revision_id=inspection.revision_id,
+        revision_id=snapshot.revision.id,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -143,7 +142,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
         modelo=Modelo.M303,
         filing_year=2025,
         period=period,
-        revision_id=inspection.revision_id,
+        revision_id=snapshot.revision.id,
         name="M303 S92",
         created_at=_NOW,
         updated_at=_NOW,
@@ -208,7 +207,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
         work_units=work_units,
         filing_records=filing_records,
         justificantes=(receipt,),
-        registry_inspections={work_unit_id: inspection},
+        registry_snapshots={work_unit_id: snapshot},
         expected_taxpayer_tax_id=_TAX_ID,
     )
     identity = CalculationRevisionAmendmentIdentity(
@@ -346,8 +345,8 @@ def test_every_persisted_target_and_justificante_join_refusal_is_biting() -> Non
             "no authoritative parent WorkUnit",
         ),
         (
-            context.model_copy(update={"registry_inspections": {}}),
-            "lacks exact registry inspection context",
+            context.model_copy(update={"registry_snapshots": {}}),
+            "lacks exact registry snapshot context",
         ),
         (
             context.model_copy(update={"filing_records": empty_records}),
@@ -480,15 +479,15 @@ def test_motive_capability_is_selected_only_from_exact_registry_evidence(
     period: str,
     expected_revision_id: str | None,
 ) -> None:
-    inspection = bundled_revision_inspection(Modelo.M303.value, filing_year=filing_year, period=period)
-    record_design = m303_rectificativa_record_design_from_inspection(inspection)
+    snapshot = bundled_authority().snapshot(Modelo.M303.value, filing_year=filing_year, period=period)
+    record_design = m303_rectificativa_record_design_from_snapshot(snapshot)
     if expected_revision_id is None:
         assert record_design is None
         return
-    assert inspection.revision_id == expected_revision_id
+    assert snapshot.revision.id == expected_revision_id
     assert record_design is not None
     assert m303_rectificativa_motive_is_applicable(
-        registry_revision_id=inspection.revision_id,
+        registry_revision_id=snapshot.revision.id,
         record_design=record_design,
     )
 

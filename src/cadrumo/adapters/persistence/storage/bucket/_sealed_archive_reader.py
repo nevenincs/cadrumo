@@ -78,7 +78,7 @@ class SealedArchiveContents:
 #: operator who wrote it.
 #:
 #: The value is not a guess. The WRITER caps a capsule payload at
-#: ``application.user_profile._capsule_archive._MAX_PAYLOAD_BYTES``, so no
+#: ``application.user_profile.PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES``, so no
 #: archive this product produced can carry a larger member, and refusing above
 #: that rejects nothing legitimate. The two are held equal by
 #: ``test_sealed_archive_member_bound_matches_the_writer_cap``; a bound that

@@ -89,13 +89,19 @@ _UNGROUNDED_BASELINE: dict[str, int] = {
     "131": 10,
     "151": 5,
     "180": 7,
+    # Split at ejercicio 2025 (Orden HAC/1430/2025): the later half repeats the
+    # earlier half's casilla ids, un-reviewed.
+    "184": 86,
     "185": 2,
     "190": 70,
     "193": 52,
     "202": 13,
+    "220": 2,
     "232": 46,
     "303": 6,
     "322": 220,
+    # Split at ejercicio 2025 (Orden HAC/1431/2025), same shape as modelo 184.
+    "347": 39,
     "353": 12,
     "369": 2,
     "390": 5,

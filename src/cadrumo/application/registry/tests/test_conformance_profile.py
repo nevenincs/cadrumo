@@ -41,7 +41,11 @@ from .. import (
     RegistryConformanceProfile,
     build_registry_conformance_profile,
 )
-from .._conformance import AnnualCasillaPopulationComparison, compare_annual_casilla_population
+from .._conformance import (
+    AnnualCasillaPopulationComparison,
+    compare_annual_casilla_population,
+    compare_annual_casilla_population_for_revision,
+)
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -59,18 +63,15 @@ _MINIMUM_COMPOSED_REVISIONS = 60
 _GROUNDED_MODELO = "303"
 _MULTI_REVISION_MODELO = "100"
 
-# Independent census captured from the bundled year-specific AEAT dictionaries
-# and the current registry declarations. These anchors make the comparator test
-# a measured divergence rather than deriving every expected value from the
-# production parser at assertion time.
-_M100_REGISTRY_CASILLA_COUNTS = {
-    2020: 1531,
-    2021: 1693,
-    2022: 1852,
-    2023: 1929,
-    2024: 2093,
-    2025: 2238,
-}
+# Independent census captured from the bundled year-specific AEAT dictionaries.
+# This anchor is a fact about the AEAT ARTEFACT, so it is pinned as a number: a
+# change here means the bundled corpus moved and is worth failing on.
+#
+# The registry-side counterpart used to be pinned the same way and was deleted.
+# It is a tally over declarations this project AUTHORS, so it drifted every time
+# a casilla was legitimately added, trained everyone to re-baseline it, and
+# detected nothing in between. What it was standing in for is asserted below as
+# a property instead.
 _M100_DICTIONARY_CASILLA_COUNTS = {
     2020: 1531,
     2021: 1693,
@@ -79,15 +80,6 @@ _M100_DICTIONARY_CASILLA_COUNTS = {
     2024: 2072,
     2025: 2215,
 }
-_M100_IDENTITY_DIVERGENCE_COUNTS = {
-    2020: 0,
-    2021: 0,
-    2022: 0,
-    2023: 0,
-    2024: 41,
-    2025: 43,
-}
-
 
 @pytest.fixture(scope="module")
 def tree_modelos() -> tuple[ModeloDefinition, ...]:
@@ -187,6 +179,28 @@ def test_governance_stamp_is_read_from_the_revision_not_defaulted(
     modelo = _modelo(tree_modelos, _MULTI_REVISION_MODELO)
     revision_id = sorted(modelo.revisions)[0]
 
+    # BOTH ends of this mutation proof are constructed. The baseline used to
+    # assume the bundled tree left every modelo 100 revision unstamped, so a
+    # test about the COMPOSER broke the moment the campaign legitimately
+    # stamped one -- and the stamping it was reading is exactly the work this
+    # project is here to do. Forcing the pending end makes the assertion "the
+    # composer reads the field" rather than "nobody has reviewed anything yet".
+    modelo = modelo.model_copy(
+        update={
+            "revisions": {
+                candidate_id: revision.model_copy(
+                    update={
+                        "review_status": RevisionReviewStatus.PENDING_REVIEW,
+                        "reviewed_by": None,
+                        "reviewed_at": None,
+                        "engineered_by": None,
+                    },
+                )
+                for candidate_id, revision in modelo.revisions.items()
+            },
+        },
+    )
+
     baseline = _compose((modelo,))
     baseline_row = next(row for row in baseline.rows if row.revision == revision_id)
     assert baseline_row.governance.review_status is RevisionReviewStatus.PENDING_REVIEW
@@ -237,9 +251,17 @@ def test_independent_check_coverage_distinguishes_absent_from_zero(
         inventory=load_bundled_external_oracle_inventory(),
         registry_validated=False,
     )
-    subject = max(grounding.rows, key=lambda row: len(row.reconciled_casilla_ids))
+    # The subject must DECLARE grounding, because the mutations below remove it
+    # and compare. Selecting purely by "reconciles the most casillas" picked a
+    # revision that legitimately declares none: modelo 303's 2024 is split at
+    # September, and the external grounding belongs to the EARLY half because
+    # its oracle is the AEAT Manual practico IVA 2024 first-trimester supuesto
+    # practico. Declaring it on the September-onward half would ground a figure
+    # that worked example never covers.
+    grounded_rows = tuple(row for row in grounding.rows if row.declared_grounded_casilla_ids)
+    assert grounded_rows, "modelo 303 no longer declares external grounding on any revision"
+    subject = max(grounded_rows, key=lambda row: len(row.reconciled_casilla_ids))
     assert subject.reconciled_casilla_ids, "modelo 303 no longer reconciles any casilla"
-    assert subject.declared_grounded_casilla_ids, "modelo 303 no longer declares external grounding"
 
     baseline_row = next(
         row for row in _compose((modelo,), external_grounding=grounding).rows if row.revision == subject.revision
@@ -497,9 +519,31 @@ def test_annual_casilla_comparison_uses_the_selected_year_dictionary(
     assert layout_comparison.dictionary_source_ref == f"aeat-dr-100-{filing_year}-dictionary"
     assert layout_comparison.parser_exposed_attributes == ("field_id", "path", "data_type", "casilla_id")
     assert "data_type" in layout_comparison.unmeasured_attributes
-    assert layout_comparison.registry_casilla_count == _M100_REGISTRY_CASILLA_COUNTS[filing_year]
     assert layout_comparison.dictionary_casilla_count == _M100_DICTIONARY_CASILLA_COUNTS[filing_year]
-    assert comparison.identity_divergence_count == _M100_IDENTITY_DIVERGENCE_COUNTS[filing_year]
+
+    # Every casilla AEAT declares for this year is declared by the registry.
+    assert layout_comparison.extra_casilla_ids == ()
+
+    # And every registry casilla carrying an AEAT NUMBER appears in that year's
+    # dictionary. Boxes AEAT does not number -- the ``*NN`` datos-identificativos
+    # series, the unnumbered ``###`` rows, and app-internal values -- carry
+    # descriptive ids and are legitimately absent, so they are excluded by shape
+    # rather than by being counted.
+    #
+    # This bites: modelo 100 declared casilla ``0058`` for 2024 and ``0059`` for
+    # 2025, both for the LIRPF art. 7.h exempt INSS benefit, and neither number
+    # appears in ANY bundled AEAT source for its year -- not the dictionary it
+    # cited, not the input dictionary, not the XSD, not the Renta manual. Both
+    # now carry a descriptive id.
+    fabricated = sorted(
+        casilla_id
+        for casilla_id in (layout_comparison.missing_casilla_ids or ())
+        if casilla_id.isdigit()
+    )
+    assert not fabricated, (
+        f"{filing_year} declares AEAT-numbered casilla(s) {fabricated} that its own dictionary "
+        "does not contain"
+    )
 
     entries = xml_dictionary_entries(
         dictionary_layout,
@@ -548,11 +592,12 @@ def test_annual_casilla_comparison_accepts_typed_inspection_without_snapshot(
     inspection = registry_authority.inspect_revision("100", filing_year=2025, period="0A")
     revision = registry_authority.modelo("100").revisions[inspection.revision_id]
 
-    comparison = compare_annual_casilla_population(
-        inspection,
+    comparison = compare_annual_casilla_population_for_revision(
+        modelo=inspection.modelo_id,
+        revision=revision,
         filing_year=2025,
         period="0A",
-        revision=revision,
+        sources=inspection.sources,
         source_root=registry_authority.source_root,
     )
 

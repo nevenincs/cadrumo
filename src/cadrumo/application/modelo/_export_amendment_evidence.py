@@ -7,7 +7,7 @@ from typing import NoReturn, Protocol
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...application.filing import AmendmentEvidence
 from ...core import Modelo
-from ...domain.calculations.registry import bundled_revision_inspection
+from ...domain.calculations.registry import bundled_authority
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
 from ...domain.modelos import (
@@ -165,8 +165,8 @@ def _evidence(
             work_units=work_unit_repository.load(),
             filing_records=records,
             justificantes=justificantes,
-            registry_inspections={
-                work_unit.work_unit_id: bundled_revision_inspection(
+            registry_snapshots={
+                work_unit.work_unit_id: bundled_authority().snapshot(
                     Modelo.M303.value,
                     filing_year=work_unit.filing_year,
                     period=work_unit.period.registry_token,

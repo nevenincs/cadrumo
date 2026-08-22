@@ -23249,12 +23249,6 @@ modelo:
                 adórendszere alá tartozó jövedelmekre.'
               label: Csökkentés a XXXVII America's Cup Barcelona adórendszere alá
                 tartozó jövedelmekre
-            0058:
-              help: '0058. mező: a társadalombiztosítástól kapott bruttó összeg az
-                INSS mentes anyasági vagy apasági ellátásai után, a személyi jövedelemadóról
-                szóló törvény 7.h cikke alapján.'
-              label: Mentes INSS anyasági/apasági ellátások - a társadalombiztosítástól
-                kapott bruttó összeg
             '0060':
               help: '0060. mező: az általános adóalapba beszámítandó csökkentett ingó
                 tőkejövedelmek összege, a 0056. mezőből.'
@@ -31775,6 +31769,9 @@ modelo:
             ZRUE2:
               help: null
               label: null
+            prestacion-inss-maternidad-paternidad-exenta:
+              help: null
+              label: Az INSS által folyósított adómentes anyasági és apasági ellátások
           construct:
             renta-2024-anexo-c-base-liquidable-negativa-general:
               field:
@@ -32013,10 +32010,6 @@ modelo:
               help: null
               label: Csökkentés kivételes módon szerzett művészi tevékenységekből
                 származó jövedelmek után
-            0059:
-              help: null
-              label: Mentesített INSS anyasági/apasági ellátások (LIRPF 7.h cikk).
-                A Társadalombiztosítástól kapott bruttó összeg
             '0060':
               help: null
               label: Az ingó vagyoni tőke csökkentett jövedelmeinek összege az általános
@@ -39546,6 +39539,9 @@ modelo:
                 ebben az egyetlen adóévben beszámítva (az az alap, amelyre a törvény
                 32.1. cikke szerinti 30%-os csökkentést alkalmazzák; az üzemeltető
                 által bevallott összeg - lásd az [1554] rovatot)
+            prestacion-inss-maternidad-paternidad-exenta:
+              help: null
+              label: Az INSS által folyósított adómentes anyasági és apasági ellátások
           construct:
             renta-2025-mini-model-actividades-economicas-objetiva:
               field:

@@ -24,6 +24,7 @@ from uuid import UUID
 
 import pytest
 
+from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.custody import (
     inventory_committed_profile_custody_capsule,
     recognize_current_profile_capsule,
@@ -32,7 +33,6 @@ from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...evidence import LegalHoldCaseAuthority
 from ...filing import FilingRetentionAuthority
-from .. import profile_close_bucket_session, profile_current_bucket_session
 from .._custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
 from .._custody_transactions import (
     ProfileCustodyTransactionConflictError,
@@ -53,7 +53,7 @@ _LABEL_RECORD_RELATIVE_PATH = "data/profile-label.v1.json"
 
 def _close_live_login() -> None:
     close_active_profile_record_session()
-    profile_close_bucket_session()
+    master_key.close_active_bucket_session()
 
 
 def _register_and_sign_in(root: Path) -> UUID:
@@ -65,7 +65,7 @@ def _register_and_sign_in(root: Path) -> UUID:
     """
     outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
     login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PASSWORD)
-    assert profile_current_bucket_session() is not None, (
+    assert master_key.current_active_bucket_session() is not None, (
         "the login must be live, or nothing here reproduces the logged-in case"
     )
     return UUID(outcome.profile_id)
@@ -202,7 +202,7 @@ def test_the_marker_still_bites_after_the_deletion_revokes_its_own_session(tmp_p
                 action=service._revoke_process_secrets,
             )
 
-            assert profile_current_bucket_session() is None
+            assert master_key.current_active_bucket_session() is None
             assert not (capsule / "db/cadrumo.db-wal").exists(), (
                 "the revocation must have checkpointed the sidecars away, or the guard is not under test"
             )

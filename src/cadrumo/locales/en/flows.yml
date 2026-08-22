@@ -73,7 +73,8 @@ flows:
       certificate_done: 'Identification: %{provider}; active certificate: %{name}.'
       export: Export a copy
       export_destination: Destination file path
-      export_done: Encrypted copy written to %{destination}.
+      export_done: Encrypted copy written to %{destination}. This product cannot import
+        it back; use 'aeat config profile archive export' for a restorable backup.
       export_passphrase: Passphrase that will protect the copy
       failed: The operation did not finish.
       filed_history_pull_all: Pull AEAT filing history

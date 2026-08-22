@@ -34,6 +34,13 @@ formulas = [
     "modelo-353-iva-cuota-devengada-total",
     "modelo-353-iva-cuota-deducible-total",
     "modelo-353-iva-resultado-regimen-general",
+    # The 2021-2025 era formulas target this modelo's own boxes 03, 05 and 09,
+    # and their legal_refs are already covered by this construct's. They were
+    # declared without being enrolled, so no construct owned them and the
+    # workflow surfaces a construct carries did not reach them.
+    "modelo-353-2021-2025-resultado",
+    "modelo-353-2021-2025-resultado-autoliquidacion",
+    "modelo-353-2021-2025-compensar-pendientes-posteriores",
 ]
 bindings = [
     "modelo-353-iva-repercutido-general-cuota",

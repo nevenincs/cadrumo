@@ -26,39 +26,52 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the IAE alta/variacion/baja declaration. DISCLOSURE \
--- this review follows a change made in the SAME action: the revision carried no \
-deadline_windows and no reasoned absence, which failed the "when due" half of the rung it \
-declares, so family_dispositions.deadline_windows was authored here before reviewing. The \
-reviewer and that author are the same agent; nothing else in the revision was altered. \
-VERIFIED -- WHEN DUE: orden-hac-2572-2003 apartado sexto reads verbatim in the bundled \
-corpus "La presentacion de la declaracion del Impuesto sobre Actividades Economicas, \
-modelo 840, debera realizarse, segun se trate de declaraciones de alta, variacion o baja, \
-en los plazos regulados en los articulos 5, 6 y 7 del Real Decreto 243/1995". Every plazo \
-is anchored to an EVENT -- the start, variacion or cese of the actividad -- not to the \
-calendar, so no recurring window exists to declare and none was fabricated; this matches \
-the shape modelo 145 already uses for its own event-relative plazo. VERIFIED -- TO WHOM: \
-apartado primero is the dedicated approving clause, "Se aprueba el modelo 840, «Impuesto \
-sobre Actividades Economicas», que figura en el anexo I de la presente Orden", carrying NO \
-year bound, so the open-ended 2003-y-siguientes claim does not outrun its orden. NOT \
-CLAIMED -- Real Decreto 243/1995 is NOT bundled in this corpus. The concrete \
-event-relative periods of its articles 5, 6 and 7 are cited by delegation through the \
-bundled apartado and are NOT corpus-proven here; a reviewer wanting the actual periods \
-must acquire the RD. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. \
-NOT CLAIMED -- no export layout is declared and the 108 fields the bundled diseno derives \
-are not modelled; this revision carries 2 casillas and reaches scheduling and \
-applicability only, which is what the applicability rung asserts. ADVISORY, not a defect: \
-the classification audit raises informative_axis_divergence for calculation_class = \
-informative against tax_domain = iae, and its own detail states the taxonomy label is a \
-free choice carrying no invariant -- an informative declaration inside the IAE domain is a \
-legitimate combination. CORRECTED SINCE -- the family_dispositions.formulas \
-reason on this revision described it as "an informational declaration reporting \
-third-party data to AEAT", which contradicts this file's own header ("administered \
-municipally and is not a return this application emits") and misstates the modelo: the IAE \
-declaration reports the taxpayer's OWN actividad. The conclusion that no formula family \
-applies was correct and is unchanged; the reason now cites TRLRHL art. 90, which puts the \
-liquidation with the administration. The same sentence sat verbatim on nine other revisions and was checked against each modelo's official name: it stays on 189, 280, 345 and 347, where the declarant reports OTHER people's data, and was corrected on 145, 232 and 720, which like this one report the declarant's own facts. NOT CLAIMED -- all 3 locales are complete for the 2 labels, but the \
-strings were not audited for accuracy."""
-reviewed_at = 2026-08-21
+-- self-review: the same agent authored all 119 new casillas across six units, re-grounded \
+the two pre-existing ones onto AEAT bracket numbers, and swept construct membership each \
+time. VERIFIED -- COVERAGE 0 -> 108 of 108 derived casillas, with 121 casillas in total. \
+Every AEAT box number the bundled aeat-dr-840 diseno prints across its three records is \
+now modelled. The two original casillas had carried SLUG numbers, which match no design \
+box and were the sole reason the report once read zero. VERIFIED -- TILING re-checked \
+before every transcription: Pag. 1 tiles 1..1132 and Pag. 2 tiles 1..1165, each exactly \
+once, no gap, no overlap. VERIFIED -- CONSTRUCT MEMBERSHIP exact, 121 of 121 both \
+directions. VERIFIED -- WHY 121 CASILLAS COVER 108 BOXES: where several physical positions \
+share one printed number, ONE casilla carries AEAT's number and each remaining position \
+becomes its own casilla with a descriptive slug, on modelo 604's precedent for its eight \
+signo casillas. A slug-numbered casilla does not count toward coverage, so the casilla \
+count tracks positions and coverage tracks boxes. The shapes differ and the treatment \
+follows the shape: 53, 54 and 55 each head a triplet of independently-set flags (three \
+casillas each, since collapsing loses two facts per triplet); 62 is ONE date split across \
+dia, mes and ano component fields (one date casilla, since splitting invents three facts); \
+63 and 86 each label two different concepts (two casillas each); 109 is a notification \
+block of five positions reduced to three casillas, lugar, fecha and calidad. VERIFIED -- \
+DATA TYPES come from the design type_code (An / Num) with one refinement: a Num field \
+whose value is a fixed-width CODE stays text, because a leading zero is significant and an \
+integer round-trip drops it. Following type_code blindly would have mis-typed five fields; \
+following the label would have mis-typed nine. VERIFIED -- NON-MONOTONIC NUMBERING: AEAT \
+numbers by printed form, not byte order, and nine fields are out of sequence (11@213 \
+before 10@215; 31@485, 29@487, 30@522; 72@1018, 70@1020, 71@1055, 73@1061). Pairing \
+numbers to offsets by sorting would mis-assign every one while the offsets still tiled. \
+NOT CLAIMED -- BOX 56 DOES NOT EXIST and none was invented. The printed sequence runs 55, \
+then two UNNUMBERED flags at @698 and @699 (campamento turistico, recepcion de loterias), \
+then 57. The gap falls exactly where a 56 would sit; both flags carry slugs instead. NOT \
+CLAIMED -- BOXES 79 AND 48 ARE \"Pto.\" AND THEIR LABELS KEEP THAT ABBREVIATION. The \
+diseno never expands it and each sits near a \"Pta.\" (Puerta). Expanding it needs an \
+official source. NOT CLAIMED -- THE ANEXO IS NOT MODELLED AS CASILLAS, and that is its \
+shape rather than an omission: 165 fields carrying only 4 distinct box numbers, almost \
+entirely one relacion-de-locales block restated with no number on any repetition. The same \
+holds for most of Pag. 2, where 24 of 110 fields are casillas. Those repetitions are the \
+binding_record / repeat = binding_rows shape modelo 720 uses; minting a byte-span number \
+per repetition would model a repeating structure as fixed positions. What modelo 840 needs \
+next is a BINDING SET, then a layout -- not more casillas. NOT CLAIMED -- NO EXPORT \
+LAYOUT: the application still cannot file this modelo, it stays on the filing-capability \
+worklist, and model_law_authority_scope remains inspection_only. NOT CLAIMED -- the \
+earlier review reasoning that this modelo is not a return this application emits is NOT \
+relied on; the worklist gate docstring treats an individually-defensible withdrawal record \
+as the historical defect. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not \
+zero. NOT CLAIMED -- all 121 labels are populated and non-null across es/en/ca/hu, \
+verified by counting values rather than keys after an earlier check that counted keys \
+proved unable to fail; the strings were not audited for accuracy."""
+reviewed_at = 2026-08-22
 
 [revisions."2003-y-siguientes".family_dispositions.formulas]
 reason = "The declarant reports its OWN actividad economica, declaring alta, variacion or baja in the matricula del IAE. The cuota is not self-assessed here: TRLRHL art. 90 puts the gestion tributaria of the impuesto with the matricula and the liquidation with the administration, so this form computes no liability and the formula family is inapplicable by this modelo's nature rather than merely absent."

@@ -1,0 +1,586 @@
+# Modelo 840 Pag. 1, Apartado IV -- datos de la actividad, boxes [33] to [67].
+# Transcribed from the bundled aeat-dr-840 design; Pag. 1 tiles 1..1132 exactly
+# once with no gap and no overlap.
+#
+# COLLAPSED BOX NUMBERS are modelled on the modelo 604 precedent: where several
+# physical positions share one printed number, ONE casilla carries AEAT's number
+# and each remaining position becomes its own casilla with a descriptive slug,
+# because (segmento, number) is uniqueness-enforced. A slug-numbered casilla does
+# not count toward diseno coverage, which is correct -- coverage measures AEAT's
+# printed boxes, not casilla count.
+#
+# The shape differs per case and the treatment follows the shape:
+#   [53], [54], [55] each head a TRIPLET of independently-set S-or-blank flags
+#     (Agrupacion / Grupo / Epigrafe, 1a 2a 3a). Three casillas each. Collapsing
+#     them to one would lose two independent facts per triplet.
+#   [62] is ONE date split across three component fields, @810+2 dia, @812+2 mes
+#     and @814+4 ano. One date casilla, not three integers: a composite component
+#     is not a casilla of its own. Splitting it would invent three facts.
+#   [63] labels TWO different causes -- Causa de la baja at @818 and Causa de la
+#     variacion at @844. Two casillas.
+#
+# [56] DOES NOT EXIST in this diseno. The printed sequence runs [55], then two
+# UNNUMBERED flags at @698 and @699 (campamento turistico, recepcion de loterias),
+# then [57]. Those two are real taxpayer-supplied facts and are declared with
+# slugs; a [56] is NOT invented for them even though the gap is exactly where one
+# would fall.
+#
+# data_type COMES FROM THE DESIGN type_code (An / Num) with ONE refinement: a Num
+# field whose value is a fixed-width CODE rather than a quantity stays `text`,
+# because a leading zero is significant and an integer round-trip drops it. That
+# covers the codigo postal [44], codigo de municipio [39], numero [46], telefono
+# [52] and the 13-digit N. Ref [67]. The only true quantity here is [65], the ano
+# de inicio, which is a `year`.
+#
+# NOT MODELLED, deliberately: the UNNUMBERED reserved C. Prov. at @533+2 and the
+# Municipio description expansion at @588+30. Neither carries a box number, neither
+# is derived, and both match the non-casilla classes already applied in Apartados
+# I, III and V -- an administration-reserved slot and a table expansion.
+#
+# [48] IS "Pto." AND ITS LABEL KEEPS THAT ABBREVIATION, as [79] does in Apartado V.
+# The diseno never expands it and it sits three boxes from [51] "Pta." (Puerta).
+
+# @530+1, type_code An. Clase de cuota (M, N, P o blanco). [33].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.clase-cuota"
+number = "33"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_clase_cuota"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @531+2, type_code An. Provincia de la cuota provincial. [act-provincia-cuota-provincial].
+# Slug: AEAT prints no box number on this field.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.provincia-cuota-provincial"
+number = "act-provincia-cuota-provincial"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_provincia_cuota_provincial"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @535+1, type_code An. Tipo de actividad (E, P o A). [34].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.tipo-actividad"
+number = "34"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_tipo_actividad"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @536+1, type_code An. Local afecto indirectamente (S o blanco). [35].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.local-afecto-indirectamente"
+number = "35"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_local_afecto_indirectamente"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @537+40, type_code An. Descripcion de la actividad. [36].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.descripcion"
+number = "36"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_descripcion"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @577+4, type_code An. Grupo o epigrafe. [37].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.grupo-epigrafe"
+number = "37"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_grupo_epigrafe"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @583+5, type_code An. Municipio (codigo). [38].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.municipio"
+number = "38"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_municipio"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @618+6, type_code Num. C. Mun. (codigo de municipio). [39].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.codigo-municipio"
+number = "39"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_codigo_municipio"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @581+2, type_code An. Provincia (codigo). [40].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.provincia"
+number = "40"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_provincia"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @624+2, type_code An. C. Prov. (codigo de provincia). [41].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.codigo-provincia"
+number = "41"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_codigo_provincia"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @626+2, type_code An. Domicilio de la actividad. SG (sigla de la via publica). [42].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-sigla-via"
+number = "42"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_sigla_via"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @628+25, type_code An. Domicilio de la actividad. Nombre de la via publica. [43].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-via-publica"
+number = "43"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_via_publica"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @653+5, type_code Num. Domicilio de la actividad. C. Postal. [44].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-codigo-postal"
+number = "44"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_codigo_postal"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @658+2, type_code An. Domicilio de la actividad. C. Via. [45].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-codigo-via"
+number = "45"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_codigo_via"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @660+5, type_code Num. Domicilio de la actividad. Num.. [46].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-numero"
+number = "46"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_numero"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @665+5, type_code An. Domicilio de la actividad. Km. [47].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-kilometro"
+number = "47"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_kilometro"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @670+4, type_code An. Domicilio de la actividad. Pto.. [48].
+# Label keeps the diseno abbreviation Pto.; it is never expanded and sits beside Pta. (Puerta) at [51].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-pto"
+number = "48"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_pto"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @674+2, type_code An. Domicilio de la actividad. Esc.. [49].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-escalera"
+number = "49"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_escalera"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @676+2, type_code An. Domicilio de la actividad. Piso. [50].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-piso"
+number = "50"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_piso"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @678+2, type_code An. Domicilio de la actividad. Pta.. [51].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-puerta"
+number = "51"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_puerta"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @680+9, type_code Num. Domicilio de la actividad. Telefono. [52].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-telefono"
+number = "52"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_telefono"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @689+1, type_code An. Notas que son de aplicacion: Agrupacion 1a. [53].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-agrupacion-1"
+number = "53"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_agrupacion_primera"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @690+1, type_code An. Notas que son de aplicacion: Agrupacion 2a. [act-nota-agrupacion-2].
+# Slug: [53] is carried by the first of three independent flags.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-agrupacion-2"
+number = "act-nota-agrupacion-2"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_agrupacion_segunda"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @691+1, type_code An. Notas que son de aplicacion: Agrupacion 3a. [act-nota-agrupacion-3].
+# Slug: [53] is carried by the first of three independent flags.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-agrupacion-3"
+number = "act-nota-agrupacion-3"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_agrupacion_tercera"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @692+1, type_code An. Notas que son de aplicacion: Grupo 1a. [54].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-grupo-1"
+number = "54"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_grupo_primera"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @693+1, type_code An. Notas que son de aplicacion: Grupo 2a. [act-nota-grupo-2].
+# Slug: [54] is carried by the first of three independent flags.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-grupo-2"
+number = "act-nota-grupo-2"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_grupo_segunda"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @694+1, type_code An. Notas que son de aplicacion: Grupo 3a. [act-nota-grupo-3].
+# Slug: [54] is carried by the first of three independent flags.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-grupo-3"
+number = "act-nota-grupo-3"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_grupo_tercera"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @695+1, type_code An. Notas que son de aplicacion: Epigrafe 1a. [55].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-epigrafe-1"
+number = "55"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_epigrafe_primera"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @696+1, type_code An. Notas que son de aplicacion: Epigrafe 2a. [act-nota-epigrafe-2].
+# Slug: [55] is carried by the first of three independent flags.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-epigrafe-2"
+number = "act-nota-epigrafe-2"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_epigrafe_segunda"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @697+1, type_code An. Notas que son de aplicacion: Epigrafe 3a. [act-nota-epigrafe-3].
+# Slug: [55] is carried by the first of three independent flags.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-epigrafe-3"
+number = "act-nota-epigrafe-3"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_epigrafe_tercera"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @698+1, type_code An. Se realiza la actividad dentro de un campamento turistico. [act-campamento-turistico].
+# Slug: AEAT prints no box number here. It sits between [55] and [57] where a [56] would fall, but the diseno does not print one and none is invented.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.campamento-turistico"
+number = "act-campamento-turistico"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_campamento_turistico"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @699+1, type_code An. Se realiza la recepcion de loterias y apuestas. [act-recepcion-loterias].
+# Slug: AEAT prints no box number here. See the note on the preceding field.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.recepcion-loterias"
+number = "act-recepcion-loterias"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_recepcion_loterias"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @700+1, type_code An. Regla(s) que son de aplicacion: Regla 4a 2 F). [57].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.regla-4-2-f"
+number = "57"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_regla_cuarta_2_f"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @701+3, type_code An. Seccion. [58].
+# Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.seccion"
+number = "58"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_seccion"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @704+4, type_code An. Actividad principal. [59].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.actividad-principal"
+number = "59"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_actividad_principal"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @708+51, type_code An. Exencion (1 codigo + 50 descripcion). [60].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.exencion"
+number = "60"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_exencion"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @759+51, type_code An. Bonificacion (1 codigo + 50 descripcion). [61].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.bonificacion"
+number = "61"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_bonificacion"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @810+8, type_code Num. Fecha de inicio, variacion, cese u otras causas. [62].
+# ONE date casilla: the diseno splits it into three component fields at @810+2 (dia), @812+2 (mes) and @814+4 (ano), and a composite component is not a casilla of its own.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.fecha-inicio-variacion-cese"
+number = "62"
+section = ["actividad"]
+data_type = "date"
+semantic_role = "act_fecha_inicio_variacion_cese"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @818+26, type_code An. Causa de la baja (1 codigo + 25 descripcion). [63].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.causa-baja"
+number = "63"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_causa_baja"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @844+25, type_code An. Causa de la variacion. [act-causa-variacion].
+# Slug: [63] labels TWO different causes and is carried by Causa de la baja above.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.causa-variacion"
+number = "act-causa-variacion"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_causa_variacion"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @869+25, type_code An. Causa de la declaracion complementaria. [64].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.causa-declaracion-complementaria"
+number = "64"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_causa_declaracion_complementaria"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @894+4, type_code Num. Ano en que inicio la actividad por primera vez. [65].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.ano-inicio-primera-vez"
+number = "65"
+section = ["actividad"]
+data_type = "year"
+semantic_role = "act_ano_inicio_primera_vez"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @898+50, type_code An. Informacion adicional. [66].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.informacion-adicional"
+number = "66"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_informacion_adicional"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+# @948+13, type_code Num. N. Ref. [67].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.numero-referencia"
+number = "67"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_numero_referencia"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]

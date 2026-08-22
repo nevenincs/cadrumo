@@ -79,7 +79,7 @@ from ...domain.bienes_inversion import (
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
     DataBindingDefinition,
-    bundled_revision_inspection,
+    bundled_authority,
     derive_modelo_202_modality,
     derive_taxpayer_files_economic_activity,
 )
@@ -969,8 +969,8 @@ def _resolve_amendment_export_evidence(
             work_units=work_unit_repository.load(),
             filing_records=filing_records,
             justificantes=justificantes,
-            registry_inspections={
-                work_unit.work_unit_id: bundled_revision_inspection(
+            registry_snapshots={
+                work_unit.work_unit_id: bundled_authority().snapshot(
                     Modelo.M303.value,
                     filing_year=work_unit.filing_year,
                     period=work_unit.period.registry_token,

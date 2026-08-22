@@ -607,16 +607,26 @@ def _literal_string(
     *,
     field: str,
     line: int,
+    where: str,
     deferred_names: frozenset[str] = frozenset(),
 ) -> str | None:
-    """Return a static string or fail rather than inventing an effective value."""
+    """Return a static string or fail rather than inventing an effective value.
+
+    ``where`` is the module being judged. Without it the refusal names a line
+    number and nothing else, and a line number alone does not locate anything
+    in a tree of 5,773 scanned files -- established by trying: six separate
+    probes failed to name the offending module, including a subtree bisect that
+    reported nothing because the census refuses a root with no ``conftest.py``
+    and the filter swallowed that refusal. A gate that cannot say WHERE cannot
+    be acted on.
+    """
     if value is None:
         return None
     if isinstance(value, ast.Constant) and isinstance(value.value, str):
         return value.value
     if _is_deferred_to_call_site(value, deferred_names):
         return None
-    message = f"fixture {field} at line {line} is dynamic; static census cannot state its effective value"
+    message = f"{where}:{line}: fixture {field} is dynamic; static census cannot state its effective value"
     raise FixtureCensusError(message)
 
 
@@ -626,16 +636,20 @@ def _literal_bool(
     field: str,
     line: int,
     default: bool,
+    where: str,
     deferred_names: frozenset[str] = frozenset(),
 ) -> bool:
-    """Return a static boolean or fail rather than silently applying a default."""
+    """Return a static boolean or fail rather than silently applying a default.
+
+    ``where`` names the module, for the reason :func:`_literal_string` states.
+    """
     if value is None:
         return default
     if isinstance(value, ast.Constant) and isinstance(value.value, bool):
         return value.value
     if _is_deferred_to_call_site(value, deferred_names):
         return default
-    message = f"fixture {field} at line {line} is dynamic; static census cannot state its effective value"
+    message = f"{where}:{line}: fixture {field} is dynamic; static census cannot state its effective value"
     raise FixtureCensusError(message)
 
 
@@ -832,15 +846,20 @@ class _ModuleVisitor(ast.NodeVisitor):
             # dynamism stays visible, and the binding is resolved separately as
             # a factory-bound candidate.
             deferred = frozenset(self._enclosing_parameters) if self._function_depth else frozenset()
+            judged = _relative_path(self.path, self.root)
             explicit_name = _literal_string(
-                keywords.get("name"), field="name", line=node.lineno, deferred_names=deferred
+                keywords.get("name"), field="name", line=node.lineno, where=judged, deferred_names=deferred
             )
-            scope = _literal_string(keywords.get("scope"), field="scope", line=node.lineno) or _DEFAULT_SCOPE
+            scope = (
+                _literal_string(keywords.get("scope"), field="scope", line=node.lineno, where=judged)
+                or _DEFAULT_SCOPE
+            )
             autouse = _literal_bool(
                 keywords.get("autouse"),
                 field="autouse",
                 line=node.lineno,
                 default=False,
+                where=judged,
                 deferred_names=deferred,
             )
             decorator = FixtureDecorator(

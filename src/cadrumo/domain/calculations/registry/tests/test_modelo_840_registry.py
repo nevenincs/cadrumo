@@ -150,7 +150,13 @@ def test_committed_modelo_840_construct_includes_revision_members() -> None:
     for revision in modelo.revisions.values():
         assert len(revision.constructs) == 1, revision.id
         construct = revision.constructs[0]
-        assert construct.casilla_ids == tuple(c.id for c in revision.casillas)
+        # Membership, not sequence. The construct must carry every casilla the
+        # revision declares and no other, with no duplicates; the ORDER it
+        # lists them in is incidental and broke this assertion the moment the
+        # sujeto set was authored, without any member being lost.
+        revision_casilla_ids = tuple(c.id for c in revision.casillas)
+        assert set(construct.casilla_ids) == set(revision_casilla_ids), revision.id
+        assert len(construct.casilla_ids) == len(revision_casilla_ids), revision.id
         assert construct.extraction_profiles == tuple(p.id for p in revision.extraction_profiles)
         assert construct.verification_expectations == tuple(e.id for e in revision.verification_expectations)
         assert construct.workbook_parity_refs == tuple(w.id for w in revision.workbook_parity_refs)

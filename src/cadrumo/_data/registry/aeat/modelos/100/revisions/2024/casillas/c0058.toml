@@ -1,7 +1,0 @@
-[[revisions."2024".casillas]]
-id = "0058"
-number = "0058"
-section = ["toma_datos_ampliada", "rdto_trabajo"]
-semantic_role = "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
-legal_refs = ["ley-35-2006:art-7-h"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary"]

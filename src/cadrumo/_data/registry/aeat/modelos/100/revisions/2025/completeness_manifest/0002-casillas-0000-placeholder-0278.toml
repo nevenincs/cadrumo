@@ -315,8 +315,8 @@ casilla_id = "0057"
 number = "0057"
 
 [[revisions."2025".completeness_manifest.casillas]]
-casilla_id = "0059"
-number = "0059"
+casilla_id = "prestacion-inss-maternidad-paternidad-exenta"
+number = "prestacion-inss-maternidad-paternidad-exenta"
 
 [[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "0060"

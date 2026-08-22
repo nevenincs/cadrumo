@@ -94,11 +94,15 @@ def _revision(modelo_id: str) -> ModeloRevision:
     difference between them here.
     """
     period = "1T" if modelo_id == "303" else "0A"
-    return resources().modelos.authority.snapshot(
-        modelo_id,
-        filing_year=_Q1_2025.filing_year,
-        period=period,
-    ).revision
+    return (
+        resources()
+        .modelos.authority.snapshot(
+            modelo_id,
+            filing_year=_Q1_2025.filing_year,
+            period=period,
+        )
+        .revision
+    )
 
 
 def _row(category: IvaCategory) -> IvaLedgerObservation:

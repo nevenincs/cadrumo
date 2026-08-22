@@ -105,7 +105,7 @@ from cadrumo.application.registry import (
     RevisionConformanceRow,
     RevisionConstructEvidence,
     audit_bundled_registry_conformance,
-    compare_annual_casilla_population,
+    compare_annual_casilla_population_for_revision,
 )
 from cadrumo.core import STRICT_FROZEN_CONFIG, RevisionReviewStatus
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
@@ -1188,11 +1188,12 @@ def build_annual_coordinate_matrix() -> ConformanceCoordinateMatrix:
     for modelo, filing_year, period in _PROVISIONAL_ANNUAL_COORDINATE_SPECS:
         inspection = authority.inspect_revision(modelo, filing_year=filing_year, period=period)
         selected_revision = authority.modelo(modelo).revisions[inspection.revision_id]
-        schema_comparison = compare_annual_casilla_population(
-            inspection,
+        schema_comparison = compare_annual_casilla_population_for_revision(
+            modelo=inspection.modelo_id,
+            revision=selected_revision,
             filing_year=filing_year,
             period=period,
-            revision=selected_revision,
+            sources=inspection.sources,
             source_root=authority.source_root,
         )
         coordinate_items.append(
