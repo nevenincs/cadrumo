@@ -5946,3 +5946,56 @@ ones. That is the same shape as the census work two entries ago: the value deliv
 green gate but a verdict someone can act on.
 
 Lanes 314 integration / 1587 unit, unchanged.
+
+### Removing the forwarding port layer: slices 1-4, and three mistakes worth keeping
+
+Operator ruling: the codebase carries no shims or re-exports, so the twenty-one module-level
+forwarding wrappers in `_custody_ports.py` go. Sixteen are now gone across four slices;
+five remain, all in the heavy tail. The twelve Protocol-adapter METHODS stay, exempted on
+evidence in an earlier entry.
+
+**Two of the first three had no callers at all** -- forwards registered in the package
+facade's TYPE_CHECKING block AND its lazy map, absent from `__all__`, called by nothing.
+Dead weight in three places at once, which is what a forwarding layer decays into once its
+consumers move on.
+
+**A wrapper's prose is not automatically worth preserving.** `profile_custody_read_optional_
+member` carried a security rationale that an earlier entry had deliberately moved INTO it.
+Checking the call site before deleting showed `_require_member` already stated it better --
+the restore source is the less trusted capsule kind and previously took a weaker
+`is_file()`-then-`read_bytes()` read. So that move had been redundant when it was made.
+Check the destination before relocating prose to save it.
+
+**Three mistakes, each caught by something other than my own reading:**
+
+- *Text-span deletion is unsafe in a file mixing functions and classes.* Taking each
+  function as "start of `def` to the next `def`" swallowed three adapter CLASSES that
+  followed one of them, leaving their factories referencing undefined names. Ruff caught it
+  in seconds. The redo uses exact AST line spans and asserts the classes survive.
+- *A wrapper can have an INTERNAL caller.* `load_profile_custody_password_material` was
+  called by another function in its own module. The post-edit assertion that the name was
+  fully gone fired BEFORE the file was written, so nothing was left half-edited -- the value
+  of asserting the end state rather than trusting the edit.
+- *Format the files you changed, not the directories they live in.* `ruff format` over whole
+  packages reformatted fifteen files nobody had asked me to touch, several belonging to
+  peers. All fifteen were restored so the tree stays as its owners left it.
+
+**Attribution, three times, none of it assumed.** A `bucket_maintenance` retention failure
+traced to a peer's UNCOMMITTED `config_reset` rework re-deriving retention against the live
+assessment. Sixteen failures across `application/tests`, `workflow/tests` and `custody/tests`
+were read rather than counted: pydantic constraint tightenings on
+`LedgerPreflightIssue.transaction_id` and `ProjectionActiveProfile.profile_id` whose fixtures
+now violate them. None mentions a session or custody symbol, and all sit outside the domain
+lanes. The one attribution attempt that FAILED is worth recording too: reverting a single
+file to compare against HEAD left the change set half-applied and the module unimportable,
+so the comparison proved nothing.
+
+**Precedent found mid-work:** peer commit `3f1a947674` already dissolved an entire
+`application/profile_custody` package -- 1,176 lines -- into user_profile. This is a
+continuation of an established pattern here, not a new direction.
+
+The two `parse_*` forwards are held for their own slice: their names are IDENTICAL to the
+adapter functions they call, so a name-based rewrite risks silently altering the adapter's
+own internal uses.
+
+Flagged forwarding wrappers 21 -> 5. Lanes 314 integration / 1589 unit.
