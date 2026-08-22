@@ -33,9 +33,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....adapters.persistence.storage.custody import ProfileCustodyRecordError
+from ....adapters.persistence.storage.custody import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, ProfileCustodyRecordError
 from .._capsule_restore import ProfileCapsuleSourceError, read_profile_capsule_source
-from .._custody_ports import PROFILE_CAPSULE_ENVELOPE_MAX_BYTES
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -61,7 +60,7 @@ def test_a_member_beyond_its_ceiling_is_refused(tmp_path: Path) -> None:
     produced.
     """
     source = _capsule_skeleton(tmp_path / "capsule")
-    (source.joinpath(*_ENVELOPE)).write_bytes(b"{" + b"0" * (PROFILE_CAPSULE_ENVELOPE_MAX_BYTES * 4))
+    (source.joinpath(*_ENVELOPE)).write_bytes(b"{" + b"0" * (PROFILE_CUSTODY_ENVELOPE_MAX_BYTES * 4))
 
     with pytest.raises(ProfileCustodyRecordError, match="not a bounded regular file"):
         read_profile_capsule_source(source)

@@ -42,9 +42,9 @@ from dataclasses import dataclass
 from secrets import token_bytes
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.storage.custody import ProfileCustodyRecoveryArtifactWarning
 from ._capsule_record import ProfileRecordSession
 from ._custody_ports import (
-    ProfileRecoveryArtifactWarning,
     create_profile_recovery_enrollment_material,
     prove_profile_recovery_artifact,
     unlock_profile_custody_password,
@@ -97,7 +97,7 @@ class ProfileRecoveryArtifactReceipt:
     dek_epoch: str
     artifact_digest: str
     target: Path
-    warnings: tuple[ProfileRecoveryArtifactWarning, ...]
+    warnings: tuple[ProfileCustodyRecoveryArtifactWarning, ...]
 
 
 @dataclass(frozen=True, slots=True)

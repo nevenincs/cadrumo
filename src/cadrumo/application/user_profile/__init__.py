@@ -416,9 +416,6 @@ if TYPE_CHECKING:
         ProfileRecordEncryptedBlob as ProfileRecordEncryptedBlob,
     )
     from ._custody_ports import (
-        ProfileRecoveryArtifactWarning as ProfileRecoveryArtifactWarning,
-    )
-    from ._custody_ports import (
         ProfileSecureObjectInventoryPort as ProfileSecureObjectInventoryPort,
     )
     from ._custody_ports import (
@@ -802,7 +799,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileRecordCryptoError": "._custody_ports",
     "ProfileRecordCryptoPort": "._custody_ports",
     "ProfileRecordEncryptedBlob": "._custody_ports",
-    "ProfileRecoveryArtifactWarning": "._custody_ports",
     "ProfileSecureObjectInventoryPort": "._custody_ports",
     "create_profile_custody_registration_material": "._custody_ports",
     "create_profile_recovery_enrollment_material": "._custody_ports",

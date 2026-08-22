@@ -860,7 +860,6 @@ def create_profile_custody_registration_material(
     return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
 
 
-ProfileRecoveryArtifactWarning = custody.ProfileCustodyRecoveryArtifactWarning
 """The closed set of warnings every recovery-artifact export must surface.
 
 Re-exported at the boundary rather than flattened to plain strings on the
@@ -984,10 +983,6 @@ def verify_profile_custody_dek_against_sentinel(
 #: Per-member ceilings for a capsule directory, re-exported so the restore path
 #: bounds each member with the SAME value the published capsule reader uses
 #: rather than forming a second opinion about the same record.
-PROFILE_CAPSULE_ENVELOPE_MAX_BYTES = custody.PROFILE_CUSTODY_ENVELOPE_MAX_BYTES
-PROFILE_CAPSULE_SENTINEL_MAX_BYTES = custody.PROFILE_CUSTODY_SENTINEL_MAX_BYTES
-PROFILE_CAPSULE_RECOVERY_MAX_BYTES = custody.PROFILE_CUSTODY_RECOVERY_MAX_BYTES
-PROFILE_CAPSULE_DATABASE_MAX_BYTES = custody.PROFILE_CUSTODY_DATA_FILE_MAX_BYTES
 
 
 def profile_custody_recovery_envelope_path(capsule_path: Path) -> Path:
@@ -1182,7 +1177,6 @@ __all__ = [
     "ProfileRecordCryptoError",
     "ProfileRecordCryptoPort",
     "ProfileRecordEncryptedBlob",
-    "ProfileRecoveryArtifactWarning",
     "ProfileSecureObjectInventoryPort",
     "ProfileSessionResumeOutcomePort",
     "canonical_snapshot_bytes",
