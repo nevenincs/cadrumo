@@ -10,51 +10,65 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Iterable
+from dataclasses import replace
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 import typer
+from typer._click.core import Context as TyContext
+from typer.main import get_command as typer_get_command
 
 from .. import app
-from .._app_execution_policies import METADATA
+from .._app_execution_policies import METADATA, declare_metadata_group
 from .._command_policy import CommandExecutionPolicy, command_execution_policy
-from .._command_suggestions import CadrumoTyperGroup, LiveCommandNode, walk_live_command_tree
+from .._command_suggestions import (
+    CadrumoTyperGroup,
+    LazySubcommand,
+    LiveCommandNode,
+    register_lazy_subcommand,
+    walk_live_command_tree,
+)
+from ._command_policy_semantic_oracle import (
+    EXPECTED_CALLBACK_POLICY,
+    REPEATED_CALLBACK_OWNERS,
+    PolicySignature,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_OWNER_CAPABILITY_EVIDENCE = {
-    "google": "google",
-    "registry": "registry",
-    "calculation": "calculation",
-    "browser": "browser",
-    "crypto": "crypto",
-}
-
 
 def _require_complete_policy(nodes: Iterable[LiveCommandNode]) -> None:
     missing = tuple(" ".join(node.path) for node in nodes if node.execution_policy is None)
     assert missing == ()
 
 
-def _require_owner_semantics(nodes: Iterable[LiveCommandNode]) -> None:
-    """Require strong module/callback ownership signals to retain authority.
+def _policy_signature(policy: CommandExecutionPolicy) -> PolicySignature:
+    classification = policy.classification
+    return (
+        tuple(sorted(classification.capabilities)),
+        tuple(sorted(classification.side_effects)),
+        classification.performance,
+        policy.write_route,
+        policy.destructive,
+        policy.handoff,
+        policy.live_write,
+    )
 
-    This is deliberately a lower-bound oracle: a callback owned by a Google,
-    registry, calculation, browser, or crypto surface cannot truthfully omit
-    that capability.  It does not infer that callbacks without those names are
-    safe, so the complete-policy gate remains independently necessary.
-    """
-    violations: list[str] = []
+
+def _require_semantic_partition(nodes: Iterable[LiveCommandNode]) -> None:
+    """Compare every callback with the independently adjudicated owner oracle."""
+    actual: dict[str, PolicySignature] = {}
     for node in nodes:
         policy = node.execution_policy
         if policy is None:
             continue
-        owner = node.handler_owner.casefold()
-        expanded = policy.classification.expanded_capabilities
-        for signal, capability in _OWNER_CAPABILITY_EVIDENCE.items():
-            if signal in owner and capability not in expanded:
-                violations.append(f"{' '.join(node.path)}: {signal!r} owner lacks {capability!r}")
-    assert violations == []
+        signature = _policy_signature(policy)
+        key = node.handler_owner
+        if key in REPEATED_CALLBACK_OWNERS:
+            key = f"{key} @ {' '.join(node.path)}"
+        previous = actual.setdefault(key, signature)
+        assert previous == signature, f"callback aliases disagree: {key}"
+    assert actual == EXPECTED_CALLBACK_POLICY
 
 
 def test_every_live_root_group_and_leaf_has_one_coherent_policy() -> None:
@@ -97,18 +111,44 @@ def test_every_live_root_group_and_leaf_has_one_coherent_policy() -> None:
             assert "network" in expanded
             assert {"network", "browser"} & classification.side_effects
 
-    _require_owner_semantics(nodes)
+    _require_semantic_partition(nodes)
 
 
-def test_policy_identity_survives_real_tree_materialisation() -> None:
-    first = walk_live_command_tree(app)
-    second = walk_live_command_tree(app)
+def test_callback_and_policy_identity_survive_fresh_lazy_materialisation() -> None:
+    probe = typer.Typer(name="lazy-policy-identity-probe", cls=CadrumoTyperGroup)
 
-    assert tuple((node.path, node.kind, node.handler_owner) for node in first) == tuple(
-        (node.path, node.kind, node.handler_owner) for node in second
+    @probe.callback()
+    @command_execution_policy(METADATA)
+    def root_callback() -> None:
+        return None
+
+    @command_execution_policy(METADATA)
+    def lazy_callback() -> None:
+        return None
+
+    def load_lazy() -> typer.Typer:
+        child = typer.Typer(name="lazy", cls=CadrumoTyperGroup, invoke_without_command=True)
+        child.callback()(lazy_callback)
+        return child
+
+    register_lazy_subcommand(
+        "lazy-policy-identity-probe",
+        LazySubcommand("lazy", load_lazy),
     )
-    first_by_path = {node.path: node.execution_policy for node in first}
-    assert all(first_by_path[node.path] is node.execution_policy for node in second)
+    root = typer_get_command(probe)
+    context = TyContext(root, info_name="lazy-policy-identity-probe")
+    try:
+        materialised = cast(Any, root).get_command(context, "lazy")
+    finally:
+        context.close()
+
+    assert materialised is not None
+    click_callback = materialised.callback
+    assert click_callback is not None
+    assert getattr(click_callback, "__wrapped__", None) is lazy_callback
+    assert getattr(click_callback, "__cadrumo_command_execution_policy__", None) is METADATA
+    assert walk_live_command_tree(probe)[1].execution_policy is METADATA
+    assert materialised.callback is click_callback
 
 
 def test_universal_gate_bites_for_an_externally_injected_unclassified_leaf() -> None:
@@ -127,25 +167,33 @@ def test_universal_gate_bites_for_an_externally_injected_unclassified_leaf() -> 
         _require_complete_policy(walk_live_command_tree(planted))
 
 
-def test_semantic_downgrade_gate_bites_independently_of_policy_identity() -> None:
-    planted = typer.Typer(name="semantic-policy-probe", cls=CadrumoTyperGroup)
+def test_semantic_partition_bites_for_a_future_helper_generated_group() -> None:
+    future = typer.Typer(name="future-metadata-group", cls=CadrumoTyperGroup)
+    declare_metadata_group(future)
+    expanded = (*walk_live_command_tree(app), *walk_live_command_tree(future))
 
-    @planted.callback()
-    @command_execution_policy(METADATA)
-    def root() -> None:
-        return None
-
-    @planted.command("pull")
-    @command_execution_policy(METADATA)
-    def google_pull() -> None:
-        return None
-
-    # Ownership is external evidence, not a path lookup or a comparison with a
-    # policy preset.  A real Google-owned callback downgraded to METADATA must
-    # therefore red even though its policy is internally valid and attached.
-    google_pull.__module__ = "external.google_adapter"
     with pytest.raises(AssertionError):
-        _require_owner_semantics(walk_live_command_tree(planted))
+        _require_semantic_partition(expanded)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        ("aeat", "config", "profile", "delete"),
+        ("aeat", "app", "ledger", "add"),
+        ("aeat", "config", "profile", "list"),
+        ("aeat", "config", "google", "sync", "push"),
+        ("aeat", "app", "modelo", "export"),
+        ("aeat", "app", "live", "iva-wallet", "pull-evidence"),
+    ],
+)
+def test_semantic_partition_bites_for_real_callback_downgrades(path: tuple[str, ...]) -> None:
+    nodes = list(walk_live_command_tree(app))
+    index = next(index for index, node in enumerate(nodes) if node.path == path)
+    nodes[index] = replace(nodes[index], execution_policy=METADATA)
+
+    with pytest.raises(AssertionError):
+        _require_semantic_partition(nodes)
 
 
 def test_legacy_path_keyed_policy_authorities_are_physically_absent() -> None:
@@ -160,6 +208,7 @@ def test_legacy_path_keyed_policy_authorities_are_physically_absent() -> None:
         "profile_bound_write" + "_verb_paths",
     )
     offenders: list[str] = []
+    duplicate_path_authorities: list[str] = []
     for source in source_root.rglob("*.py"):
         if source == Path(__file__):
             continue
@@ -169,4 +218,15 @@ def test_legacy_path_keyed_policy_authorities_are_physically_absent() -> None:
         identifiers.update(node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute))
         if any(token in identifiers for token in banned):
             offenders.append(str(source.relative_to(source_root)))
+        if "tests" not in source.parts:
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.Dict):
+                    continue
+                for key, value in zip(node.keys, node.values, strict=True):
+                    tuple_path = isinstance(key, ast.Tuple) and key.elts and all(
+                        isinstance(item, ast.Constant) and isinstance(item.value, str) for item in key.elts
+                    )
+                    if tuple_path and "policy" in ast.unparse(value).casefold():
+                        duplicate_path_authorities.append(str(source.relative_to(source_root)))
     assert offenders == []
+    assert duplicate_path_authorities == []

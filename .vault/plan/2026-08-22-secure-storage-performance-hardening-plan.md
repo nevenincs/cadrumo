@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-22'
-body_hash: 'sha256:73472a605d5d56f1dac2d1cbac1b973ba0089a1b409d0410257f9393289807db'
+body_hash: 'sha256:811ddb6f4cc38547ef13e39e4cd8293c8b34b5735105a67d7c1142b5268b0b49'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -49,7 +49,7 @@ Make the real installed command tree authoritative for universal enrollment.
 - [x] `W01.P01.S51` - Attach execution policy to live, diagnostics, maintenance, review, overview, registry, and quickfile callbacks; `src/cadrumo/entrypoints/cli/ remaining app modules`.
 - [x] `W01.P01.S52` - Migrate operator-surface and MCP HITL consumers to live-node execution policy, remove all legacy risk rows, and delete the keyed risk table; `src/cadrumo/application/operator_surface and src/cadrumo/adapters/inbound/mcp`.
 - [x] `W01.P01.S53` - Migrate profile-bound write routing to execution-policy scope and delete the verb-path catalogue; `src/cadrumo/application/storage_write_policy.py and src/cadrumo/entrypoints/cli/_common.py`.
-- [ ] `W01.P01.S04` - Add a universal census gate that fails for every unclassified node and prove the detector against an externally injected node; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
+- [x] `W01.P01.S04` - Add a universal census gate that fails for every unclassified node and prove the detector against an externally injected node; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
 
 ### Phase `W01.P02` - Reproducible startup and resolution profiler
 

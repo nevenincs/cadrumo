@@ -6,11 +6,12 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:ec5e0f7df1f000edec8a22a15cf81c73e7ba0d8c24f8baed350ed9b44d44d278'
+body_hash: 'sha256:11a9daea53584514c3f6b6ce1939fc51e663feb7b4adee447b7e1c530a0b5da0'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S03]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S04]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S48]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S49]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S50]]'
@@ -25,6 +26,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s01-live-command-walker-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s02-capability-taxonomy-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s03-command-policy-review-audit]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s04-universal-policy-gate-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s48-config-policy-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s49-ledger-policy-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s50-modelo-policy-review-audit]]'
@@ -48,6 +50,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s01-live-command-walker-review-audit` - `secure-storage-performance-hardening` audit: `W01 P01 S01 live command walker review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s02-capability-taxonomy-review-audit` - `secure-storage-performance-hardening` audit: `W01.P01.S02 capability taxonomy review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s03-command-policy-review-audit` - `secure-storage-performance-hardening` audit: `W01.P01.S03 command execution policy review`
+- `2026-08-22-secure-storage-performance-hardening-w01-p01-s04-universal-policy-gate-review-audit` - `secure-storage-performance-hardening` audit: `W01.P01.S04 universal policy gate review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s48-config-policy-review-audit` - `secure-storage-performance-hardening` audit: `W01.P01.S48 config execution-policy review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s49-ledger-policy-review-audit` - `secure-storage-performance-hardening` audit: `W01.P01.S49 ledger execution-policy review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s50-modelo-policy-review-audit` - `secure-storage-performance-hardening` audit: `W01 P01 S50 modelo policy review`
@@ -59,6 +62,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S01` - Extend the live command walker to emit stable command paths, node kind, loader owner, and handler owner for every reachable node
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S02` - Define command capability classes covering registry, profile custody, encrypted facts, network, browser, Google, calculation, filing, and state-free behavior
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S03` - Introduce lightweight node-attached command execution policy and expose it through the live command census
+- `2026-08-22-secure-storage-performance-hardening-W01-P01-S04` - Add a universal census gate that fails for every unclassified node and prove the detector against an externally injected node
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S48` - Attach execution policy to every config subtree callback and group
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S49` - Attach execution policy to every ledger subtree callback and group while retaining legacy risk rows until mandatory S52 consumer migration and deletion
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S50` - Attach execution policy to modelo subtree callbacks and remove modelo risk path declarations
