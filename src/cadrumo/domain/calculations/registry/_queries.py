@@ -17,7 +17,15 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from ....core import OBJECT_TUPLE_ADAPTER, BindingSourceKind, Modelo, Period, RegistrySelectorPeriodCode, TaxDomain
+from ....core import (
+    OBJECT_TUPLE_ADAPTER,
+    BindingSourceKind,
+    Modelo,
+    Period,
+    RegistryAuthorityGrade,
+    RegistrySelectorPeriodCode,
+    TaxDomain,
+)
 from ....core.i18n import output_language
 from ._authority import ValidatedRegistryAuthority
 from ._binding_selector_utils import boolean_binding_encoded_values
@@ -560,11 +568,22 @@ class RegistryQueryService:
         registry_period = (
             registry_period_for_request(declared_by_revision, requested_period) or requested_period.upper()
         )
+        # Introspection, not a filing assertion. The FILING rung additionally
+        # demands a reviewed revision, a reviewed legal set and an export
+        # layout, and this resolver feeds only read reports -- describe,
+        # casillas, formulas, bindings. Building at the default rung made every
+        # one of them refuse an applicability-grade modelo: `describe 036
+        # --period ALTA` raised "declares no export layout" while answering a
+        # question about which revision governs an event kind. Every structural
+        # check -- legal applicability, reference identity, the revision-scoped
+        # legal and source windows -- runs at this rung too, so the reports lose
+        # nothing they read.
         snapshot = self._authority.snapshot(
             str(definition.id),
             filing_year=filing_year,
             period=registry_period,
             on=as_of,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
         )
         return ResolvedRegistryQueryContext(
             definition=definition,
