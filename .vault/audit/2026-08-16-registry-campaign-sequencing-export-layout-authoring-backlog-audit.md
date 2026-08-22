@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:3a3d810eb7f0ce0be723000fe49ca4b35b33978ef8ceb7ce7cf9acc679711b52'
+body_hash: 'sha256:bf23d9812a38d60640ea3c65cd3a8f8d162740ae964b9bb0e08e5748d7f30383'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -12266,3 +12266,63 @@ fixtures that merely BORROW it, both have to be run.
 Modelo 322's `2008-2023` has no deadline windows of its own. Forty-nine
 unregistered design files. The three span findings still need per-design epoch
 authoring: modelo 200's 2024, modelo 322's 2022, modelo 347's 2008 and 2010.
+
+## Tick: the out-of-span window defect closed, and a measurement of mine corrected
+
+Re-measured at tick start: authority CLEAN, registration gate 49 of 218, and
+modelo 322's `2008-2023` still carrying three 2025 deadline windows outside its
+own span -- the item left open last tick.
+
+### Modelo 322's early half now has windows of its own
+
+Last tick this was recorded as needing filing-grade authoring of sixteen years
+of monthly IVA-grupo deadlines. Reading what the siblings actually declare made
+it much smaller: the registry authors THREE representative months per year, not
+twelve, and the rule they state is mechanical -- monthly, opening the first of
+the following month, closing on the 30th, with the January period closing at
+the end of February. Their legal basis is `rd-1624-1992:art-71` and
+`orden-eha-3434-2007:art-8`, both already cited by the 2008-2023 revision, so
+nothing new is claimed about the deadline, only about which year it applies to.
+
+Two windows are authored for 2023, the revision's own last ejercicio, and the
+three out-of-span 2025 windows are gone.
+
+The June period is deliberately absent. Its nominal close, 2023-07-30, falls on
+a Sunday, and the sibling revisions record a SHIFTED operational close with a
+calendar source when that happens -- `modelo-322-2026-01` closes 2026-03-02
+rather than 02-28, citing `aeat-calendario-contribuyente-2026-hasta-2-marzo`.
+Asserting the 2023 shift would need that year's calendar read rather than
+inferred, so the window is omitted instead of guessed. The two authored windows
+close on a Tuesday and need no shift at all.
+
+Across the three split modelos there are now ZERO out-of-span deadline windows:
+modelo 184 at 7 + 2, modelo 322 at 2 + 3 + 1, modelo 347 at 7 + 2.
+
+### A previous measurement of mine was wrong in the modelo's favour
+
+Modelo 322's 2022 boundary was ruled non-derivable partly on a box-number key
+that "collides six times per design". Three of those six were not the design's
+doing: the key took the FIRST bracketed number in a description, and inside a
+formula like `Total a deducir ([40]+[42]+...) [62]` that is an operand, not the
+field's own box. Reading the LAST bracket instead -- which is where these
+designs print the field's own number -- drops collisions to three and lifts the
+shared set from 204 to 207.
+
+The conclusion is unchanged and now rests on better evidence: seven 2022 fields
+still pair with nothing, and three keys remain genuinely ambiguous because
+several `Reservado para la Agencia Tributaria` and `Exclusivamente a
+cumplimentar en el último periodo` rows share one truncated description and
+carry no box at all. Seven unpaired fields is authoring, not derivation.
+
+### Verified
+
+* authority CLEAN.
+* modelo 322 registry tests and catalogue verification: 37 passed.
+* out-of-span deadline windows across modelos 184, 322 and 347: zero, measured
+  against each revision's own declared span.
+
+### Still open
+
+The three span findings still need per-design epoch authoring: modelo 200's
+2024, modelo 322's 2022, modelo 347's 2008 and 2010. Forty-nine unregistered
+design files, all needing a ruling or an acquisition.
