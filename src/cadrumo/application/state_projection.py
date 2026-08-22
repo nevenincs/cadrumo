@@ -676,7 +676,9 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
+    from ..core.i18n import tr
     from ..core.resources import resources
+    from ..domain.user_profile import ProfileSetupState
     from .modelo import (
         modelo_applicability_refusal,
         modelo_work_profile_preflight_report,
@@ -704,13 +706,17 @@ def _build_modelo_readiness(
             resolve_revision_when_missing=registry_resolution.snapshot is not None,
             authority=resources().modelos.authority,
         )
-        profile_refusal = ""
+        profile_refusal = (
+            tr("application.modelo.errors.profile_readiness_setup_incomplete")
+            if record.setup_state is ProfileSetupState.INCOMPLETE
+            else ""
+        )
         applicability_refusal = modelo_applicability_refusal(
             record=record,
             bucket_id=pointer.bucket_id,
             modelo=request.modelo,
         )
-        if applicability_refusal is not None:
+        if not profile_refusal and applicability_refusal is not None:
             profile_refusal = applicability_refusal[0]
         pre_activity_refusal = pre_activity_period_refusal(
             record=record,

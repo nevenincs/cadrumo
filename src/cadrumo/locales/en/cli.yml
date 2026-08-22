@@ -2086,7 +2086,7 @@ cli:
         terminal to be prompted.
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       manager_closed: Changes to '{profile}' are saved.
-      manager_closed_created: Profile '{profile}' created and ready. Reopen it any
+      manager_closed_created: Profile '{profile}' created. Declare setup complete with `aeat config profile complete-setup` before working with modelos. Reopen it any
         time with 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.

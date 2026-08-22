@@ -118,3 +118,45 @@ No AEAT/certificate/Cl@ve credential environment was available. Per issue scope,
 4. **Pass:** clean install, help discovery through the actual executable, safe profile creation, real local CSV import, import verification/idempotency, and permanent no-write refusal all behaved safely.
 
 **Recommendation: keep #113 open.** The complete produce → verify → export acceptance is red because work creation is blocked by contradictory profile readiness. Triage the readiness disagreement as a product defect; after its fix, rerun this same isolated operator journey and add read-only pull/resync when operator-owned credentials are safely available.
+
+## Corrective rerun — 2026-08-23
+
+The readiness defect was traced to an intentional two-stage profile lifecycle whose projections disagreed. A profile is born `INCOMPLETE` even when all required facts are present; the operator must explicitly declare it complete with `aeat config profile complete-setup`. `work create` enforced that state, while scripted create said “created and ready” and modelo readiness ignored `setup_state`.
+
+The correction preserves the explicit declaration boundary:
+
+- scripted create now names `aeat config profile complete-setup` instead of claiming readiness;
+- modelo readiness reports `profile_ready: false` and the same actionable completion command while setup is incomplete;
+- work creation retains its fail-closed refusal and now carries the actionable command through the shared locale message.
+
+Focused verification:
+
+```text
+uv run pytest -q -m integration -n 0 \
+  src/cadrumo/entrypoints/cli/tests/test_modelo_work_readiness_ux.py \
+  -k incomplete_setup
+# 1 passed, 8 deselected
+
+uv run pytest -q -m integration -n 0 \
+  src/cadrumo/entrypoints/cli/_config/tests/test_profile_complete_setup_verb.py
+# 2 passed
+
+uv run ruff check src/cadrumo/application/state_projection.py \
+  src/cadrumo/entrypoints/cli/tests/test_modelo_work_readiness_ux.py
+# All checks passed
+```
+
+A fresh isolated `.journey/` run then completed the formerly blocked portion:
+
+1. profile create emitted the corrected completion guidance;
+2. `config profile complete-setup` succeeded;
+3. CSV import persisted two synthetic rows and both were classified through the real CLI;
+4. M130 2026 2T work creation succeeded (`734542…328a4b`);
+5. calculation succeeded and persisted revision `ab38f4…dd03fb`, with ledger-grounded casillas 01=`1020.30`, 02=`41.31`, and result 19=`95.80`;
+6. revision inspection and work review succeeded with no review blockers.
+
+Verification was then exercised rather than bypassed. It correctly remained blocked by evidence the synthetic one-period walkthrough does not possess: clean M100 2025 annual and M130 2026 1T filing lineage, an activity-start date, and invoice evidence for the deductible expense. Consequently no approval was granted and export was not attempted against an unverified revision. These are honest workflow prerequisites, not a recurrence of the fixed profile-readiness defect.
+
+The local encrypted `.journey/` evidence was removed after recording these redacted identifiers. The permanent no-write boundary remains unchanged.
+
+**Updated disposition:** the bounded readiness defect is fixed, but #113 should remain open because its complete verify → export acceptance still needs a synthetic operator fixture with authoritative prior-period lineage and deductible-expense evidence (or a first-period scenario whose registry dependencies genuinely do not require them). Do not weaken verification to close the gate.
