@@ -84,7 +84,16 @@ loudly as omitting it.
 
 _ABSENT_RECOVERY_LENGTH: Final[int] = 0
 _SLOT_LENGTH_PREFIX_BYTES: Final[int] = 4
-_MAX_PAYLOAD_BYTES: Final[int] = 512 * 1024 * 1024
+#: The largest capsule-archive payload this product will write.
+#:
+#: Public because it is a CROSS-LAYER contract, not an internal bound: the
+#: sealed-archive reader in the storage adapter sets its own member ceiling at
+#: or above this value, so no archive this product produced can carry a member
+#: the reader refuses. The adapter deliberately keeps its own constant rather
+#: than importing this one -- an adapter importing the application layer would
+#: invert the dependency -- so the two are held equal by a test, and that test
+#: needs a public name to compare against.
+PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES: Final[int] = 512 * 1024 * 1024
 
 
 class ProfileCapsuleArchiveError(CadrumoError):
@@ -221,7 +230,7 @@ def _encode_payload(source: ProfileCapsuleSource) -> bytes:
             "recovery_slot": b64encode(_encode_recovery_slot(source)).decode("ascii"),
             "database": b64encode(source.database_bytes).decode("ascii"),
         },
-        maximum_bytes=_MAX_PAYLOAD_BYTES,
+        maximum_bytes=PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES,
         subject="profile capsule archive payload",
     )
 

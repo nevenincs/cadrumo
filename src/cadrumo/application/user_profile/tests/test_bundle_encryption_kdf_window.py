@@ -35,8 +35,7 @@ from ....adapters.persistence.storage.master_key import (
     MIN_TIME_COST,
     KdfParams,
 )
-from ....domain.user_profile import ProfileSetupState, UserProfilePortableExport
-from ....domain.user_profile._values import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfilePortableExport, UserProfileRecord
 from .._bundle_encryption import (
     EncryptedProfileBundleError,
     EncryptedProfileBundleExport,

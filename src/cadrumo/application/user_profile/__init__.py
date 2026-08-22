@@ -102,6 +102,8 @@ if TYPE_CHECKING:
     )
     from ._aggregate import (
         CommittedProfileView as CommittedProfileView,
+    )
+    from ._aggregate import (
         ProfileRestoreAuthority as ProfileRestoreAuthority,
     )
     from ._bundle import (
@@ -1049,6 +1051,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "record_to_path_values": "._projections",
     "record_to_values": "._projections",
     "register_imported_profile_bundle": "._bundle",
+    "PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES": "._capsule_archive",
     "ProfileCapsuleArchiveError": "._capsule_archive",
     "ProfileCapsuleArchiveInspection": "._capsule_archive",
     "ProfileCapsuleArchiveReceipt": "._capsule_archive",
@@ -1115,9 +1118,9 @@ __all__ = [
     "CENSO_SOURCE_TAG",
     "CENSO_UNADOPTED_EVIDENCE_FIELDS",
     "COMPLETENESS_ISSUE_CODES",
-    "CommittedProfileView",
     "MASKED_PLACEHOLDER",
     "PASSPHRASE_MINIMUM_LENGTH",
+    "PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES",
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "TYPED_CATEGORY_NAMESPACES",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
@@ -1129,6 +1132,7 @@ __all__ = [
     "CensoSyncError",
     "CensoSyncService",
     "CommittedProfileRepository",
+    "CommittedProfileView",
     "EffectiveFact",
     "EncryptedProfileBundleError",
     "EncryptedProfileBundleExport",
