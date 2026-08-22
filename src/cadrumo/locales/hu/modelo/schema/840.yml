@@ -16,25 +16,27 @@ modelo:
               label: Az alkalmazott kedvezmeny kodja (az adohatosag tolti ki)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
               help: null
-              label: null
+              label: A kedvezmeny osszege (az adohatosag tolti ki)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
               help: null
-              label: null
+              label: Az a szazalek, amelyre a kedvezmeny vonatkozik (az adohatosag
+                tolti ki)
             x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
               help: null
-              label: null
+              label: Kvota a kedvezmenyek es novelesek utan (az adohatosag tolti ki)
             x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
               help: null
-              label: null
+              label: Az alkalmazott noveles kodja (az adohatosag tolti ki)
             x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
               help: null
-              label: null
+              label: A noveles osszege (az adohatosag tolti ki)
             x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
               help: null
-              label: null
+              label: Az a szazalek, amelyre a noveles vonatkozik (az adohatosag tolti
+                ki)
             x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
               help: null
-              label: null
+              label: Tarifakvota vagy minimalis osszeg (az adohatosag tolti ki)
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: A bevallás vonatkozási adóéve

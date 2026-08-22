@@ -15,25 +15,27 @@ modelo:
               label: Code of the reduction applied (reserved for the tax administration)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
               help: null
-              label: null
+              label: Amount of the reduction (reserved for the tax administration)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
               help: null
-              label: null
+              label: Percentage to which the reduction applies (reserved for the tax
+                administration)
             x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
               help: null
-              label: null
+              label: Quota after reductions or increases (reserved for the tax administration)
             x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
               help: null
-              label: null
+              label: Code of the increase applied (reserved for the tax administration)
             x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
               help: null
-              label: null
+              label: Amount of the increase (reserved for the tax administration)
             x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
               help: null
-              label: null
+              label: Percentage to which the increase applies (reserved for the tax
+                administration)
             x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
               help: null
-              label: null
+              label: Tariff quota or minimum amount (reserved for the tax administration)
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Tax year to which the return relates

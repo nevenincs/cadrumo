@@ -15,25 +15,26 @@ modelo:
               label: Clau de bonificacio aplicada (reservat a l'Administracio)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
               help: null
-              label: null
+              label: Import de la bonificacio (reservat a l'Administracio)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
               help: null
-              label: null
+              label: Percentatge sobre el qual s'aplica la bonificacio (reservat a
+                l'Administracio)
             x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
               help: null
-              label: null
+              label: Quota despres de bonificacions o increments (reservat a l'Administracio)
             x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
               help: null
-              label: null
+              label: Clau d'increment aplicat (reservat a l'Administracio)
             x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
               help: null
-              label: null
+              label: Import de l'increment (reservat a l'Administracio)
             x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
               help: null
-              label: null
+              label: Percentatge sobre el qual s'aplica l'increment (reservat a l'Administracio)
             x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
               help: null
-              label: null
+              label: Quota de tarifa o import minim (reservat a l'Administracio)
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici fiscal a què es refereix la declaració

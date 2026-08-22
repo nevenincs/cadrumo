@@ -16,25 +16,28 @@ modelo:
               label: Clave de bonificacion aplicada (reservado a la Administracion)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
               help: null
-              label: null
+              label: Importe de la bonificacion (reservado a la Administracion)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
               help: null
-              label: null
+              label: Porcentaje sobre el que se aplica la bonificacion (reservado
+                a la Administracion)
             x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
               help: null
-              label: null
+              label: Cuota despues de bonificaciones o incrementos (reservado a la
+                Administracion)
             x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
               help: null
-              label: null
+              label: Clave de incremento aplicado (reservado a la Administracion)
             x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
               help: null
-              label: null
+              label: Importe del incremento (reservado a la Administracion)
             x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
               help: null
-              label: null
+              label: Porcentaje sobre el que se aplica el incremento (reservado a
+                la Administracion)
             x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
               help: null
-              label: null
+              label: Cuota de tarifa o importe minimo (reservado a la Administracion)
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio fiscal al que se refiere la declaración
