@@ -56,8 +56,9 @@ def test_utf8_limit_precedes_scalar_limit_when_both_are_exceeded() -> None:
     assert assessment.reason is ProfilePasswordRefusalReason.TOO_MANY_UTF8_BYTES
 
 
-def test_surrogate_refusal_does_not_claim_an_utf8_measurement() -> None:
-    assessment = assess_profile_password("a" * 14 + "\ud800")
+@pytest.mark.parametrize("surrogate", ["\ud800", "\udfff"])
+def test_surrogate_refusal_does_not_claim_an_utf8_measurement(surrogate: str) -> None:
+    assessment = assess_profile_password("a" * 14 + surrogate)
 
     assert assessment.accepted is False
     assert assessment.reason is ProfilePasswordRefusalReason.CONTAINS_SURROGATE

@@ -5,14 +5,11 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:43e12adb6a3bf385bfc7e26198186242716691639f6ac62b2f50b1f6d8941b2d'
+body_hash: 'sha256:7626d6fa22c92fca45844977f387289bed19183c6f5b87a389b590f2bf61a017'
 step_id: 'S04'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
 ---
-
-
-
 
 # Ground code and governing ADRs with vaultspec-rag, confirm exact symbols with rg, reread HEAD, inspect overlapping diffs, then prove scalar and byte boundaries, surrogate refusal, safe reasons, advisory independence, and composed/decomposed exact preservation
 
@@ -41,3 +38,11 @@ The repository's default parallel pytest invocation suffered an xdist worker cra
 running the focused module. Re-running the same module serially exposed the required marker
 gate; after assigning the established core unit markers, the serial focused run passed all
 11 cases. No production defect was found and no production file was changed.
+
+## Review amendment
+
+Formal review found that the original surrogate case covered only `U+D800`. The focused
+matrix now independently exercises both closed surrogate-range endpoints, `U+D800` and
+`U+DFFF`, and asserts identical typed refusal, scalar-count, and unavailable-byte facts.
+The amended focused run passes all 12 cases and Ruff remains clean; production code remains
+unchanged.
