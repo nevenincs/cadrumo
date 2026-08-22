@@ -237,6 +237,34 @@ def test_load_for_date_range_matches_full_load_filtered_in_memory(
     assert dict(via_index.transactions) == {tid: full.transactions[tid] for tid in expected_ids}
 
 
+def test_load_by_ids_matches_exact_full_catalogue_subset_and_omits_missing(
+    tmp_path: Path,
+) -> None:
+    """Targeted secure reads preserve full-load row validation and identity."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        rows = [
+            _transaction(
+                provider_id=f"targeted-{index}",
+                filing_date=date(2024, index + 1, 15),
+                amount=Decimal(index + 1),
+                description=f"targeted row {index}",
+            )
+            for index in range(3)
+        ]
+        repo.save(TransactionCatalogue.from_transactions(rows))
+
+        requested = (rows[2].transaction_id, "f" * 64, rows[0].transaction_id, rows[0].transaction_id)
+        targeted = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load_by_ids(requested)
+        full = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+    expected_ids = {rows[0].transaction_id, rows[2].transaction_id}
+    assert set(targeted.transactions) == expected_ids
+    assert dict(targeted.transactions) == {
+        transaction_id: full.transactions[transaction_id] for transaction_id in expected_ids
+    }
+
+
 def test_date_index_is_co_written_atomically_with_save(
     tmp_path: Path,
 ) -> None:
@@ -544,8 +572,12 @@ def test_partition_by_date_range_uses_one_targeted_secure_object_batch(
     batch_selects = [statement for statement in secure_object_selects if "object_key in" in statement]
     point_key_selects = [statement for statement in secure_object_selects if "object_key =" in statement]
 
-    assert len(batch_selects) == 1
+    assert len(batch_selects) == 1, "schema cutover and payload integrity must share one addressed snapshot"
     assert len(point_key_selects) == 1, "only the membership-index lookup should use a point secure-object read"
+    assert not any(
+        "from secure_objects" in statement and "object_key in" not in statement and "object_key =" not in statement
+        for statement in secure_object_selects
+    ), "targeted partition reads must never scan the secure-object namespace"
 
 
 def test_partition_by_date_range_matches_full_load_filtered_in_memory(
