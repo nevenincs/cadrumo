@@ -5,658 +5,631 @@ modelo:
         official_name: null
         title: null
       revision:
-        2008-2025:
+        2008-2023:
           casilla:
             '01':
-              help: null
+              help: A 322-es modelo 01. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
                 [01]
             '02':
-              help: null
+              help: A 322-es modelo 02. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
                 % [02]
             '03':
-              help: null
+              help: A 322-es modelo 03. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [03]
             '04':
-              help: null
+              help: A 322-es modelo 04. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
                 [04]
             '05':
-              help: null
+              help: A 322-es modelo 05. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
                 % [05]
             '06':
-              help: null
+              help: A 322-es modelo 06. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [06]
             '07':
-              help: null
+              help: A 322-es modelo 07. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
                 [07]
             08:
-              help: null
+              help: A 322-es modelo 08. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
                 % [08]
             09:
-              help: null
+              help: A 322-es modelo 09. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [09]
             '10':
-              help: null
+              help: A 322-es modelo 10. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek adóalapjainak
                 és adóösszegeinek módosítása [10]
             '107':
-              help: null
+              help: A 322-es modelo 107. rovata, 2008. adóév.
               label: Területenkénti adózási információ (csak több adóhatóság által
                 adóztatott adóalanyoknak) - Közös terület [107]
             '11':
-              help: null
+              help: A 322-es modelo 11. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek adóalapjainak
                 és adóösszegeinek módosítása [11]
             '12':
-              help: null
+              help: A 322-es modelo 12. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint [12]
             '120':
-              help: null
+              help: A 322-es modelo 120. rovata, 2008. adóév.
               label: A teljesítési hely szabályai szerint nem adóztatandó ügyletek
                 (a 123. rovatban szereplők kivételével) [120]
             '122':
-              help: null
+              help: A 322-es modelo 122. rovata, 2008. adóév.
               label: Fordított adózás alá eső adóköteles ügyletek [122]
             '123':
-              help: null
+              help: A 322-es modelo 123. rovata, 2008. adóév.
               label: A teljesítési hely szabályai szerint nem adóztatandó, egyablakos
                 szabályozás alá tartozó ügyletek [123]
             '124':
-              help: null
+              help: A 322-es modelo 124. rovata, 2008. adóév.
               label: Az egyablakos különleges szabályozás alá tartozó adóköteles ügyletek
                 [124]
             '125':
-              help: null
+              help: A 322-es modelo 125. rovata, 2008. adóév.
               label: Fordított adózás alá eső adóköteles ügyletek [125]
             '126':
-              help: null
+              help: A 322-es modelo 126. rovata, 2008. adóév.
               label: A teljesítési hely szabályai szerint nem adóztatandó, egyablakos
                 szabályozás alá tartozó ügyletek [126]
             '127':
-              help: null
+              help: A 322-es modelo 127. rovata, 2008. adóév.
               label: Az egyablakos különleges szabályozás alá tartozó adóköteles ügyletek
                 [127]
             '128':
-              help: null
+              help: A 322-es modelo 128. rovata, 2008. adóév.
               label: A 78 y 79 LIVA szerint értékelt csoporton belüli ügyletek [128]
             '13':
-              help: null
+              help: A 322-es modelo 13. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [13]
             '14':
-              help: null
+              help: A 322-es modelo 14. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [14]
             '15':
-              help: null
+              help: A 322-es modelo 15. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint [15]
             '150':
-              help: null
+              help: A 322-es modelo 150. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint [150]
             '151':
-              help: null
+              help: A 322-es modelo 151. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [151]
             '152':
-              help: null
+              help: A 322-es modelo 152. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [152]
             '153':
-              help: null
+              help: A 322-es modelo 153. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint [153]
             '154':
-              help: null
+              help: A 322-es modelo 154. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [154]
             '155':
-              help: null
+              help: A 322-es modelo 155. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [155]
             '156':
-              help: null
+              help: A 322-es modelo 156. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
                 [156]
             '157':
-              help: null
+              help: A 322-es modelo 157. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
                 % [157]
             '158':
-              help: null
+              help: A 322-es modelo 158. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
                 [158]
             '159':
-              help: null
+              help: A 322-es modelo 159. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
                 [159]
             '16':
-              help: null
+              help: A 322-es modelo 16. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [16]
             '160':
-              help: null
+              help: A 322-es modelo 160. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
                 % [160]
             '161':
-              help: null
+              help: A 322-es modelo 161. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [161]
             '162':
-              help: null
+              help: A 322-es modelo 162. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
                 [162]
             '163':
-              help: null
+              help: A 322-es modelo 163. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
                 % [163]
             '164':
-              help: null
+              help: A 322-es modelo 164. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [164]
-            '165':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
-              label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
-                Adóalap
-            '166':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
-              label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
-                Kulcs %
-            '167':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
-              label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
-                Adóösszeg
-            '168':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
-              label: Elszámolás. Fizetendő IVA. Egyenértékűségi felár. Adóalap
-            '169':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
-              label: Elszámolás. Fizetendő IVA. Egyenértékűségi felár. Kulcs %
             '17':
-              help: null
+              help: A 322-es modelo 17. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [17]
-            '170':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
-              label: Elszámolás. Fizetendő IVA. Egyenértékűségi felár. Adóösszeg
             '171':
               help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
                 adat.
               label: Elszámolás. Fizetendő IVA. Csoporton belüli ügyletek. Adóalap
-            '172':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
-              label: Elszámolás. Fizetendő IVA. Csoporton belüli ügyletek. Kulcs %
-            '173':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
-              label: Elszámolás. Fizetendő IVA. Csoporton belüli ügyletek. Adóösszeg
             '18':
-              help: null
+              help: A 322-es modelo 18. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint [18]
             '19':
-              help: null
+              help: A 322-es modelo 19. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [19]
             '20':
-              help: null
+              help: A 322-es modelo 20. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [20]
             '21':
-              help: null
+              help: A 322-es modelo 21. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Közösségen belüli termék- és szolgáltatásbeszerzések.
                 Adóalap [21]
             '22':
-              help: null
+              help: A 322-es modelo 22. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Közösségen belüli termék- és szolgáltatásbeszerzések.
                 Adóösszeg [22]
             '23':
-              help: null
-              label: null
+              help: A 322-es modelo 23. rovata, 2008. adóév.
+              label: Elszámolás. FIZETENDŐ IVA. Egyéb fordított adózású ügyletek (a
+                Közösségen belüli beszerzések kivételével) [23]
             '24':
-              help: null
-              label: null
+              help: A 322-es modelo 24. rovata, 2008. adóév.
+              label: Elszámolás. FIZETENDŐ IVA. Egyéb fordított adózású ügyletek (a
+                Közösségen belüli beszerzések kivételével). Adóösszeg [24]
             '25':
-              help: null
+              help: A 322-es modelo 25. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Adóalapok és adóösszegek módosítása
                 az általános szabályozásban. Adóalap [25]
             '26':
-              help: null
+              help: A 322-es modelo 26. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Adóalapok és adóösszegek módosítása
                 az általános szabályozásban. Adóösszeg [26]
             '27':
-              help: null
+              help: A 322-es modelo 27. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
                 [27]
             '28':
-              help: null
+              help: A 322-es modelo 28. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
                 % [28]
             '29':
-              help: null
+              help: A 322-es modelo 29. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
                 [29]
             '30':
-              help: null
+              help: A 322-es modelo 30. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
                 [30]
             '31':
-              help: null
+              help: A 322-es modelo 31. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
                 % [31]
             '32':
-              help: null
+              help: A 322-es modelo 32. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
                 [32]
             '33':
-              help: null
+              help: A 322-es modelo 33. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
                 [33]
             '34':
-              help: null
+              help: A 322-es modelo 34. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
                 % [34]
             '35':
-              help: null
+              help: A 322-es modelo 35. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
                 [35]
             '36':
-              help: null
+              help: A 322-es modelo 36. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Az egyenértékűségi felár alapjainak
                 és összegeinek módosítása. Adóalap [36]
             '37':
-              help: null
+              help: A 322-es modelo 37. rovata, 2008. adóév.
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Az egyenértékűségi felár alapjainak
                 és összegeinek módosítása. Adóösszeg [37]
             '38':
-              help: null
-              label: null
+              help: A 322-es modelo 38. rovata, 2008. adóév.
+              label: Összes fizetendő adó ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
+                [38]
             '39':
-              help: null
+              help: A 322-es modelo 39. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Csoporton belüli folyó ügyletek után
                 felszámított adóra. Adóalap [39]
             '40':
-              help: null
+              help: A 322-es modelo 40. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Csoporton belüli folyó ügyletek után
                 felszámított adóra. Adóösszeg [40]
             '41':
-              help: null
+              help: A 322-es modelo 41. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Csoporton belüli tárgyieszköz-ügyletek
                 után felszámított adóra. Adóalap [41]
             '42':
-              help: null
+              help: A 322-es modelo 42. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Csoporton belüli tárgyieszköz-ügyletek
                 után felszámított adóra. Adóösszeg [42]
             '43':
-              help: null
+              help: A 322-es modelo 43. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Csoporton belüli ügyletek levonásainak
                 helyesbítése. Adóalap [43]
             '44':
-              help: null
+              help: A 322-es modelo 44. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Csoporton belüli ügyletek levonásainak
                 helyesbítése. Adóösszeg [44]
             '45':
-              help: null
+              help: A 322-es modelo 45. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Egyéb belföldi folyó ügyletek után
                 felszámított adóra. Adóalap [45]
             '46':
-              help: null
+              help: A 322-es modelo 46. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Egyéb belföldi folyó ügyletek után
                 felszámított adóra. Adóösszeg [46]
             '47':
-              help: null
+              help: A 322-es modelo 47. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Egyéb belföldi tárgyieszköz-ügyletek
                 után felszámított adóra. Adóalap [47]
             '48':
-              help: null
+              help: A 322-es modelo 48. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Egyéb belföldi tárgyieszköz-ügyletek
                 után felszámított adóra. Adóösszeg [48]
             '49':
-              help: null
+              help: A 322-es modelo 49. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Forgóeszköz-import után felszámított
                 adóra. Adóalap [49]
             '50':
-              help: null
+              help: A 322-es modelo 50. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Forgóeszköz-import után felszámított
                 adóra. Adóösszeg [50]
             '500':
-              help: null
+              help: A 322-es modelo 500. rovata, 2008. adóév.
               label: Prorrata - 1 - CNAE-kód [500]
             '501':
-              help: null
+              help: A 322-es modelo 501. rovata, 2008. adóév.
               label: Prorrata - 1 - Ügyletek összege [501]
             '502':
-              help: null
+              help: A 322-es modelo 502. rovata, 2008. adóév.
               label: Prorrata - 1 - Levonási joggal járó ügyletek összege [502]
             '503':
-              help: null
+              help: A 322-es modelo 503. rovata, 2008. adóév.
               label: Prorrata - 1 - Arányosítás típusa [503]
             '504':
-              help: null
+              help: A 322-es modelo 504. rovata, 2008. adóév.
               label: Prorrata - 1 - Arányosítás %-a [504]
             '505':
-              help: null
+              help: A 322-es modelo 505. rovata, 2008. adóév.
               label: Prorrata - 2 - CNAE-kód [505]
             '506':
-              help: null
+              help: A 322-es modelo 506. rovata, 2008. adóév.
               label: Prorrata - 2 - Ügyletek összege [506]
             '507':
-              help: null
+              help: A 322-es modelo 507. rovata, 2008. adóév.
               label: Prorrata - 2 - Levonási joggal járó ügyletek összege [507]
             '508':
-              help: null
+              help: A 322-es modelo 508. rovata, 2008. adóév.
               label: Prorrata - 2 - Arányosítás típusa [508]
             '509':
-              help: null
+              help: A 322-es modelo 509. rovata, 2008. adóév.
               label: Prorrata - 2 - Arányosítás %-a [509]
             '51':
-              help: null
+              help: A 322-es modelo 51. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Tárgyieszköz-import után felszámított
                 adóra. Adóalap [51]
             '510':
-              help: null
+              help: A 322-es modelo 510. rovata, 2008. adóév.
               label: Prorrata - 3 - CNAE-kód [510]
             '511':
-              help: null
+              help: A 322-es modelo 511. rovata, 2008. adóév.
               label: Prorrata - 3 - Ügyletek összege [511]
             '512':
-              help: null
+              help: A 322-es modelo 512. rovata, 2008. adóév.
               label: Prorrata - 3 - Levonási joggal járó ügyletek összege [512]
             '513':
-              help: null
+              help: A 322-es modelo 513. rovata, 2008. adóév.
               label: Prorrata - 3 - Arányosítás típusa [513]
             '514':
-              help: null
+              help: A 322-es modelo 514. rovata, 2008. adóév.
               label: Prorrata - 3 - Arányosítás %-a [514]
             '515':
-              help: null
+              help: A 322-es modelo 515. rovata, 2008. adóév.
               label: Prorrata - 4 - CNAE-kód [515]
             '516':
-              help: null
+              help: A 322-es modelo 516. rovata, 2008. adóév.
               label: Prorrata - 4 - Ügyletek összege [516]
             '517':
-              help: null
+              help: A 322-es modelo 517. rovata, 2008. adóév.
               label: Prorrata - 4 - Levonási joggal járó ügyletek összege [517]
             '518':
-              help: null
+              help: A 322-es modelo 518. rovata, 2008. adóév.
               label: Prorrata - 4 - Arányosítás típusa [518]
             '519':
-              help: null
+              help: A 322-es modelo 519. rovata, 2008. adóév.
               label: Prorrata - 4 - Arányosítás %-a [519]
             '52':
-              help: null
+              help: A 322-es modelo 52. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Tárgyieszköz-import után felszámított
                 adóra. Adóösszeg [52]
             '520':
-              help: null
+              help: A 322-es modelo 520. rovata, 2008. adóév.
               label: Prorrata - 5 - CNAE-kód [520]
             '521':
-              help: null
+              help: A 322-es modelo 521. rovata, 2008. adóév.
               label: Prorrata - 5 - Ügyletek összege [521]
             '522':
-              help: null
+              help: A 322-es modelo 522. rovata, 2008. adóév.
               label: Prorrata - 5 - Levonási joggal járó ügyletek összege [522]
             '523':
-              help: null
+              help: A 322-es modelo 523. rovata, 2008. adóév.
               label: Prorrata - 5 - Arányosítás típusa [523]
             '524':
-              help: null
+              help: A 322-es modelo 524. rovata, 2008. adóév.
               label: Prorrata - 5 - Arányosítás %-a [524]
             '53':
-              help: null
+              help: A 322-es modelo 53. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Közösségen belüli forgóeszköz- és
                 szolgáltatásbeszerzésekre. Adóalap [53]
             '54':
-              help: null
+              help: A 322-es modelo 54. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Közösségen belüli forgóeszköz- és
                 szolgáltatásbeszerzésekre. Adóösszeg [54]
             '55':
-              help: null
+              help: A 322-es modelo 55. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Közösségen belüli tárgyieszköz-beszerzésekre.
                 Adóalap [55]
             '56':
-              help: null
+              help: A 322-es modelo 56. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Közösségen belüli tárgyieszköz-beszerzésekre.
                 Adóösszeg [56]
             '57':
-              help: null
+              help: A 322-es modelo 57. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. A többi ügylet levonásainak helyesbítése
                 (nem csoporton belüli). Adóalap [57]
             '58':
-              help: null
+              help: A 322-es modelo 58. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. A többi ügylet levonásainak helyesbítése
                 (nem csoporton belüli). Adóösszeg [58]
             '59':
-              help: null
+              help: A 322-es modelo 59. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Kompenzáció az A.G. y P különleges
                 szabályozásban. Adóösszeg [59]
             '60':
-              help: null
+              help: A 322-es modelo 60. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. Tárgyi eszközök korrekciója. Adóösszeg
                 [60]
             '61':
-              help: null
+              help: A 322-es modelo 61. rovata, 2008. adóév.
               label: Elszámolás. Levonható áfa. A végleges arányosítási százalék alkalmazása
                 miatti korrekció. Adóösszeg [61]
             '62':
-              help: null
-              label: null
+              help: A 322-es modelo 62. rovata, 2008. adóév.
+              label: Összes levonható ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
+                [62]
             '63':
-              help: null
-              label: null
+              help: A 322-es modelo 63. rovata, 2008. adóév.
+              label: Elszámolás (folytatás). Különbözet ([38] - [62]) . [63]
             '64':
-              help: null
+              help: A 322-es modelo 64. rovata, 2008. adóév.
               label: Elszámolás (folytatás). Az állami adóhatóságnak tulajdonítható
                 (%) [64]
             '65':
-              help: null
+              help: A 322-es modelo 65. rovata, 2008. adóév.
               label: Elszámolás (folytatás). Az állami adóhatóságnak tulajdonítható
                 [65]
             '66':
-              help: null
+              help: A 322-es modelo 66. rovata, 2008. adóév.
               label: Elszámolás (folytatás). A csoporthoz csatlakozás előtti időszakokból
                 beszámítandó összegek [66]
             '67':
-              help: null
+              help: A 322-es modelo 67. rovata, 2008. adóév.
               label: Elszámolás (folytatás). Kizárólag az állami adóhatóság és a foral
                 adóhatóságok által együttesen adóztatott adóalanyoknak. Az éves korrekció
                 eredménye [67]
             '68':
-              help: null
-              label: null
+              help: A 322-es modelo 68. rovata, 2008. adóév.
+              label: Elszámolás (folytatás). Eredmény ([65] - [66] + [67]) [68]
             '69':
               help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
                 adat.
               label: 'Levonandó (kizárólag kiegészítő önadózás esetén): az azonos
                 jogcímen, évre és időszakra korábban benyújtott önadózások eredménye'
             '70':
-              help: null
-              label: null
+              help: A 322-es modelo 70. rovata, 2008. adóév.
+              label: Az önadózás eredménye ([68] - [69]) [70]
             '700':
-              help: null
+              help: A 322-es modelo 700. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
                 Adóalap [700]
             '701':
-              help: null
+              help: A 322-es modelo 701. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [701]
             '702':
-              help: null
+              help: A 322-es modelo 702. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Belföldi ügyletek levonható áfája. Tárgyi eszközök. Adóalap [702]
             '703':
-              help: null
+              help: A 322-es modelo 703. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Belföldi ügyletek levonható áfája. Tárgyi eszközök. Levonható adóösszeg
                 [703]
             '704':
-              help: null
+              help: A 322-es modelo 704. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Import levonható áfája. Forgóeszközök. Adóalap [704]
             '705':
-              help: null
+              help: A 322-es modelo 705. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Import levonható áfája. Forgóeszközök. Levonható adóösszeg [705]
             '706':
-              help: null
+              help: A 322-es modelo 706. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Import levonható áfája. Tárgyi eszközök. Adóalap [706]
             '707':
-              help: null
+              help: A 322-es modelo 707. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Import levonható áfája. Tárgyi eszközök. Levonható adóösszeg [707]
             '708':
-              help: null
+              help: A 322-es modelo 708. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Adóalap [708]
             '709':
-              help: null
+              help: A 322-es modelo 709. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [709]
             '71':
-              help: null
+              help: A 322-es modelo 71. rovata, 2008. adóév.
               label: Kiegészítő információ. Közösségen belüli termék- és szolgáltatásértékesítések
                 [71]
             '710':
-              help: null
+              help: A 322-es modelo 710. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Közösségen belüli beszerzések levonható áfája. Tárgyi eszközök. Adóalap
                 [710]
             '711':
-              help: null
+              help: A 322-es modelo 711. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [711]
             '712':
-              help: null
+              help: A 322-es modelo 712. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
                 szabályozásban. Adóalap [712]
             '713':
-              help: null
+              help: A 322-es modelo 713. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
                 szabályozásban. Levonható adóösszeg [713]
             '714':
-              help: null
+              help: A 322-es modelo 714. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Levonások helyesbítése. Adóalap [714]
             '715':
-              help: null
+              help: A 322-es modelo 715. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Levonások helyesbítése. Levonható adóösszeg [715]
             '716':
-              help: null
+              help: A 322-es modelo 716. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Tárgyi eszközök korrekciója. Levonható adóösszeg [716]
             '717':
-              help: null
-              label: null
+              help: A 322-es modelo 717. rovata, 2008. adóév.
+              label: 'Elkülönített levonási szabályozás alá tartozó tevékenységek.
+                Levonható IVA: csoport 1. Levonások összege (701 + 703 + 705 + 707
+                + 709 + 711 + 713 + 715 + 716). Levonható adóösszeg [717]'
             '718':
-              help: null
+              help: A 322-es modelo 718. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
                 Adóalap [718]
             '719':
-              help: null
+              help: A 322-es modelo 719. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [719]
             '72':
-              help: null
+              help: A 322-es modelo 72. rovata, 2008. adóév.
               label: Kiegészítő információ. Export és azzal egy tekintet alá eső ügyletek
                 [72]
             '720':
-              help: null
+              help: A 322-es modelo 720. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Belföldi ügyletek levonható áfája. Tárgyi eszközök. Adóalap [720]
             '721':
-              help: null
+              help: A 322-es modelo 721. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Belföldi ügyletek levonható áfája. Tárgyi eszközök. Levonható adóösszeg
                 [721]
             '722':
-              help: null
+              help: A 322-es modelo 722. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Import levonható áfája. Forgóeszközök. Adóalap [722]
             '723':
-              help: null
+              help: A 322-es modelo 723. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Import levonható áfája. Forgóeszközök. Levonható adóösszeg [723]
             '724':
-              help: null
+              help: A 322-es modelo 724. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Import levonható áfája. Tárgyi eszközök. Adóalap [724]
             '725':
-              help: null
+              help: A 322-es modelo 725. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Import levonható áfája. Tárgyi eszközök. Levonható adóösszeg [725]
             '726':
-              help: null
+              help: A 322-es modelo 726. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Adóalap [726]
             '727':
-              help: null
+              help: A 322-es modelo 727. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [727]
             '728':
-              help: null
+              help: A 322-es modelo 728. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Közösségen belüli beszerzések levonható áfája. Tárgyi eszközök. Adóalap
                 [728]
             '729':
-              help: null
+              help: A 322-es modelo 729. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [729]
             '730':
-              help: null
+              help: A 322-es modelo 730. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
                 szabályozásban. Adóalap [730]
             '731':
-              help: null
+              help: A 322-es modelo 731. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
                 szabályozásban. Levonható adóösszeg [731]
             '732':
-              help: null
+              help: A 322-es modelo 732. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Levonások helyesbítése. Adóalap [732]
             '733':
-              help: null
+              help: A 322-es modelo 733. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Levonások helyesbítése. Levonható adóösszeg [733]
             '734':
-              help: null
+              help: A 322-es modelo 734. rovata, 2008. adóév.
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Tárgyi eszközök korrekciója. Levonható adóösszeg [734]
             '735':
-              help: null
-              label: null
+              help: A 322-es modelo 735. rovata, 2008. adóév.
+              label: 'Elkülönített levonási szabályozás alá tartozó tevékenységek.
+                Levonható IVA: csoport 2. Levonások összege (719 + 721 + 723 + 725
+                + 727 + 729 + 731 + 733 + 734). Levonható adóösszeg [735]'
             '74':
               help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
                 adat.
@@ -668,18 +641,18 @@ modelo:
               label: A pénzforgalmi különös rendszer alá tartozó beszerzések. Előzetesen
                 felszámított adó
             '76':
-              help: null
+              help: A 322-es modelo 76. rovata, 2008. adóév.
               label: Adóösszegek korrekciója a 80.Cinco.5ª LIVA szerint [76]
             '77':
-              help: null
+              help: A 322-es modelo 77. rovata, 2008. adóév.
               label: A vámhatóság által megállapított, még be nem fizetett import
                 áfa [77]
             '79':
-              help: null
+              help: A 322-es modelo 79. rovata, 2008. adóév.
               label: Az adóévben végzett ügyletek. Ingatlanértékesítések és nem szokásos
                 pénzügyi ügyletek [79]
             '80':
-              help: null
+              help: A 322-es modelo 80. rovata, 2008. adóév.
               label: Az adóévben végzett ügyletek. Ügyletek az általános szabályozás
                 szerint [80]
             '81':
@@ -688,63 +661,65 @@ modelo:
               label: A pénzforgalmi különös rendszer alá tartozó ügyletek, amelyek
                 a LIVA 75. cikke szerinti általános szabály alapján váltak esedékessé
             '83':
-              help: null
+              help: A 322-es modelo 83. rovata, 2008. adóév.
               label: Az adóévben végzett ügyletek. Levonási jog nélküli mentes ügyletek
                 [83]
             '84':
-              help: null
+              help: A 322-es modelo 84. rovata, 2008. adóév.
               label: A teljesítési hely szabályai szerint nem adóztatandó ügyletek
                 (a 126. rovatban szereplők kivételével) [84]
             '86':
-              help: null
+              help: A 322-es modelo 86. rovata, 2008. adóév.
               label: Az adóévben végzett ügyletek. Ügyletek az egyszerűsített szabályozás
                 szerint [86]
             '88':
-              help: null
-              label: null
+              help: A 322-es modelo 88. rovata, 2008. adóév.
+              label: Az évben teljesített ügyletek. Teljes ügyleti forgalom (a IVA-törvény
+                121. cikke) (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127 + 128 +
+                86 + 95 + 96 + 97 + 98 - 79 - 99) [88]
             '89':
-              help: null
+              help: A 322-es modelo 89. rovata, 2008. adóév.
               label: Területenkénti adózási információ (csak több adóhatóság által
                 adóztatott adóalanyoknak) - Álava [89]
             '90':
-              help: null
+              help: A 322-es modelo 90. rovata, 2008. adóév.
               label: Területenkénti adózási információ (csak több adóhatóság által
                 adóztatott adóalanyoknak) - Gipuzkoa [90]
             '91':
-              help: null
+              help: A 322-es modelo 91. rovata, 2008. adóév.
               label: Területenkénti adózási információ (csak több adóhatóság által
                 adóztatott adóalanyoknak) - Biscaya [91]
             '92':
-              help: null
+              help: A 322-es modelo 92. rovata, 2008. adóév.
               label: Területenkénti adózási információ (csak több adóhatóság által
                 adóztatott adóalanyoknak) - Navarra [92]
             '93':
-              help: null
+              help: A 322-es modelo 93. rovata, 2008. adóév.
               label: Az adóévben végzett ügyletek. Közösségen belüli termék- és szolgáltatásértékesítések
                 [93]
             '94':
-              help: null
+              help: A 322-es modelo 94. rovata, 2008. adóév.
               label: Az adóévben végzett ügyletek. Export és egyéb, levonási joggal
                 járó mentes ügyletek [94]
             '95':
-              help: null
+              help: A 322-es modelo 95. rovata, 2008. adóév.
               label: Az adóévben végzett ügyletek. Ügyletek a mezőgazdasági, állattenyésztési
                 és halászati különleges szabályozás szerint [95]
             '96':
-              help: null
+              help: A 322-es modelo 96. rovata, 2008. adóév.
               label: Az adóévben végzett ügyletek. Az egyenértékűségi felár különleges
                 szabályozása alá tartozó adóalanyok ügyletei [96]
             '97':
-              help: null
+              help: A 322-es modelo 97. rovata, 2008. adóév.
               label: Az adóévben végzett ügyletek. Ügyletek a használt cikkekre, műalkotásokra,
                 régiségekre és gyűjteménydarabokra vonatkozó különleges szabályozás
                 szerint [97]
             '98':
-              help: null
+              help: A 322-es modelo 98. rovata, 2008. adóév.
               label: Az adóévben végzett ügyletek. Ügyletek az utazási irodákra vonatkozó
                 különleges szabályozás szerint [98]
             '99':
-              help: null
+              help: A 322-es modelo 99. rovata, 2008. adóév.
               label: Az adóévben végzett ügyletek. Tárgyi eszközök értékesítése [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
               help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
@@ -788,7 +763,7 @@ modelo:
               label: Azonosítás. Ön a pénzforgalmi különös rendszer alá tartozó ügyletek
                 címzettje?
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: A 322-es modelo ejercicio. rovata, 2008. adóév.
               label: Az adóbevallás vonatkozási éve
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
@@ -808,7 +783,7 @@ modelo:
                 adat.
               label: Azonosítás. Uralkodó / függő
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: A 322-es modelo periodo. rovata, 2008. adóév.
               label: Időszak (éves, 0A)
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
               help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
@@ -835,29 +810,903 @@ modelo:
                 adat.
               label: Azonosítás. Van ügyleti forgalom (LIVA 121. cikk)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: A 322-es modelo iva.autorepercutido.intracomunitaria. rovata,
+                2008. adóév.
               label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: null
+              help: A 322-es modelo iva.cuota-deducible-total. rovata, 2008. adóév.
               label: Összes levonható ÁFA összeg
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: null
+              help: A 322-es modelo iva.cuota-devengada-total. rovata, 2008. adóév.
               label: Összes keletkezett ÁFA összeg
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
               help: A 21%-os általános kulccsal számított felszámított ÁFA teljes
                 összege.
               label: Felszámított ÁFA összeg általános kulccsal (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: null
+              help: A 322-es modelo iva.repercutido.reducido. rovata, 2008. adóév.
               label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
+              help: A 322-es modelo iva.repercutido.super-reducido. rovata, 2008.
+                adóév.
               label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: null
+              help: A 322-es modelo iva.resultado-regimen-general. rovata, 2008. adóév.
               label: Általános rendszer eredménye
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: null
+              help: A 322-es modelo iva.soportado.interiores. rovata, 2008. adóév.
+              label: Levonható ÁFA összeg belföldi folyó ügyletek után
+          construct:
+            modelo-322-iva-grupo-individual:
+              field:
+                title: 322-es modelo IVA-csoport, egyedi bevallás
+          field:
+            label: 322-es modelo, 2008-2025. adóévek
+        2024-2025:
+          casilla:
+            '01':
+              help: A 322-es modelo 01. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [01]
+            '02':
+              help: A 322-es modelo 02. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [02]
+            '03':
+              help: A 322-es modelo 03. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [03]
+            '04':
+              help: A 322-es modelo 04. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [04]
+            '05':
+              help: A 322-es modelo 05. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [05]
+            '06':
+              help: A 322-es modelo 06. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [06]
+            '07':
+              help: A 322-es modelo 07. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [07]
+            08:
+              help: A 322-es modelo 08. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [08]
+            09:
+              help: A 322-es modelo 09. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [09]
+            '10':
+              help: A 322-es modelo 10. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek adóalapjainak
+                és adóösszegeinek módosítása [10]
+            '107':
+              help: A 322-es modelo 107. rovata, 2024. adóév.
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Közös terület [107]
+            '11':
+              help: A 322-es modelo 11. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek adóalapjainak
+                és adóösszegeinek módosítása [11]
+            '12':
+              help: A 322-es modelo 12. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [12]
+            '120':
+              help: A 322-es modelo 120. rovata, 2024. adóév.
+              label: A teljesítési hely szabályai szerint nem adóztatandó ügyletek
+                (a 123. rovatban szereplők kivételével) [120]
+            '122':
+              help: A 322-es modelo 122. rovata, 2024. adóév.
+              label: Fordított adózás alá eső adóköteles ügyletek [122]
+            '123':
+              help: A 322-es modelo 123. rovata, 2024. adóév.
+              label: A teljesítési hely szabályai szerint nem adóztatandó, egyablakos
+                szabályozás alá tartozó ügyletek [123]
+            '124':
+              help: A 322-es modelo 124. rovata, 2024. adóév.
+              label: Az egyablakos különleges szabályozás alá tartozó adóköteles ügyletek
+                [124]
+            '125':
+              help: A 322-es modelo 125. rovata, 2024. adóév.
+              label: Fordított adózás alá eső adóköteles ügyletek [125]
+            '126':
+              help: A 322-es modelo 126. rovata, 2024. adóév.
+              label: A teljesítési hely szabályai szerint nem adóztatandó, egyablakos
+                szabályozás alá tartozó ügyletek [126]
+            '127':
+              help: A 322-es modelo 127. rovata, 2024. adóév.
+              label: Az egyablakos különleges szabályozás alá tartozó adóköteles ügyletek
+                [127]
+            '128':
+              help: A 322-es modelo 128. rovata, 2024. adóév.
+              label: A 78 y 79 LIVA szerint értékelt csoporton belüli ügyletek [128]
+            '13':
+              help: A 322-es modelo 13. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [13]
+            '14':
+              help: A 322-es modelo 14. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [14]
+            '15':
+              help: A 322-es modelo 15. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [15]
+            '150':
+              help: A 322-es modelo 150. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [150]
+            '151':
+              help: A 322-es modelo 151. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [151]
+            '152':
+              help: A 322-es modelo 152. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [152]
+            '153':
+              help: A 322-es modelo 153. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [153]
+            '154':
+              help: A 322-es modelo 154. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [154]
+            '155':
+              help: A 322-es modelo 155. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [155]
+            '156':
+              help: A 322-es modelo 156. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [156]
+            '157':
+              help: A 322-es modelo 157. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [157]
+            '158':
+              help: A 322-es modelo 158. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [158]
+            '159':
+              help: A 322-es modelo 159. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [159]
+            '16':
+              help: A 322-es modelo 16. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [16]
+            '160':
+              help: A 322-es modelo 160. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [160]
+            '161':
+              help: A 322-es modelo 161. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [161]
+            '162':
+              help: A 322-es modelo 162. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
+                [162]
+            '163':
+              help: A 322-es modelo 163. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
+                % [163]
+            '164':
+              help: A 322-es modelo 164. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
+                [164]
+            '165':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
+                Adóalap
+            '166':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
+                Kulcs %
+            '167':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
+                Adóösszeg
+            '168':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Egyenértékűségi felár. Adóalap
+            '169':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Egyenértékűségi felár. Kulcs %
+            '17':
+              help: A 322-es modelo 17. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [17]
+            '170':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Egyenértékűségi felár. Adóösszeg
+            '171':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Csoporton belüli ügyletek. Adóalap
+            '172':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Csoporton belüli ügyletek. Kulcs %
+            '173':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Elszámolás. Fizetendő IVA. Csoporton belüli ügyletek. Adóösszeg
+            '18':
+              help: A 322-es modelo 18. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint [18]
+            '19':
+              help: A 322-es modelo 19. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adókulcs % [19]
+            '20':
+              help: A 322-es modelo 20. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
+                szerint. Adóösszeg [20]
+            '21':
+              help: A 322-es modelo 21. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Közösségen belüli termék- és szolgáltatásbeszerzések.
+                Adóalap [21]
+            '22':
+              help: A 322-es modelo 22. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Közösségen belüli termék- és szolgáltatásbeszerzések.
+                Adóösszeg [22]
+            '23':
+              help: A 322-es modelo 23. rovata, 2024. adóév.
+              label: Elszámolás. FIZETENDŐ IVA. Egyéb fordított adózású ügyletek (a
+                Közösségen belüli beszerzések kivételével) [23]
+            '24':
+              help: A 322-es modelo 24. rovata, 2024. adóév.
+              label: Elszámolás. FIZETENDŐ IVA. Egyéb fordított adózású ügyletek (a
+                Közösségen belüli beszerzések kivételével). Adóösszeg [24]
+            '25':
+              help: A 322-es modelo 25. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Adóalapok és adóösszegek módosítása
+                az általános szabályozásban. Adóalap [25]
+            '26':
+              help: A 322-es modelo 26. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Adóalapok és adóösszegek módosítása
+                az általános szabályozásban. Adóösszeg [26]
+            '27':
+              help: A 322-es modelo 27. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [27]
+            '28':
+              help: A 322-es modelo 28. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [28]
+            '29':
+              help: A 322-es modelo 29. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [29]
+            '30':
+              help: A 322-es modelo 30. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [30]
+            '31':
+              help: A 322-es modelo 31. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [31]
+            '32':
+              help: A 322-es modelo 32. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [32]
+            '33':
+              help: A 322-es modelo 33. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
+                [33]
+            '34':
+              help: A 322-es modelo 34. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
+                % [34]
+            '35':
+              help: A 322-es modelo 35. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
+                [35]
+            '36':
+              help: A 322-es modelo 36. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Az egyenértékűségi felár alapjainak
+                és összegeinek módosítása. Adóalap [36]
+            '37':
+              help: A 322-es modelo 37. rovata, 2024. adóév.
+              label: Elszámolás. FELSZÁMÍTOTT ÁFA. Az egyenértékűségi felár alapjainak
+                és összegeinek módosítása. Adóösszeg [37]
+            '38':
+              help: A 322-es modelo 38. rovata, 2024. adóév.
+              label: Összes fizetendő adó ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
+                [38]
+            '39':
+              help: A 322-es modelo 39. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Csoporton belüli folyó ügyletek után
+                felszámított adóra. Adóalap [39]
+            '40':
+              help: A 322-es modelo 40. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Csoporton belüli folyó ügyletek után
+                felszámított adóra. Adóösszeg [40]
+            '41':
+              help: A 322-es modelo 41. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Csoporton belüli tárgyieszköz-ügyletek
+                után felszámított adóra. Adóalap [41]
+            '42':
+              help: A 322-es modelo 42. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Csoporton belüli tárgyieszköz-ügyletek
+                után felszámított adóra. Adóösszeg [42]
+            '43':
+              help: A 322-es modelo 43. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Csoporton belüli ügyletek levonásainak
+                helyesbítése. Adóalap [43]
+            '44':
+              help: A 322-es modelo 44. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Csoporton belüli ügyletek levonásainak
+                helyesbítése. Adóösszeg [44]
+            '45':
+              help: A 322-es modelo 45. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Egyéb belföldi folyó ügyletek után
+                felszámított adóra. Adóalap [45]
+            '46':
+              help: A 322-es modelo 46. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Egyéb belföldi folyó ügyletek után
+                felszámított adóra. Adóösszeg [46]
+            '47':
+              help: A 322-es modelo 47. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Egyéb belföldi tárgyieszköz-ügyletek
+                után felszámított adóra. Adóalap [47]
+            '48':
+              help: A 322-es modelo 48. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Egyéb belföldi tárgyieszköz-ügyletek
+                után felszámított adóra. Adóösszeg [48]
+            '49':
+              help: A 322-es modelo 49. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Forgóeszköz-import után felszámított
+                adóra. Adóalap [49]
+            '50':
+              help: A 322-es modelo 50. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Forgóeszköz-import után felszámított
+                adóra. Adóösszeg [50]
+            '500':
+              help: A 322-es modelo 500. rovata, 2024. adóév.
+              label: Prorrata - 1 - CNAE-kód [500]
+            '501':
+              help: A 322-es modelo 501. rovata, 2024. adóév.
+              label: Prorrata - 1 - Ügyletek összege [501]
+            '502':
+              help: A 322-es modelo 502. rovata, 2024. adóév.
+              label: Prorrata - 1 - Levonási joggal járó ügyletek összege [502]
+            '503':
+              help: A 322-es modelo 503. rovata, 2024. adóév.
+              label: Prorrata - 1 - Arányosítás típusa [503]
+            '504':
+              help: A 322-es modelo 504. rovata, 2024. adóév.
+              label: Prorrata - 1 - Arányosítás %-a [504]
+            '505':
+              help: A 322-es modelo 505. rovata, 2024. adóév.
+              label: Prorrata - 2 - CNAE-kód [505]
+            '506':
+              help: A 322-es modelo 506. rovata, 2024. adóév.
+              label: Prorrata - 2 - Ügyletek összege [506]
+            '507':
+              help: A 322-es modelo 507. rovata, 2024. adóév.
+              label: Prorrata - 2 - Levonási joggal járó ügyletek összege [507]
+            '508':
+              help: A 322-es modelo 508. rovata, 2024. adóév.
+              label: Prorrata - 2 - Arányosítás típusa [508]
+            '509':
+              help: A 322-es modelo 509. rovata, 2024. adóév.
+              label: Prorrata - 2 - Arányosítás %-a [509]
+            '51':
+              help: A 322-es modelo 51. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Tárgyieszköz-import után felszámított
+                adóra. Adóalap [51]
+            '510':
+              help: A 322-es modelo 510. rovata, 2024. adóév.
+              label: Prorrata - 3 - CNAE-kód [510]
+            '511':
+              help: A 322-es modelo 511. rovata, 2024. adóév.
+              label: Prorrata - 3 - Ügyletek összege [511]
+            '512':
+              help: A 322-es modelo 512. rovata, 2024. adóév.
+              label: Prorrata - 3 - Levonási joggal járó ügyletek összege [512]
+            '513':
+              help: A 322-es modelo 513. rovata, 2024. adóév.
+              label: Prorrata - 3 - Arányosítás típusa [513]
+            '514':
+              help: A 322-es modelo 514. rovata, 2024. adóév.
+              label: Prorrata - 3 - Arányosítás %-a [514]
+            '515':
+              help: A 322-es modelo 515. rovata, 2024. adóév.
+              label: Prorrata - 4 - CNAE-kód [515]
+            '516':
+              help: A 322-es modelo 516. rovata, 2024. adóév.
+              label: Prorrata - 4 - Ügyletek összege [516]
+            '517':
+              help: A 322-es modelo 517. rovata, 2024. adóév.
+              label: Prorrata - 4 - Levonási joggal járó ügyletek összege [517]
+            '518':
+              help: A 322-es modelo 518. rovata, 2024. adóév.
+              label: Prorrata - 4 - Arányosítás típusa [518]
+            '519':
+              help: A 322-es modelo 519. rovata, 2024. adóév.
+              label: Prorrata - 4 - Arányosítás %-a [519]
+            '52':
+              help: A 322-es modelo 52. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Tárgyieszköz-import után felszámított
+                adóra. Adóösszeg [52]
+            '520':
+              help: A 322-es modelo 520. rovata, 2024. adóév.
+              label: Prorrata - 5 - CNAE-kód [520]
+            '521':
+              help: A 322-es modelo 521. rovata, 2024. adóév.
+              label: Prorrata - 5 - Ügyletek összege [521]
+            '522':
+              help: A 322-es modelo 522. rovata, 2024. adóév.
+              label: Prorrata - 5 - Levonási joggal járó ügyletek összege [522]
+            '523':
+              help: A 322-es modelo 523. rovata, 2024. adóév.
+              label: Prorrata - 5 - Arányosítás típusa [523]
+            '524':
+              help: A 322-es modelo 524. rovata, 2024. adóév.
+              label: Prorrata - 5 - Arányosítás %-a [524]
+            '53':
+              help: A 322-es modelo 53. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Közösségen belüli forgóeszköz- és
+                szolgáltatásbeszerzésekre. Adóalap [53]
+            '54':
+              help: A 322-es modelo 54. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Közösségen belüli forgóeszköz- és
+                szolgáltatásbeszerzésekre. Adóösszeg [54]
+            '55':
+              help: A 322-es modelo 55. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Közösségen belüli tárgyieszköz-beszerzésekre.
+                Adóalap [55]
+            '56':
+              help: A 322-es modelo 56. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Közösségen belüli tárgyieszköz-beszerzésekre.
+                Adóösszeg [56]
+            '57':
+              help: A 322-es modelo 57. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. A többi ügylet levonásainak helyesbítése
+                (nem csoporton belüli). Adóalap [57]
+            '58':
+              help: A 322-es modelo 58. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. A többi ügylet levonásainak helyesbítése
+                (nem csoporton belüli). Adóösszeg [58]
+            '59':
+              help: A 322-es modelo 59. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Kompenzáció az A.G. y P különleges
+                szabályozásban. Adóösszeg [59]
+            '60':
+              help: A 322-es modelo 60. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. Tárgyi eszközök korrekciója. Adóösszeg
+                [60]
+            '61':
+              help: A 322-es modelo 61. rovata, 2024. adóév.
+              label: Elszámolás. Levonható áfa. A végleges arányosítási százalék alkalmazása
+                miatti korrekció. Adóösszeg [61]
+            '62':
+              help: A 322-es modelo 62. rovata, 2024. adóév.
+              label: Összes levonható ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
+                [62]
+            '63':
+              help: A 322-es modelo 63. rovata, 2024. adóév.
+              label: Elszámolás (folytatás). Különbözet ([38] - [62]) . [63]
+            '64':
+              help: A 322-es modelo 64. rovata, 2024. adóév.
+              label: Elszámolás (folytatás). Az állami adóhatóságnak tulajdonítható
+                (%) [64]
+            '65':
+              help: A 322-es modelo 65. rovata, 2024. adóév.
+              label: Elszámolás (folytatás). Az állami adóhatóságnak tulajdonítható
+                [65]
+            '66':
+              help: A 322-es modelo 66. rovata, 2024. adóév.
+              label: Elszámolás (folytatás). A csoporthoz csatlakozás előtti időszakokból
+                beszámítandó összegek [66]
+            '67':
+              help: A 322-es modelo 67. rovata, 2024. adóév.
+              label: Elszámolás (folytatás). Kizárólag az állami adóhatóság és a foral
+                adóhatóságok által együttesen adóztatott adóalanyoknak. Az éves korrekció
+                eredménye [67]
+            '68':
+              help: A 322-es modelo 68. rovata, 2024. adóév.
+              label: Elszámolás (folytatás). Eredmény ([65] - [66] + [67]) [68]
+            '69':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: 'Levonandó (kizárólag kiegészítő önadózás esetén): az azonos
+                jogcímen, évre és időszakra korábban benyújtott önadózások eredménye'
+            '70':
+              help: A 322-es modelo 70. rovata, 2024. adóév.
+              label: Az önadózás eredménye ([68] - [69]) [70]
+            '700':
+              help: A 322-es modelo 700. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
+                Adóalap [700]
+            '701':
+              help: A 322-es modelo 701. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [701]
+            '702':
+              help: A 322-es modelo 702. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Belföldi ügyletek levonható áfája. Tárgyi eszközök. Adóalap [702]
+            '703':
+              help: A 322-es modelo 703. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Belföldi ügyletek levonható áfája. Tárgyi eszközök. Levonható adóösszeg
+                [703]
+            '704':
+              help: A 322-es modelo 704. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Import levonható áfája. Forgóeszközök. Adóalap [704]
+            '705':
+              help: A 322-es modelo 705. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Import levonható áfája. Forgóeszközök. Levonható adóösszeg [705]
+            '706':
+              help: A 322-es modelo 706. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Import levonható áfája. Tárgyi eszközök. Adóalap [706]
+            '707':
+              help: A 322-es modelo 707. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Import levonható áfája. Tárgyi eszközök. Levonható adóösszeg [707]
+            '708':
+              help: A 322-es modelo 708. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Adóalap [708]
+            '709':
+              help: A 322-es modelo 709. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [709]
+            '71':
+              help: A 322-es modelo 71. rovata, 2024. adóév.
+              label: Kiegészítő információ. Közösségen belüli termék- és szolgáltatásértékesítések
+                [71]
+            '710':
+              help: A 322-es modelo 710. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Közösségen belüli beszerzések levonható áfája. Tárgyi eszközök. Adóalap
+                [710]
+            '711':
+              help: A 322-es modelo 711. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [711]
+            '712':
+              help: A 322-es modelo 712. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
+                szabályozásban. Adóalap [712]
+            '713':
+              help: A 322-es modelo 713. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
+                szabályozásban. Levonható adóösszeg [713]
+            '714':
+              help: A 322-es modelo 714. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Levonások helyesbítése. Adóalap [714]
+            '715':
+              help: A 322-es modelo 715. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Levonások helyesbítése. Levonható adóösszeg [715]
+            '716':
+              help: A 322-es modelo 716. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
+                Tárgyi eszközök korrekciója. Levonható adóösszeg [716]
+            '717':
+              help: A 322-es modelo 717. rovata, 2024. adóév.
+              label: 'Elkülönített levonási szabályozás alá tartozó tevékenységek.
+                Levonható IVA: csoport 1. Levonások összege (701 + 703 + 705 + 707
+                + 709 + 711 + 713 + 715 + 716). Levonható adóösszeg [717]'
+            '718':
+              help: A 322-es modelo 718. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
+                Adóalap [718]
+            '719':
+              help: A 322-es modelo 719. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [719]
+            '72':
+              help: A 322-es modelo 72. rovata, 2024. adóév.
+              label: Kiegészítő információ. Export és azzal egy tekintet alá eső ügyletek
+                [72]
+            '720':
+              help: A 322-es modelo 720. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Belföldi ügyletek levonható áfája. Tárgyi eszközök. Adóalap [720]
+            '721':
+              help: A 322-es modelo 721. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Belföldi ügyletek levonható áfája. Tárgyi eszközök. Levonható adóösszeg
+                [721]
+            '722':
+              help: A 322-es modelo 722. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Import levonható áfája. Forgóeszközök. Adóalap [722]
+            '723':
+              help: A 322-es modelo 723. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Import levonható áfája. Forgóeszközök. Levonható adóösszeg [723]
+            '724':
+              help: A 322-es modelo 724. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Import levonható áfája. Tárgyi eszközök. Adóalap [724]
+            '725':
+              help: A 322-es modelo 725. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Import levonható áfája. Tárgyi eszközök. Levonható adóösszeg [725]
+            '726':
+              help: A 322-es modelo 726. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Adóalap [726]
+            '727':
+              help: A 322-es modelo 727. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [727]
+            '728':
+              help: A 322-es modelo 728. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Közösségen belüli beszerzések levonható áfája. Tárgyi eszközök. Adóalap
+                [728]
+            '729':
+              help: A 322-es modelo 729. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
+                Levonható adóösszeg [729]
+            '730':
+              help: A 322-es modelo 730. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
+                szabályozásban. Adóalap [730]
+            '731':
+              help: A 322-es modelo 731. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
+                szabályozásban. Levonható adóösszeg [731]
+            '732':
+              help: A 322-es modelo 732. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Levonások helyesbítése. Adóalap [732]
+            '733':
+              help: A 322-es modelo 733. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Levonások helyesbítése. Levonható adóösszeg [733]
+            '734':
+              help: A 322-es modelo 734. rovata, 2024. adóév.
+              label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
+                Tárgyi eszközök korrekciója. Levonható adóösszeg [734]
+            '735':
+              help: A 322-es modelo 735. rovata, 2024. adóév.
+              label: 'Elkülönített levonási szabályozás alá tartozó tevékenységek.
+                Levonható IVA: csoport 2. Levonások összege (719 + 721 + 723 + 725
+                + 727 + 729 + 731 + 733 + 734). Levonható adóösszeg [735]'
+            '74':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: A pénzforgalmi különös rendszer alá tartozó termék- és szolgáltatásbeszerzések.
+                Adóalap
+            '75':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: A pénzforgalmi különös rendszer alá tartozó beszerzések. Előzetesen
+                felszámított adó
+            '76':
+              help: A 322-es modelo 76. rovata, 2024. adóév.
+              label: Adóösszegek korrekciója a 80.Cinco.5ª LIVA szerint [76]
+            '77':
+              help: A 322-es modelo 77. rovata, 2024. adóév.
+              label: A vámhatóság által megállapított, még be nem fizetett import
+                áfa [77]
+            '79':
+              help: A 322-es modelo 79. rovata, 2024. adóév.
+              label: Az adóévben végzett ügyletek. Ingatlanértékesítések és nem szokásos
+                pénzügyi ügyletek [79]
+            '80':
+              help: A 322-es modelo 80. rovata, 2024. adóév.
+              label: Az adóévben végzett ügyletek. Ügyletek az általános szabályozás
+                szerint [80]
+            '81':
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: A pénzforgalmi különös rendszer alá tartozó ügyletek, amelyek
+                a LIVA 75. cikke szerinti általános szabály alapján váltak esedékessé
+            '83':
+              help: A 322-es modelo 83. rovata, 2024. adóév.
+              label: Az adóévben végzett ügyletek. Levonási jog nélküli mentes ügyletek
+                [83]
+            '84':
+              help: A 322-es modelo 84. rovata, 2024. adóév.
+              label: A teljesítési hely szabályai szerint nem adóztatandó ügyletek
+                (a 126. rovatban szereplők kivételével) [84]
+            '86':
+              help: A 322-es modelo 86. rovata, 2024. adóév.
+              label: Az adóévben végzett ügyletek. Ügyletek az egyszerűsített szabályozás
+                szerint [86]
+            '88':
+              help: A 322-es modelo 88. rovata, 2024. adóév.
+              label: Az évben teljesített ügyletek. Teljes ügyleti forgalom (a IVA-törvény
+                121. cikke) (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127 + 128 +
+                86 + 95 + 96 + 97 + 98 - 79 - 99) [88]
+            '89':
+              help: A 322-es modelo 89. rovata, 2024. adóév.
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Álava [89]
+            '90':
+              help: A 322-es modelo 90. rovata, 2024. adóév.
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Gipuzkoa [90]
+            '91':
+              help: A 322-es modelo 91. rovata, 2024. adóév.
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Biscaya [91]
+            '92':
+              help: A 322-es modelo 92. rovata, 2024. adóév.
+              label: Területenkénti adózási információ (csak több adóhatóság által
+                adóztatott adóalanyoknak) - Navarra [92]
+            '93':
+              help: A 322-es modelo 93. rovata, 2024. adóév.
+              label: Az adóévben végzett ügyletek. Közösségen belüli termék- és szolgáltatásértékesítések
+                [93]
+            '94':
+              help: A 322-es modelo 94. rovata, 2024. adóév.
+              label: Az adóévben végzett ügyletek. Export és egyéb, levonási joggal
+                járó mentes ügyletek [94]
+            '95':
+              help: A 322-es modelo 95. rovata, 2024. adóév.
+              label: Az adóévben végzett ügyletek. Ügyletek a mezőgazdasági, állattenyésztési
+                és halászati különleges szabályozás szerint [95]
+            '96':
+              help: A 322-es modelo 96. rovata, 2024. adóév.
+              label: Az adóévben végzett ügyletek. Az egyenértékűségi felár különleges
+                szabályozása alá tartozó adóalanyok ügyletei [96]
+            '97':
+              help: A 322-es modelo 97. rovata, 2024. adóév.
+              label: Az adóévben végzett ügyletek. Ügyletek a használt cikkekre, műalkotásokra,
+                régiségekre és gyűjteménydarabokra vonatkozó különleges szabályozás
+                szerint [97]
+            '98':
+              help: A 322-es modelo 98. rovata, 2024. adóév.
+              label: Az adóévben végzett ügyletek. Ügyletek az utazási irodákra vonatkozó
+                különleges szabályozás szerint [98]
+            '99':
+              help: A 322-es modelo 99. rovata, 2024. adóév.
+              label: Az adóévben végzett ügyletek. Tárgyi eszközök értékesítése [99]
+            x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: Tevékenységi kód - Egyéb 1.
+            x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: IAE besorolás - Egyéb 1.
+            x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: Tevékenységi kód - Egyéb 2.
+            x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: IAE besorolás - Egyéb 2.
+            x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: Tevékenységi kód - Egyéb 3.
+            x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: IAE besorolás - Egyéb 3.
+            x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: Tevékenységi kód - Egyéb 4.
+            x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: IAE besorolás - Egyéb 4.
+            x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: Tevékenységi kód - Egyéb 5.
+            x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: IAE besorolás - Egyéb 5.
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: Tevékenységi kód - Fő
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
+              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              label: IAE besorolás - Fő
+            x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Ön a pénzforgalmi különös rendszer alá tartozó ügyletek
+                címzettje?
+            x-chim6r1ecll6asj3d5hmiro:
+              help: A 322-es modelo ejercicio. rovata, 2024. adóév.
+              label: Az adóbevallás vonatkozási éve
+            x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Az uralkodó szervezet NIF száma
+            x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Mentesül a 390-es modelo éves IVA-összesítő bevallás
+                alól?
+            x-chim6r1ectp7as3f5ln7arb5e9ng:
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Csoportszám
+            x-chim6r1ectp7as3f5lp6ur0:
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Uralkodó / függő
+            x-chim6r1ee1in4qbfchng:
+              help: A 322-es modelo periodo. rovata, 2024. adóév.
+              label: Időszak (éves, 0A)
+            x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: 'Azonosítás. A különös arányosítás alkalmazása (LIVA 103.Dos.1º
+                cikk): választás vagy a választás visszavonása'
+            x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Szerepel a havi visszatérítési nyilvántartásban (RIVA
+                30. cikk)?
+            x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: 'Azonosítás. Alkalmazandó különös rendszer: LIVA 163 sexies.Cinco
+                cikk'
+            x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Kizárólag foral adóhatóság alá tartozó adóalany, a Vámhatóság
+                által megállapított, még befizetetlen import-IVA-val
+            x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
+              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
+                adat.
+              label: Azonosítás. Van ügyleti forgalom (LIVA 121. cikk)?
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: A 322-es modelo iva.autorepercutido.intracomunitaria. rovata,
+                2024. adóév.
+              label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: A 322-es modelo iva.cuota-deducible-total. rovata, 2024. adóév.
+              label: Összes levonható ÁFA összeg
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: A 322-es modelo iva.cuota-devengada-total. rovata, 2024. adóév.
+              label: Összes keletkezett ÁFA összeg
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: A 21%-os általános kulccsal számított felszámított ÁFA teljes
+                összege.
+              label: Felszámított ÁFA összeg általános kulccsal (21%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: A 322-es modelo iva.repercutido.reducido. rovata, 2024. adóév.
+              label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: A 322-es modelo iva.repercutido.super-reducido. rovata, 2024.
+                adóév.
+              label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: A 322-es modelo iva.resultado-regimen-general. rovata, 2024. adóév.
+              label: Általános rendszer eredménye
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: A 322-es modelo iva.soportado.interiores. rovata, 2024. adóév.
               label: Levonható ÁFA összeg belföldi folyó ügyletek után
           construct:
             modelo-322-iva-grupo-individual:

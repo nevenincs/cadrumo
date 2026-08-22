@@ -5,50 +5,36 @@ modelo:
         official_name: null
         title: null
       revision:
-        2008-y-siguientes:
+        2008-2024:
           casilla:
             x-cdnmst3ic5o62sjkckn62sjicln68obdd5imst3f5lm6uor1dgmmspb7dthmiro:
               help: Field declared on modelo 347, the annual return of transactions
                 with third parties.
               label: BUSINESS PREMISES LEASE
-            x-cdnmst3ic5o62sjkckn64qb5dpin6bbmd5n66tbcc5i6uso:
-              help: Field declared on modelo 347, the annual return of transactions
-                with third parties.
-              label: TRANSACTION IN GOODS PLACED OR TO BE PLACED UNDER THE NON-CUSTOMS
-                WAREHOUSING REGIME
             x-cdnmst3ic5o62sjkckn66r31epiiqrrgclp62or9dtn0:
-              help: null
+              help: Box contraparte.clave-operacion of modelo 347, tax year 2008.
               label: Transaction code with the counterparty (A=supplies, B=acquisitions,
                 ...)
-            x-cdnmst3ic5o62sjkckn66sj9ehin4qbf5lhm2qj1:
-              help: Field declared on modelo 347, the annual return of transactions
-                with third parties.
-              label: TRANSACTIONS UNDER THE IVA CASH-ACCOUNTING SPECIAL REGIME
             x-cdnmst3ic5o62sjkckn6aqj5e9hmior9dsmmus35e9gm6qbfdo:
               help: Field declared on modelo 347, the annual return of transactions
                 with third parties.
               label: FILING YEAR
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4og:
-              help: null
+              help: Box contraparte.importe-Q1 of modelo 347, tax year 2008.
               label: Amount of transactions with the counterparty in the first quarter
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4p0:
-              help: null
+              help: Box contraparte.importe-Q2 of modelo 347, tax year 2008.
               label: Amount of transactions with the counterparty in the second quarter
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4pg:
-              help: null
+              help: Box contraparte.importe-Q3 of modelo 347, tax year 2008.
               label: Amount of transactions with the counterparty in the third quarter
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4q0:
-              help: null
+              help: Box contraparte.importe-Q4 of modelo 347, tax year 2008.
               label: Amount of transactions with the counterparty in the fourth quarter
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9dc5n7aobc:
               help: Field declared on modelo 347, the annual return of transactions
                 with third parties.
               label: ANNUAL AMOUNT OF THE TRANSACTIONS
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dcdp6it35e9kmubb3c5l62:
-              help: Field declared on modelo 347, the annual return of transactions
-                with third parties.
-              label: ANNUAL AMOUNT OF TRANSACTIONS ACCRUED UNDER THE IVA CASH-ACCOUNTING
-                CRITERION
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9ddlin8obcd5hmu:
               help: Field declared on modelo 347, the annual return of transactions
                 with third parties.
@@ -77,30 +63,22 @@ modelo:
               help: Field declared on modelo 347, the annual return of transactions
                 with third parties.
               label: ANNUAL AMOUNT RECEIVED FOR TRANSFERS OF PROPERTY SUBJECT TO IVA
-            x-cdnmst3ic5o62sjkckn6irjmclp76qbfdomn6tbaclq6ubbgc5pmitjf:
-              help: Field declared on modelo 347, the annual return of transactions
-                with third parties.
-              label: TRANSACTION WITH REVERSE CHARGE
             x-cdnmst3ic5o62sjkckn6sqb6:
-              help: null
+              help: Box contraparte.nif of modelo 347, tax year 2008.
               label: Tax ID of the declared counterparty
             x-cdnmst3ic5o62sjkckn6sqb65lnn0pbic5i6ushdcdnmqtbed5q62sj9ds:
               help: Field declared on modelo 347, the annual return of transactions
                 with third parties.
               label: EU OPERATOR NIF
             x-cdnmst3ic5o62sjkckn6srrdc9p6a:
-              help: null
+              help: Box contraparte.nombre of modelo 347, tax year 2008.
               label: Name or business name of the declared counterparty
-            x-cdnmst3ic5o62sjkckn6stbdclp6ubb3dtn7crr3c5q6usj9c4mm4p3eec:
-              help: Field declared on modelo 347, the annual return of transactions
-                with third parties.
-              label: BDNS CALL NUMBER
             x-cdnmst3ic5o62sjkckn6us35e9gm6qbfdomn6pb7elp6u:
               help: Field declared on modelo 347, the annual return of transactions
                 with third parties.
               label: INSURANCE TRANSACTION
             x-cdnmst3ic5o62sjkckn70ob9ecmm6rr4d5jmu:
-              help: null
+              help: Box contraparte.pais-codigo of modelo 347, tax year 2008.
               label: Country code of the counterparty (ISO 3166-1 alpha-2; blank for
                 domestic counterparties)
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
@@ -112,7 +90,7 @@ modelo:
                 with third parties.
               label: SUPPLEMENTARY OR REPLACEMENT RETURN
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Box ejercicio of modelo 347, tax year 2008.
               label: Filing year to which the return relates
             x-chim6r1ed5mn0rriehiiqt3fehgmobb1dpqm2r0:
               help: Field declared on modelo 347, the annual return of transactions
@@ -139,7 +117,7 @@ modelo:
                 with third parties.
               label: NIF OF THE LEGAL REPRESENTATIVE
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Box tipo-declaracion of modelo 347, tax year 2008.
               label: Return type (original / substitute / supplementary)
             x-chim6r1eehkn0rpdednn0rriehig:
               help: Field declared on modelo 347, the annual return of transactions
@@ -185,6 +163,189 @@ modelo:
           construct:
             modelo-347-informative:
               field:
-                title: null
+                title: Modelo 347 annual return of transactions with third parties
           field:
-            label: null
+            label: Modelo 347, tax years 2008 to 2024
+        2025-y-siguientes:
+          casilla:
+            x-cdnmst3ic5o62sjkckn62sjicln68obdd5imst3f5lm6uor1dgmmspb7dthmiro:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: BUSINESS PREMISES LEASE
+            x-cdnmst3ic5o62sjkckn64qb5dpin6bbmd5n66tbcc5i6uso:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: TRANSACTION IN GOODS PLACED OR TO BE PLACED UNDER THE NON-CUSTOMS
+                WAREHOUSING REGIME
+            x-cdnmst3ic5o62sjkckn66r31epiiqrrgclp62or9dtn0:
+              help: Box contraparte.clave-operacion of modelo 347, tax year 2025.
+              label: Transaction code with the counterparty (A=supplies, B=acquisitions,
+                ...)
+            x-cdnmst3ic5o62sjkckn66sj9ehin4qbf5lhm2qj1:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: TRANSACTIONS UNDER THE IVA CASH-ACCOUNTING SPECIAL REGIME
+            x-cdnmst3ic5o62sjkckn6aqj5e9hmior9dsmmus35e9gm6qbfdo:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: FILING YEAR
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4og:
+              help: Box contraparte.importe-Q1 of modelo 347, tax year 2025.
+              label: Amount of transactions with the counterparty in the first quarter
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4p0:
+              help: Box contraparte.importe-Q2 of modelo 347, tax year 2025.
+              label: Amount of transactions with the counterparty in the second quarter
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4pg:
+              help: Box contraparte.importe-Q3 of modelo 347, tax year 2025.
+              label: Amount of transactions with the counterparty in the third quarter
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4q0:
+              help: Box contraparte.importe-Q4 of modelo 347, tax year 2025.
+              label: Amount of transactions with the counterparty in the fourth quarter
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dc5n7aobc:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: ANNUAL AMOUNT OF THE TRANSACTIONS
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dcdp6it35e9kmubb3c5l62:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: ANNUAL AMOUNT OF TRANSACTIONS ACCRUED UNDER THE IVA CASH-ACCOUNTING
+                CRITERION
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9ddlin8obcd5hmu:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: AMOUNT RECEIVED IN CASH
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah64:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: AMOUNT RECEIVED FOR TRANSFERS OF PROPERTY SUBJECT TO IVA FIRST
+                QUARTER
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah68:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: AMOUNT RECEIVED FOR TRANSFERS OF PROPERTY SUBJECT TO IVA SECOND
+                QUARTER
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah6c:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: AMOUNT RECEIVED FOR TRANSFERS OF PROPERTY SUBJECT TO IVA THIRD
+                QUARTER
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah6g:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: AMOUNT RECEIVED FOR TRANSFERS OF PROPERTY SUBJECT TO IVA FOURTH
+                QUARTER
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bb9dpmnapb2dhin6:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: ANNUAL AMOUNT RECEIVED FOR TRANSFERS OF PROPERTY SUBJECT TO IVA
+            x-cdnmst3ic5o62sjkckn6irjmclp76qbfdomn6tbaclq6ubbgc5pmitjf:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: TRANSACTION WITH REVERSE CHARGE
+            x-cdnmst3ic5o62sjkckn6sqb6:
+              help: Box contraparte.nif of modelo 347, tax year 2025.
+              label: Tax ID of the declared counterparty
+            x-cdnmst3ic5o62sjkckn6sqb65lnn0pbic5i6ushdcdnmqtbed5q62sj9ds:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: EU OPERATOR NIF
+            x-cdnmst3ic5o62sjkckn6srrdc9p6a:
+              help: Box contraparte.nombre of modelo 347, tax year 2025.
+              label: Name or business name of the declared counterparty
+            x-cdnmst3ic5o62sjkckn6stbdclp6ubb3dtn7crr3c5q6usj9c4mm4p3eec:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: BDNS CALL NUMBER
+            x-cdnmst3ic5o62sjkckn6us35e9gm6qbfdomn6pb7elp6u:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: INSURANCE TRANSACTION
+            x-cdnmst3ic5o62sjkckn70ob9ecmm6rr4d5jmu:
+              help: Box contraparte.pais-codigo of modelo 347, tax year 2025.
+              label: Country code of the counterparty (ISO 3166-1 alpha-2; blank for
+                domestic counterparties)
+            x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: NIF OF THE LEGAL REPRESENTATIVE
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: SUPPLEMENTARY OR REPLACEMENT RETURN
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Box ejercicio of modelo 347, tax year 2025.
+              label: Filing year to which the return relates
+            x-chim6r1ed5mn0rriehiiqt3fehgmobb1dpqm2r0:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: TOTAL ANNUAL AMOUNT OF THE TRANSACTIONS
+            x-chim6r1ed5mn0rriehiiqt3fehgmobb1e9p6arj4c5mmipbeehniqr3fcdgmopbj:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: TOTAL AMOUNT OF BUSINESS PREMISES LEASE TRANSACTIONS
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: IDENTIFYING NUMBER OF THE RETURN
+            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: SURNAMES AND FIRST NAME
+            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdomn8pbcclj6urjf:
+              help: Nine-position numeric field. Telephone number of the contact person
+                named by the declarant.
+              label: Telephone of the contact person
+            x-chim6r1ee9in0sj5edimst31dpq6abbccljm2r1ddpkmc:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: NIF OF THE LEGAL REPRESENTATIVE
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Box tipo-declaracion of modelo 347, tax year 2025.
+              label: Return type (original / substitute / supplementary)
+            x-chim6r1eehkn0rpdednn0rriehig:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: MEDIUM TYPE
+            x-chim6r1eehnn8obc5lkmsrblclh6opbj:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: TOTAL NUMBER OF PROPERTIES
+            x-chim6r1eehnn8obc5lo6asjjdtn62spdcln78qb4c5i6aso:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: TOTAL NUMBER OF PERSONS AND ENTITIES
+            x-d5n6qtb5c9m6abj1e9p6arj4c5q62sj9dsmmsqb6:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: NIF OF THE TENANT
+            x-d5n6qtb5c9m6abj1e9p6arj4c5q62sj9dsmmsrrdc9p6a:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: SURNAMES AND FIRST NAME, COMPANY NAME OR DENOMINATION OF THE
+                TENANT
+            x-d5n6qtb5c9m6abj4d5p6aor3d5nms:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: ADDRESS OF THE PROPERTY
+            x-d5n6qtb5c9m6abj9dlo6usjkckmmus35e9gm6qbfdo:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: AMOUNT OF THE TRANSACTION
+            x-d5n6qtb5c9m6abjiclj6asj5dphmio9dcdgn8objehp62r0:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: CADASTRAL REFERENCE
+            x-d5n6qtb5c9m6abjiclo74pbjcln78obeehiiqr35ctgmobbed5j0:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: NIF OF THE LEGAL REPRESENTATIVE
+            x-d5n6qtb5c9m6abjjd5q7aob3d5nms:
+              help: Field declared on modelo 347, the annual return of transactions
+                with third parties.
+              label: LOCATION OF THE PROPERTY
+          construct:
+            modelo-347-informative:
+              field:
+                title: Modelo 347 annual return of transactions with third parties
+          field:
+            label: Modelo 347, tax years 2025 onwards

@@ -5,50 +5,36 @@ modelo:
         official_name: null
         title: null
       revision:
-        2008-y-siguientes:
+        2008-2024:
           casilla:
             x-cdnmst3ic5o62sjkckn62sjicln68obdd5imst3f5lm6uor1dgmmspb7dthmiro:
               help: Dada declarada al model 347, declaració anual d'operacions amb
                 terceres persones.
               label: ARRENDAMENT DE LOCAL DE NEGOCI
-            x-cdnmst3ic5o62sjkckn64qb5dpin6bbmd5n66tbcc5i6uso:
-              help: Dada declarada al model 347, declaració anual d'operacions amb
-                terceres persones.
-              label: OPERACIÓ AMB BÉNS VINCULATS O DESTINATS A VINCULAR-SE AL RÈGIM
-                DE DIPÒSIT DIFERENT DE L'ADUANER
             x-cdnmst3ic5o62sjkckn66r31epiiqrrgclp62or9dtn0:
-              help: null
+              help: Casella contraparte.clave-operacion del model 347, exercici 2008.
               label: Clau d'operació amb la contrapart (A=lliuraments/prestacions,
                 B=adquisicions/recepcions, ...)
-            x-cdnmst3ic5o62sjkckn66sj9ehin4qbf5lhm2qj1:
-              help: Dada declarada al model 347, declaració anual d'operacions amb
-                terceres persones.
-              label: OPERACIONS EN RÈGIM ESPECIAL DEL CRITERI DE CAIXA DE L'IVA
             x-cdnmst3ic5o62sjkckn6aqj5e9hmior9dsmmus35e9gm6qbfdo:
               help: Dada declarada al model 347, declaració anual d'operacions amb
                 terceres persones.
               label: EXERCICI
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4og:
-              help: null
+              help: Casella contraparte.importe-Q1 del model 347, exercici 2008.
               label: Import d'operacions amb la contrapart en el primer trimestre
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4p0:
-              help: null
+              help: Casella contraparte.importe-Q2 del model 347, exercici 2008.
               label: Import d'operacions amb la contrapart en el segon trimestre
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4pg:
-              help: null
+              help: Casella contraparte.importe-Q3 del model 347, exercici 2008.
               label: Import d'operacions amb la contrapart en el tercer trimestre
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4q0:
-              help: null
+              help: Casella contraparte.importe-Q4 del model 347, exercici 2008.
               label: Import d'operacions amb la contrapart en el quart trimestre
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9dc5n7aobc:
               help: Dada declarada al model 347, declaració anual d'operacions amb
                 terceres persones.
               label: IMPORT ANUAL DE LES OPERACIONS
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dcdp6it35e9kmubb3c5l62:
-              help: Dada declarada al model 347, declaració anual d'operacions amb
-                terceres persones.
-              label: IMPORT ANUAL DE LES OPERACIONS MERITADES SEGONS EL CRITERI DE
-                CAIXA DE L'IVA
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9ddlin8obcd5hmu:
               help: Dada declarada al model 347, declaració anual d'operacions amb
                 terceres persones.
@@ -78,30 +64,22 @@ modelo:
                 terceres persones.
               label: IMPORT ANUAL PERCEBUT PER TRANSMISSIONS D'IMMOBLES SUBJECTES
                 A IVA
-            x-cdnmst3ic5o62sjkckn6irjmclp76qbfdomn6tbaclq6ubbgc5pmitjf:
-              help: Dada declarada al model 347, declaració anual d'operacions amb
-                terceres persones.
-              label: OPERACIÓ AMB INVERSIÓ DEL SUBJECTE PASSIU
             x-cdnmst3ic5o62sjkckn6sqb6:
-              help: null
+              help: Casella contraparte.nif del model 347, exercici 2008.
               label: NIF de la contrapart declarada
             x-cdnmst3ic5o62sjkckn6sqb65lnn0pbic5i6ushdcdnmqtbed5q62sj9ds:
               help: Dada declarada al model 347, declaració anual d'operacions amb
                 terceres persones.
               label: NIF D'OPERADOR COMUNITARI
             x-cdnmst3ic5o62sjkckn6srrdc9p6a:
-              help: null
+              help: Casella contraparte.nombre del model 347, exercici 2008.
               label: Nom o raó social de la contrapart declarada
-            x-cdnmst3ic5o62sjkckn6stbdclp6ubb3dtn7crr3c5q6usj9c4mm4p3eec:
-              help: Dada declarada al model 347, declaració anual d'operacions amb
-                terceres persones.
-              label: NÚMERO DE CONVOCATÒRIA BDNS
             x-cdnmst3ic5o62sjkckn6us35e9gm6qbfdomn6pb7elp6u:
               help: Dada declarada al model 347, declaració anual d'operacions amb
                 terceres persones.
               label: OPERACIÓ D'ASSEGURANÇA
             x-cdnmst3ic5o62sjkckn70ob9ecmm6rr4d5jmu:
-              help: null
+              help: Casella contraparte.pais-codigo del model 347, exercici 2008.
               label: Codi de país de la contrapart (ISO 3166-1 alfa-2; buit per a
                 contraparts nacionals)
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
@@ -113,7 +91,7 @@ modelo:
                 terceres persones.
               label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Casella ejercicio del model 347, exercici 2008.
               label: Exercici a què es refereix la declaració
             x-chim6r1ed5mn0rriehiiqt3fehgmobb1dpqm2r0:
               help: Dada declarada al model 347, declaració anual d'operacions amb
@@ -140,7 +118,7 @@ modelo:
                 terceres persones.
               label: NIF DEL REPRESENTANT LEGAL
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Casella tipo-declaracion del model 347, exercici 2008.
               label: Tipus de declaració (originària / substitutiva / complementària)
             x-chim6r1eehkn0rpdednn0rriehig:
               help: Dada declarada al model 347, declaració anual d'operacions amb
@@ -185,6 +163,189 @@ modelo:
           construct:
             modelo-347-informative:
               field:
-                title: null
+                title: Model 347 declaració anual d'operacions amb terceres persones
           field:
-            label: null
+            label: Model 347, exercicis 2008 a 2024
+        2025-y-siguientes:
+          casilla:
+            x-cdnmst3ic5o62sjkckn62sjicln68obdd5imst3f5lm6uor1dgmmspb7dthmiro:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: ARRENDAMENT DE LOCAL DE NEGOCI
+            x-cdnmst3ic5o62sjkckn64qb5dpin6bbmd5n66tbcc5i6uso:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: OPERACIÓ AMB BÉNS VINCULATS O DESTINATS A VINCULAR-SE AL RÈGIM
+                DE DIPÒSIT DIFERENT DE L'ADUANER
+            x-cdnmst3ic5o62sjkckn66r31epiiqrrgclp62or9dtn0:
+              help: Casella contraparte.clave-operacion del model 347, exercici 2025.
+              label: Clau d'operació amb la contrapart (A=lliuraments/prestacions,
+                B=adquisicions/recepcions, ...)
+            x-cdnmst3ic5o62sjkckn66sj9ehin4qbf5lhm2qj1:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: OPERACIONS EN RÈGIM ESPECIAL DEL CRITERI DE CAIXA DE L'IVA
+            x-cdnmst3ic5o62sjkckn6aqj5e9hmior9dsmmus35e9gm6qbfdo:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: EXERCICI
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4og:
+              help: Casella contraparte.importe-Q1 del model 347, exercici 2025.
+              label: Import d'operacions amb la contrapart en el primer trimestre
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4p0:
+              help: Casella contraparte.importe-Q2 del model 347, exercici 2025.
+              label: Import d'operacions amb la contrapart en el segon trimestre
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4pg:
+              help: Casella contraparte.importe-Q3 del model 347, exercici 2025.
+              label: Import d'operacions amb la contrapart en el tercer trimestre
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4q0:
+              help: Casella contraparte.importe-Q4 del model 347, exercici 2025.
+              label: Import d'operacions amb la contrapart en el quart trimestre
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dc5n7aobc:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: IMPORT ANUAL DE LES OPERACIONS
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dcdp6it35e9kmubb3c5l62:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: IMPORT ANUAL DE LES OPERACIONS MERITADES SEGONS EL CRITERI DE
+                CAIXA DE L'IVA
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9ddlin8obcd5hmu:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: IMPORT PERCEBUT EN METÀL·LIC
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah64:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: IMPORT PERCEBUT PER TRANSMISSIONS D'IMMOBLES SUBJECTES A IVA
+                PRIMER TRIMESTRE
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah68:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: IMPORT PERCEBUT PER TRANSMISSIONS D'IMMOBLES SUBJECTES A IVA
+                SEGON TRIMESTRE
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah6c:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: IMPORT PERCEBUT PER TRANSMISSIONS D'IMMOBLES SUBJECTES A IVA
+                TERCER TRIMESTRE
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah6g:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: IMPORT PERCEBUT PER TRANSMISSIONS D'IMMOBLES SUBJECTES A IVA
+                QUART TRIMESTRE
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bb9dpmnapb2dhin6:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: IMPORT ANUAL PERCEBUT PER TRANSMISSIONS D'IMMOBLES SUBJECTES
+                A IVA
+            x-cdnmst3ic5o62sjkckn6irjmclp76qbfdomn6tbaclq6ubbgc5pmitjf:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: OPERACIÓ AMB INVERSIÓ DEL SUBJECTE PASSIU
+            x-cdnmst3ic5o62sjkckn6sqb6:
+              help: Casella contraparte.nif del model 347, exercici 2025.
+              label: NIF de la contrapart declarada
+            x-cdnmst3ic5o62sjkckn6sqb65lnn0pbic5i6ushdcdnmqtbed5q62sj9ds:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: NIF D'OPERADOR COMUNITARI
+            x-cdnmst3ic5o62sjkckn6srrdc9p6a:
+              help: Casella contraparte.nombre del model 347, exercici 2025.
+              label: Nom o raó social de la contrapart declarada
+            x-cdnmst3ic5o62sjkckn6stbdclp6ubb3dtn7crr3c5q6usj9c4mm4p3eec:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: NÚMERO DE CONVOCATÒRIA BDNS
+            x-cdnmst3ic5o62sjkckn6us35e9gm6qbfdomn6pb7elp6u:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: OPERACIÓ D'ASSEGURANÇA
+            x-cdnmst3ic5o62sjkckn70ob9ecmm6rr4d5jmu:
+              help: Casella contraparte.pais-codigo del model 347, exercici 2025.
+              label: Codi de país de la contrapart (ISO 3166-1 alfa-2; buit per a
+                contraparts nacionals)
+            x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: NIF DEL REPRESENTANT LEGAL
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Casella ejercicio del model 347, exercici 2025.
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ed5mn0rriehiiqt3fehgmobb1dpqm2r0:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: IMPORT TOTAL ANUAL DE LES OPERACIONS
+            x-chim6r1ed5mn0rriehiiqt3fehgmobb1e9p6arj4c5mmipbeehniqr3fcdgmopbj:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: IMPORT TOTAL DE LES OPERACIONS D'ARRENDAMENT DE LOCALS DE NEGOCI
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
+            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: COGNOMS I NOM
+            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdomn8pbcclj6urjf:
+              help: Camp numèric de 9 posicions. Telèfon de la persona amb qui relacionar-se
+                consignada pel declarant.
+              label: Telèfon de la persona amb qui relacionar-se
+            x-chim6r1ee9in0sj5edimst31dpq6abbccljm2r1ddpkmc:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: NIF DEL REPRESENTANT LEGAL
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Casella tipo-declaracion del model 347, exercici 2025.
+              label: Tipus de declaració (originària / substitutiva / complementària)
+            x-chim6r1eehkn0rpdednn0rriehig:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: TIPUS DE SUPORT
+            x-chim6r1eehnn8obc5lkmsrblclh6opbj:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: NOMBRE TOTAL D'IMMOBLES
+            x-chim6r1eehnn8obc5lo6asjjdtn62spdcln78qb4c5i6aso:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: NOMBRE TOTAL DE PERSONES I ENTITATS
+            x-d5n6qtb5c9m6abj1e9p6arj4c5q62sj9dsmmsqb6:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: NIF DE L'ARRENDATARI
+            x-d5n6qtb5c9m6abj1e9p6arj4c5q62sj9dsmmsrrdc9p6a:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: COGNOMS I NOM, RAÓ SOCIAL O DENOMINACIÓ DE L'ARRENDATARI
+            x-d5n6qtb5c9m6abj4d5p6aor3d5nms:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: ADREÇA DE L'IMMOBLE
+            x-d5n6qtb5c9m6abj9dlo6usjkckmmus35e9gm6qbfdo:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: IMPORT DE L'OPERACIÓ
+            x-d5n6qtb5c9m6abjiclj6asj5dphmio9dcdgn8objehp62r0:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: REFERÈNCIA CADASTRAL
+            x-d5n6qtb5c9m6abjiclo74pbjcln78obeehiiqr35ctgmobbed5j0:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: NIF DEL REPRESENTANT LEGAL
+            x-d5n6qtb5c9m6abjjd5q7aob3d5nms:
+              help: Dada declarada al model 347, declaració anual d'operacions amb
+                terceres persones.
+              label: SITUACIÓ DE L'IMMOBLE
+          construct:
+            modelo-347-informative:
+              field:
+                title: Model 347 declaració anual d'operacions amb terceres persones
+          field:
+            label: Model 347, exercicis 2025 i següents
