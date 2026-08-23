@@ -11,38 +11,8 @@ related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace source-casilla-integration with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
 
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S22 and 2026-08-22-source-casilla-integration-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The classify each of the five deferred row sources as an independent candidate and ## Scope
-
-- `src/cadrumo/_data/source_connectivity/census.toml` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # classify each of the five deferred row sources as an independent candidate
 
@@ -52,10 +22,15 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Create independent rows for related-party, refund, donor, gasto-193 contributor, and withholding-296 capabilities.
+- Classify the four families with existing registry bindings as ingress-blocked.
+- Classify withholding-296 as registry-blocked because current Modelo 296 declares relation-prefill bindings only.
+- Attach separate assembler evidence, destinations, review conditions, expiry, owners, and bounded follow-ups.
 
 ## Outcome
 
+All five deferred row families are individually actionable instead of sharing a blanket deferral. The census preserves the currently different blocking boundary for withholding-296 rather than inheriting an outdated claim that all five already have registry bindings.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The strict bundled loader passed. A current authoring-tree regex sentinel confirmed zero `source = "withholding296"` declarations under Modelo 296; the other four families have live source bindings in Modelos 232, 360, 182, and 193 respectively.

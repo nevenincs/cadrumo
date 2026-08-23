@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:4e6109d2b8a3e1d7ae4dc55a84f756c14fd0e54b570b438e684239a9d87c0832'
+body_hash: 'sha256:72190c5a750e46e458d64de31ddf018a716aa4e09a6f2e5d8b1c6f012d0e5e5b'
 ---
 
 # `source-casilla-integration` plan
@@ -91,7 +91,7 @@ Join both inventories through reviewed evidence-backed records and establish the
 - [x] `W01.P04.S19` - classify inventory as the first adjudication candidate with the obsolete 0155 hazard recorded; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [x] `W01.P04.S20` - classify amortization as the mandatory second adjudication candidate; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [x] `W01.P04.S21` - classify assets and fincas with separate evidence, grain, and substitutability questions; `src/cadrumo/_data/source_connectivity/census.toml`.
-- [ ] `W01.P04.S22` - classify each of the five deferred row sources as an independent candidate; `src/cadrumo/_data/source_connectivity/census.toml`.
+- [x] `W01.P04.S22` - classify each of the five deferred row sources as an independent candidate; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W01.P04.S23` - verify every discovered capability and accepted destination candidate has exactly one census row; `dev/source_connectivity/tests/test_census_completeness.py`.
 
 ### Phase `W01.P05` - enforce the monotonic ratchet
