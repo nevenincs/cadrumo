@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:002cb65055d3295eca8944f7054737d9d85d53a44035a7f676c7e970cb1b890a'
+body_hash: 'sha256:34c6ddd703de5a5609e8b851918d40e7f6a1af39581e1707b8304fc79850d6cd'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7395,3 +7395,35 @@ than a break-proof outside one. The remaining honest option is a source-inspecti
 choosing to add one to a sibling shipped distribution is its owner's call, not this campaign's
 -- particularly now the property has a proven second path. Recorded for the harness owner with
 the exact locations and the reason the priority is low.
+
+### A long sweep across a churning tree measures nothing: 324 failures, discarded
+
+The reworked watchdog's step 3 -- when the domain is green, run one slice nobody watches --
+was exercised on the full CLI integration tree, which had not run since the lazy-node-kernel
+refactor. It returned 324 failed and 32 errors. NONE of it is a finding, and chasing it would
+have burned an iteration on an artifact.
+
+The tell was visible before the result arrived and was recorded then rather than after: at run
+start `git status` reported 42 dirty files in `src`, eight of them inside the CLI tree,
+including `_config/_lazy_registration.py`. By mid-run that count was 60. By the end it was 10
+and HEAD had advanced. Six CLI modules were modified within the run's own window --
+`_app_lazy_registration.py`, `_app_lazy_families.py`, `_command_suggestions.py`,
+`cli/__init__.py` among them. A peer was refactoring CLI command registration while a
+fourteen-minute suite walked it.
+
+The failure signatures agree: 206 assertion failures and 81 validation errors spread across
+unrelated modules, with diffs naming whole commands (`config passphrase change`,
+`config profile archive export`) appearing and disappearing. That is a command tree changing
+underneath a reader, not a defect with a cause.
+
+**The refinement this forces on step 3.** A long slice needs a QUIESCENCE precondition, not
+just a green domain. Before starting one, record HEAD and the dirty-file count; after it
+finishes, read both again. If either moved, the result is void and must be discarded rather
+than triaged -- the code at minute 1 is not the code at minute 14, so no failure it reports can
+be attributed to anything. The short domain slices are immune in practice because two minutes
+is rarely enough for the tree to move, which is why they stayed green (370/1644/16 at the new
+HEAD) through the same window that produced 324 phantom failures.
+
+The cost of learning this was fourteen minutes of compute and no finding. The cost of NOT
+learning it is an iteration spent triaging 324 failures that would evaporate on re-run, and --
+worse -- a report naming a peer's in-flight refactor as a defect.
