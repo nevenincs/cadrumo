@@ -24,7 +24,7 @@ published_at = 2015-10-02
 effective_from = 2016-10-02
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
-reviewed_by = "Gergely Wootsch <hello@gergely-wootsch.com>"
+reviewed_by = "operator"
 notes = """\
 Procedencia de la revision: redactado por agente a partir del ley-39-2015-art-43.html incluido, \
 contrastado con el texto consolidado vivo BOE-A-2015-10565 (los seis apartados del art. 43 verbatim; \
