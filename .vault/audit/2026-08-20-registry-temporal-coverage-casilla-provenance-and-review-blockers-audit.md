@@ -5628,3 +5628,71 @@ this is the third occurrence, and the fix each time is the same — use the file
 
 **9826 of 11603 slots remain**; 1777 modelled, zero orphaned. Corpus re-derivation: **zero
 problems**. Every modelo 220 locale key, label and help, present in all four catalogues.
+
+## 2026-08-23 — T22004B00: a box number AEAT mistyped, and a terminator that broke the matcher
+
+### What landed
+
+Record **T22004B00** — the financial half of OPERACIONES CONTINUADAS in the cuenta de
+pérdidas y ganancias consolidada, down through RESULTADO FINANCIERO and RESULTADO ANTES DE
+IMPUESTOS to the RESULTADO CONSOLIDADO DEL EJERCICIO and its attribution. **35 casillas
+describing all 45 design fields**; revision 1950 → **1985**, forty of 137 record sheets.
+
+### A box number with an extra zero, transcribed rather than corrected
+
+`[000304]` is six digits where every other box on this record is five, and it sits between
+`[00301]` and `[00305]`.
+
+The evidence that AEAT meant `00304` is strong — the neighbours, and `00304` being a real
+box number elsewhere in this modelo. **It is still transcribed exactly as printed.** A
+casilla number is an *identifier*, the campaign's invariant is that identifiers are
+transcribed and never minted or corrected, and the corpus verifier checks precisely that
+every number is one AEAT printed. Writing `00304` would be this agent deciding what AEAT
+meant on a filing-grade identifier.
+
+The useful move was to ask how far the defect goes rather than to rule on the one in hand:
+**eight boxes across four records** carry an extra leading zero — `[000304]`, `[000507]`,
+`[000742]`, `[006308]`, `[006309]`, `[006310]`, `[007504]`, `[007656]` in T22004B00,
+T22012B20, T22014004 and T22014B20 — and **in five of the eight the immediate neighbours
+prove the intended five-digit reading** (`[007504]` sits between `[07503]` and `[07505]`).
+
+Enumerating the whole class costs one query and turns a one-off judgement call into a
+documented decision the next three records inherit. The three are named in the fragment.
+
+### A terminator matched by prose, and the two records that break it
+
+The generator located the record terminator by AEAT's words — `Fin de registro`. This
+record says **`Fin de ejercicio`**, which is simply wrong: the field closes a *record*, not
+an ejercicio. Only this record and T22005C00 do it, out of 137.
+
+Keying on prose crashed here, and the tempting fix — widen the word list — would have made
+the matcher quietly tolerant of whatever AEAT typed next. The terminator is now matched by
+its **closing tag**, which is the thing that actually identifies the field and is identical
+in all 137 designs, and the fragment comment now **reports** the wording each design uses
+instead of asserting one.
+
+Worth naming as a shape: **a matcher keyed on a label is a matcher keyed on the least
+reliable part of the data.** The structural marker was available the whole time.
+
+All 13 previously authored flat records regenerate with that single comment line changed
+and nothing else, verified by counting non-comment changed lines.
+
+### Chains derived rather than retyped
+
+This record's numbered lines share no common prefix, so the generator correctly derived an
+**empty** heading and kept each line's full text. That makes each label's part-chain
+exactly its own Spanish split on the separator — so the chain is *derived*, and the 37-part
+table is then asserted to cover the derived set exactly. Retyping 35 chains is how a
+truncation-derived key entered this campaign three times.
+
+### Also
+
+AEAT **moves a parent mid-group**: `[00319]` carries the outer name while `[00320]`–
+`[00323]`, its breakdown on the printed modelo, drop it. Each label follows its own printed
+text. Four missing separators repaired, each only after an attested standalone line, each
+listed. Twenty of the 35 lines carry a raw ligature codepoint.
+
+### Scale
+
+**9791 of 11603 slots remain**; 1812 modelled, zero orphaned. Corpus re-derivation: **zero
+problems**.
