@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:2c670b856b9f370bc49d163fc6a0b89eab986bf9cacbdef49f148186df37e6bd'
+body_hash: 'sha256:620807e2a0a56cb1db0993f6e1f8c61674e3ece4039346f1a98774df5f256120'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -17677,3 +17677,70 @@ produced.
 Eight standing failures, unchanged. Four splits, all now blocked on the same
 missing piece: a driver for the publication path. Writing one is the next
 concrete step, and it unblocks every split at once rather than one modelo.
+
+## Tick: the modelo 210 split PROVEN in a candidate; the cutover's preconditions mapped
+
+Re-measured at tick start: authority CLEAN at `5d643ab400`.
+
+### The result that matters
+
+The split was rendered and VALIDATED through the real registry authority in an
+isolated candidate registry:
+
+    210/2025:              2025-01-01..2025-12-31  extents 2700 / 1400
+    210/2026-y-siguientes: 2026-01-01..open        extents 4000 / 1400
+
+That is the pre-cutover proof. The 2026 record comes out at the 4000 positions
+AEAT's design declares, against the 2700 the single spanning revision emits
+today. It is no longer a hypothesis that the split resolves the short record.
+
+### How the chicken-and-egg was broken
+
+A revision's casillas carry `export_refs` into its own generated tree, so the
+revision cannot load until the tree is rendered -- and rendering needs a
+`RegistryRevisionInspection`, which needs a loaded revision.
+
+The way through: the 2026 semantic map joins cleanly against the 2026 design
+using revision **2025's** inspection, because the two revisions' casillas are
+identical. Render off the sibling's inspection into a candidate; that candidate
+then loads and validates; and its OWN 2026 revision becomes the inspection
+authority for the publication run.
+
+### The cutover's preconditions, learned by executing them
+
+`publish_validated_generated_export_tree` has no caller anywhere, so its
+requirements are not written down. Each was found by hitting it:
+
+1. the inspection must come from the TARGET revision, not a sibling --
+   validation refuses a parse whose intermediate source is absent from the
+   inspecting revision's source catalogue ("parser intermediate source
+   'aeat-dr-210-2026' is absent from the target registry source catalogue");
+2. the render target directory must be EMPTY, so the candidate that supplies the
+   inspection cannot also be the candidate rendered into. Two are needed;
+3. the candidate registry must hold ONLY the target revision of the target
+   modelo -- "generated modelo revisions directory must contain exactly
+   ['2026-y-siguientes'], got ['2025', '2026-y-siguientes']";
+4. every source citation in the new revision must fall inside its applicability
+   window -- "source 'aeat-dr-210-2022' applies_to 2025-12-31 is before revision
+   valid_from 2026-01-01". That is 34 citations across six files, not just
+   `revision.toml`: application_links, casillas, completeness_manifest,
+   constructs and extraction_profiles all name the design too.
+
+Point 4 is a real authoring finding rather than a mechanical detail: a split
+revision does not inherit its sibling's source citations, and the validator is
+right to refuse them.
+
+### Not landed, and reverted
+
+The tick ran out before a clean cutover. `src/` was restored: the partially
+promoted revision deleted and `2025/revision.toml` checked out. Authority loads
+CLEAN and modelo 210 carries its single revision, unchanged.
+
+Nothing was left half-published. The candidate registries are scratch and carry
+no authority.
+
+### Still open
+
+Eight standing failures, unchanged. Four splits. What this tick removes is the
+unknown: the cutover recipe above is the specification a driver needs, and every
+step of it has now been executed once rather than read.
