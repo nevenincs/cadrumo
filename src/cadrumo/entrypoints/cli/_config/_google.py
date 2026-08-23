@@ -36,9 +36,8 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TypedDict, cast
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 
-import typer
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 # Importing the renta package registers the first-slice routing
@@ -90,10 +89,8 @@ from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
-from ._execution_policies import GOOGLE_DESTRUCTIVE, GOOGLE_READ, GOOGLE_WRITE, declare_metadata_group
 from ._google_errors import _google_refusal
 from ._google_payloads import (
     GoogleLoginResult,
@@ -107,11 +104,8 @@ from ._google_payloads import (
     GoogleSyncPushResult,
 )
 
-google_app = typer.Typer(
-    name="google",
-    help=tr("cli.config.google.help"),
-    no_args_is_help=True,
-)
+if TYPE_CHECKING:
+    import typer
 
 
 class OAuthClientPayload(TypedDict):
@@ -189,19 +183,9 @@ def _coerce_client_json(path: Path) -> OAuthClient:
         ) from exc
 
 
-@google_app.command("register", help=tr("cli.config.google.register_help"))
-@command_execution_policy(GOOGLE_WRITE)
 def google_register(
     ctx: typer.Context,
-    client_json: Path = typer.Option(
-        ...,
-        "--client-json",
-        help=tr("cli.config.google.client_json_help"),
-        exists=True,
-        file_okay=True,
-        dir_okay=False,
-        readable=True,
-    ),
+    client_json: Path,
 ) -> None:
     """Register a Cloud Console Desktop OAuth client for the active profile."""
     try:
@@ -229,15 +213,9 @@ def google_register(
     )
 
 
-@google_app.command("login", help=tr("cli.config.google.login_help"))
-@command_execution_policy(GOOGLE_WRITE)
 def google_login(
     ctx: typer.Context,
-    refresh_only: bool = typer.Option(
-        False,
-        "--refresh-only",
-        help=tr("cli.config.google.refresh_only_help"),
-    ),
+    refresh_only: bool = False,
 ) -> None:
     """Run the loopback IP + PKCE consent flow (or refresh an existing credential)."""
     try:
@@ -298,8 +276,6 @@ def google_login(
     )
 
 
-@google_app.command("status", help=tr("cli.config.google.status_help"))
-@command_execution_policy(GOOGLE_READ)
 def google_status(
     ctx: typer.Context,
 ) -> None:
@@ -343,8 +319,6 @@ def google_status(
     _emit_envelope(ctx, command="config.google.status", result=typed_status, lines=tuple(lines))
 
 
-@google_app.command("logout", help=tr("cli.config.google.logout_help"))
-@command_execution_policy(GOOGLE_DESTRUCTIVE)
 def google_logout(
     ctx: typer.Context,
 ) -> None:
@@ -380,22 +354,9 @@ def google_logout(
     )
 
 
-sync_app = typer.Typer(
-    name="sync",
-    help=tr("cli.config.google.sync.help"),
-    no_args_is_help=True,
-)
-
-
-@sync_app.command("probe", help=tr("cli.config.google.sync.probe_help"))
-@command_execution_policy(GOOGLE_READ)
 def google_sync_probe(
     ctx: typer.Context,
-    read_only: bool = typer.Option(
-        False,
-        "--read-only/--no-read-only",
-        help=tr("cli.config.google.sync.probe_read_only_help"),
-    ),
+    read_only: bool = False,
 ) -> None:
     """Build a real `GoogleDriveProvider` and execute `probe()` against `drive.googleapis.com`.
 
@@ -1090,26 +1051,11 @@ def _google_sync_push_notices(mirror_result: _MirrorRowsResult) -> tuple[list[No
     return [notice], []
 
 
-@sync_app.command("push", help=tr("cli.config.google.sync.push_help"))
-@command_execution_policy(GOOGLE_WRITE)
 def google_sync_push(
     ctx: typer.Context,
-    namespace_filter: str | None = typer.Option(
-        None,
-        "--namespace",
-        help=tr("cli.config.google.sync.push_namespace_help"),
-    ),
-    limit: int | None = typer.Option(
-        None,
-        "--limit",
-        help=tr("cli.config.google.sync.push_limit_help"),
-        min=1,
-    ),
-    dry_run: bool = typer.Option(
-        False,
-        "--dry-run/--no-dry-run",
-        help=tr("cli.config.google.sync.push_dry_run_help"),
-    ),
+    namespace_filter: str | None = None,
+    limit: int | None = None,
+    dry_run: bool = False,
 ) -> None:
     """Mirror every :class:`SecureObjectRepository` row's on-wire ciphertext to Drive.
 
@@ -1156,11 +1102,8 @@ def google_sync_push(
 _ = (load_token, REQUIRED_SCOPES)
 
 
-declare_metadata_group(google_app)
-declare_metadata_group(sync_app)
-
 _SYNC_CALC_EXPORTS = frozenset(
-    {"google_sync_calc_export", "google_sync_calc_pull", "google_sync_calc_verify"}
+    {"google_sync_calc_compute", "google_sync_calc_export", "google_sync_calc_pull", "google_sync_calc_verify"}
 )
 
 
@@ -1175,4 +1118,12 @@ def __getattr__(name: str) -> object:
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__all__ = ["google_app", "sync_app", *_SYNC_CALC_EXPORTS]
+__all__ = [
+    "google_login",
+    "google_logout",
+    "google_register",
+    "google_status",
+    "google_sync_probe",
+    "google_sync_push",
+    *_SYNC_CALC_EXPORTS,
+]

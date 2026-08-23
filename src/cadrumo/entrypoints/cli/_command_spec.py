@@ -11,13 +11,55 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from types import MappingProxyType
-from typing import Literal, TypeAlias
+from typing import Literal
 
-from ._command_policy import CommandExecutionPolicy
+type CommandNodeKind = Literal["root", "group", "leaf"]
+type ParameterKind = Literal["argument", "option"]
+type LiteralValue = str | int | float | bool | bytes | None
+type Capability = Literal[
+    "state-free",
+    "local-storage",
+    "registry",
+    "profile-custody",
+    "encrypted-facts",
+    "network",
+    "browser",
+    "google",
+    "calculation",
+    "filing",
+    "crypto",
+    "subprocess",
+]
+type SideEffect = Literal["none", "local-state", "network", "browser", "google"]
+type PerformanceClass = Literal["metadata", "local-io", "compute", "external-io", "interactive"]
+type WriteRoute = Literal["none", "profile-bound", "bootstrap-root"]
 
-CommandNodeKind: TypeAlias = Literal["root", "group", "leaf"]
-ParameterKind: TypeAlias = Literal["argument", "option"]
-LiteralValue: TypeAlias = str | int | float | bool | bytes | None
+_CAPABILITIES = frozenset(
+    {
+        "state-free",
+        "local-storage",
+        "registry",
+        "profile-custody",
+        "encrypted-facts",
+        "network",
+        "browser",
+        "google",
+        "calculation",
+        "filing",
+        "crypto",
+        "subprocess",
+    }
+)
+_SIDE_EFFECTS = frozenset({"none", "local-state", "network", "browser", "google"})
+_PERFORMANCE_CLASSES = frozenset({"metadata", "local-io", "compute", "external-io", "interactive"})
+_WRITE_ROUTES = frozenset({"none", "profile-bound", "bootstrap-root"})
+_IMPLIED_CAPABILITIES: dict[Capability, frozenset[Capability]] = {
+    "encrypted-facts": frozenset({"profile-custody"}),
+    "browser": frozenset({"network"}),
+    "google": frozenset({"network"}),
+    "calculation": frozenset({"registry"}),
+    "filing": frozenset({"registry"}),
+}
 
 
 def _require_identifier(value: str, *, field: str) -> None:
@@ -28,6 +70,74 @@ def _require_identifier(value: str, *, field: str) -> None:
 def _require_token(value: str, *, field: str) -> None:
     if not value or value.strip() != value or any(character.isspace() for character in value):
         raise ValueError(f"{field} must be a non-empty whitespace-free token")
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionPolicySpec:
+    """Complete capability, effect, budget, risk, and write-route authority."""
+
+    capabilities: frozenset[Capability]
+    side_effects: frozenset[SideEffect]
+    performance: PerformanceClass
+    write_route: WriteRoute
+    destructive: bool = False
+    handoff: bool = False
+    live_write: bool = False
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.capabilities, frozenset):
+            raise TypeError("execution policy capabilities must be a frozenset")
+        if not isinstance(self.side_effects, frozenset):
+            raise TypeError("execution policy side effects must be a frozenset")
+        if any(not isinstance(value, bool) for value in (self.destructive, self.handoff, self.live_write)):
+            raise TypeError("execution policy risk flags must be bools")
+        if not self.capabilities or self.capabilities - _CAPABILITIES:
+            raise ValueError("execution policy has missing or unknown capabilities")
+        if not self.side_effects or self.side_effects - _SIDE_EFFECTS:
+            raise ValueError("execution policy has missing or unknown side effects")
+        if self.performance not in _PERFORMANCE_CLASSES:
+            raise ValueError("execution policy has an unknown performance class")
+        if self.write_route not in _WRITE_ROUTES:
+            raise ValueError("execution policy has an unknown write route")
+        if "state-free" in self.capabilities and self.capabilities != frozenset({"state-free"}):
+            raise ValueError("state-free cannot be combined with authority capabilities")
+        if "none" in self.side_effects and self.side_effects != frozenset({"none"}):
+            raise ValueError("none cannot be combined with observable side effects")
+        if self.capabilities == frozenset({"state-free"}) and self.side_effects != frozenset({"none"}):
+            raise ValueError("state-free execution must be effect-free")
+        expanded = self.expanded_capabilities
+        required_by_effect = {"network": "network", "browser": "browser", "google": "google"}
+        if any(
+            effect in self.side_effects and capability not in expanded
+            for effect, capability in required_by_effect.items()
+        ):
+            raise ValueError("execution policy side effect lacks its owning capability")
+        if self.write_route != "none" and (
+            "local-state" not in self.side_effects or "profile-custody" not in expanded
+        ):
+            raise ValueError("storage write routes require profile custody and local-state effects")
+        if self.destructive and "local-state" not in self.side_effects:
+            raise ValueError("destructive execution requires a local-state effect")
+        if self.handoff and ("filing" not in expanded or "local-state" not in self.side_effects):
+            raise ValueError("filing handoff requires filing authority and a local-state effect")
+        if self.live_write and (
+            "network" not in expanded
+            or not self.side_effects.intersection({"network", "browser"})
+        ):
+            raise ValueError("live writes require network authority and a network/browser effect")
+
+    @property
+    def expanded_capabilities(self) -> frozenset[Capability]:
+        """Return the transitive capability closure used by import gates."""
+        expanded = set(self.capabilities)
+        pending = list(self.capabilities)
+        while pending:
+            capability = pending.pop()
+            for implied in _IMPLIED_CAPABILITIES.get(capability, ()):
+                if implied not in expanded:
+                    expanded.add(implied)
+                    pending.append(implied)
+        return frozenset(expanded)
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,9 +234,8 @@ class ParameterDefault:
         elif self.kind is DefaultKind.LITERAL:
             if self.factory is not None:
                 raise ValueError("literal parameter default cannot carry a factory")
-        elif self.kind is DefaultKind.FACTORY:
-            if self.factory is None or self.literal is not None:
-                raise ValueError("factory parameter default requires only a deferred factory")
+        elif self.kind is DefaultKind.FACTORY and (self.factory is None or self.literal is not None):
+            raise ValueError("factory parameter default requires only a deferred factory")
 
     @classmethod
     def required(cls) -> ParameterDefault:
@@ -151,6 +260,10 @@ class ValueContract:
     completion: DeferredTarget | None = None
     callback: DeferredTarget | None = None
 
+    def __post_init__(self) -> None:
+        if self.click_type is not None and self.parser is not None:
+            raise ValueError("value contract cannot declare both a Click type and parser")
+
 
 @dataclass(frozen=True, slots=True)
 class ParameterConstraint:
@@ -160,6 +273,13 @@ class ParameterConstraint:
     maximum: int | float | None = None
     clamp: bool = False
     case_sensitive: bool = True
+    exists: bool = False
+    file_okay: bool = True
+    dir_okay: bool = True
+    writable: bool = False
+    readable: bool = True
+    resolve_path: bool = False
+    allow_dash: bool = False
 
     def __post_init__(self) -> None:
         if self.minimum is not None and self.maximum is not None and self.minimum > self.maximum:
@@ -235,7 +355,7 @@ class OptionSpec:
             _require_token(variable, field="option environment variable")
 
 
-ParameterSpec: TypeAlias = ArgumentSpec | OptionSpec
+type ParameterSpec = ArgumentSpec | OptionSpec
 
 
 @dataclass(frozen=True, slots=True)
@@ -246,8 +366,14 @@ class InvocationSpec:
     no_args_is_help: bool = False
     chain: bool = False
     add_help_option: bool = True
+    add_completion: bool = False
     hidden: bool = False
     deprecated_key: TranslationKey | None = None
+    context_parameter: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.context_parameter is not None:
+            _require_identifier(self.context_parameter, field="invocation context parameter")
 
 
 class SchemaState(Enum):
@@ -263,17 +389,22 @@ class ResultSchemaSpec:
     state: SchemaState
     target: DeferredTarget | None = None
     reason_key: TranslationKey | None = None
+    identity: str | None = None
 
     def __post_init__(self) -> None:
         if self.state is SchemaState.TARGET:
-            if self.target is None or self.reason_key is not None:
-                raise ValueError("schema target state requires only a target")
+            if self.target is None or self.reason_key is not None or self.identity is None:
+                raise ValueError("schema target state requires an identity and target")
+            parts = self.identity.split(".")
+            if any(not part or any(character.isspace() for character in part) for part in parts):
+                raise ValueError("schema identity must be a non-empty dotted token sequence")
         elif self.state is SchemaState.NOT_SUPPORTED:
-            if self.target is not None or self.reason_key is not None:
-                raise ValueError("unsupported schema state carries no target or reason")
-        elif self.state is SchemaState.UNAVAILABLE:
-            if self.target is not None or self.reason_key is None:
-                raise ValueError("unavailable schema state requires only a localized reason")
+            if self.target is not None or self.reason_key is not None or self.identity is not None:
+                raise ValueError("unsupported schema state carries no identity, target, or reason")
+        elif self.state is SchemaState.UNAVAILABLE and (
+            self.target is not None or self.reason_key is None or self.identity is not None
+        ):
+            raise ValueError("unavailable schema state requires only a localized reason")
 
 
 @dataclass(frozen=True, slots=True)
@@ -288,7 +419,7 @@ class CommandSpec:
     short_help_key: TranslationKey | None
     invocation: InvocationSpec
     parameters: tuple[ParameterSpec, ...]
-    policy: CommandExecutionPolicy
+    policy: ExecutionPolicySpec
     handler: LazyBinding | None
     result_schema: ResultSchemaSpec
 
@@ -393,6 +524,30 @@ class CommandSpecGraph:
 
         return tuple(sorted((CommandSpecNode(path_for(spec), spec) for spec in self.specs), key=lambda node: node.path))
 
+    def by_path(self) -> MappingProxyType[tuple[str, ...], CommandSpec]:
+        """Return the exact derived operator-path index."""
+        return MappingProxyType({node.path: node.spec for node in self.nodes()})
+
+    def resolve_path(self, path: tuple[str, ...]) -> CommandSpec:
+        """Resolve one complete operator path, failing closed on absence."""
+        try:
+            return self.by_path()[path]
+        except KeyError as error:
+            raise LookupError(f"unknown command spec path: {' '.join(path)!r}") from error
+
+    def by_schema_identity(self) -> MappingProxyType[str, CommandSpec]:
+        """Return the unique executable result-schema identity index."""
+        rows = {
+            spec.result_schema.identity: spec
+            for spec in self.specs
+            if spec.result_schema.state is SchemaState.TARGET
+            and spec.result_schema.identity is not None
+        }
+        expected = sum(spec.result_schema.state is SchemaState.TARGET for spec in self.specs)
+        if len(rows) != expected:
+            raise ValueError("command result-schema identities must be unique")
+        return MappingProxyType(rows)
+
 
 __all__ = [
     "ArgumentSpec",
@@ -403,6 +558,7 @@ __all__ = [
     "CommandSpecNode",
     "DefaultKind",
     "DeferredTarget",
+    "ExecutionPolicySpec",
     "InvocationSpec",
     "LazyBinding",
     "LiteralValue",

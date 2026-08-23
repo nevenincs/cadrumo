@@ -9,9 +9,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING
 
-import typer
 from pydantic import TypeAdapter, ValidationError
 
 from ....adapters.outbound.google import (
@@ -40,7 +39,6 @@ from ....application.storage.calc_sheets import (
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
-from ....core.i18n import tr
 from ....domain.calculations.registry import (
     BindingId,
     RegistrySnapshotError,
@@ -48,15 +46,8 @@ from ....domain.calculations.registry import (
     RelationId,
 )
 from ....domain.calculations.registry import bundled_authority as _bundled_authority
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
-from ._execution_policies import (
-    GOOGLE_CALCULATION_HANDOFF,
-    GOOGLE_CALCULATION_READ,
-    GOOGLE_CALCULATION_WRITE,
-    declare_metadata_group,
-)
 from ._google_errors import _google_refusal
 from ._google_payloads import (
     GoogleSyncCalcComputeCasillaPayload,
@@ -69,25 +60,13 @@ from ._google_payloads import (
 )
 
 if TYPE_CHECKING:
+    import typer
+
     from ....adapters.outbound.google import (
         PullResult,
         RowSetEdit,
     )
     from ....domain.calculations.registry import RegistrySnapshot
-
-
-calc_app = typer.Typer(
-    name="calc",
-    help=tr("cli.config.google.sync.calc.help"),
-    no_args_is_help=True,
-)
-
-_ModeloArg = Annotated[str, typer.Option(..., "--modelo", help=tr("cli.config.google.sync.calc.export.modelo_help"))]
-_PeriodArg = Annotated[str, typer.Option(..., "--period", help=tr("cli.config.google.sync.calc.export.period_help"))]
-_YearArg = Annotated[
-    int,
-    typer.Option(..., "--year", help=tr("cli.config.google.sync.calc.export.year_help"), min=2000, max=2099),
-]
 
 
 def resolve_credentials_and_root(profile: str) -> tuple[object, str]:
@@ -172,23 +151,13 @@ def _pull_operator_edits_for_command(
     return active, snapshot, result
 
 
-@calc_app.command("export", help=tr("cli.config.google.sync.calc.export_help"))
-@command_execution_policy(GOOGLE_CALCULATION_HANDOFF)
 def google_sync_calc_export(
     ctx: typer.Context,
-    modelo: _ModeloArg,
-    period: _PeriodArg,
-    year: _YearArg,
-    prefill_relations: bool = typer.Option(
-        False,
-        "--prefill-relations/--no-prefill-relations",
-        help=tr("cli.config.google.sync.calc.export.prefill_relations_help"),
-    ),
-    dry_run: bool = typer.Option(
-        False,
-        "--dry-run",
-        help=tr("cli.config.google.sync.calc.export.dry_run_help"),
-    ),
+    modelo: str,
+    period: str,
+    year: int,
+    prefill_relations: bool = False,
+    dry_run: bool = False,
 ) -> None:
     """Export the registry calculation surface for a modelo + period to a Google Sheets workbook."""
     from ....application.calculations import resolve_relations_from_local_store
@@ -354,22 +323,12 @@ def _emit_calc_export_preview(
     _emit_envelope(ctx, command="config.google.sync.calc.export", result=export_result, lines=tuple(lines))
 
 
-@calc_app.command("verify", help=tr("cli.config.google.sync.calc.verify_help"))
-@command_execution_policy(GOOGLE_CALCULATION_READ)
 def google_sync_calc_verify(
     ctx: typer.Context,
-    modelo: _ModeloArg,
-    period: _PeriodArg,
-    year: _YearArg,
-    scenario_path: Path | None = typer.Option(
-        None,
-        "--scenario",
-        help=tr("cli.config.google.sync.calc.verify.scenario_help"),
-        exists=True,
-        file_okay=True,
-        dir_okay=False,
-        readable=True,
-    ),
+    modelo: str,
+    period: str,
+    year: int,
+    scenario_path: Path | None = None,
 ) -> None:
     """Run a three-way parity check across AEAT oracle, local Decimal runtime, and Sheets."""
     from decimal import Decimal
@@ -497,24 +456,13 @@ def google_sync_calc_verify(
     _emit_envelope(ctx, command="config.google.sync.calc.verify", result=verify_result, lines=tuple(lines))
 
 
-@calc_app.command("pull", help=tr("cli.config.google.sync.calc.pull_help"))
-@command_execution_policy(GOOGLE_CALCULATION_WRITE)
 def google_sync_calc_pull(
     ctx: typer.Context,
-    modelo: _ModeloArg,
-    period: _PeriodArg,
-    year: _YearArg,
-    spreadsheet_id: str = typer.Option(
-        ...,
-        "--spreadsheet-id",
-        help=tr("cli.config.google.sync.calc.pull.spreadsheet_id_help"),
-        min=1,
-    ),
-    assemble_observations: bool = typer.Option(
-        False,
-        "--assemble-observations/--no-assemble-observations",
-        help=tr("cli.config.google.sync.calc.pull.assemble_observations_help"),
-    ),
+    modelo: str,
+    period: str,
+    year: int,
+    spreadsheet_id: str,
+    assemble_observations: bool = False,
 ) -> None:
     """Read operator-edited cells back from a workbook into typed records."""
     active, snapshot, result = _pull_operator_edits_for_command(
@@ -628,19 +576,12 @@ def google_sync_calc_pull(
     _emit_envelope(ctx, command="config.google.sync.calc.pull", result=pull_result, lines=tuple(lines))
 
 
-@calc_app.command("compute", help=tr("cli.config.google.sync.calc.compute_help"))
-@command_execution_policy(GOOGLE_CALCULATION_WRITE)
 def google_sync_calc_compute(
     ctx: typer.Context,
-    modelo: _ModeloArg,
-    period: _PeriodArg,
-    year: _YearArg,
-    spreadsheet_id: str = typer.Option(
-        ...,
-        "--spreadsheet-id",
-        help=tr("cli.config.google.sync.calc.compute.spreadsheet_id_help"),
-        min=1,
-    ),
+    modelo: str,
+    period: str,
+    year: int,
+    spreadsheet_id: str,
 ) -> None:
     """Compute casilla values from a workbook's operator edits; persist nothing."""
     from ....adapters.outbound.google import compute_from_pull
@@ -746,18 +687,9 @@ def _assemble_pull_observations(
     return groupings, total
 
 
-def register_google_sync_calc_commands(sync_app: typer.Typer) -> None:
-    """Register the Google Sheets calculation sync subgroup."""
-    sync_app.add_typer(calc_app, name="calc")
-
-
-declare_metadata_group(calc_app)
-
 __all__ = [
-    "calc_app",
     "google_sync_calc_compute",
     "google_sync_calc_export",
     "google_sync_calc_pull",
     "google_sync_calc_verify",
-    "register_google_sync_calc_commands",
 ]

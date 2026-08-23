@@ -3,16 +3,16 @@ from __future__ import annotations
 import dataclasses
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
-from .._command_policy import CommandExecutionPolicy
-from .._command_schema import CommandCapabilityClass
 from .._command_spec import (
     ArgumentSpec,
     CommandSpec,
     CommandSpecGraph,
     DeferredTarget,
+    ExecutionPolicySpec,
     InvocationSpec,
     LazyBinding,
     OptionSpec,
@@ -23,12 +23,12 @@ from .._command_spec import (
     ValueContract,
 )
 
-_STATE_FREE = CommandExecutionPolicy(
-    classification=CommandCapabilityClass(
-        capabilities=frozenset({"state-free"}),
-        side_effects=frozenset({"none"}),
-        performance="metadata",
-    ),
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_STATE_FREE = ExecutionPolicySpec(
+    capabilities=frozenset({"state-free"}),
+    side_effects=frozenset({"none"}),
+    performance="metadata",
     write_route="none",
 )
 _STRING = ValueContract(DeferredTarget("builtins", "str"))
@@ -39,7 +39,7 @@ def _root() -> CommandSpec:
     return CommandSpec(
         key="root",
         parent_key=None,
-        token="aeat",
+        token="aeat",  # noqa: S106 - CLI token, not a credential.
         kind="root",
         help_key=TranslationKey("cli.root.help"),
         short_help_key=None,
@@ -55,7 +55,7 @@ def _group() -> CommandSpec:
     return CommandSpec(
         key="config",
         parent_key="root",
-        token="config",
+        token="config",  # noqa: S106 - CLI token, not a credential.
         kind="group",
         help_key=TranslationKey("cli.config.help"),
         short_help_key=TranslationKey("cli.config.short_help"),
@@ -71,7 +71,7 @@ def _leaf() -> CommandSpec:
     return CommandSpec(
         key="profile_list",
         parent_key="config",
-        token="list",
+        token="list",  # noqa: S106 - CLI token, not a credential.
         kind="leaf",
         help_key=TranslationKey("cli.config.profile.list_help"),
         short_help_key=None,
@@ -99,6 +99,7 @@ def _leaf() -> CommandSpec:
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._config_payloads", "ProfileListPayload"),
+            identity="config.profile.list",
         ),
     )
 
@@ -111,15 +112,15 @@ def test_kernel_is_immutable_import_light_and_derives_paths_from_edges() -> None
         ("aeat", "config"),
         ("aeat", "config", "list"),
     )
-    with pytest.raises(dataclasses.FrozenInstanceError):
-        graph.specs = ()  # type: ignore[misc]
+    assert type(graph).__dataclass_params__.frozen
 
-    probe = subprocess.run(
+    module_path = Path(__file__).parents[1] / "_command_spec.py"
+    probe = subprocess.run(  # noqa: S603 - fixed interpreter and literal probe program.
         [
             sys.executable,
             "-c",
             (
-                "import sys; import cadrumo.entrypoints.cli._command_spec; "
+                f"import runpy, sys; runpy.run_path({str(module_path)!r}); "
                 "print(int('typer' in sys.modules), int('click' in sys.modules), "
                 "int('json' in sys.modules), int('pydantic' in sys.modules))"
             ),
@@ -134,7 +135,10 @@ def test_kernel_is_immutable_import_light_and_derives_paths_from_edges() -> None
 @pytest.mark.parametrize(
     ("specs", "message"),
     [
-        ((_root(), dataclasses.replace(_root(), key="second_root", token="other")), "exactly one root"),
+        (
+            (_root(), dataclasses.replace(_root(), key="second_root", token="other")),  # noqa: S106
+            "exactly one root",
+        ),
         ((_root(), dataclasses.replace(_group(), parent_key="missing")), "unknown parent"),
         (
             (_root(), _group(), dataclasses.replace(_leaf(), key="nested", parent_key="profile_list"), _leaf()),
@@ -171,7 +175,7 @@ def test_spec_rejects_unexecutable_leaf_and_duplicate_option_tokens() -> None:
 def test_deferred_bindings_are_fail_loud_and_never_resolve_during_declaration() -> None:
     unavailable = LazyBinding.unavailable(TranslationKey("cli.optional.unavailable"))
     assert unavailable.target is None
-    with pytest.raises(ValueError, match="requires only a deferred target"):
+    with pytest.raises(ValueError, match="requires only a localized reason"):
         LazyBinding(state=unavailable.state, target=DeferredTarget("builtins", "str"))
 
 
@@ -182,3 +186,48 @@ def test_target_and_schema_identities_are_production_authored() -> None:
     assert leaf.handler.target.identity.endswith(":profile_list")
     assert leaf.result_schema.target is not None
     assert leaf.result_schema.target.identity.endswith(":ProfileListPayload")
+    assert leaf.result_schema.identity == "config.profile.list"
+
+
+def test_graph_indexes_derived_paths_and_unique_schema_identities() -> None:
+    graph = CommandSpecGraph((_leaf(), _root(), _group()))
+
+    assert graph.resolve_path(("aeat", "config", "list")) == _leaf()
+    assert graph.by_schema_identity() == {"config.profile.list": _leaf()}
+    with pytest.raises(LookupError, match="unknown command spec path"):
+        graph.resolve_path(("aeat", "missing"))
+
+    duplicate_schema = dataclasses.replace(
+        _leaf(),
+        key="other_leaf",
+        token="other",  # noqa: S106 - CLI operator token, not a credential
+        result_schema=dataclasses.replace(_leaf().result_schema),
+    )
+    duplicate_graph = CommandSpecGraph((_root(), _group(), _leaf(), duplicate_schema))
+    with pytest.raises(ValueError, match="schema identities must be unique"):
+        duplicate_graph.by_schema_identity()
+
+
+def test_execution_policy_is_self_contained_and_expands_implied_authority() -> None:
+    policy = ExecutionPolicySpec(
+        capabilities=frozenset({"google"}),
+        side_effects=frozenset({"google"}),
+        performance="external-io",
+        write_route="none",
+    )
+    assert policy.expanded_capabilities == frozenset({"google", "network"})
+
+    with pytest.raises(ValueError, match="lacks its owning capability"):
+        ExecutionPolicySpec(
+            capabilities=frozenset({"local-storage"}),
+            side_effects=frozenset({"network"}),
+            performance="external-io",
+            write_route="none",
+        )
+
+
+def test_invocation_context_injection_is_explicit_and_validated() -> None:
+    invocation = InvocationSpec(context_parameter="ctx")
+    assert invocation.context_parameter == "ctx"
+    with pytest.raises(ValueError, match="Python identifier"):
+        InvocationSpec(context_parameter="not-valid")

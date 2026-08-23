@@ -39,7 +39,6 @@ import typer
 
 from ....application.modelo import RecipientFingerprintRegistryRepository, public_key_hex_from_raw_bytes
 from ....core.i18n import tr
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import active_bucket_id_or_refuse as _active_bucket_id_or_refuse
 from ._collab_payloads import (
@@ -48,28 +47,6 @@ from ._collab_payloads import (
     ConfigCollabRecipientRemoveResult,
     RecipientFingerprintRowPayload,
 )
-from ._execution_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, declare_metadata_group
-
-collab_app = typer.Typer(
-    name="collab",
-    help=tr(
-        "cli.config.collab.help",
-    ),
-    no_args_is_help=True,
-)
-recipient_app = typer.Typer(
-    name="recipient",
-    help=tr(
-        "cli.config.collab.recipient.help",
-    ),
-    no_args_is_help=True,
-)
-
-
-def register_collab_commands(app: typer.Typer) -> None:
-    """Mount the ``collab`` sub-app on the ``config`` root."""
-    collab_app.add_typer(recipient_app, name="recipient")
-    app.add_typer(collab_app, name="collab")
 
 
 def _registry() -> RecipientFingerprintRegistryRepository:
@@ -97,35 +74,11 @@ def _validated_public_key_hex(public_key: str) -> str:
     return public_key_hex_from_raw_bytes(raw)
 
 
-@recipient_app.command(
-    "add",
-    help=tr(
-        "cli.config.collab.recipient.add_help",
-    ),
-)
-@command_execution_policy(ENCRYPTED_WRITE)
 def collab_recipient_add(
     ctx: typer.Context,
-    recipient_id: str = typer.Argument(
-        ...,
-        help=tr(
-            "cli.config.collab.recipient.recipient_id_help",
-        ),
-    ),
-    public_key: str = typer.Option(
-        ...,
-        "--public-key",
-        help=tr(
-            "cli.config.collab.recipient.public_key_help",
-        ),
-    ),
-    label: str = typer.Option(
-        "",
-        "--label",
-        help=tr(
-            "cli.config.collab.recipient.label_help",
-        ),
-    ),
+    recipient_id: str,
+    public_key: str,
+    label: str = "",
 ) -> None:
     """Register one trusted recipient's public key, refusing a duplicate id."""
     validated_key_hex = _validated_public_key_hex(public_key)
@@ -153,13 +106,6 @@ def collab_recipient_add(
     )
 
 
-@recipient_app.command(
-    "list",
-    help=tr(
-        "cli.config.collab.recipient.list_help",
-    ),
-)
-@command_execution_policy(ENCRYPTED_READ)
 def collab_recipient_list(ctx: typer.Context) -> None:
     """List every registered recipient's fingerprint."""
     registry = _registry()
@@ -181,21 +127,9 @@ def collab_recipient_list(ctx: typer.Context) -> None:
     _emit_envelope(ctx, command="config.collab.recipient.list", result=result, lines=lines)
 
 
-@recipient_app.command(
-    "remove",
-    help=tr(
-        "cli.config.collab.recipient.remove_help",
-    ),
-)
-@command_execution_policy(ENCRYPTED_DESTRUCTIVE)
 def collab_recipient_remove(
     ctx: typer.Context,
-    recipient_id: str = typer.Argument(
-        ...,
-        help=tr(
-            "cli.config.collab.recipient.recipient_id_help",
-        ),
-    ),
+    recipient_id: str,
 ) -> None:
     """Remove the recipient registered under ``recipient_id``."""
     registry = _registry()
@@ -213,7 +147,4 @@ def collab_recipient_remove(
     )
 
 
-declare_metadata_group(collab_app)
-declare_metadata_group(recipient_app)
-
-__all__ = ["collab_app", "recipient_app", "register_collab_commands"]
+__all__ = ["collab_recipient_add", "collab_recipient_list", "collab_recipient_remove"]

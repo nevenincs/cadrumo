@@ -452,7 +452,7 @@ if TYPE_CHECKING:
         normalise_corpus_text,
         resolve_anchored_extracted_unit,
     )
-    from .external_constants import M347_THRESHOLD_EUR
+    from .external_constants import M347_THRESHOLD_EUR, OutputLanguage
     from .hashing import content_hash_hex, sha256_hex
     from .locks import exclusive_file_lock
     from .manual_corpus_sidecar import (
@@ -472,6 +472,7 @@ if TYPE_CHECKING:
         OperationLifecycle,
         OperationTerminalCondition,
     )
+    from .output_rendering import OutputFormat
     from .product_identity import (
         AEAT_AUTHORITY_SHORT_NAME,
         PRODUCT_IDENTITY,
@@ -699,6 +700,8 @@ __all__: list[str] = [
     "OrdenAnualIvaLorca2022Reduction",
     "OrdenAnualIvaModule",
     "OrdenAnualIvaSeasonalIndex",
+    "OutputFormat",
+    "OutputLanguage",
     "PassphraseStrength",
     "PaymentElection",
     "Period",
@@ -1012,6 +1015,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "M303RegimenSimplificadoModuleProjectionRef": "._filing_projection_ref",
     "M303RegimenSimplificadoModuleValue": "._filing_projection_ref",
     "M347_THRESHOLD_EUR": ".external_constants",
+    "OutputLanguage": ".external_constants",
+    "OutputFormat": ".output_rendering",
     "M720AssetClassCode": "._foreign_asset_obligation",
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX": ".manual_corpus_sidecar",
     "MANUAL_CORPUS_TEXT_SCHEMA_VERSION": ".manual_corpus_sidecar",

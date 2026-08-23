@@ -27,11 +27,9 @@ from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.i18n import OutputLanguage, tr
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError
-from ._execution_policies import ENCRYPTED_DESTRUCTIVE, declare_metadata_group
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfilePassphraseRotationOutcome
@@ -87,74 +85,49 @@ def _rotation_lines(outcome: ProfilePassphraseRotationOutcome) -> tuple[str, ...
     )
 
 
-def register_passphrase_commands(app: typer.Typer) -> None:
-    """Mount the ``config passphrase`` group on ``app``."""
-    passphrase_app = typer.Typer(
-        help=tr("cli.config.passphrase.help"),
-        no_args_is_help=True,
+def passphrase_change(
+    ctx: typer.Context,
+    secrets_stdin: bool = False,
+    secrets_fd: int | None = None,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Rotate the active profile's passphrase, keeping its records readable."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile import rotate_profile_passphrase
+    from .._config_payloads import ConfigPassphraseChangeResult
+    from ._secure_input import resolve_secrets_channel
+
+    resolve_secrets_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+    secrets = _collect_passphrases(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+
+    # A bucket identifier IS the profile UUID -- the capsule directory is
+    # named for it and can exist for no other shape -- so the active selector
+    # resolves the rotation subject without a second lookup.
+    active = _resolve_active_bucket_id()
+    if active is None:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.passphrase.no_active_profile",
+        )
+
+    outcome = rotate_profile_passphrase(
+        profile_id=UUID(active),
+        current_passphrase=secrets.current_passphrase.get_secret_value(),
+        new_passphrase=secrets.new_passphrase.get_secret_value(),
+        new_passphrase_confirmation=secrets.new_passphrase_confirmation.get_secret_value(),
     )
 
-    @passphrase_app.command("change", help=tr("cli.config.passphrase.change_help"))
-    @command_execution_policy(ENCRYPTED_DESTRUCTIVE)
-    def passphrase_change(
-        ctx: typer.Context,
-        secrets_stdin: bool = typer.Option(
-            False,
-            "--secrets-stdin",
-            help=tr("cli.config.custody.secrets_stdin_help"),
+    _emit_envelope(
+        ctx,
+        command="config.passphrase.change",
+        result=ConfigPassphraseChangeResult(
+            profile_id=outcome.profile_id,
+            changed=True,
+            password_generation=outcome.password_generation,
+            dek_epoch_preserved=outcome.dek_epoch_preserved,
+            recovery_enrollment_retained=outcome.recovery_enrollment_retained,
         ),
-        secrets_fd: int | None = typer.Option(
-            None,
-            "--secrets-fd",
-            help=tr("cli.config.custody.secrets_fd_help"),
-        ),
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """Rotate the active profile's passphrase, keeping its records readable."""
-        _activate_subcommand_output_language(ctx, output_language)
-        from ....application.user_profile import rotate_profile_passphrase
-        from .._config_payloads import ConfigPassphraseChangeResult
-        from ._secure_input import resolve_secrets_channel
-
-        resolve_secrets_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-        secrets = _collect_passphrases(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-
-        # A bucket identifier IS the profile UUID -- the capsule directory is
-        # named for it and can exist for no other shape -- so the active
-        # selector resolves the rotation subject without a second lookup.
-        active = _resolve_active_bucket_id()
-        if active is None:
-            raise CliRefusedBoundaryError(
-                translated_message="cli.config.passphrase.no_active_profile",
-            )
-
-        outcome = rotate_profile_passphrase(
-            profile_id=UUID(active),
-            current_passphrase=secrets.current_passphrase.get_secret_value(),
-            new_passphrase=secrets.new_passphrase.get_secret_value(),
-            new_passphrase_confirmation=secrets.new_passphrase_confirmation.get_secret_value(),
-        )
-
-        _emit_envelope(
-            ctx,
-            command="config.passphrase.change",
-            result=ConfigPassphraseChangeResult(
-                profile_id=outcome.profile_id,
-                changed=True,
-                password_generation=outcome.password_generation,
-                dek_epoch_preserved=outcome.dek_epoch_preserved,
-                recovery_enrollment_retained=outcome.recovery_enrollment_retained,
-            ),
-            lines=list(_rotation_lines(outcome)),
-        )
-
-    declare_metadata_group(passphrase_app)
-    app.add_typer(passphrase_app, name="passphrase")
+        lines=list(_rotation_lines(outcome)),
+    )
 
 
-__all__ = ["register_passphrase_commands"]
+__all__ = ["passphrase_change"]

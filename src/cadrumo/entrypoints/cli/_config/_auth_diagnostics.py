@@ -2,37 +2,16 @@
 
 from __future__ import annotations
 
-import typer
-
 from ....application.auth import AuthDiagnosticPhoneState
 from ....core.external_constants import OutputLanguage
-from ....core.i18n import tr
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from ._execution_policies import ENCRYPTED_READ, ENCRYPTED_WRITE, declare_metadata_group
-
-auth_diagnostics_app = typer.Typer(
-    name="diagnostics",
-    help=tr("cli.config.auth.diagnostics.help"),
-    no_args_is_help=True,
-)
 
 
-@auth_diagnostics_app.command(
-    "list",
-    help=tr("cli.config.auth.diagnostics.list_help"),
-)
-@command_execution_policy(ENCRYPTED_READ)
 def auth_diagnostics_list(
-    ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    ctx: object,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -63,20 +42,10 @@ def auth_diagnostics_list(
     _emit_envelope(ctx, command="config.auth.diagnostics.list", result=list_result, lines=lines)
 
 
-@auth_diagnostics_app.command(
-    "show",
-    help=tr("cli.config.auth.diagnostics.show_help"),
-)
-@command_execution_policy(ENCRYPTED_READ)
 def auth_diagnostics_show(
-    ctx: typer.Context,
-    diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help")),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    ctx: object,
+    diagnostic_id: str,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Show one encrypted auth diagnostic by id with sensitive bodies redacted."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -139,29 +108,11 @@ def _optional_bool_text(value: bool | None) -> str:
     return "" if value is None else str(value)
 
 
-@auth_diagnostics_app.command(
-    "report",
-    help=tr(
-        "cli.config.auth.diagnostics.report_help",
-    ),
-)
-@command_execution_policy(ENCRYPTED_WRITE)
 def auth_diagnostics_report(
-    ctx: typer.Context,
-    diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help")),
-    phone_state: AuthDiagnosticPhoneState = typer.Option(
-        ...,
-        "--phone-state",
-        help=tr(
-            "cli.config.auth.diagnostics.phone_state_help",
-        ),
-    ),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    ctx: object,
+    diagnostic_id: str,
+    phone_state: AuthDiagnosticPhoneState,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Record the human-observed Cl@ve app state for a captured diagnostic."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -201,6 +152,4 @@ def auth_diagnostics_report(
     )
 
 
-declare_metadata_group(auth_diagnostics_app)
-
-__all__ = ["auth_diagnostics_app"]
+__all__ = ["auth_diagnostics_list", "auth_diagnostics_report", "auth_diagnostics_show"]

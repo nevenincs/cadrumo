@@ -8,17 +8,11 @@ from typing import TYPE_CHECKING
 import typer
 
 from ....core.external_constants import OutputLanguage
-from ....core.i18n import tr
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_output_language
-from ._execution_policies import PROFILE_READ
 
 if TYPE_CHECKING:
     from ....application.workflow import ProfileBucketPointer
-
-app = typer.Typer()
-
 
 def profile_list_lines(
     rows: Sequence[ProfileBucketPointer],
@@ -34,16 +28,9 @@ def profile_list_lines(
     return lines
 
 
-@app.command("list", help=tr("cli.config.list.help"))
-@command_execution_policy(PROFILE_READ)
 def config_list(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """List committed profile pointers without importing sibling commands."""
     _activate_output_language(ctx, output_language)
