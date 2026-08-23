@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:3ddffc56cceb3e3360007874814a92a0ff5d01e97c5a4ffcf77c13314ee205b3'
+body_hash: 'sha256:8e4e47379499bca66f94094dd989aeaca959878fdad93e383b249e6bcaff6d07'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
@@ -35,6 +35,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P03a-S58]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P03a-S59]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P04-S13]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-W02-P04-S15]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
@@ -54,6 +55,7 @@ related:
   - '[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s12-lazy-import-failure-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s14-app-command-demand-loading-review-audit]]'
+  - '[[2026-08-23-secure-storage-performance-hardening-s15-import-light-command-spec-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s54-command-spec-convergence-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s55-command-spec-universal-gates-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s56-source-lane-review-audit]]'
@@ -96,6 +98,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-w01-p02-s06-calibration-review-audit` - `secure-storage-performance-hardening` audit: `S06 quiet-runner calibration review`
 - `2026-08-23-secure-storage-performance-hardening-s12-lazy-import-failure-review-audit` - `secure-storage-performance-hardening` audit: `S12 nested lazy import failure review`
 - `2026-08-23-secure-storage-performance-hardening-s14-app-command-demand-loading-review-audit` - `secure-storage-performance-hardening` audit: `S14 app CommandSpec demand-loading review`
+- `2026-08-23-secure-storage-performance-hardening-s15-import-light-command-spec-review-audit` - `secure-storage-performance-hardening` audit: `s15 import light command spec review`
 - `2026-08-23-secure-storage-performance-hardening-s54-command-spec-convergence-review-audit` - `secure-storage-performance-hardening` audit: `S54 command-spec convergence review`
 - `2026-08-23-secure-storage-performance-hardening-s55-command-spec-universal-gates-audit` - `secure-storage-performance-hardening` audit: `S55 CommandSpec universal gate review`
 - `2026-08-23-secure-storage-performance-hardening-s56-source-lane-review-audit` - `secure-storage-performance-hardening` audit: `S56 clean source and editable lane review`
@@ -139,6 +142,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-W02-P03a-S58` - Bind one immutable Git-archive Python cohort to exhaustive installed-runtime CommandSpec identities, locale metadata, policy, schema, selected-path import budgets, and artifact absence, then require downstream smoke, Scoop, Homebrew, MCPB, marketplace, and publish lanes to consume that sealed cohort without rebuilding or regenerating command authority
 - `2026-08-22-secure-storage-performance-hardening-W02-P03a-S59` - Run two independent post-cutover architecture reviews and reconcile all command-authority, production-development boundary, build-lane, shipping-lane, and installed-runtime findings before resuming the remaining performance campaign
 - `2026-08-22-secure-storage-performance-hardening-W02-P04-S13` - Convert the complete config subtree from eager registrar imports to nested loader references
+- `2026-08-22-secure-storage-performance-hardening-W02-P04-S15` - Keep distributed CommandSpec modules import-light by splitting heavyweight handler payload and schema implementations behind owned lazy public targets while retaining all structural declarations in production specs
 
 ### plan
 

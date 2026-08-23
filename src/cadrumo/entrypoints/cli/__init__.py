@@ -81,7 +81,6 @@ from ._framework_localisation import (
 )
 from ._language_argv import apply_language_argv_to_environment as _apply_language_argv_to_environment
 from ._log_levels import resolve_log_level as _resolve_log_level
-from ._root_payloads import AppRootResult, RootStatusResult
 
 CommandExecutionPolicy = _CommandExecutionPolicy
 
@@ -199,6 +198,7 @@ def _emit_root_help_and_exit(ctx: typer.Context) -> None:
     only on a help surface, not on every dispatch.
     """
     from ...application.operator_surface import build_help_document, render_help_text
+    from ._root_payloads import RootStatusResult
 
     document = build_help_document("root")
     typed_help = _strict_round_trip(RootStatusResult, document)
@@ -287,6 +287,7 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     from ...application.workflow import list_profile_buckets
     from ...core import resolve_active_bucket_id
     from ._root_landing import render_cli_root_landing_lines
+    from ._root_payloads import RootStatusResult
 
     active = resolve_active_bucket_id()
     landing = build_root_landing_report(
@@ -641,6 +642,7 @@ def app_root(ctx: typer.Context, help_: bool = False) -> None:
     """Render app-level workflow help when requested."""
     if help_ or ctx.invoked_subcommand is None:
         from ...application.operator_surface import build_help_document, render_help_text
+        from ._root_payloads import AppRootResult
 
         document = build_help_document("app")
         typed_app = _strict_round_trip(AppRootResult, document)
@@ -888,12 +890,10 @@ def _emit_operator_progress(progress: object) -> None:
 
 __all__ = [
     "DECLARED_UNIMPLEMENTED_SURFACES",
-    "AppRootResult",
     "CommandExecutionPolicy",
     "JsonType",
     "OAuthClientPayload",
     "ResolvedVerbLeaf",
-    "RootStatusResult",
     "SchemaResolutionError",
     "VerbInputSchema",
     "VerbLeafKind",

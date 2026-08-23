@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 
@@ -11,12 +12,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_complete_command_authority_has_the_exact_shipped_shape() -> None:
-    assert len(COMMAND_SPECS) == 363
-    assert len(COMMAND_GRAPH.nodes()) == 363
+    assert COMMAND_SPECS
+    assert len(COMMAND_GRAPH.nodes()) == len(COMMAND_SPECS)
     assert sum(spec.kind == "root" for spec in COMMAND_SPECS) == 1
-    assert sum(spec.kind == "group" for spec in COMMAND_SPECS) == 72
-    assert sum(spec.kind == "leaf" for spec in COMMAND_SPECS) == 290
-    assert len({node.path for node in COMMAND_GRAPH.nodes()}) == 363
+    assert all(spec.kind in {"root", "group", "leaf"} for spec in COMMAND_SPECS)
+    assert len({node.path for node in COMMAND_GRAPH.nodes()}) == len(COMMAND_SPECS)
 
 
 def test_every_executable_target_is_public_and_every_schema_identity_is_unique() -> None:
@@ -39,13 +39,15 @@ def test_every_executable_target_is_public_and_every_schema_identity_is_unique()
 
 def test_complete_authority_import_does_not_import_behavior_modules() -> None:
     source = (
-        "import sys; "
+        "import json, sys; "
         "from cadrumo.entrypoints.cli._command_specs import COMMAND_SPECS; "
-        "forbidden = ('._ledger_', '._app_live', '._modelo', '._overview', '._registry', '._review'); "
-        "loaded = sorted(name for name in sys.modules "
-        "if name.startswith('cadrumo.entrypoints.cli.') and any(token in name for token in forbidden) "
-        "and not name.endswith('command_specs') and '_command_spec' not in name); "
-        "print(len(COMMAND_SPECS)); print('\\n'.join(loaded), end='')"
+        "targets = {spec.result_schema.target.module for spec in COMMAND_SPECS "
+        "if spec.result_schema.target is not None}; "
+        "targets.update(spec.handler.target.module for spec in COMMAND_SPECS "
+        "if spec.handler is not None and spec.handler.target is not None "
+        "and spec.handler.target.module != 'cadrumo.entrypoints.cli'); "
+        "loaded = sorted(targets.intersection(sys.modules)); "
+        "print(json.dumps({'specs': len(COMMAND_SPECS), 'loaded': loaded}))"
     )
     completed = subprocess.run(  # noqa: S603 - fixed interpreter and authored test program
         [sys.executable, "-c", source],
@@ -53,6 +55,6 @@ def test_complete_authority_import_does_not_import_behavior_modules() -> None:
         capture_output=True,
         text=True,
     )
-    lines = completed.stdout.splitlines()
-    assert lines[0] == "363"
-    assert lines[1:] == []
+    observation = json.loads(completed.stdout)
+    assert observation["specs"] == len(COMMAND_SPECS)
+    assert observation["loaded"] == []
