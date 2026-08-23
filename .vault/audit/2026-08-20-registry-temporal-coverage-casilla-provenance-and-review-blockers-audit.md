@@ -3640,3 +3640,74 @@ uppercase DT 23 heading and a phrase AEAT splits with a stray dot (`periodos. fu
 And still: these casillas **declare** the grids; none **computes** one. Nothing
 reconciles a carried-forward deduction against the amount applied, and nothing applies
 the tipo de gravamen to anything.
+
+## 2026-08-23 — two records held back, and a target assessed and rejected
+
+### What landed
+
+Records **T22012A01** and **T22012A11** authored — family 12 now at six of its eight
+records, 831 casillas. Revision 810 → **926 casillas**, eight of 137 records.
+
+Suite: **8 failures, zero new** — back to the campaign's stated baseline; peers cleared
+three more.
+
+### Two records that load cleanly and are still unfit to ship
+
+T22012A00 and T22012A10 now resolve **completely** — zero unresolved fields — but their
+four-axis keys still **collide**: twelve pairs in A00, one in A10.
+
+Since ids became transcribed (`SEGMENTO:number`), a key collision no longer threatens the
+ids at all. It threatens the **labels**, which are composed from those axes. Shipping
+those records would hand an operator **two identical labels inside one record** with no
+way to tell which cell they were filling.
+
+They are held back until a further distinguishing axis is found. **A record that loads
+cleanly and passes every gate can still be unfit to ship** — the gates check structural
+validity, not whether a human can use the result.
+
+### This iteration was mostly vocabulary discovery
+
+Worth stating plainly rather than presenting the outcome as though it were direct. **Five
+rounds** of extension were needed to reach zero-unresolved across family 12, each
+surfacing further variants of AEAT's *own* headings:
+
+- `INTERNACIONALRDLEG` — space dropped
+- `Deducciones por doble imposicion internacional RDLEG` — title-case beside the uppercase form
+- `Ded. pendiente`, `Ded. Pendiente` — beside `Deduccion pendiente`
+- `periodos. futuros` — phrase split by a stray dot
+- a heading naming **no law at all**
+
+### Two headings got their own family keys rather than an assumed home
+
+`DEDUCCIONES POR DOBLE IMPOSICION INTERNA .` names **no law** and is ambiguous between the
+RDLEG and DT 23 families — picking either would be an inference the design does not
+support. `Deducciones doble imposicion internacional 2024` names the **year** where its
+sibling names the law. Both are recorded as what they say and nothing more.
+
+The no-law matcher is tested **last**, because every other interna heading contains it as
+a prefix — the same ordering constraint that caused a real defect last iteration.
+
+### Family 14 assessed and rejected — recorded so it is not re-derived
+
+33 records, **3959 numbered fields**, and a concept axis running to **hundreds** of
+distinct incentive types, each needing a correct label in four languages. Not a
+one-iteration unit, and guessing would produce user-facing labels that could not be stood
+behind.
+
+**The tractable next targets, measured by vocabulary footprint:**
+
+| family | records | numbered | distinct headings |
+|---|---|---|---|
+| **T22004** | 8 | 315 | **8** |
+| **T22016** | 2 | 140 | **3** |
+| T22005 | 9 | 702 | 14 |
+| T22013 | 18 | 1644 | 12 |
+| T22007 | 36 | 3139 | 80 |
+| T22014 | 33 | 3959 | 22 (but ~hundreds of concepts) |
+
+Heading count is the cheap proxy for how much label vocabulary a family needs.
+
+### Scale
+
+**10762 of 11605 slots remain** across 129 records; 843 modelled. 926 casillas describe
+eight records.
