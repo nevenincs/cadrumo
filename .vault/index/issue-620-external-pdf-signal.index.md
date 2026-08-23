@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:5a5469f9f4f2c4705890fd05a575239a057a1fb17e417a4eff67eeb5bee6132c'
+body_hash: 'sha256:08d276b313e0523f94bef5b147a39b30704b872f8ffc80b2d3617645de501289'
 related:
   - '[[2026-08-23-issue-620-external-pdf-signal-S01]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S02]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-08-23-issue-620-external-pdf-signal-S05]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S06]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S07]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-S08]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-inventory-review-audit]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-plan]]'
@@ -44,6 +45,7 @@ Auto-generated index of all documents tagged with `#issue-620-external-pdf-signa
 - `2026-08-23-issue-620-external-pdf-signal-S05` - Inventory and fingerprint the externally sourced Modelo 349 plain and fillable PDFs
 - `2026-08-23-issue-620-external-pdf-signal-S06` - Implement typed source classification and physical-byte validation for external layout candidates
 - `2026-08-23-issue-620-external-pdf-signal-S07` - Add Modelo 130 production-parser regressions for printed-box discovery and zero fabricated blank values
+- `2026-08-23-issue-620-external-pdf-signal-S08` - Add the cross-model external-layout outcome matrix with explicit unsupported and unavailable results
 
 ### plan
 
