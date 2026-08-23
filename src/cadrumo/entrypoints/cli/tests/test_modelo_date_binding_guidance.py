@@ -7,7 +7,7 @@ import pytest
 from ....core.config import override_settings
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistryValidationError, revision_date_binding_ids
-from .._modelo import _missing_binding_guidance
+from .._modelo_behavior_support import missing_binding_guidance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -35,7 +35,7 @@ def test_missing_date_binding_guidance_points_to_profile_not_binding_override() 
     )
 
     with override_settings(cadrumo_output_language="en"):
-        guidance = _missing_binding_guidance(error, "no-such-work-unit")
+        guidance = missing_binding_guidance(error, "no-such-work-unit")
 
     assert binding_id in guidance
     assert "active profile" in guidance

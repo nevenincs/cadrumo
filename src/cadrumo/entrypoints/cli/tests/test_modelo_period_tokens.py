@@ -27,9 +27,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_work_create_accepts_core_period_tokens(period: str, expected_normalized: str) -> None:
     """Valid AEAT period tokens are resolved to core ``Period`` values."""
 
-    from .._modelo import _resolve_year_period
+    from .._modelo_behavior_support import resolve_year_period
 
-    normalized = _resolve_year_period(2026, period)
+    normalized = resolve_year_period(2026, period)
     assert normalized.filing_year == 2026
     assert normalized.registry_token == expected_normalized, (
         f"period {period!r} normalized to {normalized.registry_token!r}, expected {expected_normalized!r}"
@@ -97,7 +97,7 @@ def test_period_token_error_enumerates_modelo_specific_tokens() -> None:
     generic shape hint.
     """
 
-    from .._modelo import _declared_period_tokens
+    from .._modelo_behavior_support import _declared_period_tokens
 
     annual = _declared_period_tokens("100")
     assert annual == ("0A",), f"M100 declared periods: {annual!r}"

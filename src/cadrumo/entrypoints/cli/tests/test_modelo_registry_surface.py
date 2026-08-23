@@ -12,7 +12,7 @@ See Also:
         discovery commands.
     :class:`~domain.calculations.registry.RegistryQueryService`
         Typed registry introspection service behind the discovery surface.
-    :func:`~entrypoints.cli._modelo._missing_binding_guidance`
+    :func:`~entrypoints.cli._modelo.missing_binding_guidance`
         Work-calculate refusal helper that turns registry missing-input errors
         into operator guidance.
 
@@ -365,7 +365,7 @@ def test_missing_binding_guidance_enriches_registry_validation_error() -> None:
     the first `work calculate` failure is self-correcting."""
 
     from ....domain.calculations.registry import RegistryValidationError
-    from .._modelo import _missing_binding_guidance
+    from .._modelo_behavior_support import missing_binding_guidance
 
     error = RegistryValidationError(
         "binding 'irpf.previous_year_economic_activity_net_income' has no supplied value",
@@ -373,7 +373,7 @@ def test_missing_binding_guidance_enriches_registry_validation_error() -> None:
         context={"binding_id": "irpf.previous_year_economic_activity_net_income"},
     )
     # An unknown work unit forces the generic discovery command path.
-    guidance = _missing_binding_guidance(error, "no-such-work-unit")
+    guidance = missing_binding_guidance(error, "no-such-work-unit")
     assert "--binding KEY=VALUE" in guidance
     assert "bindings list --missing" in guidance
     assert "irpf.previous_year_economic_activity_net_income" in guidance
@@ -395,7 +395,7 @@ def test_missing_binding_guidance_routes_by_binding_source(tmp_path) -> None:
     from ....core import Period
     from ....domain.calculations.registry import RegistryValidationError
     from ....tests.secure_sql import isolated_runtime_profile
-    from .._modelo import _missing_binding_guidance
+    from .._modelo_behavior_support import missing_binding_guidance
 
     period = Period.from_year_and_code(2025, "1T")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0b1d1000-0000-4000-8000-000000000001") as runtime:
@@ -413,7 +413,7 @@ def test_missing_binding_guidance_routes_by_binding_source(tmp_path) -> None:
             translated_message="errors.calc.binding_value_missing",
             context={"binding_id": "modelo-130-actividad-economica-ingresos-cumulative"},
         )
-        ledger_guidance = _missing_binding_guidance(ledger_error, unit.work_unit_id)
+        ledger_guidance = missing_binding_guidance(ledger_error, unit.work_unit_id)
         # Ledger-sourced: steer to ledger rows + preflight, NOT --binding.
         assert "ledger preflight" in ledger_guidance
         assert "--binding KEY=VALUE" not in ledger_guidance
@@ -423,7 +423,7 @@ def test_missing_binding_guidance_routes_by_binding_source(tmp_path) -> None:
             translated_message="errors.calc.binding_value_missing",
             context={"binding_id": "irpf.previous_year_economic_activity_net_income"},
         )
-        prev_filing_guidance = _missing_binding_guidance(prev_filing_error, unit.work_unit_id)
+        prev_filing_guidance = missing_binding_guidance(prev_filing_error, unit.work_unit_id)
         # previous_filing-sourced: keep the --binding guidance, not ledger.
         assert "--binding KEY=VALUE" in prev_filing_guidance
         assert "ledger preflight" not in prev_filing_guidance
@@ -521,7 +521,7 @@ def test_missing_relation_guidance_helper_routes_m200_m202_to_relation_flag() ->
     """If a relation error reaches the refusal helper, it must point at --relation."""
 
     from ....domain.calculations.registry import RegistryValidationError
-    from .._modelo import _missing_binding_guidance
+    from .._modelo_behavior_support import missing_binding_guidance
 
     error = RegistryValidationError(
         "relation 'modelo-200-2024-rel-202-pagos-fraccionados-40-2' has no supplied value",
@@ -529,7 +529,7 @@ def test_missing_relation_guidance_helper_routes_m200_m202_to_relation_flag() ->
         context={"relation_id": "modelo-200-2024-rel-202-pagos-fraccionados-40-2"},
     )
 
-    guidance = _missing_binding_guidance(error, "no-such-work-unit")
+    guidance = missing_binding_guidance(error, "no-such-work-unit")
 
     assert "--relation RELATION_ID=VALUE" in guidance
     assert "not --binding" in guidance
@@ -548,7 +548,7 @@ def test_bindings_discovery_command_renders_runnable_period_token() -> None:
 
     from ....core import Period
     from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
-    from .._modelo import _bindings_discovery_command
+    from .._modelo_behavior_support import _bindings_discovery_command
 
     typed_period = Period.from_year_and_code(2026, "1T")
     unit = WorkUnit(
@@ -585,14 +585,14 @@ def test_missing_binding_guidance_passes_non_input_errors_through() -> None:
     can actually supply."""
 
     from ....domain.calculations.registry import RegistryValidationError
-    from .._modelo import _missing_binding_guidance
+    from .._modelo_behavior_support import missing_binding_guidance
 
     error = RegistryValidationError(
         "casilla referenced before evaluation",
         translated_message="errors.calc.casilla_referenced_before_evaluation",
         context={"casilla_id": _NON_INPUT_ERROR_CASILLA},
     )
-    guidance = _missing_binding_guidance(error, "no-such-work-unit")
+    guidance = missing_binding_guidance(error, "no-such-work-unit")
     assert "--binding KEY=VALUE" not in guidance
 
 
@@ -660,7 +660,7 @@ def test_evidence_kind_rejects_unrelated_token() -> None:
 
 
 def test_validate_work_unit_id_accepts_valid_hex64_and_strips_whitespace() -> None:
-    from .._modelo import _validate_work_unit_id
+    from .._modelo_cli_support import validate_work_unit_id
 
     cases = (
         ("plain", "a" * 64, "a" * 64),
@@ -668,7 +668,7 @@ def test_validate_work_unit_id_accepts_valid_hex64_and_strips_whitespace() -> No
     )
 
     for case_id, raw, expected in cases:
-        result = _validate_work_unit_id(raw)
+        result = validate_work_unit_id(raw)
         assert result == expected, case_id
         assert isinstance(result, str), case_id
 
@@ -677,7 +677,7 @@ def test_validate_work_unit_id_rejects_malformed() -> None:
     """Malformed work_unit_id values raise ``typer.BadParameter``."""
     import typer as _typer
 
-    from .._modelo import _validate_work_unit_id
+    from .._modelo_cli_support import validate_work_unit_id
 
     malformed = (
         "short",
@@ -690,7 +690,7 @@ def test_validate_work_unit_id_rejects_malformed() -> None:
 
     for bad in malformed:
         with pytest.raises(_typer.BadParameter):
-            _validate_work_unit_id(bad)
+            validate_work_unit_id(bad)
 
 
 # ---------------------------------------------------------------------------
@@ -699,8 +699,8 @@ def test_validate_work_unit_id_rejects_malformed() -> None:
 
 
 def test_parse_casilla_override_accepts_valid_keys() -> None:
-    """Valid CasillaId keys are accepted by ``_parse_casilla_override``."""
-    from .._modelo import _parse_casilla_override
+    """Valid CasillaId keys are accepted by ``parse_casilla_override``."""
+    from .._modelo_cli_support import parse_casilla_override
 
     specs = (
         "A=1",
@@ -710,7 +710,7 @@ def test_parse_casilla_override_accepts_valid_keys() -> None:
     )
 
     for spec in specs:
-        key, _ = _parse_casilla_override(spec)
+        key, _ = parse_casilla_override(spec)
         assert key, spec
 
 
@@ -718,7 +718,7 @@ def test_parse_casilla_override_rejects_invalid_keys() -> None:
     """Invalid CasillaId keys raise ``typer.BadParameter``."""
     import typer as _typer
 
-    from .._modelo import _parse_casilla_override
+    from .._modelo_cli_support import parse_casilla_override
 
     specs = (
         "=value",  # empty key
@@ -730,7 +730,7 @@ def test_parse_casilla_override_rejects_invalid_keys() -> None:
 
     for spec in specs:
         with pytest.raises(_typer.BadParameter):
-            _parse_casilla_override(spec)
+            parse_casilla_override(spec)
 
 
 def test_parse_amendment_casilla_rejects_whitespace_padded_keys() -> None:
@@ -791,11 +791,11 @@ def test_parse_amendment_casilla_accepts_canonical_amounts(raw: str, expected: D
 
 
 def test_parse_binding_override_accepts_valid_keys() -> None:
-    """Valid BindingId keys are accepted by ``_parse_binding_override``."""
-    from .._modelo import _parse_binding_override
+    """Valid BindingId keys are accepted by ``parse_binding_override``."""
+    from .._modelo_cli_support import parse_binding_override
 
     for spec in ("binding-id=1", "a=v", "modelo-303-iva-repercutido=100"):
-        key, _ = _parse_binding_override(spec)
+        key, _ = parse_binding_override(spec)
         assert key, spec
 
 
@@ -803,7 +803,7 @@ def test_parse_binding_override_rejects_invalid_keys() -> None:
     """Invalid BindingId keys raise ``typer.BadParameter``."""
     import typer as _typer
 
-    from .._modelo import _parse_binding_override
+    from .._modelo_cli_support import parse_binding_override
 
     specs = (
         "=value",  # empty key
@@ -814,4 +814,4 @@ def test_parse_binding_override_rejects_invalid_keys() -> None:
 
     for spec in specs:
         with pytest.raises(_typer.BadParameter):
-            _parse_binding_override(spec)
+            parse_binding_override(spec)

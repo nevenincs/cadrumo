@@ -23,7 +23,7 @@ from ....domain.calculations.registry import (
     binding_profile_keys,
 )
 from ....domain.modelos import WorkUnit, derive_work_unit_id
-from .._modelo import _date_binding_profile_requirements
+from .._modelo_behavior_support import _date_binding_profile_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
