@@ -14,7 +14,7 @@ from ...application.modelo import build_modelo_work_review
 from ...core.external_constants import OutputLanguage
 from ._common import _emit_envelope, activate_subcommand_output_language
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
-from ._modelo_payloads import WorkReviewResult
+from ._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from ._modelo_rendering import verification_findings_notices
 
 
@@ -51,6 +51,18 @@ def _review_lines(result: WorkReviewResult) -> list[str]:
             for blocker in review.blockers
 
     )
+    lines.extend(
+        "\t".join(
+            (
+                "row_source_fingerprint",
+                item.binding_id,
+                str(item.row_index),
+                item.source_kind.value,
+                item.fingerprint,
+            )
+        )
+        for item in review.row_source_fingerprints
+    )
     return lines
 
 
@@ -84,7 +96,7 @@ def work_review(
         calculation_repository=calculation_repository,
         verification_repository=VerificationReportCatalogueRepository(),
     )
-    result = WorkReviewResult(review=review)
+    result = WorkReviewResult(review=WorkReviewPayload.from_review(review))
     _emit_envelope(
         ctx,
         command="modelo.work.review",

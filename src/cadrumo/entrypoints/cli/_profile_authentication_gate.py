@@ -62,21 +62,20 @@ def _leaf_selection(spec: CommandSpec, arguments: Mapping[str, object]) -> Machi
 def _preflight_sources(*, root: ProfileSecretSelection | None, leaf: MachineSecretSelection | None) -> None:
     if root is None or leaf is None:
         return
-    if root.channel is ProfileSecretChannel.STDIN and leaf.channel is MachineSecretChannel.STDIN:
+    root_descriptor = 0 if root.channel is ProfileSecretChannel.STDIN else root.descriptor
+    leaf_descriptor = 0 if leaf.channel is MachineSecretChannel.STDIN else leaf.descriptor
+    if root_descriptor != leaf_descriptor:
+        return
+    if root_descriptor == 0:
         _refuse("profile_secrets_stdin_collision")
-    if (
-        root.channel is ProfileSecretChannel.FILE_DESCRIPTOR
-        and leaf.channel is MachineSecretChannel.FILE_DESCRIPTOR
-        and root.descriptor == leaf.descriptor
-    ):
-        _refuse("profile_secrets_fd_collision")
+    _refuse("profile_secrets_fd_collision")
 
 
 def _selected_variant(spec: CommandSpec, arguments: Mapping[str, object]) -> MachineSecretVariantSpec:
     machine = spec.machine_secret
     if machine is None:
         raise RuntimeError("leaf machine-secret model requested for a non-adopter")
-    matches = []
+    matches: list[MachineSecretVariantSpec] = []
     for variant in machine.variants:
         condition = variant.condition
         if condition is None:

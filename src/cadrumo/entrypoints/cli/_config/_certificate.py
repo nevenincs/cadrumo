@@ -247,7 +247,7 @@ def certificate_check(
     ]
 
     if not report.entries:
-        lines = ["sources\t<none>"]
+        lines: list[str] = ["sources\t<none>"]
     else:
         lines = []
         for entry in report.entries:

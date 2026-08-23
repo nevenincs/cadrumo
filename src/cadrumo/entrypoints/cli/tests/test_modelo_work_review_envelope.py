@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import traceback
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -9,17 +10,23 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+from pydantic import ValidationError
+from sqlalchemy import select
+from typer.testing import CliRunner
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+from ....adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectRow
 from ....application.modelo import ModeloWorkReview, build_modelo_work_review
-from ....core import EstadoCasillaOficial, OperatorActionAxis, Period
+from ....core import BindingSourceKind, EstadoCasillaOficial, OperatorActionAxis, Period
 from ....core.json_contract import (
     EnvelopeStatus,
     SchemaEnvelope,
     derive_status,
 )
+from ....domain.calculations import RowSourceIdentity
 from ....domain.calculations.registry import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
@@ -38,20 +45,37 @@ from ....domain.modelos import (
     upsert_verification_report,
     upsert_work_unit,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from .. import app
 from .._command_schema import command_schema_types
-from .._modelo_payloads import WorkReviewResult
+from .._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from .._modelo_rendering import verification_report_notices
+from .._modelo_work_review_cli import _review_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _COMMAND = "modelo.work.review"
 _NOW = datetime(2026, 8, 12, 10, 0, tzinfo=UTC)
+_RAW_ROW_IDENTITY = "opaque-inventory-activity-review-canary"
+_ROW_FINGERPRINT = "d" * 64
+_ROW_BINDING_ID = "review-inventory-row"
+
+
+def _orphan_row_source_identity(document: dict[str, Any]) -> None:
+    revision = next(iter(document["payload"]["revisions"].values()))
+    identity = revision["row_source_identities"][0]
+    assert identity["source_row_identity"] == _RAW_ROW_IDENTITY
+    assert identity["fingerprint"] == _ROW_FINGERPRINT
+    identity["row_index"] = 2
+    assert identity["source_row_identity"] == _RAW_ROW_IDENTITY
+    assert identity["fingerprint"] == _ROW_FINGERPRINT
 
 
 @contextmanager
-def _persist_blocked_review(tmp_path: Path) -> Iterator[tuple[ModeloWorkReview, VerificationReport]]:
+def _persist_blocked_review(
+    tmp_path: Path,
+) -> Iterator[tuple[ModeloWorkReview, VerificationReport, SecureObjectRepository]]:
     """Build the application record from genuine encrypted repositories."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         objects = runtime.repository
@@ -76,6 +100,14 @@ def _persist_blocked_review(tmp_path: Path) -> Iterator[tuple[ModeloWorkReview, 
             work_unit_id=work_unit_id,
             input_values_by_casilla_id={},
             binding_overrides={},
+            row_binding_values={_ROW_BINDING_ID: {"1": "100"}},
+            row_source_identities={
+                (_ROW_BINDING_ID, 1): RowSourceIdentity(
+                    source_kind=BindingSourceKind.INVENTORY,
+                    source_row_identity=_RAW_ROW_IDENTITY,
+                    fingerprint=_ROW_FINGERPRINT,
+                ),
+            },
             casilla_values={},
             filing_instance_evidence=None,
             source_provenance=(),
@@ -100,6 +132,14 @@ def _persist_blocked_review(tmp_path: Path) -> Iterator[tuple[ModeloWorkReview, 
             updated_at=_NOW,
             filing_instance_evidence=None,
             source_provenance=(),
+            row_binding_values={_ROW_BINDING_ID: {"1": "100"}},
+            row_source_identities={
+                (_ROW_BINDING_ID, 1): RowSourceIdentity(
+                    source_kind=BindingSourceKind.INVENTORY,
+                    source_row_identity=_RAW_ROW_IDENTITY,
+                    fingerprint=_ROW_FINGERPRINT,
+                ),
+            },
         )
         finding = ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
@@ -142,12 +182,15 @@ def _persist_blocked_review(tmp_path: Path) -> Iterator[tuple[ModeloWorkReview, 
             calculation_repository=calculation_repository,
             verification_repository=verification_repository,
         )
-        yield review, report
+        yield review, report, objects
 
 
-def test_review_record_round_trips_through_registered_schema_envelope(tmp_path: Path) -> None:
-    with _persist_blocked_review(tmp_path) as (review, report):
-        result = WorkReviewResult(review=review)
+def test_review_record_round_trips_through_registered_schema_envelope(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with _persist_blocked_review(tmp_path) as (review, report, objects):
+        result = WorkReviewResult(review=WorkReviewPayload.from_review(review))
         notices = verification_report_notices(report)
         envelope_cls = cast(Any, SchemaEnvelope)[WorkReviewResult]
         envelope = envelope_cls(
@@ -161,7 +204,7 @@ def test_review_record_round_trips_through_registered_schema_envelope(tmp_path: 
         round_tripped = envelope_cls.model_validate_json(envelope.model_dump_json())
 
         assert command_schema_types()[_COMMAND] is WorkReviewResult
-        assert result.review is review
+        assert result.review.model_dump(mode="json") == review.model_dump(mode="json")
         assert round_tripped == envelope
         assert round_tripped.status is EnvelopeStatus.WARNING
         casilla_document = document["result"]["review"]["casillas"][0]
@@ -175,3 +218,71 @@ def test_review_record_round_trips_through_registered_schema_envelope(tmp_path: 
         assert notice.context is not None
         assert notice.context["kind"] == blocker.native_code
         assert notice.context["casilla_id"] == blocker.facts["casilla_id"]
+        assert document["result"]["review"]["row_source_fingerprints"] == [
+            {
+                "binding_id": _ROW_BINDING_ID,
+                "row_index": 1,
+                "source_kind": "inventory",
+                "fingerprint": _ROW_FINGERPRINT,
+            },
+        ]
+        rendered = f"{document!r} {envelope.model_dump_json()} {_review_lines(result)!r} {result!r}"
+        assert _RAW_ROW_IDENTITY not in rendered
+        assert _ROW_FINGERPRINT in rendered
+        secure_context_dump = result.model_dump(
+            mode="json",
+            context={"secure_calculation_revision": True, "secure_modelo_binding_value": True},
+        )
+        assert _RAW_ROW_IDENTITY not in repr(secure_context_dump)
+
+        command = CliRunner().invoke(
+            app,
+            ["--format", "json", "app", "modelo", "work", "review", review.work_unit_id],
+        )
+        assert command.exit_code == 0, command.output
+        command_surface = f"{command.stdout} {command.stderr} {command.exception!r}"
+        assert _RAW_ROW_IDENTITY not in command_surface
+        assert _ROW_FINGERPRINT in command.stdout
+        assert _RAW_ROW_IDENTITY not in caplog.text
+
+        mutate_encrypted_secure_object_json(
+            objects._engine,
+            row_statement=select(SecureObjectRow).where(
+                SecureObjectRow.namespace == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+                SecureObjectRow.object_key
+                == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
+            ),
+            mutate=_orphan_row_source_identity,
+        )
+        failed = CliRunner().invoke(
+            app,
+            ["--format", "json", "app", "modelo", "work", "review", review.work_unit_id],
+        )
+        assert failed.exit_code != 0
+        formatted = "" if failed.exception is None else "".join(traceback.format_exception(failed.exception))
+        failure_surface = f"{failed.stdout} {failed.stderr} {failed.exception!r} {formatted} {caplog.text}"
+        assert _RAW_ROW_IDENTITY not in failure_surface
+        assert _ROW_FINGERPRINT not in failure_surface
+
+
+def test_review_payload_refuses_raw_identity_fields_without_echoing_value(tmp_path: Path) -> None:
+    with _persist_blocked_review(tmp_path) as (review, _, _):
+        labelled_review = review.model_copy(
+            update={
+                "casillas": (
+                    review.casillas[0].model_copy(update={"label": "Actividad económica ordinaria"}),
+                    *review.casillas[1:],
+                ),
+            },
+        )
+        safe_labelled = WorkReviewPayload.from_review(labelled_review)
+        assert safe_labelled.casillas[0].label == "Actividad económica ordinaria"
+
+        payload = review.model_dump(mode="python")
+        payload["row_source_identity"] = _RAW_ROW_IDENTITY
+
+        with pytest.raises(ValidationError) as exc_info:
+            WorkReviewPayload.model_validate(payload)
+
+        rendered = f"{exc_info.value!r} {exc_info.value}"
+        assert _RAW_ROW_IDENTITY not in rendered

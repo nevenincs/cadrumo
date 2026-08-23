@@ -718,8 +718,30 @@ def test_certificate_write_accepts_every_valid_dual_source_combination(
     assert result.stderr.count("S13_DESCRIPTOR_CLOSED") == len(inherited)
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows STARTUPINFOEX HANDLE allowlist contract")
-def test_windows_allowlisted_handle_bootstrap_authenticates_real_read(tmp_path: Path) -> None:
+def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -> None:
+    if sys.platform != "win32":
+        root = tmp_path / "posix-descriptor-reader"
+        _register(root, label="posix-reader")
+        result = _run(
+            root,
+            [
+                "--format",
+                "json",
+                "--profile-secrets-fd",
+                "{fd:0}",
+                "config",
+                "profile",
+                "history",
+                "posix-reader",
+            ],
+            inherited_payloads=(json.dumps({"profile_passphrase": _PROFILE_SECRET}),),
+            assert_closed_index=0,
+        )
+        document = _assert_success(result, root)
+        assert document["command"] == "config.bucket.history"
+        assert "S13_DESCRIPTOR_CLOSED" in result.stderr
+        return
+
     import msvcrt
 
     root = tmp_path / "windows-handle"
@@ -778,11 +800,40 @@ def test_windows_allowlisted_handle_bootstrap_authenticates_real_read(tmp_path: 
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows STARTUPINFOEX HANDLE allowlist contract")
-def test_windows_profile_handle_plus_leaf_stdin_performs_real_certificate_write(
+def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_write(
     tmp_path: Path,
 ) -> None:
-    """The Windows bootstrap composes with portable leaf stdin without fd-parity claims."""
+    """The platform descriptor route composes with portable leaf stdin."""
+    if sys.platform != "win32":
+        root = tmp_path / "posix-descriptor-certificate"
+        _register(root, label="posix-writer")
+        _register_certificate_source(root, name="s13-posix-cert")
+        result = _run(
+            root,
+            [
+                "--format",
+                "json",
+                "--profile-secrets-fd",
+                "{fd:0}",
+                "config",
+                "auth",
+                "certificate",
+                "secret",
+                "set",
+                "--name",
+                "s13-posix-cert",
+                "--secrets-stdin",
+            ],
+            stdin=json.dumps({"certificate_passphrase": _CERTIFICATE_SECRET}),
+            inherited_payloads=(json.dumps({"profile_passphrase": _PROFILE_SECRET}),),
+            assert_closed_index=0,
+        )
+        document = _assert_success(result, root)
+        assert document["command"] == "config.auth.certificate.secret.set"
+        assert document["result"]["has_secret"] is True
+        assert "S13_DESCRIPTOR_CLOSED" in result.stderr
+        return
+
     import msvcrt
 
     root = tmp_path / "windows-certificate"
@@ -901,7 +952,7 @@ def test_root_refuses_same_scope_channel_conflict_before_state_or_read(tmp_path:
     assert "S14_DESCRIPTOR_UNREAD" in result.stderr
 
 
-@pytest.mark.parametrize("collision", ("two-stdin", "same-fd"))
+@pytest.mark.parametrize("collision", ("two-stdin", "root-fd0", "leaf-fd0", "same-fd"))
 def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(tmp_path: Path, collision: str) -> None:
     root = tmp_path / f"cross-scope-{collision}"
     _register(root, label="collision-operator")
@@ -913,6 +964,14 @@ def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(tm
     if collision == "two-stdin":
         args.append("--profile-secrets-stdin")
         leaf = ("--secrets-stdin",)
+        stdin = _REFUSAL_SECRET
+    elif collision == "root-fd0":
+        args.extend(("--profile-secrets-fd", "0"))
+        leaf = ("--secrets-stdin",)
+        stdin = _REFUSAL_SECRET
+    elif collision == "leaf-fd0":
+        args.append("--profile-secrets-stdin")
+        leaf = ("--secrets-fd", "0")
         stdin = _REFUSAL_SECRET
     else:
         args.extend(("--profile-secrets-fd", "{fd:0}"))
