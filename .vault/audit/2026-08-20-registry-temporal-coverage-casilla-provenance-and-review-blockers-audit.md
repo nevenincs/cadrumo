@@ -5561,3 +5561,70 @@ against hours.
 
 Revision 1918 casillas; **9846 of 11603 slots remain**; 1757 modelled, zero orphaned. Corpus re-derivation: **zero problems**. Every modelo 220
 locale key — label *and* help — is now present in all four catalogues.
+
+## 2026-08-23 — T22007A01, and a note about AEAT's numbering that the design refuted
+
+### What landed
+
+Record **T22007A01** — the DA 19ª LIS carry-forward matrix: bases imponibles negativas
+individuales no integradas, across **two regimes × four generation periods × four amounts**.
+**32 casillas describing all 42 design fields**; revision 1918 → **1950**, thirty-nine of
+137 record sheets.
+
+Ten translated parts cover all 32 labels, and the Spanish composition is **asserted to
+reproduce the design's own text** — so a wrong row or column ordering would refuse rather
+than quietly name the wrong period on every box in a block.
+
+### A note about AEAT that the design refuted
+
+The fragment was drafted with: *"the Canarias block runs 01023..01035, then its last two
+are [01935] and [01936], while [01036] is used earlier in the same block."*
+
+Reading the numbers off the design instead: the general block runs **01007..01022** and the
+Canarias block **01023..01036 unbroken**, then its last two boxes are `[01935]` and
+`[01936]`. The claim about `01036` appearing earlier was invented from the *shape* of the
+anomaly rather than read.
+
+It was caught before shipping only because the claim was checked. It is worth naming
+precisely: **the note was about AEAT being irregular, and irregularity is exactly the
+territory where a plausible-sounding description cannot be trusted.** A comment asserting
+"AEAT does something odd here" carries the same evidential burden as a casilla number, and
+this campaign has a standing rule against fabricating those. The corrected note now says so
+and records the refuted draft.
+
+### Three things kept exactly as printed
+
+- **An unclosed parenthesis.** Every one of the 32 lines heads with `(DA 19ª LIS.` and no
+  closing bracket appears anywhere in the field. The verbatim design text keeps it open in
+  the fragment; the composed *operator label* closes it, and the locale generator says so
+  explicitly, because a record name in a label is this campaign's prose while the casilla
+  text is AEAT's.
+- **One provision spelled two ways in one line** — `DA 19ª LIS` in the heading, `DA 19 LIS
+  (**)` in the amount name. Both kept; nothing decides which is canonical.
+- **Two generation periods both called 2024**, separated only by an asterisk the design
+  never explains. Preserved verbatim: collapsing them would merge two boxes AEAT numbers
+  separately, and dropping the marker would make them indistinguishable to an operator.
+
+### The one carry in this revision that crosses filing years
+
+Within each regime and period the four columns are a chain — original, pendiente at the
+start, integrado in the period, pendiente at the end — and the Total row is the column sum.
+**Neither relation is expressed.**
+
+That gap is the usual one, with one difference worth recording: every other unexpressed
+relation in this revision stays *inside* a single filing year. An end-of-period pendiente
+is meant to become the next year's opening pendiente, so this is the first place where the
+missing arithmetic would have to **cross filing years** — the exact defect class the
+campaign's standing rules treat most seriously, since a revision error there compounds.
+
+### The shell ate escapes for the third time
+
+A correction to the generator was written through a shell heredoc and mangled again,
+letting the refuted numbering note reach the generated fragment before it was fixed with a
+file edit. The campaign already knows not to pass legal text or source through a shell;
+this is the third occurrence, and the fix each time is the same — use the file tools.
+
+### Scale
+
+**9826 of 11603 slots remain**; 1777 modelled, zero orphaned. Corpus re-derivation: **zero
+problems**. Every modelo 220 locale key, label and help, present in all four catalogues.
