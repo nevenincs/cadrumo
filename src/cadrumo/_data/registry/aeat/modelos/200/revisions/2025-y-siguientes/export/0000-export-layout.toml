@@ -1,0 +1,132 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = 'generated-modelo-200-2025-y-siguientes-fichero'
+format = 'fixed_width'
+source_refs = ['aeat-dr-200-2025']
+legal_refs = [
+    'ley-27-2014:art-100',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-41',
+    'rd-634-2015:art-3',
+]
+dictionary_path_overrides = []
+
+[revisions.2025-y-siguientes.export_layouts.filing_envelope]
+schema_version = 1
+source_ref = 'aeat-dr-200-2025'
+source_sha256 = 'a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505'
+record_identity = 'DP200000'
+prefix_extent = 328
+product_identity_requirement = 'aeat-product-software-identity-v1'
+closer_derivation = 'relative-closer-v1'
+total_derivation = 'emitted-byte-total-v1'
+body_record_ids = [
+    'm200-page-001',
+    'm200-page-001b',
+    'm200-page-002',
+    'm200-page-002b',
+    'm200-page-003',
+    'm200-page-004',
+    'm200-page-005',
+    'm200-page-006',
+    'm200-page-007',
+    'm200-page-008',
+    'm200-page-009',
+    'm200-page-010',
+    'm200-page-011',
+    'm200-page-012',
+    'm200-page-013',
+    'm200-page-014',
+    'm200-page-014b',
+    'm200-page-015',
+    'm200-page-015b',
+    'm200-page-016',
+    'm200-page-016b',
+    'm200-page-016c',
+    'm200-page-017',
+    'm200-page-018',
+    'm200-page-018b',
+    'm200-page-018c',
+    'm200-page-019',
+    'm200-page-019b',
+    'm200-page-020',
+    'm200-page-020b',
+    'm200-page-020c',
+    'm200-page-020d',
+    'm200-page-021',
+    'm200-page-022',
+    'm200-page-022b',
+    'm200-page-023',
+    'm200-page-024',
+    'm200-page-024b',
+    'm200-page-025',
+    'm200-page-026',
+    'm200-page-026b',
+    'm200-page-026c',
+    'm200-page-026d',
+    'm200-page-026e',
+    'm200-page-026f',
+    'm200-page-026g',
+    'm200-page-027',
+    'm200-page-027b',
+    'm200-page-028',
+    'm200-page-029',
+    'm200-page-030',
+    'm200-page-031',
+    'm200-page-032',
+    'm200-page-033',
+    'm200-page-034',
+    'm200-page-035',
+    'm200-page-036',
+    'm200-page-037',
+    'm200-page-038',
+    'm200-page-039',
+    'm200-page-040',
+    'm200-page-041',
+    'm200-page-042',
+    'm200-page-043',
+    'm200-page-044',
+    'm200-page-045',
+    'm200-page-046',
+    'm200-page-047',
+    'm200-page-048',
+    'm200-page-049',
+    'm200-page-050',
+    'm200-page-051',
+    'm200-page-052',
+    'm200-page-053',
+    'm200-page-054',
+    'm200-page-did',
+]
+
+[[revisions.2025-y-siguientes.export_layouts.filing_envelope.prefix_fields]]
+role = 'composed_opening_tag'
+length = 17
+
+[[revisions.2025-y-siguientes.export_layouts.filing_envelope.prefix_fields]]
+role = 'aux_opening_tag'
+length = 5
+
+[[revisions.2025-y-siguientes.export_layouts.filing_envelope.prefix_fields]]
+role = 'pre_program_filler'
+length = 70
+
+[[revisions.2025-y-siguientes.export_layouts.filing_envelope.prefix_fields]]
+role = 'program_identifier'
+length = 4
+
+[[revisions.2025-y-siguientes.export_layouts.filing_envelope.prefix_fields]]
+role = 'between_identities_filler'
+length = 4
+
+[[revisions.2025-y-siguientes.export_layouts.filing_envelope.prefix_fields]]
+role = 'developer_tax_id'
+length = 9
+
+[[revisions.2025-y-siguientes.export_layouts.filing_envelope.prefix_fields]]
+role = 'post_developer_filler'
+length = 213
+
+[[revisions.2025-y-siguientes.export_layouts.filing_envelope.prefix_fields]]
+role = 'aux_closing_tag'
+length = 6

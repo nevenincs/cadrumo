@@ -1,0 +1,33 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "02782"
+number = "02782"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_dotacion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020b.f0081"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02783"
+number = "02783"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_dotacion_pendiente"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020b.f0082"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02784"
+number = "02784"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_dotacion_dispuesta"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020b.f0083"]

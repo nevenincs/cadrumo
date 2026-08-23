@@ -1,0 +1,55 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "02951"
+number = "02951"
+section = ["efectos_de_la_valoracion_contable_diferente_a_la_f", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_efectos_valoracion_contable_diferente_fiscal_permanente_aumento"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026d.f0121"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02952"
+number = "02952"
+section = ["efectos_de_la_valoracion_contable_diferente_a_la_f", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_efectos_valoracion_contable_diferente_fiscal_temporaria_ejercicio_aumento"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026d.f0122"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02953"
+number = "02953"
+section = ["efectos_de_la_valoracion_contable_diferente_a_la_f", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_efectos_valoracion_contable_diferente_fiscal_temporaria_anteriores_aumento"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026d.f0123"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02954"
+number = "02954"
+section = ["efectos_de_la_valoracion_contable_diferente_a_la_f", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_efectos_valoracion_contable_diferente_fiscal_saldo_inicial"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026d.f0120"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02955"
+number = "02955"
+section = ["efectos_de_la_valoracion_contable_diferente_a_la_f", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_efectos_valoracion_contable_diferente_fiscal_saldo_final_neto"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026d.f0124"]

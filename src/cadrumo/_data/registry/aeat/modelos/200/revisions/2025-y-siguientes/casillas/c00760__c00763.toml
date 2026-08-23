@@ -1,0 +1,44 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "00760"
+number = "00760"
+section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
+data_type = "money"
+semantic_role = "is_pyg_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200007.f0018", "m200-2025.dp200016.f0138", "m200-2025.dp200029.f0044"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00761"
+number = "00761"
+section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
+data_type = "money"
+semantic_role = "is_pyg_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200007.f0019", "m200-2025.dp200016.f0139", "m200-2025.dp200029.f0045"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00762"
+number = "00762"
+section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
+data_type = "money"
+semantic_role = "is_pyg_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200007.f0021", "m200-2025.dp200016.f0140", "m200-2025.dp200029.f0019"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00763"
+number = "00763"
+section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
+data_type = "money"
+semantic_role = "is_pyg_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200007.f0022", "m200-2025.dp200016.f0141", "m200-2025.dp200029.f0020"]

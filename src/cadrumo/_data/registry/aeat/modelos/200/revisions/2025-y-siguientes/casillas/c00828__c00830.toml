@@ -1,0 +1,33 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "00828"
+number = "00828"
+section = ["deducc_para_incentivar_determ_actividades", "2025_diferim_deducciones_cap_iv_tit_vi_ley_43_95_r"]
+data_type = "money"
+semantic_role = "is_deduccion_idi_diferimiento"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200017.f0173"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00829"
+number = "00829"
+section = ["deducc_para_incentivar_determ_actividades", "2025_diferim_deducciones_cap_iv_tit_vi_ley_43_95_r"]
+data_type = "money"
+semantic_role = "is_deduccion_idi_diferimiento_aplicado_periodo"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200017.f0174"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00830"
+number = "00830"
+section = ["deducc_para_incentivar_determ_actividades", "2025_diferim_deducciones_cap_iv_tit_vi_ley_43_95_r"]
+data_type = "money"
+semantic_role = "is_deduccion_idi_diferimiento_pendiente"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200017.f0175"]

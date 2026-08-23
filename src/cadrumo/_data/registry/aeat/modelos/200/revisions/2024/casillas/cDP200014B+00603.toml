@@ -1,0 +1,14 @@
+[[revisions."2024".casillas]]
+id = "DP200014B:00603"
+number = "00603"
+segmento = "DP200014B"
+section = ["liquidacion_iv", "pagos_fraccionados_cuota_diferencial"]
+data_type = "money"
+semantic_role = "is_liquidacion_iv_pago_fraccionado_segundo"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Liquidación IV segundo pago fraccionado (Estado) is the single cuota-chain second-instalment casilla; no sibling casilla shares this role within the modelo revision."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200011.f0104", "m200-2024.dp200014b.f0044", "m200-2024.dp200043.f0091"]

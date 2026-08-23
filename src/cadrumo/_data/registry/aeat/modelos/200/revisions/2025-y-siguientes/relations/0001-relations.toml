@@ -1,0 +1,92 @@
+[[revisions."2025-y-siguientes".relations]]
+id = "modelo-200-2024-rel-202-pagos-fraccionados"
+kind = "cross_model_output"
+dependency_role = "instalment_to_final_settlement"
+source_modelo = "202"
+source_revision_selector = { filing_year_delta = 0 }
+source_casilla_id = "34"
+target_binding = "modelo-200-2024-pagos-fraccionados-anuales"
+period_alignment = { target_period = "0A", source_period_kind = "quarterly" }
+source_periods = ["1P", "2P", "3P"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+# Modalidad cuota (art. 40.2 LIS) companion to the fold-in above. The above reads
+# M202 casilla 34 (modalidad base imponible, art. 40.3); this reads casilla 03
+# (modalidad cuota, art. 40.2). The two modalidades are mutually exclusive per
+# filing (the non-elected one computes 0), so the cuota-diferencial formula
+# subtracts BOTH — crediting a 40.2 filer's instalments that casilla 34 alone drops.
+[[revisions."2025-y-siguientes".relations]]
+id = "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
+kind = "cross_model_output"
+dependency_role = "instalment_to_final_settlement"
+source_modelo = "202"
+source_revision_selector = { filing_year_delta = 0 }
+source_casilla_id = "03"
+target_binding = "modelo-200-2024-pagos-fraccionados-anuales-40-2"
+period_alignment = { target_period = "0A", source_period_kind = "quarterly" }
+source_periods = ["1P", "2P", "3P"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+# Cross-year BIN STOCK carry (self-source): prior ejercicio's casilla 00671
+# (BIN pendiente futuros) feeds this ejercicio's opening pending balance
+# (00670) via the bin-pendiente binding. filing_year_delta = -1. LIS art. 26.
+# The strictly-negative delta marks a prior-year historical-filing carry, so
+# the previous_filing observation-coverage rule applies (no modelled 2023
+# revision required; present-or-zero at resolution).
+[[revisions."2025-y-siguientes".relations]]
+id = "modelo-200-2024-rel-self-bin-pendiente-anterior"
+kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "200"
+source_revision_selector = { filing_year_delta = -1 }
+source_casilla_id = "00671"
+target_binding = "modelo-200-2024-bin-pendiente-ejercicios-anteriores"
+period_alignment = { source_period = "0A", target_period = "0A", filing_year_delta = -1 }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+# Cross-year art.13 dotaciones-deterioro stock carry — one relation per
+# condition-state. The prior ejercicio's saldo final pendiente de integración en
+# períodos futuros (01498 NO han cumplido condiciones / 01499 SÍ han cumplido)
+# is this ejercicio's saldo inicial a principio del período (01494 / 01495),
+# carried SEPARATELY because only the cumplido stock may be integrated. These
+# relations register the previous_filing target bindings so the prefill resolves
+# the prior-year saldo final from the observation store (LIS art. 13).
+[[revisions."2025-y-siguientes".relations]]
+id = "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior"
+kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "200"
+source_revision_selector = { filing_year_delta = -1 }
+source_casilla_id = "01498"
+target_binding = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores"
+period_alignment = { source_period = "0A", target_period = "0A", filing_year_delta = -1 }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-13"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2025-y-siguientes".relations]]
+id = "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior"
+kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "200"
+source_revision_selector = { filing_year_delta = -1 }
+source_casilla_id = "01499"
+target_binding = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores"
+period_alignment = { source_period = "0A", target_period = "0A", filing_year_delta = -1 }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-13"]
+source_refs = ["aeat-modelo-200-manual-2024"]

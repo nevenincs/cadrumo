@@ -1,0 +1,22 @@
+[[revisions."2024".casillas]]
+id = "01401"
+number = "01401"
+section = ["reserva_capitalizacion", "2023"]
+data_type = "money"
+semantic_role = "is_reserva_capitalizacion_derecho_generado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200020b.f0020"]
+[[revisions."2024".casillas]]
+id = "01402"
+number = "01402"
+section = ["reserva_capitalizacion", "2023"]
+data_type = "money"
+semantic_role = "is_reserva_capitalizacion_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200020b.f0021"]

@@ -1,0 +1,7 @@
+[[revisions."2024".filing_schedules]]
+id = "modelo-200-2024-anual"
+period_kind = "annual"
+periods = ["0A"]
+profile_condition_mode = "all"
+legal_refs = ["ley-27-2014:art-124", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["boe-modelo-200-2025-form", "aeat-modelo-200-manual-2024"]

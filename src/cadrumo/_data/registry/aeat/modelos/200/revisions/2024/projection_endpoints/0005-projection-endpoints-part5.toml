@@ -1,0 +1,801 @@
+
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "nominal"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 4
+field = "porcentaje_participacion"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "nif"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "nominal"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 5
+field = "porcentaje_participacion"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "nif"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "nominal"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participacion_socio"
+slot = 6
+field = "porcentaje_participacion"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "nif"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "residencia"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "base_imponible"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "porcentaje_participacion"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "nif"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "residencia"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "base_imponible"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "porcentaje_participacion"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "nif"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "residencia"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "base_imponible"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "porcentaje_participacion"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "nif"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "residencia"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "base_imponible"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "porcentaje_participacion"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 5
+field = "nif"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 5
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 5
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 5
+field = "residencia"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 5
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 5
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 5
+field = "base_imponible"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 5
+field = "porcentaje_participacion"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 6
+field = "nif"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 6
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 6
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 6
+field = "residencia"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 6
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 6
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 6
+field = "base_imponible"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 6
+field = "porcentaje_participacion"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 7
+field = "nif"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 7
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 7
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 7
+field = "residencia"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 7
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 7
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 7
+field = "base_imponible"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 7
+field = "porcentaje_participacion"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 8
+field = "nif"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 8
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 8
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 8
+field = "residencia"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 8
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 8
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 8
+field = "base_imponible"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 8
+field = "porcentaje_participacion"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 9
+field = "nif"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 9
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 9
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 9
+field = "residencia"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 9
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 9
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 9
+field = "base_imponible"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 9
+field = "porcentaje_participacion"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 10
+field = "nif"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 10
+field = "representante"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 10
+field = "forma_juridica"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 10
+field = "residencia"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 10
+field = "apellidos_nombre_razon_social"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 10
+field = "codigo_provincia_pais"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 10
+field = "base_imponible"
+
+[[revisions."2024".projection_endpoints]]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[revisions."2024".projection_endpoints.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 10
+field = "porcentaje_participacion"

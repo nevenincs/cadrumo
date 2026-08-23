@@ -1,8 +1,0 @@
-[[revisions."2024-y-siguientes".applicability]]
-id = "m200-seed"
-applicable_entity_types = ["legal_entity"]
-applicable_fiscal_residencies = ["resident_irpf"]
-applicable_reason = "Modelo 200 (Impuesto sobre Sociedades): una entidad jurídica con personalidad jurídica es contribuyente del IS y presenta la autoliquidación anual."
-not_applicable_reason = "Modelo 200 no aplica: la autoliquidación del Impuesto sobre Sociedades local corresponde a entidades jurídicas contribuyentes del IS en la ruta residente. Un perfil NON_RESIDENT_IRNR sin eje modelado de establecimiento permanente en España no puede tratarse como listo para Modelo 200; use la ruta IRNR/Modelo 210 por AEAT Sede cuando actúe sin establecimiento permanente."
-cuota_bearing = true
-legal_refs = ["ley-27-2014:art-124", "trlirnr-rdleg-5-2004:art-2", "trlirnr-rdleg-5-2004:art-24"]

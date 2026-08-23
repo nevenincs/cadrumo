@@ -1,0 +1,147 @@
+# Boxes the 2024 diseno carries and the 2025 one drops, so they belong to this
+# revision alone. Each takes the section of a surviving sibling in the same
+# record (DP200020B) and that record's uniform legal_refs -- every casilla entry
+# the generator routes into this record declares the same set.
+
+[[revisions."2024".casillas]]
+# DP200020B 17 bytes: Reserva Capitalización - 2022 - Derecho reducir B.I. generado periodo/pendiente aplicar inicio p
+id = "1106"
+number = "1106"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_reserva_capitalizacion_importe"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020b.f0018"]
+
+[[revisions."2024".casillas]]
+# DP200020B 17 bytes: Reserva Capitalización - 2022 - Reducción B.I. aplicada [01107]
+id = "1107"
+number = "1107"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_reserva_capitalizacion_importe"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020b.f0019"]
+
+[[revisions."2024".casillas]]
+# DP200020B 17 bytes: Reserva Capitalización - 2023 - Reducción B.I. pdte. De aplicar en períodos futuros [01403]
+id = "1403"
+number = "1403"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_reserva_capitalizacion_importe"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020b.f0022"]
+
+[[revisions."2024".casillas]]
+# DP200020B 17 bytes: Reserva de nivelación - Reducción base imponible - Ejercicio generación 2019 - Importe integrado
+id = "1603"
+number = "1603"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_reserva_capitalizacion_importe"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020b.f0035"]
+
+[[revisions."2024".casillas]]
+# DP200020B 17 bytes: Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2019 - Importe reserva a d
+id = "1964"
+number = "1964"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_reserva_capitalizacion_importe"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020b.f0062"]
+
+[[revisions."2024".casillas]]
+# DP200020B 17 bytes: Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2019 - Importe reserva dot
+id = "1965"
+number = "1965"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_reserva_capitalizacion_importe"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020b.f0063"]
+
+[[revisions."2024".casillas]]
+# DP200020B 17 bytes: Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2019 - Importe reserva pen
+id = "1966"
+number = "1966"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_reserva_capitalizacion_importe"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020b.f0064"]
+
+[[revisions."2024".casillas]]
+# DP200020B 17 bytes: Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2019 - Reserva dispuesta [
+id = "1967"
+number = "1967"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_reserva_capitalizacion_importe"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020b.f0065"]
+
+[[revisions."2024".casillas]]
+# DP200020B 17 bytes: Reserva de nivelación - Reducción base imponible - Ejercicio generación 2019 - Importe minoració
+id = "2238"
+number = "2238"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_reserva_capitalizacion_importe"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020b.f0033"]
+
+[[revisions."2024".casillas]]
+# DP200020B 17 bytes: Reserva de nivelación - Reducción base imponible - Ejercicio generación 2019 - Importe adicionad
+id = "2239"
+number = "2239"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_reserva_capitalizacion_importe"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020b.f0034"]
+
+[[revisions."2024".casillas]]
+# DP200020B 17 bytes: Reserva de nivelación - Reducción base imponible - Ejercicio generación 2020 - Importe pendiente
+id = "2412"
+number = "2412"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_reserva_capitalizacion_importe"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020b.f0039"]

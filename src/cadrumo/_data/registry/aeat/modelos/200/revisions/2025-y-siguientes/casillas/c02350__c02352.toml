@@ -1,0 +1,33 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "02350"
+number = "02350"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2021"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0151"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02351"
+number = "02351"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2021"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0152"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02352"
+number = "02352"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2021"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0153"]

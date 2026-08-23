@@ -1,0 +1,43 @@
+# Boxes the 2024 diseno carries and the 2025 one drops, so they belong to this
+# revision alone. Each takes the section of a surviving sibling in the same
+# record (DP200020) and that record's uniform legal_refs -- every casilla entry
+# the generator routes into this record declares the same set.
+
+[[revisions."2024".casillas]]
+# DP200020 17 bytes: Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2019 - Pendi
+id = "1982"
+number = "1982"
+section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2021"]
+semantic_role = "is_gastos_financieros_pendiente_deducir"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020.f0096"]
+
+[[revisions."2024".casillas]]
+# DP200020 17 bytes: Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2019 - Aplic
+id = "1983"
+number = "1983"
+section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2021"]
+semantic_role = "is_gastos_financieros_pendiente_deducir"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020.f0097"]
+
+[[revisions."2024".casillas]]
+# DP200020 17 bytes: Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2020 - Pendi
+id = "2260"
+number = "2260"
+section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2021"]
+semantic_role = "is_gastos_financieros_pendiente_deducir"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200020.f0100"]
