@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:e86af71c155d34c0ed53da7f363b8b27777cde037f61310b07c4aa6953080440'
+body_hash: 'sha256:705064f2e827a19294ca2d8bbd75d9b14df4850d9b6166e0684dba4f6632d386'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -8026,3 +8026,40 @@ a fabricated or stale command name is worse than an honest null.
 Handover: `_common.py:293-294` (preserve, currently reset on Click close),
 `_terminal_errors.py:505/518` (the pattern to mirror), `_emit_crash` at :436 (the consumer).
 Both files are clean at HEAD right now.
+
+### The leaf now outlives the Click context, and the last four split into three defects
+
+Reversed the previous entry's "leave it to them", and the reason is a correction rather than
+impatience. That entry called the lifetime a kernel design decision this campaign should not
+take. Re-reading it, the decision was already TAKEN in the same file: `_INVOCATION_ARGV` is set
+at dispatch entry and reset in a `finally`, for exactly this reason -- "so parse-time handling
+can read the operator's `--format` and `--language` tokens even when the failure carries no
+command context". Mirroring a proven lifetime is applying a decision, not making one, and every
+invocation passes through that boundary, so the reset is guaranteed.
+
+`_BOUNDARY_REQUESTED_CLI_LEAF` is written through at the preserve site and bounded by
+`boundary_requested_leaf_scope()` around the dispatch. `current_requested_cli_leaf()` consults
+it only when no Click context exists -- which is either before one opened or after it closed,
+and the process boundary is the second. The stale-leaf leak the previous entry worried about is
+what the scope's reset prevents, and the failure mode it guards is a WRONG command name on an
+unrelated error, which is worse than the null it replaces.
+
+Proven from outside the repo, on the second attempt. The first break patched
+`ContextVar.set` and the case passed -- read as a broken instrument, not a vacuous test, since
+`set` is a built-in method that cannot be patched that way. Rebinding
+`_common.current_requested_cli_leaf` (which `_emit_crash` imports function-locally, so it binds
+at call time) reproduces the pre-fix state and reds the case with the identical
+`assert None == 'config.profile.show'`.
+
+**The remaining three are three DIFFERENT defects, not one.** Worth separating, because they
+were indistinguishable while the identifier was null and would otherwise be chased as a single
+cause:
+
+- `test_cadrumo_error_envelope_is_well_formed_in_json_mode` -- `error["action"] is None`. A
+  missing typed action projection, not a missing command.
+- `test_config_profile_show_ambiguous_label_refuses_cleanly` and its `validate` sibling -- the
+  refusal no longer contains "Use the profile UUID to disambiguate". Operator guidance lost from
+  the ambiguity message, and the rendered text shows the refusal DUPLICATED, which is a second
+  question about that path.
+
+Lanes: unit green at 1,705, integration 4 to 3, no regressions.

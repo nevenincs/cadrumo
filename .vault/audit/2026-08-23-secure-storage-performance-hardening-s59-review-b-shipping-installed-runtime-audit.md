@@ -79,6 +79,46 @@ canonical audit frontmatter, required sections, annotations, and edited-file
 whitespace checks passed; unrelated pre-existing markdown warnings remain in
 the earlier S56-S58 audit and execution records.
 
+### remediation-retest | low | CLI payload binding and dynamic node enrollment are now closed
+
+Independent retest at exact HEAD `1de86edd272cc878b0dc5ddd2b70e21be5e39acb`
+confirmed that the tax/CLI evidence path now compares copied cohort provenance,
+the captured executable digest, the captured installed-package payload, and a
+fresh installed-package payload projection against the exact sealed root wheel.
+The equal-version foreign-package negative passed. The clean-source/archive
+gate also derives node enrollment dynamically and passed with the current 364
+nodes, closing the obsolete `361` failure above. The wheel/sdist locale-parity
+subgate was stopped at coordinator direction while concurrent locale edits
+remain uncommitted; it is explicitly pending rather than reported passing.
+
+### cross-cohort-mcp-binding | critical | Swapped MCP and client captures still mint the sealed cohort identity
+
+The remediation binds only `InstalledTaxEvidence`. `InstalledMcpEvidence`
+carries no cohort commit, cohort-manifest digest, sealed-wheel digest,
+installed-package payload digest, or MCP executable digest tied to the cohort.
+`build_installed_oracle_evidence` validates the tax evidence and then attaches
+the supplied MCP capture without comparing its executable or invoked CLI hashes
+to the validated tax capture. `build_client_evidence`, used by MCPB, Claude
+plugin, marketplace, and real-client lanes, performs no installed-package
+payload binding at all.
+
+An independent exploit planted a temporary foreign MCP executable and arbitrary
+`f`-filled invoked-CLI hashes. Both a direct Python row with otherwise valid tax
+evidence and a `claude-desktop-mcpb` client row accepted that capture and minted
+the sealed cohort ID. This leaves the client rows and the MCP dimension of
+Python, Scoop, and Homebrew evidence open to equal-version or fully unrelated
+capture substitution.
+
+Remediation-retest evidence: 128 focused topology, cohort, evidence, and publish
+tests passed with 30 non-unit tests deselected; three targeted provenance
+negatives passed. The broader installed-oracle integration timed out during
+fixture cohort loading under severe host process contention. The dynamic
+clean-source integration passed before the remaining locale archive probe was
+stopped on coordinator instruction.
+
+Final current census: critical 1, high 0, medium 0, low 0, with the clean-archive
+locale-parity subgate pending.
+
 ## Recommendations
 
 For `cross-cohort-evidence-binding`, require evidence to bind the executed
@@ -92,3 +132,10 @@ For `clean-archive-gates`, replace the obsolete scalar node assertion with an
 independently derived exact-set comparison, ensure all locale changes are part
 of the clean source commit, and require the explicit integration lane to pass
 before S56/S57/S58 evidence or S59 reconciliation is accepted.
+
+For `cross-cohort-mcp-binding`, carry and independently recompute cohort and
+installed-payload provenance for the MCP server capture, compare every
+`invoked_cli_sha256` value to the already validated CLI capture in mixed rows,
+and apply the same sealed-wheel binding before any client-row evidence can be
+minted. Add direct-call and CLI-level swapped-capture negatives for Python,
+Scoop, Homebrew, MCPB, Claude plugin, marketplace, and real-client paths.

@@ -11,9 +11,6 @@ related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
 ---
 
-
-
-
 # Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and implement parsed-dispatch root and leaf source preflight, exact-target login fallback, show validate and history gate convergence, unused-source refusal, target assertions, bounded cleanup, and non-secret persistence warning
 
 ## Scope
