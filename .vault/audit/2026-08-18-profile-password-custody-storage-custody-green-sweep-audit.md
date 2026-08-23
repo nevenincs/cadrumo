@@ -8293,3 +8293,65 @@ campaign plans" belongs to a RECURRING vault step a peer re-runs, so a later com
 identical wording. Check ancestry before believing a hash that looks familiar.
 
 Final state: integration 361, unit 1,703, serial 16 -- all green.
+
+## Consolidation: twelve branches onto main, and three defects the merges exposed
+
+Twelve feature branches sat unmerged, each in its own worktree, all clean and 18-26 hours
+stale. Eleven conflicted with main. Consolidating them surfaced three latent defects that
+were already live on main -- every one of them the residue of an earlier conflict
+resolution that took one side and lost the other half.
+
+**The release workflow referenced a job it did not define.** Main's
+`release-orchestrator.yml` listed `precondition` in `alert.needs` while the job itself had
+been deleted from the file. The merge base HAD the job, so main's copy was a deletion that
+kept the reference -- an invalid workflow. The branch retained the job and its own fix
+(dropping six loose `python-version` pins). Restoring the branch's file removed the
+dangling reference; the merged graph now resolves with no dangling `needs`.
+
+**`import_external_filing_source` was defined twice, and the wrong one won.** In
+`_external_import_actions.py` the definition at line 105 accepted
+`observation_repository`; the one at line 265 did not. Python binds the later definition,
+so the richer one was dead and the parameter silently unavailable. Neither production
+caller passes it -- but a TEST does, so that test was failing against the shadowing
+definition. The duplicate class beside it was byte-identical. Resolved to a single
+definition carrying the parameter.
+
+**Merging issue-604 reintroduced a superseded registry fragment.** Main had already
+replaced that work through #636, re-authoring the same ten M390 2021 casillas into the
+segment-qualified `civa.anual` fragment. Carrying both declared every casilla twice and
+the loader refused the revision on reused numbers 65, 97 and
+`compensacion-generada-ejercicio`. The surviving fragment covers all ten ids, so the
+removal is lossless. This one was MY regression, introduced by the consolidation and
+absorbed in the same pass.
+
+### What the resolutions were decided on
+
+Not by preferring a side. For each conflict the question was which side actually changed
+relative to the merge base, and whether the artifact's own content answered it:
+
+- Six branches conflicted only on their own audit doc, and the difference was blank-line
+  folding. Compared with the blank lines stripped, identical.
+- Twelve locale files looked like real divergence and were YAML line-WRAPPING of the same
+  strings. Parsed, not grepped -- this campaign learned that lesson twice already.
+- Where keys genuinely differed, the codebase decided: `dev.locales scaffold --check` is
+  the authority on which keys the tree needs, and it passes, which is what proves the
+  branch's 120 extra keys were stale rather than dropped.
+- modelo-220 was live peer territory -- they committed to it mid-consolidation. Main held
+  3,980 locale keys to the branch's 1,002, and the branch's 180 extras used the derived-id
+  scheme that campaign explicitly replaced. Main is authoritative there; the peer's work
+  was preserved untouched.
+- Where main had refactored (lazy CLI command specs, the benchmark frozen census) the
+  branch's older shape would have re-registered or regressed it. Main's test sets were
+  supersets in every such case, so the branch's "unique" tests were renames.
+
+### Two things worth not repeating
+
+A peer was active in this worktree throughout, contrary to the assumption going in: they
+committed to main mid-merge and held `.git/index.lock`. The lock was waited out, never
+removed, and their three uncommitted edits were checked against every merge's file list
+before proceeding -- no collision, so nothing of theirs was touched.
+
+And a near-miss: HEAD read as the same short hash and subject the session began from,
+which looks exactly like a reset that would have orphaned everything. `merge-base
+--is-ancestor` disproved it. The subject belongs to a recurring vault step. A familiar
+hash is not evidence; ancestry is.
