@@ -25,6 +25,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+import click
 import pytest
 import typer
 from pydantic import ValidationError
@@ -32,6 +33,7 @@ from pydantic import ValidationError
 from .....application.user_profile import CENSO_SOURCE_TAG
 from .....core.config import Settings
 from .....tests.cli_runner import invoke_cached_cli
+from ... import app as _live_app
 from .. import _censo_file
 from .._censo_payloads import CensoFactPayload, CensoPullDivergencePayload, CensoPullResult
 
@@ -47,14 +49,34 @@ _FORBIDDEN_FETCH_VERBS = frozenset({"capture", "refresh", "fetch", "download", "
 
 
 def _censo_commands() -> dict[str, Any]:
-    """Return the censo group's real subcommands, built from the live Typer app.
+    """Return the censo group's real subcommands, walked from the live CLI root.
+
+    Reached through the command TREE rather than a module-level Typer object.
+    ``_censo_file.censo_app`` no longer exists: the command-spec kernel builds
+    groups from specs, so a module attribute stopped being the surface. The
+    verbs themselves are unchanged -- ``config profile censo file`` and
+    ``censo pull`` both still resolve, profile-bound -- only the route to them.
+
+    Walked with the Click API rather than ``.commands`` because the kernel's
+    groups resolve children lazily: the root's ``.commands`` dict is EMPTY
+    until each child is asked for by name, so reading it would report a CLI
+    with no commands at all. ``get_command`` resolves each child on demand,
+    which is why this must NOT call ``materialise_lazy_subcommands`` -- that
+    mutates the shared ``app`` object process-wide, and doing so here made a
+    sibling case lose the command identifier on its refusal envelope.
 
     Typed loosely because Typer builds its own vendored ``Command`` class
     rather than a ``click.Group`` subclass; the surface under test is the
     command mapping, not the class identity.
     """
-    group = typer.main.get_command(_censo_file.censo_app)
-    commands = group.commands  # ty: ignore[unresolved-attribute]  # reason: Typer's vendored Command carries .commands but is not a click.Group subclass
+    node: Any = typer.main.get_command(_live_app)
+    context = click.Context(node)
+    for name in ("config", "profile", "censo"):
+        node = node.get_command(context, name)
+        assert node is not None, f"the live command tree has no {name!r} on the censo path"
+        context = click.Context(node, parent=context)
+
+    commands = {name: node.get_command(context, name) for name in node.list_commands(context)}
     assert commands, "the censo group exposes no subcommands"
     return commands
 

@@ -1,0 +1,182 @@
+"""Parsed-dispatch safety gate for root profile authentication."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, cast
+
+import typer
+
+from ._command_spec import CommandSpec, MachineSecretVariantSpec, ProfileAuthenticationPosture
+from ._config._secure_input import (
+    MachineSecretChannel,
+    MachineSecretPayload,
+    MachineSecretSelection,
+    ProfileSecretChannel,
+    ProfileSecretSelection,
+    read_machine_secret_payload,
+    read_profile_secret_payload,
+    select_machine_secret_channel,
+    select_profile_secret_channel,
+    stage_machine_secret_payload,
+)
+from ._errors import CliRefusedBoundaryError
+from ._profile_authentication_contract import (
+    ProfileAuthenticationSecrets,
+    ProfileSecretSourceOptions,
+    profile_authentication_posture,
+    root_profile_secret_model,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+
+def _refuse(key: str) -> None:
+    raise CliRefusedBoundaryError(translated_message=f"cli.config.custody.errors.{key}")
+
+
+def _root_source(ctx: typer.Context) -> ProfileSecretSourceOptions:
+    value = cast("dict[str, object]", ctx.find_root().ensure_object(dict)).get("profile_secret_source")
+    if value is None:
+        return ProfileSecretSourceOptions()
+    if not isinstance(value, ProfileSecretSourceOptions):
+        raise TypeError("root profile-secret source has an invalid type")
+    return value
+
+
+def _leaf_selection(spec: CommandSpec, arguments: Mapping[str, object]) -> MachineSecretSelection | None:
+    if spec.machine_secret is None:
+        return None
+    return select_machine_secret_channel(
+        secrets_stdin=bool(arguments.get("secrets_stdin", False)),
+        secrets_fd=cast("int | None", arguments.get("secrets_fd")),
+    )
+
+
+def _preflight_sources(
+    *, root: ProfileSecretSelection | None, leaf: MachineSecretSelection | None
+) -> None:
+    if root is None or leaf is None:
+        return
+    if root.channel is ProfileSecretChannel.STDIN and leaf.channel is MachineSecretChannel.STDIN:
+        _refuse("profile_secrets_stdin_collision")
+    if (
+        root.channel is ProfileSecretChannel.FILE_DESCRIPTOR
+        and leaf.channel is MachineSecretChannel.FILE_DESCRIPTOR
+        and root.descriptor == leaf.descriptor
+    ):
+        _refuse("profile_secrets_fd_collision")
+
+
+def _selected_variant(spec: CommandSpec, arguments: Mapping[str, object]) -> MachineSecretVariantSpec:
+    machine = spec.machine_secret
+    if machine is None:
+        raise RuntimeError("leaf machine-secret model requested for a non-adopter")
+    matches = []
+    for variant in machine.variants:
+        condition = variant.condition
+        if condition is None:
+            matches.append(variant)
+            continue
+        present = arguments.get(condition.option_name) is not None
+        if present is (condition.presence == "present"):
+            matches.append(variant)
+    if len(matches) != 1:
+        raise RuntimeError("parsed command does not select exactly one machine-secret variant")
+    return matches[0]
+
+
+def _read_and_stage_leaf(
+    *, spec: CommandSpec, arguments: Mapping[str, object], selection: MachineSecretSelection | None
+) -> None:
+    if selection is None:
+        return
+    from ._command_runtime import resolve_deferred_target
+
+    model = resolve_deferred_target(_selected_variant(spec, arguments).model)
+    if not isinstance(model, type) or not issubclass(model, MachineSecretPayload):
+        raise TypeError("leaf machine-secret model must inherit MachineSecretPayload")
+    stage_machine_secret_payload(read_machine_secret_payload(model, selection=selection))
+
+
+def preflight_parsed_leaf(
+    ctx: typer.Context,
+    *,
+    spec: CommandSpec,
+    arguments: Mapping[str, object],
+) -> None:
+    """Preflight parsed root/leaf sources, then run the ordinary root gate."""
+    from . import _activate_active_bucket_session
+    from ._command_specs import COMMAND_GRAPH
+
+    node = next(node for node in COMMAND_GRAPH.nodes() if node.spec.key == spec.key)
+    posture = profile_authentication_posture(node)
+    source = _root_source(ctx)
+    root = select_profile_secret_channel(
+        profile_secrets_stdin=source.stdin,
+        profile_secrets_fd=source.descriptor,
+    )
+    leaf = _leaf_selection(spec, arguments)
+    _preflight_sources(root=root, leaf=leaf)
+    if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK:
+        if root is not None:
+            _refuse("profile_secrets_inapplicable")
+        _activate_active_bucket_session(
+            ctx,
+            posture=posture,
+            root_selection=None,
+            leaf_selection=leaf,
+            spec=spec,
+            arguments=arguments,
+        )
+        return
+    _activate_active_bucket_session(
+        ctx,
+        posture=posture,
+        root_selection=root,
+        leaf_selection=leaf,
+        spec=spec,
+        arguments=arguments,
+    )
+
+
+def authenticate_exact_target(ctx: typer.Context, *, bucket_id: str) -> None:
+    """Route a parsed explicit profile target through the same root source gate."""
+    from . import _resume_profile_session_or_refuse
+
+    _resume_profile_session_or_refuse(ctx, bucket_id, exact_target=True)
+
+
+def consume_root_fallback(
+    ctx: typer.Context,
+    *,
+    bucket_id: str,
+    root: ProfileSecretSelection,
+    leaf: MachineSecretSelection | None,
+    spec: CommandSpec,
+    arguments: Mapping[str, object],
+) -> None:
+    """Read all required payloads, authenticate exactly, and assert the session."""
+    from ...adapters.persistence.storage import active_bucket_session_serves
+    from ...application.user_profile import login_profile
+
+    _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
+    payload = read_profile_secret_payload(root_profile_secret_model(), selection=root)
+    try:
+        if not isinstance(payload, ProfileAuthenticationSecrets):
+            raise TypeError("root profile-secret model resolved an unexpected payload type")
+        passphrase = payload.profile_passphrase.get_secret_value()
+        outcome = login_profile(
+            name=bucket_id,
+            passphrase_callback=lambda: passphrase,
+        )
+        if outcome.bucket_id != bucket_id or not active_bucket_session_serves(bucket_id):
+            raise RuntimeError("profile authentication did not establish the exact requested session")
+        if not outcome.session_persisted:
+            cast("dict[str, object]", ctx.find_root().ensure_object(dict))["profile_session_not_persisted"] = True
+    finally:
+        passphrase = ""
+        del payload
+
+
+__all__ = ["authenticate_exact_target", "consume_root_fallback", "preflight_parsed_leaf"]

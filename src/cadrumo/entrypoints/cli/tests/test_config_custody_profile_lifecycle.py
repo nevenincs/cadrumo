@@ -250,6 +250,35 @@ def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path
     assert rotated_again.returncode == 0, _combined_output(rotated_again)
 
 
+def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_path: Path) -> None:
+    """A parsed resume-fallback leaf can authenticate and continue in one process."""
+    _register_profile(
+        tmp_path,
+        "custody",
+        **{
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Custody Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+        },
+    )
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+
+    shown = _run_cadrumo(
+        tmp_path,
+        ("--profile-secrets-stdin", "config", "profile", "show", "custody"),
+        extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
+        stdin_payload=json.dumps({"profile_passphrase": passphrase}),
+    )
+
+    assert shown.returncode == 0, _combined_output(shown)
+    assert "display_name\tcustody" in shown.stdout
+    assert "config.login.session_not_persisted" in shown.stdout
+    assert passphrase not in _combined_output(shown)
+
+
 def test_passphrase_change_resolves_target_before_reading_machine_secrets(tmp_path: Path) -> None:
     """An absent active target refuses without parsing the supplied payload."""
     result = _run_cadrumo(

@@ -142,6 +142,11 @@ def config_profile_show(
     from ....domain.user_profile import load_user_profile_schema
 
     pointer = _resolve_show_pointer(name, resolve_active_profile_pointer=resolve_active_profile_pointer)
+    if name is not None:
+        from .. import bind_profile_target_to_invocation, resume_profile_session_for_target
+
+        resume_profile_session_for_target(ctx, bucket_id=pointer.bucket_id)
+        bind_profile_target_to_invocation(ctx, bucket_id=pointer.bucket_id)
     record = _read_record_for_show(ctx, pointer)
     from .._config_payloads import ConfigProfileShowResult, ProfileFactPayload, ProfileIssuePayload
 
@@ -433,6 +438,11 @@ def config_profile_validate(
         name,
         resolve_active_profile_pointer=resolve_active_profile_pointer,
     )
+    if name is not None:
+        from .. import bind_profile_target_to_invocation, resume_profile_session_for_target
+
+        resume_profile_session_for_target(ctx, bucket_id=pointer.bucket_id)
+        bind_profile_target_to_invocation(ctx, bucket_id=pointer.bucket_id)
     try:
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:

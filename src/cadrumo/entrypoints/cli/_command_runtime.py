@@ -196,6 +196,19 @@ def _behavior_wrapper(spec: CommandSpec) -> Callable[..., object]:
         if not callable(target):
             raise TypeError(f"command target is not callable: {target_ref.identity!r}")
         bound = signature.bind(*args, **kwargs)
+        context_parameter = spec.invocation.context_parameter
+        if context_parameter is not None and spec.kind == "leaf":
+            from ._config._secure_input import clear_staged_machine_secret_payloads
+            from ._profile_authentication_gate import preflight_parsed_leaf
+
+            context = bound.arguments.get(context_parameter)
+            if context is None or not hasattr(context, "find_root"):
+                raise TypeError("command invocation context has an invalid type")
+            try:
+                preflight_parsed_leaf(cast(typer.Context, context), spec=spec, arguments=bound.arguments)
+                return cast(Callable[..., object], target)(**bound.arguments)
+            finally:
+                clear_staged_machine_secret_payloads()
         return cast(Callable[..., object], target)(**bound.arguments)
 
     parameters: list[inspect.Parameter] = []

@@ -18,7 +18,7 @@ application functions and pydantic records.
 from __future__ import annotations
 
 import os
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -35,7 +35,9 @@ if TYPE_CHECKING:
     from ._command_schema import command_schema_refs as command_schema_refs
     from ._command_schema import command_schema_type as command_schema_type
     from ._command_schema import command_schema_types as command_schema_types
+    from ._command_spec import CommandSpec, ProfileAuthenticationPosture
     from ._config._google import OAuthClientPayload as OAuthClientPayload
+    from ._config._secure_input import MachineSecretSelection, ProfileSecretSelection
     from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
     from ._verb_input_schema import cli_path_for_command_key as cli_path_for_command_key
 from ._stdio import _disable_rich_cli_rendering as _disable_rich_cli_rendering
@@ -171,7 +173,9 @@ def root_command(
     # master key, or a newcomer without CADRUMO_SECRET_PASSPHRASE cannot
     # browse the command tree and an unknown-command typo is masked by a
     # master-key refusal instead of the usage error.
-    _activate_active_bucket_session(ctx)
+    # Session activation runs from the graph-generated leaf wrapper after the
+    # complete command has parsed, so root and leaf secret sources can be
+    # preflighted together before either is consumed.
 
 
 def _ensure_storage_tree_for_invocation() -> None:
@@ -436,7 +440,15 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     ctx.with_resource(override_settings(cadrumo_active_profile=pointer.bucket_id))
 
 
-def _activate_active_bucket_session(ctx: typer.Context) -> None:
+def _activate_active_bucket_session(
+    ctx: typer.Context,
+    *,
+    posture: ProfileAuthenticationPosture,
+    root_selection: ProfileSecretSelection | None,
+    leaf_selection: MachineSecretSelection | None,
+    spec: CommandSpec,
+    arguments: Mapping[str, object],
+) -> None:
     """Active-gate the CLI session against the bootstrap-exempt registry.
 
     Three outcomes:
@@ -479,6 +491,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ...adapters.persistence.storage import active_bucket_session_serves
     from ...core import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
+    from ._command_spec import ProfileAuthenticationPosture
 
     verb_path = _resolve_invocation_verb_path(ctx)
     exempt = is_bootstrap_exempt(verb_path)
@@ -522,6 +535,12 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     # that application path can resolve profile-bound runtime collaborators
     # while the selected bucket is deliberately locked.
     if exempt:
+        if root_selection is not None:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.custody.errors.profile_secrets_inapplicable"
+            )
+        return
+    if posture is ProfileAuthenticationPosture.SELF_AUTHENTICATING:
         return
     if explicit_profile_target:
         return
@@ -531,8 +550,19 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     # A session bound to another bucket does not serve this verb's profile;
     # returning on its presence skips the resume and runs against the wrong one.
     if active_bucket_session_serves(active_bucket_id):
+        if root_selection is not None:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.custody.errors.profile_secrets_unused"
+            )
         return
-    _resume_profile_session_or_refuse(ctx, active_bucket_id)
+    _resume_profile_session_or_refuse(
+        ctx,
+        active_bucket_id,
+        root_selection=root_selection,
+        leaf_selection=leaf_selection,
+        spec=spec,
+        arguments=arguments,
+    )
     # The active profile's encrypted record is only decryptable once the
     # bucket session above is open. ``output_language()`` is cached, and
     # its cache key (env vars + `.env` mtime) does not vary when a
@@ -559,7 +589,16 @@ _LOGGED_OUT_REFUSALS: frozenset[_ProfileSessionRefusalReason] = frozenset(
 )
 
 
-def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> None:
+def _resume_profile_session_or_refuse(
+    ctx: typer.Context,
+    bucket_id: str,
+    *,
+    root_selection: ProfileSecretSelection | None = None,
+    leaf_selection: MachineSecretSelection | None = None,
+    spec: CommandSpec | None = None,
+    arguments: Mapping[str, object] | None = None,
+    exact_target: bool = False,
+) -> None:
     """Resume the persisted login session, or refuse naming ``aeat config login``.
 
     Fail-closed: the application resume authority deletes stale artefacts
@@ -584,6 +623,35 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
 
     refusal = bind_resumed_profile_session(bucket_id=bucket_id)
     if refusal is None:
+        if root_selection is not None:
+            raise CliRefusedBoundaryError(
+                translated_message="cli.config.custody.errors.profile_secrets_unused"
+            )
+        return
+    if root_selection is not None:
+        from ._command_spec import CommandSpec
+        from ._config._secure_input import ProfileSecretSelection
+        from ._profile_authentication_gate import consume_root_fallback
+
+        if not isinstance(root_selection, ProfileSecretSelection):
+            raise TypeError("root profile-secret selection has an invalid type")
+        if not isinstance(spec, CommandSpec) or arguments is None:
+            if exact_target:
+                leaf = requested_cli_leaf(ctx)
+                if leaf is None:
+                    raise RuntimeError("explicit profile target has no parsed leaf")
+                spec = _COMMAND_GRAPH.resolve_path(("aeat", *leaf.canonical_cli_path))
+                arguments = {}
+            else:
+                raise TypeError("root fallback is missing parsed command authority")
+        consume_root_fallback(
+            ctx,
+            bucket_id=bucket_id,
+            root=root_selection,
+            leaf=leaf_selection,
+            spec=spec,
+            arguments=arguments,
+        )
         return
     if refusal is _ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
         # A real process-scoped login is possible only when the explicit
@@ -674,7 +742,16 @@ def _bind_authenticated_profile_to_invocation(ctx: typer.Context, *, bucket_id: 
 
 def resume_profile_session_for_target(ctx: typer.Context, *, bucket_id: str) -> None:
     """Authenticate a command-selected profile through the canonical CLI gate."""
-    _resume_profile_session_or_refuse(ctx, bucket_id)
+    from ._config._secure_input import select_profile_secret_channel
+    from ._profile_authentication_contract import ProfileSecretSourceOptions
+
+    source = cast("dict[str, object]", ctx.find_root().ensure_object(dict)).get("profile_secret_source")
+    options = source if isinstance(source, ProfileSecretSourceOptions) else ProfileSecretSourceOptions()
+    selection = select_profile_secret_channel(
+        profile_secrets_stdin=options.stdin,
+        profile_secrets_fd=options.descriptor,
+    )
+    _resume_profile_session_or_refuse(ctx, bucket_id, root_selection=selection, exact_target=True)
 
 
 def bind_profile_target_to_invocation(ctx: typer.Context, *, bucket_id: str) -> None:

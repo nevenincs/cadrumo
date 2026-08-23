@@ -45,8 +45,10 @@ import os
 import sys
 import warnings
 from contextlib import suppress
+from contextvars import ContextVar
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import cast
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
@@ -125,6 +127,26 @@ class ProfileSecretSelection:
             raise ValueError("stdin profile-secret selection cannot carry a descriptor")
         if self.channel is ProfileSecretChannel.FILE_DESCRIPTOR and self.descriptor is None:
             raise ValueError("fd profile-secret selection requires a descriptor")
+
+
+_STAGED_MACHINE_SECRET_PAYLOADS: ContextVar[dict[type[MachineSecretPayload], MachineSecretPayload] | None] = (
+    ContextVar("cadrumo_staged_machine_secret_payloads", default=None)
+)
+
+
+def stage_machine_secret_payload(payload: MachineSecretPayload) -> None:
+    """Stage one already-validated leaf payload for its handler's canonical read."""
+    staged = dict(_STAGED_MACHINE_SECRET_PAYLOADS.get() or {})
+    model = type(payload)
+    if model in staged:
+        raise RuntimeError("machine-secret payload model is already staged")
+    staged[model] = payload
+    _STAGED_MACHINE_SECRET_PAYLOADS.set(staged)
+
+
+def clear_staged_machine_secret_payloads() -> None:
+    """Release any payload references left by an aborted dispatch."""
+    _STAGED_MACHINE_SECRET_PAYLOADS.set(None)
 
 
 def _reject_duplicate_object_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -357,6 +379,11 @@ def read_machine_secret_payload[SecretsModelT: MachineSecretPayload](
     """Read and validate one previously selected bounded machine channel."""
     if not issubclass(model, MachineSecretPayload):
         raise TypeError("canonical machine-secret payloads must inherit MachineSecretPayload")
+    staged = dict(_STAGED_MACHINE_SECRET_PAYLOADS.get() or {})
+    prevalidated = staged.pop(model, None)
+    if prevalidated is not None:
+        _STAGED_MACHINE_SECRET_PAYLOADS.set(staged or None)
+        return cast(SecretsModelT, prevalidated)
     if selection.channel is MachineSecretChannel.STDIN:
         return _read_secrets_stdin(model)
     descriptor = selection.descriptor
@@ -556,11 +583,13 @@ __all__ = [
     "MachineSecretSelection",
     "ProfileSecretChannel",
     "ProfileSecretSelection",
+    "clear_staged_machine_secret_payloads",
     "prompt_secret_no_echo",
     "read_machine_secret_payload",
     "read_profile_secret_payload",
     "select_machine_secret_channel",
     "select_profile_secret_channel",
+    "stage_machine_secret_payload",
     "terminal_can_prompt_for_secrets",
     "write_to_controlling_terminal",
 ]
