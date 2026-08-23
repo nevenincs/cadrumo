@@ -159,19 +159,19 @@ def preflight_parsed_leaf(
         else:
             normalize_ambient_profile(ctx)
     def authenticate(
-        bucket: str,
-        selected_root: ProfileSecretSelection,
-        selected_leaf: MachineSecretSelection | None,
-        command: CommandSpec,
-        parsed: Mapping[str, object],
+        bucket_id: str,
+        root_selection: ProfileSecretSelection,
+        leaf_selection: MachineSecretSelection | None,
+        spec: CommandSpec,
+        arguments: Mapping[str, object],
     ) -> None:
         consume_root_fallback(
             ctx,
-            bucket_id=bucket,
-            root=selected_root,
-            leaf=selected_leaf,
-            spec=command,
-            arguments=parsed,
+            bucket_id=bucket_id,
+            root=root_selection,
+            leaf=leaf_selection,
+            spec=spec,
+            arguments=arguments,
         )
     if spec.allow_unregistered_profile_diagnostic:
         from ...application.workflow import read_profile_bucket_by_id

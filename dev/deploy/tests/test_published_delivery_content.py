@@ -12,9 +12,6 @@ network read is injected rather than faked at the socket, so the HTTPS guard on
 the production fetch stays intact and the comparison is still exercised end to
 end.
 
-This module covered both publishers until the website was rehomed to the
-cadrumo-marketing repository. The landing-page half — the bundle-reference
-comparison — moved there with it; what remains is the documentation half.
 """
 
 from __future__ import annotations

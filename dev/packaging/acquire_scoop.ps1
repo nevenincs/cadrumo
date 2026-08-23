@@ -239,12 +239,16 @@ function Assert-InstalledCohortDigests {
 
 function Invoke-InstalledOracle {
     param(
+        [Parameter(Mandatory = $true)][string]$SourceCohort,
         [Parameter(Mandatory = $true)][string]$Prefix,
         [Parameter(Mandatory = $true)][string]$AeatCommand,
         [Parameter(Mandatory = $true)][string]$OutputDir
     )
     $python = (Resolve-Path (Join-Path $Prefix "venv\Scripts\python.exe")).Path
     $taxEvidence = Join-Path $OutputDir "tax-evidence.json"
+    $cohortManifest = (Resolve-Path (Join-Path $SourceCohort "python-cohort.json")).Path
+    $cohort = Get-Content -LiteralPath $cohortManifest -Raw | ConvertFrom-Json
+    $cohortManifestSha256 = (Get-FileHash -LiteralPath $cohortManifest -Algorithm SHA256).Hash.ToLowerInvariant()
     Push-Location $RepoRoot
     try {
         Invoke-Native -FilePath $python -ArgumentList @(
@@ -252,6 +256,9 @@ function Invoke-InstalledOracle {
             "--cli", $AeatCommand,
             "--storage-root", (Join-Path $OutputDir "tax-state"),
             "--work-dir", (Join-Path $OutputDir "tax-work"),
+            "--cohort-source-commit", $cohort.source_commit,
+            "--cohort-manifest-sha256", $cohortManifestSha256,
+            "--cohort-root-wheel-sha256", $cohort.sha256.cadrumo,
             "--output", $taxEvidence
         ) -OutputPath (Join-Path $OutputDir "tax-oracle.log")
     }
@@ -314,7 +321,7 @@ function Invoke-HostAcquisition {
     $aeat = Get-ScoopCommandPath -CommandName "aeat" -ScoopRoot $scoopRoot
     Invoke-Native -FilePath $aeat -ArgumentList @("--version")
     $verifiedDigests = Assert-InstalledCohortDigests -Prefix $prefix -SourceCohort $resolvedCohort
-    $oracle = Invoke-InstalledOracle -Prefix $prefix -AeatCommand $aeat -OutputDir $runEvidence
+    $oracle = Invoke-InstalledOracle -SourceCohort $SourceCohort -Prefix $prefix -AeatCommand $aeat -OutputDir $runEvidence
     $manifest = Get-Content -LiteralPath (Join-Path $resolvedCohort "python-cohort.json") -Raw | ConvertFrom-Json
     $evidence = [ordered]@{
         schema = "cadrumo.packaging.acquire-scoop.v1"

@@ -1,4 +1,4 @@
-"""Profile repair command registration for ``aeat config repair``.
+"""Profile repair behavior handlers for ``aeat config repair``.
 
 Reads the active :class:`UserProfileRecord` through the injected record reader
 to diagnose and repair the bucket-backed profile state.

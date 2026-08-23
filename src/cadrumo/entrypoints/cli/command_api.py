@@ -7,7 +7,14 @@ projections.  It contains no command handlers and does not materialise Typer.
 from __future__ import annotations
 
 from ._command_policy import CommandExecutionPolicy
-from ._command_schema import command_schema_refs, command_schema_type, command_schema_types
+from ._command_schema import (
+    MachineSecretPayloadMetadata,
+    ProfileAuthenticationContractMetadata,
+    command_registration_projection,
+    command_schema_refs,
+    command_schema_type,
+    command_schema_types,
+)
 from ._command_spec import ArgumentSpec, CommandSpec, CommandSpecNode, DefaultKind, OptionSpec
 from ._command_specs import COMMAND_GRAPH
 from ._verb_input_schema import (
@@ -45,7 +52,9 @@ __all__ = [
     "CommandSpecNode",
     "DefaultKind",
     "JsonType",
+    "MachineSecretPayloadMetadata",
     "OptionSpec",
+    "ProfileAuthenticationContractMetadata",
     "ResolvedVerbLeaf",
     "SchemaResolutionError",
     "VerbInputSchema",
@@ -57,6 +66,7 @@ __all__ = [
     "build_verb_input_schemas",
     "cli_argv_for",
     "cli_path_for_command_key",
+    "command_registration_projection",
     "command_schema_refs",
     "command_schema_type",
     "command_schema_types",

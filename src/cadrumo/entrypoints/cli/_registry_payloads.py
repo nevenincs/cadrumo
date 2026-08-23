@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for registry CLI commands.
 
 Each class declared here is a strict
-:class:`OutputSchema` subclass and is decorated
-with CommandSpec schema authority so the
+:class:`OutputSchema` subclass and a deferred public schema target referenced
+by production-authored CommandSpec so the
 JSON-contract test suite can enumerate every registry command surface this
 module covers.
 
@@ -69,7 +69,7 @@ class RegistryInspectResult(OutputSchema):
     Both commands project the same :class:`RegistryTreeReport` shape in
     full -- ``inspect`` from :func:`inspect_registry_tree`, ``verify`` from
     the validated result of :func:`verify_registry_tree` -- so one schema is
-    registered under both command paths (the pattern
+    referenced under both command paths (the pattern
     :class:`~cadrumo.entrypoints.cli._payloads_modelo_reconcile.ModeloReconcileResult`
     already established for ``modelo reconcile pull``/``file``). Carries the
     registry/source roots, every inventory count (bounded non-negative -- a

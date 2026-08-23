@@ -1,5 +1,5 @@
 # ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
-"""Typer registration for the guided ``aeat app modelo work amend-wizard`` command.
+"""Behavior handler for the guided ``aeat app modelo work amend-wizard`` command.
 
 An operator discovers a mistake in an already-filed return and knows "casilla 01 was
 wrong, it should have been 1100" in plain language, not the raw

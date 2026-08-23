@@ -1,4 +1,4 @@
-"""Typer registration for modelo aggregation commands."""
+"""Behavior handlers for modelo aggregation commands."""
 
 from __future__ import annotations
 

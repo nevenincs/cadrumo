@@ -22,7 +22,7 @@ The :func:`command_error_boundary` decorator wraps a callback so that
 :class:`CadrumoError` instances are emitted via
 :func:`_emit_error_and_exit`.
 :func:`decorate_typer_app` walks a
-:class:`~typer.Typer` tree and applies the decorator to every registered command
+:class:`~typer.Typer` tree and applies the error boundary to every graph-materialized command
 and group callback (with an opt-out via ``skip_paths``).
 :func:`error_boundary_under_test` toggles the
 boundary off for tests that want to assert on the raised exception directly.
@@ -702,7 +702,9 @@ def render_error_payload(
     if action is not None:
         text = _render_precondition_action_text(text, command=command, action=action)
     if authentication_notices:
-        text = "\n".join((*[item.message for item in authentication_notices], text))
+        from ._common import notice_lines
+
+        text = "\n".join((*notice_lines(authentication_notices), text))
     if notice is None:
         return text
     from ...application.operator_output import sandbox_banner_line

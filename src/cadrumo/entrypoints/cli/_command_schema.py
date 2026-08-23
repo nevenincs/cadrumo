@@ -102,6 +102,10 @@ class MachineSecretPayloadMetadata:
     key: str
     fields: tuple[MachineSecretFieldMetadata, ...]
     condition: MachineSecretVariantConditionMetadata | None
+    maximum_bytes: int
+    same_scope_exclusive: bool
+    duplicate_keys_forbidden: bool
+    extra_fields_forbidden: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,10 +117,14 @@ class ProfileAuthenticationContractMetadata:
     same_scope_exclusive: bool
     stdin_exclusive_across_scopes: bool
     descriptors_must_differ_across_scopes: bool
+    duplicate_keys_forbidden: bool
+    extra_fields_forbidden: bool
 
 
 def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPayloadMetadata, ...]:
     """Project value-free secret shapes directly from their owning command spec."""
+    from ._config._secure_input import MACHINE_SECRET_MAX_BYTES
+
     contract = spec.machine_secret
     if contract is None:
         return ()
@@ -127,6 +135,10 @@ def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPay
             MachineSecretVariantConditionMetadata(variant.condition.option_name, variant.condition.presence)
             if variant.condition is not None
             else None,
+            MACHINE_SECRET_MAX_BYTES,
+            True,
+            True,
+            True,
         )
         for variant in contract.variants
     )
@@ -312,6 +324,8 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
             same_scope_exclusive=True,
             stdin_exclusive_across_scopes=True,
             descriptors_must_differ_across_scopes=True,
+            duplicate_keys_forbidden=True,
+            extra_fields_forbidden=True,
         ),
     )
 

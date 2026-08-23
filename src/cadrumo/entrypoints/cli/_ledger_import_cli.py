@@ -1,4 +1,4 @@
-"""Ledger import command registration for ``aeat app ledger``."""
+"""Ledger import behavior handlers for ``aeat app ledger``."""
 
 from __future__ import annotations
 

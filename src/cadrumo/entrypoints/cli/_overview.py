@@ -605,7 +605,7 @@ def _overview_calendar_all_profiles(
     Iterates :func:`list_profile_buckets` and reads only the already
     authenticated active capsule. Other profiles remain locked projections.
     The combined JSON payload uses the single
-    :class:`OverviewCalendarResult` schema registered for
+    :class:`OverviewCalendarResult` schema declared for
     ``overview.calendar``.
     """
     from ...application.workflow import list_profile_buckets

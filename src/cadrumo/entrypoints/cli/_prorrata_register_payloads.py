@@ -1,7 +1,7 @@
 """Typed JSON payloads for the cross-period IVA prorrata register CLI.
 
 Each result model is a strict
-:class:`OutputSchema` subclass registered under a
+:class:`OutputSchema` subclass referenced as a deferred target under a
 stable ``command`` key so the ``_emit_envelope`` spine and the JSON-schema
 conformance gate bind the ``aeat app ledger prorrata`` leaves to a schema.
 
@@ -59,7 +59,7 @@ class SectorDefinitionPayload(OutputSchema):
 
 
 class ProrrataElectResult(OutputSchema):
-    """Shared shape for the regime-election verbs; the two verbs register distinct keys."""
+    """Shared shape referenced by the two regime-election verbs under distinct keys."""
 
     bucket_id: BucketId
     entry: ProrrataEntryPayload

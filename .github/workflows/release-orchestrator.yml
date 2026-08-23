@@ -325,7 +325,10 @@ jobs:
     name: Cadrumo / seal the release candidate and publish
     needs: [preflight, precondition, campaign, acquire]
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
+    # Includes the publication authority's own Gate 2/Gate 3 and destination
+    # work. The orchestrator must observe its terminal conclusion before it can
+    # safely retire the selectable candidate.
+    timeout-minutes: 150
     permissions:
       # contents: write creates the candidate's own DRAFT release. It is not a
       # publication: the draft lives in a reserved tag namespace the evidence GC
@@ -377,6 +380,7 @@ jobs:
           SCOOP_RUN_ID: ${{ needs.acquire.outputs.scoop_run_id }}
           HOMEBREW_RUN_ID: ${{ needs.acquire.outputs.homebrew_run_id }}
           CLAUDE_EVIDENCE_RELEASE: ${{ needs.precondition.outputs.claude_evidence_release }}
+          HEAD_SHA: ${{ needs.campaign.outputs.head_sha }}
           DRY_RUN: ${{ needs.preflight.outputs.dry_run }}
         run: |
           # A rehearsal's packaging_run_id points at packaging-quick.yml (the
@@ -394,11 +398,28 @@ jobs:
             echo "dry_run: not dispatching publish-release.yml (its Gate 2 needs a real packaging-smoke.yml source, which a rehearsal does not produce)"
             exit 0
           fi
-          args=(--repo "${GITHUB_REPOSITORY}" -f "packaging_run_id=${PACKAGING_RUN_ID}" -f "dry_run=${DRY_RUN}")
-          [ -n "${SCOOP_RUN_ID}" ] && args+=(-f "scoop_run_id=${SCOOP_RUN_ID}")
-          [ -n "${HOMEBREW_RUN_ID}" ] && args+=(-f "homebrew_run_id=${HOMEBREW_RUN_ID}")
-          [ -n "${CLAUDE_EVIDENCE_RELEASE}" ] && args+=(-f "claude_evidence_release=${CLAUDE_EVIDENCE_RELEASE}")
-          gh workflow run publish-release.yml "${args[@]}"
+          args=(--input "packaging_run_id=${PACKAGING_RUN_ID}" --input "dry_run=${DRY_RUN}")
+          [ -n "${SCOOP_RUN_ID}" ] && args+=(--input "scoop_run_id=${SCOOP_RUN_ID}")
+          [ -n "${HOMEBREW_RUN_ID}" ] && args+=(--input "homebrew_run_id=${HOMEBREW_RUN_ID}")
+          [ -n "${CLAUDE_EVIDENCE_RELEASE}" ] && args+=(--input "claude_evidence_release=${CLAUDE_EVIDENCE_RELEASE}")
+          # Resolve this dispatch by immutable commit identity and wait for the
+          # publication workflow itself to succeed. A rejected dispatch or a
+          # failed/cancelled publication exits non-zero here, before the draft
+          # candidate can be retired, so a later recovery can select it again.
+          uv run --frozen python -m dev.release.run_resolution \
+            --workflow ".github/workflows/publish-release.yml" \
+            --head-sha "${HEAD_SHA}" \
+            --repository "${GITHUB_REPOSITORY}" \
+            --resolve-seconds 300 \
+            --conclude-seconds 7200 \
+            --output-name publication_run_id \
+            "${args[@]}"
+
+          # Publication is now conclusively green. Retag the sealed draft via
+          # the release-candidate authority so it remains auditable but exits
+          # the selectable release-candidate-<packaging_run_id> namespace.
+          uv run --frozen python -c \
+            'import os; from dev.release.release_candidate import candidate_tag, mark_candidate_consumed; print(mark_candidate_consumed(candidate_tag(os.environ["PACKAGING_RUN_ID"]), repository=os.environ["GITHUB_REPOSITORY"]))'
 
   alert:
     name: Cadrumo / alert the operator on a failed release-path run

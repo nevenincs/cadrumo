@@ -29,6 +29,7 @@ real captured value.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 from datetime import UTC, datetime
@@ -41,6 +42,12 @@ from dev._paths import UTF_8
 
 from ._command import CommandResult
 from ._hashing import sha256_path
+from ._installed_wheel_binding import (
+    assert_archive_members_match_extraction,
+    installed_distribution_payload_sha256,
+    installed_wheel_payload_sha256,
+    sealed_wheel_payload_sha256,
+)
 from .cohort_manifest import LoadedReleaseCohort
 from .evidence import (
     AcquisitionIdentity,
@@ -65,6 +72,9 @@ if TYPE_CHECKING:
 _CLI_EXECUTABLE_NAME: Final[str] = "aeat"
 _MCP_EXECUTABLE_NAME: Final[str] = "cadrumo-mcp"
 _UTF_8: Final[str] = UTF_8
+_MCP_ATTESTED_COMMAND_KEYS: Final[frozenset[str]] = frozenset(
+    {"config.profile.create", "modelo.work.create", "modelo.work.calculate", "modelo.work.observations"}
+)
 
 # The client identity an acquire lane declares when it drives the published
 # artifact through the MCP SDK over ``uv``/``uvx`` rather than a real Claude
@@ -185,6 +195,91 @@ def _assert_oracle_bound_to_cohort(
             "this cohort's build. Re-run the installed oracles against the cohort under test before "
             "emitting evidence.",
         )
+    records = {record.name: record for record in cohort.manifest.artifacts}
+    expected = {
+        "cohort_source_commit": cohort.manifest.source.commit,
+        "cohort_manifest_sha256": records["python-cohort-manifest"].sha256,
+        "cohort_root_wheel_sha256": records["cadrumo-wheel"].sha256,
+    }
+    observed = {
+        "cohort_source_commit": tax_evidence.cohort_source_commit,
+        "cohort_manifest_sha256": tax_evidence.cohort_manifest_sha256,
+        "cohort_root_wheel_sha256": tax_evidence.cohort_root_wheel_sha256,
+    }
+    if observed != expected:
+        raise EvidenceCohortBindingError(
+            f"installed oracle cohort provenance mismatch: expected {expected!r}, got {observed!r}",
+        )
+    executable = Path(tax_evidence.resolved_executable).resolve(strict=True)
+    if sha256_path(executable) != tax_evidence.executable_sha256:
+        raise EvidenceCohortBindingError(
+            "installed oracle executable digest mismatch: the captured executable was replaced "
+            "or the evidence was swapped before minting",
+        )
+    expected_payload_sha256 = sealed_wheel_payload_sha256(cohort.artifact("cadrumo-wheel"))
+    if (
+        tax_evidence.installed_wheel_payload_sha256 != expected_payload_sha256
+        or installed_wheel_payload_sha256(executable) != expected_payload_sha256
+    ):
+        raise EvidenceCohortBindingError(
+            "installed cadrumo payload does not match the exact sealed root wheel",
+        )
+
+
+def _assert_mcp_oracle_bound_to_cohort(
+    *, cohort: LoadedReleaseCohort, mcp_evidence: InstalledMcpEvidence, require_mcpb: bool = False
+) -> None:
+    """Bind the observed MCP runtime and its invoked CLI to exact cohort wheels."""
+    records = {record.name: record for record in cohort.manifest.artifacts}
+    expected = {
+        "cohort_source_commit": cohort.manifest.source.commit,
+        "cohort_manifest_sha256": records["python-cohort-manifest"].sha256,
+        "cohort_root_wheel_sha256": records["cadrumo-wheel"].sha256,
+        "cohort_harness_wheel_sha256": records["cadrumo-harness-wheel"].sha256,
+    }
+    observed = {
+        "cohort_source_commit": mcp_evidence.cohort_source_commit,
+        "cohort_manifest_sha256": mcp_evidence.cohort_manifest_sha256,
+        "cohort_root_wheel_sha256": mcp_evidence.cohort_root_wheel_sha256,
+        "cohort_harness_wheel_sha256": mcp_evidence.cohort_harness_wheel_sha256,
+    }
+    if observed != expected:
+        raise EvidenceCohortBindingError(
+            f"installed MCP cohort provenance mismatch: expected {expected!r}, got {observed!r}",
+        )
+    runtime_server = Path(mcp_evidence.runtime_server_executable).resolve(strict=True)
+    if require_mcpb:
+        if mcp_evidence.runtime_project_root is None:
+            raise EvidenceCohortBindingError("client MCP evidence does not identify its extracted MCPB root")
+        project_root = Path(mcp_evidence.runtime_project_root).resolve(strict=True)
+        if not runtime_server.is_relative_to(project_root):
+            raise EvidenceCohortBindingError("client MCP runtime server escapes the extracted MCPB root")
+        try:
+            assert_archive_members_match_extraction(cohort.artifact("mcpb"), project_root)
+        except RuntimeError as exc:
+            raise EvidenceCohortBindingError(str(exc)) from exc
+    sibling_cli = runtime_server.with_name("aeat.exe" if runtime_server.suffix.lower() == ".exe" else "aeat")
+    if sha256_path(runtime_server) != mcp_evidence.server_executable_sha256:
+        raise EvidenceCohortBindingError("installed MCP runtime executable digest drifted after capture")
+    expected_cli = sealed_wheel_payload_sha256(cohort.artifact("cadrumo-wheel"))
+    expected_harness = sealed_wheel_payload_sha256(cohort.artifact("cadrumo-harness-wheel"))
+    live_cli = installed_distribution_payload_sha256(sibling_cli, "cadrumo")
+    live_harness = installed_distribution_payload_sha256(runtime_server, "cadrumo-harness")
+    if (mcp_evidence.installed_cli_payload_sha256, live_cli) != (expected_cli, expected_cli):
+        raise EvidenceCohortBindingError("MCP-invoked CLI payload is not the exact sealed root wheel")
+    if (mcp_evidence.installed_harness_payload_sha256, live_harness) != (
+        expected_harness,
+        expected_harness,
+    ):
+        raise EvidenceCohortBindingError("installed MCP server payload is not the exact sealed harness wheel")
+    path_digest = hashlib.sha256(str(sibling_cli).encode(UTF_8)).hexdigest()
+    if (
+        frozenset(mcp_evidence.invoked_cli_sha256_by_command) != _MCP_ATTESTED_COMMAND_KEYS
+        or set(mcp_evidence.invoked_cli_sha256_by_command.values()) != {mcp_evidence.invoked_cli_sha256}
+    ):
+        raise EvidenceCohortBindingError("MCP command telemetry does not converge on one CLI identity")
+    if mcp_evidence.invoked_cli_sha256 != path_digest:
+        raise EvidenceCohortBindingError("MCP telemetry names a different installed CLI path")
 
 
 def build_installed_oracle_evidence(
@@ -226,11 +321,18 @@ def build_installed_oracle_evidence(
         A validated, tamper-evident :class:`~dev.packaging.evidence.DistributionEvidence`.
     """
     _assert_oracle_bound_to_cohort(cohort=cohort, tax_evidence=tax_evidence)
+    if mcp_evidence is not None:
+        _assert_mcp_oracle_bound_to_cohort(cohort=cohort, mcp_evidence=mcp_evidence)
     commands = tuple(_command_transcript(command) for command in tax_evidence.commands)
     cli_observations = {
         "requested_executable": tax_evidence.requested_executable,
         "resolved_executable": tax_evidence.resolved_executable,
         "version_output": tax_evidence.version_output,
+        "cohort_source_commit": tax_evidence.cohort_source_commit,
+        "cohort_manifest_sha256": tax_evidence.cohort_manifest_sha256,
+        "cohort_root_wheel_sha256": tax_evidence.cohort_root_wheel_sha256,
+        "executable_sha256": tax_evidence.executable_sha256,
+        "installed_wheel_payload_sha256": tax_evidence.installed_wheel_payload_sha256,
         "calculation_revision_id": tax_evidence.calculation_revision_id,
         "target_casilla": tax_evidence.target_casilla,
         "target_value": tax_evidence.target_value,
@@ -373,6 +475,7 @@ def build_client_evidence(
         ambient_product_executables_removed=mcp_evidence.ambient_product_executables_removed,
         installed_executables=(_installed_executable(_MCP_EXECUTABLE_NAME, mcp_evidence.resolved_executable),),
     )
+    _assert_mcp_oracle_bound_to_cohort(cohort=cohort, mcp_evidence=mcp_evidence, require_mcpb=True)
     observations: dict[str, Any] = {"mcp_oracle": _mcp_observations(mcp_evidence)}
     if validated_real_client_session is not None:
         observations["real_client_session"] = validated_real_client_session.model_dump(mode="json")
@@ -507,6 +610,11 @@ def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
         requested_executable=data["requested_executable"],
         resolved_executable=data["resolved_executable"],
         version_output=data["version_output"],
+        cohort_source_commit=data["cohort_source_commit"],
+        cohort_manifest_sha256=data["cohort_manifest_sha256"],
+        cohort_root_wheel_sha256=data["cohort_root_wheel_sha256"],
+        executable_sha256=data["executable_sha256"],
+        installed_wheel_payload_sha256=data["installed_wheel_payload_sha256"],
         storage_root=data["storage_root"],
         work_unit_id=data["work_unit_id"],
         calculation_revision_id=data["calculation_revision_id"],
@@ -563,6 +671,15 @@ def _mcp_evidence_from_mapping(data: dict[str, Any]) -> InstalledMcpEvidence:
         calls=calls,
         invoked_cli_sha256=data["invoked_cli_sha256"],
         invoked_cli_sha256_by_command=dict(data["invoked_cli_sha256_by_command"]),
+        cohort_source_commit=data["cohort_source_commit"],
+        cohort_manifest_sha256=data["cohort_manifest_sha256"],
+        cohort_root_wheel_sha256=data["cohort_root_wheel_sha256"],
+        cohort_harness_wheel_sha256=data["cohort_harness_wheel_sha256"],
+        server_executable_sha256=data["server_executable_sha256"],
+        runtime_server_executable=data["runtime_server_executable"],
+        runtime_project_root=data["runtime_project_root"],
+        installed_cli_payload_sha256=data["installed_cli_payload_sha256"],
+        installed_harness_payload_sha256=data["installed_harness_payload_sha256"],
         checkout_imports_removed=data["checkout_imports_removed"],
         ambient_product_executables_removed=data["ambient_product_executables_removed"],
     )

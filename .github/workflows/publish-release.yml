@@ -100,6 +100,7 @@ jobs:
     outputs:
       source_commit: ${{ steps.source-run.outputs.source_commit }}
       version: ${{ steps.validate.outputs.version }}
+      harness_version: ${{ steps.validate.outputs.harness_version }}
     env:
       RELEASE_COHORT_DIR: var/promotion/release-cohort
       EVIDENCE_DOWNLOAD: var/promotion/evidence
@@ -309,6 +310,7 @@ jobs:
       EVIDENCE_FINAL_DIR: var/promotion/evidence-final
       DOWNLOAD_LATEST_DIR: var/promotion/download-latest
       VERSION: ${{ needs.validate.outputs.version }}
+      HARNESS_VERSION: ${{ needs.validate.outputs.harness_version }}
       SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
       PACKAGING_RUN_ID: ${{ inputs.packaging_run_id }}
       SCOOP_RUN_ID: ${{ inputs.scoop_run_id }}
@@ -683,7 +685,7 @@ jobs:
       # Ordered last, a failure before this point unwinds completely, and a
       # failure HERE leaves every channel serving release assets, none of which
       # depend on the index. Re-dispatching the same cohort then converges.
-      - name: Publish the three distributions to PyPI via Trusted Publishing (OIDC)
+      - name: Publish the complete Python cohort to PyPI via Trusted Publishing (OIDC)
         run: |
           # uv exchanges the id-token for a short-lived PyPI token (Trusted
           # Publishing); it uploads the SEALED cohort's stored wheels/sdists (the
@@ -701,6 +703,8 @@ jobs:
             --check-url https://pypi.org/simple/ \
             "$RELEASE_COHORT_DIR"/python/cadrumo-"$VERSION"-py3-none-any.whl \
             "$RELEASE_COHORT_DIR"/python/cadrumo-"$VERSION".tar.gz \
+            "$RELEASE_COHORT_DIR"/python/cadrumo_harness-"$HARNESS_VERSION"-py3-none-any.whl \
+            "$RELEASE_COHORT_DIR"/python/cadrumo_harness-"$HARNESS_VERSION".tar.gz \
             "$RELEASE_COHORT_DIR"/python/cadrumo_data_manuals-"$VERSION"-py3-none-any.whl \
             "$RELEASE_COHORT_DIR"/python/cadrumo_data_manuals-"$VERSION".tar.gz \
             "$RELEASE_COHORT_DIR"/python/cadrumo_data_official-"$VERSION"-py3-none-any.whl \

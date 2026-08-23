@@ -126,6 +126,7 @@ def main(argv: list[str] | None = None) -> int:
     logs = run_root / "logs"
     logs.mkdir(parents=True)
     profile = run_root / "isolated-user-data"
+    cohort = load_release_cohort(args.release_cohort_dir)
 
     package = dc.discover_desktop_package(state_dir=args.source_profile.resolve())
     extension_dir = (args.source_profile / "Claude Extensions" / args.extension_id).resolve(strict=True)
@@ -140,6 +141,16 @@ def main(argv: list[str] | None = None) -> int:
         environment_overrides=server_env,
         storage_root=run_root / "oracle-storage",
         work_dir=run_root / "oracle-work",
+        cohort_source_commit=cohort.manifest.source.commit,
+        cohort_manifest_sha256=next(
+            item.sha256 for item in cohort.manifest.artifacts if item.name == "python-cohort-manifest"
+        ),
+        cohort_root_wheel_sha256=next(
+            item.sha256 for item in cohort.manifest.artifacts if item.name == "cadrumo-wheel"
+        ),
+        cohort_harness_wheel_sha256=next(
+            item.sha256 for item in cohort.manifest.artifacts if item.name == "cadrumo-harness-wheel"
+        ),
         timeout_seconds=args.timeout_seconds,
     )
     (run_root / "protocol-oracle.json").write_text(
@@ -218,7 +229,6 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     # 7. Emit the sanctioned real-client row.
-    cohort = load_release_cohort(args.release_cohort_dir)
     launch_transcript = capture_owned_server_launch(
         server=uv,
         server_args=server_args,

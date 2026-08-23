@@ -643,7 +643,7 @@ class CadrumoTyperGroup(TyperGroup):
     def get_command(self, ctx: TyContext, cmd_name: str) -> TyCommand | None:
         """Resolve ``cmd_name``, importing a lazy module only if selected.
 
-        Eagerly-registered commands resolve through the base class. A
+        Eagerly materialized commands resolve through the base class. A
         lazy subcommand triggers its loader — importing the command
         module and the application layer it pulls — exactly once, the
         first time that subtree is dispatched into.

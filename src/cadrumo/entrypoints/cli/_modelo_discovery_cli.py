@@ -1,5 +1,5 @@
 # ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
-"""Typer registration for modelo registry discovery commands."""
+"""Behavior handlers for modelo registry discovery commands."""
 
 from __future__ import annotations
 

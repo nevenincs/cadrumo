@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
 
 from .._paths import LOCALES_DIR, SRC_DIR
@@ -17,6 +19,7 @@ _ACCEPTED_FD_ZERO_COPY = {
     "ca": "useu el descriptor 0",
     "hu": "használja a 0-s",
 }
+_ROOT_ERRORS_PREFIX = "cli.config.custody.errors.profile_secrets"
 
 
 def _catalogue(locale: str) -> dict[str, object]:
@@ -25,7 +28,7 @@ def _catalogue(locale: str) -> dict[str, object]:
     payload = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR).load_locale(source)
     inner = payload.get(locale, payload)
     assert isinstance(inner, dict)
-    return inner
+    return cast("dict[str, object]", inner)
 
 
 def _leaf(catalogue: dict[str, object], key: str) -> str:
@@ -71,3 +74,24 @@ def test_malformed_missing_and_oversize_copy_is_channel_neutral(locale: str) -> 
         assert "--secrets-fd" not in fd_copy
         assert "--secrets-stdin" not in fd_copy
 
+
+@pytest.mark.parametrize("locale", _LOCALES)
+def test_root_profile_authentication_copy_is_complete_and_channel_neutral(locale: str) -> None:
+    catalogue = _catalogue(locale)
+    for suffix in ("invalid_json", "missing_fields", "too_large"):
+        assert _leaf(catalogue, f"{_ROOT_ERRORS_PREFIX}_fd_{suffix}") == _leaf(
+            catalogue, f"{_ROOT_ERRORS_PREFIX}_stdin_{suffix}"
+        )
+    reserved = _leaf(catalogue, f"{_ROOT_ERRORS_PREFIX}_fd_reserved_stream")
+    assert "0" in reserved
+    assert "1" in reserved
+    assert "2" in reserved
+    for suffix in (
+        "channel_conflict",
+        "stdin_collision",
+        "fd_collision",
+        "inapplicable",
+        "unused",
+        "missing_target",
+    ):
+        assert _leaf(catalogue, f"{_ROOT_ERRORS_PREFIX}_{suffix}")

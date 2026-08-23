@@ -1,4 +1,4 @@
-"""Google Drive folder command registration for ``aeat config google``."""
+"""Google Drive folder behavior handlers for ``aeat config google``."""
 
 from __future__ import annotations
 

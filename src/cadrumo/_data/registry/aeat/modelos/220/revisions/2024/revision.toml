@@ -61,67 +61,62 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the Impuesto sobre Sociedades grupo-fiscal \
-consolidated declaration. DISCLOSURE -- self-review: the same agent authored the casillas \
-being reviewed. VERIFIED -- RECORD T22004B02 IS AUTHORED, 16 casillas describing all 26 \
-design fields: the CUENTA TECNICA DEL SEGURO NO VIDA, gastos del inmovilizado material y \
-de las inversiones, in the shape used by entidades aseguradoras, down to the closing \
-subtotal [00288]. Revision total 1897 casillas over THIRTY-SEVEN of the design's 137 \
-record sheets. Suite: 8 failed, 5385 passed -- an IDENTICAL FAILED LIST to the previous \
-run, zero regressions. CORRECTED -- THE SPANISH LABELS OF THIS CAMPAIGN HAVE BEEN MISSING \
-THEIR ACCENTS, AND THIS RECORD IS THE FIRST WITHOUT THAT DEFECT. Earlier records asserted \
-v.isascii() on every catalogue value. That assertion was adopted as a guard against \
-mojibake and SILENTLY BECAME A SPELLING RULE for a language that requires accents, so \
-\"gestion\", \"deduccion\" and \"perdidas\" shipped onto filing-grade operator labels in \
-the MANDATORY SPANISH SOURCE. Nothing in the tree required it: the catalogues already \
-carried accented text from other hands, and the suite is unchanged with accents present. \
-Here the Spanish is taken VERBATIM FROM THE DESIGN rather than retyped beside it, asserted \
-equal to the text the generator derived from AEAT, and en/ca/hu are written in their own \
-orthography; the guard is replaced by one that checks for the Unicode replacement \
-character and NFC normalisation, which is what a mojibake guard should have checked. NOT \
-CLAIMED, AND THE LARGEST KNOWN DEFECT IN THIS REVISION: 1739 OF THE 1897 SPANISH LABELS \
-REMAIN UNACCENTED across 33 records. They are wrong in the mandatory source locale and are \
-NOT fixed by this iteration. The fix is mechanical for the twelve records authored through \
-the flat generator, whose accented design text is already carried in each fragment's \
-verbatim comment; the hand-typed record families need re-accenting by hand. This is \
-recorded as owed work, not as an acceptable state. CORRECTED -- TWO FRAGMENTS SHIPPED \
-FALSE CLAIMS ABOUT THEMSELVES, BOTH FROM FIXED PROSE IN A SHARED HEADER. The header \
-asserted \"every box carries AEAT's own five-digit number, so not one number here is \
-minted\": true of the records it was written for, FALSE for T22003C01, which carries five \
-four-digit boxes, and for T22007000, which carries four byte spans AEAT numbers nowhere. \
-The header also closed every record with \"THIS BALANCE SHEET DOES NOT BALANCE HERE\", \
-which T22007000 is not -- it is a settlement chain. A CLAIM WRITTEN AS A CONSTANT IS A \
-CLAIM THAT STOPPED BEING CHECKED: the number sentence is now DERIVED from the emitted \
-numbers like every count around it, and the closing paragraph is a REQUIRED per-record \
-field, so a record that does not state what it leaves uncomputed fails to generate rather \
-than inheriting a neighbour's sentence. Two further paragraphs that cited another record's \
-\"ACTIVO\" example were made generic. All twelve flat records were regenerated: the diff \
-is COMMENTS ONLY, not one casilla definition changed, verified by counting non-comment \
-changed lines. VERIFIED -- THE WHOLE CORPUS WAS RE-DERIVED FROM THE DESIGN AFTER THIS \
-RECORD LANDED: 1897 casillas across 44 fragments and 37 sheets, every segmento a real \
-sheet, 1724 numeric box numbers PRINTED BY AEAT and none minted, 4 letter numbers, 74 byte \
-spans each resolving to a design field at exactly that offset and length, 37 sheets tiling \
-once with no gap and no partial overlap, no repeated id and no repeated (segmento, \
-number). ZERO PROBLEMS. VERIFIED -- TWO SPLIT LIGATURES REPAIRED HERE, \"cuentas fi \
-nancieras\" and \"inversiones fi nancieras\", rejoined only on 22 attestations of \
-\"financieras\" elsewhere in the design, and one missing parent-child separator repaired \
-after an ATTESTED standalone line of this record. NOTED -- FOUR OF THE SIXTEEN BOXES ARE \
-GROUP HEADS THAT ALSO CARRY A VALUE. Nothing decides whether a head is the sum of its \
-children or an independent figure: the design does not say, and no formula assumes either \
-way. NOT CLAIMED -- 9873 OF THE 11603 (record, number) SLOTS REMAIN UNMODELLED across 95 \
-of the 134 records that carry numbers; 1730 slots are modelled, zero orphaned. NOT CLAIMED \
--- NOTHING COMPUTES ANY OF IT. [00288] closes the cuenta tecnica and is DECLARED, not \
-computed; nothing carries it into the cuenta no tecnica or the consolidated result. No \
-formula, construct or binding exists anywhere in this revision. NOT CLAIMED -- NO EXPORT \
-LAYOUT AND NO CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be filed. \
-model_law_authority_scope remains inspection_only, so this stamp is made under the LOWER \
-inspection bar and MUST be re-made if a layout lands. NOT CLAIMED -- T22009001, T22012A00 \
-and T22012A10 remain deliberately held back on unresolved ambiguities. NOT CLAIMED -- \
-LOCALES COMPLETE BUT UNAUDITED: the 16 labels are COMPOSED from 16 distinct parts \
-translated once each and asserted to rejoin into exactly the design's own Spanish, by the \
-same agent that authored the casillas and reviewed by nobody else. All 1897 casillas \
-resolve a non-null label in es, en, ca and hu, counted by VALUE rather than by key, and no \
-translation repeats its Spanish verbatim. The .help keys remain unauthored across this \
-entire revision. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero."""
+consolidated declaration. DISCLOSURE -- self-review: the same agent authored the labels \
+being repaired. THIS ITERATION AUTHORED NO NEW RECORD. It repaired a defect this campaign \
+introduced and recorded as owed: the Spanish casilla labels were missing their accents. \
+Revision unchanged at 1897 casillas over thirty-seven of the design's 137 record sheets. \
+Suite: 8 failed, 5390 passed -- an IDENTICAL FAILED LIST to the previous run, zero \
+regressions. CORRECTED -- 1582 OF THE 1739 UNACCENTED SPANISH LABELS ARE REPAIRED, AND THE \
+ACCENTS WERE NOT INVENTED. They are restored from THE DESIGN'S OWN VOCABULARY, the same \
+workbook the labels were derived from, under one rule: a token whose deaccented form has \
+exactly ONE spelling in the design takes it; a token whose deaccented form has MORE THAN \
+ONE is refused; a token the design does not contain is left alone. 9255 distinct \
+deaccented tokens, 28 ambiguous. 100 distinct tokens were accented over 4501 occurrences. \
+THE INVARIANT ASSERTED FOR EVERY SINGLE LABEL is that deaccenting the result reproduces \
+the input EXACTLY -- no word added, dropped, reordered or respelled -- so the pass can \
+only have changed accents. VERIFIED INDEPENDENTLY OF THAT INVARIANT: 428 of the 460 labels \
+belonging to records authored through the flat generator now end, case aside, in exactly \
+the accented text that generator derived from AEAT by a different route. The 32 exceptions \
+are all T22007000 and are its documented abbreviation expansions (\"Suma de BI\" written \
+out), not repair damage. VERIFIED -- 20 AMBIGUOUS TOKENS WERE DECIDED BY HAND, each \
+recorded with its reason and its evidence, and the pass REFUSES rather than guesses on any \
+ambiguous token not in that table. \"o\", \"si\" and \"solo\" are decided to stay as they \
+are because the accented forms are DIFFERENT WORDS and the design attests both. \
+\"electronico\" is the one case the design does not settle -- it prints both spellings \
+once each -- and is decided on Spanish orthography, recorded as a decision rather than as \
+a count. Five decisions that never fired were REMOVED: a decision that is never reached is \
+a claim that stopped being checked, which is the same defect that let a header assert \
+\"every box is five-digit\" long after it was false. VERIFIED -- THE 157 LABELS LEFT \
+UNACCENTED CONTAIN NO ACCENT-BEARING WORD. Of their 1711 tokens, 1617 are attested \
+unaccented in the design and 94 are absent from it; all 94 are correctly unaccented \
+Spanish. This is the end state, not a residue. CORRECTED -- FIFTY LABELS NAMED A PAGE THAT \
+DOES NOT EXIST. The record prefix joins pagina and letra from the envelope; T22007000 \
+declares pagina \"07\" and letra \"0\", so the prefix read \"pag. 70\". Every other record \
+has an ALPHABETIC letra where the join is unambiguous, which is why this stayed invisible \
+until a record with a numeric one was authored. Fixed in es and ca, and fixed at the cause \
+in the generator; en and hu compose no page reference for that record at all, which is an \
+inconsistency and not a false statement. CORRECTED -- AEAT WRITES THE MASCULINE ORDINAL \
+INDICATOR IN \"1o pago fraccionado\" and the labels carried an ASCII \"o\" on fifteen of \
+them: the same isascii() rule, costing one more character. Both repairs declared their \
+expected firing count and were asserted against it after every label was rebuilt. NOT \
+CLAIMED, AND STILL OWED -- CATALAN AND HUNGARIAN CARRY THE SAME DEFECT AND ARE NOT \
+REPAIRED HERE. 1879 of 1897 Catalan labels and 1848 of 1897 Hungarian labels carry no \
+non-ASCII character, and both languages require diacritics throughout. There is NO design \
+donor for them -- the workbook is Spanish -- so they cannot be repaired mechanically the \
+way Spanish was, and hand re-accenting is owed work. This is recorded as a known-wrong \
+state, not an acceptable one. NOT CLAIMED -- 9873 OF THE 11603 (record, number) SLOTS \
+REMAIN UNMODELLED across 95 of the 134 records that carry numbers; 1730 slots are \
+modelled, zero orphaned, unchanged by this iteration. NOT CLAIMED -- NOTHING COMPUTES ANY \
+OF IT. No formula, construct or binding exists anywhere in this revision; two complete \
+balance sheets sit in it and neither balances. NOT CLAIMED -- NO EXPORT LAYOUT AND NO \
+CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be filed. model_law_authority_scope remains \
+inspection_only, so this stamp is made under the LOWER inspection bar and MUST be re-made \
+if a layout lands. NOT CLAIMED -- T22009001, T22012A00 and T22012A10 remain deliberately \
+held back on unresolved ambiguities. NOT CLAIMED -- LOCALES STILL UNAUDITED BY ANY SECOND \
+PARTY: every label in all four catalogues was written and now repaired by the same agent, \
+reviewed by nobody else. All 1897 casillas resolve a non-null label in es, en, ca and hu, \
+counted by VALUE rather than by key. The .help keys remain unauthored across this entire \
+revision. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero."""
 reviewed_at = 2026-08-23
 
 [revisions."2024".family_dispositions.casilla_continuidad_evolutions]

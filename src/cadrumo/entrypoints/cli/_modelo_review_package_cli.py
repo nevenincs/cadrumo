@@ -1,4 +1,4 @@
-"""Typer registration for the ``aeat app modelo review-package`` verb group.
+"""Behavior handlers for the ``aeat app modelo review-package`` verb group.
 
 Assembles a shareable, checksum-verifiable review package (``build``) and
 verifies one already received (``verify``). All verbs are local-only: they

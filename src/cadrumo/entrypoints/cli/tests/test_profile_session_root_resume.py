@@ -56,6 +56,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LABEL = "session-operator"
 _PASSPHRASE = "session-root-passphrase"  # noqa: S105
+_PROFILE_SECRET_PAYLOAD = json.dumps({"profile_passphrase": _PASSPHRASE})
+_LOGIN_SECRET_PAYLOAD = json.dumps({"passphrase": _PASSPHRASE})
 
 
 @pytest.fixture(autouse=True)
@@ -124,12 +126,20 @@ def _invoke_decrypting_verb_without_the_secret_channel():
     """Run a real decrypting verb with no headless passphrase configured.
 
     Clearing the passphrase is what makes this test meaningful: with the
-    sanctioned headless channel unset, ONLY a resumed persisted session
+    substrate passphrase unavailable, ONLY a resumed persisted session
     can unlock the profile, so a passing invocation proves resume rather
     than the retired implicit unlock.
     """
     with override_settings(cadrumo_secret_passphrase=None):
         return invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
+
+
+def _invoke_with_root_profile_secret(arguments: list[str]):
+    """Establish the exact root-gate session before dispatching ``arguments``."""
+    return invoke_cached_cli(
+        ["--profile-secrets-stdin", *arguments],
+        input=_PROFILE_SECRET_PAYLOAD,
+    )
 
 
 @pytest.mark.os_keychain
@@ -193,7 +203,7 @@ class TestProfileDiscoveryStaysReachableWhileLoggedOut:
     plaintext per-bucket ``manifest.toml`` files and decrypts nothing, so it
     needs no session to be correct.
 
-    The passphrase is cleared throughout. Without that the sanctioned headless
+    The substrate passphrase is cleared throughout. Without that programmatic
     channel would unlock the profile outright and the test would pass on a
     bypass rather than on the exemption it exists to pin.
     """
@@ -251,10 +261,13 @@ class TestFailClosedRefusals:
         _create_profile()
         close_active_bucket_session()
 
-        result = invoke_cached_cli(["--format", "json", "config", "profile", "validate", _LABEL])
+        result = _invoke_with_root_profile_secret(
+            ["--format", "json", "config", "profile", "validate", _LABEL],
+        )
 
         document = json.loads(semantic_cli_output(result))
-        assert result.exit_code == 0, document
+        assert document["command"] == "config.profile.validate", document
+        assert "error" not in document, document
 
     def test_unnamed_history_reads_the_authenticated_active_profile(self) -> None:
         bucket_id = _create_profile()
@@ -343,7 +356,10 @@ class TestFailClosedRefusals:
         assert f'"value":"{_LABEL}"' in text
         assert bucket_id not in text
 
-        dispatched = invoke_cached_cli(["config", "login", _LABEL])
+        dispatched = invoke_cached_cli(
+            ["config", "login", _LABEL, "--secrets-stdin"],
+            input=_LOGIN_SECRET_PAYLOAD,
+        )
         assert dispatched.exit_code == 0, dispatched.output
 
     def test_absent_session_root_refusal_carries_the_login_action(self) -> None:
@@ -470,16 +486,14 @@ class TestFailClosedRefusals:
         )
 
 
-class TestHeadlessSecretChannel:
-    """The declared non-interactive secret channel keeps working unchanged."""
+class TestAmbientSecretIsNotACliChannel:
+    """Configured substrate material cannot authenticate a CLI invocation."""
 
-    def test_configured_passphrase_unlocks_without_a_persisted_session(self) -> None:
+    def test_configured_passphrase_is_ignored_without_an_explicit_root_channel(self) -> None:
         _create_profile()
-        # No login, no persisted session — only the headless secret channel,
-        # which is the authentication factor supplied non-interactively.
         close_active_bucket_session()
         assert load_settings().cadrumo_secret_passphrase is not None
 
         result = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
 
-        assert result.exit_code == 0, result.output
+        assert result.exit_code == 2, result.output

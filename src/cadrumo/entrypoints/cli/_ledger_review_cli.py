@@ -1,4 +1,4 @@
-"""Review command registration for ``aeat app ledger``.
+"""Review behavior handlers for ``aeat app ledger``.
 
 The command queries a :class:`TransactionCatalogueRepository` through the
 application review backend.

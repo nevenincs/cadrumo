@@ -1,7 +1,7 @@
 """Auxiliary modelo payload schemas split from the main modelo registry.
 
 These strict :class:`OutputSchema` subclasses
-are registered through CommandSpec schema authority
+are referenced as deferred public schema targets by production-authored CommandSpec
 and re-exported by :mod:`_modelo_payloads` so audit,
 work-history, workflow-run, list, and describe emitters keep one payload import
 surface. Validated results enter

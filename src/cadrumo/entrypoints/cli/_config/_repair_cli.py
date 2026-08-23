@@ -1,4 +1,4 @@
-"""Config repair maintenance command registration."""
+"""Config repair maintenance behavior handlers."""
 
 from __future__ import annotations
 

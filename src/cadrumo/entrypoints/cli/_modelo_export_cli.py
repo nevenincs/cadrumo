@@ -1,4 +1,4 @@
-"""Typer registration for the root-level modelo export command."""
+"""Behavior handler for the root-level modelo export command."""
 
 from __future__ import annotations
 

@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for the profile-capabilities CLI commands.
 
 Each class is a strict
-:class:`OutputSchema` subclass registered with
-CommandSpec schema authority so the JSON-contract gate
+:class:`OutputSchema` subclass referenced by
+production-authored CommandSpec as deferred public schema targets so the JSON-contract gate
 enumerates the surface. Field sets match the payload dicts constructed in
 :mod:`_capabilities_cli` and enter
 :class:`SchemaEnvelope` through

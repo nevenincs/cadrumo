@@ -52,22 +52,33 @@ has no declared deadline window is compared on the ejercicio number alone, so a 
 arrears-filed year with a missing deadline-window declaration could still false-positive --
 that gap is a deadline-window coverage question, not one this check resolves.
 
-THE DIVERGENCE SET SPLITS IN TWO, AND ONLY ONE HALF IS A REGISTRY DEFECT. Measured
-across the current set: half the lines name a revision whose claimed EJERCICIOS fall
-wholly inside its design's window and whose PRESENTATION year alone falls outside --
-modelo 303's ``2022`` claims ejercicio 2022, presents in 2023, and cites
-``aeat-dr-303-2022`` whose catalogue window closes 2022-12-31. That shape is
-systematic rather than per-revision: for an arrears-filed return, a design window
-recorded on the EJERCICIO axis can never intersect the presentation year, so the
-comparison is between a window meaning one thing and a date meaning another. Whether
-a design's ``applies_from``/``applies_to`` record the ejercicio it governs or the
-calendar span its norm is in force is the open question, and it is not settled here.
+WHICH AXIS A DESIGN WINDOW IS ON IS DECLARED, NOT ASSUMED. The open question the
+paragraph above once left -- whether ``applies_from``/``applies_to`` record the
+ejercicio a design governs or the calendar span its norm is in force -- is answered by
+measuring the catalogue: of the registered record designs, the great majority start on
+1 January and so state an ejercicio, while a minority carry a real mid-year date and so
+state a legal effect (Modelo 036's 2025-02-03, Modelo 145's 2012-01-31, Modelo 360's
+2010-04-01, and Modelo 720's 2013-02-01). The field carries BOTH meanings, and the
+authoring already distinguishes them by the day it stamps.
 
-The other half is a genuine gap: the revision claims ejercicios its cited design does
-not cover on ANY reading -- modelo 126's ``2019-y-siguientes`` claims ejercicio 2019
-while citing ``aeat-dr-126-2020``, and modelo 126 bundles no earlier design at all.
-Those need AEAT's published design for the missing year bundled; they cannot be
-resolved by re-reading the axis.
+So the comparison reads that declaration per design rather than applying one axis to the
+whole catalogue: a layout whose every declared design starts on 1 January is compared on
+the EJERCICIO it claims, and a layout citing any date-scoped design keeps the
+presentation comparison the arrears correction above derives. Modelo 720 is the case that
+proves this reads a declaration rather than a convention -- stamped 2013-02-01 while its
+orden first applies to ejercicio 2012, it stays on the presentation axis and stays green.
+
+The correction cut the divergence set by eleven lines that compared an ejercicio-scoped
+window against a presentation year -- modelo 303's ``2022``, modelo 390's four revisions,
+modelo 714's four, modelo 232's and modelo 347's -- each of which claims ejercicios lying
+wholly inside its own design's window. It ADDED one: modelo 200's ``2024-y-siguientes``
+claims ejercicio 2024 while citing only ``aeat-dr-200-2025``, a gap the presentation shift
+had been masking by clearing ejercicio 2024 against its 2025 filing campaign.
+
+What remains is the class no axis reading resolves: a revision claiming ejercicios its
+cited design does not cover on EITHER reading -- modelo 126's ``2019-y-siguientes`` claims
+ejercicio 2019 while citing ``aeat-dr-126-2020``, and modelo 126 bundles no earlier design
+at all. Those need AEAT's published design for the missing year bundled.
 
 An open-ended ``applies_to`` and an open-ended ``year_to`` are both bounded by the newest
 corpus year rather than by a literal ceiling, so neither goes stale as a constant.
@@ -254,9 +265,7 @@ def _revision_divergences(
             if not any(
                 _year_covered_by_any_design(probe_year, declared, windows)
                 for probe_year in (
-                    {year}
-                    if on_ejercicio_axis
-                    else _presentation_calendar_years(year, windows_by_filing_year)
+                    {year} if on_ejercicio_axis else _presentation_calendar_years(year, windows_by_filing_year)
                 )
             )
         )

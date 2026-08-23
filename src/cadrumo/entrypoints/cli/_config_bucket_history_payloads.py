@@ -19,7 +19,7 @@ this is a read-only presentation projection of an event the catalogue already
 validated, and the wire row carries no signature of its own.
 
 Both :class:`BucketHistoryEventPayload` and :class:`BucketHistoryResult` are
-strict :class:`OutputSchema` transport shapes registered for the CLI's
+strict :class:`OutputSchema` transport shapes referenced for the CLI's
 ``--json`` contract.
 """
 

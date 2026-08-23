@@ -28,6 +28,7 @@ from ._acquire_common import (
     require_command_succeeded,
 )
 from ._command import CommandResult, run_command
+from ._hashing import sha256_path
 from .cohort_manifest import load_release_cohort
 from .distribution_evidence_emit import emit_installed_oracle_evidence
 from .evidence import AcquisitionIdentity, DestinationIdentity
@@ -223,6 +224,9 @@ def run_homebrew_acquisition(
         cli=aeat,
         storage_root=run_root / "oracle-state",
         work_dir=run_root / "oracle-work",
+        cohort_source_commit=cohort.source_commit,
+        cohort_manifest_sha256=sha256_path(cohort.manifest),
+        cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
         timeout_seconds=timeout_seconds,
     )
     if tax_evidence.target_value != EXPECTED_ORACLE_TARGET_VALUE:

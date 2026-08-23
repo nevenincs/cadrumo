@@ -85,7 +85,7 @@ def emit_cli_tree(app: Sphinx, *, specific_sources: list[Path] | None = None) ->
     """Write a fresh ``_static/cli-tree.json`` projection when the build needs it.
 
     Runs at ``builder-inited`` (before the read phase) so a build that needs the
-    projection ships the current live help catalogue the frontend widget fetches.
+    projection ships the current live help catalogue the browser widget fetches.
     The file is gitignored and regenerated, never committed. An incremental
     changed-page build whose artifact already exists is skipped so it does not
     pay the projection's subprocess cost for a value that cannot have changed

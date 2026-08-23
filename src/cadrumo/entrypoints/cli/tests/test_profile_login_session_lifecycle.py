@@ -71,7 +71,7 @@ def _run(
 
     ``--format`` is a ROOT-level flag, so it is prepended ahead of the
     subcommand path rather than appended to it. ``with_passphrase`` decides
-    whether the sanctioned headless secret channel is configured: the login
+    whether separately governed substrate configuration is present: the login
     gate only engages when it is NOT, so the session assertions in this
     module run with it withheld by default.
     """

@@ -159,7 +159,7 @@ def _provision_result_lines(result: object) -> tuple[str, ...]:
     from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
 
     if not isinstance(result, OutputSchema):  # pragma: no cover - defensive boundary guard
-        raise TypeError("provisioning text rendering requires a registered output schema")
+        raise TypeError("provisioning text rendering requires a graph-declared output schema")
     document = result.model_dump(mode="json")
     lines: list[str] = []
     for field_name, value in document.items():

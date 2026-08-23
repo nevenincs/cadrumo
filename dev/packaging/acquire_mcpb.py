@@ -42,6 +42,7 @@ from ._acquire_common import (  # noqa: E402
     verify_artifact_digest,
 )
 from ._command import run_command  # noqa: E402
+from ._hashing import sha256_path  # noqa: E402
 from .cohort_manifest import LoadedReleaseCohort, load_release_cohort  # noqa: E402
 from .distribution_evidence_emit import SDK_CLIENT_NAME, emit_client_evidence  # noqa: E402
 from .evidence import (  # noqa: E402
@@ -171,6 +172,7 @@ def _exercise_bundle(
     with zipfile.ZipFile(bundle) as archive:
         for distribution, source in {
             cohort.root_wheel.name: cohort.root_wheel,
+            cohort.harness_wheel.name: cohort.harness_wheel,
             cohort.manuals_wheel.name: cohort.manuals_wheel,
             cohort.official_wheel.name: cohort.official_wheel,
         }.items():
@@ -208,6 +210,10 @@ def _exercise_bundle(
         environment_overrides=resolved_environment,
         storage_root=storage_root,
         work_dir=run_root / "external-work",
+        cohort_source_commit=cohort.source_commit,
+        cohort_manifest_sha256=sha256_path(cohort.manifest),
+        cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
+        cohort_harness_wheel_sha256=cohort.sha256["cadrumo-harness"],
         timeout_seconds=timeout_seconds,
     )
     if evidence.target_value != _EXPECTED_TARGET_VALUE:

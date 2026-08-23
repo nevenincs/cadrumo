@@ -1,6 +1,6 @@
 """Behavior for modelo work :class:`CalculationRevision` read commands.
 
-The registered commands list stored calculation revisions, show one persisted
+The graph-declared commands list stored calculation revisions, show one persisted
 revision, and render its typed casilla observations without mutating modelo
 state. Selection stays in the injected application-facing resolvers; this
 transport module serializes results into

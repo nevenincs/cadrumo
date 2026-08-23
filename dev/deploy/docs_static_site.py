@@ -709,10 +709,8 @@ def _invalidate_distribution_paths(
 ) -> None:
     """Invalidate the given published paths on the distribution and wait for completion.
 
-    Shared by both deployment entry points in this package: the docs site
-    invalidates its own subtree, the landing site passes the page set Vite does
-    not content-hash. Only that path list differs, so the create-invalidate,
-    id-extract, and wait-for-completion sequence lives here once.
+    The documentation publisher invalidates its own subtree through this
+    single create-invalidation, id-extract, and wait-for-completion sequence.
     """
     created = _run(
         [
@@ -994,12 +992,8 @@ def _dry_run(repo_root: Path, *, build: Callable[[Path], Path] = _build_site_roo
     index could not run until the moment bytes were already being written to a
     live destination.
 
-    The sibling landing-page publisher's dry run authenticates because its
-    subject IS the S3 sync. This one's subject is entirely the built tree and
-    every check it runs reads the filesystem, so it deliberately requires no
-    AWS session and no publish authorization: a pre-publish check available
-    only to a credentialed caller is unavailable exactly where it is most
-    useful.
+    Its subject is entirely the built tree and every check reads the filesystem,
+    so it deliberately requires no AWS session or publish authorization.
 
     Args:
         repo_root: Repository root the build commands run from.

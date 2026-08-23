@@ -12,7 +12,7 @@ emits, in document order:
   carrying those same reader-facing frames and per-token command-path keys.
 
 Both surfaces are rendered from ONE computed payload, so the JSON a widget reads
-cannot drift from the visible frames. The frontend widget (not yet built) only
+cannot drift from the visible frames. The browser widget (not yet built) only
 toggles visibility and adds controls; it never injects content. A missing or
 stale golden is an instructive build error naming the exact ``refresh`` command.
 

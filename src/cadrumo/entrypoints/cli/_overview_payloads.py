@@ -1,7 +1,8 @@
 """Typed ``--json`` payload schemas for overview CLI commands.
 
 Each class declared here is a strict
-:class:`OutputSchema` subclass and is decorated with CommandSpec schema authority so
+:class:`OutputSchema` subclass and a deferred public schema target referenced
+by production-authored CommandSpec so
 the JSON-contract test suite can enumerate every overview-command surface this
 module covers.
 
@@ -14,7 +15,7 @@ tuples on re-validation.
 The nested calendar payloads mirror the JSON form of
 :class:`OverviewCalendar`, :class:`OverviewCalendarEntry`,
 :class:`OverviewCalendarEvent`, and
-:class:`OverviewCalendarFilingEvidence`. Registered result schemas then wrap
+:class:`OverviewCalendarFilingEvidence`. Graph-declared result schemas then wrap
 those fragments, plus read models returned by
 :func:`build_overview_status_report`, :func:`build_overview_agenda`,
 :func:`build_overview_backlog`, and :func:`build_overview_explain`, for the
@@ -38,7 +39,7 @@ from ._decimal_wire import NonNegativeDecimalWireText
 from ._ledger_payloads import LedgerStatusResult
 
 # ---------------------------------------------------------------------------
-# Shared sub-models (not registered — used as nested types)
+# Shared nested models (not direct CommandSpec schema targets)
 # ---------------------------------------------------------------------------
 
 
@@ -372,7 +373,7 @@ class OverviewCalendarProfilePayload(OutputSchema):
 
 
 # ---------------------------------------------------------------------------
-# Registered schemas
+# Graph-declared schema targets
 # ---------------------------------------------------------------------------
 
 
@@ -462,7 +463,7 @@ class OverviewBacklogResult(OutputSchema):
     """JSON envelope result for ``aeat app overview backlog``.
 
     Accepts the JSON form of :class:`OverviewBacklog` while the CLI controls
-    only envelope registration and rendering. The backlog read model is a
+    only graph-derived envelope selection and rendering. The backlog read model is a
     filtered :class:`OverviewCalendar` projection, so its items remain calendar
     entry rows rather than command-local DTOs.
     """

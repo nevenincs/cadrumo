@@ -1,4 +1,4 @@
-"""Typer registration for modelo readiness commands."""
+"""Behavior handlers for modelo readiness commands."""
 
 from __future__ import annotations
 

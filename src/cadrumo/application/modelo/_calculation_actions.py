@@ -47,10 +47,12 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...adapters.persistence.storage import secure_object_repository_for_bucket
 from ...core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
     ActionEvidenceProvenance,
@@ -737,6 +739,7 @@ def _resolve_bucket_source_mesh(
         AtribucionMemberSourceResolver,
         CalculationSourceContext,
         ForeignAssetsAggregationSourceResolver,
+        InventorySourceResolver,
         LedgerImpatriadoIncomeAggregationSourceResolver,
         LedgerIrnrIncomeAggregationSourceResolver,
         LedgerIvaAggregationSourceResolver,
@@ -789,6 +792,17 @@ def _resolve_bucket_source_mesh(
                     filing_repository=filing_repository,
                 ),
                 stage="conditional",
+            ),
+        )
+    inventory_resolutions: tuple[CalculationSourceResolution, ...] = ()
+    if any(binding.source is BindingSourceKind.INVENTORY for binding in snapshot.revision.bindings):
+        inventory_resolutions = (
+            resolve_declared(
+                InventorySourceResolver(
+                    inventory_repository=InventoryLedgerRepository(
+                        objects=secure_object_repository_for_bucket(work_unit.bucket_id),
+                    ),
+                ),
             ),
         )
     source_resolution = merge_source_resolutions(
@@ -874,6 +888,7 @@ def _resolve_bucket_source_mesh(
             # Modelo 184 attribution members are declared on the attribution-entity
             # profile as repeatable socios with explicit assigned base amounts.
             resolve_declared(AtribucionMemberSourceResolver()),
+            *inventory_resolutions,
             # Cross-period carry: prior-filing observations flow through the
             # backend-binding channel so an automatically-carried previous_filing
             # value fills the binding gap, while a caller --binding still

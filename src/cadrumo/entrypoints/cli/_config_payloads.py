@@ -1,12 +1,12 @@
 """Typed ``--json`` payload schemas for core config CLI commands.
 
-Every registered class is a strict :class:`OutputSchema` transport shape for a
+Every graph-declared class is a strict :class:`OutputSchema` transport shape for a
 config command result. Field sets match the production emit sites in
 :mod:`_config` and its submodules; sequence fields use ``list`` so JSON-mode
 pydantic dumps stay arrays. Application services remain authoritative for
 profile, auth, apoderado, repair, diagnostics, and workflow semantics.
 
-A few keys here declare a schema for a verb the tree does not register. Those are
+A few keys here declare a schema for a verb the tree does not expose. Those are
 not oversights: each is listed in
 :data:`~cadrumo.entrypoints.cli._verb_input_schema.DECLARED_UNIMPLEMENTED_SURFACES`
 with the reason it is held, because deleting the declaration would erase the only
@@ -52,8 +52,8 @@ from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import RevisionId
 from ...domain.user_profile import ProfileSetupState
 
-# The two wizard-owned profile result schemas register at their own producer
-# through the schema decorator, NOT here: the `config` group imports this
+# The two wizard-owned profile result schemas are deferred public targets owned
+# by their production CommandSpec declarations, NOT here: the `config` group imports this
 # module at group-resolution time, so importing the wizard from here would pull
 # its whole dependency tail into every `config` verb and redden the cold-start
 # guard.
@@ -62,7 +62,7 @@ if TYPE_CHECKING:
     from ...application.auth import AuthConfigureResult
     from ...application.config_reset import ConfigResetOperation
 
-# Shared sub-models (not registered — used as nested types)
+# Shared nested models (not direct CommandSpec schema targets)
 
 
 class QuarantineNamespacePayload(OutputSchema):
@@ -348,7 +348,7 @@ class RepairConnectivityResult(OutputSchema):
 class ConfigListResult(OutputSchema):
     """JSON envelope for ``aeat config profile list``.
 
-    Note: ``config_list`` is registered on the ``profile list`` sub-command
+    Note: ``config_list`` is declared for the ``profile list`` sub-command
     which maps to the CLI path ``config.list`` (the profile sub-app carries
     the list verb). Each
     :class:`ProfilePointerPayload` row
@@ -980,7 +980,7 @@ class ApoderadoCheckResult(OutputSchema):
 # ``config.profile.create`` / ``config.profile.edit`` are declared at their real
 # producer in :mod:`application.wizard._results`, which sits below this package in
 # the hexagonal direction and cannot construct a class defined up here. They
-# register there through the schema decorator. There is NO wizard import HERE:
+# are referenced there by production CommandSpec. There is NO wizard import HERE:
 # the ``config`` group must not pull the wizard dependency tail into every
 # ``config`` verb.
 
@@ -1308,7 +1308,7 @@ class CertificateSourcePayloadEntry(OutputSchema):
     """One registered certificate source row.
 
     Mirrors :class:`application.auth.CertificateSourcePayload`; nested in
-    :class:`CertificateSourceListPayload`, not registered independently.
+    :class:`CertificateSourceListPayload`, not a direct CommandSpec schema target.
     """
 
     name: str
@@ -1323,7 +1323,7 @@ class CertificateSourceMutationPayload(OutputSchema):
 
     Field set is 1:1 with the application
     :class:`application.auth.CertificateSourceMutationResult`. The same
-    schema class is registered under the three distinct command paths
+    schema class is referenced under the three distinct command paths
     below because ``register``, ``select``, and ``remove`` all emit the
     identical mutation-result shape.
     """
@@ -1348,8 +1348,7 @@ class CertificateSourceCheckEntryPayload(OutputSchema):
     """One certificate source's expiry/rotation verdict row.
 
     Mirrors :class:`application.auth.CertificateSourceCheckEntry`; nested
-    in :class:`CertificateSourceCheckPayload`, not registered
-    independently.
+    in :class:`CertificateSourceCheckPayload`, not a direct CommandSpec schema target.
     """
 
     name: str

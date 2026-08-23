@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
-import os
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -311,8 +311,15 @@ def _create_authority_ledger() -> None:
     assert result.exit_code == 0, result.output
 
 
-def test_inventory_closing_authority_stdin_persists_replays_and_redacts() -> None:
+def _authority_file(tmp_path: Path, payload: str, *, name: str = "authority.json") -> Path:
+    path = tmp_path / name
+    path.write_text(payload, encoding="utf-8")
+    return path
+
+
+def test_inventory_closing_authority_file_persists_replays_and_redacts(tmp_path: Path) -> None:
     _create_authority_ledger()
+    authority_file = _authority_file(tmp_path, _authority_payload())
     arguments = [
         "--format",
         "json",
@@ -323,10 +330,11 @@ def test_inventory_closing_authority_stdin_persists_replays_and_redacts() -> Non
         "authority",
         "--year",
         "2026",
-        "--authority-stdin",
+        "--file",
+        str(authority_file),
     ]
-    first = invoke_cached_cli(arguments, input=_authority_payload())
-    replay = invoke_cached_cli(arguments, input=_authority_payload())
+    first = invoke_cached_cli(arguments)
+    replay = invoke_cached_cli(arguments)
 
     assert first.exit_code == 0, first.output
     assert replay.exit_code == 0, replay.output
@@ -343,7 +351,8 @@ def test_inventory_closing_authority_stdin_persists_replays_and_redacts() -> Non
         "prior_closing_link_fingerprint",
     }
 
-    divergent = invoke_cached_cli(arguments, input=_authority_payload(reason="A different decision."))
+    authority_file.write_text(_authority_payload(reason="A different decision."), encoding="utf-8")
+    divergent = invoke_cached_cli(arguments)
     assert divergent.exit_code != 0
     assert "A different decision" not in divergent.output
     movement = invoke_cached_cli(
@@ -377,7 +386,7 @@ def test_inventory_closing_authority_stdin_persists_replays_and_redacts() -> Non
     assert json.loads(movement.output)["result"]["closing_authority_fingerprints"]["record"]
 
 
-def test_inventory_closing_authority_stdin_composes_physical_observation_without_leak() -> None:
+def test_inventory_closing_authority_file_composes_physical_observation_without_leak(tmp_path: Path) -> None:
     _create_authority_ledger()
     result = invoke_cached_cli(
         [
@@ -390,9 +399,9 @@ def test_inventory_closing_authority_stdin_composes_physical_observation_without
             "authority",
             "--year",
             "2026",
-            "--authority-stdin",
+            "--file",
+            str(_authority_file(tmp_path, _physical_authority_payload())),
         ],
-        input=_physical_authority_payload(),
     )
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["result"]["physical_observation_fingerprint"] is not None
@@ -401,11 +410,8 @@ def test_inventory_closing_authority_stdin_composes_physical_observation_without
     assert "b" * 64 not in result.output
 
 
-def test_inventory_closing_authority_fd_and_channel_refusals() -> None:
+def test_inventory_closing_authority_requires_a_readable_file(tmp_path: Path) -> None:
     _create_authority_ledger()
-    read_fd, write_fd = os.pipe()
-    os.write(write_fd, _authority_payload().encode())
-    os.close(write_fd)
     base = [
         "app",
         "ledger",
@@ -415,43 +421,10 @@ def test_inventory_closing_authority_fd_and_channel_refusals() -> None:
         "--year",
         "2026",
     ]
-    result = invoke_cached_cli([*base, "--authority-fd", str(read_fd)])
-    assert result.exit_code == 0, result.output
-    with pytest.raises(OSError):
-        os.read(read_fd, 1)
-
-    invalid_fd, invalid_write_fd = os.pipe()
-    os.write(invalid_write_fd, b"\xffinvalid-utf8-secret-canary")
-    os.close(invalid_write_fd)
-    invalid_utf8 = invoke_cached_cli([*base, "--authority-fd", str(invalid_fd)])
-    assert invalid_utf8.exit_code != 0
-    assert "secret-canary" not in invalid_utf8.output
-
     absent = invoke_cached_cli(base)
     assert absent.exit_code != 0
-    conflict = invoke_cached_cli([*base, "--authority-stdin", "--authority-fd", "0"], input=_authority_payload())
-    assert conflict.exit_code != 0
-
-
-def test_inventory_closing_authority_refuses_recursive_duplicate_and_oversize_without_echo() -> None:
-    _create_authority_ledger()
-    base = [
-        "app",
-        "ledger",
-        "inventory",
-        "closing-authority-record",
-        "authority",
-        "--year",
-        "2026",
-        "--authority-stdin",
-    ]
-    duplicate = _authority_payload().replace('"decision_id":"decision-2026"', '"decision_id":"decision-2026","decision_id":"secret-duplicate"')
-    refused_duplicate = invoke_cached_cli(base, input=duplicate)
-    refused_oversize = invoke_cached_cli(base, input='{"secret-oversize":"' + "x" * 9000 + '"}')
-    assert refused_duplicate.exit_code != 0
-    assert refused_oversize.exit_code != 0
-    assert "secret-duplicate" not in refused_duplicate.output
-    assert "secret-oversize" not in refused_oversize.output
+    unreadable = invoke_cached_cli([*base, "--file", str(tmp_path / "missing.json")])
+    assert unreadable.exit_code != 0
 
 
 @pytest.mark.parametrize(
@@ -463,7 +436,7 @@ def test_inventory_closing_authority_refuses_recursive_duplicate_and_oversize_wi
         '{"decision":{"decision_id":"missing-secret-canary"}}',
     ],
 )
-def test_inventory_closing_authority_refuses_malformed_shapes_without_echo(malformed: str) -> None:
+def test_inventory_closing_authority_refuses_malformed_shapes_without_echo(malformed: str, tmp_path: Path) -> None:
     _create_authority_ledger()
     result = invoke_cached_cli(
         [
@@ -474,15 +447,18 @@ def test_inventory_closing_authority_refuses_malformed_shapes_without_echo(malfo
             "authority",
             "--year",
             "2026",
-            "--authority-stdin",
+            "--file",
+            str(_authority_file(tmp_path, malformed)),
         ],
-        input=malformed,
     )
     assert result.exit_code != 0
     assert "secret-canary" not in result.output
 
 
-def test_inventory_closing_authority_coordinate_refusal_does_not_log_values(caplog: pytest.LogCaptureFixture) -> None:
+def test_inventory_closing_authority_coordinate_refusal_does_not_log_values(
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+) -> None:
     _create_authority_ledger()
     mismatched = _authority_payload().replace('"actividad_id":"authority"', '"actividad_id":"other-secret"')
     result = invoke_cached_cli(
@@ -494,9 +470,9 @@ def test_inventory_closing_authority_coordinate_refusal_does_not_log_values(capl
             "authority",
             "--year",
             "2026",
-            "--authority-stdin",
+            "--file",
+            str(_authority_file(tmp_path, mismatched)),
         ],
-        input=mismatched,
     )
     assert result.exit_code != 0
     rendered_logs = "\n".join(record.getMessage() for record in caplog.records)

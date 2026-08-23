@@ -1,8 +1,8 @@
 """JSON-contract payloads for the ``aeat app ledger invoice`` verbs.
 
 Each payload is a strict
-:class:`OutputSchema` subclass registered with
-CommandSpec schema authority on the shared
+:class:`OutputSchema` subclass referenced by
+production-authored CommandSpec as deferred public schema targets on the shared
 :class:`SchemaEnvelope` surface through
 :func:`_emit_envelope`.
 
@@ -13,7 +13,7 @@ aggregate, carrying ``linked_transaction_ids`` and the identity
 :func:`link_invoice_transaction_repositories`. The
 ``Catalogue`` prefix on these classes names that aggregate, not a CLI
 subgroup: the operator surface is the bare ``invoice`` noun, so the
-registered command identifiers are ``ledger.invoice.<verb>``.
+graph-declared command identifiers are ``ledger.invoice.<verb>``.
 """
 
 from __future__ import annotations

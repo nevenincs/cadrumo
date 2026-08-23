@@ -1,4 +1,4 @@
-"""Typer registration for the bounded evidence batch run.
+"""Behavior handlers for the bounded evidence batch run.
 
 The operator half of batch ingestion. The run itself belongs to
 :func:`~cadrumo.application.ledger.run_evidence_batch`, which owns per-item

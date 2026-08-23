@@ -1,5 +1,5 @@
 # ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
-"""Typer registration for modelo maritime preview commands.
+"""Behavior handlers for modelo maritime preview commands.
 
 This module is the transport boundary for
 ``aeat app modelo work preview-maritime-exemption``. The command body keeps CLI

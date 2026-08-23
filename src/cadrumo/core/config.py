@@ -455,8 +455,10 @@ class Settings(CadrumoLlmSettings):
         description=(
             "Passphrase that derives the encrypted-secret-store master key. "
             "Default None — the master-key loader refuses operation on None or "
-            "empty value to preserve fail-closed behaviour. Operator-facing "
-            "env var is CADRUMO_SECRET_PASSPHRASE."
+            "empty value to preserve fail-closed behaviour. The environment name "
+            "CADRUMO_SECRET_PASSPHRASE belongs to the separately governed "
+            "programmatic substrate; CLI secret input uses explicit stdin or "
+            "descriptor channels and does not fall back to this setting."
         ),
     )
 

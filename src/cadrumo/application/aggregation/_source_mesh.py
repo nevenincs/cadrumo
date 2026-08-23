@@ -271,12 +271,11 @@ def _infer_binding_source(payload: object) -> object:
 # would suppress that advisory.
 #
 # The detail-row producers need a row taxonomy, an evidence shape, and a
-# detail-record fold before a resolver can exist. Inventory already has its
-# authoritative schedule contract, but remains deferred until its selector,
-# binding declaration, and mesh resolver are enrolled by their ordered steps.
+# detail-record fold before a resolver can exist. Inventory is absent here
+# because its repository resolver is enrolled by the canonical calculation
+# route; runtime repository construction remains a separate composition step.
 DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
-        BindingSourceKind.INVENTORY,
         BindingSourceKind.RELATED_PARTY_OPERATION,
         BindingSourceKind.REFUND_OPERATION,
         BindingSourceKind.DONATIVO_DONOR,

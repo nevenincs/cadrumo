@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for ledger CLI commands.
 
 Each class declared here is a strict
-:class:`OutputSchema` subclass and is decorated
-with CommandSpec schema authority so the
+:class:`OutputSchema` subclass and is referenced as a deferred public schema
+target by production-authored CommandSpec so the
 JSON-contract test suite can enumerate every ledger-command surface this module
 covers.  Emission wraps the validated result in
 :class:`SchemaEnvelope` through
@@ -137,7 +137,7 @@ if TYPE_CHECKING:
     from ...application.ledger import LedgerSourceImportResult as _AppLedgerSourceImportResult
 
 # ---------------------------------------------------------------------------
-# Shared sub-models (not registered — used as nested types)
+# Shared nested models (not direct CommandSpec schema targets)
 # ---------------------------------------------------------------------------
 
 
@@ -388,8 +388,8 @@ class _LedgerMutationResult(OutputSchema):
 
     The uniform mutation quintet: every verb that mutates exactly one ledger
     transaction returns ``{bucket_id, transaction_id, bucket_event_ids,
-    review_status, transaction}``. Subclassed per verb so each registers its
-    own schema path.
+    review_status, transaction}``. Subclassed per verb so each CommandSpec can
+    reference its own schema target.
     """
 
     bucket_id: BucketId
@@ -442,7 +442,7 @@ class LedgerClassifyResult(OutputRootSchema[LedgerClassifySingleResult | LedgerC
     ``--file``: the single-transaction mutation quintet
     (:class:`LedgerClassifySingleResult`) or the bulk row-count summary
     (:class:`LedgerClassifyBulkResult`). The JSON-schema conformance gate maps
-    exactly one registered schema per CLI leaf, so this discriminated root
+    exactly one graph-declared schema per CLI leaf, so this discriminated root
     validates either branch under the one ``ledger.classify`` command key;
     ``model_dump`` serialises the flat branch shape, not a wrapped root.
     """

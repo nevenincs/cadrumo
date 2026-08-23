@@ -132,6 +132,7 @@ def _make_cohort_dir(
 
     for name, filename_stem, requires in (
         ("cadrumo", f"cadrumo-{version}-py3-none-any.whl", companion_requires),
+        ("cadrumo-harness", f"cadrumo_harness-{version}-py3-none-any.whl", (f"cadrumo>={version}",)),
         ("cadrumo-data-manuals", f"cadrumo_data_manuals-{version}-py3-none-any.whl", ()),
         ("cadrumo-data-official", f"cadrumo_data_official-{version}-py3-none-any.whl", ()),
     ):
@@ -144,6 +145,7 @@ def _make_cohort_dir(
 
     for name, filename_stem, requires in (
         ("cadrumo", f"cadrumo-{version}.tar.gz", companion_requires),
+        ("cadrumo-harness", f"cadrumo_harness-{version}.tar.gz", (f"cadrumo>={version}",)),
         ("cadrumo-data-manuals", f"cadrumo_data_manuals-{version}.tar.gz", ()),
         ("cadrumo-data-official", f"cadrumo_data_official-{version}.tar.gz", ()),
     ):
@@ -160,6 +162,7 @@ def _make_cohort_dir(
         "sha256": sha256,
         "source_commit": commit,
         "version": version,
+        "harness_version": version,
         "command_spec_attestation": make_test_command_spec_attestation(
             cohort_dir, artifacts, source_commit=commit
         ),
@@ -202,6 +205,7 @@ def _write_evidence(
         "source_commit": cohort.source_commit,
         "artifact_sha256": {
             "cadrumo": cohort.sha256["cadrumo"],
+            "cadrumo-harness": cohort.sha256["cadrumo-harness"],
             "cadrumo-data-manuals": cohort.sha256["cadrumo-data-manuals"],
             "cadrumo-data-official": cohort.sha256["cadrumo-data-official"],
         },
@@ -252,6 +256,7 @@ def test_tampered_artifact_digest_is_refused(tmp_path: Path) -> None:
         override={
             "artifact_sha256": {
                 "cadrumo": tampered_hashes["cadrumo"],
+                "cadrumo-harness": cohort.sha256["cadrumo-harness"],
                 "cadrumo-data-manuals": cohort.sha256["cadrumo-data-manuals"],
                 "cadrumo-data-official": cohort.sha256["cadrumo-data-official"],
             }
@@ -340,6 +345,7 @@ def test_evidence_from_different_artifact_bytes_is_refused(tmp_path: Path) -> No
         "source_commit": cohort.source_commit,
         "artifact_sha256": {
             "cadrumo": other_cohort.sha256["cadrumo"],
+            "cadrumo-harness": other_cohort.sha256["cadrumo-harness"],
             "cadrumo-data-manuals": other_cohort.sha256["cadrumo-data-manuals"],
             "cadrumo-data-official": other_cohort.sha256["cadrumo-data-official"],
         },

@@ -1,4 +1,4 @@
-"""Typer registration for ledger purchase invoice evidence commands."""
+"""Behavior handlers for ledger purchase invoice evidence commands."""
 
 from __future__ import annotations
 

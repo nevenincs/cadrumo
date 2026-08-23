@@ -7,7 +7,7 @@ row carries both sides, because the operator is the one who adjudicates
 between them — the pull never decides.
 
 These strict :class:`OutputSchema` subclasses document only the transport
-shape registered with CommandSpec schema authority and emitted through
+shape referenced as a deferred public schema target by production-authored CommandSpec and emitted through
 :class:`SchemaEnvelope`. The projection and the adopt/defer split live in
 :mod:`user_profile`; the commit lives behind the single cotejo apply
 authority.

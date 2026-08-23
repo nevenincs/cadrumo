@@ -996,11 +996,6 @@ docs-stack-deploy:
 docs-deploy:
     uv run --no-sync python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs
 
-# The landing-page publish verb (`frontend-deploy`) lived here until the website
-# was rehomed to the cadrumo-marketing repository. It is `just deploy` there now.
-# This repository declares the CLI and harness and publishes documentation only;
-# it carries no website work and no verb that reaches the site root.
-
 # ── Release ──────────────────────────────────────────────────────────────────
 
 # Audit-state readiness gate: version-surface parity, changelog sanity, the

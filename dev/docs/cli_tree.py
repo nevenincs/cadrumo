@@ -2,11 +2,13 @@
 
 This is the build-time projection consumed by the ``cli-sequence`` frontend
 widget: a gitignored
-``cli-tree.json`` help catalogue keyed by command path, fetched once per page
-so hovering or focusing a tokenised verb opens a popover carrying that path's
-live ``--help``. The projection is regenerated on every build and never
-committed — the same Pagefind commit-boundary discipline that governs the
-RST reference (``dev/docs/cli_reference.py``) extended to a JSON help asset.
+``cli-tree.json`` discovery catalogue keyed by command path, fetched once per
+page so hovering or focusing a tokenised verb opens a popover carrying that
+path's live ``--help``. The same nodes also expose value-free machine-secret
+payload contracts and profile-authentication posture for automation. The
+projection is regenerated on every build and never committed — the same
+Pagefind commit-boundary discipline that governs the RST reference
+(``dev/docs/cli_reference.py``) extended to a JSON discovery asset.
 
 The generator projects the same immutable command graph as the reference. It visits every
 authored node — groups and leaves alike — so a group token and a leaf token
@@ -50,6 +52,10 @@ from pydantic import Field, RootModel, StringConstraints
 
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.entrypoints.cli.command_api import (
+    MachineSecretPayloadMetadata,
+    ProfileAuthenticationContractMetadata,
+)
 
 from .cli_reference import _reference_subprocess_environment
 
@@ -111,7 +117,9 @@ class CliCommandNode(_BaseModel):
     ``path`` is the full command path including the leading executable token
     (``("aeat", "app", "modelo", "calculate")``). ``kind`` distinguishes a
     group (a command that dispatches subcommands) from a leaf (an invokable
-    verb). ``usage`` is a deterministic single-line usage synopsis.
+    verb). ``usage`` is a deterministic single-line usage synopsis. Secret
+    metadata describes only public shape and transport constraints; it never
+    includes invocation values, examples, or persisted credential facts.
     """
 
     model_config = _STRICT_FROZEN
@@ -121,6 +129,12 @@ class CliCommandNode(_BaseModel):
     help: str
     usage: str
     params: tuple[CliParam, ...] = Field(default=())
+    machine_secret_payloads: tuple[MachineSecretPayloadMetadata, ...] = Field(default=())
+    profile_authentication: Annotated[
+        str,
+        StringConstraints(pattern=r"^(not-applicable|resume-fallback|self-authenticating)$"),
+    ] = "not-applicable"
+    profile_authentication_contract: ProfileAuthenticationContractMetadata | None = None
 
 
 class CliTree(RootModel[dict[str, CliCommandNode]]):
@@ -225,10 +239,21 @@ def _build_cli_tree_loaded() -> CliTree:
     environment) so ``tr()`` help strings resolve to English.
     """
     from cadrumo.core.i18n import clear_output_language_cache, tr
-    from cadrumo.entrypoints.cli.command_api import ArgumentSpec, DefaultKind, command_spec_nodes
+    from cadrumo.entrypoints.cli.command_api import (
+        ArgumentSpec,
+        DefaultKind,
+        command_registration_projection,
+        command_spec_nodes,
+    )
 
     clear_output_language_cache()
 
+    registration = command_registration_projection()
+    metadata_by_path = {
+        ("aeat", *(row.cli_path or ())): row
+        for row in registration.commands
+        if row.cli_path is not None
+    }
     projection: dict[str, CliCommandNode] = {}
     for node in command_spec_nodes():
         params = tuple(
@@ -247,12 +272,20 @@ def _build_cli_tree_loaded() -> CliTree:
             usage += " [OPTIONS]"
         if node.spec.kind != "leaf":
             usage += " COMMAND [ARGS]..."
+        metadata = metadata_by_path.get(node.path)
         projection[_path_key(node.path)] = CliCommandNode(
             path=node.path,
             kind="leaf" if node.spec.kind == "leaf" else "group",
             help=tr(node.spec.help_key.value),
             usage=usage,
             params=params,
+            machine_secret_payloads=() if metadata is None else metadata.machine_secret_payloads,
+            profile_authentication=(
+                "not-applicable" if metadata is None else metadata.profile_authentication
+            ),
+            profile_authentication_contract=(
+                registration.profile_authentication_contract if node.spec.kind == "root" else None
+            ),
         )
     return CliTree(projection)
 

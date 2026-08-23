@@ -39,8 +39,8 @@ def _project_metadata() -> dict[str, object]:
 _PYPROJECT = _project_metadata()
 _PROJECT_URLS = _PYPROJECT.get("urls", {})
 _DOCS_BASE_URL = os.environ.get("CADRUMO_DOCS_BASE_URL", "").rstrip("/")
-# Cadrumo brand type ramp (Figma / marketing frontend): Instrument Serif for
-# display headings, Hanken Grotesk for text, JetBrains Mono for code.
+# Cadrumo documentation type ramp: Instrument Serif for display headings,
+# Hanken Grotesk for text, JetBrains Mono for code.
 _DOCS_FONT_STACK = (
     '"Hanken Grotesk", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
 )
@@ -346,7 +346,7 @@ html_theme_options = {
     "sidebar_hide_name": True,
     "announcement": "cadrumo-site-broadcast",
     "light_css_variables": {
-        # Cadrumo brand tokens (Figma / marketing frontend styles.css):
+        # Cadrumo documentation theme tokens:
         # warm paper neutrals — page #faf8f4, surface #f1eee7, border
         # #e4ded4, ink #1c1a17, secondary #6b655c — with the rust accent
         # #c4553b (hover #a94931) mapped onto Furo's semantic variables.
@@ -1293,7 +1293,7 @@ def setup(app):
     def _emit_cli_tree(app):
         """Write a fresh ``_static/cli-tree.json`` help projection for the widget.
 
-        The projection is a build-time asset the ``cli-sequence`` frontend widget
+        The projection is a build-time asset the ``cli-sequence`` browser widget
         fetches for hover help. It is gitignored and regenerated, never
         committed. Guarded like the sibling
         CLI-reference hook: an incremental changed-page build whose artifact

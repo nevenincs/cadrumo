@@ -37,6 +37,15 @@ _LOGGED_OUT_REFUSALS = frozenset(
 )
 
 
+def session_refusal_translation_key(refusal: ProfileSessionRefusalReason) -> str:
+    """Map every typed resume refusal to its stable operator diagnostic."""
+    return (
+        "cli.config.errors.profile_session_absent"
+        if refusal in _LOGGED_OUT_REFUSALS
+        else "cli.config.errors.profile_session_expired"
+    )
+
+
 def _common() -> Any:
     """Resolve the already-initialized facade without a static runtime cycle."""
     return import_module("cadrumo.entrypoints.cli._common")
@@ -192,11 +201,7 @@ def _resume_or_authenticate(
         refusal,
         profile_name=target_profile_label or common.active_profile_label() or bucket_id,
     )
-    key = (
-        "cli.config.errors.profile_session_absent"
-        if refusal in _LOGGED_OUT_REFUSALS
-        else "cli.config.errors.profile_session_expired"
-    )
+    key = session_refusal_translation_key(refusal)
     raise common.attach_cli_policy_verdict(
         CliRefusedBoundaryError(translated_message=key, context={"reason": refusal.value}),
         verdict=verdict,
@@ -241,4 +246,5 @@ __all__ = [
     "bind_profile_target",
     "normalize_ambient_profile",
     "resume_registered_profile_for_manager",
+    "session_refusal_translation_key",
 ]

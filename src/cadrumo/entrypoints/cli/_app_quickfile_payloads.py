@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schema for the ``aeat app quickfile`` envelope.
 
 Projects the application :class:`~application.modelo.QuickfileResult` onto a
-strict :class:`~core.json_contract.OutputSchema` registered under the
+strict :class:`~core.json_contract.OutputSchema` referenced as a deferred public target under the
 ``quickfile`` command path. The per-stage outcomes and the terminal export
 receipt (path reference only — never raw fichero bytes) are surfaced so a machine
 consumer can read exactly which stage the chain reached and where it halted.

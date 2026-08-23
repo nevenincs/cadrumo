@@ -1,5 +1,5 @@
 # ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
-"""Typer registration for modelo filing-record and verification-report commands.
+"""Behavior handlers for modelo filing-record and verification-report commands.
 
 The filing-record commands render stored :class:`ModeloRecord` rows, import
 AEAT-attested external evidence through

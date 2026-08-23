@@ -12,7 +12,11 @@ from pathlib import Path
 import pytest
 
 from ..python_cohort import load_python_cohort, source_snapshot_drift
-from ._cohort_attestation import add_test_source_archive, make_test_command_spec_attestation
+from ._cohort_attestation import (
+    add_test_source_archive,
+    make_minimal_test_python_cohort,
+    make_test_command_spec_attestation,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -66,6 +70,8 @@ def _write_placeholder_cohort(root: Path) -> dict[str, str]:
     names = {
         "cadrumo": "cadrumo-1.0.0-py3-none-any.whl",
         "cadrumo-sdist": "cadrumo-1.0.0.tar.gz",
+        "cadrumo-harness": "cadrumo_harness-1.0.0-py3-none-any.whl",
+        "cadrumo-harness-sdist": "cadrumo_harness-1.0.0.tar.gz",
         "cadrumo-data-manuals": "cadrumo_data_manuals-1.0.0-py3-none-any.whl",
         "cadrumo-data-manuals-sdist": "cadrumo_data_manuals-1.0.0.tar.gz",
         "cadrumo-data-official": "cadrumo_data_official-1.0.0-py3-none-any.whl",
@@ -84,6 +90,7 @@ def _write_placeholder_cohort(root: Path) -> dict[str, str]:
                 "sha256": sha256,
                 "source_commit": "a" * 40,
                 "version": "1.0.0",
+                "harness_version": "1.0.0",
                 "command_spec_attestation": make_test_command_spec_attestation(
                     root, names, source_commit="a" * 40
                 ),
@@ -128,6 +135,8 @@ def test_load_python_cohort_rejects_digest_drift_before_metadata_parsing(
     names = {
         "cadrumo": "cadrumo-1.0.0-py3-none-any.whl",
         "cadrumo-sdist": "cadrumo-1.0.0.tar.gz",
+        "cadrumo-harness": "cadrumo_harness-1.0.0-py3-none-any.whl",
+        "cadrumo-harness-sdist": "cadrumo_harness-1.0.0.tar.gz",
         "cadrumo-data-manuals": "cadrumo_data_manuals-1.0.0-py3-none-any.whl",
         "cadrumo-data-manuals-sdist": "cadrumo_data_manuals-1.0.0.tar.gz",
         "cadrumo-data-official": "cadrumo_data_official-1.0.0-py3-none-any.whl",
@@ -146,6 +155,7 @@ def test_load_python_cohort_rejects_digest_drift_before_metadata_parsing(
                 "sha256": sha256,
                 "source_commit": "a" * 40,
                 "version": "1.0.0",
+                "harness_version": "1.0.0",
                 "command_spec_attestation": make_test_command_spec_attestation(
                     tmp_path, names, source_commit="a" * 40
                 ),
@@ -156,4 +166,13 @@ def test_load_python_cohort_rejects_digest_drift_before_metadata_parsing(
     (tmp_path / names["cadrumo"]).write_bytes(b"changed")
 
     with pytest.raises(SystemExit, match="digest mismatch"):
+        load_python_cohort(tmp_path)
+
+
+def test_load_python_cohort_refuses_tampered_harness_wheel(tmp_path: Path) -> None:
+    """The MCP-owning harness is a digest-bound closed-world cohort member."""
+    make_minimal_test_python_cohort(tmp_path, version="1.0.0")
+    manifest = json.loads((tmp_path / "python-cohort.json").read_text(encoding="utf-8"))
+    (tmp_path / manifest["artifacts"]["cadrumo-harness"]).write_bytes(b"foreign harness")
+    with pytest.raises(SystemExit, match=r"digest mismatch.*cadrumo-harness"):
         load_python_cohort(tmp_path)

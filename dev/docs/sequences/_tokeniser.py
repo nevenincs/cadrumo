@@ -6,7 +6,7 @@ This module tokenises one frame's ``argv`` against the immutable command graph:
 each token is classified as the executable, a group verb, a leaf verb, an
 option, an option value, a positional argument, or an interpolated ``{name}``
 placeholder, and every verb (and option) token carries the command-path key the
-frontend widget uses to open that path's live ``--help`` from the generated
+browser widget uses to open that path's live ``--help`` from the generated
 ``cli-tree.json`` projection.
 
 Tokenisation runs in Python at build time against the same immutable graph the

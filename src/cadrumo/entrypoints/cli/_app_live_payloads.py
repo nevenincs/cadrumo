@@ -68,7 +68,7 @@ JustificantePeriodToken = Annotated[str, AfterValidator(_is_a_registry_period_to
 """A bare registry period code, validated through the canonical period grammar."""
 
 # ---------------------------------------------------------------------------
-# Shared sub-models (not registered — used as nested types)
+# Shared nested models (not direct CommandSpec schema targets)
 # ---------------------------------------------------------------------------
 
 
@@ -119,7 +119,7 @@ class FiledCaptureFailurePayload(OutputSchema):
 
 
 # ---------------------------------------------------------------------------
-# Registered schemas
+# Graph-declared schema targets
 # ---------------------------------------------------------------------------
 
 
@@ -334,7 +334,7 @@ class FiledCaptureSourcesResult(OutputSchema):
 # ---------------------------------------------------------------------------
 #
 # The pull/history/pull-history/pull-evidence verbs surface
-# read-only IVA compensation reports. Each registered schema below mirrors
+# read-only IVA compensation reports. Each graph-declared schema below mirrors
 # the dict payload emitted at the corresponding call site in
 # ``_app_live.py``; tuple-typed report fields are flattened to ``list``
 # because :func:`model_dump` serialises tuples as JSON arrays and

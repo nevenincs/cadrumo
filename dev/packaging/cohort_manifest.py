@@ -152,6 +152,8 @@ REQUIRED_ARTIFACT_KINDS: Final[dict[str, ArtifactKind]] = {
     "cadrumo-data-official-wheel": ArtifactKind.PYTHON_WHEEL,
     "cadrumo-sdist": ArtifactKind.PYTHON_SDIST,
     "cadrumo-wheel": ArtifactKind.PYTHON_WHEEL,
+    "cadrumo-harness-sdist": ArtifactKind.PYTHON_SDIST,
+    "cadrumo-harness-wheel": ArtifactKind.PYTHON_WHEEL,
     "cadrumo-source-archive": ArtifactKind.PYTHON_SOURCE_ARCHIVE,
     "claude-marketplace": ArtifactKind.CLAUDE_MARKETPLACE,
     "claude-plugin": ArtifactKind.CLAUDE_PLUGIN,

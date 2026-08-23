@@ -17,6 +17,17 @@ parser. If a future parser improvement starts recovering tags from these
 designs, the tolerance stops applying to them, and the second test states what
 then has to be confronted: modelo 184's segmentos are registry slugs that name
 no sheet in its own design, so every declared casilla would refuse at once.
+
+THAT REFUSAL WOULD BE THE MATCH'S DEFECT, NOT THE REGISTRY'S, and the remedy is
+not to re-slug the segmentos. :mod:`test_modelo_184_segmento_claims_resolve_by_position`
+proves every one of modelo 184's segmento-bearing claims against the design on the
+axis its completeness manifest actually uses -- ``number`` here is a design POSITION,
+not a box number -- and finds each one landing exactly, on exactly one of the two
+Tipo 2 records, in both published editions. The assignments are correct; only the
+sheet-name comparison cannot see them. So the day tags appear, the fix is to match
+the claim where the manifest already states it, and renaming the slugs to equal
+parser-derived truncations of AEAT's headings would trade a provable assignment for
+an extraction artefact.
 """
 
 from __future__ import annotations
@@ -80,8 +91,11 @@ def test_this_modelo_s_segmentos_name_no_sheet_in_its_own_design() -> None:
 
     Pinned as the current state rather than fixed here: the sheet names are
     parser-derived truncations of AEAT's headings, so making the slugs equal
-    them would pin the registry to an extraction artefact. Recording it means
-    the day tags appear, the failure is already explained.
+    them would pin the registry to an extraction artefact. What the assignment
+    IS proven against is position, in
+    :mod:`test_modelo_184_segmento_claims_resolve_by_position`, so this failure
+    is already explained and already answered -- it records that the name axis
+    is blind here, not that the registry is wrong.
     """
     modelos, _ = _committed_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "184")

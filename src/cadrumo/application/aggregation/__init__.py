@@ -104,6 +104,7 @@ from ._foreign_assets import (
     declarable_asset_classes_720,
     declarable_class,
 )
+from ._inventory import InventorySourceResolver
 from ._invoice_devengo import (
     InvoiceDevengo,
     invoice_devengo_in_period,
@@ -304,6 +305,7 @@ __all__ = [
     "ForeignAssetIngestObservation",
     "ForeignAssetsAggregation",
     "ForeignAssetsAggregationSourceResolver",
+    "InventorySourceResolver",
     "InvoiceDevengo",
     "InvoiceRetencionProjection",
     "InvoiceRetencionProjectionDefect",
