@@ -777,6 +777,11 @@ _BARE_COORDINATE_TRIPLE_RE = re.compile(
 #: wrapped Contenido cell runs to three lines in the measured corpus.
 _BARE_COORDINATE_LOOKAHEAD = 6
 
+#: How far ABOVE a bare triple its naturaleza half may sit. Wider than the
+#: lookahead because a page break drops several lines of running furniture --
+#: the modelo name, the version and the two-line subtitle -- between them.
+_BARE_COORDINATE_LOOKBEHIND = 12
+
 #: The half that follows it: naturaleza then description, no numbers of its own.
 _NATURALEZA_HEAD_RE = re.compile(
     r"^\s*(?P<naturaleza>An|Num|N|A)\s+(?P<rest>\D\S*.*)$",
@@ -825,6 +830,19 @@ def _rejoin_bare_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
         if triple is None or parsed[index + 1] is not None:
             continue
         head = _NATURALEZA_HEAD_RE.match(lines[index + 1])
+        head_index = index + 1
+        if head is None:
+            # The naturaleza half may sit ABOVE the triple instead, separated by
+            # the wrapped Contenido cell and a page break's running furniture.
+            # Modelo 200's 2010 and 2011 designs print it that way; the 2010
+            # update prints it below. Same row, mirrored.
+            for candidate in range(index - 1, max(-1, index - 1 - _BARE_COORDINATE_LOOKBEHIND), -1):
+                if parsed[candidate] is not None:
+                    break
+                found = _NATURALEZA_HEAD_RE.match(lines[candidate])
+                if found is not None:
+                    head, head_index = found, candidate
+                    break
         if head is None:
             continue
         ordinal = triple.group("ordinal")
@@ -843,14 +861,17 @@ def _rejoin_bare_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
         if successor.ordinal != str(int(ordinal) + 1) or successor.offset != offset + length:
             continue
 
+        start = min(index, head_index)
         middle = " ".join(
-            lines[position].strip() for position in range(index + 2, successor_index)
+            lines[position].strip()
+            for position in range(start, successor_index)
+            if position not in {index, head_index}
         )
-        rebuilt[index] = (
+        rebuilt[start] = (
             f"{ordinal} {offset} {length} {head.group('naturaleza')} "
             f"{head.group('rest')} {middle}".rstrip()
         )
-        consumed.update(range(index + 1, successor_index))
+        consumed.update(position for position in range(start, successor_index) if position != start)
 
     if not rebuilt:
         return lines
@@ -860,6 +881,76 @@ def _rejoin_bare_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
         if index not in consumed
     )
 
+
+#: A row whose ORDINAL and POSITION were emitted as one token, with the length
+#: and naturaleza intact behind them: ``23 3 Num C Modelo.`` for AEAT's
+#: ``2 3 3 Num C Modelo.``. Distinct from :data:`_FUSED_ROW_RE`, which covers a
+#: position glued to its NATURALEZA (``59 1A Num``); here the two numbers ran
+#: together and nothing is glued to a letter.
+_FUSED_ORDINAL_POSITION_RE = re.compile(
+    r"^\s*(?P<fused>\d+)\s+(?P<length>\d+)\s+(?P<naturaleza>An|Num|N|A)\s+(?P<rest>\S.*)$",
+)
+
+
+def _split_fused_ordinal_position_prefix(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Split a row whose ordinal and position were emitted as a single number.
+
+    Modelo 200's 2010 and 2011 PDF designs open several records this way::
+
+        1 1 2 An C Inicio del identificador de modelo y pagina.
+        23 3 Num C Modelo. Constante "200"
+        36 3 An C Pagina. Constante "021"
+        49 1 An C Fin de identificador de modelo.
+
+    Read literally the second line is ordinal 23 at position 3, which is not a
+    row anyone printed. It is ordinal 2 at position 3, and the ordinal ran into
+    the position because AEAT's two narrow columns touch.
+
+    RECONSTRUCTED FROM THE PREVIOUS ROW, NEVER GUESSED, and admitted only when
+    both halves agree. The previous row fixes exactly one candidate -- its
+    ordinal plus one, and the position where it ends -- and that candidate is
+    accepted only if concatenating the two reproduces the fused token
+    CHARACTER FOR CHARACTER. ``2`` and ``3`` give ``23``; anything else leaves
+    the line alone.
+
+    That is the same over-determination the sibling splitter uses, and it is
+    what keeps this away from rows that legitimately open with a large ordinal:
+    a real ``23 3 Num`` row at position 3 would follow a row ending at 3 with
+    ordinal 22, and ``22`` and ``3`` do not spell ``23``.
+    """
+    split: list[str] = []
+    previous: _PdfRow | None = None
+    for index, line in enumerate(lines):
+        parsed = _parse_pdf_row(line, index + 1)
+        if parsed is not None:
+            previous = parsed
+            split.append(line)
+            continue
+        fused = _FUSED_ORDINAL_POSITION_RE.match(line)
+        if (
+            fused is None
+            or previous is None
+            or previous.ordinal is None
+            or not previous.ordinal.isdigit()
+        ):
+            split.append(line)
+            continue
+        ordinal = str(int(previous.ordinal) + 1)
+        offset = previous.offset + previous.length
+        if f"{ordinal}{offset}" != fused.group("fused"):
+            split.append(line)
+            continue
+        rebuilt = (
+            f"{ordinal} {offset} {fused.group('length')} "
+            f"{fused.group('naturaleza')} {fused.group('rest')}"
+        )
+        reparsed = _parse_pdf_row(rebuilt, index + 1)
+        if reparsed is None:
+            split.append(line)
+            continue
+        previous = reparsed
+        split.append(rebuilt)
+    return tuple(split)
 
 #: A field row whose four tokens are complete but whose DESCRIPTION wrapped onto
 #: the next line. AEAT does this often enough to matter: modelo 202 writes
@@ -1380,6 +1471,7 @@ def _read_with_reversed_column_repair(
         return first
     repaired_lines = _recover_coordinate_stutter_rows(
         _rejoin_bare_coordinate_rows(
+        _split_fused_ordinal_position_prefix(
         _reattach_stranded_casilla_tags(
             _collapse_stuttered_row_prefix(
                 _join_wrapped_row_descriptions(
@@ -1388,6 +1480,7 @@ def _read_with_reversed_column_repair(
                     ),
                 ),
             ),
+        ),
         ),
         ),
     )
