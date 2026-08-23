@@ -149,6 +149,154 @@ modelo:
             x-agp34c1g6d0j0c1q60o3edhh:
               help: null
               label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 00). Egyeb
+            x-agp34c1g6d0j0c9q60o32c1h:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Penzeszkozok,
+                jegybanki szamlaegyenlegek es egyeb latra szolo betetek
+            x-agp34c1g6d0j0c9q60o32c1i:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Kereskedesi
+                celu penzugyi eszkozok
+            x-agp34c1g6d0j0c9q60o32c1j:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Derivativak
+            x-agp34c1g6d0j0c9q60o32c1k:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Tokeinstrumentumok
+            x-agp34c1g6d0j0c9q60o32c1l:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelviszonyt
+                megtestesito ertekpapirok
+            x-agp34c1g6d0j0c9q60o32c1m:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelek es eloelegek
+            x-agp34c1g6d0j0c9q60o32c1n:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelek es eloelegek.
+                Jegybankok
+            x-agp34c1g6d0j0c9q60o32c1o:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelek es eloelegek.
+                Hitelintezetek
+            x-agp34c1g6d0j0c9q60o32c1p:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelek es eloelegek.
+                Ugyfelek
+            x-agp34c1g6d0j0c9q60o32c9g:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Az eredmennyel
+                szemben valos erteken ertekeltnek megjelolt penzugyi eszkozok
+            x-agp34c1g6d0j0c9q60o32c9i:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelviszonyt
+                megtestesito ertekpapirok
+            x-agp34c1g6d0j0c9q60o32c9j:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelek es eloelegek
+            x-agp34c1g6d0j0c9q60o32c9k:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelek es eloelegek.
+                Jegybankok
+            x-agp34c1g6d0j0c9q60o32c9l:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelek es eloelegek.
+                Hitelintezetek
+            x-agp34c1g6d0j0c9q60o32c9m:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelek es eloelegek.
+                Ugyfelek
+            x-agp34c1g6d0j0c9q60o32chn:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Derivativak
+                - fedezeti elszamolas
+            x-agp34c1g6d0j0c9q60o32cho:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Kamatlabkockazat
+                portfoliofedezete soran a fedezett tetelek valos ertekenek valtozasa
+            x-agp34c1g6d0j0c9q60o32chp:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Befektetesek
+                kozos vallalkozasokban es tarsult vallalkozasokban
+            x-agp34c1g6d0j0c9q60o32cph:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Kozos vallalkozasok
+            x-agp34c1g6d0j0c9q60o32cpi:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Tarsult vallalkozasok
+            x-agp34c1g6d0j0c9q60o32cpj:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Biztositasi
+                vagy viszontbiztositasi szerzodesekkel fedezett eszkozok
+            x-agp34c1g6d0j0c9q60o32cpk:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Targyi eszkozok
+            x-agp34c1g6d0j0c9q60o32cpl:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Ingatlanok,
+                gepek es berendezesek
+            x-agp34c1g6d0j0c9q60o32cpm:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Ingatlanok,
+                gepek es berendezesek. Sajat hasznalatu
+            x-agp34c1g6d0j0c9q60o32cpn:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Ingatlanok,
+                gepek es berendezesek. Operativ lizingbe adva
+            x-agp34c1g6d0j0c9q60o32cpo:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Ingatlanok,
+                gepek es berendezesek. Jolet celu tevekenysegre rendelve (takarekpenztarak
+                es hitelszovetkezetek)
+            x-agp34c1g6d0j0c9q60o32cpp:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Befektetesi
+                celu ingatlanok
+            x-agp34c1g6d0j0c9q60o32d1g:
+              label: 'Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Befektetesi
+                celu ingatlanok. Ebbol: operativ lizingbe adva'
+            x-agp34c1g6d0j0c9q60o3cc9l:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Nem kereskedesi
+                celu penzugyi eszkozok, kotelezoen az eredmennyel szemben valos erteken
+                ertekelve
+            x-agp34c1g6d0j0c9q60o3cc9m:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Tokeinstrumentumok
+            x-agp34c1g6d0j0c9q60o3cc9n:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelviszonyt
+                megtestesito ertekpapirok
+            x-agp34c1g6d0j0c9q60o3cc9o:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelek es eloelegek
+            x-agp34c1g6d0j0c9q60o3cc9p:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Jegybankok
+            x-agp34c1g6d0j0c9q60o3cchg:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelintezetek
+            x-agp34c1g6d0j0c9q60o3cchh:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Ugyfelek
+            x-agp34c1g6d0j0c9q60o3cchi:
+              label: 'Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Emlekezteto
+                tetel: ertekesitesi vagy elzalogositasi joggal kolcsonadott vagy biztositekkent
+                atadott'
+            x-agp34c1g6d0j0c9q60o3cchj:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Az egyeb atfogo
+                eredmennyel szemben valos erteken ertekelt penzugyi eszkozok
+            x-agp34c1g6d0j0c9q60o3cchk:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Tokeinstrumentumok
+            x-agp34c1g6d0j0c9q60o3cchl:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelviszonyt
+                megtestesito ertekpapirok
+            x-agp34c1g6d0j0c9q60o3cchm:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelek es eloelegek
+            x-agp34c1g6d0j0c9q60o3cchn:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Jegybankok
+            x-agp34c1g6d0j0c9q60o3ccho:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelintezetek
+            x-agp34c1g6d0j0c9q60o3cchp:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Ugyfelek
+            x-agp34c1g6d0j0c9q60o3ccpg:
+              label: 'Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Emlekezteto
+                tetel: ertekesitesi vagy elzalogositasi joggal kolcsonadott vagy biztositekkent
+                atadott'
+            x-agp34c1g6d0j0c9q60o3ccph:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Amortizalt bekerulesi
+                erteken ertekelt penzugyi eszkozok
+            x-agp34c1g6d0j0c9q60o3ccpi:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelviszonyt
+                megtestesito ertekpapirok
+            x-agp34c1g6d0j0c9q60o3ccpj:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelek es eloelegek
+            x-agp34c1g6d0j0c9q60o3ccpk:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Jegybankok
+            x-agp34c1g6d0j0c9q60o3ccpl:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Hitelintezetek
+            x-agp34c1g6d0j0c9q60o3ccpm:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Ugyfelek
+            x-agp34c1g6d0j0c9q60o3ccpn:
+              label: 'Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Emlekezteto
+                tetel: ertekesitesi vagy elzalogositasi joggal kolcsonadott vagy biztositekkent
+                atadott'
+            x-agp34c1g6d0j0c9q60o3ed9g:
+              label: 'Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Emlekezteto
+                tetel: ertekesitesi vagy elzalogositasi joggal kolcsonadott vagy biztositekkent
+                atadott'
+            x-agp34c1g6d0j0c9q60o3ed9h:
+              label: 'Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Emlekezteto
+                tetel: ertekesitesi vagy elzalogositasi joggal kolcsonadott vagy biztositekkent
+                atadott'
+            x-agp34c1g6d0j0c9q60o3ed9l:
+              label: 'Konszolidalt merleg. Eszkozok (pag. 3A hoja 01). Emlekezteto
+                tetel: penzugyi lizing kereteben megszerezve'
             x-agp34c1g6d0j0chq60o32c1h:
               help: null
               label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 02). Penzeszkozok
@@ -340,6 +488,36 @@ modelo:
               help: null
               label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 02). Hitelek es kovetelesek.
                 Hitelek. Egyeb
+            x-agp34c1g6d0j2c9q60o32d1h:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 11). Immaterialis
+                javak
+            x-agp34c1g6d0j2c9q60o32d1i:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 11). Uzleti vagy
+                cegertek
+            x-agp34c1g6d0j2c9q60o32d1j:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 11). Egyeb immaterialis
+                javak
+            x-agp34c1g6d0j2c9q60o32d1k:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 11). Adokovetelesek
+            x-agp34c1g6d0j2c9q60o32d1l:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 11). Tenyleges adokovetelesek
+            x-agp34c1g6d0j2c9q60o32d1m:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 11). Halasztott adokovetelesek
+            x-agp34c1g6d0j2c9q60o32d1n:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 11). Egyeb eszkozok
+            x-agp34c1g6d0j2c9q60o32d1o:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 11). Nyugdijakhoz
+                kapcsolodo biztositasi szerzodesek
+            x-agp34c1g6d0j2c9q60o32d1p:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 11). Keszletek
+            x-agp34c1g6d0j2c9q60o32d9g:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 11). Az egyeb eszkozok
+                tobbi resze
+            x-agp34c1g6d0j2c9q60o32d9h:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 11). Ertekesitesre
+                tartottnak minositett befektetett eszkozok es elidegenitesi csoportok
+            x-agp34c1g6d0j2c9q60o32d9i:
+              label: Konszolidalt merleg. Eszkozok (pag. 3A hoja 11). Eszkozok osszesen
             x-agp34c1g6d130c1q60o30c1j:
               help: null
               label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Torvenyi

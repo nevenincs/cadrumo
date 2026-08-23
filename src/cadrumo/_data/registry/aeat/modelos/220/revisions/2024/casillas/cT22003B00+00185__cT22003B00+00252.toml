@@ -40,7 +40,8 @@
 # AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
 # intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is
 # derived as the common prefix of every numbered line and the remainder is stripped, so
-# both spellings land on the same heading. 0 parent-child separator repair(s)
+# both spellings land on the same heading. 0 parent-child separator
+# repair(s)
 # applied: none needed.
 #
 # THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
@@ -59,6 +60,13 @@
 # Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
 # 2024-12-31 -- exactly the single ejercicio this revision claims. T22003B00 tiles
 # 1..1044 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 03, letra B, hoja 00. Sibling sector pages of this
+# family share every heading AEAT prints in the BODY -- two records both head their
+# lines "ACTIVO" and both declare a "Total activo" -- so the envelope is the ONLY
+# non-inferential way to tell them apart. The operator label carries it for exactly
+# that reason; it claims no sector, which the design does not state.
 #
 # NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
 # pagina-complementaria mechanics; @883+150 RESERVADO PARA LA ADMINISTRACION; and
