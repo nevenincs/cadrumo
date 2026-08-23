@@ -62,60 +62,71 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the Impuesto sobre Sociedades grupo-fiscal \
 consolidated declaration. DISCLOSURE -- self-review: the same agent authored the casillas \
-being reviewed. VERIFIED -- RECORD T22007A01 IS AUTHORED, 32 casillas describing all 42 \
-design fields: the DA 19a LIS carry-forward table for bases imponibles negativas \
-individuales no integradas, a matrix of TWO regimes (general, and the regimen especial de \
-buques y empresas navieras de Canarias) by FOUR generation periods by FOUR amounts. \
-Revision total 1950 casillas over THIRTY-NINE of the design's 137 record sheets; 1777 \
-numeric slots modelled. Suite, RUN SEQUENTIALLY: 8 failed, 5422 passed, an IDENTICAL \
-FAILED LIST to the previous run. ZERO REGRESSIONS. CORRECTED BEFORE SHIPPING -- A NOTE \
-ABOUT AEAT'S NUMBERING WAS INVENTED FROM THE SHAPE OF THE ANOMALY AND THE DESIGN REFUTED \
-IT. The fragment was drafted saying the Canarias block runs 01023..01035 with [01036] used \
-earlier and the last two boxes out of sequence. Read off the design instead: the general \
-block runs 01007..01022 and the Canarias block continues 01023..01036 UNBROKEN, then its \
-last two boxes are [01935] and [01936] rather than 01037 and 01038. The note was ABOUT \
-AEAT BEING IRREGULAR, and irregularity is exactly the territory where a plausible-sounding \
-description cannot be trusted; a comment asserting \"AEAT does something odd here\" \
-carries the same evidential burden as a casilla number. The corrected note states the \
-verified runs and records the refuted draft. VERIFIED -- THE MATRIX LAYOUT IS ASSERTED \
-AGAINST THE DESIGN, NOT ASSUMED. Ten translated parts cover all 32 labels, and the Spanish \
-composition of every label must reproduce the text the generator derived from AEAT \
-exactly; a wrong row or column ordering would refuse rather than silently name the wrong \
-generation period or the wrong amount on every box in a block. NOTED -- THREE THINGS ARE \
-KEPT EXACTLY AS PRINTED. AEAT LEAVES A PARENTHESIS OPEN in the heading of all 32 lines -- \
-\"(DA 19a LIS.\" with no closing bracket anywhere in the field. The verbatim design text \
-keeps it open in the fragment comments; the composed OPERATOR label closes it, and the \
-locale generator says so explicitly, because a record name in a label is this campaign's \
-prose while the casilla text is AEAT's. THE SAME PROVISION IS SPELLED TWO WAYS IN ONE \
-LINE, \"DA 19a LIS\" in the heading and \"DA 19 LIS (**)\" in the amount name; both kept, \
-nothing decides which is canonical. TWO GENERATION PERIODS ARE BOTH CALLED 2024, separated \
-only by an asterisk the design never explains; the distinction is preserved verbatim, \
-because collapsing them would merge two boxes AEAT numbers separately and dropping the \
-marker would make them indistinguishable to an operator. NOTED -- THIS IS THE FIRST \
-UNEXPRESSED RELATION IN THIS REVISION THAT WOULD CROSS FILING YEARS. Within each regime \
-and period the four columns are a chain -- original, pendiente at the start, integrado in \
-the period, pendiente at the end -- and the Total row is the column sum; NEITHER is \
-expressed. Every other missing relation in this revision stays inside one filing year, but \
-an end-of-period pendiente is meant to become the NEXT year's opening pendiente, which is \
-the defect class where a revision error compounds across years. VERIFIED -- THE WHOLE \
-CORPUS WAS RE-DERIVED FROM THE DESIGN: 1950 casillas across 46 fragments and 39 sheets, \
-every segmento a real sheet, 1777 numeric box numbers PRINTED BY AEAT and none minted, 4 \
-letter numbers, 74 byte spans resolving to a design field at exactly that offset and \
-length, 39 sheets tiling once with no gap and no partial overlap, no repeated id and no \
-repeated (segmento, number). ZERO PROBLEMS. VERIFIED -- EVERY MODELO 220 LOCALE KEY IS \
-PRESENT IN ALL FOUR CATALOGUES, label AND help, zero missing reported by the scaffold \
-check, and no label in any locale is identical to its Spanish. The help strings follow the \
-revision's own convention, re-derived and required to reproduce 1344 existing strings \
-exactly before the 128 new ones were written. NOT CLAIMED -- 9826 OF THE 11603 (record, \
-number) SLOTS REMAIN UNMODELLED; 1777 are modelled, zero orphaned. NOT CLAIMED -- NOTHING \
-COMPUTES ANY OF IT. No formula, construct or binding exists anywhere in this revision; two \
-complete balance sheets sit in it and neither balances. NOT CLAIMED -- NO EXPORT LAYOUT \
-AND NO CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be filed. model_law_authority_scope \
-remains inspection_only, so this stamp is made under the LOWER inspection bar and MUST be \
-re-made if a layout lands. NOT CLAIMED -- T22009001, T22012A00 and T22012A10 remain \
-deliberately held back on unresolved ambiguities. NOT CLAIMED -- LOCALES COMPLETE BUT \
-UNAUDITED BY ANY SECOND PARTY: written and repaired throughout by the same agent. NOT \
-CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero."""
+being reviewed. VERIFIED -- RECORD T22004B00 IS AUTHORED, 35 casillas describing all 45 \
+design fields: the financial half of OPERACIONES CONTINUADAS in the cuenta de perdidas y \
+ganancias consolidada -- ingresos and gastos financieros, variacion de valor razonable, \
+diferencias de cambio, deterioro y resultado por enajenaciones de instrumentos financieros \
+-- down through RESULTADO FINANCIERO and RESULTADO ANTES DE IMPUESTOS to the RESULTADO \
+CONSOLIDADO DEL EJERCICIO and its attribution. Revision total 1985 casillas over FORTY of \
+the design's 137 record sheets; 1812 numeric slots modelled. NOT REPAIRED, RECORDED -- ONE \
+BOX NUMBER IS PRINTED WITH AN EXTRA LEADING ZERO. [000304] is six digits where every other \
+box on this record is five, and it sits between [00301] and [00305]. IT IS TRANSCRIBED \
+EXACTLY AS PRINTED. The evidence that AEAT meant 00304 is strong -- the immediate \
+neighbours, and 00304 being a real box number elsewhere in this modelo -- but a casilla \
+number is an IDENTIFIER, the campaign's invariant is that it is transcribed and never \
+minted or corrected, and the corpus verifier checks precisely that every number is one \
+AEAT printed. Writing 00304 would be this agent deciding what AEAT meant on a filing-grade \
+identifier, which is the fabrication this campaign refuses. VERIFIED -- THE SAME DEFECT \
+AFFECTS EIGHT BOXES ACROSS FOUR RECORDS, not one: [000304], [000507], [000742], [006308], \
+[006309], [006310], [007504] and [007656] in T22004B00, T22012B20, T22014004 and \
+T22014B20. In five of the eight the immediate neighbours prove the intended five-digit \
+reading -- [007504] sits between [07503] and [07505] -- and this was established by \
+enumerating every six-digit bracket in the design rather than by generalising from the one \
+in hand. The other three records are named in the fragment so whoever authors them meets \
+the decision already framed. CORRECTED -- THE GENERATOR MATCHED THE RECORD TERMINATOR BY \
+AEAT'S PROSE AND THIS RECORD BROKE IT. 132 designs end \"Fin de registro\", two end \"Fin \
+de Registro\", and TWO -- this record and T22005C00 -- end \"Fin de ejercicio\", which is \
+simply wrong: the field closes a RECORD, not an ejercicio. Keying on the words crashed \
+here and would have tempted a silent widening of the word list. The terminator is now \
+matched by its CLOSING TAG, which is what actually identifies the field and is identical \
+in all 137, and the fragment comment REPORTS the wording each design uses instead of \
+asserting one. All 13 previously authored flat records regenerate with that single comment \
+line changed and NOTHING ELSE, verified by counting non-comment changed lines. NOTED -- \
+AEAT MOVES A PARENT MID-GROUP: [00319] carries the outer name \"Deterioro y resultado por \
+enajenaciones de instrumentos financieros\" while [00320] to [00323], its breakdown on the \
+printed modelo, drop it and head straight with \"Resultados por enajenaciones y otras\". \
+Each label follows its own printed text; the nesting is not repaired, because the design \
+states two placements and nothing here knows which AEAT means. VERIFIED -- FOUR MISSING \
+PARENT-CHILD SEPARATORS WERE REPAIRED, each only after an ATTESTED standalone line of this \
+record, and each listed in the fragment. Twenty of the 35 numbered lines carry the real \
+ligature CODEPOINT unsplit, expanded in the labels and kept as emitted in the verbatim \
+comments. VERIFIED -- THE LOCALE CHAINS ARE DERIVED, NOT RETYPED. This record's numbered \
+lines share no common prefix, so the generator correctly derived an EMPTY heading and kept \
+each line's full text; the chain for every label is therefore its own Spanish split on the \
+separator. Deriving it beats retyping 35 chains, and the 37-part table is asserted to \
+cover the derived set exactly -- no more, no less. VERIFIED -- THE WHOLE CORPUS WAS \
+RE-DERIVED FROM THE DESIGN: 1985 casillas across 47 fragments and 40 sheets, every \
+segmento a real sheet, 1812 numeric box numbers PRINTED BY AEAT and none minted, 4 letter \
+numbers, 74 byte spans resolving to a design field at exactly that offset and length, 40 \
+sheets tiling once with no gap and no partial overlap, no repeated id and no repeated \
+(segmento, number). ZERO PROBLEMS. VERIFIED -- EVERY MODELO 220 LOCALE KEY IS PRESENT IN \
+ALL FOUR CATALOGUES, label AND help, zero missing, and no label in any locale is identical \
+to its Spanish. Help follows the revision's own convention, re-derived and required to \
+reproduce 1472 existing strings exactly before the 140 new ones were written. NOT CLAIMED \
+-- 9791 OF THE 11603 (record, number) SLOTS REMAIN UNMODELLED; 1812 are modelled, zero \
+orphaned. NOT CLAIMED -- THIS PROFIT AND LOSS ACCOUNT DOES NOT ADD UP. RESULTADO \
+FINANCIERO, RESULTADO ANTES DE IMPUESTOS, RESULTADO DEL EJERCICIO PROCEDENTE DE \
+OPERACIONES CONTINUADAS and RESULTADO CONSOLIDADO DEL EJERCICIO are each DECLARED, not \
+computed, and the split of the consolidated result between the sociedad dominante and \
+socios externos is declared beside it with NOTHING checking that the two sum back to it. \
+No formula, construct or binding relates any of them, and nothing joins this page to the \
+operating half of the same cuenta. NOT CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT \
+MEMBERSHIP CHANGE. The modelo cannot be filed. model_law_authority_scope remains \
+inspection_only, so this stamp is made under the LOWER inspection bar and MUST be re-made \
+if a layout lands. NOT CLAIMED -- T22009001, T22012A00 and T22012A10 remain deliberately \
+held back on unresolved ambiguities. NOT CLAIMED -- LOCALES COMPLETE BUT UNAUDITED BY ANY \
+SECOND PARTY: written and repaired throughout by the same agent. NOT CLAIMED -- \
+independent_check_coverage is n/a: NO CLAIM, not zero."""
 reviewed_at = 2026-08-23
 
 [revisions."2024".family_dispositions.casilla_continuidad_evolutions]
