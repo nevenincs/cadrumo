@@ -4030,3 +4030,64 @@ duplicate-label assertion caught it; the apartado is now part of the label, not 
 
 **10447 of 11570 slots remain** across 117 numbered records; 1123 modelled, zero orphaned.
 T22009001, T22012A00 and T22012A10 stay held back.
+
+## 2026-08-23 — the T22015 deducción records, and what deriving a heading found
+
+### What landed
+
+Records **T22015A00** and **T22015B00** — the two deducción detail records: deducciones
+por reinversión, and the deducción por inversión de beneficios. **21 casillas**, revision
+1258 → **1279**, eighteen of 137 records.
+
+Suite: **identical FAILED list, zero regressions.**
+
+Same repeating shape as T22010000/T22011000, but the row index is a **parenthesised
+ordinal** rather than a trailing digit, and it sits in a different place in each record.
+33 blocks each; 16 + 89×33 and 16 + 81×33 land exactly on the first total.
+
+### Deriving the heading found a legal-citation split nobody typed
+
+The record heading is **derived as the common prefix of its own group**, not retyped. That
+is what surfaced the finding:
+
+**T22015B00 prints a different legal citation on its details and on its totals.** Every one
+of its 231 detail lines says `DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37
+TRLIS)`; every one of its three totals says `(Art. 37 LIS)`. Transitional provision plus
+the repealed TRLIS article on one side, the current LIS article on the other — for the same
+deducción.
+
+**T22015A00 has no common total heading at all**, because AEAT prefixes only its *first*
+total with `Resultado de la autoliquidación.`.
+
+Neither would have been noticed had the heading been read off one line and applied to the
+rest — which is exactly what the previous iterations did in other forms. Totals therefore
+keep their printed text whole; only detail labels have a heading stripped.
+
+### A blanket punctuation rule corrupted a legal reference
+
+Regularising the space after a period — added so `reinversión (2).Deducción` and
+`reinversión (4). Deducción` would compare equal — rewrote **`DT 24.5 LIS` as
+`DT 24. 5 LIS`**.
+
+Now scoped to a period that separates *words*, so it cannot reach inside a number AEAT
+printed. And the block-shape comparison moved onto letters and digits only, so punctuation
+spacing cannot make one printed shape look like two.
+
+**The general form: a normalisation written to make two strings compare equal will happily
+change a third string that was already correct.** Scope it to the exact thing that differed.
+
+### AEAT repeats a phrase inside one description
+
+Block 1 of T22015A00 reads `...por transmisión del activo por transmisión del activo`; the
+other 32 blocks print the tail once. Collapsed in the label, kept doubled in the comment —
+the same call as T220DID00's `Estado. Estado`.
+
+Worth noting **how** it was found: the block-shape check *refused to see one shape*. The
+collapse was a response to a failing assertion, not a precaution taken in advance. Three
+iterations ago that class of thing was found by eye; it is now found by the code.
+
+### Scale
+
+**10441 of 11570 slots remain** across 115 numbered records; 1129 modelled, zero orphaned.
+The cross-record hazard is unchanged: box 00562 is declared twice and nothing yet makes two
+casillas sharing a number resolve to one value.

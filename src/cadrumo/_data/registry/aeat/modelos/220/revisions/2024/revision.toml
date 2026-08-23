@@ -62,70 +62,68 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the Impuesto sobre Sociedades grupo-fiscal \
 consolidated declaration. DISCLOSURE -- self-review: the same agent authored the casillas \
-being reviewed. VERIFIED -- RECORD T220DID00 IS AUTHORED, 31 casillas, the DOCUMENTO DE \
-INGRESO O DEVOLUCION: the payment slip of the consolidated declaration, carrying devengo \
-and identificacion of the grupo, three liquidacion figures, the devolucion block with its \
-account details, the ingreso block, the abono and compensacion por conversion de activos \
-por impuesto diferido (art. 130 LIS), and the cuota cero mark. Revision total 1258 \
-casillas over SIXTEEN of the design's 137 records. THE APARTADO IS DERIVED FROM ITS NAME, \
-NOT ITS NUMBER, and that mattered. AEAT numbers the apartados (1) to (7) inside the field \
-descriptions and the numbering DISAGREES WITH ITSELF: the field at @419, the bank country \
-code, is printed as \"Devolucion (5)\" although the devolucion block is (4) and (5) is \
-Ingreso. Routing on the digit would have filed a devolucion field under ingreso. The \
-generator asserts name-to-number consistency in BOTH directions and reports every \
-disagreement rather than resolving one silently; it also refuses to run if the \
-disagreement ever vanishes, so a corrected workbook cannot leave a stale claim standing. \
-VERIFIED -- FOUR BOXES CARRY A LETTER, NOT A FIVE-DIGIT NUMBER: [D] importe a devolver, \
-[I] importe a ingresar, [A] abono and [C] compensacion por conversion de AID. Each of the \
-four was counted across ALL 137 sheets of the design and appears EXACTLY ONCE, in this \
-record only, which is the shape of a per-record box identifier and not a column marker. \
-They are taken as AEAT's own number, the way modelo 604's alphabetic casillas already are. \
-That is a judgement and the fragment records it as one. CORRECTED BEFORE SHIPPING -- THE \
-BRACKET IS NOT ALWAYS LAST. Box 00562 prints as \"Cuota integra del grupo [00562]. \
-{DID_liq_CI}\", with the design's own variable name after the bracket, and an end-anchored \
-search silently minted a byte-span number for a box AEAT numbers. Found by reading the \
-generated output against the design, NOT by an assertion; an assertion now refuses any \
-description with an unread bracket. This is the third defect class in a row that only \
-surfaced because the output was read back, and the durable form of the fix is the same \
-each time: turn the reading into a check. VERIFIED -- THE LABELS CARRY THEIR APARTADO \
-because two fields read exactly \"Codigo IBAN - Bloque\", one under devolucion and one \
-under ingreso; without the apartado an operator cannot tell which account a value belongs \
-to. The within-record duplicate-label assertion is what surfaced that pair, and it stays. \
-VERIFIED -- COMPLETENESS COMPLEMENT ASSERTED IN THE GENERATOR: all 41 design fields are 31 \
-authored plus 10 excluded, and the difference against the design is empty. The type table \
-is asserted to cover exactly the authored offsets, so a field added or removed cannot pass \
-untyped. T220DID00 tiles 1..720 exactly once with NO gap and NO PARTIAL OVERLAP. \
-Year-clean: aeat-dr-220-2024 applies exactly the single ejercicio this revision claims. \
-NOTED -- THIS RECORD ECHOES BOXES DECLARED ELSEWHERE, and that is a limitation of the \
-convention rather than a defect in the record. Box 00562 is now declared TWICE in this \
-revision, as T22009000:00562 and T220DID00:00562, and the design prints it in SEVEN \
-records in all; 00621, 02800, 02806, 02809 and 02812 also belong to T22009001, which is \
-not yet authored. The (segmento, number) convention -- modelo 200's, adopted here -- gives \
-each record its own casilla, so ONE AEAT box becomes several casillas across the modelo. A \
-layout MUST bind these to the same value rather than collect them twice, and NOTHING \
-ENFORCES THAT TODAY. NOT CLAIMED -- 10447 OF THE 11570 (record, number) SLOTS REMAIN \
-UNMODELLED across 117 of the 133 records that carry numbers; 1123 slots are modelled. Zero \
-authored slots are orphaned: every one is still evidenced by the current extraction. As \
-the previous stamp recorded, a coverage figure is only true against the extractor of the \
-day it was measured. NOT CLAIMED -- THE LIQUIDACION FIGURES ARE DECLARED HERE, NOT \
-CARRIED. Nothing computes the devolucion or the ingreso amount from them, and no formula, \
-construct or binding is attached to any casilla in this record. A payment slip whose \
-amounts are all manual inputs is not a payment slip the application can produce. NOT \
-CLAIMED -- NO semantic_role IS SET, consistent with every other modelo 220 casilla. The \
-registry already carries a role vocabulary these bank fields belong to -- devolucion_iban \
-and devolucion_bic, used by modelo 308 -- and applying it should be one modelo-wide pass, \
-not a role invented for one record. NOT CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT \
-MEMBERSHIP CHANGE. The modelo cannot be filed. model_law_authority_scope remains \
-inspection_only, so this stamp is made under the LOWER inspection bar and MUST be re-made \
-if a layout lands. NOT CLAIMED -- T22009001, T22012A00 and T22012A10 remain deliberately \
-held back, the first for two byte-identical descriptions whose jurisdiction the design \
-does not state, the others for colliding label keys. NOT CLAIMED -- LOCALES COMPLETE BUT \
-UNAUDITED: the 31 labels were translated by the same agent that authored the casillas and \
-reviewed by nobody else; the catalogues are unaccented ASCII, now asserted rather than \
-merely intended after one accented Hungarian string slipped past. All 1258 casillas \
-resolve a non-null label in es, en, ca and hu, counted by VALUE rather than by key, and \
-duplicate Spanish labels across the revision are ZERO. NOT CLAIMED -- \
-independent_check_coverage is n/a: NO CLAIM, not zero."""
+being reviewed. VERIFIED -- RECORDS T22015A00 AND T22015B00 ARE AUTHORED, 21 casillas, the \
+two deduccion detail records: T22015A00 the deducciones por reinversion, entity by entity \
+with the transmitting NIF, the reinvesting NIF, both dates, the ejercicio of generation \
+and the three deduccion columns; T22015B00 the deduccion por inversion de beneficios with \
+the investing NIF, the NIF of the entity that funds the reserva, the date, the ejercicio \
+and the same three columns. Revision total 1279 casillas over EIGHTEEN of the design's 137 \
+records. THE NUMBER SET DECIDED THE CASILLA SET, NOT THE SHAPE: 33 detail blocks in each \
+record carry NO box number and differ only by a parenthesised row ordinal, so ONE row is \
+declared per record and a layout repeat writes the rest. Declaring every block would have \
+minted 264 and 231 casillas for 8 and 7 declared values. THE STRIDE IS PROVEN: 16 + 89x33 \
+and 16 + 81x33 land exactly on @2953 and @2689 where the first total begins, the ordinals \
+seen are asserted to be exactly 1..33, and no description may carry two of them. VERIFIED \
+-- BOTH HEADINGS ARE DERIVED AS THE COMMON PREFIX OF THEIR OWN GROUP, not retyped, and \
+that is what surfaced the finding of this iteration. THE DETAIL LINES AND THE TOTAL LINES \
+CARRY DIFFERENT HEADINGS. T22015B00 prints \"DEDUCCION POR INVERSION DE BENEFICIOS (DT \
+24.5 LIS y Art. 37 TRLIS)\" on every one of its 231 detail lines and \"DEDUCCION POR \
+INVERSION DE BENEFICIOS (Art. 37 LIS)\" on every one of its three totals -- a DIFFERENT \
+legal citation for the same deduccion, transitional-provision plus the repealed TRLIS \
+article against the current LIS article. T22015A00 has NO common total heading at all, \
+because AEAT prefixes only its FIRST total with \"Resultado de la autoliquidacion.\". \
+Neither would have been noticed had the heading been typed in from one line and applied to \
+the rest, which is what the previous three iterations did in other forms. The totals \
+therefore keep their printed text whole and only the detail labels have a heading \
+stripped. CORRECTED BEFORE SHIPPING -- A BLANKET PUNCTUATION RULE CORRUPTED A LEGAL \
+REFERENCE. Regularising the space after a period, added so that \"reinversion \
+(2).Deduccion\" and \"reinversion (4). Deduccion\" would compare equal, rewrote \"DT 24.5 \
+LIS\" as \"DT 24. 5 LIS\". It is now scoped to a period that separates WORDS and cannot \
+reach inside a number AEAT printed. The block-shape comparison itself was moved onto \
+letters and digits only, so punctuation spacing cannot make one printed shape look like \
+two. VERIFIED -- AEAT REPEATS A PHRASE INSIDE ONE DESCRIPTION: block 1 of T22015A00 reads \
+\"NIF de la entidad que obtiene el resultado por transmision del activo por transmision \
+del activo\" where the other 32 blocks print the tail once. Collapsed in the label and \
+kept doubled in the verbatim comment, the same call made on T220DID00's doubled \"Estado. \
+Estado\". The collapse was DETECTED by the block-shape check refusing to see one shape, \
+not decided in advance, and every collapse applied is reported in the fragment. VERIFIED \
+-- COMPLETENESS COMPLEMENT ASSERTED IN THE GENERATOR: all 277 and 244 design fields are \
+authored, covered by the repeat, or named as excluded, with an empty difference; the type \
+table is asserted to cover exactly the authored offsets. Both records tile 1..3165 and \
+1..2901 exactly once with NO gap and NO PARTIAL OVERLAP. Year-clean: aeat-dr-220-2024 \
+applies exactly the single ejercicio this revision claims. NOT CLAIMED -- 10441 OF THE \
+11570 (record, number) SLOTS REMAIN UNMODELLED across 115 of the 133 records that carry \
+numbers; 1129 slots are modelled, zero orphaned. As two stamps ago recorded, a coverage \
+figure is only true against the extractor of the day it was measured. NOT CLAIMED -- THE \
+TOTALS ARE DECLARED, NOT COMPUTED, and neither is the arithmetic the three money columns \
+mean: a deduccion pendiente al inicio less the deduccion aplicada gives the deduccion \
+pendiente de aplicacion, and NO formula, construct or binding expresses that or the column \
+sums. NOT CLAIMED -- THE STANDING CROSS-RECORD HAZARD IS UNCHANGED. Box 00562 is declared \
+twice, as T22009000:00562 and T220DID00:00562, and the design prints some numbers in as \
+many as seven records. A layout must bind such casillas to the SAME value rather than \
+collect them twice, and NOTHING ENFORCES THAT TODAY. NOT CLAIMED -- NO EXPORT LAYOUT AND \
+NO CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be filed. model_law_authority_scope \
+remains inspection_only, so this stamp is made under the LOWER inspection bar and MUST be \
+re-made if a layout lands. NOT CLAIMED -- T22009001, T22012A00 and T22012A10 remain \
+deliberately held back, the first for two byte-identical descriptions whose jurisdiction \
+the design does not state, the others for colliding label keys. NOT CLAIMED -- LOCALES \
+COMPLETE BUT UNAUDITED: the 21 labels were translated by the same agent that authored the \
+casillas and reviewed by nobody else; the catalogues are unaccented ASCII, asserted. All \
+1279 casillas resolve a non-null label in es, en, ca and hu, counted by VALUE rather than \
+by key, and duplicate Spanish labels across the revision are ZERO -- which matters here \
+because the two records share several detail concepts word for word and only the record \
+heading tells them apart. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not \
+zero."""
 reviewed_at = 2026-08-23
 
 [revisions."2024".family_dispositions.casilla_continuidad_evolutions]
