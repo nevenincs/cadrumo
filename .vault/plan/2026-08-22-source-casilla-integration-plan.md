@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:a8bdbc760b70d65c3a77f44c9c5feca8aa6d27471685c9e44c961abf0c3ca829'
+body_hash: 'sha256:1f7051cbe2ace9114dc9b249368f60c8d8f5fedc628383b2813aedb562af96bc'
 ---
 
 # `source-casilla-integration` plan
@@ -99,7 +99,7 @@ Join both inventories through reviewed evidence-backed records and establish the
 Make silent capability drift, stale deferral, and false connection claims fail CI.
 
 - [x] `W01.P05.S24` - implement census generation and comparison commands; `dev/source_connectivity/cli.py`.
-- [ ] `W01.P05.S25` - reject unclassified new source capabilities and unexplained candidate disappearance; `dev/source_connectivity/check.py`.
+- [x] `W01.P05.S25` - reject unclassified new source capabilities and unexplained candidate disappearance; `dev/source_connectivity/check.py`.
 - [ ] `W01.P05.S26` - reject expired blocked rows and unresolved rows without an owner and bounded follow-up; `dev/source_connectivity/check.py`.
 - [ ] `W01.P05.S27` - reject connected claims without resolver ownership and encrypted revision proof; `dev/source_connectivity/check.py`.
 - [ ] `W01.P05.S28` - prove each ratchet failure mode bites under an external mutation; `dev/source_connectivity/tests/test_check.py`.

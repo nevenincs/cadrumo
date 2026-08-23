@@ -12,9 +12,8 @@ from typing import Annotated
 
 import typer
 
-from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
-
-from .discovery import assign_capabilities_to_census, discovered_source_capability_ids
+from .check import SourceConnectivityCheckError, check_capability_census
+from .discovery import discovered_source_capability_ids
 
 app = typer.Typer(
     name="source-connectivity",
@@ -54,11 +53,9 @@ def generate(repo_root: _RepoRoot = _DEFAULT_REPO_ROOT) -> None:
 @app.command("compare")
 def compare(repo_root: _RepoRoot = _DEFAULT_REPO_ROOT) -> None:
     """Compare live discovery with the canonical reviewed census and fail on drift."""
-    capability_ids = discovered_source_capability_ids(repo_root)
-    manifest = load_source_connectivity_census()
     try:
-        assignments = assign_capabilities_to_census(capability_ids, manifest)
-    except ValueError as error:
+        result = check_capability_census(repo_root)
+    except SourceConnectivityCheckError as error:
         typer.echo(f"source-connectivity census mismatch: {error}", err=True)
         raise typer.Exit(code=1) from error
     typer.echo(
@@ -67,9 +64,9 @@ def compare(repo_root: _RepoRoot = _DEFAULT_REPO_ROOT) -> None:
                 "schema_version": 1,
                 "kind": "source-connectivity-comparison",
                 "status": "match",
-                "capability_count": len(capability_ids),
-                "census_entry_count": len(manifest.entries),
-                "assignment_count": sum(len(rows) for rows in assignments.values()),
+                "capability_count": result.capability_count,
+                "census_entry_count": result.census_entry_count,
+                "assignment_count": result.assignment_count,
             },
             indent=2,
             sort_keys=True,
