@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:171c4b4cfe7c429933d6bd0ca3f9b4fe652280cd9960063f1e40bd5714f15d8e'
+body_hash: 'sha256:d5f17d2442becc9fe9e33e2e9e4ab1ab7226bc918746056febfa0b2c979836d1'
 ---
 
 # `source-casilla-integration` plan
@@ -57,7 +57,7 @@ Define the typed candidate identity, evidence, ownership, disposition, expiry, a
 - [x] `W01.P01.S151` - emit IVA wallet decisions as immutable event-key primaries and parent their authority-source contributors to the decision provenance node; `src/cadrumo/application/calculations; src/cadrumo/application/aggregation`.
 - [x] `W01.P01.S152` - classify the M720 foreign-asset composite as grounding-blocked until a typed unique resolved-asset identity or separately approved uniqueness-enforced key exists; `src/cadrumo/application/aggregation; .vault`.
 - [x] `W01.P01.S153` - make live connectivity authority accept exactly one resolver-matching primary and reject contributor-only, ambiguous, orphaned, drifted, or malformed provenance graphs; `src/cadrumo/application/registry`.
-- [ ] `W01.P01.S154` - verify composite and direct provenance identity, encrypted round trips, mutation refusal, wallet lineage, foreign-asset blocking, and semantic sentinel non-duplication; `src/cadrumo`.
+- [x] `W01.P01.S154` - verify composite and direct provenance identity, encrypted round trips, mutation refusal, wallet lineage, foreign-asset blocking, and semantic sentinel non-duplication; `src/cadrumo`.
 - [ ] `W01.P01.S135` - replace the configurable proof fake with real authority and encrypted-revision mutation coverage; `src/cadrumo/application/registry/tests/test_source_connectivity_authority.py`.
 
 ### Phase `W01.P02` - derive the registry-side inventory

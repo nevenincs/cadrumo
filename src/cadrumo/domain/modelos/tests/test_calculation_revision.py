@@ -664,6 +664,18 @@ def test_revision_id_canonicalizes_complete_source_provenance_and_refuses_identi
         source_provenance=(first.model_copy(update={"fingerprint": "sha256:" + "c" * 64}), second),
         filing_instance_evidence=None,
     )
+    for update in (
+        {"resolved_binding_source": BindingSourceKind.PAYABLE_INVOICE},
+        {"contributor_source_kind": "invoice_catalogue_record"},
+        {"contributor_binding_source": BindingSourceKind.PAYABLE_INVOICE},
+        {"lineage_role": CalculationSourceLineageRole.CONTRIBUTOR},
+        {"parent_source_ref": second.source_ref},
+    ):
+        assert canonical != derive_calculation_revision_id(
+            **common,
+            source_provenance=(first.model_copy(update=update), second),
+            filing_instance_evidence=None,
+        )
 
 
 def test_persisted_source_ref_requires_a_coherent_explicit_binding_axis() -> None:

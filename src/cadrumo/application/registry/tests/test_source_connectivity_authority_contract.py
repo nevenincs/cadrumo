@@ -426,3 +426,22 @@ def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -
         evidence_verifier=cast(Any, object()),
     )
     assert not incoherent_authority.encrypted_revision_matches(cast(Any, proof(connection)))
+
+    contributor_only = persisted.model_copy(
+        update={
+            "lineage_role": CalculationSourceLineageRole.CONTRIBUTOR,
+            "parent_source_ref": "missing-primary",
+        },
+    )
+    contributor_authority = LiveSourceConnectivityProofAuthority(
+        source_ownership=build_calculation_route_source_ownership_catalogue(),
+        workflows=cast(Any, object()),
+        calculation_revisions=cast(
+            Any,
+            _RevisionRepository(
+                SimpleNamespace(calculation_revision_id=revision_id, source_provenance=(contributor_only,)),
+            ),
+        ),
+        evidence_verifier=cast(Any, object()),
+    )
+    assert not contributor_authority.encrypted_revision_matches(cast(Any, proof(connection)))
