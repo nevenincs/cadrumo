@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:29f10dc4b92eec4f1d6bd0fc7f2338152aa2d192bd5c1c8e9a5aefbd68bcf64b'
+body_hash: 'sha256:4fbe1f8d040db0008cbc5789aaa622097a06e8548904955f7089b7cc429aed50'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
@@ -31,6 +31,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P03a-S54]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P03a-S55]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P03a-S56]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-W02-P03a-S57]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P04-S13]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
@@ -54,6 +55,7 @@ related:
   - '[[2026-08-23-secure-storage-performance-hardening-s54-command-spec-convergence-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s55-command-spec-universal-gates-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s56-source-lane-review-audit]]'
+  - '[[2026-08-23-secure-storage-performance-hardening-s57-distribution-command-spec-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w01-p02-s07-baseline-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w01-p02-s08-profiler-bite-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w02-p03-s09-lazy-node-kernel-review-audit]]'
@@ -92,6 +94,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-23-secure-storage-performance-hardening-s54-command-spec-convergence-review-audit` - `secure-storage-performance-hardening` audit: `S54 command-spec convergence review`
 - `2026-08-23-secure-storage-performance-hardening-s55-command-spec-universal-gates-audit` - `secure-storage-performance-hardening` audit: `S55 CommandSpec universal gate review`
 - `2026-08-23-secure-storage-performance-hardening-s56-source-lane-review-audit` - `secure-storage-performance-hardening` audit: `S56 clean source and editable lane review`
+- `2026-08-23-secure-storage-performance-hardening-s57-distribution-command-spec-review-audit` - `secure-storage-performance-hardening` audit: `s57 distribution command spec review`
 - `2026-08-23-secure-storage-performance-hardening-w01-p02-s07-baseline-review-audit` - `secure-storage-performance-hardening` audit: `W01.P02.S07 frozen complete-CLI baseline review`
 - `2026-08-23-secure-storage-performance-hardening-w01-p02-s08-profiler-bite-review-audit` - `secure-storage-performance-hardening` audit: `W01.P02.S08 profiler bite review`
 - `2026-08-23-secure-storage-performance-hardening-w02-p03-s09-lazy-node-kernel-review-audit` - `secure-storage-performance-hardening` audit: `W02.P03.S09 lazy node kernel review`
@@ -124,6 +127,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-W02-P03a-S54` - Atomically hard-cut the complete root, group, and leaf surface to distributed production-authored CommandSpec as sole structural authority, project runtime assembly, help, completion, census, schema, operator, MCP/HITL, execution policy, and write routing from specs, make handlers behavior-only, and delete callback/decorator authority, lazy and path mirrors, both runtime JSON readers, both development generators, ignore entries, cache-parity tests, and stale prose with no fallback, shim, or partial coexistence
 - `2026-08-22-secure-storage-performance-hardening-W02-P03a-S55` - Add dynamic CommandSpec exact-set, uniqueness, parent-edge, target, locale-key, schema, policy, side-effect, performance-class, and write-route gates for every current and future root, group, and leaf, forbid every former structural authority and runtime artifact edge, and prove each detector with independently constructed missing, duplicate, orphan, malformed, forbidden-import, and undeclared-node negatives
 - `2026-08-22-secure-storage-performance-hardening-W02-P03a-S56` - Prove clean-checkout direct-source and editable-install CLI assembly, help, completion, census, schema, operator, MCP/HITL, and write-routing behavior from tracked CommandSpec modules without generation or development imports, including explicit absence of both command JSON names and generator paths
+- `2026-08-22-secure-storage-performance-hardening-W02-P03a-S57` - Prove direct-wheel, direct-sdist, and sdist-to-wheel contents and installed behavior include every production CommandSpec module, exclude both command JSON names and development generators, and materialize the complete localized root, group, and leaf surface with resolvable public handler and schema targets
 - `2026-08-22-secure-storage-performance-hardening-W02-P04-S13` - Convert the complete config subtree from eager registrar imports to nested loader references
 
 ### plan

@@ -11,24 +11,7 @@ related:
   - "[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace secure-storage-performance-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `secure-storage-performance-hardening` audit: `s57 distribution command spec review`
 
@@ -46,10 +29,22 @@ The first proof flattened every deferred target and verified only public importa
 
 The first module census recognized suffixed `*_COMMAND_SPEC` and `*_COMMAND_SPECS` assignments but not exports named exactly `COMMAND_SPEC` or `COMMAND_SPECS`. A future enrolled module using the bare canonical name could therefore be omitted from an artifact without entering the expected set.
 
+### s57-distribution-command-spec-review | medium | Unknown future deferred-target roles passed silently
+
+After the first remediation, recognized current target roles were validated correctly, but an unrecognized future dataclass field path fell through after public import resolution. That would permit a new role to evade its semantic contract.
+
+### s57-distribution-command-spec-review | medium | Cross-lane parity compared cardinality instead of identities
+
+The remediated lanes initially compared only node and node-kind counts. Independently self-consistent artifacts with equal-sized but different command keys or paths could pass, contrary to the required single command identity set.
+
 ## Recommendations
 
 Retain the owning dataclass field path while recursively enumerating installed targets and validate each resolved object by its role: canonical output schema, callable behavior target, concrete type, or Click converter.
 
 Recognize both bare and suffixed CommandSpec export names and prove the archive detector refuses an independently planted omitted module.
 
-Both recommendations were implemented. Final acceptance remains contingent on the full remediated artifact matrix and independent re-review.
+Fail closed for every unrecognized deferred-target field path and prove the detector with an independently planted unknown role.
+
+Compare exact sorted spec-key and derived-path projections across all artifact installs and plant equal-cardinality differing identities.
+
+All recommendations were implemented. The final independent convergence review recorded critical 0, high 0, medium 0, and low 0.
