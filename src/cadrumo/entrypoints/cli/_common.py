@@ -881,7 +881,7 @@ def _current_operator_surface_schema_rows(
         get_operator_surface_contract,
     )
     from ...entrypoints.schema_surface import ROOT_LANDING_SCHEMA_KEYS
-    from . import command_execution_policy_for_cli_path
+    from ._command_schema import command_registration_policy
 
     return _CurrentOperatorSurfaceSchemaInventory(
         command_keys=command_keys,
@@ -927,8 +927,7 @@ def _current_operator_surface_schema_rows(
                     if command_key in ROOT_LANDING_SCHEMA_KEYS
                     else (
                         "profile_bound_write"
-                        if command_execution_policy_for_cli_path(primary_paths[command_key]).write_route
-                        == "profile-bound"
+                        if command_registration_policy(command_key).write_route == "profile-bound"
                         else "non_profile_bound"
                     )
                 ),

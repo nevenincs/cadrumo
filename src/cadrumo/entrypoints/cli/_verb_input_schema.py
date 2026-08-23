@@ -568,8 +568,8 @@ def _command_help(command: ClickCommand) -> str:
     return full.splitlines()[0].strip() if full else ""
 
 
-def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInputSchema]:
-    """Build the per-verb input schemas for every command key.
+def _build_materialized_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInputSchema]:
+    """Build schemas from Click for metadata generation and parity gates.
 
     Materialises the ``aeat`` click command once and walks it per key. The walk
     imports each lazily-loaded command subtree exactly as real dispatch does, so
@@ -600,6 +600,91 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
             )
             continue
         schemas[key] = _schema_from_resolution(key, command, resolved)
+    assert_schema_coverage(tuple(resolution_errors))
+    return schemas
+
+
+def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInputSchema]:
+    """Build per-verb schemas from immutable registration metadata.
+
+    This is the runtime/operator discovery boundary.  Unlike the materialized
+    parity helper it imports no command handler subtree: the generated rows are
+    exact-set and source-fingerprint gated against the real Click declarations.
+    A declared-but-unimplemented result schema has no CLI projection and is
+    intentionally omitted under the existing explicit-gap contract.
+    """
+    from ...core.errors import resolve_output_language
+    from ._command_schema import command_registration_metadata, command_registration_projection
+
+    requested = set(command_keys)
+    if len(requested) != len(command_keys):
+        raise ValueError("command keys must be unique")
+    rows = {row.command: row for row in command_registration_metadata()}
+    missing = sorted(requested - set(rows))
+    if missing:
+        live_paths = tuple(node.path[1:] for node in command_registration_projection().nodes)
+
+        def resolved_prefix(key: str) -> tuple[str, ...]:
+            attempted = _naive_cli_path(key)
+            return max(
+                (path for path in live_paths if len(path) < len(attempted) and attempted[: len(path)] == path),
+                key=len,
+                default=(),
+            )
+
+        raise SchemaResolutionError(
+            tuple(
+                VerbLeafResolutionFailure(
+                    subject_leaf_key=key,
+                    attempted_cli_path=_naive_cli_path(key),
+                    resolved_cli_path=resolved_prefix(key),
+                    reason="registration metadata has no command identity",
+                )
+                for key in missing
+            )
+        )
+    language = resolve_output_language()
+    schemas: dict[str, VerbInputSchema] = {}
+    resolution_errors: list[VerbLeafResolutionFailure] = []
+    for key in command_keys:
+        row = rows[key]
+        parameters_by_language = row.parameters
+        parameters = parameters_by_language.get(language, parameters_by_language.get("es"))
+        if row.cli_path is None or parameters is None:
+            resolution_errors.append(
+                VerbLeafResolutionFailure(
+                    subject_leaf_key=key,
+                    attempted_cli_path=_naive_cli_path(key),
+                    reason="command is explicitly declared but has no materialized CLI leaf",
+                )
+            )
+            continue
+        help_by_language = row.help
+        schemas[key] = VerbInputSchema(
+            command_key=key,
+            cli_path=row.cli_path,
+            parameters=tuple(
+                VerbParameter.model_validate(
+                    {
+                        "name": parameter.name,
+                        "kind": VerbParamKind(parameter.kind),
+                        "cli_flag": parameter.cli_flag,
+                        "off_flag": parameter.off_flag,
+                        "json_type": JsonType(parameter.json_type),
+                        "required": parameter.required,
+                        "is_flag": parameter.is_flag,
+                        "multiple": parameter.multiple,
+                        "choices": parameter.choices,
+                        "default": list(parameter.default)
+                        if isinstance(parameter.default, tuple)
+                        else parameter.default,
+                        "help": parameter.help,
+                    }
+                )
+                for parameter in parameters
+            ),
+            help=help_by_language.get(language, help_by_language.get("es", "")),
+        )
     assert_schema_coverage(tuple(resolution_errors))
     return schemas
 
