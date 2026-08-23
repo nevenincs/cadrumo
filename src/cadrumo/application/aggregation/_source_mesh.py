@@ -1001,13 +1001,6 @@ class CalculationSourceResolution(BaseModel):
 
     @model_validator(mode="after")
     def _provenance_names_its_producing_resolver(self) -> CalculationSourceResolution:
-        if isinstance(self.resolver_id, CompositeSourceResolverId):
-            return self
-        if self.resolver_id in set(CompositeSourceResolverId):
-            raise SourceMeshError("aggregation.source_mesh.errors.reserved_composite_resolver_id")
-        mismatched = tuple(row.resolver_id for row in self.provenance if row.resolver_id != self.resolver_id)
-        if mismatched:
-            raise SourceMeshError("aggregation.source_mesh.errors.provenance_resolver_mismatch")
         primary_refs = tuple(
             row.source_ref for row in self.provenance if row.lineage_role is CalculationSourceLineageRole.PRIMARY
         )
@@ -1020,6 +1013,13 @@ class CalculationSourceResolution(BaseModel):
             if row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
         ):
             raise SourceMeshError("aggregation.source_mesh.errors.provenance_contributor_parent_missing")
+        if isinstance(self.resolver_id, CompositeSourceResolverId):
+            return self
+        if self.resolver_id in set(CompositeSourceResolverId):
+            raise SourceMeshError("aggregation.source_mesh.errors.reserved_composite_resolver_id")
+        mismatched = tuple(row.resolver_id for row in self.provenance if row.resolver_id != self.resolver_id)
+        if mismatched:
+            raise SourceMeshError("aggregation.source_mesh.errors.provenance_resolver_mismatch")
         return self
 
     @field_serializer("binding_values")
