@@ -4617,3 +4617,63 @@ declared twice, and this.
 
 **10174 of 11570 slots remain** across 104 numbered records; 1396 modelled, zero orphaned.
 This record has no TOTAL: the aseguradoras activo continues onto sheets not yet authored.
+
+## 2026-08-23 — T22003B02, and the identifier that was in the data all along
+
+### What landed
+
+Record **T22003B02**, closing the aseguradoras *balance consolidado activo* on `00162`
+TOTAL ACTIVO. **20 casillas**, revision 1562 → **1582**, thirty of 137 records.
+
+Suite: four new FAILED entries, **none mine** — see below.
+
+### AEAT declares each record's identity in its envelope, and this campaign was discarding it
+
+The design carries literal constants at `@6`, `@8`, `@9` — **página, letra, hoja**. Every
+fragment since the first has excluded those eight envelope fields as "identifier envelope
+mechanics".
+
+Sibling sector pages share **every heading AEAT prints in the body**: three ACTIVO records
+all head their lines `ACTIVO`, and two declare a box called `Total activo`. **Four operator
+labels had collided across them**, including two *different* boxes both reading
+`Balance consolidado. Activo. Total activo`.
+
+The envelope is the only **non-inferential** way to tell such records apart — and it was
+sitting in data already read and already thrown away.
+
+Swept across five records (T22003A00, A02, B02, T22005A01, A02): **184 labels** now carry
+`(pág. 3A hoja 00)`, `(pág. 3B hoja 02)`, `(pág. 5A hoja 01)` and so on. Revision duplicates
+fall from **9 texts over 29 casillas to 4 over 19**, and every survivor is AEAT's own repeat
+inside T22005A01, where the design prints no hierarchy to separate them.
+
+**The previous entry framed the collision as the price of refusing to infer a sector. That
+framing was incomplete** — there was a third option, in the data, and it took a *fourth*
+collision before I went looking. A cost accepted twice should have prompted the search the
+first time; "we chose the lesser evil" is a conclusion worth re-opening whenever the same
+evil recurs.
+
+### The suite measured a moving tree again
+
+The FAILED list gained four entries. Re-running each individually: **three already passed**,
+and the fourth failed on `registrar command is absent for 'modelo work calculate'` — a
+peer's CLI command-spec sweep landing mid-run. None reads registry TOML or locale YAML.
+
+Zero regressions from this work, and the diff-against-baseline discipline is exactly what
+separated four external entries from a real one. Second time this campaign that a peer's
+in-flight work has appeared in my results; both times individual re-runs settled it in under
+a minute.
+
+### Smaller notes
+
+- **The sheet suffix says B and this is an ACTIVO page.** It continues A02. The suffix
+  letters in this family do not track the side of the balance.
+- `00150`, `00151`, `00152` carry no prefix naming `00149` though they break it down on the
+  printed modelo — left flat, as ever.
+- AEAT capitalises `Empresas` on `00150` and not on `00151`, inside one group of three
+  parallel lines. Transcribed as printed: a rule regularising casing would be a rule about
+  AEAT's typography, and this campaign has paid three times for those.
+
+### Scale
+
+**10154 of 11570 slots remain** across 103 numbered records; 1416 modelled, zero orphaned.
+The aseguradoras activo now has a total, and nothing computes it.
