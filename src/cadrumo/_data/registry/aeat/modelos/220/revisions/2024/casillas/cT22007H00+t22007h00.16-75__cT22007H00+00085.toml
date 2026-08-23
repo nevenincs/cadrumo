@@ -1,0 +1,104 @@
+# Modelo 220 RECORD T22007H00 -- one of FOUR sibling per-operation detail records under
+# "OTRAS CORRECCIONES A LA SUMA DE BASES IMPONIBLES". This one carries:
+#   Otras correcciones a la suma de bases imponibles individuales, no comprendidas en los apartados anteriores. Corrección en base imponible
+#
+# 5 casillas describe all 211 design fields. THE NUMBER SET DECIDES THE
+# CASILLA SET, NOT THE SHAPE: the 50 detail blocks carry NO box number and differ
+# only by a printed row index, so ONE row is declared and a layout repeat writes the rest.
+# Declaring every block would mint 200 casillas for 4 declared values.
+#
+# THE ROW INDEX IS PRINTED IN TWO DIFFERENT FORMS ACROSS THESE FOUR SIBLINGS -- a
+# parenthesised ordinal after the concept in T22007D00 and T22007H00, a TRAILING DIGIT in
+# T22007E00 and T22007F00. This record uses the parenthesised form. The form is detected per
+# record rather than assumed, and the ordinals found are asserted to be exactly 1..50
+# with each appearing once per block field -- which is what rules out a description that
+# merely ends in a number.
+#
+# THE STRIDE IS PROVEN: the run starts at @16, the stride is 95, and
+# 16 + 95 x 50 lands exactly on @4766 where the total begins.
+# Every block was compared field-for-field against the first, on letters and digits only:
+# 1 distinct shape.
+#
+# THE DETAIL LINES AND THE TOTAL CARRY DIFFERENT HEADINGS, both derived as the common
+# prefix of their own group rather than read off one line:
+#   detail heading  Otras correcciones.
+#   total heading   OTRAS CORRECCIONES A LA SUMA DE BASES IMPONIBLES: Otras correcciones a la suma de bases imponibles individuales, no comprendidas en los apartados ante
+#
+# COMPLETENESS COMPLEMENT, asserted in the generator: every one of the 211 fields is
+# authored, covered by the repeat, or named below as excluded, and the difference of those
+# sets against the design is empty. The type table is asserted to cover exactly the
+# authored offsets.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22007H00 tiles
+# 1..4944 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @4783+150 RESERVADO PARA LA ADMINISTRACION; and
+# @4933+12 Fin de registro.
+#
+# NOT CLAIMED: the total is DECLARED, not computed. It is the sum of the correccion column
+# down the 50 detail rows, and NO formula, construct or binding expresses that. Nor
+# does anything express that these four corrections feed the suma de bases imponibles they
+# are named for.
+
+# @16+60 An. Otras correcciones (1).Descripción de la operación
+[[revisions."2024".casillas]]
+id = "T22007H00:t22007h00.16-75"
+number = "t22007h00.16-75"
+segmento = "T22007H00"
+section = ["liquidacion", "otras_correcciones_suma_bases_imponibles"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @76+9 An. Otras correcciones (1).N.I.F. de la Entidad del grupo que origina la corrección de la suma de bases imponibles
+[[revisions."2024".casillas]]
+id = "T22007H00:t22007h00.76-84"
+number = "t22007h00.76-84"
+segmento = "T22007H00"
+section = ["liquidacion", "otras_correcciones_suma_bases_imponibles"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @85+9 An. Otras correcciones (1).N.I.F. de la otra Entidad del grupo que interviene en la operación
+[[revisions."2024".casillas]]
+id = "T22007H00:t22007h00.85-93"
+number = "t22007h00.85-93"
+segmento = "T22007H00"
+section = ["liquidacion", "otras_correcciones_suma_bases_imponibles"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @94+17 N. Otras correcciones (1).Corrección en base imponible
+[[revisions."2024".casillas]]
+id = "T22007H00:t22007h00.94-110"
+number = "t22007h00.94-110"
+segmento = "T22007H00"
+section = ["liquidacion", "otras_correcciones_suma_bases_imponibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @4766+17 N. OTRAS CORRECCIONES A LA SUMA DE BASES IMPONIBLES: Otras correcciones a la suma de bases imponibles individuales, no comprendidas en los apartados anteriores. Corrección en base imponible. Total [00085]
+[[revisions."2024".casillas]]
+id = "T22007H00:00085"
+number = "00085"
+segmento = "T22007H00"
+section = ["liquidacion", "otras_correcciones_suma_bases_imponibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
