@@ -176,10 +176,6 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
     return schemas
 
 
-def _build_materialized_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInputSchema]:
-    return build_verb_input_schemas(command_keys)
-
-
 def cli_argv_for(schema: VerbInputSchema, arguments: dict[str, object]) -> list[str]:
     positional: list[str] = []
     options: list[str] = []

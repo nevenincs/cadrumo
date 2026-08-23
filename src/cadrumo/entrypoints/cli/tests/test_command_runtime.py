@@ -125,6 +125,29 @@ def test_runtime_preserves_an_option_with_no_help_text() -> None:
     assert "--name" in result.output
 
 
+def test_runtime_compiles_spec_owned_choices_without_a_handler_enum() -> None:
+    graph = _graph()
+    leaf = graph.by_key()["greet"]
+    option = leaf.parameters[0]
+    assert isinstance(option, OptionSpec)
+    exact_graph = CommandSpecGraph(
+        tuple(
+            replace(spec, parameters=(replace(option, value=replace(option.value, choices=("Ada", "Grace"))),))
+            if spec.key == "greet"
+            else spec
+            for spec in graph.specs
+        )
+    )
+
+    accepted = CliRunner().invoke(build_command_app(exact_graph), ["greet", "--name", "Ada"])
+    refused = CliRunner().invoke(build_command_app(exact_graph), ["greet", "--name", "Linus"])
+
+    assert accepted.exit_code == 0, accepted.output
+    assert refused.exit_code == 2
+    assert "Ada" in refused.output
+    assert "Grace" in refused.output
+
+
 def test_runtime_preserves_repeated_options_as_a_list_of_items() -> None:
     graph = _graph()
     leaf = graph.by_key()["greet"]

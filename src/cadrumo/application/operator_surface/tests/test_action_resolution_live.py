@@ -1,11 +1,11 @@
-"""Live Click and schema-registry proof for canonical action resolution."""
+"""CommandSpec projection proof for canonical action resolution."""
 
 from __future__ import annotations
 
 import pytest
 
 from ....core import NoRecoveryOutcome
-from ....entrypoints.cli import build_verb_input_schemas, command_schema_refs
+from ....entrypoints.cli.command_api import build_verb_input_schemas, command_schema_refs
 from ...operator_actions import (
     OPERATOR_ACTION_CATALOGUE,
     ActionReference,
@@ -33,17 +33,17 @@ def test_canonical_catalogue_resolves_against_real_live_command_and_input_schema
                     subject_leaf_key=command_key,
                     canonical_cli_path=input_schema.resolved_leaf.cli_path,
                     alias_cli_paths=input_schema.resolved_leaf.alias_paths,
-                    provenance="materialized production Click tree",
+                    provenance="production CommandSpec operator path",
                 ),
                 result_schema=ResultSchemaInventoryRow(
                     subject_leaf_key=command_key,
                     schema_name=schema_ref_by_key[command_key].schema_name,
-                    provenance="production result-schema registry",
+                    provenance="production CommandSpec result schema",
                 ),
                 input_schema=InputSchemaInventoryRow(
                     subject_leaf_key=command_key,
                     required_input_names=tuple(parameter.name for parameter in input_schema.required_inputs),
-                    provenance="production Click input projection",
+                    provenance="production CommandSpec input projection",
                 ),
                 mounted_family=None,
                 profile_policy=None,

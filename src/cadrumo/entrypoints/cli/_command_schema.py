@@ -200,6 +200,8 @@ def _json_type(parameter: ParameterSpec) -> CommandJsonType:
 
 
 def _choices(parameter: ParameterSpec) -> tuple[str, ...]:
+    if parameter.value.choices:
+        return parameter.value.choices
     target = parameter.value.click_type or parameter.value.annotation
     try:
         value: object = __import__(target.module, fromlist=(target.qualname.split(".", 1)[0],))
@@ -299,10 +301,6 @@ def command_registration_policy(command: str) -> CommandExecutionPolicy:
         value.handoff,
         value.live_write,
     )
-
-
-def _materialized_command_schema_refs() -> tuple[CommandSchemaRef, ...]:
-    return command_schema_refs()
 
 
 @cache

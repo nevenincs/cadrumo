@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import ast
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -37,6 +40,48 @@ def test_schema_and_input_projections_are_exact_graph_sets() -> None:
     schemas = build_verb_input_schemas(tuple(sorted(expected)))
     assert set(schemas) == set(expected)
     assert all(schema.cli_path == cli_path_for_command_key(key) for key, schema in schemas.items())
+
+
+def test_schema_and_operator_help_discovery_loads_no_behavior_target() -> None:
+    source = """
+import json
+import sys
+from cadrumo.entrypoints.cli._command_specs import COMMAND_GRAPH
+handler_modules = {
+    spec.handler.target.module
+    for spec in COMMAND_GRAPH.specs
+    if spec.handler is not None and spec.handler.target is not None
+}
+already_loaded = set(sys.modules)
+from cadrumo.entrypoints.cli._command_schema import command_schema_refs
+from cadrumo.entrypoints.cli._verb_input_schema import build_verb_input_schemas
+refs = command_schema_refs()
+schemas = build_verb_input_schemas(tuple(sorted(ref.command for ref in refs)))
+loaded_handlers = sorted(handler_modules.intersection(set(sys.modules) - already_loaded))
+print(json.dumps({
+    "expected": len(COMMAND_GRAPH.by_schema_identity()),
+    "refs": len(refs),
+    "schemas": len(schemas),
+    "loaded_handlers": loaded_handlers,
+}))
+"""
+    completed = subprocess.run(  # noqa: S603 - fixed interpreter and authored test program
+        [sys.executable, "-c", source],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    result = json.loads(completed.stdout)
+    assert result["refs"] == result["schemas"] == result["expected"]
+    assert result["loaded_handlers"] == []
+
+
+def test_operator_help_is_resolved_from_each_owning_spec_translation_key() -> None:
+    from ....core.i18n import tr
+
+    expected = COMMAND_GRAPH.by_schema_identity()
+    schemas = build_verb_input_schemas(tuple(sorted(expected)))
+    assert all(schemas[key].help == tr(spec.help_key.value) for key, spec in expected.items())
 
 
 def test_non_leaf_retirement_boolean_pairs_and_modelo_choices_are_truthful() -> None:
