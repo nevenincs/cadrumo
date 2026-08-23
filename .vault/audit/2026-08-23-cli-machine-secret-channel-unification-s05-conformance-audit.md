@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:00f466ceadaf6d3a7ceeb9e161b91134d8fb9df10a2659616eda09c23005a079'
+body_hash: 'sha256:dbfb10b2c60c225f29de343ea92fe38dd0c876955e468b4981421dfe07c88376'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
 ---
@@ -47,3 +47,13 @@ migration honestly rather than claiming all five commands are already complete.
   `MACHINE_SECRET_COMMANDS` by canonical command identity.
 - Retain S15 as the owner of generated registration JSON and CLI-tree regeneration; at S15 closure,
   replace the staged prefix allowance with exact two-channel parity for every inventory member.
+
+## Remediation
+
+### outsider-conformance-scope | resolved | Global registration census replaces config-only scan
+
+The no-outsider gate now derives adopters from every command row in the import-light global
+registration projection, whose identities and parameters are generated from the complete live
+tree and parity-gated separately. It compares canonical command identities directly with
+`MACHINE_SECRET_COMMANDS`, contains no parallel list of non-config aggregates, and imports no
+handler subtree. The current exact global census contains only the five declared adopters.

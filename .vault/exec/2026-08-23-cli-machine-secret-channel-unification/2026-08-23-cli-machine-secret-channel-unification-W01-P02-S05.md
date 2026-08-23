@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:b2f82282e8574c31ab6800a26e6e7ff1ddf22f1203cb1fa98925b0a3b97ab83d'
+body_hash: 'sha256:3f5e70995f135a844835d795e1fcfc01efded8f65b849d8bbe2749b4ac8f7e02'
 step_id: 'S05'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
@@ -38,3 +38,4 @@ The five-command inventory now has a focused conformance gate over live help, ma
 - The S04 execution record arrived in a later Vault refresh commit than its production projection. This attribution anomaly was accounted for as existing history and was not rewritten.
 - Concurrent S06 closure reached the shared serialized plan before this commit. The mechanically inseparable S05 and S06 checkbox/hash update lands here by coordinator approval; no S06 code or execution record is attributed to S05.
 - The formal-review audit scaffold remains uncommitted for the required post-landing reviewer because all collaboration slots were occupied during this Step.
+- Post-landing review found that the initial outsider assertion scanned only the config aggregate. Follow-up remediation derives the census from every row of the import-light global registration projection and closes the finding without importing handler trees or touching S15 artifacts.
