@@ -5015,3 +5015,65 @@ problems.**
 
 **9945 of 11603 slots remain** across 98 of 134 numbered records; 1658 modelled, zero
 orphaned.
+
+## 2026-08-23 — T22007000, and one machine identifier that vetoed a repair everywhere
+
+### What landed
+
+Record **T22007000** — the *base imponible y cuota íntegra del grupo*: the suma de bases
+imponibles individuales, the corrections that pages 7C–7H detail, the reservas, the
+compensación de bases negativas, the cooperativas track, down to the cuota íntegra.
+**50 casillas**, revision 1821 → **1871**, thirty-seven of 137 records.
+
+Suite: **8 failed** — one *fewer* than the previous run (a span-gate failure cleared, not
+attributable to this work). Nothing new.
+
+### One machine identifier vetoed a repair across the whole design
+
+AEAT prints `grupo fi scal` on `[00080]`. The split-ligature repair — in place since
+T22005A00 — **did not fire.**
+
+The guard skipped any rejoin whose left fragment appeared standalone even *once*, and the
+only standalone `fi` in the entire workbook is inside **`{DID_fi_periodo}`** — a developer
+variable name in T220DID00, not Spanish prose. **One token from a machine identifier
+outweighed 657 attestations of `fiscal`** and would have shipped `grupo fi scal` onto a
+filing-grade label.
+
+Two things were wrong and both are fixed:
+
+- **The vocabulary counted machine names.** A corpus assembled to attest *prose* must
+  exclude brace-delimited identifiers. The earlier lesson was that a corpus attests its own
+  damage; this is the neighbouring one — **it also attests things that were never prose.**
+- **The guard tested existence, not weight.** A single accidental occurrence should never
+  outweigh hundreds. It now compares counts.
+
+A sweep of every m220 label in all four catalogues finds **zero** split-ligature artefacts,
+so nothing already shipped carried it.
+
+### Four fields with no number at all
+
+`Tramo base imponible` 1 and 2, `Tramo de tipo de gravamen` 1 and 2 carry no bracket. They
+are taxpayer values, so treating "unnumbered" as "excludable" would have dropped four real
+filing fields — and **the exclusion assertion is what refused to let that pass silently**,
+since it requires every excluded field to be envelope, reservado or fin de registro *by its
+own text*. They take modelo 181's byte-span convention.
+
+Worth noting the pattern across the last three iterations: each new record has exercised a
+different assumption baked into the generator — five-digit numbers, then unnumbered fields,
+now the vocabulary's contents. **The generator was never wrong about the records it had
+seen; it was wrong about the corpus.**
+
+### The link the record names and cannot compute
+
+Its own text cites `(Pág. 7D)`, `(Pág. 7E)`, `(Pág. 7G)`, `(Pág. 7H)` — four detail records
+already authored here. **The references are prose in a label**: nothing carries a detail
+total into the box that cites it. The revision can now show an operator both ends of that
+link and compute neither.
+
+`[00562]` cuota íntegra del grupo is now declared a **third** time (T22009000, T220DID00,
+here). One AEAT box, three casillas, and nothing makes them agree.
+
+### Scale
+
+**9899 of 11603 slots remain** across 97 of 134 numbered records; 1704 modelled, zero
+orphaned. Corpus re-derivation after the record landed: **zero problems**.

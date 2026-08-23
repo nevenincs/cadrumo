@@ -62,61 +62,65 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the Impuesto sobre Sociedades grupo-fiscal \
 consolidated declaration. DISCLOSURE -- self-review: the same agent authored the casillas \
-being reviewed. VERIFIED -- RECORD T22003C01 IS AUTHORED, 47 casillas, the BALANCE \
-CONSOLIDADO PATRIMONIO NETO in the shape used by entidades de credito: fondos propios, the \
-otro resultado global acumulado split into elements that will and will not be \
-reclassified, intereses minoritarios, the two closing totals and the pro memoria \
-exposiciones fuera de balance. IT CLOSES THE CREDITO BALANCE SHEET. Revision total 1821 \
-casillas over THIRTY-SIX of the design's 137 records. The registry suite was run and the \
-FAILED list is IDENTICAL to this session's baseline: 9 failed, 5383 passed, ZERO \
-regressions. THE CORRECTION FROM TWO ITERATIONS AGO HAD NOT REACHED THE GENERATOR, AND \
-THIS RECORD IS WHAT FOUND THAT. Five boxes here carry a FOUR-digit number -- [0638] to \
-[0642]. The flat generator's number pattern was still \"\\\\[(\\\\d{5})\\\\]\", so all \
-five would have been read as UNNUMBERED fields and then refused as unexplained exclusions. \
-Two iterations ago the campaign established that AEAT's numbers on this modelo are not all \
-five digits, and corrected the coverage measurement and the corpus verifier -- but NOT the \
-generator, because no record authored since had contained one. A CORRECTION TO HOW A \
-CORPUS IS READ HAS TO REACH EVERY PLACE THAT READS IT; fixing the two sites that happened \
-to be in hand left a third live, and only a record that exercises it can prove the sweep \
-was complete. All nine records already authored through this generator regenerate \
-BYTE-IDENTICALLY under the widened pattern, so the change is behaviour-preserving where it \
-does not apply. VERIFIED -- SQUARE BRACKETS IN THIS RECORD ARE NOT ALL BOX NUMBERS. \
-\"[parte eficaz]\", \"[elemento cubierto]\", \"[instrumento de cobertura]\", \"[elementos \
-no designados]\" and \"[participaciones no dominantes]\" are AEAT's own qualifiers and \
-stay in the labels verbatim; only a bracket whose content is entirely digits is read as a \
-number. Widening the pattern to accept one-to-six digits did NOT widen it to accept text. \
-VERIFIED -- THE WHOLE CORPUS WAS RE-DERIVED FROM THE DESIGN AFTER THIS RECORD LANDED: 1821 \
-casillas across 41 fragments and 34 sheets, every segmento a real sheet, 1658 numeric box \
-numbers PRINTED BY AEAT and none minted, 4 letter numbers, 64 byte spans resolving to a \
-field at exactly that offset and length, 34 sheets tiling once with no gap and no partial \
-overlap, no repeated id and no repeated (segmento, number). ZERO PROBLEMS. VERIFIED -- \
-COMPLETENESS COMPLEMENT ASSERTED IN THE GENERATOR: all 57 design fields are 47 authored \
-plus 10 excluded, each excluded field asserted to be envelope, reservado or fin de \
-registro BY ITS OWN TEXT. T22003C01 tiles 1..976 exactly once. Year-clean: \
-aeat-dr-220-2024 applies exactly the single ejercicio this revision claims. The record \
-label carries AEAT's own page identifier, \"(pag. 3C hoja 01)\". NOT CLAIMED -- THE \
-CREDITO ACCOUNTING IDENTITY IS NOW EXPRESSIBLE AND IS STILL NOT EXPRESSED. [00152] TOTAL \
-ACTIVO on page 3A hoja 11 and [00229] TOTAL PATRIMONIO NETO Y PASIVO here are both \
-DECLARED, and NOTHING RELATES THEM -- exactly as on the aseguradoras pages, where the same \
-became true three iterations ago and nothing has related those either. Two complete \
-balance sheets now sit in this revision and neither balances, because no formula, \
-construct or binding exists anywhere in it. NOT CLAIMED -- 9945 OF THE 11603 (record, \
-number) SLOTS REMAIN UNMODELLED across 98 of the 134 records that carry numbers; 1658 \
-slots are modelled, zero orphaned. NOT CLAIMED -- THE REVISION CARRIES 24 DUPLICATED LABEL \
-TEXTS OVER 78 CASILLAS, every one an AEAT repeat inside a single record: the portfolio x \
-instrument matrices of T22003A01 and T22003B01, the un-indented sub-items of T22005A01, \
-and three lines repeated here. The catalogue asserts the duplicated set equals the \
-design's, so a collision introduced by this code or by a translation still fails. NOT \
-CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be \
-filed. model_law_authority_scope remains inspection_only, so this stamp is made under the \
-LOWER inspection bar and MUST be re-made if a layout lands. NOT CLAIMED -- T22009001, \
-T22012A00 and T22012A10 remain deliberately held back. NOT CLAIMED -- LOCALES COMPLETE BUT \
-UNAUDITED: the 47 labels were composed from 44 distinct lines translated once each, keyed \
-by LINE rather than by box so two boxes AEAT prints identically cannot drift apart, by the \
-same agent that authored the casillas and reviewed by nobody else; the catalogues are \
-unaccented ASCII, asserted. All 1821 casillas resolve a non-null label in es, en, ca and \
-hu, counted by VALUE rather than by key. NOT CLAIMED -- independent_check_coverage is n/a: \
-NO CLAIM, not zero."""
+being reviewed. VERIFIED -- RECORD T22007000 IS AUTHORED, 50 casillas, the BASE IMPONIBLE \
+Y CUOTA INTEGRA DEL GRUPO: the suma de bases imponibles individuales, the correcciones for \
+diferimiento de resultados internos and the otras correcciones that pages 7C to 7H detail, \
+the base imponible del grupo, the reservas de capitalizacion y nivelacion, the \
+compensacion de bases imponibles negativas, the cooperativas track, and the cuota integra \
+del grupo. Revision total 1871 casillas over THIRTY-SEVEN of the design's 137 records. \
+Suite: 8 failed, 5384 passed -- ONE FEWER than the previous run, a span-gate failure that \
+cleared and is NOT attributable to this work; nothing new. VERIFIED -- FOUR FIELDS HERE \
+CARRY NO NUMBER AT ALL AND ARE AUTHORED ANYWAY: @786 and @808 \"Tramo base imponible\" 1 \
+and 2, @803 and @825 \"Tramo de tipo de gravamen\" 1 and 2. They are taxpayer values, not \
+envelope mechanics, so treating \"unnumbered\" as \"excludable\" would have dropped four \
+real filing fields -- and the generator's exclusion assertion, which requires every \
+excluded field to be envelope, reservado or fin de registro BY ITS OWN TEXT, is what \
+refused to let that happen silently. They take modelo 181's sheet-qualified byte span, \
+which names a field the design declares at exactly that offset and length and mints \
+nothing. CORRECTED BEFORE SHIPPING -- ONE MACHINE IDENTIFIER VETOED A REPAIR ACROSS THE \
+WHOLE DESIGN. AEAT prints \"grupo fi scal\" on [00080] of this record, a split ligature \
+the campaign has repaired since T22005A00 by rejoining only forms attested elsewhere in \
+the design. The rejoin did NOT fire. The cause: the guard skipped any rejoin whose left \
+fragment appeared standalone even ONCE, and the only standalone \"fi\" in the entire \
+workbook is inside \"{DID_fi_periodo}\" -- a DEVELOPER VARIABLE NAME in T220DID00, not \
+Spanish prose. One token from a machine identifier outweighed 657 attestations of \
+\"fiscal\" and would have shipped \"grupo fi scal\" onto a filing-grade label. TWO THINGS \
+WERE WRONG AND BOTH ARE FIXED: the vocabulary now excludes brace-delimited identifiers, \
+because a corpus of prose must not count machine names; and the guard COMPARES EVIDENCE \
+WEIGHTS rather than testing existence, because a single accidental occurrence should never \
+outweigh hundreds. A sweep of every modelo 220 label in all four catalogues now finds ZERO \
+split-ligature artefacts. VERIFIED -- THE WHOLE CORPUS WAS RE-DERIVED FROM THE DESIGN \
+AFTER THIS RECORD LANDED: 1871 casillas across 42 fragments and 35 sheets, every segmento \
+a real sheet, 1704 numeric box numbers PRINTED BY AEAT and none minted, 4 letter numbers, \
+68 byte spans resolving to a field at exactly that offset and length, 35 sheets tiling \
+once with no gap and no partial overlap, no repeated id and no repeated (segmento, \
+number). ZERO PROBLEMS. All ELEVEN records previously authored through this generator \
+regenerate byte-identically apart from one comment, so both changes are \
+behaviour-preserving where they do not apply. NOTED -- THIS RECORD IS THE HEAD THAT THE 7C \
+TO 7H DETAIL PAGES FEED, and its own text says so: \"(Pag. 7D)\", \"(Pag. 7E)\", \"(Pag. \
+7G)\", \"(Pag. 7H)\". Four of those detail records are already authored in this revision \
+as T22007D00, E00, G00 and H00. THE REFERENCES ARE PROSE IN A LABEL: nothing carries a \
+value from a detail total into the box that cites it, and no construct relates them. The \
+revision can now show an operator both ends of that link and cannot compute either. NOTED \
+-- [00562] CUOTA INTEGRA DEL GRUPO IS DECLARED HERE FOR THE THIRD TIME, after T22009000 \
+and T220DID00. One AEAT box, three records, three casillas under the segmento convention. \
+A layout MUST bind them to the same value rather than collect them three times, and \
+NOTHING ENFORCES THAT. NOT CLAIMED -- 9899 OF THE 11603 (record, number) SLOTS REMAIN \
+UNMODELLED across 97 of the 134 records that carry numbers; 1704 slots are modelled, zero \
+orphaned. NOT CLAIMED -- NOTHING COMPUTES ANY OF IT. This record is a settlement chain \
+from the suma de bases imponibles to the cuota integra, and every step is a manual input: \
+no formula, construct or binding exists anywhere in this revision. Two complete balance \
+sheets also sit in it and neither balances. NOT CLAIMED -- NO EXPORT LAYOUT AND NO \
+CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be filed. model_law_authority_scope remains \
+inspection_only, so this stamp is made under the LOWER inspection bar and MUST be re-made \
+if a layout lands. NOT CLAIMED -- T22009001, T22012A00 and T22012A10 remain deliberately \
+held back. NOT CLAIMED -- LOCALES COMPLETE BUT UNAUDITED: the 50 labels were composed from \
+48 distinct lines translated once each, keyed by LINE so two boxes AEAT prints identically \
+cannot drift apart, by the same agent that authored the casillas and reviewed by nobody \
+else; the catalogues are unaccented ASCII, asserted, and AEAT's ordinal indicator in \
+\"DA19a LIS\" is rendered ASCII accordingly. All 1871 casillas resolve a non-null label in \
+es, en, ca and hu, counted by VALUE rather than by key. NOT CLAIMED -- \
+independent_check_coverage is n/a: NO CLAIM, not zero."""
 reviewed_at = 2026-08-23
 
 [revisions."2024".family_dispositions.casilla_continuidad_evolutions]
