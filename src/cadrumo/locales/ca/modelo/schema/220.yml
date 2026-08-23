@@ -102,6 +102,142 @@ modelo:
               label: Balanc consolidat. Actiu. Immobilitzat intangible. Investigacio
             x-agp34c1g6d0j0c1q60o3edhh:
               label: Balanc consolidat. Actiu. Altres
+            x-agp34c1g6d130c1q60o30c1j:
+              label: Balanc consolidat. Patrimoni net i passiu. Reserva legal i estatutaria
+            x-agp34c1g6d130c1q60o32e1l:
+              label: Balanc consolidat. Patrimoni net i passiu. Patrimoni net
+            x-agp34c1g6d130c1q60o32e1m:
+              label: Balanc consolidat. Patrimoni net i passiu. Fons propis
+            x-agp34c1g6d130c1q60o32e1n:
+              label: Balanc consolidat. Patrimoni net i passiu. Capital
+            x-agp34c1g6d130c1q60o32e1o:
+              label: Balanc consolidat. Patrimoni net i passiu. Capital. Capital escripturat
+            x-agp34c1g6d130c1q60o32e1p:
+              label: Balanc consolidat. Patrimoni net i passiu. Capital. Capital no
+                exigit
+            x-agp34c1g6d130c1q60o32e9g:
+              label: Balanc consolidat. Patrimoni net i passiu. Prima d'emissio
+            x-agp34c1g6d130c1q60o32e9h:
+              label: Balanc consolidat. Patrimoni net i passiu. Reserves
+            x-agp34c1g6d130c1q60o32e9k:
+              label: Balanc consolidat. Patrimoni net i passiu. (Accions i participacions
+                de la societat dominant)
+            x-agp34c1g6d130c1q60o32e9o:
+              label: Balanc consolidat. Patrimoni net i passiu. Altres aportacions
+                de socis
+            x-agp34c1g6d130c1q60o32e9p:
+              label: Balanc consolidat. Patrimoni net i passiu. Resultat de l'exercici
+                atribuit a la societat dominant
+            x-agp34c1g6d130c1q60o34c1g:
+              label: Balanc consolidat. Patrimoni net i passiu. (Dividend a compte)
+            x-agp34c1g6d130c1q60o34c1h:
+              label: Balanc consolidat. Patrimoni net i passiu. Altres instruments
+                de patrimoni net
+            x-agp34c1g6d130c1q60o34c1i:
+              label: Balanc consolidat. Patrimoni net i passiu. Ajustos per canvis
+                de valor
+            x-agp34c1g6d130c1q60o34c1p:
+              label: Balanc consolidat. Patrimoni net i passiu. Subvencions, donacions
+                i llegats rebuts
+            x-agp34c1g6d130c1q60o34c9g:
+              label: Balanc consolidat. Patrimoni net i passiu. Passiu no corrent
+            x-agp34c1g6d130c1q60o34c9h:
+              label: Balanc consolidat. Patrimoni net i passiu. Provisions a llarg
+                termini
+            x-agp34c1g6d130c1q60o34c9m:
+              label: Balanc consolidat. Patrimoni net i passiu. Deutes a llarg termini
+            x-agp34c1g6d130c1q60o34c9n:
+              label: Balanc consolidat. Patrimoni net i passiu. Deutes a llarg termini.
+                Obligacions i altres valors negociables
+            x-agp34c1g6d130c1q60o34c9o:
+              label: Balanc consolidat. Patrimoni net i passiu. Deutes a llarg termini.
+                Deutes amb entitats de credit
+            x-agp34c1g6d130c1q60o34c9p:
+              label: Balanc consolidat. Patrimoni net i passiu. Deutes a llarg termini.
+                Creditors per arrendament financer
+            x-agp34c1g6d130c1q60o34chi:
+              label: Balanc consolidat. Patrimoni net i passiu. Deutes a llarg termini.
+                Altres passius financers
+            x-agp34c1g6d130c1q60o34chj:
+              label: Balanc consolidat. Patrimoni net i passiu. Deutes amb empreses
+                del grup i associades a llarg termini
+            x-agp34c1g6d130c1q60o34chk:
+              label: Balanc consolidat. Patrimoni net i passiu. Passius per impost
+                diferit
+            x-agp34c1g6d130c1q60o34chl:
+              label: Balanc consolidat. Patrimoni net i passiu. Periodificacions a
+                llarg termini
+            x-agp34c1g6d130c1q60o34chm:
+              label: Balanc consolidat. Patrimoni net i passiu. Creditors comercials
+                no corrents
+            x-agp34c1g6d130c1q60o34chn:
+              label: Balanc consolidat. Patrimoni net i passiu. Deute amb caracteristiques
+                especials a llarg termini
+            x-agp34c1g6d130c1q60o34cho:
+              label: Balanc consolidat. Patrimoni net i passiu. Passiu corrent
+            x-agp34c1g6d130c1q60o34chp:
+              label: Balanc consolidat. Patrimoni net i passiu. Passius vinculats
+                amb actius no corrents mantinguts per a la venda
+            x-agp34c1g6d130c1q60o34cpg:
+              label: Balanc consolidat. Patrimoni net i passiu. Provisions a curt
+                termini
+            x-agp34c1g6d130c1q60o34cph:
+              label: Balanc consolidat. Patrimoni net i passiu. Deutes a curt termini
+            x-agp34c1g6d130c1q60o34cpi:
+              label: Balanc consolidat. Patrimoni net i passiu. Deutes a curt termini.
+                Obligacions i altres valors negociables
+            x-agp34c1g6d130c1q60o34cpj:
+              label: Balanc consolidat. Patrimoni net i passiu. Deutes a curt termini.
+                Deutes amb entitats de credit
+            x-agp34c1g6d130c1q60o34cpk:
+              label: Balanc consolidat. Patrimoni net i passiu. Deutes a curt termini.
+                Creditors per arrendament financer
+            x-agp34c1g6d130c1q60o34cpm:
+              label: Balanc consolidat. Patrimoni net i passiu. Socis externs
+            x-agp34c1g6d130c1q60o34cpn:
+              label: Balanc consolidat. Patrimoni net i passiu. Deutes a curt termini.
+                Altres passius financers
+            x-agp34c1g6d130c1q60o34cpo:
+              label: Balanc consolidat. Patrimoni net i passiu. Deutes amb empreses
+                del grup i associades a curt termini
+            x-agp34c1g6d130c1q60o34cpp:
+              label: Balanc consolidat. Patrimoni net i passiu. Creditors comercials
+                i altres comptes a pagar
+            x-agp34c1g6d130c1q60o34d1g:
+              label: Balanc consolidat. Patrimoni net i passiu. Creditors comercials
+                i altres comptes a pagar. Proveidors
+            x-agp34c1g6d130c1q60o34d1m:
+              label: Balanc consolidat. Patrimoni net i passiu. Creditors comercials
+                i altres comptes a pagar. Passius per impost corrent
+            x-agp34c1g6d130c1q60o34d1p:
+              label: Balanc consolidat. Patrimoni net i passiu. Creditors comercials
+                i altres comptes a pagar. Altres creditors
+            x-agp34c1g6d130c1q60o34d9g:
+              label: Balanc consolidat. Patrimoni net i passiu. Periodificacions a
+                curt termini
+            x-agp34c1g6d130c1q60o34d9h:
+              label: Balanc consolidat. Patrimoni net i passiu. Deute amb caracteristiques
+                especials a curt termini
+            x-agp34c1g6d130c1q60o34d9i:
+              label: Balanc consolidat. Patrimoni net i passiu. Total patrimoni net
+                i passiu
+            x-agp34c1g6d130c1q60o3ec1i:
+              label: Balanc consolidat. Patrimoni net i passiu. Reserves. Reserva
+                de revaloracio
+            x-agp34c1g6d130c1q60o3ecpl:
+              label: Balanc consolidat. Patrimoni net i passiu. Provisions per drets
+                d'emissio de gasos amb efecte d'hivernacle
+            x-agp34c1g6d130c1q60o3ecpm:
+              label: Balanc consolidat. Patrimoni net i passiu. Altres provisions
+            x-agp34c1g6d130c1q60o3ed9g:
+              label: Balanc consolidat. Patrimoni net i passiu. Reserves. Altres reserves
+            x-agp34c1g6d130c1q60o3ed9i:
+              label: Balanc consolidat. Patrimoni net i passiu. Reserva de capitalitzacio
+            x-agp34c1g6d130c1q60o3ed9j:
+              label: Balanc consolidat. Patrimoni net i passiu. Reserva de anivellacio
+            x-agp34c1g6d130c1q60o3edhk:
+              label: Balanc consolidat. Patrimoni net i passiu. Fons de reserva obligatori
+                de cooperatives
             x-agp34c1g6l0j0c1q60o36cpj:
               label: Estat d'ingressos i despeses consolidats reconeguts. Total d'ingressos
                 i despeses consolidats reconeguts. Total d'ingressos i despeses atribuits

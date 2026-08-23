@@ -967,9 +967,11 @@ errors:
     refused_profile_binding_resolution: A profile fact required for the calculation
       could not be resolved into the correct binding channel.
     refused_profile_custody_kdf_resource_limit: The host cannot allocate the requested
-      key-derivation resources.
+      key-derivation resources. Retry when the machine is less loaded; if it persists,
+      this host cannot supply the memory key derivation requires.
     refused_profile_custody_kdf_supervision_unavailable: Key-derivation supervision
-      is unavailable on this host.
+      is unavailable on this host. Retry when the machine is less loaded; if it persists,
+      this host cannot start the supervised worker process key derivation requires.
     refused_profile_custody_legacy: The store contains retired custody; destructive
       reset and re-enrollment are the only path.
     refused_profile_displaced_session_retirement: The previously selected profile's

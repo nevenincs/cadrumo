@@ -1047,9 +1047,13 @@ errors:
     refused_profile_binding_resolution: Un dato del perfil necesario para el cálculo
       no se pudo resolver en el canal de vínculo correcto.
     refused_profile_custody_kdf_resource_limit: El equipo no puede asignar los recursos
-      de derivación de clave solicitados.
+      de derivación de clave solicitados. Vuelve a intentarlo cuando el equipo esté
+      menos cargado; si persiste, este equipo no puede aportar la memoria que requiere
+      la derivación de clave.
     refused_profile_custody_kdf_supervision_unavailable: La supervisión de derivación
-      de clave no está disponible en este equipo.
+      de clave no está disponible en este equipo. Vuelve a intentarlo cuando el equipo
+      esté menos cargado; si persiste, este equipo no puede iniciar el proceso de
+      trabajo supervisado que requiere la derivación de clave.
     refused_profile_custody_legacy: El almacenamiento contiene custodia retirada;
       el restablecimiento destructivo y la nueva inscripción son la única vía.
     refused_profile_displaced_session_retirement: No se ha podido revocar la sesión

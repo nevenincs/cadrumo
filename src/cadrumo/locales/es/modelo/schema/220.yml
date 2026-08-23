@@ -107,6 +107,147 @@ modelo:
               label: Balance consolidado. Activo. Inmovilizado intangible. Investigacion
             x-agp34c1g6d0j0c1q60o3edhh:
               label: Balance consolidado. Activo. Otros
+            x-agp34c1g6d130c1q60o30c1j:
+              label: Balance consolidado. Patrimonio neto y pasivo. Reserva legal
+                y estatutaria
+            x-agp34c1g6d130c1q60o32e1l:
+              label: Balance consolidado. Patrimonio neto y pasivo. Patrimonio neto
+            x-agp34c1g6d130c1q60o32e1m:
+              label: Balance consolidado. Patrimonio neto y pasivo. Fondos propios
+            x-agp34c1g6d130c1q60o32e1n:
+              label: Balance consolidado. Patrimonio neto y pasivo. Capital
+            x-agp34c1g6d130c1q60o32e1o:
+              label: Balance consolidado. Patrimonio neto y pasivo. Capital. Capital
+                escriturado
+            x-agp34c1g6d130c1q60o32e1p:
+              label: Balance consolidado. Patrimonio neto y pasivo. Capital. Capital
+                no exigido
+            x-agp34c1g6d130c1q60o32e9g:
+              label: Balance consolidado. Patrimonio neto y pasivo. Prima de emision
+            x-agp34c1g6d130c1q60o32e9h:
+              label: Balance consolidado. Patrimonio neto y pasivo. Reservas
+            x-agp34c1g6d130c1q60o32e9k:
+              label: Balance consolidado. Patrimonio neto y pasivo. (Acciones y participaciones
+                de la sociedad dominante)
+            x-agp34c1g6d130c1q60o32e9o:
+              label: Balance consolidado. Patrimonio neto y pasivo. Otras aportaciones
+                de socios
+            x-agp34c1g6d130c1q60o32e9p:
+              label: Balance consolidado. Patrimonio neto y pasivo. Resultado del
+                ejercicio atribuido a la sociedad dominante
+            x-agp34c1g6d130c1q60o34c1g:
+              label: Balance consolidado. Patrimonio neto y pasivo. (Dividendo a cuenta)
+            x-agp34c1g6d130c1q60o34c1h:
+              label: Balance consolidado. Patrimonio neto y pasivo. Otros instrumentos
+                de patrimonio neto
+            x-agp34c1g6d130c1q60o34c1i:
+              label: Balance consolidado. Patrimonio neto y pasivo. Ajustes por cambios
+                de valor
+            x-agp34c1g6d130c1q60o34c1p:
+              label: Balance consolidado. Patrimonio neto y pasivo. Subvenciones,
+                donaciones y legados recibidos
+            x-agp34c1g6d130c1q60o34c9g:
+              label: Balance consolidado. Patrimonio neto y pasivo. Pasivo no corriente
+            x-agp34c1g6d130c1q60o34c9h:
+              label: Balance consolidado. Patrimonio neto y pasivo. Provisiones a
+                largo plazo
+            x-agp34c1g6d130c1q60o34c9m:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deudas a largo
+                plazo
+            x-agp34c1g6d130c1q60o34c9n:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deudas a largo
+                plazo. Obligaciones y otros valores negociables
+            x-agp34c1g6d130c1q60o34c9o:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deudas a largo
+                plazo. Deudas con entidades de credito
+            x-agp34c1g6d130c1q60o34c9p:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deudas a largo
+                plazo. Acreedores por arrendamiento financiero
+            x-agp34c1g6d130c1q60o34chi:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deudas a largo
+                plazo. Otros pasivos financieros
+            x-agp34c1g6d130c1q60o34chj:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deudas con empresas
+                del grupo y asociadas a largo plazo
+            x-agp34c1g6d130c1q60o34chk:
+              label: Balance consolidado. Patrimonio neto y pasivo. Pasivos por impuesto
+                diferido
+            x-agp34c1g6d130c1q60o34chl:
+              label: Balance consolidado. Patrimonio neto y pasivo. Periodificaciones
+                a largo plazo
+            x-agp34c1g6d130c1q60o34chm:
+              label: Balance consolidado. Patrimonio neto y pasivo. Acreedores comerciales
+                no corrientes
+            x-agp34c1g6d130c1q60o34chn:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deuda con caracteristicas
+                especiales a largo plazo
+            x-agp34c1g6d130c1q60o34cho:
+              label: Balance consolidado. Patrimonio neto y pasivo. Pasivo corriente
+            x-agp34c1g6d130c1q60o34chp:
+              label: Balance consolidado. Patrimonio neto y pasivo. Pasivos vinculados
+                con activos no corrientes mantenidos para la venta
+            x-agp34c1g6d130c1q60o34cpg:
+              label: Balance consolidado. Patrimonio neto y pasivo. Provisiones a
+                corto plazo
+            x-agp34c1g6d130c1q60o34cph:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deudas a corto
+                plazo
+            x-agp34c1g6d130c1q60o34cpi:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deudas a corto
+                plazo. Obligaciones y otros valores negociables
+            x-agp34c1g6d130c1q60o34cpj:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deudas a corto
+                plazo. Deudas con entidades de credito
+            x-agp34c1g6d130c1q60o34cpk:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deudas a corto
+                plazo. Acreedores por arrendamiento financiero
+            x-agp34c1g6d130c1q60o34cpm:
+              label: Balance consolidado. Patrimonio neto y pasivo. Socios externos
+            x-agp34c1g6d130c1q60o34cpn:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deudas a corto
+                plazo. Otros pasivos financieros
+            x-agp34c1g6d130c1q60o34cpo:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deudas con empresas
+                del grupo y asociadas a corto plazo
+            x-agp34c1g6d130c1q60o34cpp:
+              label: Balance consolidado. Patrimonio neto y pasivo. Acreedores comerciales
+                y otras cuentas a pagar
+            x-agp34c1g6d130c1q60o34d1g:
+              label: Balance consolidado. Patrimonio neto y pasivo. Acreedores comerciales
+                y otras cuentas a pagar. Proveedores
+            x-agp34c1g6d130c1q60o34d1m:
+              label: Balance consolidado. Patrimonio neto y pasivo. Acreedores comerciales
+                y otras cuentas a pagar. Pasivos por impuesto corriente
+            x-agp34c1g6d130c1q60o34d1p:
+              label: Balance consolidado. Patrimonio neto y pasivo. Acreedores comerciales
+                y otras cuentas a pagar. Otros acreedores
+            x-agp34c1g6d130c1q60o34d9g:
+              label: Balance consolidado. Patrimonio neto y pasivo. Periodificaciones
+                a corto plazo
+            x-agp34c1g6d130c1q60o34d9h:
+              label: Balance consolidado. Patrimonio neto y pasivo. Deuda con caracteristicas
+                especiales a corto plazo
+            x-agp34c1g6d130c1q60o34d9i:
+              label: Balance consolidado. Patrimonio neto y pasivo. Total patrimonio
+                neto y pasivo
+            x-agp34c1g6d130c1q60o3ec1i:
+              label: Balance consolidado. Patrimonio neto y pasivo. Reservas. Reserva
+                de revalorizacion
+            x-agp34c1g6d130c1q60o3ecpl:
+              label: Balance consolidado. Patrimonio neto y pasivo. Provisiones por
+                derechos de emision de gases de efecto invernadero
+            x-agp34c1g6d130c1q60o3ecpm:
+              label: Balance consolidado. Patrimonio neto y pasivo. Otras provisiones
+            x-agp34c1g6d130c1q60o3ed9g:
+              label: Balance consolidado. Patrimonio neto y pasivo. Reservas. Otras
+                reservas
+            x-agp34c1g6d130c1q60o3ed9i:
+              label: Balance consolidado. Patrimonio neto y pasivo. Reserva de capitalizacion
+            x-agp34c1g6d130c1q60o3ed9j:
+              label: Balance consolidado. Patrimonio neto y pasivo. Reserva de nivelacion
+            x-agp34c1g6d130c1q60o3edhk:
+              label: Balance consolidado. Patrimonio neto y pasivo. Fondo de reserva
+                obligatorio de cooperativas
             x-agp34c1g6l0j0c1q60o36cpj:
               label: Estado de ingresos y gastos consolidados reconocidos. Total de
                 ingresos y gastos consolidados reconocidos. Total de ingresos y gastos

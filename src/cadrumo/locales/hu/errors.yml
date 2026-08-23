@@ -987,9 +987,13 @@ errors:
     refused_profile_binding_resolution: A számításhoz szükséges profiladatot nem sikerült
       a megfelelő kötési csatornává feloldani.
     refused_profile_custody_kdf_resource_limit: A gép nem tudja lefoglalni a kért
-      kulcslevezetési erőforrásokat.
+      kulcslevezetési erőforrásokat. Próbáld újra, amikor a gép kevésbé terhelt; ha
+      továbbra is fennáll, ez a gép nem tudja biztosítani a kulcslevezetéshez szükséges
+      memóriát.
     refused_profile_custody_kdf_supervision_unavailable: A kulcslevezetés felügyelete
-      nem érhető el ezen a gépen.
+      nem érhető el ezen a gépen. Próbáld újra, amikor a gép kevésbé terhelt; ha továbbra
+      is fennáll, ez a gép nem tudja elindítani a kulcslevezetéshez szükséges felügyelt
+      munkafolyamatot.
     refused_profile_custody_legacy: A tároló visszavont letétkezelést tartalmaz; csak
       a destruktív visszaállítás és az újrabeligazgatás az út.
     refused_profile_displaced_session_retirement: A korábban kiválasztott profil tárolt

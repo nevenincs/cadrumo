@@ -101,6 +101,151 @@ modelo:
               label: Konszolidalt merleg. Eszkozok. Immaterialis javak. Kutatas
             x-agp34c1g6d0j0c1q60o3edhh:
               label: Konszolidalt merleg. Eszkozok. Egyeb
+            x-agp34c1g6d130c1q60o30c1j:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Torvenyi
+                es alapszabaly szerinti tartalek
+            x-agp34c1g6d130c1q60o32e1l:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Sajat toke
+            x-agp34c1g6d130c1q60o32e1m:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Sajat forrasok
+            x-agp34c1g6d130c1q60o32e1n:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Jegyzett
+                toke
+            x-agp34c1g6d130c1q60o32e1o:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Jegyzett
+                toke. Bejegyzett jegyzett toke
+            x-agp34c1g6d130c1q60o32e1p:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Jegyzett
+                toke. Be nem fizetett jegyzett toke
+            x-agp34c1g6d130c1q60o32e9g:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Toketartalek
+            x-agp34c1g6d130c1q60o32e9h:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Eredmenytartalekok
+            x-agp34c1g6d130c1q60o32e9k:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. (Az anyavallalat
+                reszvenyei es reszesedesei)
+            x-agp34c1g6d130c1q60o32e9o:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Egyeb tagi
+                hozzajarulasok
+            x-agp34c1g6d130c1q60o32e9p:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Az uzleti
+                ev anyavallalatnak tulajdonitott eredmenye
+            x-agp34c1g6d130c1q60o34c1g:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. (Osztalekeloleg)
+            x-agp34c1g6d130c1q60o34c1h:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Egyeb tokeinstrumentumok
+            x-agp34c1g6d130c1q60o34c1i:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Ertekelesi
+                korrekciok
+            x-agp34c1g6d130c1q60o34c1p:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Kapott tamogatasok,
+                adomanyok es hagyatekok
+            x-agp34c1g6d130c1q60o34c9g:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Hosszu lejaratu
+                kotelezettsegek
+            x-agp34c1g6d130c1q60o34c9h:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Hosszu tavu
+                celtartalekok
+            x-agp34c1g6d130c1q60o34c9m:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Hosszu lejaratu
+                tartozasok
+            x-agp34c1g6d130c1q60o34c9n:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Hosszu lejaratu
+                tartozasok. Kotvenyek es egyeb forgalomkepes ertekpapirok
+            x-agp34c1g6d130c1q60o34c9o:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Hosszu lejaratu
+                tartozasok. Hitelintezetekkel szembeni tartozasok
+            x-agp34c1g6d130c1q60o34c9p:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Hosszu lejaratu
+                tartozasok. Penzugyi lizingbeadok
+            x-agp34c1g6d130c1q60o34chi:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Hosszu lejaratu
+                tartozasok. Egyeb penzugyi kotelezettsegek
+            x-agp34c1g6d130c1q60o34chj:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Hosszu lejaratu
+                tartozasok csoporttagokkal es tarsult vallalkozasokkal
+            x-agp34c1g6d130c1q60o34chk:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Halasztott
+                adokotelezettsegek
+            x-agp34c1g6d130c1q60o34chl:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Hosszu tavu
+                idobeli elhatarolasok
+            x-agp34c1g6d130c1q60o34chm:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Hosszu lejaratu
+                szallitoi tartozasok
+            x-agp34c1g6d130c1q60o34chn:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Hosszu lejaratu,
+                kulonleges jellemzoju tartozas
+            x-agp34c1g6d130c1q60o34cho:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Rovid lejaratu
+                kotelezettsegek
+            x-agp34c1g6d130c1q60o34chp:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Ertekesitesre
+                tartott befektetett eszkozokhoz kapcsolodo kotelezettsegek
+            x-agp34c1g6d130c1q60o34cpg:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Rovid tavu
+                celtartalekok
+            x-agp34c1g6d130c1q60o34cph:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Rovid lejaratu
+                tartozasok
+            x-agp34c1g6d130c1q60o34cpi:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Rovid lejaratu
+                tartozasok. Kotvenyek es egyeb forgalomkepes ertekpapirok
+            x-agp34c1g6d130c1q60o34cpj:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Rovid lejaratu
+                tartozasok. Hitelintezetekkel szembeni tartozasok
+            x-agp34c1g6d130c1q60o34cpk:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Rovid lejaratu
+                tartozasok. Penzugyi lizingbeadok
+            x-agp34c1g6d130c1q60o34cpm:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Kulso tagok
+            x-agp34c1g6d130c1q60o34cpn:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Rovid lejaratu
+                tartozasok. Egyeb penzugyi kotelezettsegek
+            x-agp34c1g6d130c1q60o34cpo:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Rovid lejaratu
+                tartozasok csoporttagokkal es tarsult vallalkozasokkal
+            x-agp34c1g6d130c1q60o34cpp:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Szallitoi
+                es egyeb kotelezettsegek
+            x-agp34c1g6d130c1q60o34d1g:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Szallitoi
+                es egyeb kotelezettsegek. Szallitok
+            x-agp34c1g6d130c1q60o34d1m:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Szallitoi
+                es egyeb kotelezettsegek. Tenyleges adokotelezettsegek
+            x-agp34c1g6d130c1q60o34d1p:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Szallitoi
+                es egyeb kotelezettsegek. Egyeb kotelezettsegek
+            x-agp34c1g6d130c1q60o34d9g:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Rovid tavu
+                idobeli elhatarolasok
+            x-agp34c1g6d130c1q60o34d9h:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Rovid lejaratu,
+                kulonleges jellemzoju tartozas
+            x-agp34c1g6d130c1q60o34d9i:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Sajat toke
+                es kotelezettsegek osszesen
+            x-agp34c1g6d130c1q60o3ec1i:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Eredmenytartalekok.
+                Ertekhelyesbitesi tartalek
+            x-agp34c1g6d130c1q60o3ecpl:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Celtartalekok
+                uveghazhatasu gaz kibocsatasi egysegekre
+            x-agp34c1g6d130c1q60o3ecpm:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Egyeb celtartalekok
+            x-agp34c1g6d130c1q60o3ed9g:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Eredmenytartalekok.
+                Egyeb eredmenytartalekok
+            x-agp34c1g6d130c1q60o3ed9i:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Tokesitesi
+                tartalek
+            x-agp34c1g6d130c1q60o3ed9j:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Kiegyenlitesi
+                tartalek
+            x-agp34c1g6d130c1q60o3edhk:
+              label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Szovetkezetek
+                kotelezo tartalekalapja
             x-agp34c1g6l0j0c1q60o36cpj:
               label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
                 Az elszamolt konszolidalt bevetelek es raforditasok osszesen. Az anyavallalatnak

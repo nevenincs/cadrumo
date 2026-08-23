@@ -29,7 +29,7 @@ def test_every_live_capability_has_exactly_one_frozen_census_assignment() -> Non
     assignments = validate_census_completeness(REPO_ROOT)
 
     assigned = tuple(capability_id for row in assignments.values() for capability_id in row)
-    assert len(discovered) == 428
+    assert len(discovered) == 448
     assert len(assigned) == len(set(assigned))
     assert set(assigned) == set(discovered)
 
