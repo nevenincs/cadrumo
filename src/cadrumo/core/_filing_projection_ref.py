@@ -591,6 +591,81 @@ class M200RepresentanteLegalProjectionRef(BaseModel):
     field: M200RepresentanteLegalField
 
 
+class M296PerceptorField(StrEnum):
+    """Closed fields of one Modelo 296 perceptor row.
+
+    Modelo 296 is the IRNR annual withholding summary, and AEAT repeats the whole
+    PERCEPTOR RECORD once per payee rather than repeating fields inside one record. The
+    row's data already exists in the registry as
+    :class:`~cadrumo.domain.calculations.registry.Withholding296Observation` -- perceptor
+    tax id, legal name, naturaleza, clave, subclave, base and retención -- so these fields
+    are projected from that observation set rather than supplied as operator header facts.
+
+    Declaring them as header producers is what left every one of them rendering blank on a
+    filed 296 while the withholding substrate already held the values.
+    """
+
+    APELLIDOS_Y_NOMBRE_RAZON_SOCIAL_O_DENO = "apellidos_y_nombre_razon_social_o_deno"
+    BASE_RETENCIONES_E_INGRESOS_A_CUENTA = "base_retenciones_e_ingresos_a_cuenta"
+    CIUDAD = "ciudad"
+    CLAVE = "clave"
+    CLAVE_DE_MERCADO = "clave_de_mercado"
+    CODIGO = "codigo"
+    CODIGO_BIC_DEL_PERCEPTOR_MEDIADOR = "codigo_bic_del_perceptor_mediador"
+    CODIGO_CUENTA_VALORES = "codigo_cuenta_valores"
+    CODIGO_EMISOR = "codigo_emisor"
+    CODIGO_LEI_DEL_PERCEPTOR = "codigo_lei_del_perceptor"
+    CODIGO_PAIS = "codigo_pais"
+    DECIMAL = "decimal"
+    DECIMAL_NUMERICO_PARTE_DECIMAL = "decimal_numerico_parte_decimal"
+    DECIMAL_NUMERICO_PARTE_DECIMAL_2 = "decimal_numerico_parte_decimal_2"
+    DECIMAL_NUMERICO_PARTE_DECIMAL_3 = "decimal_numerico_parte_decimal_3"
+    DECLARANTE = "declarante"
+    DIRECCION_DEL_PERCEPTOR = "direccion_del_perceptor"
+    EJERCICIO = "ejercicio"
+    EJERCICIO_DEVENGO = "ejercicio_devengo"
+    ENTERO = "entero"
+    ENTERO_NUMERICO_PARTE_ENTERA = "entero_numerico_parte_entera"
+    ENTERO_NUMERICO_PARTE_ENTERA_2 = "entero_numerico_parte_entera_2"
+    ENTERO_NUMERICO_PARTE_ENTERA_3 = "entero_numerico_parte_entera_3"
+    F_J = "f_j"
+    FECHA_DE_DEVENGO = "fecha_de_devengo"
+    FECHA_DE_INICIO_DEL_PRESTAMO = "fecha_de_inicio_del_prestamo"
+    FECHA_DE_NACIMIENTO = "fecha_de_nacimiento"
+    FECHA_DE_VENCIMIENTO_DEL_PRESTAMO = "fecha_de_vencimiento_del_prestamo"
+    IDENTIFICADOR_DE_REGISTRO_O_NUMERO_DE = "identificador_de_registro_o_numero_de"
+    INGRESOS_A_CUENTA_REPERCUTIDOS = "ingresos_a_cuenta_repercutidos"
+    NATURALEZA = "naturaleza"
+    NIF_DEL_DECLARANTE = "nif_del_declarante"
+    NIF_DEL_PAGADOR_ANTERIOR = "nif_del_pagador_anterior"
+    NIF_DEL_PERCEPTOR = "nif_del_perceptor"
+    NIF_DEL_REPRESENTANTE_LEGAL = "nif_del_representante_legal"
+    NIF_EN_EL_PAIS_DE_RESIDENCIA_FISCAL = "nif_en_el_pais_de_residencia_fiscal"
+    PAIS_O_TERRITORIO_DE_RESIDENCIA_FISCAL = "pais_o_territorio_de_residencia_fiscal"
+    PARTE_DECIMAL_DEL_IMPORTE_DE_LAS_RETEN = "parte_decimal_del_importe_de_las_reten"
+    PARTE_ENTERA_DEL_IMPORTE_DE_LAS_RETENC = "parte_entera_del_importe_de_las_retenc"
+    PENDIENTE = "pendiente"
+    PERCEPTOR_MEDIADOR = "perceptor_mediador"
+    PROCEDIMIENTO_ESPECIAL_DE_RETENCIONES = "procedimiento_especial_de_retenciones"
+    SUBCLAVE = "subclave"
+    TIPO_CODIGO = "tipo_codigo"
+
+
+class M296PerceptorProjectionRef(BaseModel):
+    """One Modelo 296 perceptor row.
+
+    The slot ceiling is deliberately open-ended rather than a fixed count: unlike the
+    m200 party rows, which AEAT prints a fixed number of times on the form, the number of
+    perceptores is the number of payees and is not bounded by the design.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m296_perceptor"]
+    slot: int = Field(ge=1)
+    field: M296PerceptorField
+
+
 FilingProjectionRef = Annotated[
     M303ProrrataActivityProjectionRef
     | M303DifferentiatedDeductionProjectionRef
@@ -612,7 +687,8 @@ FilingProjectionRef = Annotated[
     | M200ParticipacionDirectaProjectionRef
     | M200ParticipacionSocioProjectionRef
     | M200SecretarioConsejoProjectionRef
-    | M200RepresentanteLegalProjectionRef,
+    | M200RepresentanteLegalProjectionRef
+    | M296PerceptorProjectionRef,
     Field(discriminator="projection_kind"),
 ]
 """Strict core-owned union for every repeated-row filing projection."""
