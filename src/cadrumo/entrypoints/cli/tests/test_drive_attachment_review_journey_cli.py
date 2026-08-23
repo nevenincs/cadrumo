@@ -30,6 +30,7 @@ _FACTURAE = (
     / "_evidence_corpus"
     / "facturae_32_recargo_invoice.xml"
 )
+_DRIVE_FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
 
 
 def _drive_attachment(data: bytes, *, name: str = "invoice.xml") -> str:
@@ -41,7 +42,7 @@ def _drive_attachment(data: bytes, *, name: str = "invoice.xml") -> str:
         request=AttachmentIngestionRequest(
             kind=AttachmentKind.DRIVE_DOCUMENT,
             source=AttachmentSource.GOOGLE_DRIVE,
-            source_reference="https://drive.google.com/file/d/reachable-file/view",
+            source_reference=f"https://drive.google.com/file/d/{_DRIVE_FILE_ID}",
             mime_type="application/xml",
             captured_at=datetime(2026, 8, 23, 10, 30, tzinfo=UTC),
             bucket_id=bucket_id,
@@ -69,7 +70,7 @@ def test_drive_attachment_is_queued_inspectable_and_confirmed_once() -> None:
     assert viewed.exit_code == 0, viewed.output
     view_result = json.loads(viewed.output)["result"]
     assert view_result["sha256"] == attachment_id
-    assert view_result["provider_locator"] == "reachable-file"
+    assert view_result["provider_locator"] == _DRIVE_FILE_ID
     assert "secret_material" not in viewed.output
     assert "operator-private" not in viewed.output
 

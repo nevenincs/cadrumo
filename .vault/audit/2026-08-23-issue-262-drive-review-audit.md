@@ -97,3 +97,13 @@ evidence; it does not affect the behavioral results above.
 
 Verdict: not safe to integrate and issue #262 cannot close until
 `drive-locator-canonicalization` is corrected and its hostile cases pass.
+
+## Resolution
+
+The high finding is resolved in the follow-up implementation. Locator projection now
+uses structured URL parsing and exposes an id only for HTTPS on the exact
+`drive.google.com` authority, with no user-info, query, fragment, port, or extra path,
+and only when the existing public Drive-id parser validates the exact terminal token.
+Every malformed, lookalike, or secret-bearing reference returns `not-exposed` without
+reflecting any input. New hostile cases cover scheme, host lookalike, user-info, query,
+fragment, extra path, invalid id, and the canonical success form.

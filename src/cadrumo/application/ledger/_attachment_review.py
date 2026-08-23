@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from urllib.parse import urlsplit
+
 from pydantic import BaseModel
 
+from ...adapters.outbound.google import parse_drive_file_id
 from ...core import STRICT_FROZEN_CONFIG
 from ...domain.attachments import Attachment, AttachmentSource, AttachmentStoreProtocol
 
@@ -29,9 +32,7 @@ class AttachmentReviewItem(BaseModel):
 def _project(attachment: Attachment) -> AttachmentReviewItem:
     provider_locator = "not-exposed"
     if attachment.source is AttachmentSource.GOOGLE_DRIVE:
-        marker = "/file/d/"
-        if marker in attachment.source_reference:
-            provider_locator = attachment.source_reference.split(marker, maxsplit=1)[1].split("/", maxsplit=1)[0]
+        provider_locator = _drive_provider_locator(attachment.source_reference)
     return AttachmentReviewItem(
         attachment_id=attachment.attachment_id,
         sha256=attachment.sha256,
@@ -43,6 +44,27 @@ def _project(attachment: Attachment) -> AttachmentReviewItem:
         linked_invoice_ids=attachment.linked_invoice_ids,
         pending_review=not attachment.linked_invoice_ids,
     )
+
+
+def _drive_provider_locator(reference: str) -> str:
+    """Return an id only from the canonical secret-free Drive file URL."""
+    try:
+        parsed = urlsplit(reference)
+        if parsed.scheme != "https" or parsed.netloc != "drive.google.com":
+            return "not-exposed"
+        if parsed.username is not None or parsed.password is not None:
+            return "not-exposed"
+        if parsed.query or parsed.fragment:
+            return "not-exposed"
+        parts = parsed.path.split("/")
+        if len(parts) != 4 or parts[:3] != ["", "file", "d"]:
+            return "not-exposed"
+        file_id = parts[3]
+        if not file_id or parse_drive_file_id(file_id) != file_id:
+            return "not-exposed"
+        return file_id
+    except ValueError:
+        return "not-exposed"
 
 
 def get_attachment_review_item(store: AttachmentStoreProtocol, attachment_id: str) -> AttachmentReviewItem:
