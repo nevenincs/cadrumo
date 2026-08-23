@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:ab7ca065c1388e31dc0d643a4c3e3094c7f6b522cba7d57405fefb43be04c244'
+body_hash: 'sha256:be479309b1ed8f8f4b80e99b316f91f4bc19bd4b1fb57f7ce0b603bdafb31c99'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -3577,3 +3577,66 @@ was therefore too small.
 
 T22001000 and T22002000 do **not** carry `segmento`: their fields are largely or wholly
 unnumbered, so the convention has nothing to key on and no collision has arisen.
+
+## 2026-08-23 — the four modelo 220 deduction grids, and a number reused WITHIN one record
+
+### What landed
+
+Records **T22012B10** and **T22012B20** authored, completing the design's four
+deducción-por-doble-imposición grids: **715 casillas** across T22012000, T22012B00,
+T22012B10 and T22012B20. Revision 439 → **810 casillas**, six of 137 records.
+
+Suite: **11 failures** — zero new, and two m390 entries cleared by a peer.
+
+### AEAT reuses a box number WITHIN one record — and it is semantic, not an error
+
+`segmento` disambiguates numbers reused *across* records. It cannot help when the same
+number appears **twice in one record**, which 33 numbers do.
+
+The reading: every one is a **"Tipo gravamen período generación"** cell, and the tipo de
+gravamen of a generation year is a property of the **period**, not of the deduction
+family — so AEAT prints the same value in both the interna and the internacional grid.
+One number is one declared value, so each becomes **one casilla** covering both offsets.
+
+**The reading is asserted, not assumed.** The generator refuses unless every reused
+number is a tipo-gravamen cell of identical width. If AEAT ever reuses a number for two
+genuinely different values, that assertion fires rather than silently merging them.
+
+Those cells are **rates, not amounts** — 42 casillas now type `ratio`. The rate column is
+*interleaved between* money columns rather than sitting at the edge of the grid, which is
+why it was easy to miss; typing a percentage as money would misdeclare it.
+
+### The collision check has now caught four distinct defects
+
+Its record across this modelo:
+
+| pass | what it caught |
+|---|---|
+| 1 | missing **group** axis — 19 numbers merged |
+| 2 | missing **"Total períodos anteriores"** scope — 4 merged, **5 already-committed casillas mislabelled** |
+| 3 | id scheme needed a **record** segment — 113 keys shared across two records |
+| 4 | **an ordering bug I introduced** — see below |
+
+**The ordering bug is the instructive one.** Adding a lowercase `"deduccion pendiente"`
+fragment made it shadow `"2024: deduccion pendiente"`, because the latter *contains* the
+former. Every 2024 cell would have been read as a prior-period one. **Matching by
+substring makes superstring-first ordering part of the contract**, and nothing but the
+collision check would have surfaced it — the decomposition still resolved 100% of fields,
+it just resolved them wrongly.
+
+### New vocabulary, all read from the design
+
+An **art. 71 family** for individual deductions carried into the group; a **"DI interna"
+sub-family that AEAT nests under its own "internacional LIS" banner** — both kept,
+because reclassifying the family to *interna* would override AEAT's own heading with an
+inference; the tipo-gravamen rate column; and four spelling variants, including a fully
+uppercase DT 23 heading and a phrase AEAT splits with a stray dot (`periodos. futuros`).
+
+### Scale
+
+**10878 of 11605 (record, number) slots remain unmodelled** across 131 of 137 records;
+727 modelled. 810 casillas describe six records — the casilla count is not progress.
+
+And still: these casillas **declare** the grids; none **computes** one. Nothing
+reconciles a carried-forward deduction against the amount applied, and nothing applies
+the tipo de gravamen to anything.
