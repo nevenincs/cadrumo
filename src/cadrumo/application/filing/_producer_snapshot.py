@@ -339,6 +339,104 @@ class Modelo296PerceptorRow(BaseModel):
     tipo_codigo: str | None = None
 
 
+class Modelo296PerceptorInteresesRow(BaseModel):
+    """One Modelo 296 perceptor of the intereses hoja.
+
+    Members are ``M296PerceptorInteresesField``'s values verbatim and are generated from that
+    enum, so a field the projection reference can name is a field this row has. Every member
+    is optional and rendered as text: the per-field width, padding, justification and data
+    type belong to the published layout, and a second copy of them here would be free to
+    disagree with the design.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apellidos_y_nombre_razon_social_o_deno: str | None = None
+    ejercicio: str | None = None
+    f_j: str | None = None
+    identificador_de_registro_o_numero_de: str | None = None
+    nif_del_declarante: str | None = None
+    nif_del_perceptor: str | None = None
+    nif_del_representante_legal: str | None = None
+    retenciones_e_ingresos_a_cuenta_ingres: str | None = None
+
+
+class Modelo296AnexoPagoRow(BaseModel):
+    """One Modelo 296 pago a contribuyente.
+
+    Members are ``M296AnexoPagoField``'s values verbatim and are generated from that
+    enum, so a field the projection reference can name is a field this row has. Every member
+    is optional and rendered as text: the per-field width, padding, justification and data
+    type belong to the published layout, and a second copy of them here would be free to
+    disagree with the design.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apellidos_y_nombre_razon_social_o_deno: str | None = None
+    apellidos_y_nombre_razon_social_o_deno_2: str | None = None
+    ciudad: str | None = None
+    clave_de_personalidad_del_contribuyent: str | None = None
+    codigo_isin: str | None = None
+    codigo_lei_del_contribuyente: str | None = None
+    codigo_pais: str | None = None
+    direccion_del_contribuyente: str | None = None
+    ejercicio: str | None = None
+    f_j: str | None = None
+    fecha_de_devengo: str | None = None
+    fecha_de_nacimiento_del_contribuyente: str | None = None
+    identificador_de_registro_o_numero_de: str | None = None
+    importe_del_pago_al_contribuyente: str | None = None
+    nif_del_contribuyente: str | None = None
+    nif_del_declarante: str | None = None
+    nif_del_perceptor: str | None = None
+    nif_del_representante_legal: str | None = None
+    nif_en_el_pais_de_residencia_fiscal_de: str | None = None
+    numero_de_justificante_del_modelo_210: str | None = None
+    pais_o_territorio_de_residencia_fiscal: str | None = None
+    porcentaje_de_retencion: str | None = None
+    retenciones: str | None = None
+
+
+class Modelo296AnexoCertificadoRow(BaseModel):
+    """One Modelo 296 certificado de pago.
+
+    Members are ``M296AnexoCertificadoField``'s values verbatim and are generated from that
+    enum, so a field the projection reference can name is a field this row has. Every member
+    is optional and rendered as text: the per-field width, padding, justification and data
+    type belong to the published layout, and a second copy of them here would be free to
+    disagree with the design.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apellidos_y_nombre_razon_social_o_deno: str | None = None
+    apellidos_y_nombre_razon_social_o_deno_2: str | None = None
+    codigo_cuenta_valores_del_certificado: str | None = None
+    codigo_isin_del_certificado: str | None = None
+    codigo_lei_del_titular_registral: str | None = None
+    decimal: str | None = None
+    decimal_2: str | None = None
+    decimal_3: str | None = None
+    ejercicio: str | None = None
+    entero: str | None = None
+    entero_2: str | None = None
+    entero_3: str | None = None
+    f_j: str | None = None
+    fecha_de_pago: str | None = None
+    fecha_de_presentacion_del_modelo_210: str | None = None
+    identificador_de_registro_o_numero_de: str | None = None
+    nif_del_declarante: str | None = None
+    nif_del_perceptor: str | None = None
+    nif_del_representante_legal: str | None = None
+    numero_de_justificante_del_modelo_210: str | None = None
+    parte_decimal_del_numero_de_titulos: str | None = None
+    parte_decimal_del_numero_de_titulos_2: str | None = None
+    parte_entera_del_numero_de_titulos: str | None = None
+    parte_entera_del_numero_de_titulos_2: str | None = None
+    titular_registral_de_la_cuenta_de_valo: str | None = None
+
+
 class Modelo296ProfileFacts(BaseModel):
     """Declarant identity the Modelo 296 tipo-1 record declares.
 
@@ -402,6 +500,12 @@ class Modelo296ProfileFacts(BaseModel):
     #: expects of a declaration with nothing to report; whether that absence is admissible
     #: is the record's own required flag, checked by the renderer.
     perceptor_rows: tuple[Modelo296PerceptorRow, ...] = ()
+    #: One entry per perceptor of the intereses hoja. Empty emits no row of this record at all.
+    perceptor_intereses_rows: tuple[Modelo296PerceptorInteresesRow, ...] = ()
+    #: One entry per pago a contribuyente. Empty emits no row of this record at all.
+    anexo_pago_rows: tuple[Modelo296AnexoPagoRow, ...] = ()
+    #: One entry per certificado de pago. Empty emits no row of this record at all.
+    anexo_certificado_rows: tuple[Modelo296AnexoCertificadoRow, ...] = ()
 
 
 class Modelo210ContribuyenteFacts(BaseModel):

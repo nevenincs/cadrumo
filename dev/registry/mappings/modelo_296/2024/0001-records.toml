@@ -25,15 +25,21 @@ sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras 
 record_identity = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"
 export_record_id = "m296-perceptor-intereses"
 record_type = "perceptor-intereses"
+# AEAT emits one row per perceptor of the intereses hoja. Without this the layout holds exactly one.
+repeat = "projection_rows"
 
 [[records]]
 sheet = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
 record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyentes"
 export_record_id = "m296-anexo-a-pagos"
 record_type = "anexo-a-pagos"
+# AEAT emits one row per pago a contribuyente. Without this the layout holds exactly one.
+repeat = "projection_rows"
 
 [[records]]
 sheet = "Anexo - Valores Negociables  Relación De Certificados De Pago"
 record_identity = "Anexo - Valores Negociables  Relación De Certificados De Pago"
 export_record_id = "m296-anexo-b-certificados"
 record_type = "anexo-b-certificados"
+# AEAT emits one row per certificado de pago. Without this the layout holds exactly one.
+repeat = "projection_rows"

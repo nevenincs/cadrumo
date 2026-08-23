@@ -31,8 +31,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f003"
-kind = "header"
-producer_key = "m296.ana.ejercicio"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "ejercicio" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -43,8 +43,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f004"
-kind = "header"
-producer_key = "m296.ana.nif_del_declarante"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "nif_del_declarante" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -55,8 +55,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f005"
-kind = "header"
-producer_key = "m296.ana.nif_del_perceptor"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "nif_del_perceptor" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -67,8 +67,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f006"
-kind = "header"
-producer_key = "m296.ana.nif_del_representante_legal"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "nif_del_representante_legal" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -79,8 +79,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f007"
-kind = "header"
-producer_key = "m296.ana.f_j"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "f_j" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -91,8 +91,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f008"
-kind = "header"
-producer_key = "m296.ana.apellidos_y_nombre_razon_social_o_deno"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "apellidos_y_nombre_razon_social_o_deno" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -103,8 +103,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f009"
-kind = "header"
-producer_key = "m296.ana.identificador_de_registro_o_numero_de"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "identificador_de_registro_o_numero_de" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -115,8 +115,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f010"
-kind = "header"
-producer_key = "m296.ana.codigo_isin"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "codigo_isin" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -127,8 +127,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f011"
-kind = "header"
-producer_key = "m296.ana.fecha_de_devengo"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "fecha_de_devengo" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -139,8 +139,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f012"
-kind = "header"
-producer_key = "m296.ana.clave_de_personalidad_del_contribuyent"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "clave_de_personalidad_del_contribuyent" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -151,8 +151,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f013"
-kind = "header"
-producer_key = "m296.ana.nif_del_contribuyente"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "nif_del_contribuyente" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -163,8 +163,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f014"
-kind = "header"
-producer_key = "m296.ana.codigo_lei_del_contribuyente"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "codigo_lei_del_contribuyente" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -175,8 +175,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f015"
-kind = "header"
-producer_key = "m296.ana.apellidos_y_nombre_razon_social_o_deno_2"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "apellidos_y_nombre_razon_social_o_deno_2" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -187,8 +187,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f016"
-kind = "header"
-producer_key = "m296.ana.importe_del_pago_al_contribuyente"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "importe_del_pago_al_contribuyente" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -199,8 +199,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f017"
-kind = "header"
-producer_key = "m296.ana.porcentaje_de_retencion"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "porcentaje_de_retencion" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -211,8 +211,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f018"
-kind = "header"
-producer_key = "m296.ana.retenciones"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "retenciones" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -223,8 +223,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f019"
-kind = "header"
-producer_key = "m296.ana.direccion_del_contribuyente"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "direccion_del_contribuyente" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -235,8 +235,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f020"
-kind = "header"
-producer_key = "m296.ana.numero_de_justificante_del_modelo_210"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "numero_de_justificante_del_modelo_210" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -258,8 +258,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f022"
-kind = "header"
-producer_key = "m296.ana.nif_en_el_pais_de_residencia_fiscal_de"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "nif_en_el_pais_de_residencia_fiscal_de" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -270,8 +270,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f023"
-kind = "header"
-producer_key = "m296.ana.fecha_de_nacimiento_del_contribuyente"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "fecha_de_nacimiento_del_contribuyente" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -282,8 +282,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f024"
-kind = "header"
-producer_key = "m296.ana.ciudad"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "ciudad" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -294,8 +294,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f025"
-kind = "header"
-producer_key = "m296.ana.codigo_pais"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "codigo_pais" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]
@@ -306,8 +306,8 @@ record_identity = "Anexo - Valores Negociables  Relación De Pago A Contribuyent
 
 [[entries]]
 export_field_id = "m296-2024.anexo-a-pagos.f026"
-kind = "header"
-producer_key = "m296.ana.pais_o_territorio_de_residencia_fiscal"
+kind = "projection"
+projection_ref = { projection_kind = "m296_anexo_pago", field = "pais_o_territorio_de_residencia_fiscal" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-dr-296-2024"]
 [entries.anchor]

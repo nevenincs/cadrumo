@@ -311,3 +311,398 @@ source_refs = ["aeat-dr-296-2024"]
 [revisions."2024-y-siguientes".projection_endpoints.projection_ref]
 projection_kind = "m296_perceptor"
 field = "tipo_codigo"
+
+# The three detail records below are AEAT relaciones -- lists -- so they carry no slot
+# axis either: each repeats and the render occurrence identifies the row.
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_perceptor_intereses"
+field = "apellidos_y_nombre_razon_social_o_deno"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_perceptor_intereses"
+field = "ejercicio"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_perceptor_intereses"
+field = "f_j"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_perceptor_intereses"
+field = "identificador_de_registro_o_numero_de"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_perceptor_intereses"
+field = "nif_del_declarante"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_perceptor_intereses"
+field = "nif_del_perceptor"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_perceptor_intereses"
+field = "nif_del_representante_legal"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_perceptor_intereses"
+field = "retenciones_e_ingresos_a_cuenta_ingres"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "apellidos_y_nombre_razon_social_o_deno"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "apellidos_y_nombre_razon_social_o_deno_2"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "ciudad"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "clave_de_personalidad_del_contribuyent"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "codigo_isin"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "codigo_lei_del_contribuyente"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "codigo_pais"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "direccion_del_contribuyente"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "ejercicio"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "f_j"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "fecha_de_devengo"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "fecha_de_nacimiento_del_contribuyente"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "identificador_de_registro_o_numero_de"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "importe_del_pago_al_contribuyente"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "nif_del_contribuyente"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "nif_del_declarante"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "nif_del_perceptor"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "nif_del_representante_legal"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "nif_en_el_pais_de_residencia_fiscal_de"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "numero_de_justificante_del_modelo_210"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "pais_o_territorio_de_residencia_fiscal"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "porcentaje_de_retencion"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_pago"
+field = "retenciones"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "apellidos_y_nombre_razon_social_o_deno"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "apellidos_y_nombre_razon_social_o_deno_2"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "codigo_cuenta_valores_del_certificado"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "codigo_isin_del_certificado"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "codigo_lei_del_titular_registral"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "decimal"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "decimal_2"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "decimal_3"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "ejercicio"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "entero"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "entero_2"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "entero_3"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "f_j"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "fecha_de_pago"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "fecha_de_presentacion_del_modelo_210"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "identificador_de_registro_o_numero_de"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "nif_del_declarante"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "nif_del_perceptor"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "nif_del_representante_legal"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "numero_de_justificante_del_modelo_210"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "parte_decimal_del_numero_de_titulos"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "parte_decimal_del_numero_de_titulos_2"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "parte_entera_del_numero_de_titulos"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "parte_entera_del_numero_de_titulos_2"
+
+[[revisions."2024-y-siguientes".projection_endpoints]]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2024"]
+[revisions."2024-y-siguientes".projection_endpoints.projection_ref]
+projection_kind = "m296_anexo_certificado"
+field = "titular_registral_de_la_cuenta_de_valo"
