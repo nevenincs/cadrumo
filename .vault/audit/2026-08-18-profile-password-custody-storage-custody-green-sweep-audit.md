@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:e53805ddd2a1102da9aba79ca9ada54bb42daa61e535e82bac6676e1350495a0'
+body_hash: 'sha256:7f540589b36bb60c52b651f2d66d54d4d07d6ca73e4a3eefd6d2fe58e589bec5'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7322,3 +7322,40 @@ Landed in `dev/quality/tests`, which the per-push dev lane runs. That package is
 red on two known parked items -- the doc-privacy offenders across four other campaigns, and the
 fixture-census manifest drift blocked on the registry duplicates -- and this gate passes inside
 it, so nothing red was enrolled.
+
+### The interpreter-exit key sweep had no test; it does now
+
+Scanning this domain's 187 production modules for import-time side effects returned exactly
+one: `_atexit.register(_close_active_session_at_exit)` at module scope in
+`master_key/_active_session.py`. It is deliberate and load-bearing rather than accidental --
+the hook sweeps every live session through `close_all_live_bucket_sessions`, zeroising unwrapped
+DEKs that a context-scoped close cannot reach, because `atexit` runs on the MAIN thread and by
+PEP 567 that thread observes no binding a worker made. The MCP transport and the TUI both run
+worker threads, so this is the mechanism stopping a worker's bucket key from living until the
+process dies with it.
+
+Nothing tested it. The thread-isolation module beside it explains the hook in prose and asserts
+the contextvar behaviour AROUND it, but no case established that the hook fires or seals
+anything, and a registration never exercised is indistinguishable from one that was deleted.
+
+`test_interpreter_exit_seals_live_sessions.py` closes that. What makes it a real proof rather
+than a restatement is refusing the easy version: calling the hook by hand would show the
+function works while saying nothing about whether it is WIRED to shutdown, which is the actual
+claim. Instead a child interpreter opens a real session, never closes it, and exits normally;
+the observation is taken from inside that shutdown by a second `atexit` hook registered BEFORE
+the substrate is imported, so under `atexit`'s reverse ordering it runs AFTER the sweep. The
+child writes to a file because stdout is unreliable that late.
+
+The session is built from raw key bytes through the public constructor, so no credential store,
+storage root or profile is involved. That matters here specifically: the property holds on a
+host where custody is unavailable, so unlike the 26 `os_keychain` cases this one actually runs
+in this environment.
+
+Two proofs, in opposite directions. The anti-tautology case runs the identical child with the
+substrate's hook DEREGISTERED and requires the session to be unsealed -- without it, an observer
+that merely reported the pre-exit state would satisfy the primary assertion while measuring the
+wrong instant. And the gate was broken from outside the repo through a scratchpad
+`sitecustomize` that replaces `close_all_live_bucket_sessions` with a no-op before anything
+binds it, touching `_live_sessions` but never `_active_session` so the atexit ORDERING under
+test stays intact; the primary case then fails with its own message. Nothing tracked was mutated
+for either.
