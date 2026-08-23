@@ -361,6 +361,9 @@ class InventoryAnexoDResult(BaseModel):
     @model_validator(mode="after")
     def _variation_split_matches_audited_values(self) -> InventoryAnexoDResult:
         """Require an exact, mutually exclusive split of the audited basis."""
+        monetary_values = (self.opening_value, self.closing_value, self.casilla_0177, self.casilla_0182)
+        if any(value != _quantize(value) for value in monetary_values):
+            raise InventoryValidationError("inventory Anexo D values must be quantised to cents")
         signed_variation = _quantize(self.closing_value - self.opening_value)
         expected_increase = max(signed_variation, _ZERO)
         expected_decrease = max(-signed_variation, _ZERO)
@@ -393,6 +396,18 @@ def compute_inventory_anexo_d_projection(ledger: InventoryLedger) -> InventoryAn
         raise InventoryLedgerError(
             "inventory Anexo D projection is grounded only for filing year 2025",
             context={"actividad_id": ledger.actividad_id, "filing_year": ledger.year},
+        )
+    out_of_period_movements = tuple(
+        movement.movement_id for movement in ledger.period_movements if movement.movement_date.year != ledger.year
+    )
+    if out_of_period_movements:
+        raise InventoryLedgerError(
+            "inventory Anexo D projection contains movements outside its filing year",
+            context={
+                "actividad_id": ledger.actividad_id,
+                "filing_year": ledger.year,
+                "movement_ids": out_of_period_movements,
+            },
         )
     derived_closing = compute_inventory_valuation(ledger).closing_value
     if ledger.closing_stock is not None and _quantize(ledger.closing_stock) != derived_closing:

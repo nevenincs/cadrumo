@@ -102,6 +102,15 @@ def test_projection_refuses_unadjudicated_explicit_closing_conflict() -> None:
         compute_inventory_anexo_d_projection(ledger)
 
 
+def test_projection_refuses_movements_outside_the_ledger_year() -> None:
+    ledger = _ledger(opening="0.00", purchase="25.00")
+    movement = ledger.period_movements[0].model_copy(update={"movement_date": date(2024, 12, 31)})
+    ledger = ledger.model_copy(update={"period_movements": (movement,)})
+
+    with pytest.raises(InventoryLedgerError, match="movements outside its filing year"):
+        compute_inventory_anexo_d_projection(ledger)
+
+
 def test_result_refuses_a_split_that_does_not_match_its_audited_basis() -> None:
     with pytest.raises(ValidationError) as exc_info:
         InventoryAnexoDResult(
@@ -114,3 +123,15 @@ def test_result_refuses_a_split_that_does_not_match_its_audited_basis() -> None:
         )
 
     assert isinstance(exc_info.value.errors()[0]["ctx"]["error"], InventoryValidationError)
+
+
+def test_result_refuses_non_cent_audited_values() -> None:
+    with pytest.raises(ValidationError, match="quantised to cents"):
+        InventoryAnexoDResult(
+            actividad_id="retail",
+            filing_year=2025,
+            opening_value=Decimal("100.001"),
+            closing_value=Decimal("125.00"),
+            casilla_0177=Decimal("25.00"),
+            casilla_0182=Decimal("0.00"),
+        )
