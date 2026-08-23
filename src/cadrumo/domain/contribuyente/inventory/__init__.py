@@ -22,13 +22,16 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.errors import CoreValidationError as _CoreValidationError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT_IVA_GENERAL_RATE_PCT
+from ....core.hashing import content_hash_hex as _content_hash_hex
+from ....core.identity import ContentDigest
 from ....core.money import round_to_cents as _quantize
+from ...filing_evidence import FilingEvidenceReference
 
 
 class AmortizacionLedgerError(_CadrumoError):
@@ -72,7 +75,7 @@ class BasisCapExceededError(AmortizacionLedgerError):
     """Raised when cumulative amortization would exceed cost basis."""
 
 
-INVENTORY_SCHEMA_VERSION = "1"
+INVENTORY_SCHEMA_VERSION = "2"
 """Forward-compatible schema version stamped onto every record in this module."""
 
 _ZERO = Decimal("0.00")
@@ -95,6 +98,173 @@ class MovementKind(StrEnum):
     PURCHASE = "purchase"
     COGS = "cogs"
     COUNT = "count"
+
+
+class InventoryAcquisitionEvidenceKind(StrEnum):
+    """Closed evidence authorities admitted for inventory acquisition facts."""
+
+    PURCHASE_INVOICE = "purchase_invoice"
+    TRANSPORT_DOCUMENT = "transport_document"
+    INSURANCE_DOCUMENT = "insurance_document"
+    CUSTOMS_DECLARATION = "customs_declaration"
+    CONTRACT = "contract"
+    OTHER_ACQUISITION_EVIDENCE = "other_acquisition_evidence"
+
+
+class InventoryAttributableCostKind(StrEnum):
+    """Closed directly-attributable cost vocabulary for inventory purchases."""
+
+    FREIGHT = "freight"
+    INSURANCE = "insurance"
+    CUSTOMS_DUTY = "customs_duty"
+    HANDLING = "handling"
+    PROFESSIONAL_FEE = "professional_fee"
+    OTHER_DIRECTLY_ATTRIBUTABLE = "other_directly_attributable"
+
+
+def _require_cents(value: Decimal, *, field_name: str) -> Decimal:
+    if value != _quantize(value):
+        raise InventoryValidationError(f"{field_name} must be quantised to cents")
+    return value
+
+
+class InventoryAcquisitionEvidence(BaseModel):
+    """Nominal evidence reference plus its immutable content digest."""
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    reference: FilingEvidenceReference
+    evidence_kind: InventoryAcquisitionEvidenceKind
+    content_digest: ContentDigest
+
+
+class InventoryAttributableCostComponent(BaseModel):
+    """One evidenced cost directly attributable to an inventory purchase."""
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    component_id: str = Field(min_length=1, max_length=128)
+    kind: InventoryAttributableCostKind
+    taxable_base: Decimal = Field(gt=_ZERO)
+    iva_amount: Decimal = Field(ge=_ZERO)
+    deductible_iva_ratio: Decimal = Field(ge=_ZERO, le=_ONE)
+    evidence_references: tuple[FilingEvidenceReference, ...] = Field(min_length=1)
+
+    @field_validator("component_id")
+    @classmethod
+    def _trim_component_id(cls, value: str) -> str:
+        trimmed = value.strip()
+        if not trimmed:
+            raise InventoryValidationError("component_id must not be blank")
+        return trimmed
+
+    @field_validator("taxable_base", "iva_amount")
+    @classmethod
+    def _monetary_fields_are_cents(cls, value: Decimal, info: ValidationInfo) -> Decimal:
+        return _require_cents(value, field_name=info.field_name)
+
+    @field_validator("evidence_references")
+    @classmethod
+    def _evidence_references_are_distinct(
+        cls,
+        value: tuple[FilingEvidenceReference, ...],
+    ) -> tuple[FilingEvidenceReference, ...]:
+        identities = tuple(item.reference for item in value)
+        if len(set(identities)) != len(identities):
+            raise InventoryValidationError("component evidence references must be unique")
+        return value
+
+    @property
+    def recoverable_iva(self) -> Decimal:
+        """Return IVA excluded from inventory acquisition cost."""
+        return _quantize(self.iva_amount * self.deductible_iva_ratio)
+
+    @property
+    def nonrecoverable_iva(self) -> Decimal:
+        """Return IVA capitalized without independent rounding drift."""
+        return self.iva_amount - self.recoverable_iva
+
+
+class InventoryAcquisitionCompleteness(BaseModel):
+    """Evidence-backed attestations that all three cost reviews occurred."""
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    consideration_evidence: FilingEvidenceReference
+    attributable_cost_review_evidence: FilingEvidenceReference
+    iva_recoverability_review_evidence: FilingEvidenceReference
+
+
+class InventoryAcquisitionCost(BaseModel):
+    """Complete, evidenced acquisition-cost decomposition for one purchase."""
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    consideration_excluding_iva: Decimal = Field(ge=_ZERO)
+    consideration_iva_amount: Decimal = Field(ge=_ZERO)
+    consideration_deductible_iva_ratio: Decimal = Field(ge=_ZERO, le=_ONE)
+    attributable_cost_components: tuple[InventoryAttributableCostComponent, ...]
+    evidence: tuple[InventoryAcquisitionEvidence, ...] = Field(min_length=1)
+    completeness: InventoryAcquisitionCompleteness
+    directly_attributable_cost_total: Decimal = Field(ge=_ZERO)
+    nonrecoverable_iva_included: Decimal = Field(ge=_ZERO)
+    recoverable_iva_excluded: Decimal = Field(ge=_ZERO)
+    total_acquisition_cost: Decimal = Field(ge=_ZERO)
+
+    @field_validator(
+        "consideration_excluding_iva",
+        "consideration_iva_amount",
+        "directly_attributable_cost_total",
+        "nonrecoverable_iva_included",
+        "recoverable_iva_excluded",
+        "total_acquisition_cost",
+    )
+    @classmethod
+    def _monetary_fields_are_cents(cls, value: Decimal, info: ValidationInfo) -> Decimal:
+        return _require_cents(value, field_name=info.field_name)
+
+    @model_validator(mode="after")
+    def _validate_complete_decomposition(self) -> InventoryAcquisitionCost:
+        evidence_ids = tuple(item.reference.reference for item in self.evidence)
+        if len(set(evidence_ids)) != len(evidence_ids):
+            raise InventoryValidationError("inventory acquisition evidence references must be unique")
+        component_ids = tuple(item.component_id for item in self.attributable_cost_components)
+        if len(set(component_ids)) != len(component_ids):
+            raise InventoryValidationError("inventory acquisition component identities must be unique")
+        declared_refs = {
+            self.completeness.consideration_evidence.reference,
+            self.completeness.attributable_cost_review_evidence.reference,
+            self.completeness.iva_recoverability_review_evidence.reference,
+            *(
+                reference.reference
+                for component in self.attributable_cost_components
+                for reference in component.evidence_references
+            ),
+        }
+        missing = sorted(declared_refs - set(evidence_ids))
+        if missing:
+            raise InventoryValidationError(f"inventory acquisition evidence references are unresolved: {missing!r}")
+
+        attributable = sum((item.taxable_base for item in self.attributable_cost_components), _ZERO)
+        recoverable = _quantize(
+            self.consideration_iva_amount * self.consideration_deductible_iva_ratio,
+        ) + sum((item.recoverable_iva for item in self.attributable_cost_components), _ZERO)
+        total_iva = self.consideration_iva_amount + sum(
+            (item.iva_amount for item in self.attributable_cost_components),
+            _ZERO,
+        )
+        nonrecoverable = total_iva - recoverable
+        total = self.consideration_excluding_iva + attributable + nonrecoverable
+        expected = {
+            "directly_attributable_cost_total": _quantize(attributable),
+            "recoverable_iva_excluded": _quantize(recoverable),
+            "nonrecoverable_iva_included": _quantize(nonrecoverable),
+            "total_acquisition_cost": _quantize(total),
+        }
+        for field_name, expected_value in expected.items():
+            if getattr(self, field_name) != expected_value:
+                raise InventoryValidationError(f"{field_name} does not match the acquisition decomposition")
+        return self
 
 
 class ValuationMethod(StrEnum):
@@ -137,6 +307,7 @@ class MovementRecord(BaseModel):
     iva_rate: Decimal = Field(default=_DEFAULT_IVA_GENERAL_RATE_PCT, ge=Decimal("0"), le=Decimal("100"))
     iva_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     deductible_iva_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
+    acquisition_cost: InventoryAcquisitionCost | None = None
     schema_version: str = INVENTORY_SCHEMA_VERSION
 
     @property
@@ -149,8 +320,18 @@ class MovementRecord(BaseModel):
         return self.quantity * self.unit_cost
 
     @property
+    def capitalized_value(self) -> Decimal:
+        """Return the sole value capitalized by inventory valuation."""
+        if self.kind is MovementKind.PURCHASE:
+            assert self.acquisition_cost is not None
+            return self.acquisition_cost.total_acquisition_cost
+        return self.value
+
+    @property
     def resolved_unit_cost(self) -> Decimal:
-        """Return the IVA-exclusive unit cost, falling back to ``taxable_base / quantity``."""
+        """Return capitalized unit cost, falling back to consideration for openings."""
+        if self.kind is MovementKind.PURCHASE:
+            return self.capitalized_value / self.quantity
         if self.unit_cost is not None:
             return self.unit_cost
         if self.taxable_base is None:
@@ -175,6 +356,26 @@ class MovementRecord(BaseModel):
             computed_iva = _quantize(self.taxable_base * self.iva_rate / _HUNDRED)
             if self.iva_amount is not None and self.iva_amount != computed_iva:
                 raise InventoryValidationError("iva_amount must equal taxable_base * iva_rate")
+        if (
+            self.unit_cost is not None
+            and self.taxable_base is not None
+            and _quantize(self.quantity * self.unit_cost) != self.taxable_base
+        ):
+            raise InventoryValidationError("taxable_base must equal quantity * unit_cost")
+        if self.kind is MovementKind.PURCHASE:
+            if self.acquisition_cost is None:
+                raise InventoryValidationError("purchase movements require complete acquisition_cost")
+            if self.acquisition_cost.consideration_excluding_iva != _quantize(self.value):
+                raise InventoryValidationError("acquisition consideration must equal the purchase consideration")
+            expected_iva = self.iva_amount
+            if expected_iva is None:
+                expected_iva = _quantize(self.value * self.iva_rate / _HUNDRED)
+            if self.acquisition_cost.consideration_iva_amount != expected_iva:
+                raise InventoryValidationError("acquisition consideration IVA must equal the purchase IVA")
+            if self.acquisition_cost.consideration_deductible_iva_ratio != self.deductible_iva_ratio:
+                raise InventoryValidationError("acquisition IVA recoverability must equal the purchase ratio")
+        elif self.acquisition_cost is not None:
+            raise InventoryValidationError("acquisition_cost is permitted only for purchase movements")
         return self
 
 
@@ -641,10 +842,61 @@ def _layers_value(layers: tuple[StockLayer, ...] | list[StockLayer]) -> Decimal:
     return sum((layer.quantity * layer.unit_cost for layer in layers), _ZERO)
 
 
+def inventory_acquisition_fingerprint(movement: MovementRecord) -> ContentDigest:
+    """Return a deterministic versioned economic/evidence purchase fingerprint."""
+    if movement.kind is not MovementKind.PURCHASE or movement.acquisition_cost is None:
+        raise InventoryValidationError("only a complete purchase acquisition can be fingerprinted")
+    acquisition = movement.acquisition_cost
+    payload = {
+        "fingerprint_schema_version": "1",
+        "movement_id": movement.movement_id,
+        "movement_date": movement.movement_date.isoformat(),
+        "kind": movement.kind.value,
+        "sku": movement.sku,
+        "quantity": format(movement.quantity, "f"),
+        "consideration_excluding_iva": format(acquisition.consideration_excluding_iva, "f"),
+        "consideration_iva_amount": format(acquisition.consideration_iva_amount, "f"),
+        "consideration_deductible_iva_ratio": format(acquisition.consideration_deductible_iva_ratio, "f"),
+        "components": [
+            {
+                "component_id": item.component_id,
+                "kind": item.kind.value,
+                "taxable_base": format(item.taxable_base, "f"),
+                "iva_amount": format(item.iva_amount, "f"),
+                "deductible_iva_ratio": format(item.deductible_iva_ratio, "f"),
+                "evidence_references": sorted(ref.reference for ref in item.evidence_references),
+            }
+            for item in sorted(acquisition.attributable_cost_components, key=lambda value: value.component_id)
+        ],
+        "evidence": [
+            {
+                "reference": item.reference.reference,
+                "evidence_kind": item.evidence_kind.value,
+                "content_digest": item.content_digest,
+            }
+            for item in sorted(acquisition.evidence, key=lambda value: value.reference.reference)
+        ],
+        "completeness": acquisition.completeness.model_dump(mode="json"),
+        "totals": {
+            "directly_attributable_cost_total": format(acquisition.directly_attributable_cost_total, "f"),
+            "nonrecoverable_iva_included": format(acquisition.nonrecoverable_iva_included, "f"),
+            "recoverable_iva_excluded": format(acquisition.recoverable_iva_excluded, "f"),
+            "total_acquisition_cost": format(acquisition.total_acquisition_cost, "f"),
+        },
+    }
+    return _content_hash_hex(payload)
+
+
 __all__ = [
     "AmortizacionLedgerError",
     "BasisCapExceededError",
+    "InventoryAcquisitionCompleteness",
+    "InventoryAcquisitionCost",
+    "InventoryAcquisitionEvidence",
+    "InventoryAcquisitionEvidenceKind",
     "InventoryAnexoDResult",
+    "InventoryAttributableCostComponent",
+    "InventoryAttributableCostKind",
     "InventoryLedger",
     "InventoryLedgerError",
     "InventoryValidationError",
@@ -655,5 +907,6 @@ __all__ = [
     "ValuationMethod",
     "compute_inventory_anexo_d_projection",
     "compute_inventory_valuation",
+    "inventory_acquisition_fingerprint",
     "parse_valuation_method",
 ]
