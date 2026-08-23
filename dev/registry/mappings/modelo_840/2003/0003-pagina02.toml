@@ -1,0 +1,1282 @@
+schema_version = 1
+fragment_id = "pagina02"
+modelo = "840"
+design_epoch = "2003"
+source_ref = "aeat-dr-840"
+source_sha256 = "d0348a78787db7eb767dd8093ea84773c248c0b92bcefb512972573aff34391a"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f001"
+kind = "literal"
+literal = "<T840020>"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 124
+ordinal = "1"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f002"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 125
+ordinal = "2"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f003"
+kind = "casilla"
+casilla_id = "elem-trib.cuota-consignada-tarifas"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 126
+ordinal = "3"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f004"
+kind = "header"
+producer_key = "m840.elementos_tributarios.grupo.a1.codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 127
+ordinal = "4"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f005"
+kind = "header"
+producer_key = "m840.elementos_tributarios.grupo.a1.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 128
+ordinal = "5"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f006"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 129
+ordinal = "6"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f007"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 130
+ordinal = "7"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f008"
+kind = "header"
+producer_key = "m840.elementos_tributarios.grupo.a2.codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 131
+ordinal = "8"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f009"
+kind = "header"
+producer_key = "m840.elementos_tributarios.grupo.a2.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 132
+ordinal = "9"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f010"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 133
+ordinal = "10"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f011"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 134
+ordinal = "11"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f012"
+kind = "header"
+producer_key = "m840.elementos_tributarios.grupo.a3.codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 135
+ordinal = "12"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f013"
+kind = "header"
+producer_key = "m840.elementos_tributarios.grupo.a3.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 136
+ordinal = "13"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f014"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 137
+ordinal = "14"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f015"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 138
+ordinal = "15"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f016"
+kind = "header"
+producer_key = "m840.elementos_tributarios.grupo.a4.codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 139
+ordinal = "16"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f017"
+kind = "header"
+producer_key = "m840.elementos_tributarios.grupo.a4.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 140
+ordinal = "17"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f018"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 141
+ordinal = "18"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f019"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 142
+ordinal = "19"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f020"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 143
+ordinal = "20"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f021"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 144
+ordinal = "21"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f022"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 145
+ordinal = "22"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f023"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 146
+ordinal = "23"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f024"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 147
+ordinal = "24"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f025"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 148
+ordinal = "25"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f026"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 149
+ordinal = "26"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f027"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 150
+ordinal = "27"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f028"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 151
+ordinal = "28"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f029"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 152
+ordinal = "29"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f030"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 153
+ordinal = "30"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f031"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 154
+ordinal = "31"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f032"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 155
+ordinal = "32"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f033"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 156
+ordinal = "33"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f034"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 157
+ordinal = "34"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f035"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 158
+ordinal = "35"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f036"
+kind = "casilla"
+casilla_id = "elem-trib.grupo-epigrafe-suma"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 162
+ordinal = "36"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f037"
+kind = "header"
+producer_key = "m840.elementos_tributarios.maquinas_tipo_a.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 163
+ordinal = "37"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f038"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 164
+ordinal = "38"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f039"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 165
+ordinal = "39"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f040"
+kind = "header"
+producer_key = "m840.elementos_tributarios.maquinas_tipo_b.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 166
+ordinal = "40"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f041"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 167
+ordinal = "41"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f042"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 168
+ordinal = "42"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f043"
+kind = "header"
+producer_key = "m840.elementos_tributarios.expositores_autoventa.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 169
+ordinal = "43"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f044"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 170
+ordinal = "44"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f045"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 171
+ordinal = "45"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f046"
+kind = "casilla"
+casilla_id = "maquinas.suma"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 172
+ordinal = "46"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f047"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c0_1.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 173
+ordinal = "47"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f048"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c0_1.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 174
+ordinal = "48"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f049"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c0_1.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 175
+ordinal = "49"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f050"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c0_2.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 176
+ordinal = "50"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f051"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c0_2.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 177
+ordinal = "51"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f052"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c0_2.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 178
+ordinal = "52"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f053"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c1_1.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 179
+ordinal = "53"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f054"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c1_1.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 180
+ordinal = "54"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f055"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c1_1.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 181
+ordinal = "55"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f056"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c1_2.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 182
+ordinal = "56"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f057"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c1_2.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 183
+ordinal = "57"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f058"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c1_2.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 184
+ordinal = "58"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f059"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c1_3.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 185
+ordinal = "59"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f060"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c1_3.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 186
+ordinal = "60"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f061"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c1_3.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 187
+ordinal = "61"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f062"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c2_0.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 188
+ordinal = "62"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f063"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c2_0.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 189
+ordinal = "63"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f064"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c2_0.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 190
+ordinal = "64"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f065"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c3_1.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 191
+ordinal = "65"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f066"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c3_1.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 192
+ordinal = "66"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f067"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c3_1.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 193
+ordinal = "67"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f068"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c3_2.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 194
+ordinal = "68"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f069"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c3_2.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 195
+ordinal = "69"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f070"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c3_2.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 196
+ordinal = "70"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f071"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c4_0.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 197
+ordinal = "71"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f072"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c4_0.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 198
+ordinal = "72"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f073"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c4_0.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 199
+ordinal = "73"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f074"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c5_0.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 200
+ordinal = "74"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f075"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c5_0.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 201
+ordinal = "75"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f076"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c5_0.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 205
+ordinal = "76"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f077"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c6_0.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 206
+ordinal = "77"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f078"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c6_0.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 207
+ordinal = "78"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f079"
+kind = "header"
+producer_key = "m840.elementos_tributarios.local.c6_0.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 208
+ordinal = "79"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f080"
+kind = "casilla"
+casilla_id = "elem-trib.municipal-suma-total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 209
+ordinal = "80"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f081"
+kind = "casilla"
+casilla_id = "elem-trib.municipal-suma-rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 210
+ordinal = "81"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f082"
+kind = "casilla"
+casilla_id = "elem-trib.municipal-suma-computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 211
+ordinal = "82"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f083"
+kind = "casilla"
+casilla_id = "elem-trib.municipal-superficie-deducible"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 212
+ordinal = "83"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f084"
+kind = "casilla"
+casilla_id = "elem-trib.municipal-superficie-computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 213
+ordinal = "84"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f085"
+kind = "casilla"
+casilla_id = "elem-trib.municipal-valor-elemento"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 214
+ordinal = "85"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f086"
+kind = "casilla"
+casilla_id = "elem-trib.municipal-coeficiente-corrector"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 215
+ordinal = "86"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f087"
+kind = "casilla"
+casilla_id = "elem-trib.municipal-cuota-elemento"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 216
+ordinal = "87"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f088"
+kind = "casilla"
+casilla_id = "elem-trib.provincial-nacional-numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 217
+ordinal = "88"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f089"
+kind = "casilla"
+casilla_id = "elem-trib.provincial-nacional-total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 218
+ordinal = "89"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f090"
+kind = "casilla"
+casilla_id = "elem-trib.provincial-nacional-rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 219
+ordinal = "90"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f091"
+kind = "casilla"
+casilla_id = "elem-trib.provincial-nacional-computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 220
+ordinal = "91"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f092"
+kind = "casilla"
+casilla_id = "elem-trib.provincial-nacional-cuota-elemento"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 221
+ordinal = "92"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f093"
+kind = "casilla"
+casilla_id = "cuota.antes-bonificaciones-incrementos"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 222
+ordinal = "93"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f094"
+kind = "casilla"
+casilla_id = "cuota.bonificacion-clave"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 223
+ordinal = "94"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f095"
+kind = "casilla"
+casilla_id = "cuota.bonificacion-porcentaje"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 224
+ordinal = "95"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f096"
+kind = "casilla"
+casilla_id = "cuota.bonificacion-importe"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 225
+ordinal = "96"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f097"
+kind = "casilla"
+casilla_id = "cuota.incremento-clave"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 226
+ordinal = "97"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f098"
+kind = "casilla"
+casilla_id = "cuota.incremento-porcentaje"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 227
+ordinal = "98"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f099"
+kind = "casilla"
+casilla_id = "cuota.incremento-importe"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 228
+ordinal = "99"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f100"
+kind = "casilla"
+casilla_id = "cuota.despues-bonificaciones-incrementos"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 229
+ordinal = "100"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f101"
+kind = "casilla"
+casilla_id = "maquinas.suma"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 230
+ordinal = "101"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f102"
+kind = "casilla"
+casilla_id = "cuota.tarifa-o-importe-minimo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 231
+ordinal = "102"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f103"
+kind = "casilla"
+casilla_id = "notificacion.lugar"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 232
+ordinal = "103"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f104"
+kind = "casilla"
+casilla_id = "notificacion.lugar"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 233
+ordinal = "104"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f105"
+kind = "casilla"
+casilla_id = "notificacion.lugar"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 234
+ordinal = "105"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f106"
+kind = "casilla"
+casilla_id = "notificacion.lugar"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 235
+ordinal = "106"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f107"
+kind = "casilla"
+casilla_id = "notificacion.lugar"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 236
+ordinal = "107"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f108"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 237
+ordinal = "108"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m840-2003.pagina02.f109"
+kind = "literal"
+literal = "</T840020>"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 238
+ordinal = "109"
+record_identity = "Pág. 2"

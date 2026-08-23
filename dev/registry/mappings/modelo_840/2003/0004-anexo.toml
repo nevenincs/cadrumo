@@ -1,0 +1,1946 @@
+schema_version = 1
+fragment_id = "anexo"
+modelo = "840"
+design_epoch = "2003"
+source_ref = "aeat-dr-840"
+source_sha256 = "d0348a78787db7eb767dd8093ea84773c248c0b92bcefb512972573aff34391a"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f001"
+kind = "literal"
+literal = "<T840030>"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 246
+ordinal = "1"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f002"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 247
+ordinal = "2"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f003"
+kind = "header"
+producer_key = "m840.locales.sg_tabla"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 248
+ordinal = "3"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f004"
+kind = "header"
+producer_key = "m840.locales.nombre_via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 249
+ordinal = "4"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f005"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 250
+ordinal = "5"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f006"
+kind = "header"
+producer_key = "m840.locales.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 251
+ordinal = "6"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f007"
+kind = "header"
+producer_key = "m840.locales.km"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 252
+ordinal = "7"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f008"
+kind = "header"
+producer_key = "m840.locales.escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 253
+ordinal = "8"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f009"
+kind = "header"
+producer_key = "m840.locales.piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 254
+ordinal = "9"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f010"
+kind = "header"
+producer_key = "m840.locales.puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 255
+ordinal = "10"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f011"
+kind = "header"
+producer_key = "m840.locales.codigo_postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 256
+ordinal = "11"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f012"
+kind = "header"
+producer_key = "m840.locales.provincia_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 257
+ordinal = "12"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f013"
+kind = "header"
+producer_key = "m840.locales.municipio_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 258
+ordinal = "13"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f014"
+kind = "header"
+producer_key = "m840.locales.municipio_nombre"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 259
+ordinal = "14"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f015"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 260
+ordinal = "15"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f016"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 261
+ordinal = "16"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f017"
+kind = "header"
+producer_key = "m840.locales.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 262
+ordinal = "17"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f018"
+kind = "header"
+producer_key = "m840.locales.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 263
+ordinal = "18"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f019"
+kind = "header"
+producer_key = "m840.locales.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 264
+ordinal = "19"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f020"
+kind = "header"
+producer_key = "m840.locales.sg_tabla"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 265
+ordinal = "20"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f021"
+kind = "header"
+producer_key = "m840.locales.nombre_via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 266
+ordinal = "21"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f022"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 267
+ordinal = "22"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f023"
+kind = "header"
+producer_key = "m840.locales.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 268
+ordinal = "23"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f024"
+kind = "header"
+producer_key = "m840.locales.km"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 269
+ordinal = "24"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f025"
+kind = "header"
+producer_key = "m840.locales.escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 270
+ordinal = "25"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f026"
+kind = "header"
+producer_key = "m840.locales.piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 271
+ordinal = "26"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f027"
+kind = "header"
+producer_key = "m840.locales.puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 272
+ordinal = "27"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f028"
+kind = "header"
+producer_key = "m840.locales.codigo_postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 273
+ordinal = "28"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f029"
+kind = "header"
+producer_key = "m840.locales.provincia_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 274
+ordinal = "29"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f030"
+kind = "header"
+producer_key = "m840.locales.municipio_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 275
+ordinal = "30"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f031"
+kind = "header"
+producer_key = "m840.locales.municipio_nombre"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 276
+ordinal = "31"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f032"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 277
+ordinal = "32"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f033"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 278
+ordinal = "33"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f034"
+kind = "header"
+producer_key = "m840.locales.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 279
+ordinal = "34"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f035"
+kind = "header"
+producer_key = "m840.locales.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 280
+ordinal = "35"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f036"
+kind = "header"
+producer_key = "m840.locales.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 284
+ordinal = "36"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f037"
+kind = "header"
+producer_key = "m840.locales.sg_tabla"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 285
+ordinal = "37"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f038"
+kind = "header"
+producer_key = "m840.locales.nombre_via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 286
+ordinal = "38"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f039"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 287
+ordinal = "39"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f040"
+kind = "header"
+producer_key = "m840.locales.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 288
+ordinal = "40"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f041"
+kind = "header"
+producer_key = "m840.locales.km"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 289
+ordinal = "41"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f042"
+kind = "header"
+producer_key = "m840.locales.escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 290
+ordinal = "42"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f043"
+kind = "header"
+producer_key = "m840.locales.piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 291
+ordinal = "43"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f044"
+kind = "header"
+producer_key = "m840.locales.puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 292
+ordinal = "44"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f045"
+kind = "header"
+producer_key = "m840.locales.codigo_postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 293
+ordinal = "45"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f046"
+kind = "header"
+producer_key = "m840.locales.provincia_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 294
+ordinal = "46"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f047"
+kind = "header"
+producer_key = "m840.locales.municipio_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 295
+ordinal = "47"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f048"
+kind = "header"
+producer_key = "m840.locales.municipio_nombre"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 296
+ordinal = "48"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f049"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 297
+ordinal = "49"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f050"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 298
+ordinal = "50"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f051"
+kind = "header"
+producer_key = "m840.locales.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 299
+ordinal = "51"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f052"
+kind = "header"
+producer_key = "m840.locales.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 300
+ordinal = "52"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f053"
+kind = "header"
+producer_key = "m840.locales.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 301
+ordinal = "53"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f054"
+kind = "header"
+producer_key = "m840.locales.sg_tabla"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 302
+ordinal = "54"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f055"
+kind = "header"
+producer_key = "m840.locales.nombre_via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 303
+ordinal = "55"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f056"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 304
+ordinal = "56"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f057"
+kind = "header"
+producer_key = "m840.locales.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 305
+ordinal = "57"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f058"
+kind = "header"
+producer_key = "m840.locales.km"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 306
+ordinal = "58"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f059"
+kind = "header"
+producer_key = "m840.locales.escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 307
+ordinal = "59"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f060"
+kind = "header"
+producer_key = "m840.locales.piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 308
+ordinal = "60"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f061"
+kind = "header"
+producer_key = "m840.locales.puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 309
+ordinal = "61"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f062"
+kind = "header"
+producer_key = "m840.locales.codigo_postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 310
+ordinal = "62"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f063"
+kind = "header"
+producer_key = "m840.locales.provincia_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 311
+ordinal = "63"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f064"
+kind = "header"
+producer_key = "m840.locales.municipio_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 312
+ordinal = "64"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f065"
+kind = "header"
+producer_key = "m840.locales.municipio_nombre"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 313
+ordinal = "65"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f066"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 314
+ordinal = "66"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f067"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 315
+ordinal = "67"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f068"
+kind = "header"
+producer_key = "m840.locales.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 316
+ordinal = "68"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f069"
+kind = "header"
+producer_key = "m840.locales.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 317
+ordinal = "69"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f070"
+kind = "header"
+producer_key = "m840.locales.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 318
+ordinal = "70"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f071"
+kind = "header"
+producer_key = "m840.locales.sg_tabla"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 319
+ordinal = "71"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f072"
+kind = "header"
+producer_key = "m840.locales.nombre_via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 320
+ordinal = "72"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f073"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 321
+ordinal = "73"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f074"
+kind = "header"
+producer_key = "m840.locales.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 322
+ordinal = "74"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f075"
+kind = "header"
+producer_key = "m840.locales.km"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 323
+ordinal = "75"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f076"
+kind = "header"
+producer_key = "m840.locales.escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 327
+ordinal = "76"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f077"
+kind = "header"
+producer_key = "m840.locales.piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 328
+ordinal = "77"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f078"
+kind = "header"
+producer_key = "m840.locales.puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 329
+ordinal = "78"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f079"
+kind = "header"
+producer_key = "m840.locales.codigo_postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 330
+ordinal = "79"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f080"
+kind = "header"
+producer_key = "m840.locales.provincia_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 331
+ordinal = "80"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f081"
+kind = "header"
+producer_key = "m840.locales.municipio_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 332
+ordinal = "81"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f082"
+kind = "header"
+producer_key = "m840.locales.municipio_nombre"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 333
+ordinal = "82"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f083"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 334
+ordinal = "83"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f084"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 335
+ordinal = "84"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f085"
+kind = "header"
+producer_key = "m840.locales.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 336
+ordinal = "85"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f086"
+kind = "header"
+producer_key = "m840.locales.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 337
+ordinal = "86"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f087"
+kind = "header"
+producer_key = "m840.locales.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 338
+ordinal = "87"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f088"
+kind = "header"
+producer_key = "m840.locales.sg_tabla"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 339
+ordinal = "88"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f089"
+kind = "header"
+producer_key = "m840.locales.nombre_via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 340
+ordinal = "89"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f090"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 341
+ordinal = "90"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f091"
+kind = "header"
+producer_key = "m840.locales.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 342
+ordinal = "91"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f092"
+kind = "header"
+producer_key = "m840.locales.km"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 343
+ordinal = "92"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f093"
+kind = "header"
+producer_key = "m840.locales.escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 344
+ordinal = "93"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f094"
+kind = "header"
+producer_key = "m840.locales.piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 345
+ordinal = "94"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f095"
+kind = "header"
+producer_key = "m840.locales.puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 346
+ordinal = "95"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f096"
+kind = "header"
+producer_key = "m840.locales.codigo_postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 347
+ordinal = "96"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f097"
+kind = "header"
+producer_key = "m840.locales.provincia_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 348
+ordinal = "97"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f098"
+kind = "header"
+producer_key = "m840.locales.municipio_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 349
+ordinal = "98"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f099"
+kind = "header"
+producer_key = "m840.locales.municipio_nombre"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 350
+ordinal = "99"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f100"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 351
+ordinal = "100"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f101"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 352
+ordinal = "101"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f102"
+kind = "header"
+producer_key = "m840.locales.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 353
+ordinal = "102"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f103"
+kind = "header"
+producer_key = "m840.locales.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 354
+ordinal = "103"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f104"
+kind = "header"
+producer_key = "m840.locales.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 355
+ordinal = "104"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f105"
+kind = "header"
+producer_key = "m840.locales.sg_tabla"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 356
+ordinal = "105"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f106"
+kind = "header"
+producer_key = "m840.locales.nombre_via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 357
+ordinal = "106"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f107"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 358
+ordinal = "107"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f108"
+kind = "header"
+producer_key = "m840.locales.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 359
+ordinal = "108"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f109"
+kind = "header"
+producer_key = "m840.locales.km"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 360
+ordinal = "109"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f110"
+kind = "header"
+producer_key = "m840.locales.escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 361
+ordinal = "110"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f111"
+kind = "header"
+producer_key = "m840.locales.piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 362
+ordinal = "111"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f112"
+kind = "header"
+producer_key = "m840.locales.puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 363
+ordinal = "112"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f113"
+kind = "header"
+producer_key = "m840.locales.codigo_postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 364
+ordinal = "113"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f114"
+kind = "header"
+producer_key = "m840.locales.provincia_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 365
+ordinal = "114"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f115"
+kind = "header"
+producer_key = "m840.locales.municipio_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 366
+ordinal = "115"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f116"
+kind = "header"
+producer_key = "m840.locales.municipio_nombre"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 370
+ordinal = "116"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f117"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 371
+ordinal = "117"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f118"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 372
+ordinal = "118"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f119"
+kind = "header"
+producer_key = "m840.locales.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 373
+ordinal = "119"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f120"
+kind = "header"
+producer_key = "m840.locales.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 374
+ordinal = "120"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f121"
+kind = "header"
+producer_key = "m840.locales.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 375
+ordinal = "121"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f122"
+kind = "header"
+producer_key = "m840.locales.sg_tabla"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 376
+ordinal = "122"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f123"
+kind = "header"
+producer_key = "m840.locales.nombre_via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 377
+ordinal = "123"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f124"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 378
+ordinal = "124"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f125"
+kind = "header"
+producer_key = "m840.locales.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 379
+ordinal = "125"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f126"
+kind = "header"
+producer_key = "m840.locales.km"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 380
+ordinal = "126"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f127"
+kind = "header"
+producer_key = "m840.locales.escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 381
+ordinal = "127"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f128"
+kind = "header"
+producer_key = "m840.locales.piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 382
+ordinal = "128"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f129"
+kind = "header"
+producer_key = "m840.locales.puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 383
+ordinal = "129"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f130"
+kind = "header"
+producer_key = "m840.locales.codigo_postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 384
+ordinal = "130"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f131"
+kind = "header"
+producer_key = "m840.locales.provincia_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 385
+ordinal = "131"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f132"
+kind = "header"
+producer_key = "m840.locales.municipio_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 386
+ordinal = "132"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f133"
+kind = "header"
+producer_key = "m840.locales.municipio_nombre"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 387
+ordinal = "133"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f134"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 388
+ordinal = "134"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f135"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 389
+ordinal = "135"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f136"
+kind = "header"
+producer_key = "m840.locales.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 390
+ordinal = "136"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f137"
+kind = "header"
+producer_key = "m840.locales.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 391
+ordinal = "137"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f138"
+kind = "header"
+producer_key = "m840.locales.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 392
+ordinal = "138"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f139"
+kind = "header"
+producer_key = "m840.locales.sg_tabla"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 393
+ordinal = "139"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f140"
+kind = "header"
+producer_key = "m840.locales.nombre_via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 394
+ordinal = "140"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f141"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 395
+ordinal = "141"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f142"
+kind = "header"
+producer_key = "m840.locales.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 396
+ordinal = "142"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f143"
+kind = "header"
+producer_key = "m840.locales.km"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 397
+ordinal = "143"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f144"
+kind = "header"
+producer_key = "m840.locales.escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 398
+ordinal = "144"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f145"
+kind = "header"
+producer_key = "m840.locales.piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 399
+ordinal = "145"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f146"
+kind = "header"
+producer_key = "m840.locales.puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 400
+ordinal = "146"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f147"
+kind = "header"
+producer_key = "m840.locales.codigo_postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 401
+ordinal = "147"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f148"
+kind = "header"
+producer_key = "m840.locales.provincia_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 402
+ordinal = "148"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f149"
+kind = "header"
+producer_key = "m840.locales.municipio_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 403
+ordinal = "149"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f150"
+kind = "header"
+producer_key = "m840.locales.municipio_nombre"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 404
+ordinal = "150"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f151"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 405
+ordinal = "151"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f152"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 406
+ordinal = "152"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f153"
+kind = "header"
+producer_key = "m840.locales.total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 407
+ordinal = "153"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f154"
+kind = "header"
+producer_key = "m840.locales.rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 408
+ordinal = "154"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f155"
+kind = "header"
+producer_key = "m840.locales.computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 409
+ordinal = "155"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f156"
+kind = "casilla"
+casilla_id = "elem-trib.provincial-nacional-total"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 413
+ordinal = "156"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f157"
+kind = "casilla"
+casilla_id = "elem-trib.provincial-nacional-rectificada"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 414
+ordinal = "157"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f158"
+kind = "casilla"
+casilla_id = "elem-trib.provincial-nacional-computable"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 415
+ordinal = "158"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f159"
+kind = "casilla"
+casilla_id = "notificacion.lugar"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 416
+ordinal = "159"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f160"
+kind = "casilla"
+casilla_id = "notificacion.lugar"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 417
+ordinal = "160"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f161"
+kind = "casilla"
+casilla_id = "notificacion.lugar"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 418
+ordinal = "161"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f162"
+kind = "casilla"
+casilla_id = "notificacion.lugar"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 419
+ordinal = "162"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f163"
+kind = "casilla"
+casilla_id = "notificacion.lugar"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 420
+ordinal = "163"
+record_identity = "Anexo"
+
+[[entries]]
+export_field_id = "m840-2003.anexo.f164"
+kind = "literal"
+literal = "</T840030>"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Anexo"
+source_row = 421
+ordinal = "164"
+record_identity = "Anexo"

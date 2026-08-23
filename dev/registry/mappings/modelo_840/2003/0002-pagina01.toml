@@ -1,0 +1,1261 @@
+schema_version = 1
+fragment_id = "pagina01"
+modelo = "840"
+design_epoch = "2003"
+source_ref = "aeat-dr-840"
+source_sha256 = "d0348a78787db7eb767dd8093ea84773c248c0b92bcefb512972573aff34391a"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f001"
+kind = "literal"
+literal = "<T840010>"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 6
+ordinal = "1"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f002"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 7
+ordinal = "2"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f003"
+kind = "header"
+producer_key = "m840.delegacion_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 8
+ordinal = "3"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f004"
+kind = "header"
+producer_key = "m840.administracion_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 9
+ordinal = "4"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f005"
+kind = "casilla"
+casilla_id = "sujeto.nif"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 10
+ordinal = "5"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f006"
+kind = "casilla"
+casilla_id = "sujeto.apellidos-razon-social"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 11
+ordinal = "6"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f007"
+kind = "casilla"
+casilla_id = "sujeto.domicilio-sigla-via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 12
+ordinal = "7"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f008"
+kind = "casilla"
+casilla_id = "sujeto.domicilio-via-publica"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 13
+ordinal = "8"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f009"
+kind = "casilla"
+casilla_id = "sujeto.domicilio-numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 14
+ordinal = "9"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f010"
+kind = "casilla"
+casilla_id = "sujeto.domicilio-kilometro"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 15
+ordinal = "10"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f011"
+kind = "casilla"
+casilla_id = "sujeto.domicilio-escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 16
+ordinal = "11"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f012"
+kind = "casilla"
+casilla_id = "sujeto.domicilio-piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 17
+ordinal = "12"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f013"
+kind = "casilla"
+casilla_id = "sujeto.domicilio-puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 18
+ordinal = "13"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f014"
+kind = "casilla"
+casilla_id = "sujeto.domicilio-provincia"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 19
+ordinal = "14"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f015"
+kind = "casilla"
+casilla_id = "sujeto.domicilio-municipio"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 20
+ordinal = "15"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f016"
+kind = "header"
+producer_key = "m840.sujeto_pasivo.municipio"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 21
+ordinal = "16"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f017"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 22
+ordinal = "17"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f018"
+kind = "casilla"
+casilla_id = "sujeto.domicilio-codigo-postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 23
+ordinal = "18"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f019"
+kind = "casilla"
+casilla_id = "sujeto.telefono-contacto"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 24
+ordinal = "19"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f020"
+kind = "casilla"
+casilla_id = "decl.ejercicio"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 25
+ordinal = "20"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f021"
+kind = "casilla"
+casilla_id = "decl.tipo-declaracion"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 26
+ordinal = "21"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f022"
+kind = "casilla"
+casilla_id = "decl.numero-referencia"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 27
+ordinal = "22"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f023"
+kind = "casilla"
+casilla_id = "representante.nif"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 28
+ordinal = "23"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f024"
+kind = "casilla"
+casilla_id = "representante.apellidos-razon-social"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 29
+ordinal = "24"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f025"
+kind = "casilla"
+casilla_id = "representante.domicilio-sigla-via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 30
+ordinal = "25"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f026"
+kind = "casilla"
+casilla_id = "representante.domicilio-via-publica"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 31
+ordinal = "26"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f027"
+kind = "casilla"
+casilla_id = "representante.domicilio-codigo-via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 32
+ordinal = "27"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f028"
+kind = "casilla"
+casilla_id = "representante.domicilio-numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 33
+ordinal = "28"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f029"
+kind = "casilla"
+casilla_id = "representante.domicilio-kilometro"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 34
+ordinal = "29"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f030"
+kind = "casilla"
+casilla_id = "representante.domicilio-escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 35
+ordinal = "30"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f031"
+kind = "casilla"
+casilla_id = "representante.domicilio-piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 36
+ordinal = "31"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f032"
+kind = "casilla"
+casilla_id = "representante.domicilio-puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 37
+ordinal = "32"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f033"
+kind = "casilla"
+casilla_id = "representante.telefono"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 38
+ordinal = "33"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f034"
+kind = "casilla"
+casilla_id = "representante.domicilio-codigo-postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 39
+ordinal = "34"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f035"
+kind = "casilla"
+casilla_id = "representante.domicilio-provincia"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 40
+ordinal = "35"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f036"
+kind = "casilla"
+casilla_id = "representante.domicilio-municipio"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 44
+ordinal = "36"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f037"
+kind = "header"
+producer_key = "m840.representante.municipio"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 45
+ordinal = "37"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f038"
+kind = "casilla"
+casilla_id = "representante.domicilio-codigo-municipio"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 46
+ordinal = "38"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f039"
+kind = "casilla"
+casilla_id = "representante.domicilio-codigo-provincia"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 47
+ordinal = "39"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f040"
+kind = "casilla"
+casilla_id = "act.clase-cuota"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 48
+ordinal = "40"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f041"
+kind = "header"
+producer_key = "m840.actividad.provincia_codigo"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 49
+ordinal = "41"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f042"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 50
+ordinal = "42"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f043"
+kind = "casilla"
+casilla_id = "act.tipo-actividad"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 51
+ordinal = "43"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f044"
+kind = "casilla"
+casilla_id = "act.local-afecto-indirectamente"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 52
+ordinal = "44"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f045"
+kind = "casilla"
+casilla_id = "act.descripcion"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 53
+ordinal = "45"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f046"
+kind = "casilla"
+casilla_id = "act.grupo-epigrafe"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 54
+ordinal = "46"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f047"
+kind = "casilla"
+casilla_id = "act.provincia"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 55
+ordinal = "47"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f048"
+kind = "casilla"
+casilla_id = "act.municipio"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 56
+ordinal = "48"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f049"
+kind = "header"
+producer_key = "m840.actividad.municipio"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 57
+ordinal = "49"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f050"
+kind = "casilla"
+casilla_id = "act.codigo-municipio"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 58
+ordinal = "50"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f051"
+kind = "casilla"
+casilla_id = "act.codigo-provincia"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 59
+ordinal = "51"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f052"
+kind = "casilla"
+casilla_id = "act.domicilio-sigla-via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 60
+ordinal = "52"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f053"
+kind = "casilla"
+casilla_id = "act.domicilio-via-publica"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 61
+ordinal = "53"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f054"
+kind = "casilla"
+casilla_id = "act.domicilio-codigo-postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 62
+ordinal = "54"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f055"
+kind = "casilla"
+casilla_id = "act.domicilio-codigo-via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 63
+ordinal = "55"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f056"
+kind = "casilla"
+casilla_id = "act.domicilio-numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 64
+ordinal = "56"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f057"
+kind = "casilla"
+casilla_id = "act.domicilio-kilometro"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 65
+ordinal = "57"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f058"
+kind = "casilla"
+casilla_id = "act.domicilio-pto"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 66
+ordinal = "58"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f059"
+kind = "casilla"
+casilla_id = "act.domicilio-escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 67
+ordinal = "59"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f060"
+kind = "casilla"
+casilla_id = "act.domicilio-piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 68
+ordinal = "60"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f061"
+kind = "casilla"
+casilla_id = "act.domicilio-puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 69
+ordinal = "61"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f062"
+kind = "casilla"
+casilla_id = "act.domicilio-telefono"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 70
+ordinal = "62"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f063"
+kind = "casilla"
+casilla_id = "act.nota-agrupacion-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 71
+ordinal = "63"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f064"
+kind = "casilla"
+casilla_id = "act.nota-agrupacion-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 72
+ordinal = "64"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f065"
+kind = "casilla"
+casilla_id = "act.nota-agrupacion-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 73
+ordinal = "65"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f066"
+kind = "casilla"
+casilla_id = "act.nota-grupo-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 74
+ordinal = "66"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f067"
+kind = "casilla"
+casilla_id = "act.nota-grupo-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 75
+ordinal = "67"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f068"
+kind = "casilla"
+casilla_id = "act.nota-grupo-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 76
+ordinal = "68"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f069"
+kind = "casilla"
+casilla_id = "act.nota-epigrafe-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 77
+ordinal = "69"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f070"
+kind = "casilla"
+casilla_id = "act.nota-epigrafe-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 78
+ordinal = "70"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f071"
+kind = "casilla"
+casilla_id = "act.nota-epigrafe-1"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 79
+ordinal = "71"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f072"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 80
+ordinal = "72"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f073"
+kind = "filler"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 81
+ordinal = "73"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f074"
+kind = "casilla"
+casilla_id = "act.regla-4-2-f"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 82
+ordinal = "74"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f075"
+kind = "casilla"
+casilla_id = "act.seccion"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 83
+ordinal = "75"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f076"
+kind = "casilla"
+casilla_id = "act.actividad-principal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 87
+ordinal = "76"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f077"
+kind = "casilla"
+casilla_id = "act.exencion"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 88
+ordinal = "77"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f078"
+kind = "casilla"
+casilla_id = "act.bonificacion"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 89
+ordinal = "78"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f079"
+kind = "casilla"
+casilla_id = "act.fecha-inicio-variacion-cese"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 90
+ordinal = "79"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f080"
+kind = "casilla"
+casilla_id = "act.fecha-inicio-variacion-cese"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 91
+ordinal = "80"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f081"
+kind = "casilla"
+casilla_id = "act.fecha-inicio-variacion-cese"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 92
+ordinal = "81"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f082"
+kind = "casilla"
+casilla_id = "act.causa-baja"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 93
+ordinal = "82"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f083"
+kind = "casilla"
+casilla_id = "act.causa-baja"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 94
+ordinal = "83"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f084"
+kind = "casilla"
+casilla_id = "act.causa-declaracion-complementaria"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 95
+ordinal = "84"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f085"
+kind = "casilla"
+casilla_id = "act.ano-inicio-primera-vez"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 96
+ordinal = "85"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f086"
+kind = "casilla"
+casilla_id = "act.informacion-adicional"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 97
+ordinal = "86"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f087"
+kind = "casilla"
+casilla_id = "act.numero-referencia"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 98
+ordinal = "87"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f088"
+kind = "casilla"
+casilla_id = "local-indirecto.uso-destino"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 99
+ordinal = "88"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f089"
+kind = "casilla"
+casilla_id = "local-indirecto.codigo-postal"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 100
+ordinal = "89"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f090"
+kind = "casilla"
+casilla_id = "local-indirecto.provincia"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 101
+ordinal = "90"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f091"
+kind = "casilla"
+casilla_id = "local-indirecto.municipio"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 102
+ordinal = "91"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f092"
+kind = "header"
+producer_key = "m840.local_indirecto.municipio"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 103
+ordinal = "92"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f093"
+kind = "casilla"
+casilla_id = "local-indirecto.codigo-municipio"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 104
+ordinal = "93"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f094"
+kind = "casilla"
+casilla_id = "local-indirecto.codigo-provincia"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 105
+ordinal = "94"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f095"
+kind = "casilla"
+casilla_id = "local-indirecto.sigla-via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 106
+ordinal = "95"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f096"
+kind = "casilla"
+casilla_id = "local-indirecto.via-publica"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 107
+ordinal = "96"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f097"
+kind = "casilla"
+casilla_id = "local-indirecto.codigo-via"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 108
+ordinal = "97"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f098"
+kind = "casilla"
+casilla_id = "local-indirecto.numero"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 109
+ordinal = "98"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f099"
+kind = "casilla"
+casilla_id = "local-indirecto.kilometro"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 110
+ordinal = "99"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f100"
+kind = "casilla"
+casilla_id = "local-indirecto.pto"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 111
+ordinal = "100"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f101"
+kind = "casilla"
+casilla_id = "local-indirecto.escalera"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 112
+ordinal = "101"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f102"
+kind = "casilla"
+casilla_id = "local-indirecto.piso"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 113
+ordinal = "102"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f103"
+kind = "casilla"
+casilla_id = "local-indirecto.puerta"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 114
+ordinal = "103"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f104"
+kind = "casilla"
+casilla_id = "local-indirecto.telefono"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 115
+ordinal = "104"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m840-2003.pagina01.f105"
+kind = "literal"
+literal = "</T840010>"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 116
+ordinal = "105"
+record_identity = "Pág. 1"
