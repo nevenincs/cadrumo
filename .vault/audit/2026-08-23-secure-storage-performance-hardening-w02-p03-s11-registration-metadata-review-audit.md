@@ -5,29 +5,10 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:29badc5d5e4cd418b50db725e703ba80d6099697e1a8f6e96c9b0efe0f61567a'
+body_hash: 'sha256:446355fc210a46b6bfe2c2645fba4b56f18fecdf58aab129cc03c4ef700951ce'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace secure-storage-performance-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `secure-storage-performance-hardening` audit: `W02.P03.S11 registration metadata review`
 
@@ -60,6 +41,12 @@ callable. S11 therefore does not yet preserve the existing exact-set consumer
 contract or provide one coherent meaning for the public schema-reference
 projection.
 
+Resolution: closed in the reviewed tree. `command_schema_refs()` now projects
+only rows with a live CLI path, while the complete registration projection and
+generation parity retain all 300 result-schema identities and exact-gate the
+four stated gaps. The focused live operator-surface/MCP reconciliation and the
+broader S11 integration lane pass with 296 callable identities.
+
 ### unresolved-prefix-evidence | medium | Metadata lookup drops the successfully resolved command prefix
 
 `test_unresolved_leaf_retains_key_and_click_path_evidence` fails for
@@ -70,6 +57,11 @@ identity. The complete generated node projection already contains sufficient
 path information to derive the longest recognized prefix without importing a
 handler subtree, so losing this evidence is not required by metadata-only
 discovery.
+
+Resolution: closed in the reviewed tree. Unknown identities now derive the
+longest recognized prefix from the complete generated live-node projection and
+name the first unresolved token. The existing `app.not-a-real-command` evidence
+test passes without materializing a handler subtree.
 
 ## Recommendations
 
@@ -83,3 +75,9 @@ Resolve `unresolved-prefix-evidence` by deriving the longest known CLI prefix
 from the generated complete-node projection and retaining it in
 `VerbLeafResolutionFailure`; prove the unknown nested-key case remains
 metadata-only.
+
+Both recommendations are implemented and verified. Final review finds no open
+S11 findings. The scoped Ruff and `ty` gates pass; 36 focused integration tests
+and 14 command-schema unit tests pass. A real wheel build contains exactly one
+`command_registration_metadata.v1.json` resource (1,932,220 bytes), confirming
+the generated runtime projection is packaged.
