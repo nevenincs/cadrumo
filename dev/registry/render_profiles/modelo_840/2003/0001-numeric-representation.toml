@@ -41,34 +41,6 @@ rule_kind = "singleton_numeric"
 aeat_type = "Num"
 semantic_kind = "digit_string"
 value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Pág. 1"
-source_row = 22
-ordinal = "17"
-record_identity = "Pág. 1"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-p-g-1-17"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado Apart. I: Datos ident. del sujeto pasivo. Cod. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Pág. 1"
-source_row = 22
-ordinal = "17"
-record_identity = "Pág. 1"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
 integer_digits = 5
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -230,62 +202,6 @@ justification = "Read from the design text 'Apart. III: Representante. Cód. Pos
 sheet = "Pág. 1"
 source_row = 39
 ordinal = "34"
-record_identity = "Pág. 1"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Pág. 1"
-source_row = 46
-ordinal = "38"
-record_identity = "Pág. 1"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-p-g-1-38"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado. Apart. III: Representante. C. Mun. [30]': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Pág. 1"
-source_row = 46
-ordinal = "38"
-record_identity = "Pág. 1"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Pág. 1"
-source_row = 58
-ordinal = "50"
-record_identity = "Pág. 1"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-p-g-1-50"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado. Apart. IV: Datos de la act. C. Mun. [39]': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Pág. 1"
-source_row = 58
-ordinal = "50"
 record_identity = "Pág. 1"
 
 [[singleton_rules]]
@@ -538,34 +454,6 @@ justification = "Read from the design text 'Apart. V: Local afecto indirectament
 sheet = "Pág. 1"
 source_row = 100
 ordinal = "89"
-record_identity = "Pág. 1"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Pág. 1"
-source_row = 104
-ordinal = "93"
-record_identity = "Pág. 1"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-p-g-1-93"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado. Apart. V: Local afecto indirectamente a la act. C. Mun. [71]': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Pág. 1"
-source_row = 104
-ordinal = "93"
 record_identity = "Pág. 1"
 
 [[singleton_rules]]
@@ -2139,34 +2027,6 @@ record_identity = "Anexo"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Anexo"
-source_row = 260
-ordinal = "15"
-record_identity = "Anexo"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-anexo-15"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Anexo"
-source_row = 260
-ordinal = "15"
-record_identity = "Anexo"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
 semantic_kind = "integer"
 value_policy = "unsigned-integer"
 integer_digits = 5
@@ -2302,34 +2162,6 @@ justification = "Read from the design text 'Apartado II: Relación de locales. C
 sheet = "Anexo"
 source_row = 273
 ordinal = "28"
-record_identity = "Anexo"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Anexo"
-source_row = 277
-ordinal = "32"
-record_identity = "Anexo"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-anexo-32"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Anexo"
-source_row = 277
-ordinal = "32"
 record_identity = "Anexo"
 
 [[singleton_rules]]
@@ -2475,34 +2307,6 @@ record_identity = "Anexo"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Anexo"
-source_row = 297
-ordinal = "49"
-record_identity = "Anexo"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-anexo-49"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Anexo"
-source_row = 297
-ordinal = "49"
-record_identity = "Anexo"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
 semantic_kind = "integer"
 value_policy = "unsigned-integer"
 integer_digits = 5
@@ -2638,34 +2442,6 @@ justification = "Read from the design text 'Apartado II: Relación de locales. C
 sheet = "Anexo"
 source_row = 310
 ordinal = "62"
-record_identity = "Anexo"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Anexo"
-source_row = 314
-ordinal = "66"
-record_identity = "Anexo"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-anexo-66"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Anexo"
-source_row = 314
-ordinal = "66"
 record_identity = "Anexo"
 
 [[singleton_rules]]
@@ -2811,34 +2587,6 @@ record_identity = "Anexo"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Anexo"
-source_row = 334
-ordinal = "83"
-record_identity = "Anexo"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-anexo-83"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Anexo"
-source_row = 334
-ordinal = "83"
-record_identity = "Anexo"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
 semantic_kind = "integer"
 value_policy = "unsigned-integer"
 integer_digits = 5
@@ -2974,34 +2722,6 @@ justification = "Read from the design text 'Apartado II: Relación de locales. C
 sheet = "Anexo"
 source_row = 347
 ordinal = "96"
-record_identity = "Anexo"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Anexo"
-source_row = 351
-ordinal = "100"
-record_identity = "Anexo"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-anexo-100"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Anexo"
-source_row = 351
-ordinal = "100"
 record_identity = "Anexo"
 
 [[singleton_rules]]
@@ -3147,34 +2867,6 @@ record_identity = "Anexo"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Anexo"
-source_row = 371
-ordinal = "117"
-record_identity = "Anexo"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-anexo-117"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Anexo"
-source_row = 371
-ordinal = "117"
-record_identity = "Anexo"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
 semantic_kind = "integer"
 value_policy = "unsigned-integer"
 integer_digits = 5
@@ -3315,34 +3007,6 @@ record_identity = "Anexo"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Anexo"
-source_row = 388
-ordinal = "134"
-record_identity = "Anexo"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-anexo-134"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Anexo"
-source_row = 388
-ordinal = "134"
-record_identity = "Anexo"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
 semantic_kind = "integer"
 value_policy = "unsigned-integer"
 integer_digits = 5
@@ -3478,34 +3142,6 @@ justification = "Read from the design text 'Apartado II: Relación de locales. C
 sheet = "Anexo"
 source_row = 401
 ordinal = "147"
-record_identity = "Anexo"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 6
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Anexo"
-source_row = 405
-ordinal = "151"
-record_identity = "Anexo"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-anexo-151"
-decision_statement = "6 position(s) rendered as digit string."
-justification = "Read from the design text 'Reservado. Apartado II: Relación de locales. C. Mun.': an administrative code or street number: positional digits, never summed, leading zeros significant."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Anexo"
-source_row = 405
-ordinal = "151"
 record_identity = "Anexo"
 
 [[singleton_rules]]
@@ -3674,88 +3310,4 @@ justification = "Read from the design text 'Apartado II: Relación de locales. S
 sheet = "Anexo"
 source_row = 415
 ordinal = "158"
-record_identity = "Anexo"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "day_dd"
-value_policy = "two-digit-day"
-integer_digits = 2
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Anexo"
-source_row = 417
-ordinal = "160"
-record_identity = "Anexo"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-anexo-160"
-decision_statement = "2 position(s) rendered as day dd."
-justification = "Read from the design text 'Reservado. Día [109]': the design names the field Día, a two-position day-of-month component."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Anexo"
-source_row = 417
-ordinal = "160"
-record_identity = "Anexo"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "month_mm"
-value_policy = "two-digit-month"
-integer_digits = 2
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Anexo"
-source_row = 418
-ordinal = "161"
-record_identity = "Anexo"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-anexo-161"
-decision_statement = "2 position(s) rendered as month mm."
-justification = "Read from the design text 'Reservado. Mes [109]': the design names the field Mes, a two-position month component."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Anexo"
-source_row = 418
-ordinal = "161"
-record_identity = "Anexo"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "year_yyyy"
-value_policy = "four-digit-year"
-integer_digits = 4
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Anexo"
-source_row = 419
-ordinal = "162"
-record_identity = "Anexo"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m840-anexo-162"
-decision_statement = "4 position(s) rendered as year yyyy."
-justification = "Read from the design text 'Reservado. Año [109]': the design names the field an ejercicio/año, written as four digits."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Anexo"
-source_row = 419
-ordinal = "162"
 record_identity = "Anexo"

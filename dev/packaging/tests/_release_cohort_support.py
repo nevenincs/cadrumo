@@ -60,7 +60,21 @@ DEFAULT_COHORT_CREATED_AT = datetime(2026, 1, 1, tzinfo=UTC)
 def _real_product_wheels() -> dict[str, Path]:
     """Build real wheel artifacts once; never counterfeit them from installed files."""
     output = Path(tempfile.mkdtemp(prefix="cadrumo-real-cohort-wheels-"))
-    commands = (("cadrumo-wheel", ["uv", "build", "--wheel", "--out-dir", str(output)]),)
+    commands = (
+        ("cadrumo-wheel", ["uv", "build", "--wheel", "--out-dir", str(output)]),
+        (
+            "cadrumo-harness-wheel",
+            [
+                "uv",
+                "build",
+                "--wheel",
+                "--project",
+                str(REPO_ROOT / "src" / "cadrumo-harness"),
+                "--out-dir",
+                str(output),
+            ],
+        ),
+    )
     result: dict[str, Path] = {}
     for name, argv in commands:
         completed = subprocess.run(  # noqa: S603 - fixed uv build argv over repository-owned paths.
@@ -72,7 +86,7 @@ def _real_product_wheels() -> dict[str, Path]:
         )
         if completed.returncode != 0:
             raise RuntimeError(f"real wheel fixture build failed: {completed.stderr}")
-        pattern = "cadrumo-*.whl"
+        pattern = "cadrumo_harness-*.whl" if "harness" in name else "cadrumo-*.whl"
         candidates = tuple(output.glob(pattern))
         if len(candidates) != 1:
             raise RuntimeError(f"real wheel fixture expected one {pattern}: {candidates!r}")
@@ -100,11 +114,15 @@ def release_cohort(
     for index, (name, kind) in enumerate(sorted(REQUIRED_ARTIFACT_KINDS.items())):
         path = root / "artifacts" / f"{name}.bin"
         path.parent.mkdir(exist_ok=True)
-        if name == "cadrumo-wheel":
+        if name in {"cadrumo-wheel", "cadrumo-harness-wheel"}:
             shutil.copy2(_real_product_wheels()[name], path)
             if payload_suffix:
+                package = "cadrumo" if name == "cadrumo-wheel" else "cadrumo_harness"
                 with zipfile.ZipFile(path, "a") as archive:
-                    archive.writestr("cadrumo/_foreign_cohort_plant.py", payload_suffix)
+                    archive.writestr(f"{package}/_foreign_cohort_plant.py", payload_suffix)
+        elif name == "mcpb":
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.write(REPO_ROOT / "pyproject.toml", "pyproject.toml")
         else:
             path.write_bytes(f"{index}:{name}:{payload_suffix}\n".encode())
         artifacts.append((name, kind, path))
