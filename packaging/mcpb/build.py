@@ -43,9 +43,8 @@ _DISTRIBUTIONS: Final[tuple[str, str, str, str]] = (
     "cadrumo-data-manuals",
     "cadrumo-data-official",
 )
-#: The MCP server ships in the sibling ``cadrumo-harness`` distribution, which is
-#: versioned independently of the command/data cohort, so the bundle reads its
-#: version from its own project rather than reusing ``cohort.version``.
+#: The MCP server ships in the cohort's independently versioned
+#: ``cadrumo-harness`` member, so the bundle reads that member's own version.
 _HARNESS_DISTRIBUTION: Final[str] = "cadrumo-harness"
 _MCP_LAUNCHER: Final[str] = "uv"
 _CONSOLE_SCRIPT: Final[str] = "cadrumo-mcp"

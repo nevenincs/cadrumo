@@ -30,7 +30,7 @@ _GENERATOR = _REPO_ROOT / "packaging" / "scoop" / "generate.py"
 
 @dataclass(frozen=True)
 class BuiltCohort:
-    """One real three-wheel cohort shared by Scoop generator tests."""
+    """One real closed-world cohort shared by Scoop generator tests."""
 
     directory: Path
     root: Path
