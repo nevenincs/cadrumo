@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
 
 import typer
 
@@ -13,10 +12,14 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...application.modelo import build_modelo_work_review
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...domain.modelos import WorkUnit
-from ._command_policy import command_execution_policy
-from ._common import _emit_envelope  # pyright: ignore[reportPrivateUsage]
-from ._modelo_execution_policies import MODEL_READ
+from ._common import (
+    _emit_envelope,  # pyright: ignore[reportPrivateUsage]
+    activate_subcommand_output_language,
+)
+from ._modelo_behavior_support import (
+    require_active_profile,
+    resolve_work_unit_for_cli,
+)
 from ._modelo_payloads import WorkReviewResult
 from ._modelo_rendering import verification_findings_notices
 from ._modelo_work_options import (
@@ -64,65 +67,43 @@ def _review_lines(result: WorkReviewResult) -> list[str]:
     return lines
 
 
-def register_work_review_command(
-    work_app: typer.Typer,
-    *,
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
-    require_active_profile: Callable[[], None],
-    resolve_work_unit_for_cli: Callable[..., WorkUnit],
-) -> None:
-    """Register the read-only ``modelo work review`` command."""
-
-    @work_app.command(
-        "review",
-        help=tr("cli.app.modelo.work.review_help"),
-    )
-    @command_execution_policy(MODEL_READ)
-    def work_review(  # pyright: ignore[reportUnusedFunction]
-        ctx: typer.Context,
-        work_unit_id: _WorkUnitIdArg = None,
-        modelo: _ModeloOpt = None,
-        year: _YearOpt = None,
-        period: _PeriodOpt = None,
-        revision: _RevisionOpt = None,
-        bucket_id: _BucketIdOpt = None,
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """Emit the canonical application review for one persisted work target."""
-        activate_output_language(ctx, output_language)
-        require_active_profile()
-        unit = resolve_work_unit_for_cli(
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            revision=revision,
-            bucket_id=bucket_id,
-        )
-        work_repository = WorkUnitCatalogueRepository()
-        calculation_repository = CalculationRevisionCatalogueRepository()
-        review = build_modelo_work_review(
-            unit.bucket_id,
-            unit.modelo,
-            unit.filing_year,
-            unit.period,
-            work_unit_repository=work_repository,
-            calculation_repository=calculation_repository,
-            verification_repository=VerificationReportCatalogueRepository(),
-        )
-        result = WorkReviewResult(review=review)
-        _emit_envelope(
-            ctx,
-            command="modelo.work.review",
-            result=result,
-            lines=_review_lines(result),
-            notices=verification_findings_notices(review.findings),
-        )
-
-
 __all__ = ["register_work_review_command"]
+
+
+def work_review(
+    ctx: typer.Context,
+    work_unit_id: _WorkUnitIdArg = None,
+    modelo: _ModeloOpt = None,
+    year: _YearOpt = None,
+    period: _PeriodOpt = None,
+    revision: _RevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
+    output_language: OutputLanguage | None = typer.Option(
+        None, "--output-language", "--language", help=tr("cli.config.auth.output_language_help")
+    ),
+) -> None:
+    """Emit the canonical application review for one persisted work target."""
+    activate_subcommand_output_language(ctx, output_language)
+    require_active_profile()
+    unit = resolve_work_unit_for_cli(
+        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
+    )
+    work_repository = WorkUnitCatalogueRepository()
+    calculation_repository = CalculationRevisionCatalogueRepository()
+    review = build_modelo_work_review(
+        unit.bucket_id,
+        unit.modelo,
+        unit.filing_year,
+        unit.period,
+        work_unit_repository=work_repository,
+        calculation_repository=calculation_repository,
+        verification_repository=VerificationReportCatalogueRepository(),
+    )
+    result = WorkReviewResult(review=review)
+    _emit_envelope(
+        ctx,
+        command="modelo.work.review",
+        result=result,
+        lines=_review_lines(result),
+        notices=verification_findings_notices(review.findings),
+    )

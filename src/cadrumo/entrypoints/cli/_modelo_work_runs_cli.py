@@ -24,8 +24,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Annotated, NamedTuple
+from typing import NamedTuple
 
 import typer
 
@@ -42,20 +41,20 @@ from ...application.workflow import (
     resolve_modelo_workflow_resume_target,
     resume_modelo_workflow,
 )
-from ...core import Period
-from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import ResolvedPreconditionAction
 from ._action_rendering import resolved_precondition_action_json_cell
-from ._command_policy import command_execution_policy
-from ._common import _emit_envelope, resolve_cli_precondition_action
+from ._common import _emit_envelope, activate_subcommand_output_language, resolve_cli_precondition_action
+from ._modelo_behavior_support import (
+    resolve_optional_cli_period,
+)
 from ._modelo_cli_support import (
     OutputLanguageOpt,
+    bad_parameter_from_error,
     parse_revision_selector,
     validate_calculation_revision_id,
     validate_work_unit_id,
 )
-from ._modelo_execution_policies import MODEL_READ
 from ._modelo_payloads import WorkflowRunPayload, WorkResumeResult, WorkRunsResult
 from ._modelo_work_options import (
     _BucketIdOpt,
@@ -143,109 +142,6 @@ def _workflow_run_tab_line(run: WorkflowRunPayload) -> str:
     )
 
 
-def register_work_run_commands(
-    work_app: typer.Typer,
-    *,
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
-    resolve_optional_cli_period: Callable[..., Period | None],
-) -> None:
-    """Register workflow-run discovery and resume commands.
-
-    The command callbacks delegate business rules to the public workflow
-    application facade and keep CLI responsibilities limited to option parsing,
-    localization, and envelope emission.
-    """
-
-    @work_app.command(
-        "runs",
-        help=tr("cli.app.modelo.work.runs_help"),
-    )
-    @command_execution_policy(MODEL_READ)
-    def work_runs(
-        ctx: typer.Context,
-        output_language: OutputLanguageOpt = None,
-    ) -> None:
-        """List persisted :class:`WorkflowResult` rows."""
-        activate_output_language(ctx, output_language)
-        runs = list_runs()
-
-        run_payloads = [_workflow_run_payload(run) for run in runs]
-        result = WorkRunsResult(run_count=len(runs), runs=run_payloads)
-        lines = [
-            "operation\tmodelo.work.runs",
-            f"run_count\t{len(runs)}",
-            "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction",
-        ]
-        lines.extend(_workflow_run_tab_line(run) for run in run_payloads)
-        _emit_envelope(ctx, command="modelo.work.runs", result=result, lines=lines)
-
-    @work_app.command(
-        "resume",
-        help=tr("cli.app.modelo.work.resume_help"),
-    )
-    @command_execution_policy(MODEL_READ)
-    def work_resume(
-        ctx: typer.Context,
-        target: Annotated[
-            str | None,
-            typer.Argument(
-                help=tr("cli.app.modelo.work.resume_target_help"),
-            ),
-        ] = None,
-        modelo: _ModeloOpt = None,
-        year: _YearOpt = None,
-        period: _PeriodOpt = None,
-        revision: _RevisionOpt = None,
-        select: Annotated[
-            str | None,
-            typer.Option("--select", help=tr("cli.app.modelo.work.revision_selector_help")),
-        ] = None,
-        work_unit_id: _WorkUnitIdOpt = None,
-        calculation_revision_id: Annotated[
-            str | None,
-            typer.Option(
-                "--calculation-revision-id",
-                help=tr("cli.app.modelo.work.calculation_revision_id_help"),
-            ),
-        ] = None,
-        bucket_id: _BucketIdOpt = None,
-        output_language: OutputLanguageOpt = None,
-    ) -> None:
-        """Surface workflow-resume preconditions and resumable context.
-
-        The natural-key path, exact work-unit path, calculation-revision path,
-        and direct workflow-run path are normalized by
-        :func:`resolve_modelo_workflow_resume_target`
-        before :func:`resume_modelo_workflow` validates
-        that the selected run is actually resumable.
-        """
-        activate_output_language(ctx, output_language)
-
-        try:
-            typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
-            resolution = resolve_modelo_workflow_resume_target(
-                target=target,
-                work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
-                calculation_revision_id=(
-                    validate_calculation_revision_id(calculation_revision_id)
-                    if calculation_revision_id is not None
-                    else None
-                ),
-                modelo=modelo,
-                year=year,
-                period=typed_period,
-                registry_revision_id=revision,
-                bucket_id=bucket_id,
-                selector=parse_revision_selector(select) if select is not None else None,
-            )
-            result = resume_modelo_workflow(resolution.run_id)
-        except (WorkflowResumeRefusedError, WorkflowError) as exc:
-            raise bad_parameter_from_error(exc) from exc
-
-        _emit_work_resume(ctx, result=result, resolution=resolution)
-
-
 def _emit_work_resume(
     ctx: typer.Context,
     *,
@@ -294,3 +190,61 @@ def _emit_work_resume(
 
 
 __all__ = ["register_work_run_commands"]
+
+
+def work_runs(ctx: typer.Context, output_language: OutputLanguageOpt = None) -> None:
+    """List persisted :class:`WorkflowResult` rows."""
+    activate_subcommand_output_language(ctx, output_language)
+    runs = list_runs()
+    run_payloads = [_workflow_run_payload(run) for run in runs]
+    result = WorkRunsResult(run_count=len(runs), runs=run_payloads)
+    lines = [
+        "operation\tmodelo.work.runs",
+        f"run_count\t{len(runs)}",
+        "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction",
+    ]
+    lines.extend(_workflow_run_tab_line(run) for run in run_payloads)
+    _emit_envelope(ctx, command="modelo.work.runs", result=result, lines=lines)
+
+
+def work_resume(
+    ctx: typer.Context,
+    target: str | None = None,
+    modelo: _ModeloOpt = None,
+    year: _YearOpt = None,
+    period: _PeriodOpt = None,
+    revision: _RevisionOpt = None,
+    select: str | None = None,
+    work_unit_id: _WorkUnitIdOpt = None,
+    calculation_revision_id: str | None = None,
+    bucket_id: _BucketIdOpt = None,
+    output_language: OutputLanguageOpt = None,
+) -> None:
+    """Surface workflow-resume preconditions and resumable context.
+
+    The natural-key path, exact work-unit path, calculation-revision path,
+    and direct workflow-run path are normalized by
+    :func:`resolve_modelo_workflow_resume_target`
+    before :func:`resume_modelo_workflow` validates
+    that the selected run is actually resumable.
+    """
+    activate_subcommand_output_language(ctx, output_language)
+    try:
+        typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
+        resolution = resolve_modelo_workflow_resume_target(
+            target=target,
+            work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
+            calculation_revision_id=validate_calculation_revision_id(calculation_revision_id)
+            if calculation_revision_id is not None
+            else None,
+            modelo=modelo,
+            year=year,
+            period=typed_period,
+            registry_revision_id=revision,
+            bucket_id=bucket_id,
+            selector=parse_revision_selector(select) if select is not None else None,
+        )
+        result = resume_modelo_workflow(resolution.run_id)
+    except (WorkflowResumeRefusedError, WorkflowError) as exc:
+        raise bad_parameter_from_error(exc) from exc
+    _emit_work_resume(ctx, result=result, resolution=resolution)

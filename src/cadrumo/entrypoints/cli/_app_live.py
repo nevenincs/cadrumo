@@ -28,7 +28,7 @@ import subprocess
 from collections.abc import Awaitable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import typer
 
@@ -55,32 +55,15 @@ from ...application.live import (
     list_filed_data_bulk,
     pull_filed_history,
 )
-from ...application.operator_surface import FilingStatus
 from ...core import Period, PeriodError
 from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva_compensation import IvaCompensationDecisionReason
-from ._app_execution_policies import (
-    BROWSER_SUBPROCESS_LIVE_PROFILE_WRITE,
-    ENCRYPTED_READ,
-    LIVE_PROFILE_WRITE,
-    LIVE_READ,
-    declare_metadata_group,
-)
 from ._app_live_auth_preflight import _emit_live_auth_preflight
-from ._app_live_borrador_cli import borrador_100_app, borrador_app, register_borrador_commands
-from ._app_live_deudas_cli import register_deudas_commands
-from ._app_live_expedientes_cli import expedientes_app, register_expedientes_commands
-from ._app_live_justificante_cli import justificante_app, register_justificante_commands
-from ._app_live_notifications_cli import notifications_app, register_notifications_commands
-from ._app_live_portals_cli import portals_app, portals_list, portals_show, register_portals_commands
 from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_filed_capture_lines
-from ._app_live_verify_cli import register_verify_commands, verify_app
-from ._command_policy import command_execution_policy
 from ._common import (
     _emit_envelope,
-    active_bucket_id_or_refuse,
     notice_lines,
     resolve_optional_root,
     resolve_pull_year_range,
@@ -101,39 +84,6 @@ def _verify_expected(value: str | None) -> VerifyVerdict | None:
     if value == "unknown":
         return "unknown"
     raise typer.BadParameter(tr("cli.app.live.verify.expected_values_error"))
-
-
-app = typer.Typer(
-    name="live",
-    help=tr("cli.app.live.app_help"),
-    no_args_is_help=True,
-    add_completion=False,
-)
-filed_app = typer.Typer(
-    name=FilingStatus.FILED,
-    help=tr("cli.app.live.filed_app_help"),
-    no_args_is_help=True,
-    add_completion=False,
-)
-app.add_typer(filed_app, name=FilingStatus.FILED)
-
-iva_wallet_app = typer.Typer(
-    name="iva-wallet",
-    help=tr(
-        "cli.app.live.iva_wallet.app_help",
-        default=(
-            "AEAT IVA compensation wallet capture (read-only; allows only own-name representation and "
-            "the guarded wallet read query)."
-        ),
-    ),
-    no_args_is_help=True,
-    add_completion=False,
-)
-
-declare_metadata_group(app)
-declare_metadata_group(filed_app)
-declare_metadata_group(iva_wallet_app)
-app.add_typer(iva_wallet_app, name="iva-wallet")
 
 
 def _live_period_option(period: str | None, *, year: int) -> Period | None:
@@ -200,33 +150,11 @@ _IVA_WALLET_LIVE_SAFETY_LINES = (
 )
 
 
-@iva_wallet_app.command(
-    "pull",
-    help=tr(
-        "cli.app.live.iva_wallet.pull_help",
-        default=(
-            "Live-fetch and persist AEAT's IVA compensation wallet. The only AEAT form action allowed is "
-            "the guarded wallet read query; representation gates only continue in own-name mode."
-        ),
-    ),
-)
 def iva_wallet_pull_cmd(
     ctx: typer.Context,
-    year: Annotated[
-        int,
-        typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help")),
-    ],
-    period: Annotated[str, typer.Option("--period", help=tr("cli.app.live.period_help"))],
-    taxpayer_nif: Annotated[
-        str | None,
-        typer.Option(
-            "--taxpayer-nif",
-            help=tr(
-                "cli.app.live.iva_wallet.taxpayer_nif_help",
-                default="Taxpayer NIF; defaults to authenticated identity.",
-            ),
-        ),
-    ] = None,
+    year: int,
+    period: str,
+    taxpayer_nif: str | None = None,
 ) -> None:
     """Pull the authenticated AEAT IVA wallet into an :class:`IvaWalletCaptureReport`.
 
@@ -286,22 +214,9 @@ def _iva_wallet_pull_lines(report: IvaWalletCaptureReport) -> tuple[str, ...]:
     )
 
 
-@iva_wallet_app.command(
-    "history",
-    help=tr(
-        "cli.app.live.iva_wallet.history_help",
-        default=(
-            "List secure local IVA compensation history, carry-forward lots, and persisted wallet "
-            "authority decisions derived from Modelo 303 captures."
-        ),
-    ),
-)
 def iva_wallet_history_cmd(
     ctx: typer.Context,
-    as_of_year: Annotated[
-        int | None,
-        typer.Option("--as-of-year", min=2000, max=2099, help=tr("cli.app.live.iva_wallet.as_of_year_help")),
-    ] = None,
+    as_of_year: int | None = None,
 ) -> None:
     """List stored :class:`IvaCompensationHistoryReport` evidence.
 
@@ -523,36 +438,11 @@ def _iva_wallet_decision_reason_text(reason: IvaCompensationDecisionReason) -> s
     return tr(translation_key)
 
 
-@iva_wallet_app.command(
-    "pull-history",
-    help=tr(
-        "cli.app.live.iva_wallet.pull_history_help",
-        default=(
-            "Pull filed Modelo 303 history and persist secure IVA compensation state. "
-            "No AEAT filing or wallet form choices are submitted."
-        ),
-    ),
-)
 def iva_wallet_pull_history_cmd(
     ctx: typer.Context,
-    year_from: Annotated[
-        int,
-        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
-    ],
-    year_to: Annotated[
-        int,
-        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
-    ],
-    output_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--output-root",
-            file_okay=False,
-            dir_okay=True,
-            writable=True,
-            help=tr("cli.app.live.output_root_help"),
-        ),
-    ] = None,
+    year_from: int,
+    year_to: int,
+    output_root: Path | None = None,
 ) -> None:
     """Pull Modelo 303 filed history into an :class:`IvaCompensationHistoryCaptureReport`.
 
@@ -605,51 +495,14 @@ def iva_wallet_pull_history_cmd(
     _emit_envelope(ctx, command="app.live.iva_wallet.pull_history", result=result, lines=lines)
 
 
-@iva_wallet_app.command(
-    "pull-evidence",
-    help=tr(
-        "cli.app.live.iva_wallet.pull_evidence_help",
-        default=(
-            "Pull filed Modelo 303 history and attempt the AEAT IVA wallet/cartera read as one "
-            "typed read-only acquisition."
-        ),
-    ),
-)
 def iva_wallet_pull_evidence_cmd(
     ctx: typer.Context,
-    year_from: Annotated[
-        int,
-        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
-    ],
-    year_to: Annotated[
-        int,
-        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
-    ],
-    target_year: Annotated[
-        int,
-        typer.Option("--target-year", min=2000, max=2099, help=tr("cli.app.live.year_help")),
-    ],
-    target_period: Annotated[str, typer.Option("--target-period", help=tr("cli.app.live.period_help"))],
-    taxpayer_nif: Annotated[
-        str | None,
-        typer.Option(
-            "--taxpayer-nif",
-            help=tr(
-                "cli.app.live.iva_wallet.taxpayer_nif_help",
-                default="Taxpayer NIF; defaults to authenticated identity.",
-            ),
-        ),
-    ] = None,
-    output_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--output-root",
-            file_okay=False,
-            dir_okay=True,
-            writable=True,
-            help=tr("cli.app.live.output_root_help"),
-        ),
-    ] = None,
+    year_from: int,
+    year_to: int,
+    target_year: int,
+    target_period: str,
+    taxpayer_nif: str | None = None,
+    output_root: Path | None = None,
 ) -> None:
     """Capture filed-history and wallet/cartera evidence as an IVA remote-state report.
 
@@ -1000,18 +853,11 @@ def _compact_failure_context(context: dict[str, object] | None) -> str:
     return ";".join(parts)
 
 
-@filed_app.command("list", help=tr("cli.app.live.filed.list_help"))
 def filed_list_cmd(
     ctx: typer.Context,
-    modelo: Annotated[str | None, typer.Option("--modelo", help=tr("cli.app.live.modelo_help"))] = None,
-    year_from: Annotated[
-        int | None,
-        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
-    ] = None,
-    year_to: Annotated[
-        int | None,
-        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
-    ] = None,
+    modelo: str | None = None,
+    year_from: int | None = None,
+    year_to: int | None = None,
 ) -> None:
     """List :class:`FiledDataListingRow` register rows.
 
@@ -1141,7 +987,6 @@ def _filed_list_result_and_lines(
     return result, tuple(lines)
 
 
-@filed_app.command("discover", help=tr("cli.app.live.filed.discover_help"))
 def filed_discover_cmd(ctx: typer.Context) -> None:
     """Report which ``(modelo, ejercicio)`` pairs a history pull would walk.
 
@@ -1262,23 +1107,10 @@ def _filed_discover_notices(report: FiledHistoryDiscoveryReport) -> list[Notice]
     return notices
 
 
-@filed_app.command("pull-all", help=tr("cli.app.live.filed.pull_all_help"))
 def filed_pull_all_cmd(
     ctx: typer.Context,
-    output_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--output-root",
-            file_okay=False,
-            dir_okay=True,
-            writable=True,
-            help=tr("cli.app.live.output_root_help"),
-        ),
-    ] = None,
-    limit: Annotated[
-        int | None,
-        typer.Option("--limit", min=1, help=tr("cli.app.live.filed.pull_all_limit_help")),
-    ] = None,
+    output_root: Path | None = None,
+    limit: int | None = None,
 ) -> None:
     """Pull this taxpayer's AEAT history in one sweep and report what it found.
 
@@ -1627,45 +1459,17 @@ def _emit_bulk_filed_pull(
     )
 
 
-@filed_app.command("pull", help=tr("cli.app.live.filed.pull_help"))
 def filed_pull_cmd(
     ctx: typer.Context,
-    modelos: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--modelo",
-            help=tr(
-                "cli.app.live.filed.pull_modelo_help",
-                default="Modelo code to include. Repeat or omit with --from-year/--to-year for a bulk pull.",
-            ),
-        ),
-    ] = None,
-    year: Annotated[int | None, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help"))] = None,
-    year_from: Annotated[
-        int | None,
-        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
-    ] = None,
-    year_to: Annotated[
-        int | None,
-        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
-    ] = None,
-    output_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--output-root",
-            file_okay=False,
-            dir_okay=True,
-            writable=True,
-            help=tr("cli.app.live.output_root_help"),
-        ),
-    ] = None,
-    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.live.period_help"))] = None,
-    expediente_id: Annotated[str | None, typer.Option("--expediente", help=tr("cli.app.live.expediente_help"))] = None,
-    limit: Annotated[int | None, typer.Option("--limit", min=1, help=tr("cli.app.live.limit_help"))] = None,
-    dry_run: Annotated[
-        bool,
-        typer.Option("--dry-run", help=tr("cli.app.live.filed.pull_dry_run_help")),
-    ] = False,
+    modelos: list[str] | None = None,
+    year: int | None = None,
+    year_from: int | None = None,
+    year_to: int | None = None,
+    output_root: Path | None = None,
+    period: str | None = None,
+    expediente_id: str | None = None,
+    limit: int | None = None,
+    dry_run: bool = False,
 ) -> None:
     """Capture filed-declaration observations through the read-only AEAT register.
 
@@ -1756,42 +1560,14 @@ def _skipped_casilla_notice(skipped: Sequence[FiledCasillaSkipRow]) -> Notice | 
     )
 
 
-@filed_app.command("pull-sources", help=tr("cli.app.live.filed.pull_sources_help"))
 def filed_pull_sources_cmd(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help"))],
-    year: Annotated[int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help"))],
-    period: Annotated[str, typer.Option("--period", help=tr("cli.app.live.period_help"))],
-    output_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--output-root",
-            file_okay=False,
-            dir_okay=True,
-            writable=True,
-            help=tr("cli.app.live.output_root_help"),
-        ),
-    ] = None,
-    registry_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--registry-root",
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.app.live.registry_root_help"),
-        ),
-    ] = None,
-    source_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--source-root",
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.app.live.source_root_help"),
-        ),
-    ] = None,
+    modelo: str,
+    year: int,
+    period: str,
+    output_root: Path | None = None,
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
 ) -> None:
     """Capture registry-selected source observations for a target :class:`Period`.
 
@@ -1843,72 +1619,16 @@ def filed_pull_sources_cmd(
     )
 
 
-register_notifications_commands(
-    app,
-    active_bucket_id=active_bucket_id_or_refuse,
-    auth_preflight=_emit_live_auth_preflight,
-)
-
-
 # ─────────────────────────────────────────────────────────────────────────
 
-register_portals_commands(app)
-
-
-register_deudas_commands(app, active_bucket_id=active_bucket_id_or_refuse)
-
-
-register_expedientes_commands(
-    app,
-    active_bucket_id=active_bucket_id_or_refuse,
-    auth_preflight=_emit_live_auth_preflight,
-)
-
-
-register_justificante_commands(
-    app,
-    active_bucket_id=active_bucket_id_or_refuse,
-    auth_preflight=_emit_live_auth_preflight,
-)
-
-
-register_verify_commands(app, active_bucket_id=active_bucket_id_or_refuse, verify_expected=_verify_expected)
-
-
-register_borrador_commands(app, active_bucket_id=active_bucket_id_or_refuse)
-
-for _callback in (
-    iva_wallet_pull_cmd,
-    iva_wallet_pull_history_cmd,
-    filed_pull_all_cmd,
-    filed_pull_cmd,
-    filed_pull_sources_cmd,
-):
-    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)
-command_execution_policy(BROWSER_SUBPROCESS_LIVE_PROFILE_WRITE)(iva_wallet_pull_evidence_cmd)
-for _callback in (iva_wallet_history_cmd, filed_list_cmd):
-    command_execution_policy(ENCRYPTED_READ)(_callback)
-command_execution_policy(LIVE_READ)(filed_discover_cmd)
 
 __all__ = [
-    "app",
-    "borrador_100_app",
-    "borrador_app",
-    "expedientes_app",
-    "filed_app",
     "filed_list_cmd",
     "filed_pull_all_cmd",
     "filed_pull_cmd",
     "filed_pull_sources_cmd",
-    "iva_wallet_app",
     "iva_wallet_history_cmd",
     "iva_wallet_pull_cmd",
     "iva_wallet_pull_evidence_cmd",
     "iva_wallet_pull_history_cmd",
-    "justificante_app",
-    "notifications_app",
-    "portals_app",
-    "portals_list",
-    "portals_show",
-    "verify_app",
 ]

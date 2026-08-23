@@ -41,25 +41,6 @@ def participation_lookup(ctx: typer.Context, transaction_id: str | None = None) 
     _emit_participation_lookup(ctx, transaction_id=transaction_id, resolve_transaction_id=resolve_ledger_transaction_id)
 
 
-def _reserved_subcommand_names(participation: typer.Typer) -> frozenset[str]:
-    """Return the names of subcommands registered under the ``participation`` group.
-
-    The group callback's optional positional ``transaction_id`` would otherwise
-    swallow a bare subcommand token (e.g. ``rebuild``); these names are reserved
-    so the callback can forward them to their command instead of treating them
-    as a transaction id.
-    """
-    names: set[str] = set()
-    for info in participation.registered_commands:
-        if info.name:
-            names.add(info.name)
-            continue
-        callback_name = getattr(info.callback, "__name__", "") if info.callback is not None else ""
-        if callback_name:
-            names.add(callback_name)
-    return frozenset(names)
-
-
 def _emit_participation_lookup(
     ctx: typer.Context,
     *,
@@ -152,4 +133,4 @@ def participation_rebuild(ctx: typer.Context) -> None:
     )
 
 
-__all__ = ["register_participation_commands"]
+__all__ = ["participation_lookup", "participation_rebuild"]

@@ -1756,22 +1756,23 @@ cli:
           interactiu; utilitza --secrets-stdin.
         secrets_channel_conflict: No es pot especificar --secrets-stdin i --secrets-fd
           alhora.
-        secrets_fd_invalid_json: 'El contingut de --secrets-fd no és un objecte JSON
-          vàlid. Envieu un objecte amb aquestes claus: {expected_fields}.'
-        secrets_fd_missing_fields: 'A l''objecte de --secrets-fd li falten camps obligatoris
-          o en té d''inesperats. Envieu exactament aquestes claus: {expected_fields}.'
-        secrets_fd_reserved_stream: El descriptor de fitxer no pot ser l'entrada,
-          sortida ni el flux d'error estàndard.
-        secrets_fd_too_large: El contingut del secret de màquina des del descriptor
-          de fitxer supera la mida màxima.
+        secrets_fd_invalid_json: 'El contingut de secrets de màquina no és un objecte
+          JSON vàlid. Envieu un objecte amb aquestes claus: {expected_fields}.'
+        secrets_fd_missing_fields: 'A l''objecte de secrets de màquina li falten camps
+          obligatoris o en té d''inesperats. Envieu exactament aquestes claus: {expected_fields}.'
+        secrets_fd_reserved_stream: Els descriptors 1 (sortida estàndard) i 2 (error
+          estàndard) estan reservats; useu el descriptor 0 o un altre descriptor llegible.
+        secrets_fd_too_large: El contingut de secrets de màquina supera la mida màxima
+          permesa.
         secrets_fd_unreadable: Error en llegir secrets de màquina des del descriptor
           de fitxer.
-        secrets_stdin_invalid_json: 'El contingut de --secrets-stdin no és un objecte
+        secrets_stdin_invalid_json: 'El contingut de secrets de màquina no és un objecte
           JSON vàlid. Envieu un objecte amb aquestes claus: {expected_fields}.'
-        secrets_stdin_missing_fields: 'A l''objecte de --secrets-stdin li falten camps
-          obligatoris o en té d''inesperats. Envieu exactament aquestes claus: {expected_fields}.'
-        secrets_stdin_too_large: El contingut de --secrets-stdin supera la mida màxima
-          permesa.
+        secrets_stdin_missing_fields: 'A l''objecte de secrets de màquina li falten
+          camps obligatoris o en té d''inesperats. Envieu exactament aquestes claus:
+          {expected_fields}.'
+        secrets_stdin_too_large: El contingut de secrets de màquina supera la mida
+          màxima permesa.
       recovery_words_confirm: Ja l'he anotada
       recovery_words_heading: Desa aquesta frase de recuperació
       recovery_words_warning: Només es mostra una vegada. Qui tingui aquesta frase
@@ -1990,9 +1991,8 @@ cli:
         session_not_persisted: No hi ha cap magatzem de claus del sistema utilitzable,
           així que la sessió no es pot desar; aquest inici de sessió només val per
           a l'ordre actual.
-      passphrase_channel_absent: No hi ha cap canal de contrasenya disponible. Executa
-        aquest verb en un terminal, usa --secrets-stdin o --secrets-fd, o defineix
-        CADRUMO_SECRET_PASSPHRASE per a una execució desatesa.
+      passphrase_channel_absent: No hi ha cap canal de contrasenya disponible. Executeu
+        aquest verb en un terminal o useu --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contrasenya del perfil: '
       refusal:
         abandoned: S'ha cancel·lat l'inici de sessió; no s'ha obert cap perfil.
@@ -2099,8 +2099,7 @@ cli:
       create_name_required: Cal un nom de perfil. Executa 'aeat config profile create
         NOM'.
       create_passphrase_channel_absent: No hi ha cap canal de contrasenya disponible.
-        Executa aquest verb en un terminal o defineix CADRUMO_SECRET_PASSPHRASE per
-        a una execució desatesa.
+        Executeu aquest verb en un terminal o useu --secrets-stdin o --secrets-fd.
       create_passphrase_mismatch: La contrasenya i la seva confirmació no coincideixen;
         no s'ha creat cap perfil.
       create_passphrase_prompt: 'Contrasenya del nou perfil: '
@@ -3336,8 +3335,8 @@ cli:
         paragraph_durable_state: L'estat durador (perfil, autenticació, llibre) persisteix
           entre sessions.
         paragraph_storage_isolation: Per a una execució aïllada des de zero, definiu
-          CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_DIR i CADRUMO_SECRET_PASSPHRASE;
-          els logs queden per defecte sota aquest directori d'emmagatzematge.
+          CADRUMO_LOCAL_STORAGE_ROOT i CADRUMO_SECRET_STORE_DIR; els registres queden
+          per defecte sota aquest directori d'emmagatzematge.
         passphrase_change: Canvia la contrasenya que protegeix el perfil actiu.
         profile_delete: Elimina un perfil emmagatzemat localment.
         profile_history: Inspecciona l'historial append-only d'esdeveniments del perfil.

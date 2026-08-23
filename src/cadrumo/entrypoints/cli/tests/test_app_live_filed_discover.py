@@ -33,8 +33,9 @@ from ....application.live import (
     filed_history_discovery_report,
 )
 from ....core import FiledHistoryDiscoverySignal
-from ....core.json_contract import SCHEMA_REGISTRY, NoticeSeverity, SchemaEnvelope
+from ....core.json_contract import NoticeSeverity, SchemaEnvelope
 from .._app_live import _filed_discover_notices, _filed_discover_result_and_lines
+from .._app_live_command_specs import LIVE_COMMAND_SPECS
 from .._app_live_payloads import FiledDiscoverResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -77,11 +78,9 @@ def _register_only_report() -> FiledHistoryDiscoveryReport:
 
 
 def test_the_verb_registers_its_schema() -> None:
-    from .._app_live import app as live_app
-
-    assert live_app is not None
-    assert _SCHEMA_KEY in SCHEMA_REGISTRY
-    assert SCHEMA_REGISTRY[_SCHEMA_KEY] is FiledDiscoverResult
+    spec = next(spec for spec in LIVE_COMMAND_SPECS if spec.result_schema.identity == _SCHEMA_KEY)
+    assert spec.result_schema.target is not None
+    assert spec.result_schema.target.qualname == FiledDiscoverResult.__name__
 
 
 def test_the_schema_specialises_the_shared_envelope() -> None:

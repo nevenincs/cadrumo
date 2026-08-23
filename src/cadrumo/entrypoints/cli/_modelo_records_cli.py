@@ -12,7 +12,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
-from typing import Annotated
 
 import typer
 
@@ -38,9 +37,7 @@ from ...application.modelo import (
 from ...core import CasillaId, Period, PeriodError, validated_casilla_id
 from ...core.i18n import tr
 from ...domain.modelos import ExternalEvidenceKind, ModeloCode, ModeloValidationError
-from ._command_policy import command_execution_policy
-from ._common import MODELO_CODE_CHOICE, _declared_tax_id, _emit_envelope
-from ._modelo_execution_policies import MODEL_READ, MODEL_WRITE, declare_metadata_group
+from ._common import _declared_tax_id, _emit_envelope
 from ._modelo_payloads import (
     FilingRecordImportResult,
     FilingRecordLocalObservationResult,
@@ -62,28 +59,6 @@ _validate_work_unit_id: Callable[[str], str] | None = None
 _parse_amendment_casilla: Callable[[str], tuple[CasillaId, Decimal]] | None = None
 _resolve_default_actor: Callable[[], str] | None = None
 _bad_parameter_from_error: Callable[[Exception], typer.BadParameter] | None = None
-
-
-def register_record_commands(
-    app: typer.Typer,
-    *,
-    validate_work_unit_id: Callable[[str], str],
-    parse_amendment_casilla: Callable[[str], tuple[CasillaId, Decimal]],
-    resolve_default_actor: Callable[[], str],
-    bad_parameter_from_error: Callable[[Exception], typer.BadParameter],
-) -> None:
-    """Mount filing-record and verification-report command groups."""
-    global _validate_work_unit_id
-    global _parse_amendment_casilla
-    global _resolve_default_actor
-    global _bad_parameter_from_error
-
-    _validate_work_unit_id = validate_work_unit_id
-    _parse_amendment_casilla = parse_amendment_casilla
-    _resolve_default_actor = resolve_default_actor
-    _bad_parameter_from_error = bad_parameter_from_error
-    app.add_typer(filing_record_app, name="filing-record")
-    app.add_typer(verification_report_app, name="verification-report")
 
 
 def _work_unit_id(raw: str) -> str:
@@ -134,42 +109,8 @@ def _filing_period(year: int, token: str) -> Period:
         raise _bad_from_error(exc) from exc
 
 
-filing_record_app = typer.Typer(
-    name="filing-record",
-    help=tr("cli.app.modelo.filing_record.app_help"),
-    no_args_is_help=True,
-    add_completion=False,
-)
-
-verification_report_app = typer.Typer(
-    name="verification-report",
-    help=tr("cli.app.modelo.verification_report.app_help"),
-    no_args_is_help=True,
-    add_completion=False,
-)
-declare_metadata_group(filing_record_app)
-declare_metadata_group(verification_report_app)
-
-
-@filing_record_app.command("list", help=tr("cli.app.modelo.filing_record.list_help"))
-@command_execution_policy(MODEL_READ)
 def filing_record_list(
-    ctx: typer.Context,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.filing_record.bucket_id_help")),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", click_type=MODELO_CODE_CHOICE, help=tr("cli.app.modelo.filing_record.modelo_help")),
-    ] = None,
-    include_superseded: Annotated[
-        bool,
-        typer.Option(
-            "--include-superseded",
-            help=tr("cli.app.modelo.filing_record.include_superseded_help"),
-        ),
-    ] = False,
+    ctx: typer.Context, bucket_id: str | None = None, modelo: str | None = None, include_superseded: bool = False
 ) -> None:
     """List filing records."""
     modelo_code = _modelo_filter(modelo)
@@ -190,85 +131,44 @@ def filing_record_list(
         "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by",
     ]
     lines.extend(
-        "\t".join(
-            (
-                record.filing_record_id,
-                record.bucket_id,
-                str(record.modelo),
-                str(record.filing_year),
-                record.period.registry_token,
-                record.status.value,
-                record.filed_at.isoformat(),
-                record.filed_by,
-            ),
-        )
-        for record in records
+
+            "\t".join(
+                (
+                    record.filing_record_id,
+                    record.bucket_id,
+                    str(record.modelo),
+                    str(record.filing_year),
+                    record.period.registry_token,
+                    record.status.value,
+                    record.filed_at.isoformat(),
+                    record.filed_by,
+                )
+            )
+            for record in records
+
     )
     _emit_envelope(ctx, command="modelo.filing_record.list", result=result, lines=lines)
 
 
-@filing_record_app.command("view", help=tr("cli.app.modelo.filing_record.view_help"))
-@command_execution_policy(MODEL_READ)
-def filing_record_show(
-    ctx: typer.Context,
-    filing_record_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.filing_record.filing_record_id_help")),
-    ],
-) -> None:
+def filing_record_show(ctx: typer.Context, filing_record_id: str) -> None:
     """View one filing record by id."""
     try:
         record = get_filing_record(filing_record_id)
     except ModeloRecordNotFoundError as exc:
         raise _bad_from_error(exc) from exc
-
     result = ModeloRecordShowResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
     lines = ["operation\tmodelo.filing_record.show", *filing_record_lines(record)]
     _emit_envelope(ctx, command="modelo.filing_record.view", result=result, lines=lines)
 
 
-@filing_record_app.command("import", help=tr("cli.app.modelo.filing_record.import_help"))
-@command_execution_policy(MODEL_WRITE)
 def filing_record_import(
     ctx: typer.Context,
-    work_unit_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
-    ],
-    evidence_kind: Annotated[
-        ExternalEvidenceKind,
-        typer.Option(
-            "--evidence-kind",
-            help=tr("cli.app.modelo.filing_record.evidence_kind_help"),
-        ),
-    ],
-    evidence_reference_id: Annotated[
-        str,
-        typer.Option(
-            "--evidence-id",
-            help=tr("cli.app.modelo.filing_record.evidence_reference_id_help"),
-        ),
-    ],
-    actor: Annotated[
-        str,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = "aeat-import",
-    set_overrides: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--set",
-            help=tr("cli.app.modelo.filing_record.import_casilla_help"),
-        ),
-    ] = None,
-    file: Annotated[
-        Path | None,
-        typer.Option(
-            "--file",
-            exists=True,
-            dir_okay=False,
-            help=tr("cli.app.modelo.filing_record.import_file_help"),
-        ),
-    ] = None,
+    work_unit_id: str,
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+    actor: str = "aeat-import",
+    set_overrides: list[str] | None = None,
+    file: Path | None = None,
 ) -> None:
     """Import AEAT external evidence as a current :class:`ModeloRecord`.
 
@@ -289,7 +189,6 @@ def filing_record_import(
         casilla_values[key] = value
     if not casilla_values and file is None:
         raise typer.BadParameter(tr("cli.app.modelo.filing_record.import_set_required"))
-
     try:
         from ...application.workflow import workflow_state_repository
 
@@ -321,19 +220,14 @@ def filing_record_import(
             )
     except WorkUnitMutationRefusedError:
         raise
-    except (
-        WorkUnitNotFoundError,
-        ExternalModeloImportError,
-        ModeloLocalObservationError,
-    ) as exc:
+    except (WorkUnitNotFoundError, ExternalModeloImportError, ModeloLocalObservationError) as exc:
         raise _bad_from_error(exc) from exc
-
     result = FilingRecordImportResult.model_validate(
         {
             "evidence_kind": evidence_kind,
             "evidence_reference_id": evidence_reference_id,
             **filing_record_payload(record).model_dump(mode="python"),
-        },
+        }
     )
     lines = [
         "operation\tmodelo.filing_record.import",
@@ -345,47 +239,15 @@ def filing_record_import(
     _emit_envelope(ctx, command="modelo.filing_record.import", result=result, lines=lines)
 
 
-@filing_record_app.command(
-    "observe-local",
-    help=tr("cli.app.modelo.filing_record.observe_local_help"),
-)
-@command_execution_policy(MODEL_WRITE)
 def filing_record_observe_local(
     ctx: typer.Context,
-    modelo: Annotated[
-        str,
-        typer.Option("--modelo", click_type=MODELO_CODE_CHOICE, help=tr("cli.app.modelo.work.modelo_help")),
-    ],
-    year: Annotated[
-        int,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ],
-    period: Annotated[
-        str,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ],
+    modelo: str,
+    year: int,
+    period: str,
     actor: _ActorOpt = None,
-    set_overrides: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--set",
-            help=tr("cli.app.modelo.filing_record.observe_local_set_help"),
-        ),
-    ] = None,
-    file: Annotated[
-        Path | None,
-        typer.Option(
-            "--file",
-            help=tr("cli.app.modelo.filing_record.observe_local_file_help"),
-        ),
-    ] = None,
-    replace_official_evidence: Annotated[
-        bool,
-        typer.Option(
-            "--replace-official-evidence",
-            help=tr("cli.app.modelo.filing_record.observe_local_replace_official_evidence_help"),
-        ),
-    ] = False,
+    set_overrides: list[str] | None = None,
+    file: Path | None = None,
+    replace_official_evidence: bool = False,
 ) -> None:
     """Record non-official local observations for later calculation prefill.
 
@@ -411,18 +273,15 @@ def filing_record_observe_local(
             try:
                 casilla_id = validated_casilla_id(raw_code, surface="--file casilla_code column")
             except ValueError as exc:
-                raise typer.BadParameter(
-                    f"--file row casilla_code {raw_code!r} is not a valid CasillaId",
-                ) from exc
+                raise typer.BadParameter(f"--file row casilla_code {raw_code!r} is not a valid CasillaId") from exc
             casilla_values[casilla_id] = value
     for spec in set_overrides or ():
         key, value = _casilla_value(spec)
         casilla_values[key] = value
     if not casilla_values:
         raise typer.BadParameter(
-            "observe-local requires at least one --set CASILLA=DECIMAL value or a --file spreadsheet",
+            "observe-local requires at least one --set CASILLA=DECIMAL value or a --file spreadsheet"
         )
-
     try:
         local_observation = record_operator_local_observation(
             modelo=str(modelo_code),
@@ -434,7 +293,6 @@ def filing_record_observe_local(
         )
     except ModeloLocalObservationError as exc:
         raise _bad_from_error(exc) from exc
-
     result = FilingRecordLocalObservationResult(
         modelo=local_observation.modelo,
         filing_year=local_observation.filing_year,
@@ -449,10 +307,7 @@ def filing_record_observe_local(
         captured_at=local_observation.captured_at,
         captured_by=local_observation.captured_by,
     )
-    notice_message = (
-        "Operator-supplied local observation recorded for calculation prefill only; "
-        "it is not AEAT evidence and no filing record was created."
-    )
+    notice_message = "Operator-supplied local observation recorded for calculation prefill only; it is not AEAT evidence and no filing record was created."
     notice = advisory_notice(
         "modelo.filing_record.observe_local.non_official",
         notice_message,
@@ -477,29 +332,12 @@ def filing_record_observe_local(
         f"captured_by\t{local_observation.captured_by}",
         "casilla_id\tvalue",
     ]
-    lines.extend(f"{casilla_id}\t{value}" for casilla_id, value in sorted(local_observation.casilla_values.items()))
+    lines.extend((f"{casilla_id}\t{value}" for casilla_id, value in sorted(local_observation.casilla_values.items())))
     lines.append(f"WARNING\t{notice_message}")
-    _emit_envelope(
-        ctx,
-        command="modelo.filing_record.observe_local",
-        result=result,
-        lines=lines,
-        notices=[notice],
-    )
+    _emit_envelope(ctx, command="modelo.filing_record.observe_local", result=result, lines=lines, notices=[notice])
 
 
-@verification_report_app.command("list", help=tr("cli.app.modelo.verification_report.list_help"))
-@command_execution_policy(MODEL_READ)
-def verification_report_list(
-    ctx: typer.Context,
-    calculation_revision_id: Annotated[
-        str | None,
-        typer.Option(
-            "--calculation-revision-id",
-            help=tr("cli.app.modelo.work.calculation_revision_id_help"),
-        ),
-    ] = None,
-) -> None:
+def verification_report_list(ctx: typer.Context, calculation_revision_id: str | None = None) -> None:
     """List persisted verification reports, optionally scoped to one revision.
 
     Each row is a persisted :class:`VerificationReport` projected through
@@ -520,30 +358,24 @@ def verification_report_list(
         "verification_report_id\tcalculation_revision_id\tcompleteness_status\tgranted\trun_at\tverified_by",
     ]
     lines.extend(
-        "\t".join(
-            (
-                r.verification_report_id,
-                r.calculation_revision_id,
-                r.completeness_status.value,
-                str(r.granted_verificado_completo).lower(),
-                r.run_at.isoformat(),
-                r.verified_by,
-            ),
-        )
-        for r in reports
+
+            "\t".join(
+                (
+                    r.verification_report_id,
+                    r.calculation_revision_id,
+                    r.completeness_status.value,
+                    str(r.granted_verificado_completo).lower(),
+                    r.run_at.isoformat(),
+                    r.verified_by,
+                )
+            )
+            for r in reports
+
     )
     _emit_envelope(ctx, command="modelo.verification_report.list", result=result, lines=lines)
 
 
-@verification_report_app.command("view", help=tr("cli.app.modelo.verification_report.view_help"))
-@command_execution_policy(MODEL_READ)
-def verification_report_show(
-    ctx: typer.Context,
-    verification_report_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.verification_report.verification_report_id_help")),
-    ],
-) -> None:
+def verification_report_show(ctx: typer.Context, verification_report_id: str) -> None:
     """View one persisted verification report by id.
 
     The command validates the shared
@@ -558,7 +390,6 @@ def verification_report_show(
         report = get_verification_report(verification_report_id)
     except VerificationReportNotFoundError as exc:
         raise _bad_from_error(exc) from exc
-
     result = VerificationReportShowResult.model_validate(verification_report_payload(report).model_dump(mode="python"))
     lines = ["operation\tmodelo.verification_report.show", *verification_report_lines(report)]
     _emit_envelope(ctx, command="modelo.verification_report.view", result=result, lines=lines)

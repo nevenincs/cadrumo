@@ -1750,23 +1750,22 @@ cli:
           használja a --secrets-stdin kapcsolót.
         secrets_channel_conflict: A --secrets-stdin és a --secrets-fd nem adható meg
           egyszerre.
-        secrets_fd_invalid_json: 'A --secrets-fd tartalma nem érvényes JSON objektum.
+        secrets_fd_invalid_json: 'A gépi titok tartalma nem érvényes JSON-objektum.
           Küldjön egy objektumot ezekkel a kulcsokkal: {expected_fields}.'
-        secrets_fd_missing_fields: 'A --secrets-fd objektumból hiányoznak kötelező
-          mezők, vagy váratlanokat tartalmaz. Pontosan ezeket a kulcsokat küldje:
-          {expected_fields}.'
-        secrets_fd_reserved_stream: A fájlleíró nem lehet a standard bemenet, kimenet
-          vagy hibacsatorna.
-        secrets_fd_too_large: A fájlleíróból kapott gépi titok mérete meghaladja a
-          maximális méretet.
+        secrets_fd_missing_fields: 'A gépi titok objektumából kötelező mezők hiányoznak,
+          vagy váratlan mezőket tartalmaz. Pontosan ezeket a kulcsokat küldje: {expected_fields}.'
+        secrets_fd_reserved_stream: Az 1-es (szabványos kimenet) és a 2-es (szabványos
+          hibakimenet) fájlleíró foglalt; használja a 0-s vagy egy másik olvasható
+          fájlleírót.
+        secrets_fd_too_large: A gépi titok tartalma meghaladja a megengedett maximális
+          méretet.
         secrets_fd_unreadable: Nem sikerült kiolvasni a gépi titkokat a fájlleíróból.
-        secrets_stdin_invalid_json: 'A --secrets-stdin tartalma nem érvényes JSON
-          objektum. Küldjön egy objektumot ezekkel a kulcsokkal: {expected_fields}.'
-        secrets_stdin_missing_fields: 'A --secrets-stdin objektumból hiányoznak kötelező
-          mezők, vagy váratlanokat tartalmaz. Pontosan ezeket a kulcsokat küldje:
-          {expected_fields}.'
-        secrets_stdin_too_large: A --secrets-stdin tartalma meghaladja a megengedett
-          maximális méretet.
+        secrets_stdin_invalid_json: 'A gépi titok tartalma nem érvényes JSON-objektum.
+          Küldjön egy objektumot ezekkel a kulcsokkal: {expected_fields}.'
+        secrets_stdin_missing_fields: 'A gépi titok objektumából kötelező mezők hiányoznak,
+          vagy váratlan mezőket tartalmaz. Pontosan ezeket a kulcsokat küldje: {expected_fields}.'
+        secrets_stdin_too_large: A gépi titok tartalma meghaladja a megengedett maximális
+          méretet.
       recovery_words_confirm: Leírtam
       recovery_words_heading: Írd le ezt a helyreállítási kifejezést
       recovery_words_warning: Csak egyszer jelenik meg. Akinek megvan ez a kifejezés,
@@ -1989,9 +1988,8 @@ cli:
           a bejelentkezés előtt.
         session_not_persisted: Nincs használható rendszerkulcstár, ezért a munkamenet
           nem menthető; ez a bejelentkezés csak a jelenlegi parancsra érvényes.
-      passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtasd ezt a parancsot
-        terminálban, add meg a --secrets-stdin vagy --secrets-fd kapcsolót, vagy állítsd
-        be a CADRUMO_SECRET_PASSPHRASE változót a felügyelet nélküli futtatáshoz.
+      passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtassa ezt a parancsot
+        terminálban, vagy használja a --secrets-stdin vagy --secrets-fd kapcsolót.
       passphrase_prompt: 'Profil jelszava: '
       refusal:
         abandoned: A bejelentkezés megszakadt; egyetlen profil sem nyílt meg.
@@ -2101,8 +2099,8 @@ cli:
       create_name_required: 'Profilnév szükséges. Futtassa: ''aeat config profile
         create NÉV''.'
       create_passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtassa ezt
-        a parancsot terminálban, vagy állítsa be a CADRUMO_SECRET_PASSPHRASE változót
-        felügyelet nélküli futtatáshoz.
+        a parancsot terminálban, vagy használja a --secrets-stdin vagy --secrets-fd
+        kapcsolót.
       create_passphrase_mismatch: A jelszó és a megerősítése nem egyezik; nem jött
         létre profil.
       create_passphrase_prompt: 'Az új profil jelszava: '
@@ -3338,10 +3336,9 @@ cli:
         footer: 'Teljes áttekintésért futtassa: aeat --help.'
         heading: aeat config - profil, hitelesítés, diagnosztika
         paragraph_durable_state: A config-parancsok a helyi tartós állapotot kezelik.
-        paragraph_storage_isolation: Elszigetelt üres állapothoz állítsa be ezeket
-          az env változókat; CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_DIR
-          és CADRUMO_SECRET_PASSPHRASE; a naplók alapértelmezés szerint ezen tárhelygyökér
-          alatt vannak.
+        paragraph_storage_isolation: Elszigetelt üres állapothoz állítsa be a CADRUMO_LOCAL_STORAGE_ROOT
+          és a CADRUMO_SECRET_STORE_DIR változót; a naplók alapértelmezés szerint
+          ezen tárhelygyökér alatt vannak.
         passphrase_change: Az aktív profilt védő jelszó módosítása.
         profile_delete: Helyileg tárolt profil törlése.
         profile_history: Az append-only profil eseménytörténet megtekintése.

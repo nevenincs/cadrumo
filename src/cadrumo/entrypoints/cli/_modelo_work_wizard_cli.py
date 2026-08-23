@@ -77,10 +77,11 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import InputKind, RegistrySnapshotError, RegistryValidationError
 from ...domain.user_profile import ProfileNotFoundError
-from ._command_policy import command_execution_policy
 from ._errors import CliOutboundPayloadBoundaryError
-from ._modelo_cli_support import MISSING_INPUT_TRANSLATED_MESSAGES, work_calculate_input_bundle_from_cli
-from ._modelo_execution_policies import INTERACTIVE_MODEL_WRITE
+from ._modelo_cli_support import (
+    MISSING_INPUT_TRANSLATED_MESSAGES,
+    work_calculate_input_bundle_from_cli,
+)
 from ._modelo_rendering import (
     calculation_revision_lines,
     calculation_revision_payload,
@@ -167,61 +168,6 @@ class _WizardStep:
 
 
 # KWARGS-ANY-RATIONALE-cli: resolve_work_unit_for_cli is a CLI resolver callback injected by the command registrar
-def register_work_wizard_commands(
-    work_app: typer.Typer,
-    *,
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
-    require_active_profile: Callable[[], None],
-    resolve_work_unit_for_cli: Callable[
-        ..., Any
-    ],  # KWARGS-ANY-RATIONALE-cli-callback: work-unit resolver callback injected by the command registrar
-    resolve_actor_option: Callable[[str | None], str],
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
-) -> None:
-    """Register the guided ``work wizard`` command on the modelo work app."""
-    deps = _WizardDeps(
-        activate_output_language=activate_output_language,
-        require_active_profile=require_active_profile,
-        resolve_work_unit_for_cli=resolve_work_unit_for_cli,
-        resolve_actor_option=resolve_actor_option,
-        bad_parameter_from_error=bad_parameter_from_error,
-    )
-
-    @work_app.command("wizard", help=tr("cli.app.modelo.work.wizard_help"))
-    @command_execution_policy(INTERACTIVE_MODEL_WRITE)
-    def work_wizard(
-        ctx: typer.Context,
-        work_unit_id: _WorkUnitIdArg = None,
-        modelo: _ModeloOpt = None,
-        year: _YearOpt = None,
-        period: _PeriodOpt = None,
-        revision: _RevisionOpt = None,
-        bucket_id: _BucketIdOpt = None,
-        actor: _ActorOpt = None,
-        output_language_opt: _WizardOutputLanguageOpt = None,
-    ) -> None:
-        """Walk the resolved work unit's outstanding manual inputs one at a time.
-
-        Resolves (or reuses) a work unit exactly as ``work create`` does,
-        lists its outstanding manual casillas and missing bindings/relations
-        through the same registry discovery surface as
-        ``bindings list --missing``, prompts for each one in turn (showing
-        its official label, help text, and legal grounding), then calls
-        :func:`calculate_modelo_work_revision` through the identical input
-        bundle ``work calculate`` builds.
-        """
-        run_modelo_work_wizard(
-            deps=deps,
-            ctx=ctx,
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            revision=revision,
-            bucket_id=bucket_id,
-            actor=actor,
-            output_language_opt=output_language_opt,
-        )
 
 
 def run_modelo_work_wizard(
@@ -774,3 +720,38 @@ def _emit_wizard_result(
 
 
 __all__ = ["register_work_wizard_commands"]
+
+
+def work_wizard(
+    ctx: typer.Context,
+    work_unit_id: _WorkUnitIdArg = None,
+    modelo: _ModeloOpt = None,
+    year: _YearOpt = None,
+    period: _PeriodOpt = None,
+    revision: _RevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
+    actor: _ActorOpt = None,
+    output_language_opt: _WizardOutputLanguageOpt = None,
+) -> None:
+    """Walk the resolved work unit's outstanding manual inputs one at a time.
+
+    Resolves (or reuses) a work unit exactly as ``work create`` does,
+    lists its outstanding manual casillas and missing bindings/relations
+    through the same registry discovery surface as
+    ``bindings list --missing``, prompts for each one in turn (showing
+    its official label, help text, and legal grounding), then calls
+    :func:`calculate_modelo_work_revision` through the identical input
+    bundle ``work calculate`` builds.
+    """
+    run_modelo_work_wizard(
+        deps=deps,
+        ctx=ctx,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+        actor=actor,
+        output_language_opt=output_language_opt,
+    )

@@ -1,10 +1,8 @@
 """Typed ``--json`` payload schemas for app live CLI commands.
 
-Each class declared here is a strict
-:class:`OutputSchema` subclass and is decorated
-with :func:`register_schema` so the
-JSON-contract test suite can enumerate every live-command surface this module
-covers.
+Each class declared here is a strict :class:`OutputSchema` subclass. Production
+CommandSpec declarations own the schema identities and deferred class targets
+used to enumerate every live-command surface this module covers.
 
 Field sets match the production payload dicts constructed in ``_app_live.py``
 at their emit sites.  All sequence fields use ``list`` rather than ``tuple``
@@ -48,7 +46,7 @@ from ...core.identity import (
     FilingRecordId,
     SnapshotId,
 )
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import BindingId
 
@@ -125,7 +123,6 @@ class FiledCaptureFailurePayload(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
-@register_schema("app.live.filed.list")
 class FiledListResult(OutputSchema):
     """List result for declaration-register rows returned by the live filed surface.
 
@@ -145,7 +142,6 @@ class FiledListResult(OutputSchema):
     failures: list[FiledCaptureFailurePayload] = []
 
 
-@register_schema("app.live.filed.discover")
 class FiledDiscoverResult(OutputSchema):
     """Discovery result: which ``(modelo, ejercicio)`` pairs a history pull would walk.
 
@@ -215,7 +211,6 @@ class FiledHistoryPairOutcomePayload(OutputSchema):
     failure_message: str | None = None
 
 
-@register_schema("app.live.filed.pull_all")
 class FiledHistoryOnboardingResult(OutputSchema):
     """One history-onboarding run: what was walked, captured and reconciled.
 
@@ -271,7 +266,6 @@ class FiledHistoryOnboardingResult(OutputSchema):
     stage_failures: list[str] = []
 
 
-@register_schema("app.live.filed.pull")
 class FiledCaptureResult(OutputSchema):
     """Capture result for encrypted filed-declaration observations and artefacts.
 
@@ -308,7 +302,6 @@ class FiledCaptureResult(OutputSchema):
     failures: list[FiledCaptureFailurePayload] = []
 
 
-@register_schema("app.live.filed.pull_sources")
 class FiledCaptureSourcesResult(OutputSchema):
     """Source-observation capture result for a target filing's registry dependencies.
 
@@ -408,7 +401,6 @@ class IvaWalletAuthorityDecisionPayload(OutputSchema):
     authority_sources: list[str]
 
 
-@register_schema("app.live.iva_wallet.pull")
 class IvaWalletPullResult(OutputSchema):
     """Read-only wallet capture result from :class:`IvaWalletCaptureReport`.
 
@@ -433,7 +425,6 @@ class IvaWalletPullResult(OutputSchema):
     captured_at: str
 
 
-@register_schema("app.live.iva_wallet.history")
 class IvaWalletHistoryResult(OutputSchema):
     """Stored IVA evidence report from :class:`IvaCompensationHistoryReport`.
 
@@ -452,7 +443,6 @@ class IvaWalletHistoryResult(OutputSchema):
     authority_decisions: list[IvaWalletAuthorityDecisionPayload]
 
 
-@register_schema("app.live.iva_wallet.pull_history")
 class IvaWalletCaptureHistoryResult(OutputSchema):
     """Filed-history capture result from :class:`IvaCompensationHistoryCaptureReport`.
 
@@ -525,7 +515,6 @@ class LiveIvaAuthOutcomePayload(OutputSchema):
     fresh: bool | None
 
 
-@register_schema("app.live.iva_wallet.pull_evidence")
 class IvaWalletPullEvidenceResult(OutputSchema):
     """Combined IVA acquisition payload for :class:`IvaRemoteStateAcquisitionReport`.
 
@@ -590,7 +579,6 @@ class NotificationSnapshotListingPayload(OutputSchema):
     row_count: int = Field(ge=0)
 
 
-@register_schema("app.live.notifications.pull")
 class NotificationsCaptureResult(OutputSchema):
     """Typed result for a persisted DEHu notification pull.
 
@@ -608,7 +596,6 @@ class NotificationsCaptureResult(OutputSchema):
     source_url: str = Field(min_length=1)
 
 
-@register_schema("app.live.notifications.list")
 class NotificationsListResult(OutputSchema):
     """Typed listing of persisted DEHu notification snapshots.
 
@@ -622,7 +609,6 @@ class NotificationsListResult(OutputSchema):
     rows: list[NotificationSnapshotListingPayload]
 
 
-@register_schema("app.live.notifications.view")
 class NotificationsViewResult(OutputSchema):
     """Typed detail view for one persisted DEHu notification snapshot.
 
@@ -641,7 +627,6 @@ class NotificationsViewResult(OutputSchema):
     rows: list[NotificationRowPayload]
 
 
-@register_schema("app.live.notifications.latest")
 class NotificationsLatestResult(OutputSchema):
     """Typed newest-snapshot response for DEHu notifications.
 
@@ -727,7 +712,6 @@ class NotificationDocumentPayload(OutputSchema):
         return self
 
 
-@register_schema("app.live.notifications.document.pull")
 class NotificationDocumentPullResult(NotificationDocumentPayload):
     """Typed result for one guarded notification-document fetch.
 
@@ -742,7 +726,6 @@ class NotificationDocumentPullResult(NotificationDocumentPayload):
     already_in_custody: bool
 
 
-@register_schema("app.live.notifications.document.view")
 class NotificationDocumentViewResult(NotificationDocumentPayload):
     """Typed read-back of one stored notification document.
 
@@ -760,7 +743,6 @@ class NotificationDocumentHistoryEntry(OutputSchema):
     sancion: SancionReadingPayload
 
 
-@register_schema("app.live.notifications.document.history")
 class NotificationDocumentHistoryResult(OutputSchema):
     """Parsed notification documents held by this profile, without a total."""
 
@@ -794,7 +776,6 @@ class PortalEntryPayload(OutputSchema):
     active: bool
 
 
-@register_schema("app.live.portals.list")
 class PortalsListResult(OutputSchema):
     """Typed local-catalogue result for ``aeat app live portals list``.
 
@@ -808,7 +789,6 @@ class PortalsListResult(OutputSchema):
     rows: list[PortalEntryPayload]
 
 
-@register_schema("app.live.portals.view")
 class PortalsViewResult(PortalEntryPayload):
     """Typed local-catalogue result for ``aeat app live portals view``.
 
@@ -878,7 +858,6 @@ class ExpedientesCaptureFailurePayload(OutputSchema):
     message: str
 
 
-@register_schema("app.live.expedientes.pull")
 class ExpedientesCaptureResult(OutputSchema):
     """Typed result for one or more persisted expedientes pulls.
 
@@ -905,7 +884,6 @@ class ExpedientesCaptureResult(OutputSchema):
     failures: list[ExpedientesCaptureFailurePayload] = []
 
 
-@register_schema("app.live.expedientes.list")
 class ExpedientesListResult(OutputSchema):
     """Typed listing of persisted expedientes snapshots.
 
@@ -919,7 +897,6 @@ class ExpedientesListResult(OutputSchema):
     rows: list[ExpedienteSnapshotSummaryPayload]
 
 
-@register_schema("app.live.expedientes.view")
 class ExpedientesViewResult(OutputSchema):
     """Typed detail view for one persisted expedientes snapshot.
 
@@ -936,7 +913,6 @@ class ExpedientesViewResult(OutputSchema):
     declarations: list[ExpedienteDeclarationPayload]
 
 
-@register_schema("app.live.expedientes.latest")
 class ExpedientesLatestResult(OutputSchema):
     """Typed newest-snapshot response for expedientes.
 
@@ -994,7 +970,6 @@ class DeudaSnapshotSummaryPayload(OutputSchema):
     deuda_count: int
 
 
-@register_schema("app.live.deudas.list")
 class DeudasListResult(OutputSchema):
     """Typed listing of persisted deudas snapshots.
 
@@ -1008,7 +983,6 @@ class DeudasListResult(OutputSchema):
     rows: list[DeudaSnapshotSummaryPayload]
 
 
-@register_schema("app.live.deudas.view")
 class DeudasViewResult(OutputSchema):
     """Typed detail view for one persisted deudas snapshot.
 
@@ -1025,7 +999,6 @@ class DeudasViewResult(OutputSchema):
     deudas: list[DeudaRowPayload]
 
 
-@register_schema("app.live.deudas.latest")
 class DeudasLatestResult(OutputSchema):
     """Typed newest-snapshot response for deudas.
 
@@ -1072,7 +1045,6 @@ class VerifyObservationPayload(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
-@register_schema("app.live.justificante.pull")
 class JustificanteCaptureResult(OutputSchema):
     """Result envelope for a persisted :class:`JustificanteCaptureSnapshot`.
 
@@ -1119,7 +1091,6 @@ class JustificanteSnapshotSummaryPayload(OutputSchema):
     captured_at: datetime
 
 
-@register_schema("app.live.justificante.list")
 class JustificanteListResult(OutputSchema):
     """List result from :class:`JustificanteCaptureSnapshotService`.
 
@@ -1135,7 +1106,6 @@ class JustificanteListResult(OutputSchema):
     rows: list[JustificanteSnapshotSummaryPayload]
 
 
-@register_schema("app.live.justificante.view")
 class JustificanteViewResult(OutputSchema):
     """Detail view for one persisted :class:`JustificanteCaptureSnapshot`.
 
@@ -1176,7 +1146,6 @@ class VerifyObservationSummaryPayload(OutputSchema):
     checked_at: str
 
 
-@register_schema("app.live.verify.list")
 class VerifyListResult(OutputSchema):
     """Typed listing of persisted NIF verification observations.
 
@@ -1189,7 +1158,6 @@ class VerifyListResult(OutputSchema):
     rows: list[VerifyObservationSummaryPayload]
 
 
-@register_schema("app.live.verify.view")
 class VerifyViewResult(VerifyObservationPayload):
     """Typed detail view for one persisted :class:`VerifyObservation`.
 
@@ -1198,7 +1166,6 @@ class VerifyViewResult(VerifyObservationPayload):
     """
 
 
-@register_schema("app.live.verify.latest")
 class VerifyLatestResult(OutputSchema):
     """Typed newest-observation response for one surface/NIF pair.
 
@@ -1218,7 +1185,6 @@ class VerifyLatestResult(OutputSchema):
     checked_at: str | None = None
 
 
-@register_schema("app.live.verify.nif_iva")
 class VerifyNifIvaResult(VerifyObservationPayload):
     """Typed result for an IXVI NIF-IVA live-read observation.
 
@@ -1228,7 +1194,6 @@ class VerifyNifIvaResult(VerifyObservationPayload):
     """
 
 
-@register_schema("app.live.verify.tgvi")
 class VerifyTgviResult(VerifyObservationPayload):
     """Typed result for a TGVI/GROI live-read observation.
 
@@ -1289,7 +1254,6 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
         return _canonical_borrador_utc_timestamp(value)
 
 
-@register_schema("app.live.borrador.100.list")
 class Borrador100ListResult(OutputSchema):
     """Typed listing of bucket-scoped Modelo 100 borrador snapshots.
 
@@ -1309,7 +1273,6 @@ class Borrador100ListResult(OutputSchema):
         return self
 
 
-@register_schema("app.live.borrador.100.view")
 class Borrador100ViewResult(Borrador100SnapshotSummaryPayload):
     """Typed detail view for one Modelo 100 borrador snapshot.
 
@@ -1325,7 +1288,6 @@ class Borrador100ViewResult(Borrador100SnapshotSummaryPayload):
     binding_values: dict[BindingId, str]
 
 
-@register_schema("app.live.borrador.100.latest")
 class Borrador100LatestResult(OutputSchema):
     """Typed newest-active response for Modelo 100 borrador snapshots.
 

@@ -45,8 +45,8 @@ def _validate_category_id(category_id: str | None) -> str | None:
 
 def rule_add(
     ctx: typer.Context,
-    description_pattern: str = ...,
-    classification: BusinessClassification = ...,
+    description_pattern: str,
+    classification: BusinessClassification,
     category_id: str | None = None,
     priority: int = 100,
     actor: str | None = None,

@@ -592,7 +592,7 @@ def _ledger_check_issue_lines_from_items(issues: Any) -> list[str]:
     return [f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}" for issue in issues]
 
 
-def ledger_preflight(ctx: typer.Context, period: str = ..., year: int = ...) -> None:
+def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
     """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
     from ...application.ledger import preflight_ledger_tax_readiness
 
@@ -634,7 +634,7 @@ def ledger_preflight(ctx: typer.Context, period: str = ..., year: int = ...) -> 
     )
 
 
-def ledger_history(ctx: typer.Context, transaction_id: str = ..., include_split_siblings: bool = False) -> None:
+def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblings: bool = False) -> None:
     """Emit the chronological event chain for one ledger transaction id."""
     transaction_repository = _tx_repo(_state())
     resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
@@ -667,7 +667,7 @@ def ledger_history(ctx: typer.Context, transaction_id: str = ..., include_split_
 
 def ledger_export(
     ctx: typer.Context,
-    output: Path = ...,
+    output: Path,
     export_kind: ExportSerializationFormat = ExportSerializationFormat.CSV,
     include_inactive: bool = False,
     period: str | None = None,
@@ -765,7 +765,7 @@ def ledger_list(
     )
 
 
-def ledger_view(ctx: typer.Context, transaction_id: str = ...) -> None:
+def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
     """Read one bucket-scoped ledger transaction.
 
     Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerViewResult`.
@@ -905,7 +905,7 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
     _emit_envelope(ctx, command="ledger.status", result=strict_round_trip(LedgerStatusResult, report), lines=lines)
 
 
-def ledger_track(ctx: typer.Context, transaction_id: str = ...) -> None:
+def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
     """Show audit lineage for one transaction.
 
     Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
@@ -1110,4 +1110,16 @@ def _ledger_track_lines(transaction_id: str, transaction: Transaction) -> list[s
     return lines
 
 
-__all__ = ["register_read_commands"]
+__all__ = [
+    "ledger_categories",
+    "ledger_check",
+    "ledger_export",
+    "ledger_history",
+    "ledger_list",
+    "ledger_llm_diagnostics",
+    "ledger_preflight",
+    "ledger_status",
+    "ledger_track",
+    "ledger_view",
+    "resolve_ledger_transaction_id",
+]

@@ -106,10 +106,10 @@ def consent_list(ctx: typer.Context) -> None:
     }
     lines = ["evidence_reference\ttransport\trederivable_on_host\tprovenance_stamp"]
     lines.extend(
-
-            f"{row.evidence_reference}\t{row.transport or '-'}\t{('-' if row.rederivable_on_host is None else row.rederivable_on_host)}\t{row.provenance_stamp}"
-            for row in survey.cloud_derived_artefacts
-
+        f"{row.evidence_reference}\t{row.transport or '-'}\t"
+        f"{'-' if row.rederivable_on_host is None else row.rederivable_on_host}\t"
+        f"{row.provenance_stamp}"
+        for row in survey.cloud_derived_artefacts
     )
     notices = [_unrecallable_notice()]
     if not survey.consented_dispatches and (not survey.cloud_derived_artefacts):
@@ -170,9 +170,7 @@ def _dispatch_payload(dispatch: ConsentedDispatch) -> dict[str, str]:
     }
 
 
-def consent_rederive(
-    ctx: typer.Context, evidence_reference: str = ..., content_address: str = ..., transcriber: str = ...
-) -> None:
+def consent_rederive(ctx: typer.Context, evidence_reference: str, content_address: str, transcriber: str) -> None:
     """Re-derive one artefact on this host from its cached transcription."""
     bucket_id = _tx_repo(_state()).bucket_id
     outcome = rederive_artefact_on_host(

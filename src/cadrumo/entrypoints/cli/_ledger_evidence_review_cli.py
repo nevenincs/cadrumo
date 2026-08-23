@@ -423,7 +423,7 @@ def review_list(
     """List the review queue, optionally narrowed to one blocking reason, check or advisory."""
     bucket_id = _tx_repo(_state()).bucket_id
     document = load_extraction_drafts(bucket_id, load_settings())
-        filters: list[str] = []
+    filters: list[str] = []
     if reason is not None:
         filters.append(f"reason={reason.value}")
     if finding is not None:
@@ -435,10 +435,10 @@ def review_list(
     rows = _review_queue_rows(document, reason=reason, finding=finding, advisory=advisory, blocking_only=blocking_only)
     lines = [f"bucket_id\t{bucket_id}", f"pending\t{len(rows)}"]
     lines.extend(
-
-            f"{row.evidence_reference}\t{row.blocking_count}\t{','.join(row.reasons) or '-'}\t{row.extractor}\t{row.advisory_count}\t{','.join(row.advisories) or '-'}"
-            for row in rows
-
+        f"{row.evidence_reference}\t{row.blocking_count}\t"
+        f"{','.join(row.reasons) or '-'}\t{row.extractor}\t"
+        f"{row.advisory_count}\t{','.join(row.advisories) or '-'}"
+        for row in rows
     )
     notices = _review_queue_notices(rows)
     _emit_envelope(
@@ -484,7 +484,7 @@ def _review_show_advisories(draft: InvoiceDraft) -> tuple[list[Notice], list[str
     return notices, lines
 
 
-def review_show(ctx: typer.Context, reference: str = ...) -> None:
+def review_show(ctx: typer.Context, reference: str) -> None:
     """Show every reviewable field of one pending draft, with its blocking findings."""
     bucket_id = _tx_repo(_state()).bucket_id
     document = load_extraction_drafts(bucket_id, load_settings())
@@ -513,10 +513,8 @@ def review_show(ctx: typer.Context, reference: str = ...) -> None:
         f"suggested_kind\t{(draft.suggested_kind.value if draft.suggested_kind is not None else '-')}",
     ]
     lines.extend(
-
-            f"field\t{row.field}\t{row.value or '-'}\t{row.origin or '-'}\t{row.grounding or '-'}\t{row.anchor or '-'}"
-            for row in fields
-
+        f"field\t{row.field}\t{row.value or '-'}\t{row.origin or '-'}\t{row.grounding or '-'}\t{row.anchor or '-'}"
+        for row in fields
     )
     lines.extend(
         f"blocker\t{blocker.blocker_id}\t{blocker.reason.value}\t{blocker.field or '-'}" for blocker in blockers
@@ -588,4 +586,4 @@ def parse_finding_resolution(raw: str) -> FindingResolution:
     return FindingResolution(blocker_id=blocker_id.strip(), action=action, value=payload.strip())
 
 
-__all__ = ["parse_finding_resolution", "register_evidence_review_commands", "review_app"]
+__all__ = ["parse_finding_resolution", "review_list", "review_show"]

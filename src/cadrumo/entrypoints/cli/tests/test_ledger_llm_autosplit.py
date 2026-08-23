@@ -59,7 +59,7 @@ def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
     assert listed.exit_code == 0, listed.output
     rows = _json_object(_json_result(listed))["rows"]
     assert isinstance(rows, list)
-transaction_ids: list[str] = []
+    transaction_ids: list[str] = []
     for row in rows:
         transaction_id = _json_object(row)["transaction_id"]
         assert isinstance(transaction_id, str)

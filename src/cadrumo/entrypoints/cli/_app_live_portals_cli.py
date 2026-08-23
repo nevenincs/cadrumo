@@ -1,4 +1,4 @@
-"""Portal registry command registration for ``aeat app live portals``.
+"""Portal registry behavior handlers for ``aeat app live portals``.
 
 The list verb accepts :class:`PortalCategory` filters and projects local
 :class:`PortalMetadata` records from :data:`PORTAL_REGISTRY` into
@@ -8,16 +8,14 @@ The list verb accepts :class:`PortalCategory` filters and projects local
 
 from __future__ import annotations
 
-from typing import Annotated, TypedDict
+from typing import TypedDict
 
 import typer
 
 from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ...domain.portals import PortalCategory
-from ._app_execution_policies import METADATA, declare_metadata_group
-from ._command_policy import command_execution_policy
-from ._common import MODELO_CODE_CHOICE_ALL, _emit_envelope
+from ._common import _emit_envelope
 
 
 class _PortalRow(TypedDict):
@@ -30,20 +28,6 @@ class _PortalRow(TypedDict):
     label: str
     purpose: str
     active: bool
-
-
-portals_app = typer.Typer(
-    name="portals",
-    help=tr("cli.app.live.portals.app_help", default="Local AEAT portal registry catalogue (read-only)."),
-    no_args_is_help=True,
-    add_completion=False,
-)
-declare_metadata_group(portals_app)
-
-
-def register_portals_commands(app: typer.Typer) -> None:
-    """Mount local portal-registry commands on the live app."""
-    app.add_typer(portals_app, name="portals")
 
 
 def _portal_row(metadata) -> _PortalRow:
@@ -66,30 +50,10 @@ def _portal_row(metadata) -> _PortalRow:
     )
 
 
-@portals_app.command(
-    "list",
-    help=tr("cli.app.live.portals.list_help", default="List portal-registry entries (optionally filtered)."),
-)
 def portals_list(
     ctx: typer.Context,
-    category: Annotated[
-        PortalCategory | None,
-        typer.Option(
-            "--category",
-            help=tr("cli.app.live.portals.category_help", default="Filter to one PortalCategory value."),
-        ),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option(
-            "--modelo",
-            click_type=MODELO_CODE_CHOICE_ALL,
-            help=tr(
-                "cli.app.live.portals.modelo_help",
-                default="Filter to portals bound to one modelo code (e.g. 303).",
-            ),
-        ),
-    ] = None,
+    category: PortalCategory | None = None,
+    modelo: str | None = None,
 ) -> None:
     """List local AEAT portal registry entries, optionally filtered by category or modelo.
 
@@ -122,16 +86,9 @@ def portals_list(
     _emit_envelope(ctx, command="app.live.portals.list", result=result, lines=lines)
 
 
-@portals_app.command(
-    "view",
-    help=tr("cli.app.live.portals.view_help", default="View one portal-registry entry by Portal id."),
-)
 def portals_show(
     ctx: typer.Context,
-    portal_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.live.portals.portal_id_help", default="Portal enum value.")),
-    ],
+    portal_id: str,
 ) -> None:
     """Show one portal-registry entry by its :class:`Portal` id.
 
@@ -152,8 +109,7 @@ def portals_show(
     _emit_envelope(ctx, command="app.live.portals.view", result=result, lines=lines)
 
 
-for _callback in (portals_list, portals_show):
-    command_execution_policy(METADATA)(_callback)
+__all__ = ["portals_list", "portals_show"]
 
 
 # ─────────────────────────────────────────────────────────────────────────

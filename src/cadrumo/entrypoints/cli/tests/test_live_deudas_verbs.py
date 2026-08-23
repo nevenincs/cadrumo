@@ -138,9 +138,9 @@ def test_the_family_exposes_exactly_list_view_and_latest() -> None:
     rather than merely spot-checked: a later convenience verb cannot slip in
     unnoticed, and ``view`` is asserted as the canonical spelling over ``show``.
     """
-    from .._app_live_deudas_cli import deudas_app
+    from .._app_live_command_specs import LIVE_COMMAND_SPECS
 
-    names = {command.name for command in deudas_app.registered_commands}
+    names = {spec.token for spec in LIVE_COMMAND_SPECS if spec.parent_key == "app_live_deudas" and spec.kind == "leaf"}
     assert names == {"list", "view", "latest"}
     assert "show" not in names
     assert "pull" not in names

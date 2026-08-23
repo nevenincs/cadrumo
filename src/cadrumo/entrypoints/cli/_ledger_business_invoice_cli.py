@@ -17,7 +17,6 @@ from datetime import date
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Annotated
 
 import typer
 
@@ -42,7 +41,6 @@ from ._common import (
     _bad,
     _emit_envelope,
     _parse_iso_date,
-    case_insensitive_choice,
     parse_decimal_amount,
     parse_optional_decimal_amount,
 )
@@ -249,115 +247,17 @@ def _catalogue_invoice_lines(invoice) -> list[str]:
 # ``wizard``), which carry a byte-identical 11-option signature. Declaring them
 # once keeps the ``cli.app.ledger.invoice.*`` help keys in one home so ``--help``
 # renders identically for both verbs from one ``tr`` lookup.
-_CatalogueKindOpt = Annotated[
-    InvoiceKind,
-    typer.Option(
-        "--kind",
-        help=tr("cli.app.ledger.invoice.kind_help"),
-    ),
-]
 #: The destinatario's NIF. Optional because RD 1619/2012 art. 7 does not require
 #: it on a factura simplificada -- that relief is the point of the simplified
 #: form. The domain has always accepted its absence for an ISSUED SIMPLIFICADA;
 #: only this option forced one, so the state the art. 6.1.d advisory evaluates
 #: could not be reached through the CLI at all. Every other class still refuses
 #: an absent id at the domain boundary, with the accepted set named.
-_CatalogueCounterpartyNifOpt = Annotated[str | None, typer.Option("--counterparty-nif")]
 
 #: The wizard keeps the NIF REQUIRED. It is a guided flow that assembles a
 #: complete record field by field and validates the id as it goes, so an absent
 #: one is an unanswered question rather than the deliberate omission that a
 #: simplificada represents on the direct `add` path.
-_WizardCounterpartyNifOpt = Annotated[str, typer.Option("--counterparty-nif")]
-_CatalogueCounterpartyNameOpt = Annotated[str, typer.Option("--counterparty-name")]
-_CatalogueInvoiceNumberOpt = Annotated[str, typer.Option("--invoice-number")]
-_CatalogueInvoiceDateOpt = Annotated[
-    str,
-    typer.Option(
-        "--invoice-date",
-        help=tr("cli.app.ledger.invoice.invoice_date_help"),
-    ),
-]
-_CatalogueTaxableBaseOpt = Annotated[str, typer.Option("--taxable-base")]
-_CatalogueIvaRateOpt = Annotated[str | None, typer.Option("--iva-rate")]
-_CatalogueCurrencyOpt = Annotated[str, typer.Option("--currency")]
-_CatalogueCountryCodeOpt = Annotated[
-    str,
-    typer.Option(
-        "--country-code",
-        help=tr("cli.app.ledger.invoice.country_code_help"),
-    ),
-]
-_CatalogueOperationDateOpt = Annotated[
-    str | None,
-    typer.Option(
-        "--operation-date",
-        help=tr("cli.app.ledger.invoice.operation_date_help"),
-    ),
-]
-_CatalogueOperationTypeOpt = Annotated[
-    IntracomOperationType | None,
-    typer.Option(
-        "--operation-type",
-        click_type=case_insensitive_choice(IntracomOperationType),
-        help=tr("cli.app.ledger.invoice.operation_type_help"),
-    ),
-]
-_CatalogueNotesOpt = Annotated[str, typer.Option("--notes")]
-_CatalogueInvoiceClassOpt = Annotated[
-    InvoiceClass | None,
-    typer.Option(
-        "--invoice-class",
-        help=tr("cli.app.ledger.invoice.invoice_class_help"),
-    ),
-]
-
-_CatalogueSeriesOpt = Annotated[
-    str | None,
-    typer.Option(
-        "--series",
-        help=tr("cli.app.ledger.invoice.series_help"),
-    ),
-]
-
-_CatalogueRectifiesOpt = Annotated[
-    str | None,
-    typer.Option(
-        "--rectifies-invoice-number",
-        help=tr("cli.app.ledger.invoice.rectifies_help"),
-    ),
-]
-
-_CatalogueRecargoOpt = Annotated[
-    str | None,
-    typer.Option(
-        "--recargo",
-        help=tr("cli.app.ledger.invoice.recargo_help"),
-    ),
-]
-
-_CatalogueIvaCategoryOpt = Annotated[
-    IvaCategory | None,
-    typer.Option(
-        "--iva-category",
-        help=tr("cli.app.ledger.invoice.iva_category_help"),
-    ),
-]
-
-_CatalogueRetentionRateOpt = Annotated[
-    str | None,
-    typer.Option(
-        "--retention-rate",
-        help=tr("cli.app.ledger.invoice.retention_rate_help"),
-    ),
-]
-_CatalogueRetentionAmountOpt = Annotated[
-    str | None,
-    typer.Option(
-        "--retention-amount",
-        help=tr("cli.app.ledger.invoice.retention_amount_help"),
-    ),
-]
 
 
 def invoice_add(
@@ -546,8 +446,8 @@ def invoice_wizard(
 
 def invoice_import(
     ctx: typer.Context,
-    file: Path = ...,
-    kind: InvoiceKind = ...,
+    file: Path,
+    kind: InvoiceKind,
     country: str | None = None,
 ) -> None:
     """Bulk-create reconciliation catalogue invoices from a CSV/XLSX file.
@@ -749,7 +649,7 @@ def invoice_list(
 
 def invoice_view(
     ctx: typer.Context,
-    invoice_id: str = ...,
+    invoice_id: str,
 ) -> None:
     """Show one rich catalogue invoice, resolving a full id or unambiguous prefix.
 
@@ -771,7 +671,7 @@ def invoice_view(
 
 def invoice_remove(
     ctx: typer.Context,
-    invoice_id: str = ...,
+    invoice_id: str,
     yes: bool = False,
 ) -> None:
     """Delete one rich catalogue invoice, resolving a full id or unambiguous prefix.
@@ -797,10 +697,10 @@ def invoice_remove(
 
 def invoice_update(
     ctx: typer.Context,
-    invoice_id: str = ...,
-    counterparty_name: _CatalogueCounterpartyNameOpt | None = None,
-    counterparty_country: _CatalogueCountryCodeOpt | None = None,
-    notes: _CatalogueNotesOpt | None = None,
+    invoice_id: str,
+    counterparty_name: str | None = None,
+    counterparty_country: str | None = None,
+    notes: str | None = None,
     iva_category: IvaCategory | None = None,
     operation_type: IntracomOperationType | None = None,
     operation_date: str | None = None,
