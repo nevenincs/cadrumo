@@ -19108,3 +19108,70 @@ generalisation.
 
 The 322 split, unchanged and now priced: two publish cycles. Modelo 200 and 347
 splits unchanged. Everything else as recorded.
+
+## Tick: the 322 split executed to the publication step, then rolled back
+
+The split was attempted end to end rather than priced again. It got as far as a
+VALIDATING candidate and failed on the publication transaction's temporary-root
+contract. The tree is back to its pre-tick state.
+
+### How far it got, and what that proves
+
+Every step before publication succeeded, and each failure along the way was a
+real contract the generator enforces:
+
+* the revision rename needs the `export/` fragments rewritten too -- they key the
+  revision with an UNQUOTED TOML key (`revisions.2008-2023.export_layouts`), so a
+  quoted-form replacement silently matched nothing;
+* the derived map must carry every kind-specific payload key, not an enumerated
+  few: a `draft` entry must declare `draft_attribute`, and omitting it made the
+  fragment validator refuse the whole map;
+* the join demands a complete exact bijection with parser output keyed on
+  `source_cell` as well as `source_row` -- 322 is an `.xls` design, so its
+  anchors carry cells where a PDF-sourced map's do not;
+* the envelope sheet `DR32200` needs its `variable_envelopes` contract, which
+  lives in the records fragment and is not an entry -- carried over unchanged
+  because that sheet is byte-identical between the two designs.
+
+With those four closed, **STEP 1 (candidate validates) and STEP 2 (rendered into
+the publication candidate) both passed.** The 2022 map, the retargeted render
+profile, the re-pointed casillas, the fifteen dropped 2023-only boxes and the
+authored box [73] are therefore proved coherent by the real loader and registry
+authority -- that is the pre-cutover proof the rule requires, and it passed.
+
+Publication then failed on `temporary_root`: passing the candidate's parent
+gives "journal candidate does not match the explicit caller temporary root", and
+passing the registry root itself gives "candidate registry root must be a strict
+descendant of its explicit caller root". Both cannot be satisfied by the two
+obvious readings, so the contract needs reading in the publication source rather
+than guessed at. That is the ONLY step still unproven.
+
+### The rollback, and a peer commit in the middle of it
+
+A peer committed the in-progress state as `6d416bbd33 registry(modelo-322):
+rename the 2008-2023 revision to 2023`, so HEAD briefly carried a revision whose
+`export/` still declared the old id and a `2008-2022` with no export tree at all
+-- the authority did not load.
+
+Restored forward rather than by touching history: `2008-2022` removed, `2023`
+renamed back, and the id, layout id, provenance `revision_id` and window
+rewritten across 19 fragments. Authority loads CLEAN with the original three
+revisions. Nothing of the split remains in the tree.
+
+Worth recording as a hazard rather than a complaint: in this shared worktree a
+multi-step registry mutation can be committed mid-flight, so the intermediate
+states of one must each be independently loadable, or the rollback becomes a
+fix-forward against someone else's commit.
+
+### Verified
+
+* authority loads CLEAN; modelo 322 declares its original three revisions.
+* the 322 gates pass unchanged, including the box-parity gate landed last tick.
+
+### Still open
+
+The 322 split, one step from done: everything through render-and-validate is
+proved, and only the publication call's temporary-root contract is unresolved.
+The derived map generator now handles payload keys, source cells and the
+envelope contract, so a re-run starts from a working generator rather than from
+scratch.
