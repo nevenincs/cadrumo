@@ -4,16 +4,23 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 
 import pytest
-from dev.benchmarks.cli.capture_baseline import DEFAULT_OUTPUT, _copy_source_snapshot, check_baseline
-
-from cadrumo.entrypoints.cli import app
-from cadrumo.entrypoints.cli._command_suggestions import walk_live_command_tree
+from dev.benchmarks.cli.capture_baseline import (
+    DEFAULT_OUTPUT,
+    _copy_source_snapshot,
+    _load_raw_evidence,
+    _publish_raw_and_summary,
+    _reject_unexpected_checkpoint_commands,
+    _write_json_atomic,
+    check_baseline,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -30,15 +37,49 @@ def test_committed_baseline_is_an_exact_live_census_with_safe_samples() -> None:
     check_baseline(_committed_baseline())
 
 
-def test_exact_set_gate_bites_when_a_live_path_is_absent() -> None:
-    """Removing one dynamically selected path makes the gate red."""
-    payload = _committed_baseline()
-    commands = payload["commands"]
+def _republish_mutated_raw(
+    tmp_path: Path, mutate: Callable[[dict[str, object]], None]
+) -> tuple[dict[str, object], Path]:
+    summary = _committed_baseline()
+    raw = _load_raw_evidence(summary, baseline_path=DEFAULT_OUTPUT)
+    commands = raw["commands"]
     assert isinstance(commands, dict)
-    commands.pop(next(iter(commands)))
+    frozen: object = json.loads(
+        DEFAULT_OUTPUT.with_name("baseline.census.json").read_text(encoding="utf-8")
+    )
+    assert isinstance(frozen, dict)
+    raw["frozen_census"] = frozen["commands"]
+    mutate(commands)
+    output = tmp_path / "baseline.json"
+    republished = _publish_raw_and_summary(output, raw)
+    _write_json_atomic(output, republished)
+    return cast("dict[str, object]", republished), output
 
-    with pytest.raises(RuntimeError, match="stale CLI baseline"):
-        check_baseline(payload)
+
+def test_exact_set_gate_bites_on_coherently_republished_missing_node(tmp_path: Path) -> None:
+    """Independent frozen authority rejects a self-consistent shortened pair."""
+    def remove_first(commands: dict[str, object]) -> None:
+        commands.pop(next(iter(commands)))
+
+    payload, output = _republish_mutated_raw(tmp_path, remove_first)
+    with pytest.raises(RuntimeError, match="exact-set mismatch"):
+        check_baseline(payload, baseline_path=output)
+
+
+def test_exact_set_gate_bites_on_coherently_republished_invented_node(tmp_path: Path) -> None:
+    """Independent frozen authority rejects a self-consistent invented node."""
+    def add_invented(commands: dict[str, object]) -> None:
+        commands["aeat invented"] = next(iter(commands.values()))
+
+    payload, output = _republish_mutated_raw(tmp_path, add_invented)
+    with pytest.raises(RuntimeError, match="exact-set mismatch"):
+        check_baseline(payload, baseline_path=output)
+
+
+def test_resume_rejects_checkpoint_commands_outside_frozen_census() -> None:
+    """A poisoned resume cannot carry an invented observation to publication."""
+    with pytest.raises(RuntimeError, match="unexpected commands"):
+        _reject_unexpected_checkpoint_commands({"aeat": {}, "aeat invented": {}}, ["aeat"])
 
 
 def test_gate_bites_when_help_mode_is_claimed_as_handler_execution() -> None:
@@ -123,14 +164,26 @@ def test_gate_bites_when_control_distribution_or_method_count_is_tampered() -> N
         check_baseline(method_payload)
 
 
-def test_live_census_has_no_fixed_count_assumption() -> None:
-    """Enrollment equality derives from paths rather than a frozen tally."""
-    paths = {node.path for node in walk_live_command_tree(app)}
+def test_live_census_freshness_has_no_fixed_count_assumption() -> None:
+    """Freshness compares dynamic paths and source identity, never a frozen tally."""
     payload = _committed_baseline()
-    commands = payload["commands"]
-    assert isinstance(commands, dict)
+    with pytest.raises(RuntimeError, match="source snapshot is stale"):
+        check_baseline(payload, require_current_source=True)
 
-    assert {tuple(path.split(" ")) for path in commands} == paths
+
+def test_gate_bites_when_lossless_raw_evidence_is_corrupted(tmp_path: Path) -> None:
+    """The compact summary cannot authenticate damaged lossless observations."""
+    summary_path = tmp_path / "baseline.json"
+    raw_path = tmp_path / "baseline.raw.json.gz"
+    shutil.copyfile(DEFAULT_OUTPUT, summary_path)
+    shutil.copyfile(DEFAULT_OUTPUT.with_name("baseline.raw.json.gz"), raw_path)
+    shutil.copyfile(DEFAULT_OUTPUT.with_name("baseline.census.json"), tmp_path / "baseline.census.json")
+    raw = bytearray(raw_path.read_bytes())
+    raw[len(raw) // 2] ^= 1
+    raw_path.write_bytes(raw)
+
+    with pytest.raises(RuntimeError, match="compressed digest"):
+        check_baseline(_committed_baseline(), baseline_path=summary_path)
 
 
 def test_frozen_import_root_ignores_later_live_source_mutation(tmp_path: Path) -> None:
