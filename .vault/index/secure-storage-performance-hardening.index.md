@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:3fda67ae328bf8b9d1cc746e3224ca9b7bbdc83a89132a63a31e96778fab99b2'
+body_hash: 'sha256:764b201b843010cbc8a06835fdbbe898f954784d0bb37319fa2b434fb9b5601c'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
@@ -23,6 +23,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P02-S07]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P02-S08]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P02-summary]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-W02-P03-S09]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
@@ -41,6 +42,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p02-s06-calibration-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w01-p02-s07-baseline-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w01-p02-s08-profiler-bite-review-audit]]'
+  - '[[2026-08-23-secure-storage-performance-hardening-w02-p03-s09-lazy-node-kernel-review-audit]]'
 ---
 
 # `secure-storage-performance-hardening` feature index
@@ -69,6 +71,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-w01-p02-s06-calibration-review-audit` - `secure-storage-performance-hardening` audit: `S06 quiet-runner calibration review`
 - `2026-08-23-secure-storage-performance-hardening-w01-p02-s07-baseline-review-audit` - `secure-storage-performance-hardening` audit: `W01.P02.S07 frozen complete-CLI baseline review`
 - `2026-08-23-secure-storage-performance-hardening-w01-p02-s08-profiler-bite-review-audit` - `secure-storage-performance-hardening` audit: `W01.P02.S08 profiler bite review`
+- `2026-08-23-secure-storage-performance-hardening-w02-p03-s09-lazy-node-kernel-review-audit` - `secure-storage-performance-hardening` audit: `W02.P03.S09 lazy node kernel review`
 
 ### exec
 
@@ -87,6 +90,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-W01-P02-S07` - Capture baseline distributions and ranked outliers for every enrolled node as execution evidence
 - `2026-08-22-secure-storage-performance-hardening-W01-P02-S08` - Prove profiler and census gates bite on injected registry loading, filesystem materialization, and unclassified nodes
 - `2026-08-22-secure-storage-performance-hardening-W01-P02-summary` - `secure-storage-performance-hardening` `W01.P02` summary
+- `2026-08-22-secure-storage-performance-hardening-W02-P03-S09` - Refactor lazy registration into a reusable node loader with explicit targets and fail-loud dependency classification
 
 ### plan
 

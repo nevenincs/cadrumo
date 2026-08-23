@@ -15,7 +15,13 @@ from ....tests.cli_runner import invoke_cached_cli
 from .. import app
 from .._command_policy import CommandExecutionPolicy, command_execution_policy
 from .._command_schema import CommandCapabilityClass
-from .._command_suggestions import CadrumoTyperGroup, LazySubcommand, register_lazy_subcommand, walk_live_command_tree
+from .._command_suggestions import (
+    CadrumoTyperGroup,
+    LazyFactoryTarget,
+    LazySubcommand,
+    register_lazy_subcommand,
+    walk_live_command_tree,
+)
 from ._runtime_profile_cli_fixture import _isolated_cli_state
 
 __all__ = ["_isolated_cli_state"]
@@ -117,7 +123,7 @@ def test_live_command_walker_distinguishes_eager_and_lazy_ownership() -> None:
 
         return lazy
 
-    register_lazy_subcommand("command-census-proof", LazySubcommand("lazy", _load_lazy))
+    register_lazy_subcommand("command-census-proof", LazySubcommand("lazy", LazyFactoryTarget(_load_lazy)))
 
     first = walk_live_command_tree(root)
     second = walk_live_command_tree(root)
@@ -162,7 +168,7 @@ def test_live_command_walker_reads_policy_from_real_eager_and_lazy_callbacks() -
 
         return lazy
 
-    register_lazy_subcommand("policy-census-proof", LazySubcommand("lazy", _load_lazy))
+    register_lazy_subcommand("policy-census-proof", LazySubcommand("lazy", LazyFactoryTarget(_load_lazy)))
 
     by_path = {node.path: node for node in walk_live_command_tree(root)}
 

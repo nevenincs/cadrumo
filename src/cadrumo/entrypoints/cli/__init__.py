@@ -18,11 +18,11 @@ application functions and pydantic records.
 from __future__ import annotations
 
 import os
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Never, cast
 
 import typer
 from typer._click.core import Command as _TyCommand
@@ -73,6 +73,10 @@ from ._app_execution_policies import METADATA as _APP_HELP_POLICY
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_policy import command_execution_policy as _command_execution_policy
 from ._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
+from ._command_suggestions import (
+    LazyImportTarget as _LazyImportTarget,
+)
+from ._command_suggestions import LazyOptionalDependencyProvider as _LazyOptionalDependencyProvider
 from ._command_suggestions import (
     LazySubcommand as _LazySubcommand,
 )
@@ -1189,45 +1193,46 @@ _LAZY_COMMAND_REGISTRATIONS: tuple[tuple[str, str, str], ...] = (
 _LAZY_COMMAND_MODULES: frozenset[str] = frozenset(module for _group, _name, module in _LAZY_COMMAND_REGISTRATIONS)
 
 
-def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer]:
-    """Build a deferred factory importing ``module_name``'s ``app`` Typer.
+def _required_import_failure(name: str, error: ModuleNotFoundError) -> Never:
+    """Refuse a required or unclassified lazy-target dependency failure."""
+    missing = _missing_dependency_name(error)
+    raise _CliCommandGroupUnavailableError(group=name, module=_redact_for_cli_output(missing)) from error
 
-    A :exc:`ModuleNotFoundError` is handed to
-    :func:`_surface_for_import_failure`, which degrades to a placeholder group
-    only when the missing module belongs to a registered optional extra and
-    otherwise refuses loudly. Every other import failure propagates untouched.
-    """
 
-    def _factory() -> typer.Typer:
-        from importlib import import_module
+def _optional_import_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
+    """Build the canonical unavailable surface for an explicit optional extra."""
+    from ...core import optional_extra_for_module
 
-        if module_name not in _LAZY_COMMAND_MODULES:
-            raise RuntimeError(f"unregistered lazy CLI module: {module_name}")
-        try:
-            # Module names are constrained to `_LAZY_COMMAND_MODULES`.
-            module = import_module(module_name, __name__)  # nosemgrep
-        except ModuleNotFoundError as error:
-            return _surface_for_import_failure(group_label, error)
-        # Read the attribute rather than fetching it by name. The two are the
-        # same operation here, but only this spelling lets a static reader see
-        # WHICH attribute a dynamically imported module can reach, which is
-        # what proves nothing else escapes through this loader.
-        try:
-            app = module.app
-        except AttributeError as error:
-            raise RuntimeError(f"lazy CLI module {module_name!r} does not expose a Typer app") from error
-        if not isinstance(app, typer.Typer):
-            raise RuntimeError(f"lazy CLI module {module_name!r} does not expose a Typer app")
-        return app
+    extra = optional_extra_for_module(_missing_dependency_name(error))
+    if extra is None:
+        raise RuntimeError("lazy loader classified an undeclared dependency as optional") from error
+    return _optional_extra_surface(name, extra)
 
-    return _factory
+
+def _optional_dependency_names() -> frozenset[str]:
+    """Read the canonical optional-extra registry only after an import fails."""
+    from ...core import OPTIONAL_EXTRAS
+
+    return frozenset(extra.import_name for extra in OPTIONAL_EXTRAS)
 
 
 def _lazy(group_name: str, name: str, module_name: str) -> None:
     """Register ``module_name`` as a lazily-loaded subcommand of ``group_name``."""
+    if module_name not in _LAZY_COMMAND_MODULES:
+        raise RuntimeError(f"unregistered lazy CLI module: {module_name}")
     _register_lazy_subcommand(
         group_name,
-        _LazySubcommand(name, _lazy_loader(module_name, name), decorate=_decorate_typer_app),
+        _LazySubcommand(
+            name,
+            _LazyImportTarget(
+                module=module_name,
+                package=__name__,
+                optional_dependencies=_LazyOptionalDependencyProvider(_optional_dependency_names),
+            ),
+            decorate=_decorate_typer_app,
+            optional_unavailable=_optional_import_surface,
+            required_unavailable=_required_import_failure,
+        ),
     )
 
 
