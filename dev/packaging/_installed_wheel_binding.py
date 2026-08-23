@@ -149,6 +149,14 @@ def assert_installed_console_entry_point(
             with zipfile.ZipFile(resolved) as launcher:
                 if launcher.namelist() != ["__main__.py"] or launcher.read("__main__.py") != expected_script:
                     raise RuntimeError("console entry-point launcher semantics drifted")
+            peer_name = "cadrumo-mcp.exe" if entry_point == "aeat" else "aeat.exe"
+            peer = resolved.with_name(peer_name).resolve(strict=True)
+            executable_bytes = resolved.read_bytes()
+            peer_bytes = peer.read_bytes()
+            executable_zip = executable_bytes.find(b"PK\x03\x04")
+            peer_zip = peer_bytes.find(b"PK\x03\x04")
+            if executable_zip < 0 or peer_zip < 0 or executable_bytes[:executable_zip] != peer_bytes[:peer_zip]:
+                raise RuntimeError("console entry-point launcher stub drifted")
         except (OSError, zipfile.BadZipFile) as exc:
             raise RuntimeError("console entry-point launcher is malformed") from exc
     elif resolved.read_bytes() != expected_script:

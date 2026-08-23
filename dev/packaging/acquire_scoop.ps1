@@ -6,7 +6,9 @@
     Post-publication reacquisition for post-release-distribution plan row P03.S16.
     Adds the published Scoop bucket, installs the app from it, verifies every
     installed cohort artifact digest against the promoted cohort, and repeats the
-    grounded installed CLI tax-work oracle. Reuses the disposable
+    grounded installed CLI tax-work oracle. The manifest is CLI-only by scope:
+    cadrumo-mcp ships in the sibling cadrumo-harness distribution, which Scoop
+    does not install. Reuses the disposable
     Windows-container orchestration pattern of smoke_scoop.ps1 (-Mode Container
     launches a throwaway ltsc2022 container that bootstraps Scoop and runs the
     Host implementation). Refuses instructively when the public bucket does not
@@ -334,6 +336,9 @@ function Invoke-HostAcquisition {
         verified_artifact_digests = $verifiedDigests
         installed_prefix = $prefix
         installed_tax_oracle = (Get-Content -LiteralPath $oracle.tax_evidence -Raw | ConvertFrom-Json)
+        # The Scoop manifest is CLI-only by scope; cadrumo-mcp ships in the
+        # sibling cadrumo-harness distribution, which the manifest does not install.
+        installed_mcp_oracle = $null
     }
     $evidence | ConvertTo-Json -Depth 20 |
         Set-Content -LiteralPath (Join-Path $resolvedEvidence "acquire-scoop-evidence.json") -Encoding UTF8

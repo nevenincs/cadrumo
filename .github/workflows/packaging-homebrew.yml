@@ -235,8 +235,9 @@ jobs:
             --retain-install
 
       # Mint the sanctioned homebrew-<os>-<arch> row from the real captured tax
-      # oracle JSON written by the CLI smoke, bound to THE immutable release
-      # cohort verified and extracted above. No re-run.
+      # oracle JSON (the CLI-only smoke wrote tax-evidence.json host-visible;
+      # the formula carries no MCP leg, so the record marks it absent), bound to
+      # THE immutable release cohort verified and extracted above. No re-run.
       - name: Emit the sanctioned Homebrew distribution-evidence record
         env:
           ROW_ID: ${{ matrix.row_id }}
@@ -258,7 +259,7 @@ jobs:
             --distribution-evidence-dir "$CADRUMO_HOMEBREW_ROOT/distribution-install-readiness"
 
       # Diagnostics must survive the runner workspace: on failure, keep the
-      # brew-install log and smoke failure detail as debug-* artifacts.
+      # brew-install log and the harness failure detail as debug-* artifacts.
       # debug-* names are outside the promotable row namespace: none are .json
       # row files, and the publish gates exclude debug-* from row aggregation.
       - name: Stage build-failure diagnostics

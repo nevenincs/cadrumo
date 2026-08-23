@@ -21,6 +21,7 @@
 #   * the complete blocking evidence set, derived from the channels this release
 #     claims and re-run here rather than trusted from a local aggregation;
 #   * the fail-closed leak sweep over every byte about to be attached;
+#   * the marketplace supersession preflight;
 #   * reversible destination writes first, with the sole irreversible index
 #     upload last, and idempotent convergence on re-dispatch.
 #
@@ -182,8 +183,8 @@ jobs:
           # artifact cannot be attached to a run that did not produce it, which
           # is the binding the old release-asset manifest had to reconstruct.
           # verify therefore pins run identity against the Actions API and then
-          # pulls that run's artifacts. Aggregate the base Python, Scoop, and
-          # Homebrew rows.
+          # pulls that run's artifacts. Aggregate all eleven rows: 3 python
+          # (smoke run), 1 scoop, and 3 homebrew rows.
           mkdir -p "$EVIDENCE_DOWNLOAD/rows" "$EVIDENCE_DOWNLOAD/rows-raw"
           verify() {  # run-id, workflow-path, dest
             identity="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$1" \
@@ -325,7 +326,7 @@ jobs:
           tar -xzf var/promotion/download/cadrumo-release-cohort.tar.gz -C "$RELEASE_COHORT_DIR"
 
       # D8: the published release is self-evidencing — it also carries the
-      # verified base-channel rows, so a shipped version's audit trail outlives the
+      # eleven verified rows, so a shipped version's audit trail outlives the
       # producing runs' artifact retention. Rows re-download from the same
       # identity-verified runs.
       - name: Re-download and verify the evidence rows for the self-evidencing release

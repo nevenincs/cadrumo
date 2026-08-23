@@ -1,7 +1,7 @@
 """Assert an installed environment matches the tested pinned constraint closure.
 
-The Scoop manifest installs the product wheels and lets ``uv`` resolve their
-transitive dependencies against a pinned constraints file
+The Scoop manifest and the MCPB bundle install the product wheels and then let
+``uv`` resolve their transitive dependencies against a pinned constraints file
 exported from ``uv.lock`` (:mod:`dev.packaging.uv_constraints`). Pinning the
 closure at install time is necessary but not sufficient: nothing yet observes
 that the environment the installer actually produced landed on those pins. This
