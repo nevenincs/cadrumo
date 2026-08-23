@@ -700,6 +700,15 @@ applies_to = 2024-08-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/DR303e24.xlsx"
 review_status = "reviewed"
 
+# The 2024 pair's windows OVERLAP in July and August, and that is AEAT's rule
+# rather than a data error. `-early` is titled "hasta periodos 08 y 2T" and
+# `-late` "a partir de periodos 09 y 3T": a MONTHLY filer switches at period 09
+# (September) while a QUARTERLY filer's 3T already starts in July, so both
+# designs are live across those two months and which one applies is decided by
+# the filer's cadence, not by the calendar date alone. Narrowing either window to
+# make the pair tile would make one cadence cite a design AEAT did not publish
+# for it. The same shape holds for the 2021 and 2018 pairs, whose windows span
+# the whole ejercicio because the PERIOD axis, not the date, separates them.
 [sources."aeat-dr-303-2024-late"]
 evidence_tier = "layout_authority"
 authority = "aeat"

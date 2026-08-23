@@ -3,8 +3,10 @@
 #
 # 37 casillas describe all 47 design fields -- 37 authored and
 # 10 excluded, each excluded field asserted to be envelope, reservado or fin de
-# registro BY ITS OWN TEXT rather than by position. Every box carries AEAT's own five-digit
-# number, so not one number here is minted.
+# registro BY ITS OWN TEXT rather than by position.
+#
+# All 37 of this record's numbers carry AEAT's own printed box number (37 are 5-digit).
+# Not one number here is minted.
 #
 # CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
 # and no nesting is inferred from position. Where a design does NOT do this the record is
@@ -16,34 +18,32 @@
 # [00138] Existencias and [00149] Deudores comerciales and read on the printed modelo as
 # breakdowns of Existencias. The design does not say so, so nothing here says so either.
 #
-# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
-# intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is
-# derived as the common prefix of every numbered line and the remainder is stripped, so
-# both spellings land on the same heading. 0 parent-child separator
-# repair(s)
-# applied: none needed.
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER A HEADING, writing the same one
+# both with and without the space that should follow its period. The heading is derived as
+# the common prefix of every numbered line and the remainder is stripped, so both
+# spellings land on the same heading. 0 parent-child separator
+# repair(s) applied to this record: none needed.
 #
 # THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
 # counted twice so the damage cannot attest itself: once over every token, and once over
 # only those tokens seen where they CANNOT be the left half of a split. 0
-# rejoin(s) applied: none.
+# rejoin(s) applied to this record, 0 distinct: none.
 #
 # 7 of this record's 37 numbered lines carry the real ligature CODEPOINT, unsplit,
 # expanded in the labels and kept as emitted in the verbatim comments. The design carries
 # 309 such codepoints in all, so a plain-text search of this workbook for a Spanish
 # word silently misses them.
-
 #
 # Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
 # 2024-12-31 -- exactly the single ejercicio this revision claims. T22003A00 tiles
 # 1..806 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
 #
 # AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
-# pagina 03, letra A, hoja 00. Sibling sector pages of this
-# family share every heading AEAT prints in the BODY -- two records both head their
-# lines "ACTIVO" and both declare a "Total activo" -- so the envelope is the ONLY
-# non-inferential way to tell them apart. The operator label carries it for exactly
-# that reason; it claims no sector, which the design does not state.
+# pagina 03, letra A, hoja 00. Sibling sector pages in this modelo
+# can share every heading AEAT prints in the BODY -- on the balance-sheet pages two
+# records both head their lines "ACTIVO" and both declare a "Total activo" -- so the
+# envelope is the ONLY non-inferential way to tell such records apart. The operator label
+# carries it for exactly that reason; it claims no sector, which the design does not state.
 #
 # NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
 # pagina-complementaria mechanics; @645+150 RESERVADO PARA LA ADMINISTRACION; and
