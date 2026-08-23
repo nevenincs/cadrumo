@@ -4498,3 +4498,63 @@ Re-measure first. If m322 still fails, the block is not mine to clear without co
 The next unit remains **T22003B00** (61 fields, 51 numbered boxes, the patrimonio neto and
 pasivo side of the general-PGC balance sheet), which pairs with T22003A00 authored last
 iteration.
+
+## 2026-08-23 — T22003B00, and an assertion that was wrong about its own record
+
+### The block cleared
+
+The peer's m322 era split landed; the registry loads clean and the FAILED list is back to
+the nine it stood at before. Nothing had to be done to clear it — which is the right outcome
+for a block that was never mine.
+
+### What landed
+
+Record **T22003B00** — the *balance consolidado, patrimonio neto y pasivo*, completing the
+pair with T22003A00. **51 casillas**, revision 1464 → **1515**, twenty-eight of 137 records.
+
+### An empty common prefix is a valid answer
+
+The generator derives a record's heading as the common prefix of its numbered lines, and
+**asserted the result was non-empty**. T22003A00 prefixes every line with `ACTIVO`; this
+record prefixes **nothing at all** — its lines begin directly with `PATRIMONIO NETO`,
+`Fondos propios`, `Capital`.
+
+The assertion would have failed here, and **the assertion was wrong, not the record**.
+Forcing a heading would have put a word AEAT does not print onto 51 filing-grade labels.
+
+That's a distinct failure mode from the ones logged so far: not a derivation that produced a
+wrong answer, but **a guard that treated a legitimate answer as impossible**. A check
+encodes an assumption; when it fires, the assumption is as likely to be the defect as the
+data. Second time this campaign — the T22005A00 duplicate-label check fired on AEAT's own
+structure.
+
+### AEAT is inconsistent inside one group
+
+Five boxes sit under `Reservas` on the printed modelo and carry **no prefix** — `00003`,
+`00752`, `00753`, `00764` — while `00750` and `00702` *are* prefixed `Reservas.` in the same
+run. All left flat: nested only where the line itself says so.
+
+`00003` also sits far outside the record's `00185`–`00252` range. AEAT's numbering, not a
+transcription slip, and recorded so nobody concludes otherwise.
+
+### Parentheses that carry arithmetic
+
+`(Acciones y participaciones de la sociedad dominante)` and `(Dividendo a cuenta)` are
+parenthesised because they **subtract**. Kept verbatim in all four catalogues — stripping
+them would silently drop the sign convention. **Nothing here acts on it**: it is punctuation
+in a label, and a consumer treating those lines as additive will be wrong.
+
+Also `Procisiones` for *Provisiones* on `00735` — corrected by name, reported on the
+fragment.
+
+### Both sides now exist, and still nothing checks them
+
+`TOTAL ACTIVO` `00180` and `TOTAL PATRIMONIO NETO Y PASIVO` `00252` are both declared, and
+**nothing checks that they are equal.** No formula sums a group into its head, sums heads
+into a total, or relates the totals. Authoring both sides makes the check possible; it does
+not make it exist — worth stating plainly, because a complete balance sheet is exactly the
+kind of artefact a reader assumes must balance.
+
+### Scale
+
+**10221 of 11570 slots remain** across 105 numbered records; 1349 modelled, zero orphaned.

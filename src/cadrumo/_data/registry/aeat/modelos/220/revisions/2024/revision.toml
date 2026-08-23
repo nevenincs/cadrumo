@@ -62,51 +62,58 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the Impuesto sobre Sociedades grupo-fiscal \
 consolidated declaration. DISCLOSURE -- self-review: the same agent authored the casillas \
-being reviewed. VERIFIED -- RECORD T22003A00 IS AUTHORED, 37 casillas, the BALANCE \
-CONSOLIDADO, ACTIVO, in the general Plan General de Contabilidad shape: activo no \
-corriente from inmovilizado intangible through the long-term investments to activos por \
-impuesto diferido, then activo corriente from existencias through the short-term \
-investments to efectivo, closing on TOTAL ACTIVO. Revision total 1464 casillas over \
-TWENTY-SEVEN of the design's 137 records. Every box carries AEAT's own five-digit number, \
-so not one number here is minted. VERIFIED -- CHILDREN CARRY THEIR PARENT'S NAME INLINE, \
-so all 37 labels are distinct on AEAT's own text and no nesting is inferred from position. \
-TWO BOXES ARE THE EXCEPTION AND ARE LEFT FLAT: [00701] \"Derechos de emision de gases de \
-efecto invernadero\" and [00761] \"Otros\" carry NO parent name, though they sit between \
-[00138] Existencias and [00149] Deudores comerciales and read on the printed modelo as \
-breakdowns of Existencias. The design does not say so, so nothing here says so either -- \
-the same refusal that kept T22005A01 flat, applied to two boxes rather than nineteen. \
-VERIFIED -- THE GENERATOR IS NOW GENERALISED RATHER THAN COPIED A THIRD TIME. Heading \
-derived as the common prefix of every numbered line; ligature repair grounded in the \
-workbook's vocabulary and counted twice so the damage cannot attest itself; parent-child \
-separator inserted only after an attested standalone line of the same record; completeness \
-complement asserted against the design; type coverage asserted. Three records have now \
-been authored through it and the shared machinery is what makes their claims comparable. \
-VERIFIED -- AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER ITS OWN HEADING, writing \
-\"ACTIVO. Inmovilizado intangible\" with a space and \"ACTIVO.Activos por impuesto \
-diferido\" without. Deriving the heading as a common prefix and stripping the remainder \
-lands both spellings on the same heading, so no rule about AEAT's punctuation was needed. \
-VERIFIED -- SEVEN OF THIS RECORD'S 37 LINES CARRY THE REAL U+FB01 CODEPOINT, unsplit, in \
-\"Inversiones financieras\" and \"Periodificaciones\". Expanded in the labels, kept as \
-emitted in the verbatim comments. The design carries 309 such codepoints in all, so a \
-plain-text search of this workbook for a Spanish word silently misses them -- the \
-measurement that first surfaced on T22007M00 and has now been rechecked on a third family. \
-VERIFIED -- COMPLETENESS COMPLEMENT ASSERTED IN THE GENERATOR: all 47 design fields are 37 \
-authored plus 10 excluded, and every excluded field is asserted to be envelope, reservado \
-or fin de registro BY ITS OWN TEXT rather than by position. T22003A00 tiles 1..806 exactly \
-once with NO gap and NO PARTIAL OVERLAP. Year-clean: aeat-dr-220-2024 applies exactly the \
-single ejercicio this revision claims. NOT CLAIMED -- THIS BALANCE SHEET DOES NOT BALANCE \
-HERE. Every subtotal and the TOTAL ACTIVO are DECLARED, not computed: NO formula, \
-construct or binding sums a group into its head, sums the heads into [00180], or checks \
-activo against patrimonio neto plus pasivo. Every box is a manual input. A reader should \
-not mistake a complete balance-sheet record for a balance sheet the application can check. \
-NOT CLAIMED -- THE SIBLING BALANCE RECORDS ARE NOT AUTHORED. T22003A01, A02, A11, B00, \
-B01, B02, C01, C02 and D02 remain unmodelled, and the family's sheet suffix is NOT a \
-reliable guide to which side of the balance a record covers: T22003B02 opens \"ACTIVO. \
-Inmovilizado intangible\" despite the B, so it continues an ACTIVO page rather than \
-starting a PASIVO one. Anyone continuing this family must read the descriptions, not the \
-sheet names. NOT CLAIMED -- 10272 OF THE 11570 (record, number) SLOTS REMAIN UNMODELLED \
-across 106 of the 133 records that carry numbers; 1298 slots are modelled, zero orphaned. \
-A coverage figure is only true against the extractor of the day it was measured. NOT \
+being reviewed. VERIFIED -- RECORD T22003B00 IS AUTHORED, 51 casillas, the BALANCE \
+CONSOLIDADO, PATRIMONIO NETO Y PASIVO in the general Plan General de Contabilidad shape: \
+fondos propios from capital through the reservas and the resultado del ejercicio, then \
+ajustes por cambios de valor, subvenciones and socios externos, then pasivo no corriente \
+and pasivo corriente, closing on TOTAL PATRIMONIO NETO Y PASIVO. It completes the pair \
+with T22003A00 authored last iteration. Revision total 1515 casillas over TWENTY-EIGHT of \
+the design's 137 records. Every box carries AEAT's own five-digit number, so not one \
+number here is minted. VERIFIED -- AN EMPTY COMMON PREFIX IS A VALID ANSWER, NOT A FAILURE \
+TO FIND ONE. The generator derives a record's heading as the common prefix of its numbered \
+lines. T22003A00 prefixes every line with \"ACTIVO\"; THIS RECORD PREFIXES NOTHING AT ALL \
+-- its lines begin directly with \"PATRIMONIO NETO\", \"Fondos propios\", \"Capital\". The \
+generator previously ASSERTED a non-empty heading, which would have failed here; the \
+assertion was wrong, not the record. Forcing a heading would have put a word AEAT does not \
+print onto 51 filing-grade labels. VERIFIED -- FIVE BOXES SIT UNDER \"Reservas\" ON THE \
+PRINTED MODELO AND CARRY NO PREFIX: [00003] reserva legal y estatutaria, [00752] reserva \
+de capitalizacion, [00753] reserva de nivelacion and [00764] fondo de reserva obligatorio \
+de cooperativas, while [00750] and [00702] ARE prefixed \"Reservas.\" in the same run. \
+AEAT is inconsistent within one group. All are left FLAT -- nested only where the line \
+itself says so, the same treatment given to [00701] and [00761] on the activo side and to \
+the nineteen shared lines of T22005A01. NOTED -- [00003] IS FAR OUTSIDE THIS RECORD'S \
+NUMBER RANGE, which otherwise runs 00185 to 00252 with a handful of 007xx additions. It is \
+AEAT's numbering, not a transcription slip, and is recorded because a reader checking the \
+range would conclude otherwise. VERIFIED -- TWO LABELS ARE PARENTHESISED IN THE DESIGN: \
+\"(Acciones y participaciones de la sociedad dominante)\" and \"(Dividendo a cuenta)\". \
+The parentheses are AEAT's mark for a line that SUBTRACTS, so they are kept verbatim in \
+all four catalogues; stripping them would silently drop a sign convention. NOTHING HERE \
+ACTS ON THAT CONVENTION -- it is punctuation in a label, not arithmetic, and a consumer \
+that treats these as additive will be wrong. VERIFIED -- AEAT MISSPELLS \"Provisiones\" AS \
+\"Procisiones\" on [00735]; corrected in the operator label by name, never by a general \
+rule, and kept as printed in the fragment comment. Six of this record's 51 lines carry the \
+real U+FB01 ligature codepoint, unsplit, expanded in the labels and kept as emitted in the \
+comments. VERIFIED -- COMPLETENESS COMPLEMENT ASSERTED IN THE GENERATOR: all 61 design \
+fields are 51 authored plus 10 excluded, and every excluded field is asserted to be \
+envelope, reservado or fin de registro BY ITS OWN TEXT rather than by position. T22003B00 \
+tiles 1..1044 exactly once with NO gap and NO PARTIAL OVERLAP. Year-clean: \
+aeat-dr-220-2024 applies exactly the single ejercicio this revision claims. NOTED -- THE \
+PREVIOUS ITERATION WAS BLOCKED AND WROTE NOTHING. The registry failed validation with 189 \
+failures, every one in modelo 322 revision 2008-2022 while a peer's era split was in \
+flight; the failure count moved between consecutive load attempts, which is what \
+distinguishes an active worktree from a stable break. No record was authored and no stamp \
+was written then. That split has since landed and the registry loads clean. NOT CLAIMED -- \
+THIS BALANCE SHEET DOES NOT BALANCE. Both sides are now declared -- TOTAL ACTIVO as \
+[00180] and TOTAL PATRIMONIO NETO Y PASIVO as [00252] -- and NOTHING CHECKS THAT THEY ARE \
+EQUAL. No formula, construct or binding sums a group into its head, sums the heads into \
+either total, or relates the two totals to each other. Authoring both sides makes the \
+check possible; it does not make it exist. NOT CLAIMED -- 10221 OF THE 11570 (record, \
+number) SLOTS REMAIN UNMODELLED across 105 of the 133 records that carry numbers; 1349 \
+slots are modelled, zero orphaned. A coverage figure is only true against the extractor of \
+the day it was measured. NOT CLAIMED -- THE SIBLING BALANCE RECORDS ARE NOT AUTHORED: \
+T22003A01, A02, A11, B01, B02, C01, C02 and D02 remain unmodelled, and the family's sheet \
+suffix is NOT a reliable guide to which side a record covers -- T22003B02 opens \"ACTIVO. \
+Inmovilizado intangible\" despite the B. Read the descriptions, not the sheet names. NOT \
 CLAIMED -- THE STANDING CROSS-RECORD HAZARD IS UNCHANGED. Box 00500 is declared in two \
 records and carries an identical operator label in both; the design prints some numbers in \
 as many as seven records. A layout MUST bind such casillas to the SAME value rather than \
@@ -114,15 +121,13 @@ collect them twice, and NOTHING ENFORCES THAT TODAY. NOT CLAIMED -- NO EXPORT LA
 NO CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be filed. model_law_authority_scope \
 remains inspection_only, so this stamp is made under the LOWER inspection bar and MUST be \
 re-made if a layout lands. NOT CLAIMED -- T22009001, T22012A00 and T22012A10 remain \
-deliberately held back, the first for two byte-identical descriptions whose jurisdiction \
-the design does not state, the others for colliding label keys. NOT CLAIMED -- LOCALES \
-COMPLETE BUT UNAUDITED: the 37 labels were composed from 19 parent concepts and 12 child \
-suffixes translated once each, by the same agent that authored the casillas and reviewed \
-by nobody else; the catalogues are unaccented ASCII, asserted. All 1464 casillas resolve a \
-non-null label in es, en, ca and hu, counted by VALUE rather than by key. The revision \
-carries FIVE duplicated label texts over TWENTY-ONE casillas, unchanged by this record: \
-four are AEAT's own repeats inside T22005A01 and the fifth is box 00500 declared twice. \
-NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero."""
+deliberately held back. NOT CLAIMED -- LOCALES COMPLETE BUT UNAUDITED: the 51 labels were \
+composed from 36 parent concepts and 11 child suffixes translated once each, by the same \
+agent that authored the casillas and reviewed by nobody else; the catalogues are \
+unaccented ASCII, asserted. All 1515 casillas resolve a non-null label in es, en, ca and \
+hu, counted by VALUE rather than by key. The revision carries FIVE duplicated label texts \
+over TWENTY-ONE casillas, unchanged by this record. NOT CLAIMED -- \
+independent_check_coverage is n/a: NO CLAIM, not zero."""
 reviewed_at = 2026-08-23
 
 [revisions."2024".family_dispositions.casilla_continuidad_evolutions]
