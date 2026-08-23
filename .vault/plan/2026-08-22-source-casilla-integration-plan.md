@@ -13,7 +13,7 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
 modified: '2026-08-23'
-body_hash: 'sha256:97a07780e2d720f12bc741f9edfd16a939e6f8f9db35b60ed61cfb1185681bb6'
+body_hash: 'sha256:038be16e43c82fbe06e090a464c18ef5224613c4d9e386d9bf6543a7115ea0c2'
 ---
 
 # `source-casilla-integration` plan
@@ -162,7 +162,7 @@ Declare only the revision-specific facts established by adjudication.
 - [x] `W02.P08.S171` - persist typed row-source identity coordinates on encrypted CalculationRevision state; `src/cadrumo/domain/modelos/_calculation_revision.py`.
 - [x] `W02.P08.S172` - define validated inventory operation row-template selectors without taxpayer activity identities; `src/cadrumo/domain/calculations/registry/_inventory_bindings.py`.
 - [x] `W02.P08.S173` - carry typed row-source identity coordinates through ModeloBindingValue filing state; `src/cadrumo/domain/filing/_schema.py`.
-- [ ] `W02.P08.S174` - propagate row-source identities through calculation replay and review assembly; `src/cadrumo/application/modelo`.
+- [x] `W02.P08.S174` - propagate row-source identities through calculation replay and review assembly; `src/cadrumo/application/modelo`.
 - [ ] `W02.P08.S175` - redact raw row-source identities while exposing safe cohort fingerprints in operator output; `src/cadrumo/entrypoints/cli`.
 - [ ] `W02.P08.S176` - enumerate canonical runtime inventory activities into deterministic atomic three-operation row cohorts; `src/cadrumo/application/aggregation/_inventory.py`.
 - [ ] `W02.P08.S43` - add grounded inventory operation row-template bindings for supported M100 revisions without taxpayer activity identities; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.

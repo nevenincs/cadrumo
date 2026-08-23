@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:f85ef5167fcad7cebc097de499e0eaf2d686748aa475b548067e4c939f597856'
+body_hash: 'sha256:a21fc3e3fd872c83e2f809775a41d0799478401dfc859f0a8c53ba492c7d8f22'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -70,7 +70,7 @@ Correct the nonconforming generated-resource design through one production-autho
 - [x] `W02.P03a.S55` - Add dynamic CommandSpec exact-set, uniqueness, parent-edge, target, locale-key, schema, policy, side-effect, performance-class, and write-route gates for every current and future root, group, and leaf, forbid every former structural authority and runtime artifact edge, and prove each detector with independently constructed missing, duplicate, orphan, malformed, forbidden-import, and undeclared-node negatives; `src/cadrumo/entrypoints/cli/tests/ and dev/ci/tests/`.
 - [x] `W02.P03a.S56` - Prove clean-checkout direct-source and editable-install CLI assembly, help, completion, census, schema, operator, MCP/HITL, and write-routing behavior from tracked CommandSpec modules without generation or development imports, including explicit absence of both command JSON names and generator paths; `src/cadrumo/entrypoints/cli/tests/ and dev/packaging/`.
 - [x] `W02.P03a.S57` - Prove direct-wheel, direct-sdist, and sdist-to-wheel contents and installed behavior include every production CommandSpec module, exclude both command JSON names and development generators, and materialize the complete localized root, group, and leaf surface with resolvable public handler and schema targets; `src/cadrumo/tests/test_wheel_content_boundary.py and dev/packaging/`.
-- [ ] `W02.P03a.S60` - Physically delete the entire embedded external-client harness workspace and Python package, including every module, skill, rule, server entrypoint, fixture, test, build record, workspace member, lock entry, alias, re-export, shim, and fallback; `src/cadrumo-harness/, pyproject.toml, and uv.lock`.
+- [x] `W02.P03a.S60` - Physically delete the entire embedded external-client harness workspace and Python package, including every module, skill, rule, server entrypoint, fixture, test, build record, workspace member, lock entry, alias, re-export, shim, and fallback; `src/cadrumo-harness/, pyproject.toml, and uv.lock`.
 - [ ] `W02.P03a.S61` - Physically delete the complete MCPB builder surface, including its manifest, bundle materializer, launch contract, packaged artifacts, fixtures, tests, aliases, and fallbacks; `packaging/mcpb/`.
 - [ ] `W02.P03a.S62` - Physically delete the complete Claude plugin and marketplace source surface, including descriptors, materializers, packaged artifacts, supersession metadata, fixtures, tests, aliases, and fallbacks; `packaging/marketplace/`.
 - [ ] `W02.P03a.S63` - Physically delete the external-client agent evaluation subsystem, including scenarios, runners, scoring, replay, reports, fixtures, and tests, without retaining a dormant or renamed harness; `dev/agent_eval/`.
