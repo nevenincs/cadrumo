@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:7e5c0f5ab940697a0edfc4671d70ea85e5c5e223c87aa98c3d9ac938752b2d27'
+body_hash: 'sha256:13aeaa845d648cff554420b7282181ae4fc5e518fbedce810ec308c202ff84d8'
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-global-machine-secret-contract-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -125,9 +125,10 @@ JSON types, repeated/extra-field prohibition, and conditional variants. Restore 
 mutually exclusive variants keyed by public `--artifact` presence. Metadata contains no
 values, examples, hashes, invocation-derived lengths, or persisted credential facts.
 
-A closed secret-command inventory makes adoption enforceable: any production command
-that accepts or prompts for a scalar secret must inherit both transports and metadata;
-commands outside it may not call the scalar-secret reader or prompt directly.
+A closed verb-secret inventory makes adoption enforceable: any production command that
+owns a scalar secret must inherit both transports and metadata. The distinct root
+profile-authentication precondition defined below is not a sixth verb-owned secret and
+has its own typed command-graph authority.
 
 ### Hard-cut deletion and decision reconciliation
 
@@ -143,6 +144,66 @@ paired-channel contract while its cryptographic and lifecycle decisions remain. 
 secret-FD ownership sentence in `2026-08-13-cli-action-envelope-successor-adr` likewise
 defers option, payload-metadata, and selection ownership here while retaining its command
 tree and action-envelope decisions. Neither narrower ADR is superseded as a whole.
+
+### Keychain-free root profile-authentication amendment
+
+The root profile-session precondition exposes exactly `--profile-secrets-stdin` and
+`--profile-secrets-fd`. Its strict frozen JSON object contains exactly
+`profile_passphrase: SecretStr` and inherits the canonical 8 KiB, strict UTF-8 JSON,
+recursive duplicate refusal, missing/extra-field refusal, fd 0 acceptance, negative and
+fd 1/2 refusal, one-shot read, descriptor-close, secret-free diagnostic, and verified
+prompt prohibitions. It accepts no argv value, environment variable, alias, executable
+callback, ticket, persisted bearer credential, or fallback store.
+
+This root capability is a profile precondition, not a verb-owned secret. The five
+`--secrets-stdin` / `--secrets-fd` leaf contracts and their exact local models remain
+closed. Root applicability is derived from typed command-graph/session-exemption
+authority rather than a parallel handwritten command inventory.
+
+Help, version, metadata, bare-group output, unknown commands, and parse or usage failures
+take precedence and never read or semantically validate a profile source. After Click
+has resolved an executable leaf, dispatch preflights root and leaf selections together
+without reading: each scope is internally exclusive, at most one scope may select
+stdin, and selected descriptor numbers must differ. Collision or inapplicability refuses
+before either read, authentication, KDF, session activation, transaction entry, or leaf
+mutation. Valid dual-secret combinations are profile fd plus leaf stdin, profile stdin
+plus leaf fd, or two distinct descriptors. The preflight derives from parsed command
+specification authority; argv scanning and duplicated grammar are forbidden.
+
+The root source applies only when an exact profile target is resolved, the leaf requires
+a profile session, no live session serves that target, and persisted-session resume has
+refused. Login, create, restore, logout, and passphrase change are inapplicable. A live
+or successfully resumed exact-target session makes a supplied root source unused and
+therefore a refusal without consumption. Machine authentication never invokes an
+interactive chooser.
+
+Before root authentication may persist activation, every required root and leaf machine
+payload is bounded-read and strict-validated. The root then calls canonical
+`login_profile` for the exact target; both returned bucket and serving live session must
+match it before binding and leaf dispatch. Explicitly targeted profile show, validate,
+and history route through this same gate. Passphrase change is restored as the sole
+rotation verb with `current_passphrase`, `new_passphrase`, and
+`new_passphrase_confirmation`; it is self-authenticating and root-gate-exempt, so a
+root source supplied to it refuses unread.
+
+Without a root source, keychain unavailability retains the typed refusal. With a valid
+source, canonical login may establish a process-scoped session and continue the same
+parsed command. Persistence failure stages a non-secret Notice that authentication must
+be supplied again next process. Repeated Argon2 work on keychain-free hosts is
+intentional; no parallel authenticator, credential store, or bearer format is added.
+
+Registration metadata exposes a value-free `profile_authentication` posture of
+`not-applicable`, `resume-fallback`, or `self-authenticating`, plus public field/type,
+bound, exclusivity, and cross-scope collision rules. It contains no values, examples,
+hashes, runtime-derived lengths, or credential state.
+
+Mutable raw read buffers are wiped in `finally` blocks and secret-bearing references are
+released promptly. The implementation does not claim guaranteed erasure of immutable
+Python strings created by decoding, JSON, Pydantic, or `SecretStr`. POSIX subprocesses
+may inherit numeric descriptors. On Windows the supported descriptor route uses an
+allowlisted inherited HANDLE converted by a bootstrap wrapper through
+`msvcrt.open_osfhandle`; documentation must not claim direct numeric CRT-fd inheritance
+parity. Stdin remains the portable direct-executable route.
 
 ## Rationale
 
