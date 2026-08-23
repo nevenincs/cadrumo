@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:705064f2e827a19294ca2d8bbd75d9b14df4850d9b6166e0684dba4f6632d386'
+body_hash: 'sha256:195fddafdbde5c3aae6251541da4e78c689fe4b1684365120180a7d1a4b847fd'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -8063,3 +8063,41 @@ cause:
   question about that path.
 
 Lanes: unit green at 1,705, integration 4 to 3, no regressions.
+
+### A fixed defect returned through a NEW call site the fix predated
+
+`config profile show <label>` and `config profile validate <label>` refused with the
+WORKFLOW-layer message ("... 2 active buckets carry it") instead of the dedicated CLI refusal
+("Use the profile UUID to disambiguate"). The test module names that signature itself: its
+constants are commented as the dedicated refusal versus "the workflow-layer error's own
+translated message ... Its presence is the pre-fix signature." So the defect had been fixed
+before, and had returned.
+
+It returned without anything being un-fixed. All three sites the original repair covered still
+carry the conversion -- `_config/_profile_support.resolve_profile_by_label`,
+`_profile_session_gate.normalize_ambient_profile`, and the root `--profile` override. What
+changed is that the gate refactor added a FOURTH resolution site that the original fix could
+not have known about: `preflight_parsed_leaf` calls
+`application/user_profile.resolve_login_target`, which resolves the label and lets
+`ProfileLabelAmbiguousError` -- a WorkflowError, not a ValueError -- escape straight to the
+terminal boundary.
+
+Located by tracing rather than by reading: a scratchpad `sitecustomize` printed the exception
+type and frames reaching `render_error_payload`, which named the path in one run --
+`_command_runtime` to `preflight_parsed_leaf` to `resolve_login_target` to
+`resolve_profile_bucket`. Reading the four handlers had shown all of them converting correctly,
+which is exactly the trap: the escaping site was the one with NO handler, so it was invisible to
+a search for handlers.
+
+Both preflight resolutions now route through one local helper that performs the same conversion
+the other three sites do. Proven from outside the repo by rebinding that helper to the raw
+`resolve_login_target`, which restores the pre-fix escape and reds the identical two cases.
+
+Durable lesson: a defect fixed "at every call site" is fixed at every call site THAT EXISTED.
+The repair leaves no marker at the sites it did not touch, so a later refactor adding a
+resolution path reintroduces the escape silently, and searching for the handler pattern finds
+only the sites that already have it. The signature to search for is the raw call --
+`resolve_login_target(` -- not the guard.
+
+Lanes: integration 3 to 1, unit green at 1,705. The last one is the separate missing typed
+action projection (`error["action"] is None`).

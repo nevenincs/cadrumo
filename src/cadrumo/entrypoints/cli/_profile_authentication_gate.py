@@ -59,9 +59,7 @@ def _leaf_selection(spec: CommandSpec, arguments: Mapping[str, object]) -> Machi
     )
 
 
-def _preflight_sources(
-    *, root: ProfileSecretSelection | None, leaf: MachineSecretSelection | None
-) -> None:
+def _preflight_sources(*, root: ProfileSecretSelection | None, leaf: MachineSecretSelection | None) -> None:
     if root is None or leaf is None:
         return
     if root.channel is ProfileSecretChannel.STDIN and leaf.channel is MachineSecretChannel.STDIN:
@@ -105,6 +103,34 @@ def _read_and_stage_leaf(
     stage_machine_secret_payload(read_machine_secret_payload(model, selection=selection))
 
 
+def _resolve_login_target_or_refuse(raw: str):
+    """Resolve a profile target, converting label ambiguity to the CLI refusal.
+
+    `resolve_login_target` surfaces `ProfileLabelAmbiguousError`, a WorkflowError
+    from the application layer. Left uncaught here it reaches the terminal
+    boundary and renders the WORKFLOW-layer message ("... active buckets carry
+    it") instead of the dedicated CLI refusal that tells the operator what to do
+    ("Use the profile UUID to disambiguate").
+
+    That exact escape was fixed once before, at the three other CLI sites that
+    resolve a label -- `_config/_profile_support.resolve_profile_by_label`,
+    `_profile_session_gate.normalize_ambient_profile`, and the root
+    `--profile` override. This preflight is a FOURTH resolution site, introduced
+    after that fix, and it did not carry the conversion, so the escape returned
+    on `config profile show <label>` and `config profile validate <label>`.
+    """
+    from ...application.user_profile import resolve_login_target
+    from ...application.workflow import ProfileLabelAmbiguousError
+    from ._errors import CliRefusedBoundaryError
+
+    try:
+        return resolve_login_target(raw)
+    except ProfileLabelAmbiguousError as error:
+        raise CliRefusedBoundaryError(
+            translated_message="errors.refused.refused_profile_label_ambiguous",
+        ) from error
+
+
 def preflight_parsed_leaf(
     ctx: typer.Context,
     *,
@@ -141,23 +167,21 @@ def preflight_parsed_leaf(
         if raw_target is not None:
             if not isinstance(raw_target, str):
                 raise TypeError("profile target parameter has an invalid type")
-            from ...application.user_profile import resolve_login_target
-            pointer = resolve_login_target(raw_target)
+            pointer = _resolve_login_target_or_refuse(raw_target)
             explicit_target = pointer.bucket_id
             explicit_label = pointer.label
             root_state[_RESOLVED_PROFILE_TARGET_KEY] = pointer
     if explicit_target is None and posture is not ProfileAuthenticationPosture.NOT_APPLICABLE:
         profile_override = root_state.get("profile_override")
         if isinstance(profile_override, str):
-            from ...application.user_profile import resolve_login_target
-
-            pointer = resolve_login_target(profile_override)
+            pointer = _resolve_login_target_or_refuse(profile_override)
             explicit_target = pointer.bucket_id
             explicit_label = pointer.label
             if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK:
                 bind_profile_target(ctx, bucket_id=explicit_target)
         else:
             normalize_ambient_profile(ctx)
+
     def authenticate(
         bucket_id: str,
         root_selection: ProfileSecretSelection,
@@ -173,6 +197,7 @@ def preflight_parsed_leaf(
             spec=spec,
             arguments=arguments,
         )
+
     if spec.allow_unregistered_profile_diagnostic:
         from ...application.workflow import read_profile_bucket_by_id
         from ...core import resolve_active_bucket_id
