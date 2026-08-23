@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:df8275d67294343959cff024ac4aab22211b19561c357670fab6b7e411170f74'
+body_hash: 'sha256:2e0b53a90c448a968b11a5d1d718eb6db5fbdc488db5ed058ea1fe5c4ed3c101'
 step_id: 'S07'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
