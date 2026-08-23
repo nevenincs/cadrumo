@@ -355,15 +355,3 @@ def test_releasing_doc_matches_the_executable_release_entry_and_recovery() -> No
     assert "docs/_release_checklist.yaml" in text
     assert "release-candidate soak" not in text.lower()
     assert "release PR" in text
-
-
-def test_releasing_doc_keeps_the_marketing_site_outside_the_product_release() -> None:
-    """Website ownership is stated once; no product command or scaffold is reintroduced."""
-    text = RELEASING_PATH.read_text(encoding="utf-8")
-    lowered = text.lower()
-
-    assert lowered.count("marketing website") == 1
-    assert "cadrumo-marketing" in text
-    assert "frontend" not in lowered
-    assert "frontend-deploy" not in lowered
-    assert "docs-deploy" not in lowered

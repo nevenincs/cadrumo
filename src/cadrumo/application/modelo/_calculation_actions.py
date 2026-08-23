@@ -64,6 +64,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations import RowBindingKey, RowSourceIdentity
 from ...domain.calculations.registry import (
     BindingId,
     InputKind,
@@ -300,6 +301,7 @@ def calculate_modelo_revision(
         enum_binding_values=enum_binding_values,
         backend_binding_values=backend_binding_values,
         row_binding_values=row_binding_values,
+        row_source_identities=None,
         backend_casilla_inputs=backend_casilla_inputs,
         iva_compensation_decision=iva_compensation_decision,
         iva_compensation_decision_repository=iva_compensation_decision_repository,
@@ -372,6 +374,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     enum_binding_values: Mapping[BindingId, str] | None = None,
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
     row_binding_values: Mapping[tuple[BindingId, int], Decimal | str] | None = None,
+    row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
@@ -553,6 +556,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **resolved_text_inputs},
         binding_overrides=replay_payloads.binding_overrides,
         row_binding_values=replay_payloads.row_binding_values,
+        row_source_identities=dict(row_source_identities or {}),
         relation_overrides=replay_payloads.relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
@@ -1408,6 +1412,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         binding_values=preparation.binding_values,
         backend_binding_values=channels.backend_binding_values,
         row_binding_values=channels.source_resolution.row_binding_values,
+        row_source_identities=channels.source_resolution.row_source_identities,
         backend_casilla_inputs=channels.backend_casilla_inputs,
         iva_compensation_decision=iva_compensation_decision,
         iva_compensation_decision_repository=iva_compensation_decision_repository,
