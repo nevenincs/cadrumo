@@ -320,6 +320,39 @@ def test_keychain_free_root_login_notice_survives_a_real_leaf_refusal(tmp_path: 
     assert passphrase not in output
 
 
+def test_keychain_free_root_login_notice_survives_callback_bad_parameter(tmp_path: Path) -> None:
+    """The Click control-flow funnel drains the Notice after real root login."""
+    _register_profile(tmp_path, "custody")
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+
+    refused = _run_cadrumo(
+        tmp_path,
+        (
+            "--format",
+            "json",
+            "--profile-secrets-stdin",
+            "config",
+            "profile",
+            "history",
+            "custody",
+            "--since",
+            "2026-02-01",
+            "--until",
+            "2026-01-01",
+        ),
+        extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
+        stdin_payload=json.dumps({"profile_passphrase": passphrase}),
+    )
+
+    output = _combined_output(refused)
+    assert refused.returncode == 2, output
+    envelope = json.loads(refused.stderr)
+    assert [notice["code"] for notice in envelope["notices"]] == [
+        "config.login.session_not_persisted"
+    ]
+    assert passphrase not in output
+
+
 def test_root_and_leaf_stdin_collision_refuses_before_fresh_tree_mutation(tmp_path: Path) -> None:
     """Parsed cross-scope collision wins before profile lookup, reads, or setup writes."""
     result = _run_cadrumo(

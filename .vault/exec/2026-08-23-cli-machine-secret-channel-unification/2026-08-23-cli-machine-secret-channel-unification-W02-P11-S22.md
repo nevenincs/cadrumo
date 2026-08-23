@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:2d4b0b63bba99c76442948ecbc2d5fc01df1461100bdfca9391269febd650157'
+body_hash: 'sha256:c2de8f1c942c6a85dfb60bf1d7448f48b14b8965ed92d64fd0504618fd37b605'
 step_id: 'S22'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
@@ -58,12 +58,15 @@ related:
 - Localize root-specific help, applicability, collision, unused-source, missing-target, parser, descriptor, and repeated-authentication diagnostics in all four catalogues through `dev.locales`.
 - Add an explicit Windows inherited-HANDLE bootstrap that converts one caller-allowlisted handle into the canonical descriptor route without claiming POSIX numeric-fd inheritance.
 - Exercise all typed resume reasons, cross-scope collisions, self-authentication posture, four-locale rendering, Notice one-shot delivery, a real keychain-free Argon2 login followed by a leaf refusal, and platform-specific bootstrap behavior.
+- Close the independent Sol medium finding by draining the Notice through callback Click-control-flow JSON and text funnels, with one-shot and real history-range refusal proof.
 
 ## Outcome
 
 The two S21 MED findings are closed. Root and leaf selections remain statically exact at the neutral session gate, and a successful keychain-free login can no longer lose its promised warning when the requested handler later refuses or raises. Root help and every reachable diagnostic now distinguish profile authentication from leaf secrets in English, Spanish, Catalan, and Hungarian. Windows supervisors have a concrete HANDLE-to-CRT bootstrap while stdin remains the portable route.
 
-Focused root-contract, locale, Ruff, and type gates pass. Forty-four focused unit cases pass on Windows, and the real keychain-free post-login refusal integration case passes separately. The later S13/S14 rows retain ownership of the full real subprocess success/refusal matrix.
+Focused root-contract, locale, Ruff, and type gates pass. Forty-six focused unit cases pass on Windows, and both real keychain-free post-login refusal integration cases pass separately. The later S13/S14 rows retain ownership of the full real subprocess success/refusal matrix.
+
+Independent Sol review found no critical or high issue. Its one medium Click-funnel finding was remediated; thirteen focused gate cases and the real keychain-free callback-refusal integration case pass after the repair, leaving no open S22 review finding.
 
 ## Notes
 

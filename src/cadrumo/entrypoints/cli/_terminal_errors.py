@@ -321,6 +321,9 @@ def _resolved_command_identifier(exc: BaseException) -> str | None:
 def _emit_click_exception(exc: BaseException) -> NoReturn:
     """Emit a Click/usage failure honouring the JSON error contract."""
     exit_code = int(getattr(exc, "exit_code", _ABORTED_EXIT_CODE))
+    from ._profile_authentication_notice import drain_profile_authentication_notices
+
+    authentication_notices = drain_profile_authentication_notices()
     if _json_requested_for(exc):
         from ._errors import write_stderr
 
@@ -333,9 +336,15 @@ def _emit_click_exception(exc: BaseException) -> NoReturn:
                 # merely to decorate its transport envelope.
                 active_profile=None,
                 command=_resolved_command_identifier(exc),
+                notices=authentication_notices,
             ),
         )
     else:
+        if authentication_notices:
+            from ._common import notice_lines
+            from ._errors import write_stderr
+
+            write_stderr("\n".join(notice_lines(authentication_notices)) + "\n")
         _render_click_exception_text(exc)
     sys.exit(exit_code)
 

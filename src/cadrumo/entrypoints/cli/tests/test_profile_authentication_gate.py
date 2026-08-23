@@ -10,6 +10,7 @@ import pytest
 
 from ....core import OutputLanguage, ProfileSessionRefusalReason
 from ....core.config import override_settings
+from ....tests.cli_runner import invoke_cached_cli
 from .._command_spec import ProfileAuthenticationPosture
 from .._command_specs import COMMAND_GRAPH
 from .._config._secure_input import (
@@ -123,6 +124,22 @@ def test_non_persistence_notice_uses_the_notice_transport_in_text_refusals() -> 
     )
     assert rendered.startswith("notice\tconfig.login.session_not_persisted\t")
     assert drain_profile_authentication_notices() == ()
+
+
+@pytest.mark.parametrize("as_json", (True, False))
+def test_click_terminal_refusal_drains_the_notice_once(as_json: bool) -> None:
+    drain_profile_authentication_notices()
+    stage_profile_session_not_persisted_notice()
+    arguments = ["config", "profile", "show", "--not-a-real-option"]
+    if as_json:
+        arguments[:0] = ["--format", "json"]
+    refused = invoke_cached_cli(arguments)
+    assert refused.exit_code == 2
+    assert refused.output.count("config.login.session_not_persisted") == 1
+
+    next_refusal = invoke_cached_cli(arguments)
+    assert next_refusal.exit_code == 2
+    assert "config.login.session_not_persisted" not in next_refusal.output
 
 
 def test_windows_handle_bootstrap_does_not_claim_numeric_fd_inheritance_on_posix() -> None:
