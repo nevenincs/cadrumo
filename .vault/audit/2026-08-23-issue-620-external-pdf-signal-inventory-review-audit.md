@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:09b19b379d922f2b67a1c43850320aa5a5d09e34bbac52480be86f6e01685db9'
+body_hash: 'sha256:cdb2302d280aa1f1c2e81d54c273153d738eafae82884d1f92f144bf10f0d019'
 related:
   - "[[2026-08-23-issue-620-external-pdf-signal-plan]]"
 ---
@@ -44,6 +44,15 @@ period `alta` reaches both PDFs and returns `blank_no_values`, with exactly
 targets. This is a false signal in the central S08 acceptance matrix and leaves
 the feature with an unresolved high-severity correctness finding.
 
+#### Resolution | resolved by S10
+
+Commit `79dfcd6924` replaces the invalid `01` period with the authoritative
+`alta` event, removes the unavailable outcome and broad snapshot-exception
+conversion, and asserts both M036 variants as `blank_no_values` with exactly
+`decl.event-kind` missing and empty value, malformed, and ambiguous buckets.
+Focused inspection confirms the PDFs now reach the production extraction
+primitives. This finding is resolved.
+
 ### inventory-orphan-files | medium | The exact-inventory gate ignores unpaired or surprise PDF bytes
 
 The candidate contract constructs its inventory exclusively from `*/*.json`
@@ -55,6 +64,14 @@ without appearing in the claimed exact five-by-two admission matrix. The gate's
 stated missing-or-surprise-row guarantee is therefore narrower than its name
 and documentation.
 
+#### Resolution | resolved by S10
+
+Commit `79dfcd6924` constructs the ten expected sidecar paths explicitly and
+asserts the corpus root, exact five modelo directories, and exact
+`plain`/`fillable` JSON/PDF filename set within every modelo directory. An
+orphan half, surprise modelo directory, root file, or candidate filename now
+fails the admission gate. This finding is resolved.
+
 ### synthetic-corpus-terminology | low | Some gate comments still describe synthetic fixtures as real
 
 The M130 evidence correction updates the principal test names and docstrings,
@@ -64,6 +81,13 @@ call the committed `justificantes` tree a "real fixture tree", "real fixture
 inventory", or say that all real modelos carry real fixtures. Those statements
 conflict with the corrected evidence boundary and can mislead later authors,
 although they do not change runtime behavior.
+
+#### Resolution | resolved by S10
+
+Commit `79dfcd6924` replaces the remaining reviewed "real fixture" descriptions
+with explicit committed-synthetic-corpus terminology in both registry gate
+modules. References to genuinely external or authenticated evidence remain
+qualified. This finding is resolved.
 
 ## Recommendations
 
@@ -79,3 +103,6 @@ although they do not change runtime behavior.
 - Resolve `synthetic-corpus-terminology` by replacing the remaining "real"
   descriptions with "committed synthetic" wording while preserving references
   to genuinely external or authenticated evidence.
+
+Post-S10 verdict: all three recorded findings are resolved. No unresolved high
+or critical finding remains in the reviewed issue-620 feature surface.
