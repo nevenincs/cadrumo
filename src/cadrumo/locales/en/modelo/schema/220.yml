@@ -103,6 +103,153 @@ modelo:
                 Research
             x-agp34c1g6d0j0c1q60o3edhh:
               label: Consolidated balance sheet. Assets. Other
+            x-agp34c1g6d130c1q60o30c1j:
+              label: Consolidated balance sheet. Equity and liabilities. Legal and
+                statutory reserve
+            x-agp34c1g6d130c1q60o32e1l:
+              label: Consolidated balance sheet. Equity and liabilities. Equity
+            x-agp34c1g6d130c1q60o32e1m:
+              label: Consolidated balance sheet. Equity and liabilities. Shareholders'
+                funds
+            x-agp34c1g6d130c1q60o32e1n:
+              label: Consolidated balance sheet. Equity and liabilities. Capital
+            x-agp34c1g6d130c1q60o32e1o:
+              label: Consolidated balance sheet. Equity and liabilities. Capital.
+                Registered capital
+            x-agp34c1g6d130c1q60o32e1p:
+              label: Consolidated balance sheet. Equity and liabilities. Capital.
+                Uncalled capital
+            x-agp34c1g6d130c1q60o32e9g:
+              label: Consolidated balance sheet. Equity and liabilities. Share premium
+            x-agp34c1g6d130c1q60o32e9h:
+              label: Consolidated balance sheet. Equity and liabilities. Reserves
+            x-agp34c1g6d130c1q60o32e9k:
+              label: Consolidated balance sheet. Equity and liabilities. (Shares and
+                holdings of the parent company)
+            x-agp34c1g6d130c1q60o32e9o:
+              label: Consolidated balance sheet. Equity and liabilities. Other shareholder
+                contributions
+            x-agp34c1g6d130c1q60o32e9p:
+              label: Consolidated balance sheet. Equity and liabilities. Result for
+                the year attributed to the parent company
+            x-agp34c1g6d130c1q60o34c1g:
+              label: Consolidated balance sheet. Equity and liabilities. (Interim
+                dividend)
+            x-agp34c1g6d130c1q60o34c1h:
+              label: Consolidated balance sheet. Equity and liabilities. Other equity
+                instruments
+            x-agp34c1g6d130c1q60o34c1i:
+              label: Consolidated balance sheet. Equity and liabilities. Valuation
+                adjustments
+            x-agp34c1g6d130c1q60o34c1p:
+              label: Consolidated balance sheet. Equity and liabilities. Grants, donations
+                and bequests received
+            x-agp34c1g6d130c1q60o34c9g:
+              label: Consolidated balance sheet. Equity and liabilities. Non-current
+                liabilities
+            x-agp34c1g6d130c1q60o34c9h:
+              label: Consolidated balance sheet. Equity and liabilities. Long-term
+                provisions
+            x-agp34c1g6d130c1q60o34c9m:
+              label: Consolidated balance sheet. Equity and liabilities. Long-term
+                debts
+            x-agp34c1g6d130c1q60o34c9n:
+              label: Consolidated balance sheet. Equity and liabilities. Long-term
+                debts. Debentures and other negotiable securities
+            x-agp34c1g6d130c1q60o34c9o:
+              label: Consolidated balance sheet. Equity and liabilities. Long-term
+                debts. Debts with credit institutions
+            x-agp34c1g6d130c1q60o34c9p:
+              label: Consolidated balance sheet. Equity and liabilities. Long-term
+                debts. Finance lease creditors
+            x-agp34c1g6d130c1q60o34chi:
+              label: Consolidated balance sheet. Equity and liabilities. Long-term
+                debts. Other financial liabilities
+            x-agp34c1g6d130c1q60o34chj:
+              label: Consolidated balance sheet. Equity and liabilities. Long-term
+                debts with group and associated companies
+            x-agp34c1g6d130c1q60o34chk:
+              label: Consolidated balance sheet. Equity and liabilities. Deferred
+                tax liabilities
+            x-agp34c1g6d130c1q60o34chl:
+              label: Consolidated balance sheet. Equity and liabilities. Long-term
+                accruals and deferrals
+            x-agp34c1g6d130c1q60o34chm:
+              label: Consolidated balance sheet. Equity and liabilities. Non-current
+                trade payables
+            x-agp34c1g6d130c1q60o34chn:
+              label: Consolidated balance sheet. Equity and liabilities. Long-term
+                debt with special features
+            x-agp34c1g6d130c1q60o34cho:
+              label: Consolidated balance sheet. Equity and liabilities. Current liabilities
+            x-agp34c1g6d130c1q60o34chp:
+              label: Consolidated balance sheet. Equity and liabilities. Liabilities
+                linked to non-current assets held for sale
+            x-agp34c1g6d130c1q60o34cpg:
+              label: Consolidated balance sheet. Equity and liabilities. Short-term
+                provisions
+            x-agp34c1g6d130c1q60o34cph:
+              label: Consolidated balance sheet. Equity and liabilities. Short-term
+                debts
+            x-agp34c1g6d130c1q60o34cpi:
+              label: Consolidated balance sheet. Equity and liabilities. Short-term
+                debts. Debentures and other negotiable securities
+            x-agp34c1g6d130c1q60o34cpj:
+              label: Consolidated balance sheet. Equity and liabilities. Short-term
+                debts. Debts with credit institutions
+            x-agp34c1g6d130c1q60o34cpk:
+              label: Consolidated balance sheet. Equity and liabilities. Short-term
+                debts. Finance lease creditors
+            x-agp34c1g6d130c1q60o34cpm:
+              label: Consolidated balance sheet. Equity and liabilities. Non-controlling
+                interests
+            x-agp34c1g6d130c1q60o34cpn:
+              label: Consolidated balance sheet. Equity and liabilities. Short-term
+                debts. Other financial liabilities
+            x-agp34c1g6d130c1q60o34cpo:
+              label: Consolidated balance sheet. Equity and liabilities. Short-term
+                debts with group and associated companies
+            x-agp34c1g6d130c1q60o34cpp:
+              label: Consolidated balance sheet. Equity and liabilities. Trade and
+                other payables
+            x-agp34c1g6d130c1q60o34d1g:
+              label: Consolidated balance sheet. Equity and liabilities. Trade and
+                other payables. Suppliers
+            x-agp34c1g6d130c1q60o34d1m:
+              label: Consolidated balance sheet. Equity and liabilities. Trade and
+                other payables. Current tax liabilities
+            x-agp34c1g6d130c1q60o34d1p:
+              label: Consolidated balance sheet. Equity and liabilities. Trade and
+                other payables. Other payables
+            x-agp34c1g6d130c1q60o34d9g:
+              label: Consolidated balance sheet. Equity and liabilities. Short-term
+                accruals and deferrals
+            x-agp34c1g6d130c1q60o34d9h:
+              label: Consolidated balance sheet. Equity and liabilities. Short-term
+                debt with special features
+            x-agp34c1g6d130c1q60o34d9i:
+              label: Consolidated balance sheet. Equity and liabilities. Total equity
+                and liabilities
+            x-agp34c1g6d130c1q60o3ec1i:
+              label: Consolidated balance sheet. Equity and liabilities. Reserves.
+                Revaluation reserve
+            x-agp34c1g6d130c1q60o3ecpl:
+              label: Consolidated balance sheet. Equity and liabilities. Provisions
+                for greenhouse gas emission allowances
+            x-agp34c1g6d130c1q60o3ecpm:
+              label: Consolidated balance sheet. Equity and liabilities. Other provisions
+            x-agp34c1g6d130c1q60o3ed9g:
+              label: Consolidated balance sheet. Equity and liabilities. Reserves.
+                Other reserves
+            x-agp34c1g6d130c1q60o3ed9i:
+              label: Consolidated balance sheet. Equity and liabilities. Capitalisation
+                reserve
+            x-agp34c1g6d130c1q60o3ed9j:
+              label: Consolidated balance sheet. Equity and liabilities. Levelling
+                reserve
+            x-agp34c1g6d130c1q60o3edhk:
+              label: Consolidated balance sheet. Equity and liabilities. Compulsory
+                reserve fund of cooperatives
             x-agp34c1g6l0j0c1q60o36cpj:
               label: Statement of recognised consolidated income and expense. Total
                 recognised consolidated income and expense. Total income and expense
