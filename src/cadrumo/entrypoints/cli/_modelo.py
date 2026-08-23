@@ -139,14 +139,6 @@ from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
 )
 from ._modelo_review_package_cli import register_review_package_commands
-from ._modelo_work import create_work_app
-from ._modelo_work_calculate_cli import register_work_calculate_commands
-from ._modelo_work_lifecycle_cli import register_work_lifecycle_commands
-from ._modelo_work_review_cli import register_work_review_command
-from ._modelo_work_revision_cli import register_work_revision_commands
-from ._modelo_work_runs_cli import register_work_run_commands
-from ._modelo_work_verification_cli import register_work_verification_commands
-from ._modelo_work_wizard_cli import register_work_wizard_commands
 
 _log = get_logger(__name__)
 _HEX_DIGITS = frozenset("0123456789abcdef")
@@ -175,9 +167,6 @@ register_discovery_commands(
 register_aggregate_commands(app, resolve_year_period=_resolve_year_period)
 
 
-work_app = create_work_app()
-app.add_typer(work_app, name="work")
-declare_metadata_group(work_app)
 
 
 _M200_M202_PAGOS_RELATION_IDS: frozenset[str] = frozenset(
@@ -188,39 +177,10 @@ _M200_M202_PAGOS_RELATION_IDS: frozenset[str] = frozenset(
 )
 
 
-register_work_lifecycle_commands(
-    work_app,
-    activate_output_language=activate_subcommand_output_language,
-    require_active_profile=_require_active_profile,
-    guard_foral_profile_ccaa=_guard_foral_profile_ccaa,
-    resolve_year_period=_resolve_year_period,
-    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
-    resolve_default_actor=_resolve_default_actor,
-    bad_parameter_from_error=_bad_parameter_from_error,
-    selector_bad_parameter=_selector_bad_parameter,
-)
 
 
-register_work_calculate_commands(
-    work_app,
-    activate_output_language=activate_subcommand_output_language,
-    require_active_profile=_require_active_profile,
-    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
-    resolve_actor_option=_resolve_actor_option,
-    calculate_input_bundle_from_cli=_work_calculate_input_bundle_from_cli,
-    bad_parameter_from_error=_bad_parameter_from_error,
-    missing_binding_guidance=_missing_binding_guidance,
-)
 
 
-register_work_wizard_commands(
-    work_app,
-    activate_output_language=activate_subcommand_output_language,
-    require_active_profile=_require_active_profile,
-    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
-    resolve_actor_option=_resolve_actor_option,
-    bad_parameter_from_error=_bad_parameter_from_error,
-)
 
 
 def work_compare_taxation(
@@ -350,23 +310,8 @@ def work_compare_taxation(
     )
 
 
-register_work_revision_commands(
-    work_app,
-    activate_output_language=activate_subcommand_output_language,
-    require_active_profile=_require_active_profile,
-    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
-    resolve_revision_for_cli=_resolve_revision_for_cli,
-    bad_parameter_from_error=_bad_parameter_from_error,
-    selector_bad_parameter=_selector_bad_parameter,
-)
 
 
-register_work_review_command(
-    work_app,
-    activate_output_language=activate_subcommand_output_language,
-    require_active_profile=_require_active_profile,
-    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
-)
 
 
 def work_history(
@@ -441,22 +386,8 @@ def work_history(
     _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines, notices=[next_step])
 
 
-register_work_verification_commands(
-    work_app,
-    activate_output_language=activate_subcommand_output_language,
-    require_active_profile=_require_active_profile,
-    resolve_revision_for_cli=_resolve_revision_for_cli,
-    resolve_default_actor=_resolve_default_actor,
-    bad_parameter_from_error=_bad_parameter_from_error,
-)
 
 
-register_work_run_commands(
-    work_app,
-    activate_output_language=activate_subcommand_output_language,
-    bad_parameter_from_error=_bad_parameter_from_error,
-    resolve_optional_cli_period=_resolve_optional_cli_period,
-)
 
 
 def _parse_amendment_casilla(spec: str) -> tuple[CasillaId, Decimal]:
@@ -608,14 +539,6 @@ def work_amend(
     _emit_envelope(ctx, command="modelo.work.amend", result=result, lines=lines)
 
 
-register_amend_wizard_commands(
-    work_app,
-    activate_output_language=activate_subcommand_output_language,
-    require_active_profile=_require_active_profile,
-    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
-    resolve_default_actor=_resolve_default_actor,
-    bad_parameter_from_error=_bad_parameter_from_error,
-)
 
 
 register_record_commands(
@@ -737,12 +660,6 @@ register_projection_commands(
 register_iva_wallet_commands(app, active_bucket_id=active_bucket_id_or_refuse)
 
 
-register_maritime_commands(
-    work_app,
-    require_active_profile=_require_active_profile,
-    activate_output_language=activate_subcommand_output_language,
-    bad_parameter_from_error=_bad_parameter_from_error,
-)
 
 
 register_m036_commands(

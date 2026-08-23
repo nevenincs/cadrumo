@@ -35,7 +35,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from ....tests.user_profile import register_cli_profile
-from .._modelo import _resolve_work_unit_for_cli
+from .._modelo_behavior_support import resolve_work_unit_for_cli
 from .._modelo_work_wizard_cli import (
     _ACTIVE_RUNS,
     _binding_grounding_lookup,
@@ -97,7 +97,7 @@ def _scripted_manual_answers(work_unit_id: str) -> list[tuple[_WizardStep, str]]
     # runs inside a real profile storage session — the same session the CLI
     # command opens per invocation.
     with open_test_profile_session(bucket_id):
-        unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        unit = resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         steps = _outstanding_wizard_steps(unit)
         _ACTIVE_RUNS[run_token] = {}
         try:
@@ -311,7 +311,7 @@ def test_binding_grounding_lookup_covers_a_real_m130_binding() -> None:
     assert bucket_id is not None
 
     with open_test_profile_session(bucket_id):
-        unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        unit = resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         lookup = _binding_grounding_lookup(unit)
 
     assert lookup, "expected at least one registry binding for the M130 1T scope"

@@ -16,7 +16,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry import RevisionId
 
 
@@ -57,7 +57,6 @@ class ModeloSupportMatrixEntryPayload(OutputSchema):
     portal_compatibility_refs: list[ModeloPortalCompatibilityRefPayload]
 
 
-@register_schema("modelo.support_matrix")
 class ModeloSupportMatrixResult(OutputSchema):
     """Registry-wide per-modelo support/capability matrix result."""
 

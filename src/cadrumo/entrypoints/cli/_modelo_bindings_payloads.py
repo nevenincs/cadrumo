@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry import BindingId, LegalRefId, RelationId, SourceRefId
 
 
@@ -109,7 +109,6 @@ class BindingListRowPayload(BindingGroundingPayload):
     borrador_capable: bool
 
 
-@register_schema("modelo.bindings.list")
 class ModeloBindingsListResult(OutputSchema):
     """Bindings list result."""
 
@@ -132,7 +131,6 @@ class BindingPreviewRowPayload(BindingGroundingPayload):
     override: str | None
 
 
-@register_schema("modelo.bindings.resolve")
 class ModeloBindingsPreviewResult(OutputSchema):
     """Bindings resolve result."""
 

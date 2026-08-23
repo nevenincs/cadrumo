@@ -1,8 +1,11 @@
 """Typer registration for the root-level modelo export command."""
 
 from __future__ import annotations
+
 from pathlib import Path
+
 import typer
+
 from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -31,7 +34,15 @@ from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._common import _emit_envelope, _filing_taxpayer_or_refuse
-from ._modelo_cli_support import parse_revision_selector, validate_calculation_revision_id, validate_work_unit_id
+from ._modelo_behavior_support import resolve_optional_cli_period
+from ._modelo_cli_support import (
+    bad_parameter_from_error,
+    parse_revision_selector,
+    resolve_default_actor,
+    selector_bad_parameter,
+    validate_calculation_revision_id,
+    validate_work_unit_id,
+)
 from ._modelo_payloads import ModeloExportPayload
 
 

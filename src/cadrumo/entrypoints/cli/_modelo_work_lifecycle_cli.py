@@ -1,4 +1,4 @@
-"""Typer registration for modelo work lifecycle commands."""
+"""Behavior for modelo work lifecycle commands."""
 
 from __future__ import annotations
 
@@ -31,9 +31,7 @@ from ...application.modelo import (
 from ...core import Modelo, Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...core.json_contract import (
-    Notice,
-)
+from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistrySnapshotError, RevisionId
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
@@ -55,29 +53,8 @@ from ._modelo_cli_support import (
     resolve_explicit_or_active_bucket_id,
     selector_bad_parameter,
 )
-from ._modelo_payloads import (
-    WorkCreateResult,
-    WorkDiscardResult,
-    WorkListResult,
-    WorkRenameResult,
-    WorkStatusResult,
-)
-from ._modelo_rendering import (
-    advisory_notice,
-    work_unit_lines,
-    work_unit_list_lines,
-    work_unit_payload,
-)
-from ._modelo_work_options import (
-    _ActorOpt,
-    _BucketIdOpt,
-    _ModeloOpt,
-    _NameOpt,
-    _PeriodOpt,
-    _RevisionOpt,
-    _WorkUnitIdArg,
-    _YearOpt,
-)
+from ._modelo_payloads import WorkCreateResult, WorkDiscardResult, WorkListResult, WorkRenameResult, WorkStatusResult
+from ._modelo_rendering import advisory_notice, work_unit_lines, work_unit_list_lines, work_unit_payload
 
 _FILING_YEAR_MIN = 2000
 _FILING_YEAR_MAX = 2099
@@ -98,30 +75,19 @@ class _LifecycleDeps:
 def _validate_filing_year(year: int) -> None:
     if not _FILING_YEAR_MIN <= year <= _FILING_YEAR_MAX:
         raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.year_out_of_range",
-                year=year,
-                minimum=_FILING_YEAR_MIN,
-                maximum=_FILING_YEAR_MAX,
-            ),
+            tr("cli.app.modelo.work.year_out_of_range", year=year, minimum=_FILING_YEAR_MIN, maximum=_FILING_YEAR_MAX)
         )
 
 
 def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> None:
     from ._errors import CliRefusedBoundaryError
 
-    refusal = modelo_work_create_applicability_refusal(
-        modelo,
-        allow_not_applicable=allow_not_applicable,
-    )
+    refusal = modelo_work_create_applicability_refusal(modelo, allow_not_applicable=allow_not_applicable)
     if refusal is None:
         return
     raise CliRefusedBoundaryError(
         translated_message="cli.app.modelo.work.create_not_applicable_refused",
-        context={
-            "modelo": refusal.modelo,
-            "reason": refusal.reason,
-        },
+        context={"modelo": refusal.modelo, "reason": refusal.reason},
     )
 
 
@@ -132,16 +98,11 @@ def guard_unsupported_work_modelo(modelo: str) -> None:
     locale_key = modelo_work_create_refusal_locale_key(modelo_code)
     if locale_key is None:
         return
-
     raise CliRefusedBoundaryError(translated_message=locale_key, context={"modelo": modelo_code})
 
 
 def _validate_registry_target_before_profile_if_needed(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: Period,
-    registry_revision_id: RevisionId | None,
+    *, modelo: str, filing_year: int, period: Period, registry_revision_id: RevisionId | None
 ) -> None:
     from ...core import resolve_active_bucket_id
 
@@ -149,10 +110,7 @@ def _validate_registry_target_before_profile_if_needed(
         return
     try:
         resolve_registry_revision_for_work_target(
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            registry_revision_id=registry_revision_id,
+            modelo=modelo, filing_year=filing_year, period=period, registry_revision_id=registry_revision_id
         )
     except (ModeloWorkRegistryYearMismatchError, RegistrySnapshotError) as exc:
         raise typer.BadParameter(str(exc)) from exc
@@ -174,7 +132,6 @@ def _emit_work_create_result(
     else:
         status_message = tr("cli.app.modelo.work.create_created")
         operation = "modelo.work.create"
-
     result = WorkCreateResult.model_validate(
         {
             "operation": operation,
@@ -183,15 +140,9 @@ def _emit_work_create_result(
             "name_applied": name_applied,
             "applicability_guard_bypassed": allow_not_applicable,
             **work_unit_payload(unit).model_dump(mode="python"),
-        },
+        }
     )
     obligation_notices, obligation_lines = _modelo_100_obligation_advisory_output(unit)
-    # ``--quiet`` trims the human success prose (operation/status header,
-    # work-unit summary, confirmation message) for text mode only. The
-    # notice channel is preserved verbatim — obligation advisories still
-    # print — and the JSON envelope (``result`` + ``notices``) is emitted
-    # unchanged regardless, since ``_emit_envelope`` ignores ``lines`` in
-    # JSON mode. Errors raise before reaching this emit path.
     if quiet:
         lines = list(obligation_lines)
     else:
@@ -207,26 +158,10 @@ def _emit_work_create_result(
 
 def _reused_work_status_message(*, name: str | None, name_applied: str | None) -> tuple[str, str]:
     if name_applied is not None:
-        return (
-            tr(
-                "cli.app.modelo.work.create_reused_renamed",
-                name=name_applied,
-            ),
-            "modelo.work.reuse",
-        )
+        return (tr("cli.app.modelo.work.create_reused_renamed", name=name_applied), "modelo.work.reuse")
     if name is not None and name.strip():
-        return (
-            tr(
-                "cli.app.modelo.work.create_reused_name_match",
-            ),
-            "modelo.work.reuse",
-        )
-    return (
-        tr(
-            "cli.app.modelo.work.create_reused",
-        ),
-        "modelo.work.reuse",
-    )
+        return (tr("cli.app.modelo.work.create_reused_name_match"), "modelo.work.reuse")
+    return (tr("cli.app.modelo.work.create_reused"), "modelo.work.reuse")
 
 
 def _modelo_100_obligation_advisory_output(unit) -> tuple[list[Notice], list[str]]:
@@ -238,22 +173,22 @@ def _modelo_100_obligation_advisory_output(unit) -> tuple[list[Notice], list[str
     rebuilt from the same advisory messages so the two cannot drift.
     """
     if unit.modelo != Modelo.M100:
-        return [], []
+        return ([], [])
     from ...application.overview import build_filing_obligation_advisories
     from ...application.user_profile import ProfileRecordRepository, record_to_values
     from ...core import resolve_active_bucket_id
 
     bucket = resolve_active_bucket_id()
     if bucket is None:
-        return [], []
+        return ([], [])
     record = ProfileRecordRepository.for_current_session(bucket).load(bucket)
     raw = record_to_values(record) if record is not None else None
     messages = [tr(advisory_key) for advisory_key in build_filing_obligation_advisories(raw)]
     notices = [advisory_notice("modelo.work.create.filing_obligation", message) for message in messages]
-    return notices, messages
+    return (notices, messages)
 
 
-__all__ = ["guard_unsupported_work_modelo", "register_work_lifecycle_commands"]
+__all__ = ["guard_unsupported_work_modelo", "work_create", "work_discard", "work_list", "work_rename", "work_status"]
 
 
 def work_create(
@@ -261,16 +196,14 @@ def work_create(
     modelo: str,
     year: int,
     period: str,
-    revision: _RevisionOpt = None,
-    bucket_id: _BucketIdOpt = None,
-    name: _NameOpt = None,
-    actor: _ActorOpt = None,
+    revision: str | None = None,
+    bucket_id: str | None = None,
+    name: str | None = None,
+    actor: str | None = None,
     allow_not_applicable: bool = False,
     quiet: bool = False,
     causante_ccaa_raw: str | None = None,
-    output_language: OutputLanguage | None = typer.Option(
-        None, "--output-language", "--language", help=tr("cli.config.auth.output_language_help")
-    ),
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
     activate_subcommand_output_language(ctx, output_language)
@@ -340,11 +273,9 @@ def work_create(
 
 def work_list(
     ctx: typer.Context,
-    bucket_id: _BucketIdOpt = None,
+    bucket_id: str | None = None,
     include_discarded: bool = False,
-    output_language: OutputLanguage | None = typer.Option(
-        None, "--output-language", "--language", help=tr("cli.config.auth.output_language_help")
-    ),
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """List modelo work units. Discarded units are excluded unless asked."""
     activate_subcommand_output_language(ctx, output_language)
@@ -368,15 +299,13 @@ def work_list(
 
 def work_status(
     ctx: typer.Context,
-    work_unit_id: _WorkUnitIdArg = None,
-    modelo: _ModeloOpt = None,
-    year: _YearOpt = None,
-    period: _PeriodOpt = None,
-    revision: _RevisionOpt = None,
-    bucket_id: _BucketIdOpt = None,
-    output_language: OutputLanguage | None = typer.Option(
-        None, "--output-language", "--language", help=tr("cli.config.auth.output_language_help")
-    ),
+    work_unit_id: str | None = None,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    revision: str | None = None,
+    bucket_id: str | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """View one work unit's metadata."""
     activate_subcommand_output_language(ctx, output_language)
@@ -396,14 +325,14 @@ def work_status(
 
 def work_rename(
     ctx: typer.Context,
-    work_unit_id: _WorkUnitIdArg = None,
-    modelo: _ModeloOpt = None,
-    year: _YearOpt = None,
-    period: _PeriodOpt = None,
-    revision: _RevisionOpt = None,
-    bucket_id: _BucketIdOpt = None,
-    name: _NameOpt = None,
-    actor: _ActorOpt = None,
+    work_unit_id: str | None = None,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    revision: str | None = None,
+    bucket_id: str | None = None,
+    name: str | None = None,
+    actor: str | None = None,
 ) -> None:
     """Update one work unit's display name."""
     require_active_profile()
@@ -425,13 +354,13 @@ def work_rename(
 
 def work_discard(
     ctx: typer.Context,
-    work_unit_id: _WorkUnitIdArg = None,
-    modelo: _ModeloOpt = None,
-    year: _YearOpt = None,
-    period: _PeriodOpt = None,
-    revision: _RevisionOpt = None,
-    bucket_id: _BucketIdOpt = None,
-    actor: _ActorOpt = None,
+    work_unit_id: str | None = None,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    revision: str | None = None,
+    bucket_id: str | None = None,
+    actor: str | None = None,
     reason: str | None = None,
     confirmed: bool = False,
 ) -> None:

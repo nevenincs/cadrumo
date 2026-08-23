@@ -57,8 +57,6 @@ class ModeloReconciliationDiffPayload(OutputSchema):
     source_refs: tuple[str, ...] = ()
 
 
-@register_schema("modelo.reconcile.pull")
-@register_schema("modelo.reconcile.file")
 class ModeloReconcileResult(OutputSchema):
     """Result payload for ``modelo reconcile file`` and ``modelo reconcile pull``.
 

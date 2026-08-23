@@ -694,7 +694,6 @@ class WorkAmendResult(ModeloRecordPayload):
     amends_filing_record_id: FilingRecordId
 
 
-@register_schema("modelo.filing_record.list")
 class ModeloRecordListResult(OutputSchema):
     """Filing-record listing returned by ``aeat app modelo filing-record list``."""
 
@@ -706,14 +705,12 @@ class ModeloRecordListResult(OutputSchema):
     records: list[ModeloRecordPayload]
 
 
-@register_schema("modelo.filing_record.view")
 class ModeloRecordShowResult(ModeloRecordPayload):
     """Filing-record detail returned by ``aeat app modelo filing-record view``."""
 
     operation: str = "modelo.filing_record.show"
 
 
-@register_schema("modelo.verification_report.list")
 class VerificationReportListResult(OutputSchema):
     """Typed listing of persisted verification reports.
 
@@ -730,7 +727,6 @@ class VerificationReportListResult(OutputSchema):
     reports: list[VerificationReportPayload]
 
 
-@register_schema("modelo.verification_report.view")
 class VerificationReportShowResult(OutputSchema):
     """Typed detail view for one persisted verification report.
 
@@ -754,7 +750,6 @@ class VerificationReportShowResult(OutputSchema):
     findings: list[FindingPayload]
 
 
-@register_schema("modelo.formulas")
 class FormulasResult(OutputSchema):
     operation: str = "modelo.formulas"
     code: str
@@ -765,7 +760,6 @@ class FormulasResult(OutputSchema):
     rows: tuple[FormulaPayload, ...]
 
 
-@register_schema("modelo.filing_record.import")
 class FilingRecordImportResult(ModeloRecordPayload):
     """Result emitted by ``aeat app modelo filing-record import``.
 
@@ -793,7 +787,6 @@ class FilingRecordImportResult(ModeloRecordPayload):
         return self
 
 
-@register_schema("modelo.filing_record.observe_local")
 class FilingRecordLocalObservationResult(OutputSchema):
     """Result emitted by ``aeat app modelo filing-record observe-local``.
 
@@ -823,7 +816,6 @@ class FilingRecordLocalObservationResult(OutputSchema):
     aeat_accepted: Literal[False] = False
 
 
-@register_schema("modelo.casilla")
 class ModeloCasillaResult(OutputSchema):
     """Single-casilla semantic detail returned by ``aeat app modelo casilla``.
 
@@ -870,7 +862,6 @@ class CasillaRowPayload(OutputSchema):
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
-@register_schema("modelo.casillas")
 class ModeloCasillasResult(OutputSchema):
     """Casillas listing result."""
 
@@ -899,7 +890,6 @@ class DataInventoryCasillaPayload(OutputSchema):
     binding_source: str | None = None
 
 
-@register_schema("modelo.requires")
 class ModeloRequiresResult(OutputSchema):
     """Data-inventory checklist result returned by ``aeat app modelo requires``.
 
@@ -947,7 +937,6 @@ class ModeloRequiresResult(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
-@register_schema("modelo.export")
 class ModeloExportPayload(OutputSchema):
     """Modelo export result (path reference only — no raw bytes in envelope).
 
@@ -1030,7 +1019,6 @@ class CompareSectionPayload(OutputSchema):
     rows: list[DeltaRowPayload]
 
 
-@register_schema("modelo.compare")
 class ModeloCompareResult(OutputSchema):
     """Envelope result for ``modelo.compare``.
 
@@ -1131,7 +1119,6 @@ class M100ProjectionPayload(OutputSchema):
     cuota_resultante_0597: str
 
 
-@register_schema("modelo.project")
 class ModeloProjectResult(OutputSchema):
     """Envelope result for ``modelo.project``.
 
@@ -1232,7 +1219,6 @@ class WorkResumeResult(OutputSchema):
     obligation: dict[str, object]
 
 
-@register_schema("modelo.aggregate")
 class ModeloAggregateResult(OutputSchema):
     """Per-modelo aggregation result, projected from the canonical service result.
 
@@ -1346,7 +1332,6 @@ class ModeloAggregateResult(OutputSchema):
         )
 
 
-@register_schema("modelo.work.preview_maritime_exemption")
 class WorkPreviewMaritimeExemptionResult(OutputSchema):
     """Envelope result for ``modelo.work.preview_maritime_exemption``.
 

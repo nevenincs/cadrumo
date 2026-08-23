@@ -1,3 +1,4 @@
+# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Typer registration for the guided ``aeat app modelo work amend-wizard`` command.
 
 An operator discovers a mistake in an already-filed return and knows "casilla 01 was
@@ -40,13 +41,16 @@ references only; the registry stays the copy authority.
 """
 
 from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
+
 import typer
 from pydantic import BaseModel
+
 from ...adapters.inbound.tui import select_flow_frontend
 from ...application.flows import (
     CopyRef,
@@ -89,7 +93,10 @@ from ...domain.modelos import (
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
+from ._common import activate_subcommand_output_language
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
+from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
+from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
 from ._modelo_rendering import filing_record_lines
 
 if TYPE_CHECKING:
@@ -139,6 +146,15 @@ class _AmendWizardDeps:
     resolve_work_unit_for_cli: Callable[..., Any]
     resolve_default_actor: Callable[[], str]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
+
+
+deps = _AmendWizardDeps(
+    activate_output_language=activate_subcommand_output_language,
+    require_active_profile=require_active_profile,
+    resolve_work_unit_for_cli=resolve_work_unit_for_cli,
+    resolve_default_actor=resolve_default_actor,
+    bad_parameter_from_error=bad_parameter_from_error,
+)
 
 
 def run_modelo_work_amend_wizard(
@@ -266,11 +282,9 @@ def _amendable_rows(casilla_rows: tuple[Any, ...], baseline_revision: Calculatio
     read top-to-bottom like the printed return.
     """
     return tuple(
-        (
-            row
-            for row in sorted(casilla_rows, key=lambda r: r.number)
-            if row.casilla_id in baseline_revision.casilla_values
-        )
+        row
+        for row in sorted(casilla_rows, key=lambda r: r.number)
+        if row.casilla_id in baseline_revision.casilla_values
     )
 
 
@@ -321,10 +335,8 @@ def _selection_definition(
     """Project the amendable casillas into a one-page CHECKBOX selection flow."""
     table = _ACTIVE_RUNS[run_token]
     summary_lines = "\n".join(
-        (
-            f"  {row.number}\t{row.label}\t{baseline_revision.casilla_values.get(row.casilla_id, Decimal('0'))}"
-            for row in amendable
-        )
+        f"  {row.number}\t{row.label}\t{baseline_revision.casilla_values.get(row.casilla_id, Decimal('0'))}"
+        for row in amendable
     )
     prompt_ref = _copy_ref(run_token, "sel:prompt")
     table[prompt_ref] = tr(
@@ -500,14 +512,14 @@ def _value_help_ref(*, row: Any, run_token: str, table: dict[str, str]) -> str |
 
 def _amendment_kind_page(*, modelo: str, period: Period, run_token: str, table: dict[str, str]) -> FlowPage:
     permitted = permitted_amendment_kind_values(modelo, period)
-    permitted_kinds = tuple((kind for kind in CalculationRevisionAmendmentKind if kind.value in permitted))
+    permitted_kinds = tuple(kind for kind in CalculationRevisionAmendmentKind if kind.value in permitted)
     kind_choices = tuple(
-        (_amendment_kind_choice(kind=kind, run_token=run_token, table=table) for kind in permitted_kinds)
+        _amendment_kind_choice(kind=kind, run_token=run_token, table=table) for kind in permitted_kinds
     )
     kind_prompt_ref = _copy_ref(run_token, "kind:prompt")
     table[kind_prompt_ref] = tr(
         "cli.app.modelo.work.amend_wizard_kind_prompt",
-        choices=", ".join((repr(kind.value) for kind in permitted_kinds)),
+        choices=", ".join(repr(kind.value) for kind in permitted_kinds),
         default="Amendment kind ({choices})",
     )
     kind_help_ref = _copy_ref(run_token, "kind:help")
@@ -548,12 +560,12 @@ def _m303_motive_page(
     ):
         return None
     motive_choices = tuple(
-        (_m303_motive_choice(motive=motive, run_token=run_token, table=table) for motive in M303RectificativaMotive)
+        _m303_motive_choice(motive=motive, run_token=run_token, table=table) for motive in M303RectificativaMotive
     )
     motive_prompt_ref = _copy_ref(run_token, "motive:prompt")
     table[motive_prompt_ref] = tr(
         "cli.app.modelo.work.amend_wizard_m303_rectificativa_motive_prompt",
-        choices=", ".join((repr(motive.value) for motive in M303RectificativaMotive)),
+        choices=", ".join(repr(motive.value) for motive in M303RectificativaMotive),
     )
     motive_help_ref = _copy_ref(run_token, "motive:help")
     table[motive_help_ref] = tr("cli.app.modelo.work.m303_rectificativa_motive_help")
@@ -663,7 +675,7 @@ def _emit_amend_wizard_result(
 
 def work_amend_wizard(
     ctx: typer.Context,
-    work_unit_id: _WorkUnitIdArg = None,
+    work_unit_id: str | None = None,
     modelo: str | None = None,
     year: int | None = None,
     period: str | None = None,

@@ -1,3 +1,4 @@
+# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Typer registration for modelo filing-record and verification-report commands.
 
 The filing-record commands render stored :class:`ModeloRecord` rows, import
@@ -9,7 +10,6 @@ commands expose persisted :class:`VerificationReport` rows.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
 
@@ -35,9 +35,16 @@ from ...application.modelo import (
     record_operator_local_observation,
 )
 from ...core import CasillaId, Period, PeriodError, validated_casilla_id
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.i18n import tr
 from ...domain.modelos import ExternalEvidenceKind, ModeloCode, ModeloValidationError
 from ._common import _declared_tax_id, _emit_envelope
+from ._modelo_cli_support import (
+    bad_parameter_from_error,
+    parse_casilla_override,
+    resolve_default_actor,
+    validate_work_unit_id,
+)
 from ._modelo_payloads import (
     FilingRecordImportResult,
     FilingRecordLocalObservationResult,
@@ -53,40 +60,30 @@ from ._modelo_rendering import (
     verification_report_lines,
     verification_report_payload,
 )
-from ._modelo_work_options import _ActorOpt
-
-_validate_work_unit_id: Callable[[str], str] | None = None
-_parse_amendment_casilla: Callable[[str], tuple[CasillaId, Decimal]] | None = None
-_resolve_default_actor: Callable[[], str] | None = None
-_bad_parameter_from_error: Callable[[Exception], typer.BadParameter] | None = None
 
 
 def _work_unit_id(raw: str) -> str:
     """Validate a filing-record command work-unit id."""
-    if _validate_work_unit_id is None:
-        raise RuntimeError("modelo record commands were not registered")
-    return _validate_work_unit_id(raw)
+    return validate_work_unit_id(raw)
 
 
 def _casilla_value(spec: str) -> tuple[CasillaId, Decimal]:
     """Parse one ``--set`` casilla value through the modelo CLI parser."""
-    if _parse_amendment_casilla is None:
-        raise RuntimeError("modelo record commands were not registered")
-    return _parse_amendment_casilla(spec)
+    key, raw_value = parse_casilla_override(spec)
+    value = try_parse_canonical_decimal(raw_value, max_fraction_digits=2)
+    if value is None:
+        raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=raw_value))
+    return validated_casilla_id(str(key), surface="--set casilla"), value
 
 
 def _actor() -> str:
     """Return the active-profile default actor for record commands."""
-    if _resolve_default_actor is None:
-        raise RuntimeError("modelo record commands were not registered")
-    return _resolve_default_actor()
+    return resolve_default_actor()
 
 
 def _bad_from_error(exc: Exception) -> typer.BadParameter:
     """Adapt application exceptions into Typer parameter errors."""
-    if _bad_parameter_from_error is None:
-        raise RuntimeError("modelo record commands were not registered")
-    return _bad_parameter_from_error(exc)
+    return bad_parameter_from_error(exc)
 
 
 def _modelo_filter(raw: str | None) -> ModeloCode | None:
@@ -131,21 +128,19 @@ def filing_record_list(
         "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by",
     ]
     lines.extend(
-
-            "\t".join(
-                (
-                    record.filing_record_id,
-                    record.bucket_id,
-                    str(record.modelo),
-                    str(record.filing_year),
-                    record.period.registry_token,
-                    record.status.value,
-                    record.filed_at.isoformat(),
-                    record.filed_by,
-                )
+        "\t".join(
+            (
+                record.filing_record_id,
+                record.bucket_id,
+                str(record.modelo),
+                str(record.filing_year),
+                record.period.registry_token,
+                record.status.value,
+                record.filed_at.isoformat(),
+                record.filed_by,
             )
-            for record in records
-
+        )
+        for record in records
     )
     _emit_envelope(ctx, command="modelo.filing_record.list", result=result, lines=lines)
 
@@ -244,7 +239,7 @@ def filing_record_observe_local(
     modelo: str,
     year: int,
     period: str,
-    actor: _ActorOpt = None,
+    actor: str | None = None,
     set_overrides: list[str] | None = None,
     file: Path | None = None,
     replace_official_evidence: bool = False,
@@ -358,19 +353,17 @@ def verification_report_list(ctx: typer.Context, calculation_revision_id: str | 
         "verification_report_id\tcalculation_revision_id\tcompleteness_status\tgranted\trun_at\tverified_by",
     ]
     lines.extend(
-
-            "\t".join(
-                (
-                    r.verification_report_id,
-                    r.calculation_revision_id,
-                    r.completeness_status.value,
-                    str(r.granted_verificado_completo).lower(),
-                    r.run_at.isoformat(),
-                    r.verified_by,
-                )
+        "\t".join(
+            (
+                r.verification_report_id,
+                r.calculation_revision_id,
+                r.completeness_status.value,
+                str(r.granted_verificado_completo).lower(),
+                r.run_at.isoformat(),
+                r.verified_by,
             )
-            for r in reports
-
+        )
+        for r in reports
     )
     _emit_envelope(ctx, command="modelo.verification_report.list", result=result, lines=lines)
 

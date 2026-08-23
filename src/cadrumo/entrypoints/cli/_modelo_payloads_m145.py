@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING
 
 from ...core import CasillaId
 from ...core.identity import BucketId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry import LegalRefId, RevisionId, SourceRefId
 
 if TYPE_CHECKING:
@@ -84,9 +84,6 @@ class M145CommunicationRecordPayload(OutputSchema):
         )
 
 
-@register_schema("modelo.m145.create")
-@register_schema("modelo.m145.mark_delivered_to_payer")
-@register_schema("modelo.m145.mark_locally_completed")
 class M145CommunicationRecordResult(OutputSchema):
     """Envelope payload for Modelo 145 local communication record mutations."""
 
@@ -116,7 +113,6 @@ class M145CommunicationValidationIssuePayload(OutputSchema):
         )
 
 
-@register_schema("modelo.m145.validate")
 class M145CommunicationValidationResultPayload(OutputSchema):
     """Envelope payload for Modelo 145 local communication validation."""
 
@@ -152,7 +148,6 @@ class M145CommunicationValidationResultPayload(OutputSchema):
         )
 
 
-@register_schema("modelo.m145.export")
 class M145CommunicationExportResultPayload(OutputSchema):
     """Envelope payload for Modelo 145 local communication export."""
 

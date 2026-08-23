@@ -1,4 +1,5 @@
-"""Typer registration for the guided ``aeat app modelo work wizard`` command.
+# ruff: noqa: E501
+"""Behavior for the guided ``aeat app modelo work wizard`` command.
 
 An operator knows "gross income" and "deductible expenses" in plain language, not
 that Modelo 130 casilla ``06`` is "Retenciones e ingresos a cuenta". The
@@ -77,9 +78,13 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import InputKind, RegistrySnapshotError, RegistryValidationError
 from ...domain.user_profile import ProfileNotFoundError
+from ._common import activate_subcommand_output_language
 from ._errors import CliOutboundPayloadBoundaryError
+from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (
     MISSING_INPUT_TRANSLATED_MESSAGES,
+    bad_parameter_from_error,
+    resolve_actor_option,
     work_calculate_input_bundle_from_cli,
 )
 from ._modelo_rendering import (
@@ -87,16 +92,6 @@ from ._modelo_rendering import (
     calculation_revision_payload,
     source_diagnostic_notice,
     source_diagnostic_notice_text,
-)
-from ._modelo_work_options import (
-    _ActorOpt,
-    _BucketIdOpt,
-    _ModeloOpt,
-    _PeriodOpt,
-    _RevisionOpt,
-    _WizardOutputLanguageOpt,
-    _WorkUnitIdArg,
-    _YearOpt,
 )
 from ._modelo_work_wizard_payloads import WizardPromptChannel, WizardPromptedCasillaPayload, WorkWizardResult
 
@@ -112,20 +107,8 @@ class _ModeloWizardAnswers(BaseModel):
 
 
 _COPY_NAMESPACE = "modelo-work"
-
 _ACTIVE_RUNS: dict[str, dict[str, str]] = {}
-"""Per-run registry-derived copy tables, keyed by an opaque run token.
-
-Each wizard invocation owns one table for its whole lifetime. Every
-reference embeds its run token (``modelo-work:<run-token>:<step-key>:<facet>``),
-so the registered resolver reads only the addressed run's table: two
-interleaved runs in one process (the ``cadrumo-mcp`` host is exactly such
-a host) never clear each other's entries, and each table is dropped at
-its own run end rather than accumulating for the process lifetime. Values
-are the registry snapshot's localized labels and help; the resolver
-returns ``None`` outside the namespace so other domains' schema-field
-resolvers get their turn.
-"""
+"Per-run registry-derived copy tables, keyed by an opaque run token.\n\nEach wizard invocation owns one table for its whole lifetime. Every\nreference embeds its run token (``modelo-work:<run-token>:<step-key>:<facet>``),\nso the registered resolver reads only the addressed run's table: two\ninterleaved runs in one process (the ``cadrumo-mcp`` host is exactly such\na host) never clear each other's entries, and each table is dropped at\nits own run end rather than accumulating for the process lifetime. Values\nare the registry snapshot's localized labels and help; the resolver\nreturns ``None`` outside the namespace so other domains' schema-field\nresolvers get their turn.\n"
 
 
 def _resolve_modelo_wizard_copy(ref: str) -> str | None:
@@ -153,6 +136,16 @@ class _WizardDeps:
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
 
 
+def _wizard_dependencies() -> _WizardDeps:
+    return _WizardDeps(
+        activate_output_language=activate_subcommand_output_language,
+        require_active_profile=require_active_profile,
+        resolve_work_unit_for_cli=resolve_work_unit_for_cli,
+        resolve_actor_option=resolve_actor_option,
+        bad_parameter_from_error=bad_parameter_from_error,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class _WizardStep:
     """One outstanding question the wizard asks, resolved to a CLI input channel."""
@@ -165,9 +158,6 @@ class _WizardStep:
     help_text: str | None
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
-
-
-# KWARGS-ANY-RATIONALE-cli: resolve_work_unit_for_cli is a CLI resolver callback injected by the command registrar
 
 
 def run_modelo_work_wizard(
@@ -186,30 +176,16 @@ def run_modelo_work_wizard(
     deps.activate_output_language(ctx, output_language_opt)
     deps.require_active_profile()
     unit = deps.resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
+        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
     )
-
     try:
         steps = _outstanding_wizard_steps(unit)
     except RegistrySnapshotError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
-
     run_token = uuid4().hex
     _ACTIVE_RUNS[run_token] = {}
     try:
-        _drive_wizard_calculation(
-            deps=deps,
-            ctx=ctx,
-            unit=unit,
-            steps=steps,
-            actor=actor,
-            run_token=run_token,
-        )
+        _drive_wizard_calculation(deps=deps, ctx=ctx, unit=unit, steps=steps, actor=actor, run_token=run_token)
     finally:
         _ACTIVE_RUNS.pop(run_token, None)
 
@@ -225,43 +201,24 @@ def _drive_wizard_calculation(
 ) -> None:
     resolved_actor = deps.resolve_actor_option(actor)
     prompted = list(_run_wizard_steps(steps, run_token=run_token))
-
     for _attempt in range(_MAX_MISSING_INPUT_RETRIES):
         calculation_result = _run_wizard_calculation_attempt(
-            deps=deps,
-            unit=unit,
-            actor=resolved_actor,
-            prompted=prompted,
-            run_token=run_token,
+            deps=deps, unit=unit, actor=resolved_actor, prompted=prompted, run_token=run_token
         )
         if calculation_result is None:
             continue
         _emit_wizard_result(ctx, calculation_result, tuple(prompted))
         return
-
-    # Exhausted the retry budget: surface the last registry refusal rather
-    # than looping silently. Structurally unreachable in practice (a
-    # calculation converges in at most one follow-up prompt per distinct
-    # unsatisfied binding/relation), kept as a defensive ceiling so a
-    # pathological registry state fails loudly instead of hanging the
-    # operator's terminal.
     raise typer.BadParameter(
         tr(
             "cli.app.modelo.work.wizard_retry_exhausted",
-            default=(
-                "The wizard could not resolve every calculation input after "
-                "{limit} follow-up prompts. Run `aeat app modelo work calculate` "
-                "directly and supply the remaining --binding / --relation values by hand."
-            ),
+            default="The wizard could not resolve every calculation input after {limit} follow-up prompts. Run `aeat app modelo work calculate` directly and supply the remaining --binding / --relation values by hand.",
             limit=_MAX_MISSING_INPUT_RETRIES,
-        ),
+        )
     )
 
 
-def _wizard_calculation_inputs(
-    unit: WorkUnit,
-    prompted: list[tuple[_WizardStep, str]],
-) -> Any:
+def _wizard_calculation_inputs(unit: WorkUnit, prompted: list[tuple[_WizardStep, str]]) -> Any:
     casilla_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "casilla"]
     binding_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "binding"]
     relation_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "relation"]
@@ -284,20 +241,11 @@ def _wizard_calculation_inputs(
 
 
 def _run_wizard_calculation_attempt(
-    *,
-    deps: _WizardDeps,
-    unit: WorkUnit,
-    actor: str,
-    prompted: list[tuple[_WizardStep, str]],
-    run_token: str,
+    *, deps: _WizardDeps, unit: WorkUnit, actor: str, prompted: list[tuple[_WizardStep, str]], run_token: str
 ) -> ModeloWorkCalculationServiceResult | None:
     calculation_inputs = _wizard_calculation_inputs(unit, prompted)
     try:
-        return calculate_modelo_work_revision(
-            work_unit_id=unit.work_unit_id,
-            actor=actor,
-            inputs=calculation_inputs,
-        )
+        return calculate_modelo_work_revision(work_unit_id=unit.work_unit_id, actor=actor, inputs=calculation_inputs)
     except RegistryValidationError as exc:
         follow_up = _follow_up_step_for_missing_input(exc, unit=unit)
         if follow_up is None:
@@ -317,30 +265,6 @@ def _run_wizard_calculation_attempt(
         raise CliOutboundPayloadBoundaryError(exc) from exc
 
 
-#: Binding ``source`` kinds a wizard may legitimately ask an operator to fill
-#: in with a raw ``--binding KEY=VALUE`` override. Every other source kind
-#: self-resolves on the shared calculation path exactly as a bare
-#: ``work calculate`` resolves it, and ``_missing_binding_guidance``
-#: (``_modelo.py``) refuses a caller ``--binding`` override for most of
-#: them:
-#:
-#: * ``LEDGER_BINDING_SOURCE_KINDS`` (and the remaining aggregation-mesh
-#:   sources such as ``retenciones_aggregation``) read the bucket-scoped
-#:   ledger; overriding them with ``--binding`` is a hard refusal
-#:   (``errors.error.error_modelo_aggregation_binding``).
-#: * ``previous_filing`` resolves from a prior filed revision, or defaults to
-#:   an "absent-by-design" zero when no prior period exists (the same
-#:   auto-default a bare ``work calculate`` applies) — never operator-supplied.
-#: * ``relation_prefill`` is supplied through ``--relation``, not
-#:   ``--binding``; those rows are asked through the ``relation`` channel
-#:   below, driven off each row's declared ``relation_inputs`` rather than
-#:   its ``source`` value.
-#: * ``borrador`` / ``iva_wallet_decision`` are pre-mesh decisions with no
-#:   registry binding declaration an operator could target.
-#:
-#: ``manual_input`` and ``profile`` (when the profile fact is not already
-#: resolvable, per :func:`_profile_resolved_binding_ids`) are the only
-#: sources left that genuinely need an operator-typed value.
 _WIZARD_PROMPTABLE_BINDING_SOURCES: frozenset[str] = frozenset({"manual_input", "profile"})
 
 
@@ -371,25 +295,23 @@ def _outstanding_wizard_steps(unit: WorkUnit) -> tuple[_WizardStep, ...]:
     ledger-aggregation binding).
     """
     casillas_report = registry_casillas_for_registry_scope(
-        str(unit.modelo),
-        filing_year=unit.filing_year,
-        period=unit.period.registry_token,
-        input_kind=InputKind.MANUAL,
+        str(unit.modelo), filing_year=unit.filing_year, period=unit.period.registry_token, input_kind=InputKind.MANUAL
     )
     casilla_steps = tuple(
-        _WizardStep(
-            channel="casilla",
-            key=row.casilla_id,
-            casilla_id=row.casilla_id,
-            number=row.number,
-            label=row.label,
-            help_text=row.help_text,
-            legal_refs=tuple(row.legal_refs),
-            source_refs=tuple(row.source_refs),
-        )
-        for row in casillas_report.rows
-    )
 
+            _WizardStep(
+                channel="casilla",
+                key=row.casilla_id,
+                casilla_id=row.casilla_id,
+                number=row.number,
+                label=row.label,
+                help_text=row.help_text,
+                legal_refs=tuple(row.legal_refs),
+                source_refs=tuple(row.source_refs),
+            )
+            for row in casillas_report.rows
+
+    )
     bindings_report = registry_bindings_for_scope(str(unit.modelo), period=unit.period)
     profile_resolved = _profile_resolved_binding_ids(unit)
     binding_steps: list[_WizardStep] = []
@@ -408,14 +330,11 @@ def _outstanding_wizard_steps(unit: WorkUnit) -> tuple[_WizardStep, ...]:
                         help_text=tr(
                             "cli.app.modelo.work.wizard_relation_help",
                             binding_id=str(row.binding_id),
-                            default=(
-                                "Fed by registry relation {binding_id}; supply the cross-period "
-                                "or cross-modelo value this relation carries."
-                            ),
+                            default="Fed by registry relation {binding_id}; supply the cross-period or cross-modelo value this relation carries.",
                         ),
                         legal_refs=tuple(row.legal_refs),
                         source_refs=tuple(row.source_refs),
-                    ),
+                    )
                 )
             continue
         if row.source not in _WIZARD_PROMPTABLE_BINDING_SOURCES:
@@ -432,16 +351,11 @@ def _outstanding_wizard_steps(unit: WorkUnit) -> tuple[_WizardStep, ...]:
                 help_text=None,
                 legal_refs=tuple(row.legal_refs),
                 source_refs=tuple(row.source_refs),
-            ),
+            )
         )
     return (*casilla_steps, *tuple(binding_steps))
 
 
-#: Upper bound on missing-input follow-up prompts per wizard invocation. Each
-#: retry resolves exactly one distinct unsatisfied binding/relation the
-#: registry engine reports, so this is a defensive ceiling, not an expected
-#: iteration count — M130 never needs more than one (the prior-year IRPF net
-#: income carry, when no local Modelo 100 filing exists to auto-resolve it).
 _MAX_MISSING_INPUT_RETRIES = 12
 
 
@@ -500,10 +414,7 @@ def _follow_up_step_for_missing_input(error: RegistryValidationError, *, unit: W
             help_text=tr(
                 "cli.app.modelo.work.wizard_relation_help",
                 binding_id=relation_id,
-                default=(
-                    "Fed by registry relation {binding_id}; supply the cross-period "
-                    "or cross-modelo value this relation carries."
-                ),
+                default="Fed by registry relation {binding_id}; supply the cross-period or cross-modelo value this relation carries.",
             ),
             legal_refs=legal_refs,
             source_refs=source_refs,
@@ -533,11 +444,8 @@ def _profile_resolved_binding_ids(unit: WorkUnit) -> frozenset[str]:
     try:
         return _text_frozenset(
             profile_resolvable_binding_ids(
-                modelo=str(unit.modelo),
-                bucket_id=bucket_id,
-                filing_year=unit.filing_year,
-                period=unit.period,
-            ),
+                modelo=str(unit.modelo), bucket_id=bucket_id, filing_year=unit.filing_year, period=unit.period
+            )
         )
     except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
         return frozenset[str]()
@@ -559,11 +467,7 @@ def _page_key(step: _WizardStep) -> str:
     return f"{step.channel}:{step.key}"
 
 
-def _definition_from_steps(
-    steps: tuple[_WizardStep, ...],
-    *,
-    run_token: str,
-) -> FlowDefinition:
+def _definition_from_steps(steps: tuple[_WizardStep, ...], *, run_token: str) -> FlowDefinition:
     """Project the discovered registry steps into a one-section flow definition.
 
     Each step becomes a free-text page whose prompt and help are
@@ -596,7 +500,7 @@ def _definition_from_steps(
                 help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=help_ref) if help_ref else None,
                 required=False,
                 answer_type=str,
-            ),
+            )
         )
     help_key = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref="cli.app.modelo.work.wizard_help")
     return FlowDefinition(
@@ -612,11 +516,7 @@ def _definition_from_steps(
     )
 
 
-def _run_wizard_steps(
-    steps: tuple[_WizardStep, ...],
-    *,
-    run_token: str,
-) -> tuple[tuple[_WizardStep, str], ...]:
+def _run_wizard_steps(steps: tuple[_WizardStep, ...], *, run_token: str) -> tuple[tuple[_WizardStep, str], ...]:
     """Walk the outstanding steps through the interactive flow frontend.
 
     The frontend is the full-screen Textual app where the host can host
@@ -633,22 +533,14 @@ def _run_wizard_steps(
     if not steps:
         return ()
     definition = _definition_from_steps(steps, run_token=run_token)
-    frontend = select_flow_frontend(
-        definition,
-        mode=FlowMode.CREATE,
-        capability=detect_frontend_capability(),
-    )
+    frontend = select_flow_frontend(definition, mode=FlowMode.CREATE, capability=detect_frontend_capability())
     if isinstance(frontend, LineFlowFrontend):
         state, _projection = frontend.run(mode=FlowMode.CREATE)
     else:
         frontend.run()
         if frontend.final_state is None:
-            # Textual returned without a submit or save-and-exit: the
-            # operator abandoned the run. Refuse with the typed abandonment
-            # rather than committing a partially-answered calculation.
             raise FlowRunAbandonedError(
-                translated_message="errors.refused.refused_flow_run_abandoned",
-                context={"flow_id": definition.id},
+                translated_message="errors.refused.refused_flow_run_abandoned", context={"flow_id": definition.id}
             )
         state = frontend.final_state
     return tuple((step, (state.answers.get(_page_key(step)) or "").strip()) for step in steps)
@@ -665,13 +557,7 @@ def _emit_wizard_result(
     unit_for_modality = calculation_result.work_unit
     saved_confirmation = tr(
         "cli.app.modelo.work.wizard_saved",
-        default=(
-            "Saved as draft calculation revision %{revision_id} "
-            "(state: %{state}). It is persisted and can be resumed later; "
-            "list revisions with "
-            "`aeat app modelo work revisions --modelo %{modelo} --year %{year} --period %{period}` "
-            "and re-inspect this one with `aeat app modelo work revision %{revision_id}`."
-        ),
+        default="Saved as draft calculation revision %{revision_id} (state: %{state}). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period %{period}` and re-inspect this one with `aeat app modelo work revision %{revision_id}`.",
         revision_id=calculation_revision.calculation_revision_id,
         state=calculation_revision.state.value,
         modelo=unit_for_modality.modelo,
@@ -679,18 +565,20 @@ def _emit_wizard_result(
         period=unit_for_modality.period.registry_token,
     )
     prompted_payload = tuple(
-        WizardPromptedCasillaPayload(
-            casilla_id=step.casilla_id,
-            number=step.number,
-            label=step.label,
-            channel=step.channel,
-            key=step.key,
-            value=value,
-            legal_refs=step.legal_refs,
-            source_refs=step.source_refs,
-            help_text=step.help_text,
+        (
+            WizardPromptedCasillaPayload(
+                casilla_id=step.casilla_id,
+                number=step.number,
+                label=step.label,
+                channel=step.channel,
+                key=step.key,
+                value=value,
+                legal_refs=step.legal_refs,
+                source_refs=step.source_refs,
+                help_text=step.help_text,
+            )
+            for step, value in prompted
         )
-        for step, value in prompted
     )
     result = WorkWizardResult.model_validate(
         {
@@ -698,7 +586,7 @@ def _emit_wizard_result(
             "saved_confirmation": saved_confirmation,
             **calculation_revision_payload(calculation_revision).model_dump(mode="python"),
             "prompted_casillas": prompted_payload,
-        },
+        }
     )
     lines = [
         "operation\tmodelo.work.wizard",
@@ -709,29 +597,29 @@ def _emit_wizard_result(
     notices: list[Notice] = []
     diagnostics = calculation_result.source_diagnostics
     if diagnostics:
-        # Shares the calculate path's projection, so the wizard's advisories carry
-        # the same routable context AND the remedy this call site previously dropped.
         notices.extend(
-            source_diagnostic_notice(diagnostic, code="modelo.work.wizard.source_advisory")
-            for diagnostic in diagnostics
+
+                source_diagnostic_notice(diagnostic, code="modelo.work.wizard.source_advisory")
+                for diagnostic in diagnostics
+
         )
         lines.extend(source_diagnostic_notice_text(notice) for notice in notices)
     _emit_envelope(ctx, command="modelo.work.wizard", result=result, lines=lines, notices=notices or None)
 
 
-__all__ = ["register_work_wizard_commands"]
+__all__ = ["work_wizard"]
 
 
 def work_wizard(
     ctx: typer.Context,
-    work_unit_id: _WorkUnitIdArg = None,
-    modelo: _ModeloOpt = None,
-    year: _YearOpt = None,
-    period: _PeriodOpt = None,
-    revision: _RevisionOpt = None,
-    bucket_id: _BucketIdOpt = None,
-    actor: _ActorOpt = None,
-    output_language_opt: _WizardOutputLanguageOpt = None,
+    work_unit_id: str | None = None,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    revision: str | None = None,
+    bucket_id: str | None = None,
+    actor: str | None = None,
+    output_language_opt: OutputLanguage | None = None,
 ) -> None:
     """Walk the resolved work unit's outstanding manual inputs one at a time.
 
@@ -744,7 +632,7 @@ def work_wizard(
     bundle ``work calculate`` builds.
     """
     run_modelo_work_wizard(
-        deps=deps,
+        deps=_wizard_dependencies(),
         ctx=ctx,
         work_unit_id=work_unit_id,
         modelo=modelo,

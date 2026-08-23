@@ -32,10 +32,9 @@ from pydantic import Field
 
 from ...core import HEX_PATTERN_64, Period
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 
 
-@register_schema("modelo.review_package.build")
 class ModeloReviewPackageBuildResult(OutputSchema):
     """Review-package build result (path reference only — no raw bytes in envelope).
 
@@ -60,7 +59,6 @@ class ModeloReviewPackageBuildResult(OutputSchema):
     built_at: datetime
 
 
-@register_schema("modelo.review_package.verify")
 class ModeloReviewPackageVerifyResult(OutputSchema):
     """Review-package integrity-verification result.
 
@@ -91,7 +89,6 @@ class ModeloReviewPackageVerifyResult(OutputSchema):
     built_at: datetime
 
 
-@register_schema("modelo.review_package.sign")
 class ModeloReviewPackageSignResult(OutputSchema):
     """Review-package signing result.
 
@@ -113,7 +110,6 @@ class ModeloReviewPackageSignResult(OutputSchema):
     signed_at: datetime
 
 
-@register_schema("modelo.review_package.verify_signature")
 class ModeloReviewPackageVerifySignatureResult(OutputSchema):
     """Review-package Ed25519 signature-verification result (authenticity check)."""
 
@@ -124,7 +120,6 @@ class ModeloReviewPackageVerifySignatureResult(OutputSchema):
     is_valid: bool
 
 
-@register_schema("modelo.review_package.counter_sign")
 class ModeloReviewPackageCounterSignResult(OutputSchema):
     """Review-package accountant counter-sign result.
 
@@ -144,7 +139,6 @@ class ModeloReviewPackageCounterSignResult(OutputSchema):
     counter_signed_at: datetime
 
 
-@register_schema("modelo.review_package.verify_receipt")
 class ModeloReviewPackageVerifyReceiptResult(OutputSchema):
     """Review-package counter-signed receipt verification result (both layers)."""
 
@@ -156,7 +150,6 @@ class ModeloReviewPackageVerifyReceiptResult(OutputSchema):
     is_valid: bool
 
 
-@register_schema("modelo.review_package.encrypt_for_recipient")
 class ModeloReviewPackageEncryptForRecipientResult(OutputSchema):
     """Review-package encrypt-for-recipient result.
 
@@ -178,7 +171,6 @@ class ModeloReviewPackageEncryptForRecipientResult(OutputSchema):
     valid_until: datetime | None = None
 
 
-@register_schema("modelo.review_package.decrypt")
 class ModeloReviewPackageDecryptResult(OutputSchema):
     """Review-package decrypt (recipient side) result.
 
@@ -197,7 +189,6 @@ class ModeloReviewPackageDecryptResult(OutputSchema):
     review_only: bool
 
 
-@register_schema("modelo.review_package.encrypt_feedback")
 class ModeloReviewPackageEncryptFeedbackResult(OutputSchema):
     """Feedback-package encrypt (recipient side) result.
 
@@ -222,7 +213,6 @@ class ModeloReviewPackageEncryptFeedbackResult(OutputSchema):
     valid_until: datetime | None = None
 
 
-@register_schema("modelo.review_package.import_feedback")
 class ModeloReviewPackageImportFeedbackResult(OutputSchema):
     """Feedback-package import (originator side) result.
 

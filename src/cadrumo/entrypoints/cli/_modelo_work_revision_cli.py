@@ -1,4 +1,4 @@
-"""Typer registration for modelo work :class:`CalculationRevision` read commands.
+"""Behavior for modelo work :class:`CalculationRevision` read commands.
 
 The registered commands list stored calculation revisions, show one persisted
 revision, and render its typed casilla observations without mutating modelo
@@ -29,31 +29,14 @@ from ...application.modelo import (
 from ...core.external_constants import OutputLanguage
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ._common import _emit_envelope, activate_subcommand_output_language
-from ._modelo_behavior_support import (
-    require_active_profile,
-    resolve_work_unit_for_cli,
-)
-from ._modelo_cli_support import (
-    OutputLanguageOpt,
-)
+from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli, resolve_work_unit_for_cli
+from ._modelo_cli_support import bad_parameter_from_error, selector_bad_parameter
 from ._modelo_payloads import WorkObservationsResult, WorkRevisionResult, WorkRevisionsResult
 from ._modelo_rendering import (
     calculation_observation_lines,
     calculation_revision_lines,
     calculation_revision_payload,
     short_id,
-)
-from ._modelo_work_options import (
-    _BucketIdOpt,
-    _CalculationRevisionIdArg,
-    _ModeloOpt,
-    _PeriodOpt,
-    _RegistryRevisionOpt,
-    _RevisionOpt,
-    _RevisionSelectorOpt,
-    _WorkUnitIdArg,
-    _WorkUnitIdOpt,
-    _YearOpt,
 )
 
 
@@ -67,6 +50,17 @@ class _WorkRevisionCommandDeps:
     resolve_revision_for_cli: Callable[..., CalculationRevision]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
     selector_bad_parameter: Callable[[BaseException], typer.BadParameter]
+
+
+def _revision_dependencies() -> _WorkRevisionCommandDeps:
+    return _WorkRevisionCommandDeps(
+        activate_output_language=activate_subcommand_output_language,
+        require_active_profile=require_active_profile,
+        resolve_work_unit_for_cli=resolve_work_unit_for_cli,
+        resolve_revision_for_cli=resolve_revision_for_cli,
+        bad_parameter_from_error=bad_parameter_from_error,
+        selector_bad_parameter=selector_bad_parameter,
+    )
 
 
 def _resolve_selected_revision(
@@ -99,18 +93,18 @@ def _resolve_selected_revision(
         raise deps.selector_bad_parameter(exc) from exc
 
 
-__all__ = ["register_work_revision_commands"]
+__all__ = ["work_observations", "work_revision", "work_revisions"]
 
 
 def work_revisions(
     ctx: typer.Context,
-    work_unit_id: _WorkUnitIdArg = None,
-    modelo: _ModeloOpt = None,
-    year: _YearOpt = None,
-    period: _PeriodOpt = None,
-    revision: _RevisionOpt = None,
-    bucket_id: _BucketIdOpt = None,
-    output_language: OutputLanguageOpt = None,
+    work_unit_id: str | None = None,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    revision: str | None = None,
+    bucket_id: str | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """List persisted :class:`CalculationRevision` rows for an optional :class:`WorkUnit`."""
     activate_subcommand_output_language(ctx, output_language)
@@ -136,33 +130,35 @@ def work_revisions(
         "short_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at",
     ]
     lines.extend(
-        "\t".join(
-            (
-                short_id(rev.calculation_revision_id) or "",
-                rev.calculation_revision_id,
-                short_id(rev.work_unit_id) or "",
-                rev.work_unit_id,
-                rev.state.value,
-                rev.created_at.isoformat(),
+
+            "\t".join(
+                (
+                    short_id(rev.calculation_revision_id) or "",
+                    rev.calculation_revision_id,
+                    short_id(rev.work_unit_id) or "",
+                    rev.work_unit_id,
+                    rev.state.value,
+                    rev.created_at.isoformat(),
+                )
             )
-        )
-        for rev in revisions
+            for rev in revisions
+
     )
     _emit_envelope(ctx, command="modelo.work.revisions", result=result, lines=lines)
 
 
 def work_revision(
     ctx: typer.Context,
-    calculation_revision_id: _CalculationRevisionIdArg = None,
-    modelo: _ModeloOpt = None,
-    year: _YearOpt = None,
-    period: _PeriodOpt = None,
-    registry_revision: _RegistryRevisionOpt = None,
-    work_unit_id: _WorkUnitIdOpt = None,
-    select: _RevisionSelectorOpt = ModeloCalculationRevisionSelector.CURRENT.value,
-    bucket_id: _BucketIdOpt = None,
+    calculation_revision_id: str | None = None,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    registry_revision: str | None = None,
+    work_unit_id: str | None = None,
+    select: str = ModeloCalculationRevisionSelector.CURRENT.value,
+    bucket_id: str | None = None,
     verbose: bool = False,
-    output_language: OutputLanguageOpt = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Show one selected :class:`CalculationRevision` as a work-revision result.
 
@@ -175,7 +171,7 @@ def work_revision(
     activate_subcommand_output_language(ctx, output_language)
     require_active_profile()
     selected_revision = _resolve_selected_revision(
-        deps,
+        _revision_dependencies(),
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
         modelo=modelo,
@@ -205,15 +201,15 @@ def work_revision(
 
 def work_observations(
     ctx: typer.Context,
-    calculation_revision_id: _CalculationRevisionIdArg = None,
-    modelo: _ModeloOpt = None,
-    year: _YearOpt = None,
-    period: _PeriodOpt = None,
-    registry_revision: _RegistryRevisionOpt = None,
-    work_unit_id: _WorkUnitIdOpt = None,
-    select: _RevisionSelectorOpt = ModeloCalculationRevisionSelector.CURRENT.value,
-    bucket_id: _BucketIdOpt = None,
-    output_language: OutputLanguageOpt = None,
+    calculation_revision_id: str | None = None,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    registry_revision: str | None = None,
+    work_unit_id: str | None = None,
+    select: str = ModeloCalculationRevisionSelector.CURRENT.value,
+    bucket_id: str | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Show observation provenance for one stored :class:`CalculationRevision`.
 
@@ -224,7 +220,7 @@ def work_observations(
     activate_subcommand_output_language(ctx, output_language)
     require_active_profile()
     selected_revision = _resolve_selected_revision(
-        deps,
+        _revision_dependencies(),
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
         modelo=modelo,

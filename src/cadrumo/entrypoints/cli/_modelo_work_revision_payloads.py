@@ -1,4 +1,4 @@
-"""Registered work-revision inspection payloads for modelo CLI commands.
+"""Work-revision inspection payloads for modelo CLI commands.
 
 ``aeat app modelo work revision`` and ``work observations`` both project a
 persisted :class:`CalculationRevision` through
@@ -7,9 +7,7 @@ They share the nested
 :class:`ObservationPayload`
 and
 :class:`ResultSummaryRowPayload`
-rows, then register strict
-:class:`OutputSchema` result schemas through
-:func:`register_schema`.
+rows with strict :class:`OutputSchema` result schemas.
 
 The application/modelo facade remains authoritative for revision lookup,
 selection, and Modelo 202 modality resolution; these classes only document the
@@ -22,11 +20,10 @@ these split schemas so modelo work emitters keep one payload import surface.
 from __future__ import annotations
 
 from ...core.identity import CalculationRevisionId, WorkUnitId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ._modelo_revision_payload_parts import CalculationRevisionProjectionFields, ObservationPayload
 
 
-@register_schema("modelo.work.revision")
 class WorkRevisionResult(CalculationRevisionProjectionFields):
     """Single-revision shape returned by ``aeat app modelo work revision``.
 
@@ -45,7 +42,6 @@ class WorkRevisionResult(CalculationRevisionProjectionFields):
     modality_reason: str | None = None
 
 
-@register_schema("modelo.work.observations")
 class WorkObservationsResult(OutputSchema):
     """Typed provenance view for one stored :class:`CalculationRevision`.
 

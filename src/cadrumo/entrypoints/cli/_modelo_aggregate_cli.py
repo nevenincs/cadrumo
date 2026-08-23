@@ -1,10 +1,13 @@
 """Typer registration for modelo aggregation commands."""
 
 from __future__ import annotations
+
 import json
 from collections.abc import Callable
+
 import typer
 from pydantic import BaseModel, ValidationError
+
 from ...application.aggregation import (
     CounterpartObservation,
     ForeignAssetIngestObservation,
@@ -43,7 +46,7 @@ def _route_invoice_retenciones_into_command(
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.invoice_retencion_wrong_modelo", modelo=command.modelo))
     catalogue = _load_invoices()
     entries = tuple(
-        ((resolve_catalogue_invoice(catalogue, request.invoice_id), request.scheme) for request in requests)
+        (resolve_catalogue_invoice(catalogue, request.invoice_id), request.scheme) for request in requests
     )
     routing = route_invoice_retenciones(entries)
     merged = command.model_copy(
@@ -89,7 +92,7 @@ def _aggregate_output_lines(
     result: PerModeloAggregationResult, *, clave_breakdown: tuple[WithholdingClaveBreakdown, ...], notices: list[Notice]
 ) -> list[str]:
     """Render the text envelope lines for one per-modelo aggregation."""
-    source_kinds = ", ".join((source_kind.value for source_kind in result.source_kinds)) or "-"
+    source_kinds = ", ".join(source_kind.value for source_kind in result.source_kinds) or "-"
     lines = [
         "operation\tmodelo.aggregate",
         f"modelo\t{result.modelo}",
@@ -102,12 +105,12 @@ def _aggregate_output_lines(
     if clave_breakdown:
         lines.append("clave\tpercepcion_count\tpercibido_total\tretencion_total")
         lines.extend(
-            (
+
                 f"clave_breakdown\t{row.clave.value}\t{row.percepcion_count}\t{row.percibido_total}\t{row.retencion_total}"
                 for row in clave_breakdown
-            )
+
         )
-    lines.extend((notice.message for notice in notices))
+    lines.extend(notice.message for notice in notices)
     return lines
 
 
@@ -120,7 +123,7 @@ def _invoice_retencion_excluded_notice(projection: InvoiceRetencionProjection) -
     :data:`~application.aggregation.INVOICE_RETENCION_DEFECT_GUIDANCE` rather than
     invented here, so the CLI renders remediation the routing module already declared.
     """
-    reasons = ", ".join((defect.value for defect in projection.defects))
+    reasons = ", ".join(defect.value for defect in projection.defects)
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="modelo.aggregate.invoice_retencion_excluded",
@@ -148,7 +151,7 @@ def _parse_typed_cli_observations[ObservationT: BaseModel](
         try:
             parsed.append(model.model_validate_json(raw))
         except ValidationError as exc:
-            details = "; ".join((f"{'.'.join((str(s) for s in e['loc']))}: {e['msg']}" for e in exc.errors()))
+            details = "; ".join(f"{'.'.join(str(s) for s in e['loc'])}: {e['msg']}" for e in exc.errors())
             raise typer.BadParameter(
                 tr("cli.app.modelo.aggregate.json_validation_error", flag=flag, details=details)
             ) from exc

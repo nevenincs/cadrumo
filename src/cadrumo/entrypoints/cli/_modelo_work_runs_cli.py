@@ -1,4 +1,4 @@
-"""Typer registration for modelo workflow-run discovery and resume.
+"""Behavior for modelo workflow-run discovery and resume.
 
 This CLI module is a transport boundary for persisted
 :class:`WorkflowResult` rows. The ``runs`` command
@@ -41,35 +41,22 @@ from ...application.workflow import (
     resolve_modelo_workflow_resume_target,
     resume_modelo_workflow,
 )
+from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import ResolvedPreconditionAction
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._common import _emit_envelope, activate_subcommand_output_language, resolve_cli_precondition_action
-from ._modelo_behavior_support import (
-    resolve_optional_cli_period,
-)
+from ._modelo_behavior_support import resolve_optional_cli_period
 from ._modelo_cli_support import (
-    OutputLanguageOpt,
     bad_parameter_from_error,
     parse_revision_selector,
     validate_calculation_revision_id,
     validate_work_unit_id,
 )
 from ._modelo_payloads import WorkflowRunPayload, WorkResumeResult, WorkRunsResult
-from ._modelo_work_options import (
-    _BucketIdOpt,
-    _ModeloOpt,
-    _PeriodOpt,
-    _RevisionOpt,
-    _WorkUnitIdOpt,
-    _YearOpt,
-)
 
 
-def _render_workflow_step_summary(
-    summary_locale_key: str,
-    details: WorkflowStepDetails | None,
-) -> str:
+def _render_workflow_step_summary(summary_locale_key: str, details: WorkflowStepDetails | None) -> str:
     """Render an abstract workflow summary from its closed locale-neutral facts."""
     interpolation = {} if details is None else details.model_dump(mode="json", exclude_none=True)
     return tr(summary_locale_key, **interpolation)
@@ -118,10 +105,7 @@ def _workflow_run_payload(run: WorkflowResult) -> WorkflowRunPayload:
         summary_locale_key=projection.summary_locale_key,
         summary_details=projection.summary_details,
         site_health_alert=projection.site_health_alert,
-        summary=_render_workflow_step_summary(
-            projection.summary_locale_key,
-            projection.summary_details,
-        ),
+        summary=_render_workflow_step_summary(projection.summary_locale_key, projection.summary_details),
         action=projection.action,
     )
 
@@ -138,15 +122,12 @@ def _workflow_run_tab_line(run: WorkflowRunPayload) -> str:
             run.started_at,
             run.summary,
             resolved_precondition_action_json_cell(run.action),
-        ),
+        )
     )
 
 
 def _emit_work_resume(
-    ctx: typer.Context,
-    *,
-    result: WorkflowResumeContext,
-    resolution: WorkflowResumeTargetResolution,
+    ctx: typer.Context, *, result: WorkflowResumeContext, resolution: WorkflowResumeTargetResolution
 ) -> None:
     """Emit the resume context and resolved selector metadata.
 
@@ -189,10 +170,10 @@ def _emit_work_resume(
     _emit_envelope(ctx, command="modelo.work.resume", result=resume_result, lines=lines)
 
 
-__all__ = ["register_work_run_commands"]
+__all__ = ["work_resume", "work_runs"]
 
 
-def work_runs(ctx: typer.Context, output_language: OutputLanguageOpt = None) -> None:
+def work_runs(ctx: typer.Context, output_language: OutputLanguage | None = None) -> None:
     """List persisted :class:`WorkflowResult` rows."""
     activate_subcommand_output_language(ctx, output_language)
     runs = list_runs()
@@ -210,15 +191,15 @@ def work_runs(ctx: typer.Context, output_language: OutputLanguageOpt = None) -> 
 def work_resume(
     ctx: typer.Context,
     target: str | None = None,
-    modelo: _ModeloOpt = None,
-    year: _YearOpt = None,
-    period: _PeriodOpt = None,
-    revision: _RevisionOpt = None,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    revision: str | None = None,
     select: str | None = None,
-    work_unit_id: _WorkUnitIdOpt = None,
+    work_unit_id: str | None = None,
     calculation_revision_id: str | None = None,
-    bucket_id: _BucketIdOpt = None,
-    output_language: OutputLanguageOpt = None,
+    bucket_id: str | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Surface workflow-resume preconditions and resumable context.
 
