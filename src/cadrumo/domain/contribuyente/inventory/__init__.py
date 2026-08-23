@@ -11,10 +11,8 @@ Public functions:
     :class:`ValuationMethod`, refusing LIFO.
     :func:`compute_inventory_valuation` — value closing stock and
     COGS for one ledger.
-    :func:`compute_inventory_variation` — signed Anexo D ``0155``
-    closing-minus-opening stock variation.
-    :func:`compute_anexo_d_inventory_variation` — per-activity
-    aggregation across multiple ledgers.
+    :func:`compute_inventory_anexo_d_projection` — split the 2025
+    stock variation between casillas ``0177`` and ``0182``.
 """
 
 from __future__ import annotations
@@ -22,6 +20,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -319,29 +318,6 @@ def parse_valuation_method(raw: str) -> ValuationMethod:
         ) from exc
 
 
-def compute_inventory_variation(ledger: InventoryLedger, year: int) -> Decimal:
-    """Compute signed Anexo D inventory variation for a ledger.
-
-    Returns closing stock minus opening stock for casilla ``0155``. If
-    ``closing_stock`` is not supplied, it is derived via
-    :func:`compute_inventory_valuation`.
-
-    Args:
-        ledger: Ledger to evaluate.
-        year: Period year. The ledger is skipped when its ``year``
-            does not match.
-
-    Returns:
-        Signed closing-minus-opening valuation, quantised to cents.
-    """
-    if ledger.year != year:
-        return _ZERO
-    closing = ledger.closing_stock
-    if closing is None:
-        closing = compute_inventory_valuation(ledger).closing_value
-    return _quantize(closing - ledger.opening_stock)
-
-
 class InventoryValuationResult(BaseModel):
     """Computed valuation outcome for an inventory ledger.
 
@@ -362,28 +338,83 @@ class InventoryValuationResult(BaseModel):
     purchase_value: Decimal
 
 
-def compute_anexo_d_inventory_variation(
-    year: int,
-    actividad: str,
-    *,
-    ledgers: tuple[InventoryLedger, ...] = (),
-) -> Decimal:
-    """Compute Anexo D normal casilla ``0155`` for one activity.
+class InventoryAnexoDResult(BaseModel):
+    """Auditable 2025 stock-variation projection for one activity.
+
+    ``casilla_0177`` carries a closing-over-opening increase and
+    ``casilla_0182`` carries an opening-over-closing decrease. The source
+    opening and closing values remain on the result so the split can be
+    reviewed without reconstructing its basis. Purchase acquisition cost for
+    casilla ``0181`` is deliberately absent until the inventory source can
+    prove the complete acquisition-cost fact.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    actividad_id: str = Field(min_length=1)
+    filing_year: Literal[2025]
+    opening_value: Decimal = Field(ge=_ZERO)
+    closing_value: Decimal = Field(ge=_ZERO)
+    casilla_0177: Decimal = Field(ge=_ZERO)
+    casilla_0182: Decimal = Field(ge=_ZERO)
+
+    @model_validator(mode="after")
+    def _variation_split_matches_audited_values(self) -> InventoryAnexoDResult:
+        """Require an exact, mutually exclusive split of the audited basis."""
+        signed_variation = _quantize(self.closing_value - self.opening_value)
+        expected_increase = max(signed_variation, _ZERO)
+        expected_decrease = max(-signed_variation, _ZERO)
+        if self.casilla_0177 != expected_increase or self.casilla_0182 != expected_decrease:
+            raise InventoryValidationError(
+                "inventory Anexo D outputs must be the mutually exclusive split of closing minus opening",
+            )
+        return self
+
+
+def compute_inventory_anexo_d_projection(ledger: InventoryLedger) -> InventoryAnexoDResult:
+    """Project one 2025 activity ledger to inventory variation casillas.
+
+    The canonical valuation engine supplies closing value. An explicit
+    physical closing value may confirm that result, but this pre-authority
+    projection refuses a conflict because the current ledger carries no
+    provenance capable of adjudicating an override.
 
     Args:
-        year: Calendar year being filed.
-        actividad: Activity identifier to filter ledgers by.
-        ledgers: Ledgers to aggregate over.
+        ledger: The single activity/year inventory coordinate to project.
 
     Returns:
-        Sum of :func:`compute_inventory_variation` across matching
-        ledgers, quantised to cents.
+        Audited values split between casillas ``0177`` and ``0182``.
+
+    Raises:
+        InventoryLedgerError: If the ledger is outside the grounded 2025
+            revision or an explicit closing conflicts with derived valuation.
     """
-    total = _ZERO
-    for ledger in ledgers:
-        if ledger.actividad_id == actividad:
-            total += compute_inventory_variation(ledger, year)
-    return _quantize(total)
+    if ledger.year != 2025:
+        raise InventoryLedgerError(
+            "inventory Anexo D projection is grounded only for filing year 2025",
+            context={"actividad_id": ledger.actividad_id, "filing_year": ledger.year},
+        )
+    derived_closing = compute_inventory_valuation(ledger).closing_value
+    if ledger.closing_stock is not None and _quantize(ledger.closing_stock) != derived_closing:
+        raise InventoryLedgerError(
+            "explicit inventory closing conflicts with movement-derived valuation",
+            context={
+                "actividad_id": ledger.actividad_id,
+                "filing_year": ledger.year,
+                "explicit_closing": str(_quantize(ledger.closing_stock)),
+                "derived_closing": str(derived_closing),
+            },
+        )
+    opening = _quantize(ledger.opening_stock)
+    signed_variation = _quantize(derived_closing - opening)
+    return InventoryAnexoDResult(
+        actividad_id=ledger.actividad_id,
+        filing_year=2025,
+        opening_value=opening,
+        closing_value=derived_closing,
+        casilla_0177=max(signed_variation, _ZERO),
+        casilla_0182=max(-signed_variation, _ZERO),
+    )
 
 
 def compute_inventory_valuation(ledger: InventoryLedger) -> InventoryValuationResult:
@@ -598,6 +629,7 @@ def _layers_value(layers: tuple[StockLayer, ...] | list[StockLayer]) -> Decimal:
 __all__ = [
     "AmortizacionLedgerError",
     "BasisCapExceededError",
+    "InventoryAnexoDResult",
     "InventoryLedger",
     "InventoryLedgerError",
     "InventoryValidationError",
@@ -606,8 +638,7 @@ __all__ = [
     "MovementRecord",
     "StockLayer",
     "ValuationMethod",
-    "compute_anexo_d_inventory_variation",
+    "compute_inventory_anexo_d_projection",
     "compute_inventory_valuation",
-    "compute_inventory_variation",
     "parse_valuation_method",
 ]

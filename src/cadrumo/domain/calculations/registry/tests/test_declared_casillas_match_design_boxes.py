@@ -24,6 +24,16 @@ different ones. A casilla with no box declares a figure the record cannot carry.
 A box with no casilla is a slot nothing can fill. Asserting containment either
 way would license one of them.
 
+A BRACKETED NUMBER IS NOT ALWAYS THE FIELD'S OWN BOX. AEAT sometimes labels a
+computed field with its FORMULA instead of its number: modelo 123's 2019-2023
+design prints ``Suma de retenciones e ingresos a cuenta y regularizacion. [03] +
+[05]`` at the slot that IS box 06, so 06 never appears as a tag while 03 and 05
+appear away from their own fields. Read naively that modelo shows one stray
+casilla -- and the casilla is correct; the reading is not. Modelo 123 is
+therefore NOT enrolled. The enrolled modelos are unaffected because an operand
+is itself a real box elsewhere in the same design and so is already in the set;
+the failure only appears where a field's own number is printed nowhere.
+
 THE KEY IS THE BRACKET, AND THAT MATTERS. AEAT prints a box number bracketed --
 ``Bonificacion personal investigador (RD 475/2014) [00065]``. Reading bare digit
 runs instead is wrong in both directions and was measured to be: a 5-digit rule
@@ -52,11 +62,26 @@ _TAG = re.compile(r"\[(\d+)\]")
 #: verified by measurement before enrolment. Not a suppression list: adding a
 #: modelo here subjects it to the check, it does not excuse it.
 _BOX_NUMBERED_MODELOS: dict[str, str] = {
-    "322": "measured exact on all three revisions (179, 188, 189 boxes)",
+    "117": "measured exact on every revision carrying a layout",
+    "130": "measured exact on every revision carrying a layout",
+    "131": "measured exact on every revision carrying a layout",
     "200": "measured exact: 3427 numbered casillas against 3427 bracketed boxes",
+    "202": "measured exact on every revision carrying a layout",
+    "210": "measured exact on every revision carrying a layout",
+    "222": "measured exact on every revision carrying a layout",
+    "322": "measured exact on all four revisions (165, 179, 188, 189 boxes)",
+    "341": "measured exact on every revision carrying a layout",
+    "353": "measured exact on every revision carrying a layout",
+    "490": "measured exact on every revision carrying a layout",
+    "604": "measured exact on every revision carrying a layout",
+    "714": "measured exact on every revision carrying a layout",
 }
-#: Below this the design was not read and the comparison would be vacuous.
-_MINIMUM_BOXES = 100
+#: A design that yields NO boxes was not read, and the comparison would be
+#: vacuous. Deliberately not a numeric floor: modelo 117 carries 11 boxes and
+#: modelo 200 carries 3,427, so any fixed threshold either passes vacuously for
+#: the large ones or fails honestly-small designs. Emptiness is the property that
+#: actually distinguishes "unread" from "small"; the extraction's own
+#: ``skipped`` check below covers the partially-read case.
 
 
 def _subjects():
@@ -99,9 +124,7 @@ def test_no_revision_declares_a_box_its_layout_design_does_not_print() -> None:
 
     for modelo_id, revision_id, revision in subjects:
         boxes = _layout_design_boxes(modelo_id, revision)
-        assert len(boxes) >= _MINIMUM_BOXES, (
-            f"{modelo_id}/{revision_id}: only {len(boxes)} boxes read; the design was not read"
-        )
+        assert boxes, f"{modelo_id}/{revision_id}: the design yielded no boxes; it was not read"
         stray = sorted(_numbered_casillas(revision) - boxes, key=int)
 
         assert not stray, (
@@ -115,7 +138,7 @@ def test_no_design_box_is_left_without_a_casilla() -> None:
     """The opposite direction, which containment alone would license."""
     for modelo_id, revision_id, revision in _subjects():
         boxes = _layout_design_boxes(modelo_id, revision)
-        assert len(boxes) >= _MINIMUM_BOXES
+        assert boxes, f"{modelo_id}/{revision_id}: the design yielded no boxes; it was not read"
 
         unclaimed = sorted(boxes - _numbered_casillas(revision), key=int)
 

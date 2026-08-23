@@ -1,16 +1,17 @@
 """Closed sort axes for the ``aeat app ledger list`` surface.
 
 ``ledger list`` exposes a stable, operator-selectable sort. The two axes are
-declared here in ``core/`` — the innermost hexagonal ring — so the Typer
-boundary can render the accepted-value ``Choice([...])`` from the enum
-directly, production code routes on enum members, and tests assert against
-members rather than raw strings.
+declared here in ``core/`` — the innermost hexagonal ring — so the authored
+command specification can project the accepted values from the enum directly,
+production code routes on enum members, and tests assert against members rather
+than raw strings.
 
 :class:`LedgerSortField` selects the projection axis and
 :class:`LedgerSortOrder` selects the direction. The CLI parser and the
 ledger projection service both use these enum members rather than raw
 string tokens, threading them through
-:func:`cadrumo.entrypoints.cli._ledger_read_cli._register_ledger_list_command`,
+:data:`cadrumo.entrypoints.cli._app_ledger_command_specs.APP_LEDGER_COMMAND_SPECS`,
+:func:`cadrumo.entrypoints.cli._ledger_read_cli.ledger_list`,
 :func:`cadrumo.entrypoints.cli._ledger_list.project_ledger_list`, and the stable
 :func:`cadrumo.entrypoints.cli._ledger_list._sort_results` helper.
 
@@ -37,7 +38,7 @@ class LedgerSortField(StrEnum):
     timestamp on a row authored before the axis existed) sorts deterministically
     last under both orders, never crashing the sort.
 
-    The value set is consumed as a Typer choice and by
+    The value set is consumed by the command-spec runtime and by
     :func:`cadrumo.entrypoints.cli._ledger_list._sort_field_value`, so any new
     member must be added with a projection over
     :class:`~cadrumo.domain.transactions.Transaction` and covered by the real

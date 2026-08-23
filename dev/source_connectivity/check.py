@@ -9,6 +9,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from cadrumo.application.registry import LiveSourceConnectivityProofAuthority
 from cadrumo.application.registry.source_connectivity import (
     SourceConnectivityCensusManifest,
     load_source_connectivity_census,
@@ -110,6 +111,18 @@ def check_capability_census(
         manifest = load_source_connectivity_census(proof_authority=proof_authority)
     except ValidationError as error:
         raise SourceConnectivityCheckError(f"census claim failed live proof validation: {error}") from error
+    if isinstance(proof_authority, LiveSourceConnectivityProofAuthority):
+        for row in manifest.entries:
+            if row.disposition is not SourceConnectivityDisposition.CONNECTED:
+                continue
+            proof = row.connected_proof
+            if proof is None or not proof_authority.destinations_match(
+                proof.connection,
+                tuple(candidate.identity for candidate in row.registry_destination_candidates),
+            ):
+                raise SourceConnectivityCheckError(
+                    f"connected census destinations do not match independent proof fixture: {row.candidate_id}"
+                )
     try:
         validate_census_destination_candidates(manifest, resources().modelos.authority.modelos)
     except ValueError as error:

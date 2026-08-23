@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -42,6 +43,7 @@ from .. import (
     CalculationRouteResolverSourceOwnership,
     CalculationRouteSourceOwnershipCatalogue,
     LiveSourceConnectivityProofAuthority,
+    LiveSourceConnectivityProofExpectation,
     RepositoryRootEvidenceDigestVerifier,
     build_calculation_route_source_ownership_catalogue,
 )
@@ -224,6 +226,40 @@ def test_real_live_authority_admits_coherent_encrypted_connected_row(
 
     assert row.connected_proof is not None
     assert row.connected_proof.connection == connection
+
+
+def test_independent_expectation_rejects_census_owned_workflow_and_destination_mutations(
+    tmp_path: Path,
+    secure_objects: SecureObjectRepository,
+) -> None:
+    authority, connection, proof, _ = _composition(tmp_path, secure_objects)
+    expectation = LiveSourceConnectivityProofExpectation(
+        connection=connection,
+        entrypoint_id=proof.operator_reachability.entrypoint_id,
+        command_id=proof.operator_reachability.command_id,
+        route_id=proof.operator_reachability.route_id,
+        canonical_cli_path=proof.operator_reachability.canonical_cli_path,
+        destination_identities=(("casilla_semantic_role", "100", "inventory.increase"),),
+    )
+    constrained = replace(authority, independent_expectations=(expectation,))
+
+    SourceConnectivityCensusRow.validate_with_authority(
+        _payload(connection, proof),
+        authority=constrained,
+    )
+    mutated_operator = proof.operator_reachability.model_copy(
+        update={"command_id": "modelo.work.wizard"},
+    )
+    with pytest.raises(ValidationError, match="workflow is not supported"):
+        SourceConnectivityCensusRow.validate_with_authority(
+            _payload(connection, proof.model_copy(update={"operator_reachability": mutated_operator})),
+            authority=constrained,
+        )
+    assert constrained.destinations_match(connection, expectation.destination_identities)
+    assert not constrained.destinations_match(
+        connection,
+        (("casilla_semantic_role", "100", "inventory.decrease"),),
+    )
 
 
 def test_real_live_authority_encrypted_payload_roundtrip_and_raw_lineage_deletion(

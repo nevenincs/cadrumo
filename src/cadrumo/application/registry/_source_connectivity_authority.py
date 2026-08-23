@@ -125,6 +125,19 @@ def build_calculation_route_source_ownership_catalogue() -> CalculationRouteSour
     )
 
 
+class LiveSourceConnectivityProofExpectation(BaseModel):
+    """Independent expected identity for one synthetic production-route proof."""
+
+    model_config = _STRICT_FROZEN
+
+    connection: SourceConnectivityConnectionIdentity
+    entrypoint_id: str = Field(min_length=1, max_length=128)
+    command_id: str = Field(min_length=1, max_length=128)
+    route_id: ModeloCalculationRouteId
+    canonical_cli_path: tuple[str, ...] = Field(min_length=1)
+    destination_identities: tuple[tuple[str, str, str], ...] = Field(min_length=1)
+
+
 @runtime_checkable
 class RepositoryEvidenceDigestVerifier(Protocol):
     """Injected port that verifies one repository evidence reference."""
@@ -254,9 +267,27 @@ class LiveSourceConnectivityProofAuthority:
     workflows: SupportedModeloCalculationWorkflowCatalogue
     calculation_revisions: CalculationRevisionCatalogueRepositoryProtocol
     evidence_verifier: RepositoryEvidenceDigestVerifier
+    independent_expectations: tuple[LiveSourceConnectivityProofExpectation, ...] = ()
+
+    def _expectation_for(
+        self,
+        connection: SourceConnectivityConnectionIdentity,
+    ) -> LiveSourceConnectivityProofExpectation | None:
+        matches = tuple(
+            expectation
+            for expectation in self.independent_expectations
+            if expectation.connection.candidate_id == connection.candidate_id
+        )
+        if not self.independent_expectations:
+            return None
+        if len(matches) != 1 or matches[0].connection != connection:
+            return None
+        return matches[0]
 
     def source_is_enrolled(self, connection: SourceConnectivityConnectionIdentity) -> bool:
         """Require exact resolver ownership under an enrolled live disposition."""
+        if self.independent_expectations and self._expectation_for(connection) is None:
+            return False
         ownership = self.source_ownership.ownership_for(connection.source_kind)
         if isinstance(ownership, CalculationRouteManualSourceOwnership):
             return ownership.owner_id == connection.resolver_id
@@ -269,6 +300,15 @@ class LiveSourceConnectivityProofAuthority:
     ) -> bool:
         """Require the exact reviewed live workflow beside exact source enrollment."""
         if proof.connection != connection:
+            return False
+        expectation = self._expectation_for(connection)
+        if self.independent_expectations and (
+            expectation is None
+            or expectation.entrypoint_id != proof.entrypoint_id
+            or expectation.command_id != proof.command_id
+            or expectation.route_id is not proof.route_id
+            or expectation.canonical_cli_path != proof.canonical_cli_path
+        ):
             return False
         ownership = self.source_ownership.ownership_for(connection.source_kind)
         workflows = tuple(
@@ -332,12 +372,22 @@ class LiveSourceConnectivityProofAuthority:
             return None
         return self.evidence_verifier.digest(evidence.locator.reference)
 
+    def destinations_match(
+        self,
+        connection: SourceConnectivityConnectionIdentity,
+        destination_identities: tuple[tuple[str, str, str], ...],
+    ) -> bool:
+        """Match registry destinations against the independently authored fixture."""
+        expectation = self._expectation_for(connection)
+        return expectation is not None and expectation.destination_identities == destination_identities
+
 
 __all__ = [
     "CalculationRouteManualSourceOwnership",
     "CalculationRouteResolverSourceOwnership",
     "CalculationRouteSourceOwnershipCatalogue",
     "LiveSourceConnectivityProofAuthority",
+    "LiveSourceConnectivityProofExpectation",
     "RepositoryEvidenceDigestVerifier",
     "RepositoryRootEvidenceDigestVerifier",
     "build_calculation_route_source_ownership_catalogue",

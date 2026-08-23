@@ -44,26 +44,16 @@ from ...domain.modelos import (
 )
 from ._common import activate_subcommand_output_language, active_bucket_id_or_refuse
 from ._modelo_aggregate_cli import register_aggregate_commands
-from ._modelo_amend_wizard_cli import register_amend_wizard_commands
 from ._modelo_audit_cli import audit_app as audit_app
 from ._modelo_audit_cli import register_audit_commands
 from ._modelo_behavior_support import (
     bare_period_error as _bare_period_error,
 )
 from ._modelo_behavior_support import (
-    guard_foral_profile_ccaa as _guard_foral_profile_ccaa,
-)
-from ._modelo_behavior_support import (
-    missing_binding_guidance as _missing_binding_guidance,
-)
-from ._modelo_behavior_support import (
     require_active_profile as _require_active_profile,
 )
 from ._modelo_behavior_support import (
     resolve_optional_cli_period as _resolve_optional_cli_period,
-)
-from ._modelo_behavior_support import (
-    resolve_revision_for_cli as _resolve_revision_for_cli,
 )
 from ._modelo_behavior_support import (
     resolve_work_unit_for_cli as _resolve_work_unit_for_cli,
@@ -90,9 +80,6 @@ from ._modelo_cli_support import (
     parse_kv_spec as _parse_kv_spec,
 )
 from ._modelo_cli_support import (
-    resolve_actor_option as _resolve_actor_option,
-)
-from ._modelo_cli_support import (
     resolve_default_actor as _resolve_default_actor,
 )
 from ._modelo_cli_support import (
@@ -104,16 +91,12 @@ from ._modelo_cli_support import (
 from ._modelo_cli_support import (
     validate_work_unit_id as _validate_work_unit_id,
 )
-from ._modelo_cli_support import (
-    work_calculate_input_bundle_from_cli as _work_calculate_input_bundle_from_cli,
-)
 from ._modelo_discovery_cli import register_discovery_commands
 from ._modelo_execution_policies import declare_metadata_group
 from ._modelo_export_cli import register_export_commands
 from ._modelo_iva_wallet_cli import register_iva_wallet_commands
 from ._modelo_m036_cli import register_m036_commands
 from ._modelo_m145_cli import register_m145_communication_commands
-from ._modelo_maritime_cli import register_maritime_commands
 from ._modelo_projection_cli import register_projection_commands
 from ._modelo_readiness_cli import register_readiness_commands
 from ._modelo_reconcile_cli import register_reconcile_commands
