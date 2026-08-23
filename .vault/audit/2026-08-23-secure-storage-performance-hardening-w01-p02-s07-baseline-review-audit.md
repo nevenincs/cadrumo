@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:07a23704db0d2596fdc64801355f70546f560acc00e16ad2d1d638de0dffbc33'
+body_hash: 'sha256:04479cca578c21dffaa430da36c802ad3355262635d510195186d0aa3a4334bd'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
 ---
@@ -113,3 +113,74 @@ For `rejected-run-evidence`, preserve sanitized rejected envelopes or downgrade
 the document explicitly to an unaudited operator note. Do not feed rejected
 samples into distributions, and retain the current explicit statement that no
 failed path was selectively rerun.
+
+## Re-review
+
+The mandatory re-review verified the remediated content-addressed evidence
+pair. `baseline.raw.json.gz` authenticates against both declared SHA-256
+digests, decompresses to the declared byte count, and recompresses byte-for-byte
+identically at gzip timestamp zero. Its lossless observations retain every
+imported module, import-family member, storage symbol, and call count; the
+`aeat config profile list` specimen exposes 2,120 imported modules, 230 storage
+family members, and all 223 storage symbols. The compact artifact is an exact
+mechanical derivation of that raw payload.
+
+The distribution, control, ranking, failure-index, sample-count, and compact
+derivations are now recomputed. The accepted artifact contains 361 snapshot
+nodes, 100 controls, and zero failed or timed-out paths. `--check` passes
+internal content checks; `--check-fresh` correctly rejects current divergence,
+and `current-source-delta.md` accurately names the two current additions. The
+rejected mutable sweep is now explicitly classified as an unaudited operator
+note rather than execution evidence. The three original high findings and the
+medium finding are resolved by these changes.
+
+### frozen-census-authority | high | Internal checking no longer proves the snapshot command set
+
+The remediated `check_baseline` constructs the current live census only when
+`require_current_source=True`. Its historical/internal lane requires merely
+that `commands` be non-empty. It has no independently retained frozen-census
+declaration or executable frozen source with which to compare the raw command
+keys. The existing missing-path test mutates only `baseline.json`; it reds at
+the generic compact-versus-raw comparison, so it does not prove an exact-set
+detector. A coherently republished raw/compact pair with a removed or invented
+command satisfies the internal set logic. The same omission means resume loads
+`checkpoint.commands` without verifying that its keys are a subset of
+`expected_paths`; a poisoned or accidentally coherent checkpoint entry can be
+carried into the final evidence. `--check-fresh` cannot close this gap because
+it intentionally rejects at the earlier source-manifest divergence and never
+reaches current census comparison for this historical snapshot. Approval
+remains withheld until the frozen 361-node enrollment and resume subset are
+independently enforced.
+
+For `frozen-census-authority`, retain a canonical frozen census declaration
+with path, kind, ownership, and policy identity separately from measured
+command observations, authenticate it in the raw evidence, and require exact
+equality during internal checking. Validate checkpoint command keys as a subset
+of `expected_paths` on resume and exact equality before publication. Replace
+the current compact-only removal test with planted raw-and-summary missing and
+extra-node cases so the set detector, rather than the pair-integrity detector,
+is proven to bite.
+
+## Final re-review
+
+The `frozen-census-authority` high finding is resolved. The separate canonical
+`baseline.census.json` carries the snapshot source digest and 361 path records,
+each with kind, loader owner, handler owner, and complete execution policy. Its
+declared byte count and SHA-256 match the file; its source digest matches the
+capture manifest; its path set and every metadata record exactly match the
+measured artifact. Internal checking authenticates this authority before
+requiring exact command-set and metadata equality.
+
+Resume now rejects checkpoint command keys outside `expected_paths`, and
+capture requires exact equality with the frozen census before publication. The
+two planted tests coherently republish both raw and compact artifacts after
+removing or inventing a node; both fail specifically at the independent frozen
+exact-set gate. This proves the detector rather than relying on a raw/compact
+mismatch.
+
+The final scoped verification passed Ruff, ty, all 11 baseline tests, internal
+artifact checking, deterministic gzip authentication, raw/compact derivation,
+and independent census set and metadata comparison. The historical artifact
+remains 361 nodes, 100 controls, and zero failures; the explicit freshness lane
+continues to reject the two-node current-source delta. No critical, high,
+medium, or low findings remain open. `W01.P02.S07` is approved.

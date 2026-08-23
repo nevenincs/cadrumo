@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#secure-storage-performance-hardening'
-date: '2026-08-22'
-modified: '2026-08-22'
+date: '2026-08-23'
+modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:83b74d268adff9db20c4bcac03b7e0dfcf31dafd1fb52924c5ac19e9831531d6'
+body_hash: 'sha256:45af135b04c5bc65b9af2aacf158f9272fee700b027fb903802bcaa031cd9d91'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
@@ -20,6 +20,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S53]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P02-S05]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P02-S06]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-W01-P02-S07]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
@@ -36,6 +37,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s52-implementation-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p02-s05-profiler-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p02-s06-calibration-review-audit]]'
+  - '[[2026-08-23-secure-storage-performance-hardening-w01-p02-s07-baseline-review-audit]]'
 ---
 
 # `secure-storage-performance-hardening` feature index
@@ -62,6 +64,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-w01-p01-s52-implementation-review-audit` - `secure-storage-performance-hardening` audit: `W01.P01.S52 implementation review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p02-s05-profiler-review-audit` - `secure-storage-performance-hardening` audit: `W01.P02.S05 profiler implementation review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p02-s06-calibration-review-audit` - `secure-storage-performance-hardening` audit: `S06 quiet-runner calibration review`
+- `2026-08-23-secure-storage-performance-hardening-w01-p02-s07-baseline-review-audit` - `secure-storage-performance-hardening` audit: `W01.P02.S07 frozen complete-CLI baseline review`
 
 ### exec
 
@@ -77,6 +80,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-W01-P01-S53` - Migrate profile-bound write routing to execution-policy scope and delete the verb-path catalogue
 - `2026-08-22-secure-storage-performance-hardening-W01-P02-S05` - Add a reusable fresh-process profiler for resolution, invocation, imports, Pydantic construction, filesystem changes, and storage operations
 - `2026-08-22-secure-storage-performance-hardening-W01-P02-S06` - Add quiet-runner calibration and median and ratio budget support without single-sample pass conditions
+- `2026-08-22-secure-storage-performance-hardening-W01-P02-S07` - Capture baseline distributions and ranked outliers for every enrolled node as execution evidence
 
 ### plan
 

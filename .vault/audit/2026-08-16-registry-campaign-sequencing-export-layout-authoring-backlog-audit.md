@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:a22789a788e845ea1fd05ff6194d50d84bc9abf11bd8682378ff99e332e54c63'
+body_hash: 'sha256:18c04043b062b2a66d8907566946f4aad51f42905001025935a209448ba3f0ae'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -18044,3 +18044,83 @@ not be called the position-10 class, which is now closed everywhere it occurs.
 
 Modelo 180 and 349 remain form diagrams needing AEAT acquisition. Three splits
 remain: modelo 200, 322 and 347.
+
+## Tick: modelo 200's 2010 design reads whole; the partly-read inventory falls to 3
+
+Re-measured at tick start: authority CLEAN at `7e344db765`, inventory at 4 of
+218, three distinct holes remaining across two designs.
+
+### The three holes were not one class, and were measured before being grouped
+
+    02-200 Pag. 22 -- 1697-1705   (9 positions)
+    03-200 Pag. 22 -- 773-806     (34)
+    03-200 Pag. 44 -- 215-231     (17)
+
+Different sizes, so they were read individually rather than assumed alike. The
+first is a naturaleza glued to the content-column marker; the second resolved
+with it; the third is something else entirely and is NOT the same class.
+
+### What was fixed
+
+`_split_glued_naturaleza_rows` separates a naturaleza that ran into the column
+marker behind it -- `170 1697 9 AnC ...` for AEAT's `170 1697 9 An C ...`.
+Nothing is missing from such a line; only the space is, and without it the row
+does not parse and its nine positions read as a hole that costs the record.
+
+It is its own pass because the module's existing rule for this gluing keys on
+the COORDINATES being doubled as well (`137 1777 15 1777 15 AnC B`). Here they
+are printed once and correctly, so that rule never matched.
+
+Admitted on over-determination -- the coordinates must continue the previous row
+in both ordinal and position -- and on the separated line then parsing.
+
+THE DAMAGED DESCRIPTION IS CARRIED THROUGH UNTOUCHED. AEAT's own PDF drops
+characters from that cell, so the extracted text reads `A i t   i UTES M d l d
+i f i`. The repair recovers the row's POSITION, which is what un-skips the
+record; reconstructing the prose would be a worse failure than reporting it
+damaged, and a test pins that the text passes through byte for byte.
+
+### What it achieves
+
+Corpus-wide, two processes: **216 designs, 2 improved, 0 regressed, 214
+unchanged.**
+
+* `02-200-ejercicio-2010`: 1 skipped -> **0**, 44 sheets -> 45, +234 fields. It
+  now reads WHOLE;
+* `03-200-ejercicio-2011`: 2 -> 1, 43 -> 44, +234 fields.
+
+The partly-read inventory falls from 4 of 218 to **3**: modelo 180 and 349's
+form diagrams, and this one remaining modelo 200 design.
+
+Across the last two ticks the three modelo 200 tables have gone from 2, 3 and 2
+skipped records to 0, 1 and 0.
+
+### The last hole, characterised rather than guessed at
+
+`03-200`'s `Pag. 44` is missing ordinal 18 at 215-231, and it is NOT a
+line-repair failure: a line parsing exactly as `ROW ord18@215+17` survives every
+repair pass. It simply belongs to another record. The same coordinates appear on
+`Pag. 5`, `Pag. 7` and `Pag. 13`, and `Pag. 44` has 16 at 181 and 17 at 198 then
+jumps to 19 at 232.
+
+So this one is a record-ASSEMBLY question -- which sheet a row is attributed to
+-- not a line-shape question, and it should not be described as the glued or
+position-10 class when it is next picked up.
+
+### Verified
+
+* the new regression: 7 passed, including both recovered records tiling with no
+  hole and the damaged description carried through unchanged;
+* it bites: disabling the pass reds 6 of the 7;
+* 37 passed across the record-design gates together;
+* authority loads CLEAN; the three ruff findings sit at 3343, 3783 and 3988,
+  none in the three new functions at 791, 895 and 965.
+
+### Still open
+
+`03-200`'s `Pag. 44`, as a record-assembly attribution question.
+
+Modelo 180 and 349 remain form diagrams needing AEAT acquisition, which is
+operator-side and unchanged.
+
+Three splits remain: modelo 200, 322 and 347.
