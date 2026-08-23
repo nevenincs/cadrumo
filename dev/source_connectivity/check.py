@@ -14,12 +14,12 @@ from cadrumo.application.registry.source_connectivity import (
     load_source_connectivity_census,
     validate_census_destination_candidates,
 )
-from cadrumo.core import (
+from cadrumo.core.resources import resources
+from cadrumo.core.source_connectivity import (
     SourceConnectivityDisposition,
     SourceConnectivityExpiryPosture,
     SourceConnectivityProofAuthority,
 )
-from cadrumo.core.resources import resources
 
 from .discovery import (
     assign_capabilities_to_census,
@@ -53,7 +53,7 @@ _UNRESOLVED_DISPOSITIONS = frozenset(
 )
 
 
-def check_census_governance(manifest: object, *, as_of: date) -> None:
+def check_census_governance(manifest: SourceConnectivityCensusManifest, *, as_of: date) -> None:
     """Reject stale blockers and unresolved rows without bounded accountability."""
     for row in manifest.entries:
         if row.disposition not in _UNRESOLVED_DISPOSITIONS:
@@ -70,7 +70,7 @@ def check_census_governance(manifest: object, *, as_of: date) -> None:
 
 def check_capability_locators(
     repo_root: Path,
-    manifest: object,
+    manifest: SourceConnectivityCensusManifest,
     *,
     capability_evidence: Mapping[str, str] | None = None,
 ) -> None:

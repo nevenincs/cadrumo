@@ -12,7 +12,10 @@ import hashlib
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from cadrumo.application.registry.source_connectivity import SourceConnectivityCensusManifest
 
 type SecureRepositoryMechanism = Literal["secure_bound", "profile_secure_document", "secure_object"]
 type IngressChannel = Literal["cli", "worksheet"]
@@ -346,7 +349,7 @@ def _string_value(node: ast.AST, bindings: dict[str, ast.AST] | None = None) -> 
 
 def _call_bindings(function: ast.FunctionDef, call: ast.Call) -> dict[str, ast.AST]:
     names = [argument.arg for argument in function.args.args]
-    bound = dict(zip(names, call.args, strict=False))
+    bound: dict[str, ast.AST] = dict(zip(names, call.args, strict=False))
     bound.update({keyword.arg: keyword.value for keyword in call.keywords if keyword.arg is not None})
     return bound
 
@@ -468,6 +471,7 @@ def discover_ingress_surfaces(repo_root: Path) -> tuple[IngressCapability, ...]:
             policy = _execution_policy(node)
             if command is None or policy is None or "WRITE" not in policy:
                 continue
+            assert isinstance(command.func, ast.Attribute)
             group = _dotted_name(command.func.value)
             command_name = node.name
             if command.args and isinstance(command.args[0], ast.Constant) and isinstance(command.args[0].value, str):
@@ -595,9 +599,11 @@ def discover_row_assemblers(repo_root: Path) -> tuple[RowAssemblerCapability, ..
         and node.target.id == "_GROUPING_DISPATCH"
         and isinstance(node.value, ast.Dict)
     )
+    dispatch_value = dispatch_assignment.value
+    assert isinstance(dispatch_value, ast.Dict)
     grouping_members = [
         (key.value, ast.unparse(value))
-        for key, value in zip(dispatch_assignment.value.keys, dispatch_assignment.value.values, strict=True)
+        for key, value in zip(dispatch_value.keys, dispatch_value.values, strict=True)
         if isinstance(key, ast.Constant) and isinstance(key.value, str)
     ]
     dispatcher = next(
@@ -718,7 +724,7 @@ def _capability_digest(capability_ids: tuple[str, ...]) -> str:
 
 def assign_capabilities_to_census(
     capability_ids: tuple[str, ...],
-    manifest: object,
+    manifest: SourceConnectivityCensusManifest,
 ) -> dict[str, tuple[str, ...]]:
     """Assign every discovered capability exactly once or refuse census drift."""
     entries = manifest.entries
@@ -805,7 +811,7 @@ _LEXICAL_STOPWORDS = frozenset(
 
 def _lexical_tokens(value: str) -> frozenset[str]:
     expanded = re.sub(r"(?<=[a-záéíóúñ])(?=[A-ZÁÉÍÓÚÑ])", " ", value)
-    return frozenset(
+    return frozenset[str](
         token
         for token in re.findall(r"[a-záéíóúñ]{4,}", expanded.lower())
         if token not in _LEXICAL_STOPWORDS

@@ -12,7 +12,7 @@ from cadrumo.application.registry.source_connectivity import (
     SourceConnectivityCensusEntry,
     load_source_connectivity_census,
 )
-from cadrumo.core import SourceConnectivityDisposition
+from cadrumo.core.source_connectivity import SourceConnectivityDisposition
 
 from ..check import SourceConnectivityCheckError, check_capability_locators, check_census_governance
 from ..discovery import (
