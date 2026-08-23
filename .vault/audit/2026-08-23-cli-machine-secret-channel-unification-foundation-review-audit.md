@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:2f75ffa94bb54555c5a07fdbf25b64f737f91ca6b9d576daf03d626e9b0628be'
+body_hash: 'sha256:309314294256f9258868fa412563347f7f932b0c3c25f1638ab266ccc5360798'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
 ---
@@ -37,6 +37,13 @@ signatures may remain broad for unmigrated callers, but the new reader's generic
 bound should require `MachineSecretPayload`; migration and inventory tests should
 prove every registered payload inherits it.
 
+Resolution (2026-08-23): Closed by commit `ed0cc8d9c4`.
+`read_machine_secret_payload` now binds its generic to
+`MachineSecretPayload` and performs a runtime `issubclass` refusal before
+reading. The focused test stages a permissive payload on a descriptor, proves
+the refusal, and then proves the bytes remain unread. The complete focused
+machine-channel module passes 24 tests at remediation HEAD.
+
 ### selection-channel-runtime-validation | low | Exported selection accepts a non-enum channel at runtime
 
 `MachineSecretSelection.__post_init__` checks descriptor consistency only for
@@ -46,6 +53,13 @@ external construction with an arbitrary string and a descriptor survives, and
 channel. The selector itself always constructs valid state, so this is not
 reachable through the intended CLI path, but the exported typed boundary should
 reject an unknown channel instead of broadening it implicitly.
+
+Resolution (2026-08-23): Closed by commit `ed0cc8d9c4`.
+`MachineSecretSelection.__post_init__` now refuses a channel that is not a
+`MachineSecretChannel` before descriptor-consistency routing. The focused test
+constructs an unknown runtime channel, proves the typed refusal, and proves the
+staged descriptor bytes remain unread. The complete focused machine-channel
+module passes 24 tests at remediation HEAD.
 
 ## Recommendations
 
