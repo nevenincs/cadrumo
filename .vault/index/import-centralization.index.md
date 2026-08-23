@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#import-centralization'
-date: '2026-08-16'
-modified: '2026-08-16'
+date: '2026-08-23'
+modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:32b2bd881f61292927e20d22e6a0c9539d96f71ac3f744a93d85d38353698253'
+body_hash: 'sha256:56d244187eb0730c69cc8c778f38108e8d38cb8017ec5f2107b89e1e32ab07b2'
 related:
   - '[[2026-07-01-import-centralization-W01-P02-S01]]'
   - '[[2026-07-01-import-centralization-W01-P03-S02]]'
@@ -396,6 +396,7 @@ related:
   - '[[2026-07-01-import-centralization-W06-P90-S400]]'
   - '[[2026-07-01-import-centralization-W06-P90-S401]]'
   - '[[2026-07-01-import-centralization-W06-P90-S402]]'
+  - '[[2026-07-01-import-centralization-W06-P90-S403]]'
   - '[[2026-07-01-import-centralization-adr]]'
   - '[[2026-07-01-import-centralization-plan]]'
   - '[[2026-07-01-import-centralization-research]]'
@@ -808,6 +809,7 @@ Auto-generated index of all documents tagged with `#import-centralization`.
 - `2026-07-01-import-centralization-W02-P80-S296` - Rewire 1 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.entrypoints.cli`
 - `2026-07-01-import-centralization-W02-P81-S297` - Rewire 7 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.contribuyente`, `aeat.domain.deadlines`
 - `2026-07-01-import-centralization-W02-P82-S298` - Rewire 6 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.domain.calculations.registry`
+- `2026-07-01-import-centralization-W06-P90-S403` - Reconcile the post-close import-integrity drift measured by the machine-secret S18 honesty review: return the test-only private-import debt ratchet to exact named equality, dispose every new Family-2 forwarding wrapper, correct the excluded-test-tree dev-tooling detector, remove every dangling first-party import target, and prove the complete import-hygiene and import-edge lane has zero failures without enlarging a baseline or exemption
 
 ### plan
 

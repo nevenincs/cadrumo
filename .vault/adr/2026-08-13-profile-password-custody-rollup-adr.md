@@ -112,4 +112,3 @@ The selected model is the only option that makes the supplied profile password i
 ## Consequences
 
 Every profile carries its own password envelope and DEK proof. Shared master-key and provider-fallback code must be removed rather than retained as compatibility. Recovery becomes optional without weakening disaster recovery. Backup is host-independent. KDF work gains an explicit denial-of-service and supervision boundary. The hard cutover requires destructive reset for current retired stores, DEK rotation remains unavailable, and coherent full-capsule rollback remains outside guarantees without an external witness.
-

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:7b2e4c1cf53e75e6eaa0ecbf3bb8402ded8ec8e23bf73cb8fa9c4210de010995'
+body_hash: 'sha256:a517fa9f8ac1a71eca2c7ca111c738eefcd1d9d6f3d3ddda1ffd2cc356c910aa'
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-plan]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
@@ -39,9 +39,9 @@ Fresh focused evidence included 98 unit and conformance cases passing; seven rep
 
 The initial review found live configuration help and fallback prose that still instructed operators to use `CADRUMO_SECRET_PASSPHRASE`, contradicting the hard-cut decision and allowing a machine caller to infer an unsupported channel. Commit `37f45a298ff` removed that route and added a four-locale real-process help gate. Current guidance at `src/cadrumo/locales/en/cli.yml:3143`, `src/cadrumo/locales/es/cli.yml:3386`, `src/cadrumo/locales/ca/cli.yml:3354`, and `src/cadrumo/locales/hu/cli.yml:3353` names `--profile-secrets-stdin`, `--profile-secrets-fd`, `--secrets-stdin`, and `--secrets-fd`; `src/cadrumo/entrypoints/cli/tests/test_help_without_secrets.py:230` refuses the retired name. Direct subprocess help in en, es, ca, and hu passed with all four flags present and the retired name absent. Required remediation is complete.
 
-### S18-002 | HIGH | OPEN | The target page sequence golden trails the remediated root help
+### S18-002 | HIGH | RESOLVED | The target page sequence golden trailed the remediated root help
 
-On the final localized single-page build, `docs/_sequences/how-to/protect-data-access/protect-data-access-machine-secret-help.json:14` still contains the pre-remediation root help sentence while live `aeat --help` carries the four explicit machine-secret channels. The build therefore exits 2 at frame zero before localized rendering. Required remediation: refresh only `how-to/protect-data-access` through the canonical sequence tool, inspect the exact frame diff, run the page sequence gate, and run real es, ca, and hu single-page builds with sequence checking enabled. S18 must remain open until the refreshed golden is committed and those gates pass.
+Commit `e347f62d4bbadf66a978cc503a116d5104bb7820` refreshed exactly `docs/_sequences/how-to/protect-data-access/protect-data-access-machine-secret-help.json:14`, replacing the obsolete isolated-state sentence with the four explicit root and leaf channels and no retired environment route. Independent current-HEAD verification passed both the specific sequence and the complete `how-to/protect-data-access` page sequence gate. The earlier logout exit-6 report did not reproduce on the committed head; the page-wide gate passed, so it is transient concurrent-tree evidence rather than an open defect. Canonical es, ca, and hu single-page builds with sequence checking enabled each exited zero. The builds still printed the unrelated generated Modelo and six other-page sequence diagnostics formally owned by `docs-sphinx-ux` W03.P05.S27, but the requested target page built successfully in every language. Required remediation is complete.
 
 ### S18-003 | MEDIUM | RESOLVED | Localized machine-secret documentation was incomplete after catalogue sync
 
@@ -61,7 +61,7 @@ The historical S06 and S10 records now state that their patched tests were remov
 
 ### S18-007 | HIGH | RESOLVED BY FORMAL DEFERRALS | Standing broad gates remain red outside the reviewed implementation
 
-The S17 summary's phrase â€œfeature-owned surfaceâ€� was insufficient because the ADR and plan require broader gates. S18 preserves each standing criterion through a current run and a concrete open owner:
+The S17 summary's phrase "feature-owned surface" was insufficient because the ADR and plan require broader gates. S18 preserves each standing criterion through a current run and a concrete open owner:
 
 - Import integrity: the current lane completed with 51 passed and seven failed. Three exact-debt assertions report 115 reaches versus 69 named, including 45 unnamed and one stale entry; eleven forwarding wrappers, three excluded-test false positives, one TUI manifest identity, and 23 dangling targets remain. `.vault/plan/2026-07-01-import-centralization-plan.md:907` reopens the authority as W06.P90.S403, and its Step Record carries the exact zero-failure command and no-baseline-expansion rule. TUI deletion proof remains separately owned by `tui-architecture` W06.P15.S88-S91.
 - WSL supervised KDF: the full feature subprocess matrix stops at inherited-PTY worker attestation before CLI dispatch. `.vault/plan/2026-08-13-profile-password-custody-plan.md:143` owns the defect as W03.P06.S209; its record requires the entire machine-secret subprocess module to pass inside WSL with all five leaves, both restore variants, root authentication, collision semantics, no skips, and no weakened supervision. The current 23 POSIX reader cases and two descriptor-zero CLI probes are preserved as partial evidence, not substituted for this gate.
@@ -72,7 +72,7 @@ These deferrals do not claim any broad lane green. They preserve the standing ac
 
 ### S18-008 | MEDIUM | RESOLVED | Lifecycle counts, links, and single-home boundaries drifted
 
-The S18 plan row now says all twenty-two Steps rather than the obsolete eighteen. The plan and ADR link directly to the custody roll-up, action-envelope successor and hardening decision, profile-session successor, canonical-credential decision, and both feature research records. Decision prose remains in ADRs; execution facts remain in Step Records and audits; the plan maps work without restating its evidence; summaries do not supersede red gate history. The feature index must be regenerated only after the final S18 artifact update so it includes this audit and its linked carry-forwards.
+The S18 plan row now says all twenty-two Steps rather than the obsolete eighteen. The plan and ADR link directly to the custody roll-up, action-envelope successor and hardening decision, profile-session successor, canonical-credential decision, and both feature research records. Decision prose remains in ADRs; execution facts remain in Step Records and audits; the plan maps work without restating its evidence; summaries do not supersede red gate history. The feature index was regenerated after the final S18 artifact update and now includes this audit and its linked carry-forwards.
 
 ### S18-009 | INFO | No remaining implementation defect found in the machine-secret contract
 
@@ -80,4 +80,4 @@ The fresh-context review confirmed exactly five leaf paired-channel adopters, on
 
 ## Recommendations
 
-Do not close S18 while S18-002 remains open. After its canonical golden remediation lands, independently rerun the target sequence and three localized single-page builds, regenerate the feature index, run the feature-scoped Vault fix and read-only checks, and then close S18 through the plan CLI. The four broad carry-forward Steps remain intentionally open under their own plans after feature closure; their exact red criteria and verification gates must not be weakened.
+All feature-owned HIGH findings are resolved and no CRITICAL finding exists. The feature index was regenerated, the feature-scoped Vault fix and read-only checks remained clean, and S18 was closed through the plan CLI. The four broad carry-forward Steps remain intentionally open under their own plans after feature closure; their exact red criteria and verification gates must not be weakened.

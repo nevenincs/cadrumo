@@ -5,45 +5,30 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:7b155c41eecfc15029bb310c49b8abb4cb1ca028c4be7bdfad97cd540d95738a'
+body_hash: 'sha256:e31ccdd9e57efe841c3308ac1f1bda7339366e8c54a047c772d93f7cbd3d3665'
 related:
-  - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
+  - '[[2026-08-23-cli-machine-secret-channel-unification-plan]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-W04-P09-S18]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-s18-fresh-context-honesty-review-audit]]'
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cli-machine-secret-channel-unification with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- PHASE SUMMARY:
-     This file rolls up every <Step Record> belonging to one Phase
-     of the originating plan. Each Step (S##) in the Phase produces
-     one <Step Record> in `.vault/exec/`; this summary aggregates
-     them, lists modified / created files across the Phase, and
-     reports verification status. -->
-
 # `cli-machine-secret-channel-unification` `W04.P09` summary
 
-<!-- Brief summary of overall progress across every Step in this Phase,
-     followed by a list of files touched across the Phase, e.g.:
-     - Modified: `{file1}`
-     - Created: `{file2}` -->
+Independent assurance is complete. The feature-owned implementation, help, localized target documentation, destructive lifecycle proof, sequence golden, and architecture corpus are reconciled with no open CRITICAL or HIGH finding. All twenty-two feature Steps now carry durable evidence; standing broad failures remain visible under four explicit open owner Steps rather than being narrowed or erased.
+
+- Modified: `.vault/audit/2026-08-23-cli-machine-secret-channel-unification-s18-fresh-context-honesty-review-audit.md`
+- Modified: `.vault/exec/2026-08-23-cli-machine-secret-channel-unification/2026-08-23-cli-machine-secret-channel-unification-W04-P09-S18.md`
+- Modified: `.vault/exec/2026-08-23-cli-machine-secret-channel-unification/2026-08-23-cli-machine-secret-channel-unification-W04-P09-summary.md`
+- Modified: `.vault/plan/2026-08-23-cli-machine-secret-channel-unification-plan.md`
+- Modified: `.vault/plan/2026-08-13-profile-password-custody-plan.md`
+- Modified: `.vault/plan/2026-07-01-import-centralization-plan.md`
+- Modified: `.vault/plan/2026-07-18-user-docs-localization-plan.md`
+- Modified: `.vault/plan/2026-06-04-docs-sphinx-ux-plan.md`
+- Created: `.vault/exec/2026-07-01-import-centralization/2026-07-01-import-centralization-W06-P90-S403.md`
+- Created: `.vault/exec/2026-07-18-user-docs-localization/2026-07-18-user-docs-localization-W03-P06-S23.md`
+- Created: `.vault/exec/2026-06-04-docs-sphinx-ux/2026-06-04-docs-sphinx-ux-W03-P05-S27.md`
 
 ## Description
 
-<!-- High-level description of work accomplished. -->
+S18 reviewed every decision, requirement, implementation surface, test authority, generated projection, locale, document, removal census, execution claim, and prior audit finding in fresh context. It closed the live-help, keychain-free destructive rotation, target localization, target sequence, patched-evidence, custody recovery-semantics, plan-count, and link-reconciliation findings. Focused unit, real-process, localized help, catalogue, sequence, and single-page gates are green.
+
+The phase does not rewrite broad failures as success. Custody W03.P06.S209 owns the full WSL supervised-KDF proof; import-centralization W06.P90.S403 owns the current seven import-integrity failures; user-docs-localization W03.P06.S23 owns the current complete-catalogue and fresh-POT backlogs; and docs-sphinx-ux W03.P05.S27 owns the current non-target sequence and full Sphinx backlog. Their exact closure criteria remain open after this feature phase closes.

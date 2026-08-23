@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:ba312d6cfd09d69899a4b40b716cc28463d89a560797e219b6237623f2970ce8'
+body_hash: 'sha256:2c3624186e4b3132f7ba7a991d601a909e626c5f06e7a5e2870b636e12f32ac9'
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-W01-P01-S01]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W01-P01-S02]]'
@@ -38,6 +38,8 @@ related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-W03-P07-summary]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W04-P08-S17]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W04-P08-summary]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-W04-P09-S18]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-W04-P09-summary]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-foundation-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-global-machine-secret-contract-research]]'
@@ -53,6 +55,7 @@ related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-s13-subprocess-success-matrix-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s14-subprocess-refusal-matrix-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s15-metadata-projection-review-audit]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-s18-fresh-context-honesty-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s19-passphrase-rotation-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s22-root-profile-authentication-audit]]'
 ---
@@ -80,6 +83,7 @@ Auto-generated index of all documents tagged with `#cli-machine-secret-channel-u
 - `2026-08-23-cli-machine-secret-channel-unification-s13-subprocess-success-matrix-review-audit` - `cli-machine-secret-channel-unification` audit: `S13 subprocess success matrix review`
 - `2026-08-23-cli-machine-secret-channel-unification-s14-subprocess-refusal-matrix-review-audit` - `cli-machine-secret-channel-unification` audit: `S14 subprocess refusal matrix review`
 - `2026-08-23-cli-machine-secret-channel-unification-s15-metadata-projection-review-audit` - `cli-machine-secret-channel-unification` audit: `S15 metadata projection review`
+- `2026-08-23-cli-machine-secret-channel-unification-s18-fresh-context-honesty-review-audit` - `cli-machine-secret-channel-unification` S18 fresh-context honesty review
 - `2026-08-23-cli-machine-secret-channel-unification-s19-passphrase-rotation-review-audit` - `cli-machine-secret-channel-unification` audit: `s19 passphrase rotation review`
 - `2026-08-23-cli-machine-secret-channel-unification-s22-root-profile-authentication-audit` - `cli-machine-secret-channel-unification` audit: `s22 root profile authentication`
 
@@ -115,6 +119,8 @@ Auto-generated index of all documents tagged with `#cli-machine-secret-channel-u
 - `2026-08-23-cli-machine-secret-channel-unification-W03-P07-summary` - `cli-machine-secret-channel-unification` `W03.P07` summary
 - `2026-08-23-cli-machine-secret-channel-unification-W04-P08-S17` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and run focused and broad lint, type, import, test, subprocess, metadata, locale, generator, documentation, sequence, Sphinx, obsolete-code census, and Vault gates while recording honest triage for unrelated failures
 - `2026-08-23-cli-machine-secret-channel-unification-W04-P08-summary` - `cli-machine-secret-channel-unification` `W04.P08` summary
+- `2026-08-23-cli-machine-secret-channel-unification-W04-P09-S18` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and perform formal code review, remediate all high and critical findings, execute a fresh-context honesty audit, reconcile ADR, research, plan, indexes, and summaries, and close all twenty-two Steps only with durable evidence
+- `2026-08-23-cli-machine-secret-channel-unification-W04-P09-summary` - `cli-machine-secret-channel-unification` `W04.P09` summary
 
 ### plan
 

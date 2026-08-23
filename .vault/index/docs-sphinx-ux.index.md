@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#docs-sphinx-ux'
-date: '2026-08-16'
-modified: '2026-08-16'
+date: '2026-08-23'
+modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:64255353eb72aa91436ae9126eb5177d91e96caeffa2323f044bee6dd9f8c7f9'
+body_hash: 'sha256:e4aeebae648bbb4ddddb5358db57f64e4a8da919cb8c76be5b1b7dbc7451cd37'
 related:
   - '[[2026-06-04-docs-sphinx-ux-W01-P01-S01]]'
   - '[[2026-06-04-docs-sphinx-ux-W01-P01-S02]]'
@@ -31,6 +31,7 @@ related:
   - '[[2026-06-04-docs-sphinx-ux-W03-P05-S14]]'
   - '[[2026-06-04-docs-sphinx-ux-W03-P05-S15]]'
   - '[[2026-06-04-docs-sphinx-ux-W03-P05-S16]]'
+  - '[[2026-06-04-docs-sphinx-ux-W03-P05-S27]]'
   - '[[2026-06-04-docs-sphinx-ux-W03-P08-S24]]'
   - '[[2026-06-04-docs-sphinx-ux-W03-P08-S25]]'
   - '[[2026-06-04-docs-sphinx-ux-W03-P08-S26]]'
@@ -82,6 +83,7 @@ Auto-generated index of all documents tagged with `#docs-sphinx-ux`.
 - `2026-06-04-docs-sphinx-ux-W03-P08-S24` - prepare the final rendered approval packet
 - `2026-06-04-docs-sphinx-ux-W03-P08-S25` - obtain explicit human approval for rendered experience
 - `2026-06-04-docs-sphinx-ux-W03-P08-S26` - record approved follow-up UX issues
+- `2026-06-04-docs-sphinx-ux-W03-P05-S27` - Reconcile post-close nitpicky documentation-build drift by refreshing the six non-machine-secret sequence sources whose directive frame counts exceed their goldens, restoring every generated or authored target currently missing from the all-pages build, resolving the current generated Modelo markup failure, and proving the complete Sphinx and documentation-conformance lanes green without suppressing warnings
 
 ### plan
 

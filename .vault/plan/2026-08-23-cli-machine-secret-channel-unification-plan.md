@@ -4,7 +4,7 @@ tags:
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
 modified: '2026-08-23'
-body_hash: 'sha256:a2b1639eea6bb17b6eef0998be3b24de47223c01dea2dbfe5f193ac46f32926f'
+body_hash: 'sha256:18f1eb7982216f0c1acf3727da5f13b8b52574c084ac403769755d22159c640b'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
@@ -113,7 +113,7 @@ Run focused and broad verification and prove obsolete paths are absent.
 
 Review, remediate, audit honestly, and reconcile the feature corpus.
 
-- [ ] `W04.P09.S18` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and perform formal code review, remediate all high and critical findings, execute a fresh-context honesty audit, reconcile ADR, research, plan, indexes, and summaries, and close all twenty-two Steps only with durable evidence; `feature implementation and Vault lifecycle documents`.
+- [x] `W04.P09.S18` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and perform formal code review, remediate all high and critical findings, execute a fresh-context honesty audit, reconcile ADR, research, plan, indexes, and summaries, and close all twenty-two Steps only with durable evidence; `feature implementation and Vault lifecycle documents`.
 
 ## Parallelization
 

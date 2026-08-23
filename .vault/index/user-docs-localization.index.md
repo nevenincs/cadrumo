@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#user-docs-localization'
-date: '2026-08-16'
-modified: '2026-08-16'
+date: '2026-08-23'
+modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:c56a5c19c8f6f35263274cd405d4b1bdc1b1ee36a436c779a1ed1b526502a4a3'
+body_hash: 'sha256:d3dff8df0770dde98894cec9ff9592eefe65c680cd9b19a300ae814929a77633'
 related:
   - '[[2026-07-18-user-docs-localization-W01-P01-S01]]'
   - '[[2026-07-18-user-docs-localization-W01-P01-S02]]'
@@ -30,6 +30,7 @@ related:
   - '[[2026-07-18-user-docs-localization-W03-P06-S20]]'
   - '[[2026-07-18-user-docs-localization-W03-P06-S21]]'
   - '[[2026-07-18-user-docs-localization-W03-P06-S22]]'
+  - '[[2026-07-18-user-docs-localization-W03-P06-S23]]'
   - '[[2026-07-18-user-docs-localization-adr]]'
   - '[[2026-07-18-user-docs-localization-audit]]'
   - '[[2026-07-18-user-docs-localization-plan]]'
@@ -76,6 +77,7 @@ Auto-generated index of all documents tagged with `#user-docs-localization`.
 - `2026-07-18-user-docs-localization-W03-P06-S20` - Run the full docs-check lane and the complete language matrix at HEAD and record the green evidence
 - `2026-07-18-user-docs-localization-W03-P06-S21` - Dispatch an independent code review over the campaign commits and action every finding
 - `2026-07-18-user-docs-localization-W03-P06-S22` - Run the fresh-context honesty review against the closure summary and persist the audit before declaring the campaign complete
+- `2026-07-18-user-docs-localization-W03-P06-S23` - Reconcile post-close user-documentation catalogue drift across Spanish, Catalan, and Hungarian by synchronizing the seven source-divergent pages, translating every incomplete entry across the current thirty-page backlog, and proving the full completeness and fresh-POT equality gates return zero without excluding a page or accepting fuzzy fallback
 
 ### plan
 
