@@ -62,6 +62,38 @@ class IngressCapability:
         return f"{self.module}:{self.line}"
 
 
+@dataclass(frozen=True, slots=True)
+class CalculationHelperCapability:
+    """One exported domain helper that performs typed arithmetic or aggregation."""
+
+    module: str
+    function_name: str
+    line: int
+    return_type: str
+    operation_kinds: tuple[str, ...]
+
+    @property
+    def evidence_locator(self) -> str:
+        """Return a re-fetchable source locator for review and census rows."""
+        return f"{self.module}:{self.line}"
+
+
+@dataclass(frozen=True, slots=True)
+class SourceReadinessCapability:
+    """One explicit source-readiness declaration function."""
+
+    module: str
+    function_name: str
+    line: int
+    readiness_type: str
+    source_kind_expression: str
+
+    @property
+    def evidence_locator(self) -> str:
+        """Return a re-fetchable source locator for review and census rows."""
+        return f"{self.module}:{self.line}"
+
+
 def _production_python_files(source_root: Path) -> tuple[Path, ...]:
     return tuple(
         path
@@ -259,11 +291,103 @@ def discover_ingress_surfaces(repo_root: Path) -> tuple[IngressCapability, ...]:
     return tuple(sorted(capabilities, key=lambda item: (item.module, item.line, item.callback_name)))
 
 
+def _exported_symbols(source_root: Path) -> frozenset[str]:
+    exported: set[str] = set()
+    for path in sorted(source_root.rglob("__init__.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.List, ast.Tuple, ast.Set)):
+                continue
+            exported.update(
+                child.value
+                for child in node.elts
+                if isinstance(child, ast.Constant) and isinstance(child.value, str)
+            )
+    return frozenset(exported)
+
+
+def discover_calculation_helpers(repo_root: Path) -> tuple[CalculationHelperCapability, ...]:
+    """Enumerate exported domain functions with structural calculation behavior."""
+    domain_root = repo_root / "src" / "cadrumo" / "domain"
+    exported = _exported_symbols(domain_root)
+    capabilities: list[CalculationHelperCapability] = []
+    for path in sorted(domain_root.rglob("*.py")):
+        if "tests" in path.relative_to(domain_root).parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in tree.body:
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) or node.name not in exported:
+                continue
+            binary_operations = {
+                type(child.op).__name__
+                for child in ast.walk(node)
+                if isinstance(child, (ast.BinOp, ast.AugAssign))
+            }
+            aggregate_calls = {
+                name
+                for child in ast.walk(node)
+                if isinstance(child, ast.Call)
+                and (name := _dotted_name(child.func).rsplit(".", maxsplit=1)[-1])
+                in {"Decimal", "max", "min", "quantize", "sum"}
+            }
+            operation_kinds = tuple(sorted(binary_operations | {f"call:{name}" for name in aggregate_calls}))
+            if not operation_kinds or node.returns is None:
+                continue
+            capabilities.append(
+                CalculationHelperCapability(
+                    module=path.relative_to(repo_root).as_posix(),
+                    function_name=node.name,
+                    line=node.lineno,
+                    return_type=ast.unparse(node.returns),
+                    operation_kinds=operation_kinds,
+                )
+            )
+    return tuple(sorted(capabilities, key=lambda item: (item.module, item.line, item.function_name)))
+
+
+def discover_source_readiness(repo_root: Path) -> tuple[SourceReadinessCapability, ...]:
+    """Enumerate functions that construct an explicit ready/source-kind record."""
+    source_root = repo_root / "src" / "cadrumo"
+    capabilities: list[SourceReadinessCapability] = []
+    for path in _production_python_files(source_root):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) or node.returns is None:
+                continue
+            readiness_type = ast.unparse(node.returns)
+            constructor = next(
+                (
+                    child
+                    for child in ast.walk(node)
+                    if isinstance(child, ast.Call)
+                    and {keyword.arg for keyword in child.keywords} >= {"ready", "source_kind"}
+                ),
+                None,
+            )
+            if constructor is None:
+                continue
+            source_keyword = next(keyword for keyword in constructor.keywords if keyword.arg == "source_kind")
+            capabilities.append(
+                SourceReadinessCapability(
+                    module=path.relative_to(repo_root).as_posix(),
+                    function_name=node.name,
+                    line=node.lineno,
+                    readiness_type=readiness_type,
+                    source_kind_expression=ast.unparse(source_keyword.value),
+                )
+            )
+    return tuple(sorted(capabilities, key=lambda item: (item.module, item.line, item.function_name)))
+
+
 __all__ = [
+    "CalculationHelperCapability",
     "IngressCapability",
     "IngressChannel",
     "SecureRepositoryCapability",
     "SecureRepositoryMechanism",
+    "SourceReadinessCapability",
+    "discover_calculation_helpers",
     "discover_ingress_surfaces",
     "discover_secure_repositories",
+    "discover_source_readiness",
 ]
