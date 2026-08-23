@@ -50,13 +50,6 @@ and every parameter, binding, relation and literal slot on that expression tree 
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
 
-[revisions."2024-y-siguientes".family_dispositions.projection_endpoints]
-reason = """
-FilingProjectionRef (cadrumo.core) is a CLOSED discriminated union, and every member is scoped to the modelo whose repeated rows it describes; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming this modelo's own casillas can validate while the union carries no modelo-296 member. It carries none. The union is not single-modelo -- it holds m303_ and m200_ members -- so this is stated as a scoping rule rather than as a member count or a prefix, both of \
-which go stale the moment another modelo is added. Note this is INDEPENDENT of the export layout: an earlier reading held the family open because 296 has no layout yet and its design prints anexo bodies that look like repeated perceptor rows, but the union scoping refuses the declaration whether or not a layout exists, so the family cannot be populated today by any route. Should a modelo-296 member ever be added, this disposition must be revisited rather than inherited."""
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
-source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
-
 [revisions."2024-y-siguientes".family_dispositions.live_cross_references]
 reason = """
 A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for modelo 296: no adapter under adapters/outbound/aeat references it -- the only textual hits are byte-offset tuples in a sede test, not modelo references -- and the application never performs \

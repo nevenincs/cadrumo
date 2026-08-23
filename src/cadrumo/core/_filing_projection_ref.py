@@ -652,17 +652,21 @@ class M296PerceptorField(StrEnum):
 
 
 class M296PerceptorProjectionRef(BaseModel):
-    """One Modelo 296 perceptor row.
+    """One field of the Modelo 296 perceptor row.
 
-    The slot ceiling is deliberately open-ended rather than a fixed count: unlike the
-    m200 party rows, which AEAT prints a fixed number of times on the form, the number of
-    perceptores is the number of payees and is not bounded by the design.
+    This reference carries NO slot, and the omission is the point. The m200 party
+    references carry one because AEAT prints those rows a fixed number of times on the
+    form, so the slot is part of the field's address. The number of perceptores is the
+    number of payees and is not bounded by the design, so the perceptor RECORD repeats
+    instead: it declares ``repeat = "projection_rows"``, the plan emits one render context
+    per payee, and the projection address is completed by that context's occurrence. A
+    slot here would be a second row axis that is always 1 -- meaningless at best, and at
+    worst an invitation to cap the payees at the slots someone declared.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m296_perceptor"]
-    slot: int = Field(ge=1)
     field: M296PerceptorField
 
 

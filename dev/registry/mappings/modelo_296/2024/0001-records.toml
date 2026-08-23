@@ -16,6 +16,9 @@ sheet = "Tipo 2 - Registro De Perceptor"
 record_identity = "Tipo 2 - Registro De Perceptor"
 export_record_id = "m296-perceptor"
 record_type = "perceptor"
+# One record is one perceptor. Without this the layout holds exactly one payee and a
+# 296 with two cannot be expressed at all.
+repeat = "projection_rows"
 
 [[records]]
 sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"

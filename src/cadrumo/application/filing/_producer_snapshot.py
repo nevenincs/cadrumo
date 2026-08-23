@@ -271,6 +271,74 @@ _FourDigitYear = Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
 _DigitString9 = Annotated[str, StringConstraints(pattern=r"^\d{1,9}$")]
 
 
+class Modelo296PerceptorRow(BaseModel):
+    """One Modelo 296 perceptor: the payee, the renta and the retencion practicada.
+
+    The Tipo 2 record is emitted once per payee, so this row is the unit AEAT repeats.
+    Members are ``M296PerceptorField``'s values verbatim and are generated from that enum,
+    which keeps the projection reference and the row that answers it in lock-step: a field
+    the reference can name is a field this row has.
+
+    Every member is optional and rendered as text. The record design's own per-field width,
+    padding, justification and data type are what shape the bytes, and they live in the
+    published layout; duplicating them as constraints here would be a second copy of the
+    design that is free to disagree with it.
+
+    These rows are NOT yet fed from the withholding substrate. The values already exist in
+    the registry as ``Withholding296Observation`` -- perceptor tax id, legal name, naturaleza,
+    clave, subclave, base and retencion among them -- and the snapshot assembler should
+    project them from there rather than take them as operator entry. Until it does, a caller
+    that populates these by hand can state a figure the ledger disagrees with.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apellidos_y_nombre_razon_social_o_deno: str | None = None
+    base_retenciones_e_ingresos_a_cuenta: str | None = None
+    ciudad: str | None = None
+    clave: str | None = None
+    clave_de_mercado: str | None = None
+    codigo: str | None = None
+    codigo_bic_del_perceptor_mediador: str | None = None
+    codigo_cuenta_valores: str | None = None
+    codigo_emisor: str | None = None
+    codigo_lei_del_perceptor: str | None = None
+    codigo_pais: str | None = None
+    decimal: str | None = None
+    decimal_numerico_parte_decimal: str | None = None
+    decimal_numerico_parte_decimal_2: str | None = None
+    decimal_numerico_parte_decimal_3: str | None = None
+    declarante: str | None = None
+    direccion_del_perceptor: str | None = None
+    ejercicio: str | None = None
+    ejercicio_devengo: str | None = None
+    entero: str | None = None
+    entero_numerico_parte_entera: str | None = None
+    entero_numerico_parte_entera_2: str | None = None
+    entero_numerico_parte_entera_3: str | None = None
+    f_j: str | None = None
+    fecha_de_devengo: str | None = None
+    fecha_de_inicio_del_prestamo: str | None = None
+    fecha_de_nacimiento: str | None = None
+    fecha_de_vencimiento_del_prestamo: str | None = None
+    identificador_de_registro_o_numero_de: str | None = None
+    ingresos_a_cuenta_repercutidos: str | None = None
+    naturaleza: str | None = None
+    nif_del_declarante: str | None = None
+    nif_del_pagador_anterior: str | None = None
+    nif_del_perceptor: str | None = None
+    nif_del_representante_legal: str | None = None
+    nif_en_el_pais_de_residencia_fiscal: str | None = None
+    pais_o_territorio_de_residencia_fiscal: str | None = None
+    parte_decimal_del_importe_de_las_reten: str | None = None
+    parte_entera_del_importe_de_las_retenc: str | None = None
+    pendiente: str | None = None
+    perceptor_mediador: str | None = None
+    procedimiento_especial_de_retenciones: str | None = None
+    subclave: str | None = None
+    tipo_codigo: str | None = None
+
+
 class Modelo296ProfileFacts(BaseModel):
     """Declarant identity the Modelo 296 tipo-1 record declares.
 
@@ -330,6 +398,10 @@ class Modelo296ProfileFacts(BaseModel):
     n: _NonBlankName | None = None
     #: Sello electronico -- design offset 488, length 13.
     sello_electronico: str | None = None
+    #: One entry per payee. Empty emits no perceptor record at all, which is what AEAT
+    #: expects of a declaration with nothing to report; whether that absence is admissible
+    #: is the record's own required flag, checked by the renderer.
+    perceptor_rows: tuple[Modelo296PerceptorRow, ...] = ()
 
 
 class Modelo210ContribuyenteFacts(BaseModel):

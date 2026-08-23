@@ -8,6 +8,7 @@ order = 1
 encoding = 'latin-1'
 line_ending = 'crlf'
 required = true
+repeat = 'projection_rows'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f001'
@@ -47,8 +48,7 @@ source_refs = ['aeat-dr-296-2024']
 id = 'm296-2024.perceptor.f003'
 offset = 5
 length = 4
-kind = 'header'
-producer_key = 'm296.per.ejercicio'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -60,13 +60,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'ejercicio'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f004'
 offset = 9
 length = 9
-kind = 'header'
-producer_key = 'm296.per.nif_del_declarante'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -77,13 +80,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'nif_del_declarante'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f005'
 offset = 18
 length = 9
-kind = 'header'
-producer_key = 'm296.per.nif_del_perceptor'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -94,13 +100,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'nif_del_perceptor'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f006'
 offset = 27
 length = 9
-kind = 'header'
-producer_key = 'm296.per.nif_del_representante_legal'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -111,13 +120,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'nif_del_representante_legal'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f007'
 offset = 36
 length = 1
-kind = 'header'
-producer_key = 'm296.per.f_j'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -128,13 +140,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'f_j'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f008'
 offset = 37
 length = 40
-kind = 'header'
-producer_key = 'm296.per.apellidos_y_nombre_razon_social_o_deno'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -145,13 +160,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'apellidos_y_nombre_razon_social_o_deno'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f009'
 offset = 77
 length = 8
-kind = 'header'
-producer_key = 'm296.per.identificador_de_registro_o_numero_de'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -162,13 +180,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'identificador_de_registro_o_numero_de'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f010'
 offset = 85
 length = 6
-kind = 'header'
-producer_key = 'm296.per.codigo_bic_del_perceptor_mediador'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -180,12 +201,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'codigo_bic_del_perceptor_mediador'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f011'
 offset = 91
 length = 8
-kind = 'header'
-producer_key = 'm296.per.fecha_de_devengo'
+kind = 'projection'
 data_type = 'date'
 required = false
 padding = 'none'
@@ -199,12 +223,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'fecha_de_devengo'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f012'
 offset = 99
 length = 1
-kind = 'header'
-producer_key = 'm296.per.naturaleza'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -215,13 +242,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'naturaleza'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f013'
 offset = 100
 length = 2
-kind = 'header'
-producer_key = 'm296.per.clave'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -232,13 +262,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'clave'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f014'
 offset = 102
 length = 2
-kind = 'header'
-producer_key = 'm296.per.subclave'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'none'
@@ -250,13 +283,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'subclave'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f015'
 offset = 104
 length = 13
-kind = 'header'
-producer_key = 'm296.per.base_retenciones_e_ingresos_a_cuenta'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -267,13 +303,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'base_retenciones_e_ingresos_a_cuenta'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f016'
 offset = 117
 length = 2
-kind = 'header'
-producer_key = 'm296.per.entero'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -285,13 +324,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'entero'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f017'
 offset = 119
 length = 2
-kind = 'header'
-producer_key = 'm296.per.decimal'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -304,12 +346,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'decimal'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f018'
 offset = 121
 length = 11
-kind = 'header'
-producer_key = 'm296.per.parte_entera_del_importe_de_las_retenc'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -322,12 +367,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'parte_entera_del_importe_de_las_retenc'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f019'
 offset = 132
 length = 2
-kind = 'header'
-producer_key = 'm296.per.parte_decimal_del_importe_de_las_reten'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -340,12 +388,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'parte_decimal_del_importe_de_las_reten'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f020'
 offset = 134
 length = 1
-kind = 'header'
-producer_key = 'm296.per.perceptor_mediador'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'none'
@@ -357,13 +408,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'perceptor_mediador'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f021'
 offset = 135
 length = 1
-kind = 'header'
-producer_key = 'm296.per.codigo'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'none'
@@ -375,13 +429,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'codigo'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f022'
 offset = 136
 length = 12
-kind = 'header'
-producer_key = 'm296.per.codigo_emisor'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -393,12 +450,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'codigo_emisor'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f023'
 offset = 148
 length = 1
-kind = 'header'
-producer_key = 'm296.per.declarante'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'none'
@@ -411,12 +471,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'declarante'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f024'
 offset = 149
 length = 1
-kind = 'header'
-producer_key = 'm296.per.tipo_codigo'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -427,13 +490,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'tipo_codigo'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f025'
 offset = 150
 length = 20
-kind = 'header'
-producer_key = 'm296.per.codigo_cuenta_valores'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -444,13 +510,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'codigo_cuenta_valores'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f026'
 offset = 170
 length = 1
-kind = 'header'
-producer_key = 'm296.per.pendiente'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -462,12 +531,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'pendiente'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f027'
 offset = 171
 length = 4
-kind = 'header'
-producer_key = 'm296.per.ejercicio_devengo'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -480,12 +552,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'ejercicio_devengo'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f028'
 offset = 175
 length = 8
-kind = 'header'
-producer_key = 'm296.per.fecha_de_inicio_del_prestamo'
+kind = 'projection'
 data_type = 'date'
 required = false
 padding = 'none'
@@ -498,13 +573,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'fecha_de_inicio_del_prestamo'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f029'
 offset = 183
 length = 8
-kind = 'header'
-producer_key = 'm296.per.fecha_de_vencimiento_del_prestamo'
+kind = 'projection'
 data_type = 'date'
 required = false
 padding = 'none'
@@ -518,12 +596,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'fecha_de_vencimiento_del_prestamo'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f030'
 offset = 191
 length = 10
-kind = 'header'
-producer_key = 'm296.per.entero_numerico_parte_entera'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -535,13 +616,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'entero_numerico_parte_entera'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f031'
 offset = 201
 length = 2
-kind = 'header'
-producer_key = 'm296.per.decimal_numerico_parte_decimal'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -553,13 +637,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'decimal_numerico_parte_decimal'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f032'
 offset = 203
 length = 10
-kind = 'header'
-producer_key = 'm296.per.entero_numerico_parte_entera_2'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -571,13 +658,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'entero_numerico_parte_entera_2'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f033'
 offset = 213
 length = 2
-kind = 'header'
-producer_key = 'm296.per.decimal_numerico_parte_decimal_2'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -590,12 +680,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'decimal_numerico_parte_decimal_2'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f034'
 offset = 215
 length = 10
-kind = 'header'
-producer_key = 'm296.per.entero_numerico_parte_entera_3'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -608,12 +701,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'entero_numerico_parte_entera_3'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f035'
 offset = 225
 length = 2
-kind = 'header'
-producer_key = 'm296.per.decimal_numerico_parte_decimal_3'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -626,12 +722,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'decimal_numerico_parte_decimal_3'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f036'
 offset = 227
 length = 162
-kind = 'header'
-producer_key = 'm296.per.direccion_del_perceptor'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -643,12 +742,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'direccion_del_perceptor'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f037'
 offset = 389
 length = 13
-kind = 'header'
-producer_key = 'm296.per.ingresos_a_cuenta_repercutidos'
+kind = 'projection'
 data_type = 'integer'
 required = false
 padding = 'left_zero'
@@ -661,12 +763,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'ingresos_a_cuenta_repercutidos'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f038'
 offset = 402
 length = 9
-kind = 'header'
-producer_key = 'm296.per.nif_del_pagador_anterior'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -677,13 +782,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'nif_del_pagador_anterior'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f039'
 offset = 411
 length = 1
-kind = 'header'
-producer_key = 'm296.per.procedimiento_especial_de_retenciones'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -694,13 +802,16 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'procedimiento_especial_de_retenciones'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f040'
 offset = 412
 length = 1
-kind = 'header'
-producer_key = 'm296.per.clave_de_mercado'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -712,12 +823,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'clave_de_mercado'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f041'
 offset = 413
 length = 20
-kind = 'header'
-producer_key = 'm296.per.codigo_lei_del_perceptor'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'none'
@@ -730,12 +844,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'codigo_lei_del_perceptor'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f042'
 offset = 433
 length = 20
-kind = 'header'
-producer_key = 'm296.per.nif_en_el_pais_de_residencia_fiscal'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -747,12 +864,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'nif_en_el_pais_de_residencia_fiscal'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f043'
 offset = 453
 length = 8
-kind = 'header'
-producer_key = 'm296.per.fecha_de_nacimiento'
+kind = 'projection'
 data_type = 'date'
 required = false
 padding = 'none'
@@ -766,12 +886,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'fecha_de_nacimiento'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f044'
 offset = 461
 length = 35
-kind = 'header'
-producer_key = 'm296.per.ciudad'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -784,12 +907,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'ciudad'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f045'
 offset = 496
 length = 2
-kind = 'header'
-producer_key = 'm296.per.codigo_pais'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'none'
@@ -802,12 +928,15 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-296-2024']
 
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'codigo_pais'
+
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f046'
 offset = 498
 length = 2
-kind = 'header'
-producer_key = 'm296.per.pais_o_territorio_de_residencia_fiscal'
+kind = 'projection'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -818,6 +947,10 @@ legal_refs = [
     'orden-eha-3290-2008:art-6',
 ]
 source_refs = ['aeat-dr-296-2024']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor'
+field = 'pais_o_territorio_de_residencia_fiscal'
 
 [[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = 'm296-2024.perceptor.f047'

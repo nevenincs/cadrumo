@@ -104,6 +104,7 @@ from ._producer_snapshot import (
     FilingProducerSnapshot,
 )
 from ._m200_projection import build_m200_filing_projection_plan
+from ._m296_projection import build_m296_filing_projection_plan
 from ._projection import (
     FilingProjectionPlan,
     FilingProjectionValue,
@@ -1515,6 +1516,12 @@ def _projection_plan_for_layout(
         )
     if draft.modelo == Modelo.M200.value:
         return build_m200_filing_projection_plan(
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+            producer_snapshot=producer_snapshot,
+        )
+    if draft.modelo == Modelo.M296.value:
+        return build_m296_filing_projection_plan(
             registry_snapshot=registry_snapshot,
             layout=layout,
             producer_snapshot=producer_snapshot,
