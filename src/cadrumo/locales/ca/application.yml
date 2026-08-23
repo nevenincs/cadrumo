@@ -602,6 +602,7 @@ application:
   inventory:
     service:
       errors:
+        closing_authority_conflict: Ja existeix un registre diferent d'autoritat de tancament per a aquesta activitat i any.
         actividad_conflict: Ja existeix un llibre d'inventari per a l'activitat %{actividad_id}
           i l'exercici %{year}. Executeu `aeat app ledger inventory list` per veure
           els llibres existents.

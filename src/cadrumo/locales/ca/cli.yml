@@ -268,6 +268,11 @@ cli:
         yes_help: Confirma l'eliminació del justificant
         yes_required: Has de passar --yes per eliminar un justificant
       inventory:
+        authority_invalid: L'objecte d'autoritat de tancament no és vàlid per a aquest llibre d'existències.
+        authority_channel_required: Seleccioneu exactament un canal estructurat d'autoritat de tancament.
+        authority_fd_help: Llegir l'objecte JSON complet d'autoritat de tancament des d'un descriptor d'un sol ús
+        authority_stdin_help: Llegir l'objecte JSON complet d'autoritat de tancament des de stdin
+        closing_authority_record_help: Registrar atòmicament l'autoritat acreditada del tancament d'existències
         acquisition_cost_invalid: 'JSON de cost d''adquisició no vàlid llegit de l''entrada
           estàndard: {details}'
         acquisition_cost_stdin_help: Llegeix de l'entrada estàndard l'objecte JSON

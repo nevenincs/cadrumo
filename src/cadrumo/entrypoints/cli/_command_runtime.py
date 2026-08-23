@@ -11,7 +11,6 @@ from __future__ import annotations
 import inspect
 from collections.abc import Callable
 from functools import cache
-from importlib import import_module
 from types import GenericAlias
 from typing import Any, cast
 
@@ -35,6 +34,7 @@ from ._command_suggestions import (
     LazyFactoryTarget,
     LazySubcommand,
 )
+from ._command_target import resolve_deferred_target
 
 
 class CommandSpecTyperGroup(CadrumoTyperGroup):
@@ -48,19 +48,6 @@ def _group_class(graph: CommandSpecGraph, key: str) -> type[CommandSpecTyperGrou
         (CommandSpecTyperGroup,),
         {"lazy_subcommands": _lazy_children(graph, graph.by_key()[key])},
     )
-
-
-def resolve_deferred_target(target: DeferredTarget) -> object:
-    """Resolve one explicitly declared public production target."""
-    value: object = import_module(target.module)
-    for part in target.qualname.split("."):
-        if part.startswith("_"):
-            raise RuntimeError(f"command target is not public: {target.identity!r}")
-        try:
-            value = getattr(value, part)
-        except AttributeError as error:
-            raise RuntimeError(f"command target does not exist: {target.identity!r}") from error
-    return value
 
 
 def _parameter_default(default: ParameterDefault) -> tuple[object, Callable[[], object] | None]:
@@ -192,23 +179,33 @@ def _behavior_wrapper(spec: CommandSpec) -> Callable[..., object]:
     signature: inspect.Signature
 
     def invoke(*args: object, **kwargs: object) -> object:
-        target = resolve_deferred_target(target_ref)
-        if not callable(target):
-            raise TypeError(f"command target is not callable: {target_ref.identity!r}")
         bound = signature.bind(*args, **kwargs)
         context_parameter = spec.invocation.context_parameter
-        if context_parameter is not None and spec.kind == "leaf":
+        if context_parameter is not None and (
+            spec.kind == "leaf" or (spec.kind == "group" and spec.invocation.invoke_without_command)
+        ):
             from ._config._secure_input import clear_staged_machine_secret_payloads
             from ._profile_authentication_gate import preflight_parsed_leaf
 
             context = bound.arguments.get(context_parameter)
             if context is None or not hasattr(context, "find_root"):
                 raise TypeError("command invocation context has an invalid type")
+            if spec.kind == "group" and getattr(context, "invoked_subcommand", None) is not None:
+                target = resolve_deferred_target(target_ref)
+                if not callable(target):
+                    raise TypeError(f"command target is not callable: {target_ref.identity!r}")
+                return cast(Callable[..., object], target)(**bound.arguments)
             try:
                 preflight_parsed_leaf(cast(typer.Context, context), spec=spec, arguments=bound.arguments)
+                target = resolve_deferred_target(target_ref)
+                if not callable(target):
+                    raise TypeError(f"command target is not callable: {target_ref.identity!r}")
                 return cast(Callable[..., object], target)(**bound.arguments)
             finally:
                 clear_staged_machine_secret_payloads()
+        target = resolve_deferred_target(target_ref)
+        if not callable(target):
+            raise TypeError(f"command target is not callable: {target_ref.identity!r}")
         return cast(Callable[..., object], target)(**bound.arguments)
 
     parameters: list[inspect.Parameter] = []

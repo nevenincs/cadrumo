@@ -2059,6 +2059,36 @@ modelo:
               label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport entitasaiban
                 levo sajat toke reszesedesek korabbi idoszakokban kiszurt, az idoszak
                 vegen meg be nem szamitott ertekvesztese. Meg be nem szamitott ertekvesztes'
+            x-agp34c1g6t3j0c1q60o30e1j:
+              label: 'Szovetkezeti csoportok: kiszuresek (R.D. 1345/1992). Kiszuresek
+                osszege. Osszesen'
+            x-agp34c1g6t3j0c1q60o32c1j:
+              label: 'Szovetkezeti csoportok: kiszuresek (R.D. 1345/1992). Csoporton
+                beluli szovetkezeti visszateritesek (*). Osszesen'
+            x-agp34c1g6t3j0c1q60o32c1l:
+              label: 'Szovetkezeti csoportok: kiszuresek (R.D. 1345/1992). Csoporton
+                beluli penzugyi tamogatasok (*). Osszesen'
+            x-agp34c1g6t3j0c1q60o32c1n:
+              label: 'Szovetkezeti csoportok: kiszuresek (R.D. 1345/1992). A csoport
+                anyaentitasa altal felosztott eredmenyek (*). Osszesen'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e64r2qchk:
+              label: 'Szovetkezeti csoportok: kiszuresek (R.D. 1345/1992). A kifizeto
+                entitas adoazonositoja'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e68qiqcpj:
+              label: 'Szovetkezeti csoportok: kiszuresek (R.D. 1345/1992). A kedvezmenyezett
+                entitas adoazonositoja'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6cq2qd9g:
+              label: 'Szovetkezeti csoportok: kiszuresek (R.D. 1345/1992). Csoporton
+                beluli szovetkezeti visszateritesek'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6koiqdhn:
+              label: 'Szovetkezeti csoportok: kiszuresek (R.D. 1345/1992). Csoporton
+                beluli penzugyi tamogatasok'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6os2qe1k:
+              label: 'Szovetkezeti csoportok: kiszuresek (R.D. 1345/1992). A csoport
+                anyaentitasa altal felosztott eredmenyek'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e70qiqc9g64:
+              label: 'Szovetkezeti csoportok: kiszuresek (R.D. 1345/1992). A tranzakcio
+                kiszureseinek osszege'
             x-agp34c1g6t430c1q60o30e1l:
               help: null
               label: 'Egyeb korrekciok az adoalapok osszegehez: egyeb korrekciok az

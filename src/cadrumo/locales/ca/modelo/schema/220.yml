@@ -2024,6 +2024,36 @@ modelo:
                 de valor de participacions en fons propis d''entitats del grup fiscal
                 eliminats en periodes anteriors, pendents d''incorporar al final del
                 periode. Deteriorament de valor pendent d''incorporacio'
+            x-agp34c1g6t3j0c1q60o30e1j:
+              label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Total
+                eliminacions. Total'
+            x-agp34c1g6t3j0c1q60o32c1j:
+              label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Retorns
+                intragrup (*). Total'
+            x-agp34c1g6t3j0c1q60o32c1l:
+              label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Ajuts
+                economics intragrup (*). Total'
+            x-agp34c1g6t3j0c1q60o32c1n:
+              label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Resultats
+                distribuits per l''entitat capcalera de grup (*). Total'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e64r2qchk:
+              label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). N.I.F.
+                de l''entitat pagadora'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e68qiqcpj:
+              label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). N.I.F.
+                de l''entitat perceptora'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6cq2qd9g:
+              label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Retorns
+                intragrup'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6koiqdhn:
+              label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Ajuts
+                economics intragrup'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6os2qe1k:
+              label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Resultats
+                distribuits per l''entitat capcalera del grup'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e70qiqc9g64:
+              label: 'Grups de cooperatives: eliminacions (R.D. 1345/1992). Total
+                eliminacions de l''operacio'
             x-agp34c1g6t430c1q60o30e1l:
               help: null
               label: 'Altres correccions a la suma de bases imposables: altres correccions

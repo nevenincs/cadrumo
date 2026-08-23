@@ -111,6 +111,15 @@ class InventoryMovementPayload(OutputSchema):
     schema_version: _InventorySchemaVersion
 
 
+class InventoryClosingAuthorityFingerprintPayload(OutputSchema):
+    """Non-sensitive identities for a persisted closing-authority bundle."""
+
+    record: str
+    decision: str
+    physical_observation: str | None = None
+    prior_closing_link: str
+
+
 class InventoryLedgerPayload(OutputSchema):
     """One per-actividad inventory ledger record.
 
@@ -124,7 +133,7 @@ class InventoryLedgerPayload(OutputSchema):
     valuation_method: _ValuationMethodText  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     opening_stock: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     opening_layers: list[InventoryStockLayerPayload] = []
-    closing_stock: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    closing_authority_fingerprints: InventoryClosingAuthorityFingerprintPayload | None = None
     period_movements: list[InventoryMovementPayload] = []
     schema_version: _InventorySchemaVersion
     bucket_event_ids: list[str] = []
@@ -133,7 +142,7 @@ class InventoryLedgerPayload(OutputSchema):
 class InventoryListRowPayload(InventoryLedgerPayload):
     """One inventory summary row returned by the list command."""
 
-    schema_version: str = "1"
+    schema_version: _InventorySchemaVersion = INVENTORY_SCHEMA_VERSION  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-SCHEMA-VERSION: runtime annotated validator mirrors the canonical inventory schema constant
     movement_count: int = 0
 
 
@@ -153,6 +162,17 @@ class InventoryMovementAddResult(InventoryLedgerPayload):
     """JSON envelope for ``aeat app ledger inventory movement add``."""
 
 
+class InventoryClosingAuthorityRecordResult(OutputSchema):
+    """Redacted result of recording inventory closing authority."""
+
+    actividad_id: str
+    year: int
+    authority_record_fingerprint: str
+    decision_fingerprint: str
+    physical_observation_fingerprint: str | None = None
+    prior_closing_link_fingerprint: str
+
+
 class InventoryValuationPreviewPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory valuation preview``.
 
@@ -167,7 +187,7 @@ class InventoryValuationPreviewPayload(OutputSchema):
     actividad_id: str
     year: int
     valuation_method: str
-    closing_stock: str
+    derived_closing_value: str
     cogs: str
     bucket_event_ids: list[str] = []
 

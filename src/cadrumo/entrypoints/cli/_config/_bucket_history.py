@@ -35,20 +35,10 @@ def profile_history(
     """Browse the active profile's append-only event history."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ....adapters.persistence.storage import (
-        active_bucket_session_serves,
-        secure_object_repository_for_bucket,
-    )
+    from ....adapters.persistence.storage import secure_object_repository_for_bucket
     from .._config_bucket_history_payloads import BucketHistoryResult
 
-    profile_label, bucket_id = _resolve_profile_history_target(profile)
-    if not active_bucket_session_serves(bucket_id):
-        from .. import resume_profile_session_for_target
-
-        resume_profile_session_for_target(ctx, bucket_id=bucket_id)
-    from .. import bind_profile_target_to_invocation
-
-    bind_profile_target_to_invocation(ctx, bucket_id=bucket_id)
+    profile_label, bucket_id = _resolve_profile_history_target(ctx, profile)
     selected = _parse_bucket_event_types(event_type)
     since_dt = _parse_bucket_history_instant(since, flag="--since")
     until_dt = _parse_bucket_history_instant(until, flag="--until")
@@ -89,13 +79,20 @@ def profile_history(
     _emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
 
 
-def _resolve_profile_history_target(profile: str | None) -> tuple[str, str]:
+def _resolve_profile_history_target(ctx: typer.Context, profile: str | None) -> tuple[str, str]:
     """Resolve an explicit profile token or the active profile for history reads."""
     from ....application.workflow import ProfileLabelAmbiguousError, resolve_profile_bucket
     from ....core import resolve_active_bucket_id
     from .._common import _no_active_profile_refusal
 
-    selected = profile if profile is not None else resolve_active_bucket_id()
+    if profile is not None:
+        from .._profile_authentication_gate import resolved_command_profile_target
+
+        pointer = resolved_command_profile_target(ctx)
+        if pointer is None:
+            raise RuntimeError("explicit profile history target was not resolved by parsed dispatch")
+        return pointer.label, pointer.bucket_id
+    selected = resolve_active_bucket_id()
     if selected is None:
         raise _no_active_profile_refusal()
     token = selected.strip()

@@ -2359,6 +2359,27 @@ def test_a_design_title_never_contradicts_a_trustworthy_filename_year() -> None:
     )
 
 
+#: Designs whose era IS stated but with an OPEN BOUND, which this module refuses to
+#: enumerate for the same reason it refuses ``y siguientes``: turning "everything
+#: before 2001" or "from 2018 4T onward" into a year list invents years AEAT did not
+#: write. Distinct from :data:`_NON_EJERCICIO_COVERAGE_AXIS`, whose designs are scoped
+#: on a different axis entirely -- these two ARE ejercicio-scoped, just unbounded on
+#: one side, and conflating the two would misdescribe both.
+#:
+#: Each reason quotes AEAT's OWN published title, read from the per-modelo corpus
+#: manifest rather than inferred from the stored filename.
+_OPEN_BOUNDED_ERA_DESIGNS: dict[tuple[str, str], str] = {
+    (
+        "111",
+        "04-111-ejercicios-anteriores-al-2001-65-kb-pdf.pdf",
+    ): "AEAT titles it '111 - Ejercicios anteriores al 2001': open below, with no earliest ejercicio stated",
+    (
+        "763",
+        "01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx",
+    ): "AEAT titles it '763 - Desde 2018 4T y siguientes': open above, and period-qualified",
+}
+
+
 #: Designs whose coverage IS stated, on an axis that is not an ejercicio. Each entry
 #: names the axis the file itself uses, so the reason is checkable against the
 #: filename rather than merely asserted. Keyed by ``(modelo, filename)`` -- never by
@@ -2426,6 +2447,8 @@ def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured()
                 continue
             if (modelo_id, path.name) in _NON_EJERCICIO_COVERAGE_AXIS:
                 continue  # coverage stated on a declared non-ejercicio axis
+            if (modelo_id, path.name) in _OPEN_BOUNDED_ERA_DESIGNS:
+                continue  # era stated, but open on one side and so not enumerable
             unattributed.append(f"modelo {modelo_id} design {path.name!r}")
     assert attributed, "no bundled design could be attributed to any year at all; attribution has broken"
     assert not unattributed, (
@@ -3144,3 +3167,42 @@ def test_every_non_ejercicio_declaration_is_still_earned() -> None:
 
     unreasoned = sorted(k for k, why in _NON_EJERCICIO_COVERAGE_AXIS.items() if len(why.strip()) < 30)
     assert not unreasoned, f"every entry must state the axis the file itself uses: {unreasoned}"
+
+
+def test_every_open_bounded_era_declaration_is_still_earned() -> None:
+    """Each open-bounded design must still exist AND still yield no year list.
+
+    The same two staleness directions the non-ejercicio audit checks, for the same
+    reason: an entry naming a design the corpus no longer holds excuses nothing, and
+    an entry whose design BECAME enumerable is suppressing a design this module can
+    now measure. Kept separate from that audit rather than folded into it, because
+    the two declarations answer different questions and a single audit would let an
+    entry drift between them unnoticed.
+    """
+    design_root = bundled_path(*_DESIGN_ROOT_PARTS)
+    on_disk: dict[tuple[str, str], Path] = {}
+    for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):
+        modelo_id = directory.name.removeprefix("modelo_")
+        for path in _design_sources(modelo_id):
+            on_disk[(modelo_id, path.name)] = path
+
+    assert _OPEN_BOUNDED_ERA_DESIGNS, "the declaration is empty; this audit would be vacuous"
+
+    overlap = sorted(set(_OPEN_BOUNDED_ERA_DESIGNS) & set(_NON_EJERCICIO_COVERAGE_AXIS))
+    assert not overlap, (
+        f"these designs are declared under BOTH classifications, so one of them is wrong: {overlap}"
+    )
+
+    missing = sorted(key for key in _OPEN_BOUNDED_ERA_DESIGNS if key not in on_disk)
+    assert not missing, (
+        "these designs are declared as open-bounded but are no longer bundled under that name, "
+        f"so the declaration excuses nothing: {missing}"
+    )
+
+    now_attributable = sorted(
+        key for key in _OPEN_BOUNDED_ERA_DESIGNS if _design_coverage_years(on_disk[key])
+    )
+    assert not now_attributable, (
+        "these designs now yield ejercicio coverage, so the declaration is suppressing a design "
+        f"the module can measure -- remove the entry: {now_attributable}"
+    )

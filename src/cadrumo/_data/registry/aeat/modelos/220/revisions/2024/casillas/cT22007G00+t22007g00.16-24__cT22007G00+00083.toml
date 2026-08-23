@@ -1,0 +1,172 @@
+# Modelo 220 RECORD T22007G00 -- GRUPOS DE COOPERATIVAS, the eliminations a
+# cooperative group makes under R.D. 1345/1992: retornos intragrupo, ayudas economicas
+# intragrupo and resultados distribuidos por la entidad cabeza del grupo.
+#
+# 10 casillas describe all 314 design fields. THE NUMBER SET DECIDES THE
+# CASILLA SET, NOT THE SHAPE: the 50 detail blocks carry NO box number and differ
+# only by a printed row index, so ONE row is declared and a layout repeat writes the rest.
+# Declaring every block would mint 300 casillas for 6 declared values.
+#
+# THIS RECORD IS THE FIRST OF ITS FAMILY TO CARRY MORE THAN ONE TOTAL. The four siblings
+# D00, E00, F00 and H00 each close on a single numbered box; here FOUR totals close the
+# record, one per eliminated concept plus the sum. The generator asserts the count it
+# finds rather than the count it expected, and requires the totals to be contiguous at the
+# tail -- otherwise "everything before the first numbered box" would not be the run.
+#
+# THE ROW INDEX IS THE PARENTHESISED FORM, detected rather than assumed: both the
+# parenthesised and the trailing-digit forms are tried and exactly one must explain every
+# line of the run. The ordinals found are asserted to be exactly 1..50 with each
+# appearing once per block field, which is what rules out a description that merely ends
+# in a number.
+#
+# THE STRIDE IS PROVEN: the run starts at @16, the stride is 86, and
+# 16 + 86 x 50 lands exactly on @4316 where the first total
+# begins. Every block was compared field-for-field against the first, on letters and
+# digits only: 1 distinct shape.
+#
+# THE DETAIL LINES AND THE TOTALS CARRY DIFFERENT HEADINGS, both derived as the common
+# prefix of their own group rather than read off one line:
+#   detail heading  Eliminación.
+#   totals heading  GRUPOS DE COOPERATIVAS: Eliminación de "retornos intragrupo", "Ayudas económicas intragrupo" y "resultados distribuidos por la entidad cabeza del grupo" (R:D. 1345/1992).
+#
+# COMPLETENESS COMPLEMENT, asserted in the generator: every one of the 314 fields is
+# authored, covered by the repeat, or named below as excluded, and the difference of those
+# sets against the design is empty. Every excluded offset is required to say so in its own
+# text. The type table is asserted to cover exactly the authored offsets.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22007G00 tiles
+# 1..4545 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @4384+150 RESERVADO PARA LA ADMINISTRACION; and
+# @4534+12 Fin de registro.
+#
+# NOT CLAIMED: TWO DIFFERENT SUMS ARE DECLARED AND NEITHER IS COMPUTED. The block's own
+# "Total eliminaciones" is the row sum of the three concept columns beside it; the closing
+# [00083] is the column sum of that same field down the 50 rows. NO formula,
+# construct or binding expresses either, nor that these eliminations reach the suma de
+# bases imponibles del grupo that T22007000 declares.
+#
+# NOT CLAIMED: the design prints "cabeza del grupo" on the detail line and "cabeza de
+# grupo" on the total. Both are kept as printed; nothing here decides which AEAT meant.
+
+# @16+9 An. Eliminación (1).N.I.F. de la Entidad pagadora
+[[revisions."2024".casillas]]
+id = "T22007G00:t22007g00.16-24"
+number = "t22007g00.16-24"
+segmento = "T22007G00"
+section = ["liquidacion", "correcciones_grupos_de_cooperativas"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @25+9 An. Eliminación (1).N.I.F. de la Entidad perceptora
+[[revisions."2024".casillas]]
+id = "T22007G00:t22007g00.25-33"
+number = "t22007g00.25-33"
+segmento = "T22007G00"
+section = ["liquidacion", "correcciones_grupos_de_cooperativas"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @34+17 N. Eliminación (1).Retornos intragrupo
+[[revisions."2024".casillas]]
+id = "T22007G00:t22007g00.34-50"
+number = "t22007g00.34-50"
+segmento = "T22007G00"
+section = ["liquidacion", "correcciones_grupos_de_cooperativas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @51+17 N. Eliminación (1).Ayudas económicas intragrupo
+[[revisions."2024".casillas]]
+id = "T22007G00:t22007g00.51-67"
+number = "t22007g00.51-67"
+segmento = "T22007G00"
+section = ["liquidacion", "correcciones_grupos_de_cooperativas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @68+17 N. Eliminación (1).Resultados distribuidos por la entidad cabeza del grupo
+[[revisions."2024".casillas]]
+id = "T22007G00:t22007g00.68-84"
+number = "t22007g00.68-84"
+segmento = "T22007G00"
+section = ["liquidacion", "correcciones_grupos_de_cooperativas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @85+17 N. Eliminación (1).Total eliminaciones
+[[revisions."2024".casillas]]
+id = "T22007G00:t22007g00.85-101"
+number = "t22007g00.85-101"
+segmento = "T22007G00"
+section = ["liquidacion", "correcciones_grupos_de_cooperativas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @4316+17 N. GRUPOS DE COOPERATIVAS: Eliminación de "retornos intragrupo", "Ayudas económicas intragrupo" y "resultados distribuidos por la entidad cabeza del grupo" (R:D. 1345/1992). Retornos intragrupo(*) Total [00103]
+[[revisions."2024".casillas]]
+id = "T22007G00:00103"
+number = "00103"
+segmento = "T22007G00"
+section = ["liquidacion", "correcciones_grupos_de_cooperativas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @4333+17 N. GRUPOS DE COOPERATIVAS: Eliminación de "retornos intragrupo", "Ayudas económicas intragrupo" y "resultados distribuidos por la entidad cabeza del grupo" (R:D. 1345/1992). Ayudas económicas intragrupo (*). Total [00105]
+[[revisions."2024".casillas]]
+id = "T22007G00:00105"
+number = "00105"
+segmento = "T22007G00"
+section = ["liquidacion", "correcciones_grupos_de_cooperativas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @4350+17 N. GRUPOS DE COOPERATIVAS: Eliminación de "retornos intragrupo", "Ayudas económicas intragrupo" y "resultados distribuidos por la entidad cabeza del grupo" (R:D. 1345/1992). Resultados distribuidos por la entidad cabeza de grupo (*). Total [00107]
+[[revisions."2024".casillas]]
+id = "T22007G00:00107"
+number = "00107"
+segmento = "T22007G00"
+section = ["liquidacion", "correcciones_grupos_de_cooperativas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @4367+17 N. GRUPOS DE COOPERATIVAS: Eliminación de "retornos intragrupo", "Ayudas económicas intragrupo" y "resultados distribuidos por la entidad cabeza del grupo" (R:D. 1345/1992). Total eliminaciones. Total [00083]
+[[revisions."2024".casillas]]
+id = "T22007G00:00083"
+number = "00083"
+segmento = "T22007G00"
+section = ["liquidacion", "correcciones_grupos_de_cooperativas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

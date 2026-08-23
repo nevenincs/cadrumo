@@ -546,6 +546,7 @@ application:
   inventory:
     service:
       errors:
+        closing_authority_conflict: A different closing-authority record already exists for this activity and year.
         actividad_conflict: An inventory ledger already exists for activity %{actividad_id}
           and year %{year}. Run `aeat app ledger inventory list` to see the existing
           ledgers.

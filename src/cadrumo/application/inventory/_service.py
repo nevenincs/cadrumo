@@ -19,7 +19,10 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
+from ...adapters.persistence.profile.inventory import (
+    InventoryClosingAuthorityConflictError,
+    InventoryLedgerRepository,
+)
 from ...adapters.persistence.storage import secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
@@ -32,6 +35,7 @@ from ...domain.buckets import (
 )
 from ...domain.contribuyente.inventory import (
     InventoryAcquisitionCost,
+    InventoryClosingAuthorityRecord,
     InventoryLedger,
     InventoryLedgerDocument,
     InventoryLedgerError,
@@ -103,7 +107,7 @@ class InventoryValuationPreview(BaseModel):
     actividad_id: str = Field(min_length=1)
     year: int = Field(ge=1900)
     valuation_method: ValuationMethod
-    closing_stock: Decimal = Field(ge=Decimal("0"))
+    derived_closing_value: Decimal = Field(ge=Decimal("0"))
     cogs: Decimal = Field(ge=Decimal("0"))
 
 
@@ -390,7 +394,7 @@ class InventoryService:
             actividad_id=ledger.actividad_id,
             year=ledger.year,
             valuation_method=ledger.valuation_method,
-            closing_stock=result.closing_value,
+            derived_closing_value=result.closing_value,
             cogs=result.cogs_value,
         )
         now = _now_utc()
@@ -405,6 +409,37 @@ class InventoryService:
             payload={"valuation_method": ledger.valuation_method.value},
         )
         return InventoryValuationPreviewResult(preview=preview, bucket_event_ids=(event_id,))
+
+    def closing_authority_record(
+        self,
+        *,
+        bucket_id: str,
+        actividad_id: str,
+        year: int,
+        authority_record: InventoryClosingAuthorityRecord,
+    ) -> InventoryLedgerResult:
+        """Atomically validate and persist one complete closing-authority bundle."""
+        repository = self._repository_for(bucket_id)
+        try:
+            ledger = repository.record_closing_authority(
+                actividad_id,
+                authority_record,
+                year=year,
+            )
+        except InventoryClosingAuthorityConflictError as exc:
+            raise InventoryServiceInputError(
+                translated_message="application.inventory.service.errors.closing_authority_conflict",
+                context={"actividad_id": actividad_id, "year": str(year)},
+            ) from exc
+        except InventoryLedgerError as exc:
+            raise InventoryActividadNotFoundError(
+                translated_message="application.inventory.service.errors.actividad_not_found",
+                context={"actividad_id": actividad_id, "year": str(year)},
+            ) from exc
+        # No event is emitted here: inventory and bucket events have distinct
+        # repositories with no shared transaction. The encrypted ledger write is
+        # atomic and replay-safe; claiming a cross-repository commit would not be.
+        return InventoryLedgerResult(ledger=ledger)
 
     def remove(
         self,

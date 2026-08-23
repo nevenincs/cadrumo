@@ -128,6 +128,8 @@ def _leaf(
     policy: ExecutionPolicySpec,
     parameters: tuple[ArgumentSpec | OptionSpec, ...] = (),
     machine_secret: MachineSecretSpec | None = None,
+    *,
+    profile_target_parameter: str | None = None,
 ) -> CommandSpec:
     return CommandSpec(
         key,
@@ -142,6 +144,7 @@ def _leaf(
         _handler(module, handler),
         _schema(schema_module, schema_name, key.replace("_", ".")),
         machine_secret=machine_secret,
+        profile_target_parameter=profile_target_parameter,
     )
 
 
@@ -497,6 +500,7 @@ PROFILE_COMMAND_SPECS = (
             _option("actor", ("--actor",), _STR, "cli.config.profile.history_actor_help"),
             _LANGUAGE,
         ),
+        profile_target_parameter="profile",
     ),
     _leaf(
         "config_profile_preflight",
@@ -591,6 +595,7 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileShowResult",
         ENCRYPTED_READ,
         (_argument("name", _STR, "cli.config.profile.show_name_help", required=False), _LANGUAGE),
+        profile_target_parameter="name",
     ),
     _leaf(
         "config_profile_validate",
@@ -603,6 +608,7 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileValidateResult",
         CALCULATION_READ,
         (_argument("name", _STR, "cli.config.profile.validate_name_help", required=False), _LANGUAGE),
+        profile_target_parameter="name",
     ),
 )
 

@@ -265,6 +265,11 @@ cli:
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
       inventory:
+        authority_invalid: A zárókészlet-hatósági objektum érvénytelen ehhez a készletfőkönyvhöz.
+        authority_channel_required: Pontosan egy strukturált zárókészlet-hatósági bemeneti csatornát válasszon.
+        authority_fd_help: A teljes zárókészlet-hatósági JSON beolvasása egyszer használatos fájlleíróból
+        authority_stdin_help: A teljes zárókészlet-hatósági JSON beolvasása stdinről
+        closing_authority_record_help: A bizonyított zárókészlet-hatóság atomi rögzítése
         acquisition_cost_invalid: 'Érvénytelen beszerzési költség JSON a szabványos
           bemenetről: {details}'
         acquisition_cost_stdin_help: A teljes beszerzési költség JSON-objektum beolvasása

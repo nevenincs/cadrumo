@@ -80,15 +80,8 @@ def quickfile(
     if ctx.invoked_subcommand is not None:
         return
     activate_subcommand_output_language(ctx, output_language)
-    # ``aeat app quickfile`` is an ``invoke_without_command`` group, so the CLI
-    # root treats it as a bare-subgroup introspection surface and skips the
-    # active-bucket session activation it performs for leaf verbs. This command
-    # DOES mutate profile-bound storage (calculate + verify persist), so it
-    # activates the session itself through the same root helper — which also
-    # applies the storage write-policy guard for the ``app quickfile`` path.
-    from . import _activate_active_bucket_session
-
-    _activate_active_bucket_session(ctx)
+    # The graph-generated wrapper applies the same parsed profile-session gate
+    # to this executable group as it does to ordinary leaves.
     if output is None or not str(output).strip() or str(output).strip() == ".":
         raise typer.BadParameter(tr("cli.app.modelo.export.errors.output_required"))
 

@@ -458,7 +458,6 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
                             "source_movement_id": "opening",
                         },
                     ],
-                    "closing_stock": None,
                     "period_movements": [
                         {
                             "movement_id": "m-1",
@@ -468,10 +467,10 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
                             "unit_cost": "10.00",
                             "iva_rate": "21",
                             "deductible_iva_ratio": "1.00",
-                            "schema_version": "1",
+                            "schema_version": "3",
                         },
                     ],
-                    "schema_version": "1",
+                    "schema_version": "3",
                 },
             ],
             "count": 1,

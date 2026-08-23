@@ -143,7 +143,7 @@ def _movement(**overrides: object) -> InventoryMovementPayload:
             "evidence_count": 3,
             "complete": True,
         },
-        "schema_version": "2",
+        "schema_version": "3",
     }
     fields.update(overrides)
     return InventoryMovementPayload.model_validate(fields)
@@ -155,7 +155,7 @@ def _ledger_row(**overrides: object) -> InventoryLedgerPayload:
         "year": 2026,
         "valuation_method": ValuationMethod.FIFO.value,
         "opening_stock": "100.00",
-        "schema_version": "2",
+        "schema_version": "3",
     }
     fields.update(overrides)
     return InventoryLedgerPayload.model_validate(fields)

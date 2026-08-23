@@ -600,6 +600,7 @@ application:
   inventory:
     service:
       errors:
+        closing_authority_conflict: Ya existe un registro distinto de autoridad de cierre para esta actividad y año.
         actividad_conflict: Ya existe un libro de inventario para la actividad %{actividad_id}
           y el ejercicio %{year}. Ejecute `aeat app ledger inventory list` para ver
           los libros existentes.

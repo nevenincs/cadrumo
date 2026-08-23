@@ -547,6 +547,8 @@ class CommandSpec:
     machine_secret: MachineSecretSpec | None = None
     profile_secret: ProfileSecretSpec | None = None
     profile_authentication: ProfileAuthenticationPosture = ProfileAuthenticationPosture.NOT_APPLICABLE
+    profile_target_parameter: str | None = None
+    allow_unregistered_profile_diagnostic: bool = False
 
     def __post_init__(self) -> None:
         _require_identifier(self.key, field="command key")
@@ -572,6 +574,10 @@ class CommandSpec:
         parameter_names = tuple(parameter.name for parameter in self.parameters)
         if len(parameter_names) != len(set(parameter_names)):
             raise ValueError("command parameter names must be unique")
+        if self.profile_target_parameter is not None:
+            _require_identifier(self.profile_target_parameter, field="profile target parameter")
+            if self.profile_target_parameter not in parameter_names:
+                raise ValueError("profile target parameter must reference a declared command parameter")
         option_tokens = [
             declaration
             for parameter in self.parameters

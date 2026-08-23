@@ -2061,6 +2061,36 @@ modelo:
                 de valor de participaciones en fondos propios de entidades del grupo
                 fiscal eliminados en periodos anteriores, pendientes de incorporar
                 al termino del periodo. Deterioro de valor pendiente de incorporacion'
+            x-agp34c1g6t3j0c1q60o30e1j:
+              label: 'Grupos de cooperativas: eliminaciones (R.D. 1345/1992). Total
+                eliminaciones. Total'
+            x-agp34c1g6t3j0c1q60o32c1j:
+              label: 'Grupos de cooperativas: eliminaciones (R.D. 1345/1992). Retornos
+                intragrupo (*). Total'
+            x-agp34c1g6t3j0c1q60o32c1l:
+              label: 'Grupos de cooperativas: eliminaciones (R.D. 1345/1992). Ayudas
+                economicas intragrupo (*). Total'
+            x-agp34c1g6t3j0c1q60o32c1n:
+              label: 'Grupos de cooperativas: eliminaciones (R.D. 1345/1992). Resultados
+                distribuidos por la entidad cabeza de grupo (*). Total'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e64r2qchk:
+              label: 'Grupos de cooperativas: eliminaciones (R.D. 1345/1992). N.I.F.
+                de la entidad pagadora'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e68qiqcpj:
+              label: 'Grupos de cooperativas: eliminaciones (R.D. 1345/1992). N.I.F.
+                de la entidad perceptora'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6cq2qd9g:
+              label: 'Grupos de cooperativas: eliminaciones (R.D. 1345/1992). Retornos
+                intragrupo'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6koiqdhn:
+              label: 'Grupos de cooperativas: eliminaciones (R.D. 1345/1992). Ayudas
+                economicas intragrupo'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6os2qe1k:
+              label: 'Grupos de cooperativas: eliminaciones (R.D. 1345/1992). Resultados
+                distribuidos por la entidad cabeza del grupo'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e70qiqc9g64:
+              label: 'Grupos de cooperativas: eliminaciones (R.D. 1345/1992). Total
+                eliminaciones de la operacion'
             x-agp34c1g6t430c1q60o30e1l:
               help: null
               label: 'Otras correcciones a la suma de bases imponibles: otras correcciones

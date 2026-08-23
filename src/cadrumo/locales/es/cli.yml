@@ -270,6 +270,11 @@ cli:
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
       inventory:
+        authority_invalid: El objeto de autoridad de cierre no es válido para este libro de existencias.
+        authority_channel_required: Seleccione exactamente un canal estructurado de autoridad de cierre.
+        authority_fd_help: Leer el objeto JSON completo de autoridad de cierre desde un descriptor de un solo uso
+        authority_stdin_help: Leer el objeto JSON completo de autoridad de cierre desde stdin
+        closing_authority_record_help: Registrar atómicamente la autoridad acreditada del cierre de existencias
         acquisition_cost_invalid: 'JSON de coste de adquisición no válido leído de
           la entrada estándar: {details}'
         acquisition_cost_stdin_help: Lee de la entrada estándar el objeto JSON de

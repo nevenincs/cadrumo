@@ -2071,6 +2071,36 @@ modelo:
                 equity holdings in tax group entities eliminated in earlier periods,
                 still to be incorporated at the end of the period. Impairment still
                 to be incorporated'
+            x-agp34c1g6t3j0c1q60o30e1j:
+              label: 'Cooperative groups: eliminations (R.D. 1345/1992). Total eliminations.
+                Total'
+            x-agp34c1g6t3j0c1q60o32c1j:
+              label: 'Cooperative groups: eliminations (R.D. 1345/1992). Intra-group
+                cooperative returns (*). Total'
+            x-agp34c1g6t3j0c1q60o32c1l:
+              label: 'Cooperative groups: eliminations (R.D. 1345/1992). Intra-group
+                financial assistance (*). Total'
+            x-agp34c1g6t3j0c1q60o32c1n:
+              label: 'Cooperative groups: eliminations (R.D. 1345/1992). Profits distributed
+                by the group parent entity (*). Total'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e64r2qchk:
+              label: 'Cooperative groups: eliminations (R.D. 1345/1992). Tax ID of
+                the paying entity'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e68qiqcpj:
+              label: 'Cooperative groups: eliminations (R.D. 1345/1992). Tax ID of
+                the receiving entity'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6cq2qd9g:
+              label: 'Cooperative groups: eliminations (R.D. 1345/1992). Intra-group
+                cooperative returns'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6koiqdhn:
+              label: 'Cooperative groups: eliminations (R.D. 1345/1992). Intra-group
+                financial assistance'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e6os2qe1k:
+              label: 'Cooperative groups: eliminations (R.D. 1345/1992). Profits distributed
+                by the group parent entity'
+            x-agp34c1g6t3j0c1qegp34c1g6tjj0c1e70qiqc9g64:
+              label: 'Cooperative groups: eliminations (R.D. 1345/1992). Total eliminations
+                for the transaction'
             x-agp34c1g6t430c1q60o30e1l:
               help: null
               label: 'Other corrections to the sum of taxable bases: other corrections

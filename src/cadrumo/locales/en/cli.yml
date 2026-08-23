@@ -246,6 +246,11 @@ cli:
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
       inventory:
+        authority_invalid: The closing-authority object is invalid for this inventory ledger.
+        authority_channel_required: Select exactly one structured closing-authority input channel.
+        authority_fd_help: Read the complete closing-authority JSON object from a one-shot file descriptor
+        authority_stdin_help: Read the complete closing-authority JSON object from stdin
+        closing_authority_record_help: Atomically record evidenced inventory closing authority
         acquisition_cost_invalid: 'Invalid acquisition-cost JSON from stdin: {details}'
         acquisition_cost_stdin_help: Read the complete acquisition-cost JSON object
           from stdin

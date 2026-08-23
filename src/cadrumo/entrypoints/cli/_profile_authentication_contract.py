@@ -31,7 +31,7 @@ class ProfileSecretSourceOptions:
 
 def resolve_profile_secret_model(spec: ProfileSecretSpec) -> type[MachineSecretPayload]:
     """Resolve and prove exact parity between graph metadata and runtime model."""
-    from ._command_runtime import resolve_deferred_target
+    from ._command_target import resolve_deferred_target
 
     model = resolve_deferred_target(spec.model)
     if not isinstance(model, type) or not issubclass(model, MachineSecretPayload):
@@ -54,7 +54,7 @@ def root_profile_secret_model() -> type[MachineSecretPayload]:
 def profile_authentication_posture(node: CommandSpecNode) -> ProfileAuthenticationPosture:
     """Derive one leaf's root-gate posture from graph and exemption authority."""
     spec = node.spec
-    if spec.kind != "leaf":
+    if spec.kind == "root" or (spec.kind != "leaf" and spec.handler is None):
         return ProfileAuthenticationPosture.NOT_APPLICABLE
     if spec.profile_authentication is ProfileAuthenticationPosture.SELF_AUTHENTICATING:
         return ProfileAuthenticationPosture.SELF_AUTHENTICATING

@@ -44,6 +44,7 @@ if TYPE_CHECKING:
 def _resolve_show_pointer(
     name: str | None,
     *,
+    ctx: typer.Context,
     resolve_active_profile_pointer: Callable[[], _ProfileBucketPointer | None],
 ) -> _ProfileBucketPointer:
     """Resolve the profile ``show`` inspects, by name or the active pointer.
@@ -58,27 +59,12 @@ def _resolve_show_pointer(
             raise no_active_profile_refusal()
         return pointer
 
-    from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
-    from ....application.workflow import resolve_profile_bucket as _resolve_profile_bucket
+    from .._profile_authentication_gate import resolved_command_profile_target
 
-    unknown = _CliRefusedBoundaryError(
-        translated_message="cli.config.profile.unknown_profile",
-        context={"name": name},
-    )
-    try:
-        pointer = _resolve_profile_bucket(name)
-    except _ProfileLabelAmbiguousError as exc:
-        # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
-        # ``ValueError``; refuse clearly with the dedicated ambiguity
-        # message rather than escaping to an unhandled traceback.
-        raise _CliRefusedBoundaryError(
-            translated_message="errors.refused.refused_profile_label_ambiguous",
-        ) from exc
-    except ValueError as exc:
-        raise unknown from exc
-    if pointer is None:
-        raise unknown
-    return pointer
+    pointer = resolved_command_profile_target(ctx)
+    if pointer is not None:
+        return pointer
+    raise RuntimeError("explicit profile show target was not resolved by parsed dispatch")
 
 
 def _read_record_for_show(ctx: typer.Context, pointer: _ProfileBucketPointer) -> _UserProfileRecord:
@@ -141,12 +127,7 @@ def config_profile_show(
     from ....application.user_profile import ProfileValidationService, record_to_path_values
     from ....domain.user_profile import load_user_profile_schema
 
-    pointer = _resolve_show_pointer(name, resolve_active_profile_pointer=resolve_active_profile_pointer)
-    if name is not None:
-        from .. import bind_profile_target_to_invocation, resume_profile_session_for_target
-
-        resume_profile_session_for_target(ctx, bucket_id=pointer.bucket_id)
-        bind_profile_target_to_invocation(ctx, bucket_id=pointer.bucket_id)
+    pointer = _resolve_show_pointer(name, ctx=ctx, resolve_active_profile_pointer=resolve_active_profile_pointer)
     record = _read_record_for_show(ctx, pointer)
     from .._config_payloads import ConfigProfileShowResult, ProfileFactPayload, ProfileIssuePayload
 
@@ -377,6 +358,7 @@ def config_profile_preflight(
 def _resolve_validate_target_pointer(
     name: str | None,
     *,
+    ctx: typer.Context,
     resolve_active_profile_pointer: Callable[[], _ProfileBucketPointer | None],
 ) -> _ProfileBucketPointer:
     """Resolve the profile the validate verb targets, refusing clearly when it cannot.
@@ -385,33 +367,16 @@ def _resolve_validate_target_pointer(
     records included, because validating one is legitimate); an omitted name
     falls back to the active profile pointer.
     """
-    from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
-    from ....application.workflow import read_profile_bucket as _read_profile_bucket
-
     if name is None:
         pointer = resolve_active_profile_pointer()
         if pointer is None:
             raise no_active_profile_refusal()
         return pointer
-    try:
-        pointer = _read_profile_bucket(name)
-    except _ProfileLabelAmbiguousError as exc:
-        # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
-        # ``ValueError``; refuse clearly with the dedicated ambiguity
-        # message rather than escaping to an unhandled traceback.
-        raise _CliRefusedBoundaryError(
-            translated_message="errors.refused.refused_profile_label_ambiguous",
-        ) from exc
-    except ValueError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": name},
-        ) from exc
+    from .._profile_authentication_gate import resolved_command_profile_target
+
+    pointer = resolved_command_profile_target(ctx)
     if pointer is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": name},
-        )
+        raise RuntimeError("explicit profile validate target was not resolved by parsed dispatch")
     return pointer
 
 
@@ -436,13 +401,9 @@ def config_profile_validate(
 
     pointer = _resolve_validate_target_pointer(
         name,
+        ctx=ctx,
         resolve_active_profile_pointer=resolve_active_profile_pointer,
     )
-    if name is not None:
-        from .. import bind_profile_target_to_invocation, resume_profile_session_for_target
-
-        resume_profile_session_for_target(ctx, bucket_id=pointer.bucket_id)
-        bind_profile_target_to_invocation(ctx, bucket_id=pointer.bucket_id)
     try:
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:

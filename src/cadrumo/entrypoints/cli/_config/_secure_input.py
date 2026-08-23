@@ -48,13 +48,17 @@ from contextlib import suppress
 from contextvars import ContextVar
 from dataclasses import dataclass
 from enum import StrEnum
+from importlib import import_module
 from typing import cast
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.tty import stdin_is_tty
-from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+
+_CliRefusedBoundaryError = import_module(
+    "cadrumo.entrypoints.cli._errors"
+).CliRefusedBoundaryError
 
 MACHINE_SECRET_MAX_BYTES = 8192
 _MAX_SECRETS_BYTES = MACHINE_SECRET_MAX_BYTES
@@ -171,7 +175,7 @@ def _reject_duplicate_object_keys(pairs: list[tuple[str, object]]) -> dict[str, 
 
 
 def _validate_secrets_payload[SecretsModelT: BaseModel](
-    raw: bytes,
+    raw: bytes | bytearray,
     model: type[SecretsModelT],
     *,
     invalid_json_key: str,
@@ -227,20 +231,23 @@ def _read_secrets_stdin[SecretsModelT: BaseModel](
     refuses with a localised :class:`CliRefusedBoundaryError`; the raw bytes
     are never echoed or logged.
     """
-    raw = sys.stdin.buffer.read(_MAX_SECRETS_BYTES + 1)
-    if len(raw) > _MAX_SECRETS_BYTES:
-        raise _CliRefusedBoundaryError(
-            translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_stdin_too_large",
+    raw = bytearray(sys.stdin.buffer.read(_MAX_SECRETS_BYTES + 1))
+    try:
+        if len(raw) > _MAX_SECRETS_BYTES:
+            raise _CliRefusedBoundaryError(
+                translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_stdin_too_large",
+            )
+        return _validate_secrets_payload(
+            raw,
+            model,
+            invalid_json_key=f"cli.config.custody.errors.{diagnostic_prefix}_stdin_invalid_json",
+            missing_fields_key=f"cli.config.custody.errors.{diagnostic_prefix}_stdin_missing_fields",
         )
-    return _validate_secrets_payload(
-        raw,
-        model,
-        invalid_json_key=f"cli.config.custody.errors.{diagnostic_prefix}_stdin_invalid_json",
-        missing_fields_key=f"cli.config.custody.errors.{diagnostic_prefix}_stdin_missing_fields",
-    )
+    finally:
+        raw[:] = b"\x00" * len(raw)
 
 
-def _read_descriptor_to_bound(descriptor: int, *, maximum_bytes: int) -> bytes:
+def _read_descriptor_to_bound(descriptor: int, *, maximum_bytes: int) -> bytearray:
     """Drain ``descriptor`` up to ``maximum_bytes`` + 1, then close it.
 
     Reads through :func:`os.read` rather than wrapping the descriptor in a
@@ -267,7 +274,9 @@ def _read_descriptor_to_bound(descriptor: int, *, maximum_bytes: int) -> bytes:
         # result stands and there is nothing left to release.
         with suppress(OSError):
             os.close(descriptor)
-    return b"".join(chunks)
+    combined = bytearray().join(chunks)
+    chunks.clear()
+    return combined
 
 
 def _read_secrets_fd[SecretsModelT: BaseModel](
@@ -313,16 +322,19 @@ def _read_secrets_fd[SecretsModelT: BaseModel](
             translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_fd_unreadable",
             context={"descriptor": str(descriptor)},
         ) from exc
-    if len(raw) > _MAX_SECRETS_BYTES:
-        raise _CliRefusedBoundaryError(
-            translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_fd_too_large",
+    try:
+        if len(raw) > _MAX_SECRETS_BYTES:
+            raise _CliRefusedBoundaryError(
+                translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_fd_too_large",
+            )
+        return _validate_secrets_payload(
+            raw,
+            model,
+            invalid_json_key=f"cli.config.custody.errors.{diagnostic_prefix}_fd_invalid_json",
+            missing_fields_key=f"cli.config.custody.errors.{diagnostic_prefix}_fd_missing_fields",
         )
-    return _validate_secrets_payload(
-        raw,
-        model,
-        invalid_json_key=f"cli.config.custody.errors.{diagnostic_prefix}_fd_invalid_json",
-        missing_fields_key=f"cli.config.custody.errors.{diagnostic_prefix}_fd_missing_fields",
-    )
+    finally:
+        raw[:] = b"\x00" * len(raw)
 
 
 def select_machine_secret_channel(
