@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:7c59b08710d88ece53d6dfb50071261ace7d54e4767cea7ec2763cf83653f6fb'
+body_hash: 'sha256:4837135ca4db2fa24ea15077cb41d388ee2e223f9f9d2773fcf91ff48d089d68'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
@@ -44,6 +44,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p01-s52-implementation-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p02-s05-profiler-review-audit]]'
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p02-s06-calibration-review-audit]]'
+  - '[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s12-lazy-import-failure-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w01-p02-s07-baseline-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w01-p02-s08-profiler-bite-review-audit]]'
@@ -62,6 +63,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 ### adr
 
 - `2026-08-22-secure-storage-performance-hardening-adr` - `secure-storage-performance-hardening` adr: `command-scoped loading and pure secure-storage reads` | (**status:** `accepted`)
+- `2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr` - `secure-storage-performance-hardening` adr: `production-authored CommandSpec authority` | (**status:** `accepted`)
 
 ### audit
 
