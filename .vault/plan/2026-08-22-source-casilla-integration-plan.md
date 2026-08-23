@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:411a8eebf30810c690ae52b00f80f30710d2de7896d8695e260e20136d83af6b'
+body_hash: 'sha256:32e1be251a143e8e8a0e68f8a66a96523911cc4fba34c5c3a6cfdc01c30a72f3'
 ---
 
 # `source-casilla-integration` plan
@@ -104,7 +104,7 @@ Make silent capability drift, stale deferral, and false connection claims fail C
 - [x] `W01.P05.S27` - reject connected claims without resolver ownership and encrypted revision proof; `dev/source_connectivity/check.py`.
 - [x] `W01.P05.S28` - prove each ratchet failure mode bites under an external mutation; `dev/source_connectivity/tests/test_check.py`.
 - [x] `W01.P05.S29` - enroll the connectivity check in the repository quality-gate surface; `pyproject.toml`.
-- [ ] `W01.P05.S30` - conduct a formal code review of the census and ratchet foundation; `.vault/audit/2026-08-22-source-casilla-integration-census-code-review.md`.
+- [x] `W01.P05.S30` - conduct a formal code review of the census and ratchet foundation; `.vault/audit/2026-08-22-source-casilla-integration-census-code-review.md`.
 
 ## Wave `W02` - adjudicate and connect inventory first
 
