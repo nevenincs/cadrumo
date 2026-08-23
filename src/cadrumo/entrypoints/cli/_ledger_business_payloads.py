@@ -234,6 +234,36 @@ class EvidenceListResult(OutputSchema):
     rows: list[EvidenceRecordPayload]
 
 
+class AttachmentReviewPayload(OutputSchema):
+    """Review-safe provenance for one encrypted attachment."""
+
+    attachment_id: str
+    sha256: str
+    mime_type: str
+    bytes_size: int
+    source: str
+    provider_locator: str
+    captured_at: str
+    linked_invoice_ids: list[str] = []
+    pending_review: bool
+
+
+@register_schema("ledger.evidence.attachment_queue")
+class AttachmentReviewQueueResult(OutputSchema):
+    """Pending Drive attachments awaiting explicit invoice confirmation."""
+
+    bucket_id: BucketId
+    count: int
+    rows: list[AttachmentReviewPayload] = []
+
+
+@register_schema("ledger.evidence.attachment_view")
+class AttachmentReviewViewResult(AttachmentReviewPayload):
+    """One stored attachment's non-secret metadata and provenance."""
+
+    bucket_id: BucketId
+
+
 class ConsentedDispatchPayload(OutputSchema):
     """One recorded off-host dispatch on the consent surface."""
 

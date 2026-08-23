@@ -45,6 +45,9 @@ cli:
           hogy a korábbi válasz téves volt.
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
+        attachment_id_help: A tartalom alapján címzett melléklet azonosítója.
+        attachment_queue_help: A számlaellenőrzésre váró Drive-mellékletek listázása.
+        attachment_view_help: A tárolt melléklet metaadatainak és eredetének vizsgálata.
         batch_directory_help: A könyvtár, amelynek fájljait feldolgozza. Kombinálható
           az ismételt --file kapcsolóval, vagy helyettesíthető azzal.
         batch_file_help: Egy feldolgozandó dokumentum. Dokumentumonként ismételje
@@ -2231,8 +2234,9 @@ cli:
         terminálban, és a program bekéri.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
       manager_closed: A(z) '{profile}' módosításai mentve.
-      manager_closed_created: A(z) '{profile}' profil létrejött. A modellekkel végzett munka előtt jelentsd be a beállítás befejezését az `aeat config profile complete-setup` paranccsal. Bármikor
-        újranyithatod az 'aeat config profile edit' paranccsal.
+      manager_closed_created: A(z) '{profile}' profil létrejött. A modellekkel végzett
+        munka előtt jelentsd be a beállítás befejezését az `aeat config profile complete-setup`
+        paranccsal. Bármikor újranyithatod az 'aeat config profile edit' paranccsal.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       preflight:

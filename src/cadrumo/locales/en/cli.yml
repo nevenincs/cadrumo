@@ -45,6 +45,9 @@ cli:
           earlier answer was wrong.
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
+        attachment_id_help: Content-addressed attachment identifier.
+        attachment_queue_help: List Drive attachments awaiting invoice review.
+        attachment_view_help: Inspect stored attachment metadata and provenance.
         batch_directory_help: Directory whose files are ingested. Combine with or
           replace by repeated --file.
         batch_file_help: One document to ingest. Repeat once per document; combines
@@ -2086,8 +2089,9 @@ cli:
         terminal to be prompted.
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       manager_closed: Changes to '{profile}' are saved.
-      manager_closed_created: Profile '{profile}' created. Declare setup complete with `aeat config profile complete-setup` before working with modelos. Reopen it any
-        time with 'aeat config profile edit'.
+      manager_closed_created: Profile '{profile}' created. Declare setup complete
+        with `aeat config profile complete-setup` before working with modelos. Reopen
+        it any time with 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
       preflight:

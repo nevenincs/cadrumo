@@ -143,6 +143,11 @@ if TYPE_CHECKING:
         describe_aeat_party_identifier,
         project_aeat_record_counterparty,
     )
+    from ._attachment_review import (
+        AttachmentReviewItem,
+        get_attachment_review_item,
+        list_attachment_review_queue,
+    )
     from ._batch_ingest import (
         BATCH_ITEM_STATUSES,
         BatchItemResult,
@@ -436,6 +441,9 @@ if TYPE_CHECKING:
 
 #: Public name -> owning submodule, resolved on first attribute access.
 _LAZY_EXPORTS: dict[str, str] = {
+    "AttachmentReviewItem": "._attachment_review",
+    "get_attachment_review_item": "._attachment_review",
+    "list_attachment_review_queue": "._attachment_review",
     "CloudDerivedArtefact": "._consent_withdrawal",
     "ConsentRederivationError": "._consent_withdrawal",
     "ConsentWithdrawalSurvey": "._consent_withdrawal",
@@ -772,6 +780,7 @@ __all__ = [
     "AnchorEvaluation",
     "ApplyRulesAppliedRow",
     "ApplyRulesResult",
+    "AttachmentReviewItem",
     "BatchItemResult",
     "BatchRunResult",
     "BulkClassifyFailure",
@@ -938,6 +947,7 @@ __all__ = [
     "extract_invoice_draft_from_evidence",
     "field_assertions",
     "forget_confirmed_counterparty_facts",
+    "get_attachment_review_item",
     "get_manual_transaction",
     "get_transaction_participation",
     "ground_ambiguous_candidates",
@@ -953,6 +963,7 @@ __all__ = [
     "ledger_transaction_review_status",
     "ledger_transaction_tracking_payload",
     "link_manual_transaction_invoice",
+    "list_attachment_review_queue",
     "list_eligible_ratios_for_bucket",
     "list_manual_transactions",
     "load_confirmation_records",
