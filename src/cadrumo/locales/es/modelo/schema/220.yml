@@ -1308,6 +1308,69 @@ modelo:
             x-agp34c1g6d230chq60o3ecpl:
               label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
                 propios. Reservas. Reserva de nivelacion
+            x-agp34c1g6h130chq60o34dpn:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones
+            x-agp34c1g6h130chq60o34dpo:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Gastos de gestión de las inversiones
+            x-agp34c1g6h130chq60o34dpp:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Gastos de gestión de las inversiones. Gastos
+                del inmovilizado material y de las inversiones inmobiliarias
+            x-agp34c1g6h130chq60o34e1g:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Gastos de gestión de las inversiones. Gastos
+                de inversiones y cuentas financieras
+            x-agp34c1g6h130chq60o34e1h:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Correcciones de valor del inmovilizado material
+                y de las inversiones
+            x-agp34c1g6h130chq60o34e1i:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Correcciones de valor del inmovilizado material
+                y de las inversiones. Amortización del inmovilizado material y de
+                las inversiones inmobiliarias
+            x-agp34c1g6h130chq60o34e1j:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Correcciones de valor del inmovilizado material
+                y de las inversiones. Deterioro del inmovilizado material y de las
+                inversiones inmobiliarias
+            x-agp34c1g6h130chq60o34e1k:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Correcciones de valor del inmovilizado material
+                y de las inversiones. Deterioro de inversiones financieras
+            x-agp34c1g6h130chq60o34e1l:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Pérdidas procedentes del inmovilizado material
+                y de las inversiones
+            x-agp34c1g6h130chq60o34e1m:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Pérdidas procedentes del inmovilizado material
+                y de las inversiones. Del inmovilizado material y de las inversiones
+                inmobiliarias
+            x-agp34c1g6h130chq60o34e1n:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Pérdidas procedentes del inmovilizado material
+                y de las inversiones. De las inversiones financieras
+            x-agp34c1g6h130chq60o34e1o:
+              label: Cuenta técnica del seguro no vida. Subtotal (Resultado de la
+                cuenta técnica del seguro no vida)
+            x-agp34c1g6h130chq60o3cd9m:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Pérdidas por la enajenación de participaciones
+                en sociedades consolidadas
+            x-agp34c1g6h130chq60o3ec1p:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Gastos de entidades incluidas en la consolidación
+            x-agp34c1g6h130chq60o3ec9g:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Participación en pérdidas de entidades puestas
+                en equivalencia
+            x-agp34c1g6h130chq60o3ec9h:
+              label: Cuenta técnica del seguro no vida. Gastos del inmovilizado material
+                y de las inversiones. Pérdidas por la enajenación de participaciones
+                en sociedades puestas en equivalencia
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: Estado de ingresos y gastos consolidados reconocidos. Total de

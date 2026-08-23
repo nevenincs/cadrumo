@@ -1323,6 +1323,70 @@ modelo:
             x-agp34c1g6d230chq60o3ecpl:
               label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
                 funds. Reserves. Levelling reserve
+            x-agp34c1g6h130chq60o34dpn:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments
+            x-agp34c1g6h130chq60o34dpo:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Investment management expenses
+            x-agp34c1g6h130chq60o34dpp:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Investment management expenses.
+                Expenses of property, plant and equipment and of investment property
+            x-agp34c1g6h130chq60o34e1g:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Investment management expenses.
+                Expenses of investments and financial accounts
+            x-agp34c1g6h130chq60o34e1h:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Value adjustments of property, plant
+                and equipment and of investments
+            x-agp34c1g6h130chq60o34e1i:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Value adjustments of property, plant
+                and equipment and of investments. Depreciation of property, plant
+                and equipment and of investment property
+            x-agp34c1g6h130chq60o34e1j:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Value adjustments of property, plant
+                and equipment and of investments. Impairment of property, plant and
+                equipment and of investment property
+            x-agp34c1g6h130chq60o34e1k:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Value adjustments of property, plant
+                and equipment and of investments. Impairment of financial investments
+            x-agp34c1g6h130chq60o34e1l:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Losses on property, plant and equipment
+                and on investments
+            x-agp34c1g6h130chq60o34e1m:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Losses on property, plant and equipment
+                and on investments. On property, plant and equipment and on investment
+                property
+            x-agp34c1g6h130chq60o34e1n:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Losses on property, plant and equipment
+                and on investments. On financial investments
+            x-agp34c1g6h130chq60o34e1o:
+              label: Non-life insurance technical account. Subtotal (Result of the
+                non-life insurance technical account)
+            x-agp34c1g6h130chq60o3cd9m:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Losses on disposal of holdings in
+                consolidated companies
+            x-agp34c1g6h130chq60o3ec1p:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Expenses of entities included in
+                the consolidation
+            x-agp34c1g6h130chq60o3ec9g:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Share of losses of equity-accounted
+                entities
+            x-agp34c1g6h130chq60o3ec9h:
+              label: Non-life insurance technical account. Expenses of property, plant
+                and equipment and of investments. Losses on disposal of holdings in
+                equity-accounted companies
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: Statement of recognised consolidated income and expense. Total

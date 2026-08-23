@@ -1277,6 +1277,69 @@ modelo:
             x-agp34c1g6d230chq60o3ecpl:
               label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
                 Reserves. Reserva d'anivellacio
+            x-agp34c1g6h130chq60o34dpn:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions
+            x-agp34c1g6h130chq60o34dpo:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Despeses de gestió de les inversions
+            x-agp34c1g6h130chq60o34dpp:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Despeses de gestió de les inversions.
+                Despeses de l'immobilitzat material i de les inversions immobiliàries
+            x-agp34c1g6h130chq60o34e1g:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Despeses de gestió de les inversions.
+                Despeses d'inversions i comptes financers
+            x-agp34c1g6h130chq60o34e1h:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Correccions de valor de l'immobilitzat
+                material i de les inversions
+            x-agp34c1g6h130chq60o34e1i:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Correccions de valor de l'immobilitzat
+                material i de les inversions. Amortització de l'immobilitzat material
+                i de les inversions immobiliàries
+            x-agp34c1g6h130chq60o34e1j:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Correccions de valor de l'immobilitzat
+                material i de les inversions. Deteriorament de l'immobilitzat material
+                i de les inversions immobiliàries
+            x-agp34c1g6h130chq60o34e1k:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Correccions de valor de l'immobilitzat
+                material i de les inversions. Deteriorament d'inversions financeres
+            x-agp34c1g6h130chq60o34e1l:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Pèrdues procedents de l'immobilitzat
+                material i de les inversions
+            x-agp34c1g6h130chq60o34e1m:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Pèrdues procedents de l'immobilitzat
+                material i de les inversions. De l'immobilitzat material i de les
+                inversions immobiliàries
+            x-agp34c1g6h130chq60o34e1n:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Pèrdues procedents de l'immobilitzat
+                material i de les inversions. De les inversions financeres
+            x-agp34c1g6h130chq60o34e1o:
+              label: Compte tècnic de l'assegurança no vida. Subtotal (Resultat del
+                compte tècnic de l'assegurança no vida)
+            x-agp34c1g6h130chq60o3cd9m:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Pèrdues per l'alienació de participacions
+                en societats consolidades
+            x-agp34c1g6h130chq60o3ec1p:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Despeses d'entitats incloses en la consolidació
+            x-agp34c1g6h130chq60o3ec9g:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Participació en pèrdues d'entitats posades
+                en equivalència
+            x-agp34c1g6h130chq60o3ec9h:
+              label: Compte tècnic de l'assegurança no vida. Despeses de l'immobilitzat
+                material i de les inversions. Pèrdues per l'alienació de participacions
+                en societats posades en equivalència
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: Estat d'ingressos i despeses consolidats reconeguts. Total d'ingressos
