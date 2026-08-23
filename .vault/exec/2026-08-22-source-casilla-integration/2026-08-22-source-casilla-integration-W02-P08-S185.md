@@ -11,9 +11,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
-
-
-
 # ground which supported M100 filing formats carry repeated economic-activity casilla rows and their exact official coordinates
 
 ## Scope

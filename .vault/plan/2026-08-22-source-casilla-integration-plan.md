@@ -13,7 +13,7 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
 modified: '2026-08-23'
-body_hash: 'sha256:23215a89e271b1db32d411798ba95ad14ba8f6c5bef63d7df925374e0586bfc2'
+body_hash: 'sha256:51fb2cd949f126e1a4b996e661fec793f33ba6de03dbbed95ab462b90b58577d'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -169,7 +169,7 @@ Declare only the revision-specific facts established by adjudication.
 - [x] `W02.P08.S176` - enumerate canonical runtime inventory activities into deterministic atomic three-operation row cohorts; `src/cadrumo/application/aggregation/_inventory.py`.
 - [x] `W02.P08.S43` - add grounded inventory operation row-template bindings for supported M100 revisions without taxpayer activity identities; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
 - [x] `W02.P08.S185` - ground which supported M100 filing formats carry repeated economic-activity casilla rows and their exact official coordinates; `.vault/research/2026-08-23-inventory-casilla-grounding-research.md`.
-- [ ] `W02.P08.S205` - amend this plan with one renderer step and one proof step per grounded row-capable format, or record no renderer when no supported format qualifies; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
+- [x] `W02.P08.S205` - amend this plan with one renderer step and one proof step per grounded row-capable format, or record no renderer when no supported format qualifies; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
 - [ ] `W02.P08.S186` - add typed row-indexed casilla values and direct-materialization provenance to the canonical source-resolution carrier; `src/cadrumo/application/aggregation/_source_mesh.py`.
 - [ ] `W02.P08.S187` - persist row-indexed casilla values and direct-materialization provenance through encrypted CalculationRevision state; `src/cadrumo/domain/modelos/_calculation_revision.py`.
 - [ ] `W02.P08.S188` - exclude ROWS bindings from scalar calculation-input projection; `src/cadrumo/application/modelo/_calculation_actions.py`.
@@ -178,6 +178,14 @@ Declare only the revision-specific facts established by adjudication.
 - [ ] `W02.P08.S195` - exclude ROWS binding maps from scalar decimal-input coercion; `src/cadrumo/application/filing/__init__.py`.
 - [ ] `W02.P08.S44` - link each inventory operation row template to its adjudicated M100 activity-row casilla; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
 - [ ] `W02.P08.S190` - materialize inventory binding rows bijectively into direct row-indexed casilla values; `src/cadrumo/application/modelo/_calculation_resolution.py`.
+- [ ] `W02.P08.S217` - ground the canonical authority, lifecycle, and shared activity identity for the M100 direct-estimation activity envelope required by repeated XML rows; `.vault/research`.
+- [ ] `W02.P08.S218` - amend the inventory mapping decision with the grounded activity-envelope owner, join invariants, and explicit no-fabrication boundary; `.vault/adr/2026-08-23-inventory-casilla-mapping-adr.md`.
+- [ ] `W02.P08.S219` - expand this plan from the accepted activity-envelope decision without duplicating an existing semantic source capability; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
+- [ ] `W02.P08.S220` - materialize canonical M100 direct-estimation activity-envelope rows keyed by the same durable activity identity as inventory and reusing TipoActividad; `src/cadrumo/application/aggregation`.
+- [ ] `W02.P08.S221` - prove the activity-envelope join refuses absent, mismatched, duplicate, reordered, and fabricated TACT or IAE claims; `src/cadrumo/application/aggregation/tests`.
+- [ ] `W02.P08.S222` - render row-indexed inventory casillas into repeated M100 XML ActividadEstDirecta nodes joined to complete grounded activity envelopes; `src/cadrumo/application/filing/_export_xml_dictionary.py`.
+- [ ] `W02.P08.S224` - extend the canonical XML parser and post-write verifier with typed row-casilla coordinates and strict missing, extra, duplicate, and reordered-row equality; `src/cadrumo/domain/calculations/registry/_export_parse.py, src/cadrumo/application/filing/_export.py`.
+- [ ] `W02.P08.S223` - prove repeated M100 XML inventory rows preserve sibling identity and order, enforce the six-row bound, round-trip row coordinates, and validate against the official XSD; `src/cadrumo/application/filing/tests`.
 - [ ] `W02.P08.S192` - prove positive row-casilla identity, cohort, direct-materialization provenance, and scalar-exclusion invariants; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
 - [ ] `W02.P08.S196` - prove row-casilla materialization refuses a missing coordinate; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
 - [ ] `W02.P08.S197` - prove row-casilla materialization refuses an orphaned coordinate; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
