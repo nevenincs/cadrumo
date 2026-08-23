@@ -4846,3 +4846,62 @@ match and the spellings found are reported.
 
 **10004 of 11570 slots remain** across 99 numbered records; 1566 modelled, zero orphaned —
 measured by reading the committed TOML directly, because the authority would not load.
+
+## 2026-08-23 — no record authored; the measurement pattern was wrong instead
+
+### The gate is still down, so the iteration did something else
+
+The authority still will not load — a peer's modelo 200 work leaves **5475 validation
+failures, zero naming modelo 220**, stable across repeated attempts. The previous stamp
+deferred a suite verification to "the next iteration"; **this is that iteration and it cannot
+discharge it either.**
+
+Rather than add a second record's worth of unverified surface, this iteration paid the part
+of the debt that does not need the authority: a direct re-derivation of every authored
+casilla from the design.
+
+### The provenance claim holds — 1732 casillas, zero problems
+
+Every casilla across 39 fragments and 32 sheets checked against `aeat-dr-220-2024` without
+the authority: every segmento a real sheet; every numeric number **printed by AEAT**, none
+minted; every byte span resolving to a field at exactly that offset and length; every letter
+number a bracket AEAT prints; all 32 sheets tiling once with no gap and no partial overlap;
+no repeated id or `(segmento, number)` pair.
+
+### And the verifier found a defect in my own reporting
+
+It flagged three casillas — `[2309]`, `[4520]` on T22012B00 and `[000507]` on T22012B20 — as
+**minted numbers**. They are not. AEAT prints all three.
+
+**AEAT's box numbers on modelo 220 are not all five digits**: the design carries **12
+three-digit, 13 four-digit and 8 six-digit** brackets alongside 11610 five-digit ones. The
+pattern `\[(\d{5})\]` was chosen once at the first m220 measurement and **inherited by every
+figure since**, so 33 real filing boxes were never counted.
+
+**The true denominator is 11603, not 11570.** Corrected: 1569 modelled, 10034 remaining.
+Every "N of the 11570" in this revision's earlier stamps understates both sides.
+
+Checked and clean: of the 33, three are authored and **thirty lie in records not yet
+authored — zero fall inside a record already shipped.** The per-record completeness
+complement was field-level and never had the flaw; only the coverage arithmetic did.
+
+### What this says, beyond the number
+
+A verifier written *specifically to be trustworthy* encoded the same wrong assumption as the
+thing it was verifying, and reported correct data as defective. That is the **fourth** time
+this campaign a check has fired on AEAT's own structure rather than a defect — and the first
+inside a verification whose whole purpose was to be believed.
+
+The general shape: **a measurement pattern adopted at first contact with a corpus silently
+defines what counts as data for everything downstream, and nothing re-examines it unless
+something forces the question.** Writing a second check does not help if it inherits the
+first one's premise. What forced the question here was checking the corpus against the
+*design* rather than against another derived figure.
+
+### Scale
+
+**10034 of 11603 slots remain**; 1569 modelled, zero orphaned, across 34 of 137 records.
+
+**Obligation carried forward:** the next iteration that finds a loadable authority must run
+the registry suite and diff the FAILED list *before* authoring anything further. Two stamps
+now stand with the suite state recorded as unknown.
