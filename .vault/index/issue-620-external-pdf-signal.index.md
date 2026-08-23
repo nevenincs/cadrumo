@@ -6,10 +6,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:dee33a4f674ca14841519b0f06ab007762d5ea5980a6e09aaad2c0c1704e9e93'
+body_hash: 'sha256:42c4b31a61f593abc26e8aa320214b409b1233966ab29779b03106f4b453ebc8'
 related:
   - '[[2026-08-23-issue-620-external-pdf-signal-S01]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S02]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-S03]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S04]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-plan]]'
@@ -30,6 +31,7 @@ Auto-generated index of all documents tagged with `#issue-620-external-pdf-signa
 
 - `2026-08-23-issue-620-external-pdf-signal-S01` - Inventory and fingerprint the externally sourced Modelo 130 plain and fillable PDFs
 - `2026-08-23-issue-620-external-pdf-signal-S02` - Inventory and fingerprint the externally sourced Modelo 131 plain and fillable PDFs
+- `2026-08-23-issue-620-external-pdf-signal-S03` - Inventory and fingerprint the externally sourced Modelo 303 plain and fillable PDFs
 - `2026-08-23-issue-620-external-pdf-signal-S04` - Inventory and fingerprint the externally sourced Modelo 036 plain and fillable PDFs
 
 ### plan
