@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:b07064477bb6f538f137c55073da01c1fedd4512e1184a67fe1868912ad35be2'
+body_hash: 'sha256:d55999784e43e72b3229f7d3432eec6ed86c6704123a05d6329011a53e8b64d0'
 ---
 
 # `source-casilla-integration` plan
@@ -80,7 +80,7 @@ Enumerate typed secure domains, repositories, ingress, assemblers, helpers, and 
 - [x] `W01.P03.S13` - enumerate exported calculation helpers and explicit readiness declarations; `dev/source_connectivity/discovery.py`.
 - [x] `W01.P03.S14` - enumerate typed row assemblers and declared source-disposition ownership; `dev/source_connectivity/discovery.py`.
 - [x] `W01.P03.S15` - emit lexical destination matches as advisory findings only; `dev/source_connectivity/discovery.py`.
-- [ ] `W01.P03.S16` - verify discovery detects a new repository, assembler, helper, and readiness declaration independently; `dev/source_connectivity/tests/test_discovery.py`.
+- [x] `W01.P03.S16` - verify discovery detects a new repository, assembler, helper, and readiness declaration independently; `dev/source_connectivity/tests/test_discovery.py`.
 
 ### Phase `W01.P04` - publish the canonical census
 
