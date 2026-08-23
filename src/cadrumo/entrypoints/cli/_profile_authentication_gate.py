@@ -138,7 +138,9 @@ def preflight_parsed_leaf(
     explicit_label = None
     if spec.profile_target_parameter is not None:
         raw_target = arguments.get(spec.profile_target_parameter)
-        if isinstance(raw_target, str) and raw_target.strip():
+        if raw_target is not None:
+            if not isinstance(raw_target, str):
+                raise TypeError("profile target parameter has an invalid type")
             from ...application.user_profile import resolve_login_target
             pointer = resolve_login_target(raw_target)
             explicit_target = pointer.bucket_id

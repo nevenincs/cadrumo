@@ -23,6 +23,7 @@ import json
 import subprocess
 from pathlib import Path
 from typing import Final
+from uuid import UUID
 
 import pytest
 
@@ -304,6 +305,54 @@ def test_root_and_leaf_stdin_collision_refuses_before_fresh_tree_mutation(tmp_pa
     assert not tmp_path.exists() or tuple(tmp_path.iterdir()) == ()
 
 
+@pytest.mark.parametrize("command", [("app",), ("config",), ("app", "diagnostics")])
+def test_terminal_introspection_groups_leave_a_fresh_root_state_free(
+    tmp_path: Path, command: tuple[str, ...]
+) -> None:
+    result = _run_cadrumo(tmp_path, command)
+
+    assert result.returncode in {0, 2}, _combined_output(result)
+    assert not tmp_path.exists() or tuple(tmp_path.iterdir()) == ()
+
+
+def test_terminal_executable_group_preserves_root_secret_source_for_parsed_gate(
+    tmp_path: Path,
+) -> None:
+    result = _run_cadrumo(
+        tmp_path,
+        (
+            "--profile-secrets-stdin",
+            "app",
+            "quickfile",
+            "--modelo",
+            "303",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+        ),
+        stdin_payload="must-remain-unread",
+    )
+
+    output = _combined_output(result)
+    assert result.returncode == 2, output
+    assert "target" in output.lower()
+    assert "json" not in output.lower()
+
+
+def test_blank_explicit_profile_target_refuses_before_root_secret_read(tmp_path: Path) -> None:
+    _register_profile(tmp_path, "ambient")
+    result = _run_cadrumo(
+        tmp_path,
+        ("--profile-secrets-stdin", "config", "profile", "show", ""),
+        stdin_payload="must-remain-unread",
+    )
+
+    output = _combined_output(result)
+    assert result.returncode == 2, output
+    assert "json" not in output.lower()
+
+
 def test_self_authenticating_leaf_refuses_root_source_unread(tmp_path: Path) -> None:
     result = _run_cadrumo(
         tmp_path,
@@ -319,7 +368,7 @@ def test_self_authenticating_leaf_refuses_root_source_unread(tmp_path: Path) -> 
 
 @pytest.mark.os_keychain
 def test_valid_resumed_session_refuses_root_source_unread(tmp_path: Path) -> None:
-    _register_profile(tmp_path, "custody")
+    bucket_id = _register_profile(tmp_path, "custody")
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
     logged_in = _run_cadrumo(
         tmp_path,
@@ -327,6 +376,10 @@ def test_valid_resumed_session_refuses_root_source_unread(tmp_path: Path) -> Non
         stdin_payload=json.dumps({"passphrase": passphrase}),
     )
     assert logged_in.returncode == 0, _combined_output(logged_in)
+    from ....adapters.persistence.storage.custody import profile_session_path
+
+    if not profile_session_path(storage_root=tmp_path, profile_id=UUID(bucket_id)).is_file():
+        pytest.skip("host OS keychain cannot persist the cross-process profile session")
 
     refused = _run_cadrumo(
         tmp_path,

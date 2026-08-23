@@ -27,8 +27,6 @@ from typing import TYPE_CHECKING, cast
 import typer
 
 if TYPE_CHECKING:
-    import click
-
     # Type-checking-only: gives static consumers of the lazy `command_schema_refs`
     # re-export (below, via `__getattr__`) its real signature without paying the
     # eager registry-parse import cost at runtime -- this line never executes.
@@ -452,11 +450,9 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
     remainder = list(ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
     if _is_metadata_invocation(remainder):
         return True
-    # Walk the LEADING non-option tokens through the real command tree;
-    # the chain stops at the first option token (everything after it can
-    # be an option value, not a subcommand name). ``list_commands`` is
-    # the structural group marker (the vendored TyperGroup is not a
-    # guaranteed upstream ``click.Group`` subclass).
+    # Walk leading command tokens through the sealed graph. The graph's typed
+    # terminal behavior—not Click group shape—decides whether a bare group is
+    # state-free; executable groups must continue into parsed preflight.
     tokens: list[str] = []
     for token in remainder:
         if token.startswith("-"):
@@ -464,24 +460,19 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
         tokens.append(token)
     if not tokens:
         return False
-    command: object = ctx.command
+    path = ["aeat"]
+    spec = _COMMAND_GRAPH.resolve_path(tuple(path))
     for token in tokens:
-        if not hasattr(command, "list_commands"):
+        if spec.kind == "leaf" or spec.invocation.terminal_behavior == "executable":
+            # Remaining non-option tokens are parsed positional arguments, not
+            # command identities. The executable node owns their validation.
             return False
-        # CAST-RATIONALE-CLICK-GROUP: ``list_commands`` is the structural group
-        # marker used above before calling the click group API.
-        group = cast("click.Group", command)
-        # CAST-RATIONALE-CLICK-CONTEXT: ``typer.Context`` is the vendored-fork
-        # context; ty treats it as distinct from upstream ``click.core.Context``
-        # that ``get_command`` annotates, though it is structurally identical.
-        subcommand = group.get_command(cast("click.Context", ctx), token)
-        if subcommand is None:
+        path.append(token)
+        try:
+            spec = _COMMAND_GRAPH.resolve_path(tuple(path))
+        except LookupError:
             return True
-        command = subcommand
-    # A bare subgroup invocation (for example `aeat config profile`) can
-    # only render that group's help/callback surface. Treat it like help so
-    # discovery never asks for the encrypted profile passphrase first.
-    return hasattr(command, "list_commands")
+    return spec.kind == "group" and spec.invocation.terminal_behavior == "introspection"
 
 
 def _verb_path_from_context(ctx: typer.Context) -> str | None:

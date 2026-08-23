@@ -93,9 +93,18 @@ _CONTEXTVAR_HARNESS_SOURCE = dedent(
             route = classify_storage_route()
             assert route.kind is StorageRouteKind[expected_route_kind], route
         sys.argv = ["cadrumo", *cli_args]
-        from cadrumo.entrypoints.cli import main
+        # Mirror the production console bootstrap: importing CLI contracts can
+        # acquire loggers, but file handlers are authorized only after parsed
+        # secret-source preflight.
+        from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
 
-        main()
+        defer_logging_configuration()
+        try:
+            from cadrumo.entrypoints.cli import main
+
+            main()
+        finally:
+            resume_logging_configuration()
     finally:
         config_module._settings_override.reset(token)
     """,

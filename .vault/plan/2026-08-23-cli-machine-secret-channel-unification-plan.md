@@ -3,12 +3,12 @@ tags:
   - '#plan'
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
-modified: '2026-08-23'
-body_hash: 'sha256:56c7a1046b6da15e593fc059b606ebcf8e828e19cc1ab692dfa46ef278a3fe5d'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-global-machine-secret-contract-research]]'
+modified: '2026-08-23'
+body_hash: 'sha256:570a129c9a418d8b51edaba8c4b8b04c36e6c70e254b0c4e8b87eb00c053dee3'
 ---
 
 <!-- RETIRED: P10 -->
@@ -70,9 +70,9 @@ Align diagnostics and remove superseded implementations and fallbacks.
 
 Restore self-authenticating custody grammar and add explicit keychain-free per-invocation profile proof with dispatch-wide source safety.
 
-- [ ] `W02.P11.S19` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and restore config passphrase change as the sole three-field rotation verb with canonical leaf transport, public metadata, tests, and an explicit self-authenticating root-gate exemption; `passphrase command specification handler metadata and tests`.
+- [x] `W02.P11.S19` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and restore config passphrase change as the sole three-field rotation verb with canonical leaf transport, public metadata, tests, and an explicit self-authenticating root-gate exemption; `passphrase command specification handler metadata and tests`.
 - [x] `W02.P11.S20` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and define the distinct root profile-authentication option pair, strict profile_passphrase payload, typed command-graph posture, value-free metadata, and universal non-adopter invariants; `root command specification secure input contract metadata and tests`.
-- [ ] `W02.P11.S21` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and implement parsed-dispatch root and leaf source preflight, exact-target login fallback, show validate and history gate convergence, unused-source refusal, target assertions, bounded cleanup, and non-secret persistence warning; `root CLI gate profile target routing session integration and focused tests`.
+- [x] `W02.P11.S21` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and implement parsed-dispatch root and leaf source preflight, exact-target login fallback, show validate and history gate convergence, unused-source refusal, target assertions, bounded cleanup, and non-secret persistence warning; `root CLI gate profile target routing session integration and focused tests`.
 - [ ] `W02.P11.S22` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and align all four locales and focused behavior tests for root applicability, parse precedence, session refusal reasons, collisions, self-authenticating exemptions, cleanup, leakage, and Windows descriptor bootstrap semantics; `CLI locale sources root profile-authentication tests and platform bootstrap`.
 
 ## Wave `W03` - Runtime, generated, and operator proof
