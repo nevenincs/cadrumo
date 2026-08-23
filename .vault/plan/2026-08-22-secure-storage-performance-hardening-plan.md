@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:cc0e295ed48ed877a7d0992447d780e120eee1b3d6708bb927b5569aa3cb07f3'
+body_hash: 'sha256:194a9f63d69a6197732d9153cf5d828bca612718921da6883c82cfd097254784'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -62,7 +62,7 @@ Generalize lazy loading to nested groups and leaves.
 
 Correct the nonconforming generated-resource design before any further command-loading or performance work, then make one atomic hard cut to production-authored CommandSpec authority and prove every source, build, shipping, and installed-runtime lane.
 
-- [ ] `W02.P03a.S54` - Atomically hard-cut the complete root, group, and leaf surface to distributed production-authored CommandSpec as sole structural authority, project runtime assembly, help, completion, census, schema, operator, MCP/HITL, execution policy, and write routing from specs, make handlers behavior-only, and delete callback/decorator authority, lazy and path mirrors, both runtime JSON readers, both development generators, ignore entries, cache-parity tests, and stale prose with no fallback, shim, or partial coexistence; `repository CLI command-authority surface`.
+- [x] `W02.P03a.S54` - Atomically hard-cut the complete root, group, and leaf surface to distributed production-authored CommandSpec as sole structural authority, project runtime assembly, help, completion, census, schema, operator, MCP/HITL, execution policy, and write routing from specs, make handlers behavior-only, and delete callback/decorator authority, lazy and path mirrors, both runtime JSON readers, both development generators, ignore entries, cache-parity tests, and stale prose with no fallback, shim, or partial coexistence; `repository CLI command-authority surface`.
 - [ ] `W02.P03a.S11` - Correct the reopened S11 execution and review evidence, preserving its latency observations while re-proving schema and operator-help discovery exclusively from production CommandSpec after the atomic cutover; `.vault/exec/2026-08-22-secure-storage-performance-hardening/ and .vault/audit/`.
 - [ ] `W02.P03a.S14` - Correct the open S14 evidence by rejecting the app-manifest reader and generator as nonconforming, then re-prove demand-loaded modelo, registry, ledger, live, maintenance, overview, review, diagnostics, and quickfile descendants exclusively from production CommandSpec after the atomic cutover; `.vault/exec/2026-08-22-secure-storage-performance-hardening/ and .vault/audit/`.
 - [ ] `W02.P03a.S55` - Add dynamic CommandSpec exact-set, uniqueness, parent-edge, target, locale-key, schema, policy, side-effect, performance-class, and write-route gates for every current and future root, group, and leaf, forbid every former structural authority and runtime artifact edge, and prove each detector with independently constructed missing, duplicate, orphan, malformed, forbidden-import, and undeclared-node negatives; `src/cadrumo/entrypoints/cli/tests/ and dev/ci/tests/`.

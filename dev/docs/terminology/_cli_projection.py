@@ -213,10 +213,8 @@ _WALK_PROGRAM = textwrap.dedent(
 def _walk_tree_for_language(language: OutputLanguage) -> list[_CommandPayload]:
     """Project the command graph in one language via a fresh subprocess.
 
-    Pins ``CADRUMO_OUTPUT_LANGUAGE`` to ``language`` so every ``help=tr(...)``
-    call stores that language's string on the Typer objects before any CLI
-    module is imported (the clean-interpreter guarantee mirrored from
-    :func:`dev.docs.cli_reference.generate_cli_reference_in_subprocess`).
+    Pins ``CADRUMO_OUTPUT_LANGUAGE`` to ``language`` before resolving the
+    specification translation keys in the subprocess.
 
     Args:
         language: The output language to resolve help strings in.
@@ -225,8 +223,7 @@ def _walk_tree_for_language(language: OutputLanguage) -> list[_CommandPayload]:
         A list of per-command payloads (path, family, help, params).
 
     Raises:
-        RuntimeError: When the subprocess exits non-zero (tree could not be
-            materialised in this language).
+        RuntimeError: When the subprocess exits non-zero.
     """
     env = dict(os.environ)
     env["CADRUMO_OUTPUT_LANGUAGE"] = language.value
@@ -305,9 +302,9 @@ def project_cli_search_records() -> tuple[
     tuple[CliOptionRecord, ...],
     CliProjectionStats,
 ]:
-    """Project the live CLI tree into command and option search records.
+    """Project the command graph into command and option search records.
 
-    Walks the materialised command tree once per output language (es / en /
+    Projects the immutable specifications once per output language (es / en /
     ca / hu) in language-pinned subprocesses and merges the four passes into
     one record per command and one record per option, each carrying its
     four-language help.

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:4837135ca4db2fa24ea15077cb41d388ee2e223f9f9d2773fcf91ff48d089d68'
+body_hash: 'sha256:c5fe875e8eb9c396f9e93d18537fcc192a0894202fc947b0324473e115553d22'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P03-S10]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P03-S11]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P03-S12]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-W02-P03a-S54]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P04-S13]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
@@ -46,6 +47,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-w01-p02-s06-calibration-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s12-lazy-import-failure-review-audit]]'
+  - '[[2026-08-23-secure-storage-performance-hardening-s54-command-spec-convergence-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w01-p02-s07-baseline-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w01-p02-s08-profiler-bite-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-w02-p03-s09-lazy-node-kernel-review-audit]]'
@@ -80,6 +82,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-w01-p02-s05-profiler-review-audit` - `secure-storage-performance-hardening` audit: `W01.P02.S05 profiler implementation review`
 - `2026-08-22-secure-storage-performance-hardening-w01-p02-s06-calibration-review-audit` - `secure-storage-performance-hardening` audit: `S06 quiet-runner calibration review`
 - `2026-08-23-secure-storage-performance-hardening-s12-lazy-import-failure-review-audit` - `secure-storage-performance-hardening` audit: `S12 nested lazy import failure review`
+- `2026-08-23-secure-storage-performance-hardening-s54-command-spec-convergence-review-audit` - `secure-storage-performance-hardening` audit: `S54 command-spec convergence review`
 - `2026-08-23-secure-storage-performance-hardening-w01-p02-s07-baseline-review-audit` - `secure-storage-performance-hardening` audit: `W01.P02.S07 frozen complete-CLI baseline review`
 - `2026-08-23-secure-storage-performance-hardening-w01-p02-s08-profiler-bite-review-audit` - `secure-storage-performance-hardening` audit: `W01.P02.S08 profiler bite review`
 - `2026-08-23-secure-storage-performance-hardening-w02-p03-s09-lazy-node-kernel-review-audit` - `secure-storage-performance-hardening` audit: `W02.P03.S09 lazy node kernel review`
@@ -108,6 +111,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-W02-P03-S10` - Preserve root help, completion, version, error-envelope, and suggestion contracts through metadata-only traversal
 - `2026-08-22-secure-storage-performance-hardening-W02-P03-S11` - Make schema and operator-help discovery consume registration metadata without materializing handler subtrees
 - `2026-08-22-secure-storage-performance-hardening-W02-P03-S12` - Extend lazy import failure coverage across nested groups and leaves for required and optional dependencies
+- `2026-08-22-secure-storage-performance-hardening-W02-P03a-S54` - Atomically hard-cut the complete root, group, and leaf surface to distributed production-authored CommandSpec as sole structural authority, project runtime assembly, help, completion, census, schema, operator, MCP/HITL, execution policy, and write routing from specs, make handlers behavior-only, and delete callback/decorator authority, lazy and path mirrors, both runtime JSON readers, both development generators, ignore entries, cache-parity tests, and stale prose with no fallback, shim, or partial coexistence
 - `2026-08-22-secure-storage-performance-hardening-W02-P04-S13` - Convert the complete config subtree from eager registrar imports to nested loader references
 
 ### plan

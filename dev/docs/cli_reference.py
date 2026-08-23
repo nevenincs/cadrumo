@@ -173,7 +173,7 @@ def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
 
 
 # ---------------------------------------------------------------------------
-# Internal helpers - tree materialisation
+# Internal graph-projection helpers
 # ---------------------------------------------------------------------------
 
 
@@ -436,11 +436,9 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
     renders one RST page per top-level family plus an ``index.rst`` and the
     companion ``automation.rst`` and ``schemas.rst`` pages.
 
-    This function pins the output-language setting to English before importing the
-    CLI tree so that ``tr()`` keys resolve to English strings for deterministic
-    reference output. The subprocess entry point :func:`main` provides a clean
-    interpreter boundary for callers that cannot guarantee the CLI has not already
-    been imported.
+    This function pins the output-language setting to English before resolving
+    specification translation keys. The subprocess entry point :func:`main`
+    provides a clean interpreter boundary.
 
     Args:
         docs_root: The project documentation root (the directory that contains
@@ -561,8 +559,8 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
 def collect_live_leaf_paths_in_subprocess() -> list[str]:
     """Return all live leaf command paths by spawning a fresh interpreter.
 
-    Guarantees that the CLI tree is materialised with ``CADRUMO_OUTPUT_LANGUAGE=en``
-    before any CLI module is imported, mirroring the generation subprocess.
+    Guarantees that the command graph is projected with
+    ``CADRUMO_OUTPUT_LANGUAGE=en``, mirroring the generation subprocess.
 
     Returns:
         A sorted list of normalised registry-key strings for every live leaf
@@ -570,7 +568,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
 
     Raises:
         RuntimeError: When the subprocess exits with a non-zero code,
-            indicating that the CLI tree could not be materialised.
+            indicating that the command graph could not be projected.
     """
     code = textwrap.dedent(
         """

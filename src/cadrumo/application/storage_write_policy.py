@@ -159,7 +159,7 @@ def inspect_storage_write_policy(
     not duplicate storage-routing logic.
 
     Unknown values fail closed. The caller obtains the value from validated,
-    callback-attached command policy rather than reconstructing a command path.
+    CommandSpec-owned policy rather than reconstructing a command path.
     """
     if write_route == "bootstrap-root":
         return StorageWritePolicyDecision(

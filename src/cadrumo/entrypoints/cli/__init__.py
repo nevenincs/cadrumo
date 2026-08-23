@@ -994,9 +994,9 @@ def _declared_execution_policy_for_cli_path(
 def command_execution_policy_for_cli_path(
     cli_path: tuple[str, ...],
 ) -> _CommandExecutionPolicy:
-    """Return callback-attached policy for one live path, loading only that path.
+    """Return CommandSpec-owned policy for one live path.
 
-    The concrete policy type remains owned by the CLI metadata module.  This
+    The concrete policy type remains owned by the CLI command graph. This
     facade keeps cross-distribution consumers on the public entrypoint boundary
     without importing the complete command tree.
     """

@@ -80,7 +80,7 @@ def collect_enrolment_candidates(
 
     Each axis is consumed through its authority (registry via the
     validated authority, enums by import, topics via the catalogue
-    repository, the CLI via Typer introspection). The boolean toggles let
+    repository, and the CLI via its public immutable graph projection). The boolean toggles let
     tests drive a controlled subset deterministically without standing up
     every authority.
 

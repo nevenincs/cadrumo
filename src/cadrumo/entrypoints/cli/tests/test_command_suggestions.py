@@ -73,4 +73,3 @@ def test_live_command_walker_censuses_every_runtime_node_stably() -> None:
     assert any(node.loader_owner is not None for node in first)
     assert all(":" in node.loader_owner for node in first if node.loader_owner is not None)
     assert all(":" in node.handler_owner for node in first if node.handler_owner != "<none>")
-
