@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Literal
 
 type SecureRepositoryMechanism = Literal["secure_bound", "profile_secure_document", "secure_object"]
+type IngressChannel = Literal["cli", "worksheet"]
 
 _SECURE_NAMES = frozenset(
     {
@@ -36,6 +37,24 @@ class SecureRepositoryCapability:
     mechanism: SecureRepositoryMechanism
     payload_types: tuple[str, ...]
     aggregate_grain: str
+
+    @property
+    def evidence_locator(self) -> str:
+        """Return a re-fetchable source locator for review and census rows."""
+        return f"{self.module}:{self.line}"
+
+
+@dataclass(frozen=True, slots=True)
+class IngressCapability:
+    """One supported operator write surface that can introduce source data."""
+
+    module: str
+    callback_name: str
+    line: int
+    channel: IngressChannel
+    command_group_symbol: str
+    command_name: str
+    execution_policy: str
 
     @property
     def evidence_locator(self) -> str:
@@ -179,4 +198,72 @@ def discover_secure_repositories(repo_root: Path) -> tuple[SecureRepositoryCapab
     return tuple(sorted(capabilities, key=lambda item: (item.module, item.repository_name, item.line)))
 
 
-__all__ = ["SecureRepositoryCapability", "SecureRepositoryMechanism", "discover_secure_repositories"]
+def _command_decorator(node: ast.FunctionDef | ast.AsyncFunctionDef) -> ast.Call | None:
+    return next(
+        (
+            decorator
+            for decorator in node.decorator_list
+            if isinstance(decorator, ast.Call)
+            and isinstance(decorator.func, ast.Attribute)
+            and decorator.func.attr == "command"
+        ),
+        None,
+    )
+
+
+def _execution_policy(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str | None:
+    for decorator in node.decorator_list:
+        if not isinstance(decorator, ast.Call) or _dotted_name(decorator.func).rsplit(".", maxsplit=1)[-1] != (
+            "command_execution_policy"
+        ):
+            continue
+        if decorator.args:
+            return ast.unparse(decorator.args[0])
+    return None
+
+
+def discover_ingress_surfaces(repo_root: Path) -> tuple[IngressCapability, ...]:
+    """Enumerate policy-declared CLI writes, distinguishing worksheet pulls."""
+    cli_root = repo_root / "src" / "cadrumo" / "entrypoints" / "cli"
+    capabilities: list[IngressCapability] = []
+    for path in _production_python_files(cli_root):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            command = _command_decorator(node)
+            policy = _execution_policy(node)
+            if command is None or policy is None or "WRITE" not in policy:
+                continue
+            group = _dotted_name(command.func.value)
+            command_name = node.name
+            if command.args and isinstance(command.args[0], ast.Constant) and isinstance(command.args[0].value, str):
+                command_name = command.args[0].value
+            called_names = {_dotted_name(child).rsplit(".", maxsplit=1)[-1] for child in ast.walk(node)}
+            channel: IngressChannel = (
+                "worksheet"
+                if called_names & {"_pull_operator_edits_for_command", "assemble_observations_for_grouping"}
+                else "cli"
+            )
+            capabilities.append(
+                IngressCapability(
+                    module=path.relative_to(repo_root).as_posix(),
+                    callback_name=node.name,
+                    line=node.lineno,
+                    channel=channel,
+                    command_group_symbol=group,
+                    command_name=command_name,
+                    execution_policy=policy,
+                )
+            )
+    return tuple(sorted(capabilities, key=lambda item: (item.module, item.line, item.callback_name)))
+
+
+__all__ = [
+    "IngressCapability",
+    "IngressChannel",
+    "SecureRepositoryCapability",
+    "SecureRepositoryMechanism",
+    "discover_ingress_surfaces",
+    "discover_secure_repositories",
+]
