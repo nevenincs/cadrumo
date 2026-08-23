@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:1c578829c996bdaafe1dfdb2b7a3ff1027579aa757ded169058d43422b71fe51'
+body_hash: 'sha256:6baf54e032074944721d26c27452c22c96f1db80523fcfa97aa1293b368c71e5'
 ---
 
 # `source-casilla-integration` plan
@@ -175,7 +175,7 @@ Resolve whether the asset and finca amortization ledgers are authoritative filin
 
 Settle filing destination identity, substitutability, grain, precedence, absence semantics, rounding, and override policy.
 
-- [ ] `W03.P10.S56` - ground amortization destinations, revision windows, eligible basis, rates, limits, and asset grain; `.vault/research/2026-08-22-amortization-casilla-grounding-research.md`.
+- [x] `W03.P10.S56` - ground amortization destinations, revision windows, eligible basis, rates, limits, and asset grain; `.vault/research/2026-08-23-amortization-casilla-grounding-research.md`.
 - [ ] `W03.P10.S57` - determine whether asset amortization is a direct filing source or a duplicate of transaction-ledger expenses; `.vault/adr/2026-08-22-amortization-casilla-mapping-adr.md`.
 - [ ] `W03.P10.S58` - determine whether finca amortization shares or requires a distinct source contract; `.vault/adr/2026-08-22-amortization-casilla-mapping-adr.md`.
 - [ ] `W03.P10.S59` - decide grain, precedence, absence semantics, rounding, and override policy; `.vault/adr/2026-08-22-amortization-casilla-mapping-adr.md`.
