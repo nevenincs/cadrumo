@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:ca7dc9ad9093207270491e66dc2912882219e25c8bf5cef495eab8db8d529e4e'
+body_hash: 'sha256:fb9c3a71834a6ebb78b15b17a955f6dc0870c30241ac2fea548aa0b7b5b626d4'
 related:
   - "[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-adr]]"
   - "[[2026-08-23-issue-620-external-pdf-signal-plan]]"
@@ -98,5 +98,7 @@ matrix. The focused candidate-contract, matrix, and M130 boundary modules pass
 
 ## Recommendations
 
-Both medium findings are resolved. No critical or high finding remains, and no
-live-network dependency or additional official PDF bytes were introduced.
+Final status: both MEDIUM findings are resolved and independently re-reviewed.
+No open actionable finding remains at any severity. No live-network dependency
+or additional official PDF bytes were introduced, and the closing focused gate
+passes all 63 authority-contract and parser tests.

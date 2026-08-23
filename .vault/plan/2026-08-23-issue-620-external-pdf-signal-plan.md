@@ -11,7 +11,7 @@ related:
   - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-adr]]'
 modified: '2026-08-23'
-body_hash: 'sha256:e375c20781711cc2034a093bfc3dce9aea164d00fe91396940e469e13343063d'
+body_hash: 'sha256:f1992ce0a83c61a656f056c18827ed35e71ff9ce0bcd630aa5c8f1dac1b45951'
 ---
 
 # `issue-620-external-pdf-signal` plan
@@ -38,7 +38,7 @@ The accepted real-render verification decision requires render-dependent claims 
 - [x] `S12` - Adjudicate all ten candidates against pinned official bases and registry applicability; `src/cadrumo/tests/fixtures/external_layout_candidates/{036,130,131,303,349}/*.json`.
 - [x] `S13` - Correct cross-model outcomes to select applicable revisions or refuse current-form alignment; `src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py`.
 - [x] `S14` - Verify authority adjudication through only the affected registry and parser unit modules; `src/cadrumo/tests/fixtures/external_layout_candidates/tests/; src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py`.
-- [ ] `S15` - Run fresh review, feature-surface gates, and close issue 620 with the candidate verdict matrix; `.vault/audit/; .vault/exec/; GitHub issue #620`.
+- [x] `S15` - Run fresh review, feature-surface gates, and close issue 620 with the candidate verdict matrix; `.vault/audit/; .vault/exec/; GitHub issue #620`.
 - [x] `S16` - Resolve review findings by locking official evidence coordinates and physical counterpart digests; `src/cadrumo/tests/fixtures/external_layout_candidates/__init__.py; src/cadrumo/tests/fixtures/external_layout_candidates/tests/test_candidate_contract.py; .vault/audit/2026-08-23-issue-620-external-pdf-signal-authority-adjudication-final-review-audit.md`.
 
 ## Parallelization
