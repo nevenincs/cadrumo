@@ -302,8 +302,9 @@ class CallerOverrideDisposition(StrEnum):
     The override disposition axis of the caller-override precedence ladder.
 
     Members:
-        LOCK: Deterministic bucket-owned resolvers (the ledger aggregations and
-            the invoice families). A caller override is REJECTED so the persisted
+        LOCK: Deterministic bucket-owned resolvers (ledger aggregations,
+            invoice families, inventory projection, and other complete source
+            authorities). A caller override is REJECTED so the persisted
             revision faithfully reflects the sources it aggregates.
         CARRY: Carry-style sources (previous_filing, relation_prefill, the
             IVA-compensation annual partition, and prorrata regularizacion).
@@ -354,6 +355,7 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
                 BindingSourceKind.COLLECTIBLE_INVOICE,
                 BindingSourceKind.PAYABLE_INVOICE,
                 BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
+                BindingSourceKind.INVENTORY,
             },
         ),
         disposition=CallerOverrideDisposition.LOCK,

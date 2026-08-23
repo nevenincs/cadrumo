@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:69970157eef01636c514c86438ec8f08a3c56a5257bad2087468965e5f4c2799'
+body_hash: 'sha256:a8d5e3ae204f0693acbd24f7ed35cc3471a2ca3abcfd6fee65a26e35782de6b0'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -152,7 +152,7 @@ Add inventory to the canonical taxonomy and resolution mesh without bypassing se
 - [x] `W02.P07.S39` - implement inventory repository resolution, diagnostics, source identity, and fingerprint provenance; `src/cadrumo/application/aggregation/_inventory.py`.
 - [x] `W02.P07.S40` - enroll the inventory resolver and explicit source disposition; `src/cadrumo/application/aggregation/_source_mesh.py`.
 - [x] `W02.P07.S41` - supply the encrypted inventory repository through calculation orchestration; `src/cadrumo/application/modelo/_calculation_actions.py`.
-- [ ] `W02.P07.S42` - enforce inventory source ownership and caller-override refusal; `src/cadrumo/application/modelo/_calculate_input.py`.
+- [x] `W02.P07.S42` - enforce inventory source ownership and caller-override refusal; `src/cadrumo/application/modelo/_calculate_input.py`.
 
 ### Phase `W02.P08` - bind inventory into the legal registry
 
