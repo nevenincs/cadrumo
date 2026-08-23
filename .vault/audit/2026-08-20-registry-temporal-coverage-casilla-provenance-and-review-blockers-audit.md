@@ -4729,3 +4729,54 @@ accounting identity could not be expressed here even if something were willing t
 ### Scale
 
 **10106 of 11570 slots remain** across 102 numbered records; 1464 modelled, zero orphaned.
+
+## 2026-08-23 — T22003D02, closing the aseguradoras balance sheet
+
+### What landed
+
+Record **T22003D02** — the aseguradoras *patrimonio neto*, closing on `00232` TOTAL
+PATRIMONIO NETO and `00233` TOTAL PASIVO Y PATRIMONIO NETO. **36 casillas**, revision
+1630 → **1666**, thirty-two of 137 records.
+
+**The aseguradoras balance sheet is now complete**: pages 3A and 3B the activo, 3C the
+pasivo, 3D the patrimonio neto.
+
+Suite: identical to the clean baseline, **zero regressions**.
+
+### AEAT abbreviates a parent on one child and not its sibling
+
+`00219` reads `Resultados de ejercicios anteriores atribuidos a la sociedad dominante.
+Remanente`; `00220` reads `Resultados de ejercicios anteriores. (Resultados negativos …)` —
+the same concept, written short.
+
+**The short form is not a standalone box of this record**, so it stays *inside the leaf
+label* rather than being promoted to a heading it never was. My first attempt at the
+translation table did promote it — and the unmapped-parent assertion refused, which is how
+the question got asked at all.
+
+Expanding it to match the sibling would be a guess that two lines AEAT wrote differently
+mean the same thing. Same refusal as T22005A01's flat authoring and the unparented `00701`
+/ `00761`.
+
+### The registry was red on the first load and green on the second
+
+3569 failures, every one in modelo 200 revision 2024, while a peer's revision rename and
+export-layout work was landing. The immediate re-run loaded clean.
+
+**Fourth iteration in a row where re-running before diagnosing was the whole diagnosis.**
+Two of those four would have cost an hour of investigation each if the first reading had
+been taken as fact.
+
+### The accounting identity is now expressible, and still not expressed
+
+`00162` TOTAL ACTIVO and `00233` TOTAL PASIVO Y PATRIMONIO NETO are both declared, and
+**nothing relates them**. Authoring all four pages made the check possible; it did not make
+it exist.
+
+That is worth restating each time it changes state, because "the balance sheet is complete"
+is exactly the sentence a reader will shorten to "the balance sheet balances."
+
+### Scale
+
+**10070 of 11570 slots remain** across 101 numbered records; 1500 modelled, zero orphaned.
+The general-PGC balance is complete; the crédito one — A01, A11, B01, C01 — is not.
