@@ -11,6 +11,8 @@ related:
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
   - '[[2026-08-13-cli-action-envelope-successor-adr]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-keychain-free-cross-process-machine-operation-research]]'
+  - '[[2026-08-13-profile-session-lifecycle-successor-adr]]'
+  - '[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]'
 ---
 # `cli-machine-secret-channel-unification` adr: `Uniform explicit machine-secret channels for every scalar-secret CLI verb` | (**status:** `accepted`)
 

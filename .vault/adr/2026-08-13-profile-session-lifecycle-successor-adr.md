@@ -5,9 +5,10 @@ tags:
 date: '2026-08-13'
 related:
   - "[[2026-08-13-profile-password-custody-research]]"
+  - '[[2026-08-13-profile-password-custody-rollup-adr]]'
 supersedes:
   - '2026-07-24-profile-login-session-adr'
-modified: '2026-08-13'
+modified: '2026-08-23'
 body_schema: 'body-v1'
 body_hash: 'sha256:abfdc5fa64ab60145e483fadb133dec2c243c1866653c4e13ca3ad052509e5d8'
 ---

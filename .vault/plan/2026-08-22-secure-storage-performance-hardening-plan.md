@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:9e16423e109e198fc6e75dc9348cfb1c25780cace6e85411edbec7d4103b18f2'
+body_hash: 'sha256:98c1983aa00f7045ca501836f1e35a2bf423e247fcb6bf7c21a313e791c9ca5d'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -80,7 +80,7 @@ Convert the complete CLI to the shared demand-loaded registration shape.
 - [x] `W02.P04.S13` - Convert the complete config subtree from eager registrar imports to nested loader references; `src/cadrumo/entrypoints/cli/_config/`.
 - [x] `W02.P04.S15` - Keep distributed CommandSpec modules import-light by splitting heavyweight handler payload and schema implementations behind owned lazy public targets while retaining all structural declarations in production specs; `src/cadrumo/entrypoints/cli/`.
 - [x] `W02.P04.S16` - Replace hidden first-party function-local coupling with owned lazy public handler and schema boundaries referenced only by CommandSpec targets; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W02.P04.S17` - Require every current and future CLI root, group, and leaf to be declared exactly once through CommandSpec with no decorator, registrar, callback-metadata, generated-resource, or path-catalogue escape hatch; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
+- [x] `W02.P04.S17` - Require every current and future CLI root, group, and leaf to be declared exactly once through CommandSpec with no decorator, registrar, callback-metadata, generated-resource, or path-catalogue escape hatch; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
 
 ### Phase `W02.P05` - Lazy public application and configuration boundaries
 

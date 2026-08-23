@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
+modified: '2026-08-23'
+body_hash: 'sha256:6033b8032ea47999466ff32c37876779880ace2d1eac54770738c3a84eb4a369'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -17,8 +19,6 @@ related:
   - '[[2026-08-13-recovery-mnemonic-presentation-successor-adr]]'
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
-modified: '2026-08-18'
-body_hash: 'sha256:e82f08a155145408145420ad4e92a178e84c095f7e511b9ba0b0d22ee83463f9'
 ---
 
 # `profile-password-custody` plan
@@ -140,6 +140,7 @@ Expose canonical profile verbs and secret channels through typed action envelope
 - [x] `W03.P06.S194` - Have Terra XHigh stop the two advisory paths that refuse or crash on states an operator legitimately passes through, the manager overview projecting a taxpayer classification without guarding the validation error a half-entered non-resident record raises so declaring non-residency before a country crashes the screen and blocks that onboarding outright, and the descendants advisory embedding an executable invocation in a notice message where the envelope contract admits one only through its typed action projection; `src/cadrumo/entrypoints/cli/_config/_status_frontend.py and src/cadrumo/application/wizard/_commands.py`.
 - [ ] `W03.P06.S195` - Have Sol Medium confirm the restored setup-incomplete anti-tautology case green once the registry authority loads again, since that single case is the only one in its module that builds a real calendar and therefore the only one that needs the authority, it has never been observed passing while the concurrent authority-grade sweep leaves the registry refusing tree-wide, and an anti-tautology case never seen to pass is not yet evidence of anything; `src/cadrumo/entrypoints/cli/tests/test_profile_setup_incomplete_surface.py`.
 - [x] `W03.P06.S201` - Have Sol Medium rule whether a refusal message may be keyed on a field inside one exception class, since the four distinct profile-custody refusal reasons all resolve to a single shared sentence because the error registry keys by exception class alone, so the specific cause and its recovery guidance reach the operator only as structured context and never as differentiated prose, and no existing registry entry keys on an inner field so this is a design question rather than a missing catalogue value; `src/cadrumo/core/errors/registry/ and src/cadrumo/adapters/persistence/storage/custody/_errors.py`.
+- [ ] `W03.P06.S209` - Have Terra XHigh reproduce and resolve the WSL supervised-KDF inherited-PTY attestation refusal that prevents the full machine-secret CLI subprocess matrix from reaching dispatch, preserve strict worker isolation without bypasses or weaker fallback, and add a WSL runtime gate proving all five leaf descriptor channels, both restore variants, root authentication, and cross-scope collision semantics; `src/cadrumo/adapters/persistence/storage/custody KDF supervision and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 
 ## Wave `W04` - retire superseded custody
 

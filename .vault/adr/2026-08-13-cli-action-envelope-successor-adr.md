@@ -4,13 +4,15 @@ tags:
   - "#cli-action-envelope"
 date: '2026-08-13'
 related:
-  - "[[2026-08-13-profile-password-custody-research]]"
+  - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
+  - '[[2026-08-13-profile-password-custody-rollup-adr]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
 supersedes:
   - '2026-07-15-cli-authority-verb-conformance-adr'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:6b8f8b1f5f092f7fc337ec29c856a0b6d412a1bfef62d53411bac06b56827de8'
+body_hash: 'sha256:e68a82ad674f9eeff69cfc6a964e3713faa8f167eaf8282e6109ffb208128407'
 ---
 # `cli-action-envelope` adr: `profile custody action envelope grammar` | (**status:** `accepted`)
 
@@ -34,7 +36,7 @@ Entrypoints render typed application outcomes and cannot infer storage backend, 
 
 ## Implementation
 
-The canonical commands are `aeat config profile restore`, `aeat config profile restore-recover`, and `aeat config profile delete`. The existing action-envelope hardening ADR owns request/result schema, action-chain resolution, refusal rendering, output formats, and authority checks. The custody roll-up owns operation semantics; `2026-08-23-cli-machine-secret-channel-unification-adr` owns scalar-secret transport requirements. This successor owns only their command-tree mapping and delegation boundary.
+The canonical commands are `aeat config profile restore` and `aeat config profile delete`; `restore --artifact` selects the explicit recovery-artifact proof door without creating a sibling command. The existing action-envelope hardening ADR owns request/result schema, action-chain resolution, refusal rendering, output formats, and authority checks. The custody roll-up owns operation semantics; `2026-08-23-cli-machine-secret-channel-unification-adr` owns scalar-secret transport requirements. This successor owns only their command-tree mapping and delegation boundary.
 
 ## Rationale
 
@@ -44,4 +46,3 @@ Delegation preserves one CLI envelope authority while removing backend-shaped co
 
 Future custody verbs must extend the existing action-envelope schema before exposure; they cannot introduce a parallel envelope.
 
-2026-08-18 amendment (campaign-close proof, S24): the canonical verb is `restore --artifact`, not `restore-recover`; the composite spelling was retired before shipping.
