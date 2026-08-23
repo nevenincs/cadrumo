@@ -1,0 +1,1195 @@
+# Modelo 220 RECORD T22012B10 -- deducciones por doble imposicion: interna bajo el
+# RDLEG 4/2004, interna bajo la DT 23a LIS, internacional bajo el RDLEG 4/2004,
+# internacional bajo la LIS.
+#
+# 186 casillas, EVERY ONE carrying a real AEAT box number. The record is a numbered
+# grid: each money cell is a 17-position amount at the intersection of a deduction
+# family, a generation scope and a settlement column, and AEAT numbers every cell
+# separately. There is no repetition to collapse and no field without a number.
+#
+# AEAT REUSES BOX NUMBERS ACROSS RECORDS, so this modelo is MULTI-SEGMENT. Number 00285
+# is a different declared cell in T22012B10 than it is in T22012000, T22012B00, T22012B20, and the two records
+# share many such numbers. Every casilla here therefore declares `segmento` and takes the
+# `<SEGMENTO>:<number>` id shape, which is the convention modelo 200 -- the other
+# multi-record Sociedades declaration -- already established. Both halves of the id are
+# TRANSCRIBED from AEAT: its record name and its box number. Nothing is derived.
+#
+# THAT SHAPE REPLACED A DERIVED ONE, and the reason is worth keeping. The first version
+# of these fragments minted ids from a four-axis decomposition of the field descriptions
+# (family, group, scope, column). It survived three checks -- nothing unresolved, no
+# duplicate key within a record, no duplicate key across records once a record segment
+# was added -- and each check caught a real defect: a missing group axis collided
+# nineteen numbers, a missing "Total periodos anteriores" scope collided four more and
+# mislabelled five. But the loader then refused the result, because the modelo needs
+# `segmento` regardless, and an established convention already existed for exactly this.
+# A derived id that passes every check you thought of is still worse than a transcribed
+# one, and re-implementing a convention the registry already has is a defect in itself.
+#
+# THE DECOMPOSITION SURVIVES WHERE IT IS ACTUALLY NEEDED: the casilla LABELS. Those must
+# say what a cell means in four languages, and are composed from the four checked axes
+# rather than from free text, so a label can only be wrong if one of four small
+# vocabularies is wrong.
+#
+# WHAT THE SEGMENTO DOES *NOT* ASSERT: the design gives NO textual distinction between
+# these grids beyond the record each sits in. Nothing in the field descriptions says what
+# "B00" scopes differently from "000", so the segmento records AEAT's own record
+# identifier and claims nothing more.
+#
+# AEAT MISSPELLS ITS OWN SECTION HEADING FOUR WAYS across these records -- "RDLEG
+# 4/2004", "RDLEG4/2004", "RDL 4/2004", "RDLRG 4/2004" -- and truncates column labels
+# ("licado en esta liquidacion"). All are matched deliberately so the decomposition
+# reflects what the design says; the casilla labels use the corrected form, because a
+# label is read by an operator while the match is read against AEAT.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22012B10 tiles
+# 1..3240 exactly once with NO gap and NO PARTIAL OVERLAP, both checked, and every
+# number, offset, length and type below was read from its own field description.
+#
+# NOT MODELLED, deliberately: the modelo and pagina identifier envelope, the
+# pagina-complementaria mechanics, the "RESERVADO PARA LA ADMINISTRACION" run and the
+# end-of-record marker. None is filer-supplied.
+#
+# NOT CLAIMED: these casillas DECLARE the deduction grid; none of them computes it. No
+# formula, construct or binding is attached, so nothing reconciles a carried-forward
+# deduction against the amount applied. The revision carries no export layout.
+
+# @35+17. Deducciones individuales pendientes de aplicar al incorporarse al grupo o, en su caso, al grupo previo (art. 71).INCN y cuota íntegra. Cuota íntegra de la entidad teniendo en cuenta eliminaciones e incorporaciones .
+[[revisions."2024".casillas]]
+id = "T22012B10:01233"
+number = "01233"
+segmento = "T22012B10"
+section = ["liquidacion", "deducciones_individuales_art_71"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @52+17. Deducciones individuales pendientes de aplicar al incorporarse al grupo o, en su caso, al grupo previo (art. 71).INCN y cuota íntegra. Incremento por incumplimiento reserva de nivelación (art. 105.6 LIS)
+[[revisions."2024".casillas]]
+id = "T22012B10:01234"
+number = "01234"
+segmento = "T22012B10"
+section = ["liquidacion", "deducciones_individuales_art_71"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @69+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. 2008
+[[revisions."2024".casillas]]
+id = "T22012B10:01354"
+number = "01354"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @86/1702+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2008
+[[revisions."2024".casillas]]
+id = "T22012B10:00021"
+number = "00021"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @92+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2008
+[[revisions."2024".casillas]]
+id = "T22012B10:01355"
+number = "01355"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @109+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2008
+[[revisions."2024".casillas]]
+id = "T22012B10:01356"
+number = "01356"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @126+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2008
+[[revisions."2024".casillas]]
+id = "T22012B10:02044"
+number = "02044"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @143+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. 2009
+[[revisions."2024".casillas]]
+id = "T22012B10:01358"
+number = "01358"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @160/1776+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2009
+[[revisions."2024".casillas]]
+id = "T22012B10:00027"
+number = "00027"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @166+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2009
+[[revisions."2024".casillas]]
+id = "T22012B10:01359"
+number = "01359"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @183+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2009
+[[revisions."2024".casillas]]
+id = "T22012B10:01360"
+number = "01360"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @200+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2009
+[[revisions."2024".casillas]]
+id = "T22012B10:01361"
+number = "01361"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @217+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDL 4/2004. Deducción pendiente. Ejercicio de generación. 2010
+[[revisions."2024".casillas]]
+id = "T22012B10:01362"
+number = "01362"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @234/1850+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2010
+[[revisions."2024".casillas]]
+id = "T22012B10:00033"
+number = "00033"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @240+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2010
+[[revisions."2024".casillas]]
+id = "T22012B10:01363"
+number = "01363"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @257+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2010
+[[revisions."2024".casillas]]
+id = "T22012B10:01364"
+number = "01364"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @274+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2010
+[[revisions."2024".casillas]]
+id = "T22012B10:01365"
+number = "01365"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @291+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. 2011
+[[revisions."2024".casillas]]
+id = "T22012B10:01366"
+number = "01366"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @308/1924+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2011
+[[revisions."2024".casillas]]
+id = "T22012B10:00039"
+number = "00039"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @314+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2011
+[[revisions."2024".casillas]]
+id = "T22012B10:01367"
+number = "01367"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @331+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2011
+[[revisions."2024".casillas]]
+id = "T22012B10:01368"
+number = "01368"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @348+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2011
+[[revisions."2024".casillas]]
+id = "T22012B10:01369"
+number = "01369"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @365+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. 2012
+[[revisions."2024".casillas]]
+id = "T22012B10:01370"
+number = "01370"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @382/1998+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2012
+[[revisions."2024".casillas]]
+id = "T22012B10:00045"
+number = "00045"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @388+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2012
+[[revisions."2024".casillas]]
+id = "T22012B10:01371"
+number = "01371"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @405+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2012
+[[revisions."2024".casillas]]
+id = "T22012B10:01372"
+number = "01372"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @422+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2012
+[[revisions."2024".casillas]]
+id = "T22012B10:01373"
+number = "01373"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @439+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. 2013
+[[revisions."2024".casillas]]
+id = "T22012B10:01374"
+number = "01374"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @456/2072+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2013
+[[revisions."2024".casillas]]
+id = "T22012B10:00051"
+number = "00051"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @462+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2013
+[[revisions."2024".casillas]]
+id = "T22012B10:01375"
+number = "01375"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @479+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2013
+[[revisions."2024".casillas]]
+id = "T22012B10:01376"
+number = "01376"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @496+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2013
+[[revisions."2024".casillas]]
+id = "T22012B10:01377"
+number = "01377"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @513+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. 2014
+[[revisions."2024".casillas]]
+id = "T22012B10:01378"
+number = "01378"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @530/2146+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2014
+[[revisions."2024".casillas]]
+id = "T22012B10:00599"
+number = "00599"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @536+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2014
+[[revisions."2024".casillas]]
+id = "T22012B10:01379"
+number = "01379"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @553+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2014
+[[revisions."2024".casillas]]
+id = "T22012B10:01380"
+number = "01380"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @570+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2014
+[[revisions."2024".casillas]]
+id = "T22012B10:01381"
+number = "01381"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @587+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. Total períodos anteriores
+[[revisions."2024".casillas]]
+id = "T22012B10:01382"
+number = "01382"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @604+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. Total períodos anteriores
+[[revisions."2024".casillas]]
+id = "T22012B10:01383"
+number = "01383"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @621+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. Total períodos anteriores
+[[revisions."2024".casillas]]
+id = "T22012B10:01384"
+number = "01384"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @638+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. Total períodos anteriores
+[[revisions."2024".casillas]]
+id = "T22012B10:01385"
+number = "01385"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @655+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2015. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:02045"
+number = "02045"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @672/2288+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2015. Tipo gravamen período generación
+[[revisions."2024".casillas]]
+id = "T22012B10:00692"
+number = "00692"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @678+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2015. 2024: deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:02046"
+number = "02046"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @695+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2015. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "T22012B10:02047"
+number = "02047"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @712+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2015. Pendiente de aplicación en ejerc. futuros
+[[revisions."2024".casillas]]
+id = "T22012B10:02048"
+number = "02048"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @729+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2016. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:02049"
+number = "02049"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @746/2362+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2016. Tipo gravamen período generación
+[[revisions."2024".casillas]]
+id = "T22012B10:00506"
+number = "00506"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @752+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2016. 2024: deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:00520"
+number = "00520"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @769+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2016. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "T22012B10:00521"
+number = "00521"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @786+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2016. Pendiente de aplicación en ejerc. futuros
+[[revisions."2024".casillas]]
+id = "T22012B10:00522"
+number = "00522"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @803+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2017. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:00338"
+number = "00338"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @820/2436+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2017. Tipo gravamen período generación
+[[revisions."2024".casillas]]
+id = "T22012B10:00339"
+number = "00339"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @826+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2017. 2024: deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:00340"
+number = "00340"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @843+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2017. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "T22012B10:00341"
+number = "00341"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @860+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2017. Pendiente de aplicación en ejerc. futuros
+[[revisions."2024".casillas]]
+id = "T22012B10:00342"
+number = "00342"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @877+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2018. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:03411"
+number = "03411"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @894/2510+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2018. Tipo gravamen período generación
+[[revisions."2024".casillas]]
+id = "T22012B10:02259"
+number = "02259"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @900+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2018. 2024: deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:03412"
+number = "03412"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @917+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2018. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "T22012B10:03413"
+number = "03413"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @934+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2018. Pendiente de aplicación en ejerc. futuros
+[[revisions."2024".casillas]]
+id = "T22012B10:03414"
+number = "03414"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @951+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2019. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:01235"
+number = "01235"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @968/2584+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2019. Tipo gravamen período generación
+[[revisions."2024".casillas]]
+id = "T22012B10:02257"
+number = "02257"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @974+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2019. 2024: deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:01236"
+number = "01236"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @991+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2019. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "T22012B10:01237"
+number = "01237"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1008+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2019. Pendiente de aplicación en ejerc. futuros
+[[revisions."2024".casillas]]
+id = "T22012B10:01238"
+number = "01238"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1025+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2020. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:04027"
+number = "04027"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1042/2658+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2020. Tipo gravamen período generación
+[[revisions."2024".casillas]]
+id = "T22012B10:04028"
+number = "04028"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1048+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2020. 2024: deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:04029"
+number = "04029"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1065+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2020. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "T22012B10:04030"
+number = "04030"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1082+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2020. Pendiente de aplicación en ejerc. futuros
+[[revisions."2024".casillas]]
+id = "T22012B10:04031"
+number = "04031"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1099+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2021. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:04528"
+number = "04528"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1116/2732+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2021. Tipo gravamen período generación
+[[revisions."2024".casillas]]
+id = "T22012B10:00805"
+number = "00805"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1122+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2021. 2024: deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:04529"
+number = "04529"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1139+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2021. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "T22012B10:04530"
+number = "04530"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1156+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2021. Pendiente de aplicación en ejerc. futuros
+[[revisions."2024".casillas]]
+id = "T22012B10:04531"
+number = "04531"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1173+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2022. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:06138"
+number = "06138"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1190/2806+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2022. Tipo gravamen período generación
+[[revisions."2024".casillas]]
+id = "T22012B10:06139"
+number = "06139"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1196+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2022. : 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:06140"
+number = "06140"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1213+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2022. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "T22012B10:06141"
+number = "06141"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1230+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2022. Pendiente de aplicación en ejerc. futuros
+[[revisions."2024".casillas]]
+id = "T22012B10:06142"
+number = "06142"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1247+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2023. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:02159"
+number = "02159"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1264/2880+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2023. Tipo gravamen período generación
+[[revisions."2024".casillas]]
+id = "T22012B10:02160"
+number = "02160"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1270+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2023. : 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:02161"
+number = "02161"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1287+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2023. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "T22012B10:02196"
+number = "02196"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1304+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. periodos anteriores. DI interna 2023. Pendiente de aplicación en periodos futuros
+[[revisions."2024".casillas]]
+id = "T22012B10:02197"
+number = "02197"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1321+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2024(*). Deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:02875"
+number = "02875"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1338/2954+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc anteriores. DI interna 2024(*). Tipo gravamen período generación
+[[revisions."2024".casillas]]
+id = "T22012B10:02876"
+number = "02876"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1344+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2024(*). : 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:02877"
+number = "02877"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1361+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2024(*). Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "T22012B10:02878"
+number = "02878"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1378+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2024(*). Pendiente de aplicación en ejerc. futuros
+[[revisions."2024".casillas]]
+id = "T22012B10:02879"
+number = "02879"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1395+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. Total. Deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:00523"
+number = "00523"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1412+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. Total. : 2024 deducción pendiente
+[[revisions."2024".casillas]]
+id = "T22012B10:00524"
+number = "00524"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1429+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. Total. Aplicado en esta liquidación
+[[revisions."2024".casillas]]
+id = "T22012B10:00525"
+number = "00525"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1446+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. Total. Pendiente de aplicación en periodos. futuros
+[[revisions."2024".casillas]]
+id = "T22012B10:00526"
+number = "00526"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
