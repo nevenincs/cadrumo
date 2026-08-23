@@ -3491,6 +3491,63 @@ modelo:
               label: Deduccions per doble imposicio internacional, LIS. doble imposicio
                 interna, periodes anteriors. doble imposicio de 2022. pendent d'aplicacio
                 en periodes futurs (registre T22012B20)
+            x-agp34c1h6l0j0c1q60o3ae1l:
+              label: Deduccions per reinversio. Total. Deduccio aplicada en l'exercici
+            x-agp34c1h6l0j0c1q60o3gd1h:
+              label: Deduccions per reinversio. Resultat de l'autoliquidacio. Total.
+                Deduccio pendent d'aplicar a l'inici de l'exercici
+            x-agp34c1h6l0j0c1q60o3gd1j:
+              label: Deduccions per reinversio. Total. Deduccio pendent d'aplicar
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e64r2qchk:
+              label: Deduccions per reinversio. N.I.F. de l'entitat que obte el resultat
+                per transmissio de l'actiu
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e68qiqcpi:
+              label: Deduccions per reinversio. Data de la transmissio (AAAAMMDD)
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6cpiqd1h:
+              label: Deduccions per reinversio. N.I.F. de l'entitat que reinverteix
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6gp2qd1p:
+              label: Deduccions per reinversio. Data de la reinversio (AAAAMMDD)
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6ko2qd9j:
+              label: Deduccions per reinversio. Exercici de generacio de la deduccio
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6kq2qdpg:
+              label: Deduccions per reinversio. Deduccio pendent d'aplicar a l'inici
+                del periode o deduccio generada en el periode
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6soiqe1n:
+              label: Deduccions per reinversio. Deduccio aplicada en el periode
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e70s2qc9g6g:
+              label: Deduccions per reinversio. Deduccio pendent d'aplicacio
+            x-agp34c1h6l130c1q60o38dhp:
+              label: Deduccio per inversio de beneficis (DT 24.5 LIS i art. 37 TRLIS).
+                Art. 37 LIS. Total. Deduccio pendent d'aplicar a l'inici de l'exercici
+                o deduccio generada en l'exercici
+            x-agp34c1h6l130c1q60o38dpg:
+              label: Deduccio per inversio de beneficis (DT 24.5 LIS i art. 37 TRLIS).
+                Art. 37 LIS. Total. Deduccio aplicada en l'exercici
+            x-agp34c1h6l130c1q60o38dph:
+              label: Deduccio per inversio de beneficis (DT 24.5 LIS i art. 37 TRLIS).
+                Art. 37 LIS. Total. Deduccio pendent d'aplicacio
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e64r2qchk:
+              label: Deduccio per inversio de beneficis (DT 24.5 LIS i art. 37 TRLIS).
+                N.I.F. de l'entitat que inverteix
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e68qiqcpj:
+              label: Deduccio per inversio de beneficis (DT 24.5 LIS i art. 37 TRLIS).
+                N.I.F. de l'entitat que dota la reserva
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6cq2qd1h:
+              label: Deduccio per inversio de beneficis (DT 24.5 LIS i art. 37 TRLIS).
+                Data de la inversio (AAAAMMDD)
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6gp2qd1l:
+              label: Deduccio per inversio de beneficis (DT 24.5 LIS i art. 37 TRLIS).
+                Exercici de la generacio de la deduccio
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6gr2qdhi:
+              label: Deduccio per inversio de beneficis (DT 24.5 LIS i art. 37 TRLIS).
+                Deduccio pendent d'aplicar a l'inici del periode o deduccio generada
+                en el periode
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6opiqdpp:
+              label: Deduccio per inversio de beneficis (DT 24.5 LIS i art. 37 TRLIS).
+                Deduccio aplicada en el periode
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e70o2qe9m:
+              label: Deduccio per inversio de beneficis (DT 24.5 LIS i art. 37 TRLIS).
+                Deduccio pendent d'aplicacio
             x-agp34c1h6oo30c1q60o30d9i:
               label: Repartiment entre Administracions forals. Total. Araba
             x-agp34c1h6oo30c1q60o30d9j:

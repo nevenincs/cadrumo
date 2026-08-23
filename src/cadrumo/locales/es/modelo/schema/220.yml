@@ -3596,6 +3596,64 @@ modelo:
               label: Deducciones por doble imposicion internacional, LIS. doble imposicion
                 interna, periodos anteriores. doble imposicion de 2022. pendiente
                 de aplicacion en periodos futuros (registro T22012B20)
+            x-agp34c1h6l0j0c1q60o3ae1l:
+              label: Deducciones por reinversion. Total. Deduccion aplicada en el
+                ejercicio
+            x-agp34c1h6l0j0c1q60o3gd1h:
+              label: Deducciones por reinversion. Resultado de la autoliquidacion.
+                Total. Deduccion pendiente de aplicar al inicio del ejercicio
+            x-agp34c1h6l0j0c1q60o3gd1j:
+              label: Deducciones por reinversion. Total. Deduccion pendiente de aplicar
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e64r2qchk:
+              label: Deducciones por reinversion. N.I.F. de la entidad que obtiene
+                el resultado por transmision del activo
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e68qiqcpi:
+              label: Deducciones por reinversion. Fecha de la transmision (AAAAMMDD)
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6cpiqd1h:
+              label: Deducciones por reinversion. N.I.F. de la entidad que reinvierte
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6gp2qd1p:
+              label: Deducciones por reinversion. Fecha de la reinversion (AAAAMMDD)
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6ko2qd9j:
+              label: Deducciones por reinversion. Ejercicio de generacion de la deduccion
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6kq2qdpg:
+              label: Deducciones por reinversion. Deduccion pendiente de aplicar al
+                inicio del periodo o deduccion generada en el periodo
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6soiqe1n:
+              label: Deducciones por reinversion. Deduccion aplicada en el periodo
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e70s2qc9g6g:
+              label: Deducciones por reinversion. Deduccion pendiente de aplicacion
+            x-agp34c1h6l130c1q60o38dhp:
+              label: Deduccion por inversion de beneficios (DT 24.5 LIS y art. 37
+                TRLIS). Art. 37 LIS. Total. Deduccion pendiente de aplicar al inicio
+                del ejercicio o deduccion generada en el ejercicio
+            x-agp34c1h6l130c1q60o38dpg:
+              label: Deduccion por inversion de beneficios (DT 24.5 LIS y art. 37
+                TRLIS). Art. 37 LIS. Total. Deduccion aplicada en el ejercicio
+            x-agp34c1h6l130c1q60o38dph:
+              label: Deduccion por inversion de beneficios (DT 24.5 LIS y art. 37
+                TRLIS). Art. 37 LIS. Total. Deduccion pendiente de aplicacion
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e64r2qchk:
+              label: Deduccion por inversion de beneficios (DT 24.5 LIS y art. 37
+                TRLIS). N.I.F. de la entidad que invierte
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e68qiqcpj:
+              label: Deduccion por inversion de beneficios (DT 24.5 LIS y art. 37
+                TRLIS). N.I.F. de la entidad que dota la reserva
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6cq2qd1h:
+              label: Deduccion por inversion de beneficios (DT 24.5 LIS y art. 37
+                TRLIS). Fecha de la inversion (AAAAMMDD)
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6gp2qd1l:
+              label: Deduccion por inversion de beneficios (DT 24.5 LIS y art. 37
+                TRLIS). Ejercicio de la generacion de la deduccion
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6gr2qdhi:
+              label: Deduccion por inversion de beneficios (DT 24.5 LIS y art. 37
+                TRLIS). Deduccion pendiente de aplicar al inicio del periodo o deduccion
+                generada en el periodo
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6opiqdpp:
+              label: Deduccion por inversion de beneficios (DT 24.5 LIS y art. 37
+                TRLIS). Deduccion aplicada en el periodo
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e70o2qe9m:
+              label: Deduccion por inversion de beneficios (DT 24.5 LIS y art. 37
+                TRLIS). Deduccion pendiente de aplicacion
             x-agp34c1h6oo30c1q60o30d9i:
               label: Reparto entre Administraciones forales. Total. Araba
             x-agp34c1h6oo30c1q60o30d9j:

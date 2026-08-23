@@ -3441,6 +3441,71 @@ modelo:
               label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. belfoldi kettos
                 adoztatas, korabbi idoszakok. 2022. evi kettos adoztatas. jovobeli
                 idoszakokban ervenyesitheto (rekord T22012B20)
+            x-agp34c1h6l0j0c1q60o3ae1l:
+              label: Ujrabefekteteshez kapcsolodo levonasok. Osszesen. Az adoevben
+                ervenyesitett levonas
+            x-agp34c1h6l0j0c1q60o3gd1h:
+              label: Ujrabefekteteshez kapcsolodo levonasok. Az onadozas eredmenye.
+                Osszesen. Az adoev elejen fennallo levonas
+            x-agp34c1h6l0j0c1q60o3gd1j:
+              label: Ujrabefekteteshez kapcsolodo levonasok. Osszesen. Meg ervenyesitheto
+                levonas
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e64r2qchk:
+              label: Ujrabefekteteshez kapcsolodo levonasok. Az eszkoz atruhazasabol
+                eredmenyt szerzo entitas adoazonositoja
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e68qiqcpi:
+              label: Ujrabefekteteshez kapcsolodo levonasok. Az atruhazas datuma (EEEEHHNN)
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6cpiqd1h:
+              label: Ujrabefekteteshez kapcsolodo levonasok. Az ujrabefekteto entitas
+                adoazonositoja
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6gp2qd1p:
+              label: Ujrabefekteteshez kapcsolodo levonasok. Az ujrabefektetes datuma
+                (EEEEHHNN)
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6ko2qd9j:
+              label: Ujrabefekteteshez kapcsolodo levonasok. A levonas keletkezesenek
+                adoeve
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6kq2qdpg:
+              label: Ujrabefekteteshez kapcsolodo levonasok. Az idoszak elejen fennallo
+                vagy az idoszakban keletkezett levonas
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6soiqe1n:
+              label: Ujrabefekteteshez kapcsolodo levonasok. Az idoszakban ervenyesitett
+                levonas
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e70s2qc9g6g:
+              label: Ujrabefekteteshez kapcsolodo levonasok. Meg ervenyesitheto levonas
+            x-agp34c1h6l130c1q60o38dhp:
+              label: Nyereseg befektetesehez kapcsolodo levonas (LIS 24.5. atmeneti
+                rendelkezes es TRLIS 37. cikk). TRLIS 37. cikk. Osszesen. Az adoev
+                elejen fennallo vagy az adoevben keletkezett levonas
+            x-agp34c1h6l130c1q60o38dpg:
+              label: Nyereseg befektetesehez kapcsolodo levonas (LIS 24.5. atmeneti
+                rendelkezes es TRLIS 37. cikk). TRLIS 37. cikk. Osszesen. Az adoevben
+                ervenyesitett levonas
+            x-agp34c1h6l130c1q60o38dph:
+              label: Nyereseg befektetesehez kapcsolodo levonas (LIS 24.5. atmeneti
+                rendelkezes es TRLIS 37. cikk). TRLIS 37. cikk. Osszesen. Meg ervenyesitheto
+                levonas
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e64r2qchk:
+              label: Nyereseg befektetesehez kapcsolodo levonas (LIS 24.5. atmeneti
+                rendelkezes es TRLIS 37. cikk). A befekteto entitas adoazonositoja
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e68qiqcpj:
+              label: Nyereseg befektetesehez kapcsolodo levonas (LIS 24.5. atmeneti
+                rendelkezes es TRLIS 37. cikk). A tartalekot kepzo entitas adoazonositoja
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6cq2qd1h:
+              label: Nyereseg befektetesehez kapcsolodo levonas (LIS 24.5. atmeneti
+                rendelkezes es TRLIS 37. cikk). A befektetes datuma (EEEEHHNN)
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6gp2qd1l:
+              label: Nyereseg befektetesehez kapcsolodo levonas (LIS 24.5. atmeneti
+                rendelkezes es TRLIS 37. cikk). A levonas keletkezesenek adoeve
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6gr2qdhi:
+              label: Nyereseg befektetesehez kapcsolodo levonas (LIS 24.5. atmeneti
+                rendelkezes es TRLIS 37. cikk). Az idoszak elejen fennallo vagy az
+                idoszakban keletkezett levonas
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6opiqdpp:
+              label: Nyereseg befektetesehez kapcsolodo levonas (LIS 24.5. atmeneti
+                rendelkezes es TRLIS 37. cikk). Az idoszakban ervenyesitett levonas
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e70o2qe9m:
+              label: Nyereseg befektetesehez kapcsolodo levonas (LIS 24.5. atmeneti
+                rendelkezes es TRLIS 37. cikk). Meg ervenyesitheto levonas
             x-agp34c1h6oo30c1q60o30d9i:
               label: Felosztas a kulon jogallasu adohatosagok kozott. Osszesen. Araba
             x-agp34c1h6oo30c1q60o30d9j:

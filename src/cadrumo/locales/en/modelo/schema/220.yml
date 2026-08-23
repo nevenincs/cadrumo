@@ -3584,6 +3584,65 @@ modelo:
               label: Deductions for international double taxation, LIS. internal double
                 taxation, prior periods. double taxation of 2022. outstanding for
                 application in future periods (record T22012B20)
+            x-agp34c1h6l0j0c1q60o3ae1l:
+              label: Reinvestment deductions. Total. Deduction applied in the tax
+                year
+            x-agp34c1h6l0j0c1q60o3gd1h:
+              label: Reinvestment deductions. Result of the self-assessment. Total.
+                Deduction outstanding at the start of the tax year
+            x-agp34c1h6l0j0c1q60o3gd1j:
+              label: Reinvestment deductions. Total. Deduction still outstanding
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e64r2qchk:
+              label: Reinvestment deductions. Tax ID of the entity obtaining the gain
+                on the transfer of the asset
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e68qiqcpi:
+              label: Reinvestment deductions. Date of the transfer (YYYYMMDD)
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6cpiqd1h:
+              label: Reinvestment deductions. Tax ID of the reinvesting entity
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6gp2qd1p:
+              label: Reinvestment deductions. Date of the reinvestment (YYYYMMDD)
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6ko2qd9j:
+              label: Reinvestment deductions. Tax year in which the deduction arose
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6kq2qdpg:
+              label: Reinvestment deductions. Deduction outstanding at the start of
+                the period or deduction arising in the period
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e6soiqe1n:
+              label: Reinvestment deductions. Deduction applied in the period
+            x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e70s2qc9g6g:
+              label: Reinvestment deductions. Deduction still outstanding
+            x-agp34c1h6l130c1q60o38dhp:
+              label: Deduction for the investment of profits (transitional provision
+                24.5 LIS and art. 37 TRLIS). Art. 37 LIS. Total. Deduction outstanding
+                at the start of the tax year or deduction arising in the tax year
+            x-agp34c1h6l130c1q60o38dpg:
+              label: Deduction for the investment of profits (transitional provision
+                24.5 LIS and art. 37 TRLIS). Art. 37 LIS. Total. Deduction applied
+                in the tax year
+            x-agp34c1h6l130c1q60o38dph:
+              label: Deduction for the investment of profits (transitional provision
+                24.5 LIS and art. 37 TRLIS). Art. 37 LIS. Total. Deduction still outstanding
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e64r2qchk:
+              label: Deduction for the investment of profits (transitional provision
+                24.5 LIS and art. 37 TRLIS). Tax ID of the investing entity
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e68qiqcpj:
+              label: Deduction for the investment of profits (transitional provision
+                24.5 LIS and art. 37 TRLIS). Tax ID of the entity funding the reserve
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6cq2qd1h:
+              label: Deduction for the investment of profits (transitional provision
+                24.5 LIS and art. 37 TRLIS). Date of the investment (YYYYMMDD)
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6gp2qd1l:
+              label: Deduction for the investment of profits (transitional provision
+                24.5 LIS and art. 37 TRLIS). Tax year in which the deduction arose
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6gr2qdhi:
+              label: Deduction for the investment of profits (transitional provision
+                24.5 LIS and art. 37 TRLIS). Deduction outstanding at the start of
+                the period or deduction arising in the period
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e6opiqdpp:
+              label: Deduction for the investment of profits (transitional provision
+                24.5 LIS and art. 37 TRLIS). Deduction applied in the period
+            x-agp34c1h6l130c1qegp34c1h6lh30c1e70o2qe9m:
+              label: Deduction for the investment of profits (transitional provision
+                24.5 LIS and art. 37 TRLIS). Deduction still outstanding
             x-agp34c1h6oo30c1q60o30d9i:
               label: Allocation between chartered tax administrations. Total. Araba
             x-agp34c1h6oo30c1q60o30d9j:
