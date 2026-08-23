@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:3bc60594310f5df44d883aae2ec89c094e9cd83ee280d6da3baa396e08ead59b'
+body_hash: 'sha256:578d4f3d3dc7714b1030a26939314834708ad2a3f6ed03c9b37cb36c5541846d'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7101,3 +7101,41 @@ of them this domain. A peer is mid-authoring modelo 210 revision `2026-y-siguien
 UNTRACKED revision directory beside a modified `revision.toml` -- and every failure names that
 revision with unknown export fields. Registry work in flight, another campaign's, and the same
 in-flight pattern this document has now recorded four times.
+
+### Sweeping the "passes for the wrong reason" class: one more instance, in this campaign's own file
+
+Having fixed one guard that any refusal satisfied, the domain was swept for the same shape
+rather than assuming it was unique.
+
+*Negative resumability assertions* -- five sites assert `resumed is False` or
+`dek_length == 0`. Four are sound and needed no change: two are inside
+`_assert_no_resumable_material`, which already names the refusal as `ABSENT`; the other two are
+guarded by a POSITIVE precondition in the same test (`dek_length == 32` measured before the
+action), which is what makes the later zero meaningful. Only the fifth was weak, and it was
+the one already fixed. The defect was a single instance, and the module is otherwise
+disciplined about this.
+
+*Over-broad exception expectations* -- the sibling shape, since `pytest.raises(Exception)`
+also passes for any reason. Seven sites; the one worth changing was in THIS campaign's own
+`test_custody_lock_order.py`, the anti-tautology proof that a held lock refuses a second
+acquire. It caught bare `Exception` with a noqa explaining that the refusal type belonged to
+the primitive. That proof is the load-bearing half of the lock-order test -- it is what stops
+the ordering assertion being satisfied by a lock that never really locks -- and a missing
+parent directory, a typo in the leaf path, or an import error inside the primitive would each
+have satisfied it while proving nothing about exclusivity.
+
+The type was determined by OBSERVATION rather than by reading for a plausible candidate: a
+scratchpad probe took the lock twice and reported
+`ProfileCustodyRecordError("local custody lock cannot be exclusively opened")`. Narrowed to
+that type, imported through the custody package facade rather than its private `_errors`
+module. The noqa went with it, because B017 no longer applies once the type is named.
+
+Proven from outside the repo: a plugin let the first acquire run for real and made the second
+raise `ValueError`, and the narrowed form fails on it. The old form would have accepted it --
+that needs no measurement, since `ValueError` is an `Exception`; naming it as measured would
+be a claim I did not make.
+
+Left alone deliberately: four `pytest.raises(Exception) as refused` sites that bind the
+exception and assert on its value afterwards, where the breadth is closed by the later
+assertions, and two `pytest.raises(OSError)` sites which are already specific. Narrowing those
+would be churn, not a fix.

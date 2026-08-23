@@ -163,9 +163,16 @@ def test_the_probe_fails_when_the_profile_lock_is_genuinely_held(tmp_path: Path)
     target = _profile_lock_path(tmp_path)
     target.parent.mkdir(parents=True, exist_ok=True)
 
+    # The TYPE is named rather than accepting any exception. A bare
+    # `pytest.raises(Exception)` is satisfied by a missing parent directory, a
+    # typo in the leaf path, or an import error in the primitive -- every one of
+    # which would let this proof pass while proving nothing about exclusivity.
+    # Determined by observation, not assumption: the second acquire raises
+    # `ProfileCustodyRecordError("local custody lock cannot be exclusively
+    # opened")`.
     with (
         custody.profile_custody_local_lock(target, timeout_seconds=_PROBE_SECONDS),
-        pytest.raises(Exception),  # noqa: B017 - the refusal type is the primitive's own
+        pytest.raises(custody.ProfileCustodyRecordError),
         custody.profile_custody_local_lock(target, timeout_seconds=0.5),
     ):
         pass
