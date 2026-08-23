@@ -265,16 +265,18 @@ cli:
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
       inventory:
-        authority_invalid: A zárókészlet-hatósági objektum érvénytelen ehhez a készletfőkönyvhöz.
-        authority_channel_required: Pontosan egy strukturált zárókészlet-hatósági bemeneti csatornát válasszon.
-        authority_fd_help: A teljes zárókészlet-hatósági JSON beolvasása egyszer használatos fájlleíróból
-        authority_stdin_help: A teljes zárókészlet-hatósági JSON beolvasása stdinről
-        closing_authority_record_help: A bizonyított zárókészlet-hatóság atomi rögzítése
         acquisition_cost_invalid: 'Érvénytelen beszerzési költség JSON a szabványos
           bemenetről: {details}'
         acquisition_cost_stdin_help: A teljes beszerzési költség JSON-objektum beolvasása
           a szabványos bemenetről
         actividad_id_help: Gazdasági tevékenység azonosítója.
+        authority_channel_required: Pontosan egy strukturált zárókészlet-hatósági
+          bemeneti csatornát válasszon.
+        authority_fd_help: A teljes zárókészlet-hatósági JSON beolvasása egyszer használatos
+          fájlleíróból
+        authority_invalid: A zárókészlet-hatósági objektum érvénytelen ehhez a készletfőkönyvhöz.
+        authority_stdin_help: A teljes zárókészlet-hatósági JSON beolvasása stdinről
+        closing_authority_record_help: A bizonyított zárókészlet-hatóság atomi rögzítése
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
         group_help: Készlet-főkönyvek tevékenységek, mozgások és értékelés szerint.
         iva_rate_help: IVA-kulcs százalékban.
@@ -1759,6 +1761,34 @@ cli:
           munkamenetből.
         non_interactive_secret_required: Titok szükséges, de nincs interaktív terminál;
           használja a --secrets-stdin vagy --secrets-fd kapcsolót.
+        profile_secrets_channel_conflict: 'Pontosan egy profilhitelesítési csatornát
+          válasszon: --profile-secrets-stdin vagy --profile-secrets-fd.'
+        profile_secrets_fd_collision: A profilhitelesítési és a parancstitok-adatoknak
+          eltérő fájlleírókat kell használniuk.
+        profile_secrets_fd_invalid_json: 'A profilhitelesítési bemenetnek egy szigorú
+          UTF-8 JSON-objektumnak kell lennie ezekkel a mezőkkel: {expected_fields}.'
+        profile_secrets_fd_missing_fields: 'A profilhitelesítési objektumnak pontosan
+          ezeket a mezőket kell tartalmaznia: {expected_fields}.'
+        profile_secrets_fd_reserved_stream: A(z) {descriptor} fájlleíró nem használható
+          profilhitelesítésre; a 0 engedélyezett, az 1 és 2 a kimenet számára fenntartott.
+        profile_secrets_fd_too_large: A profilhitelesítési adat meghaladja a 8192
+          bájtos korlátot.
+        profile_secrets_fd_unreadable: A(z) {descriptor} fájlleíró nem örökölt, olvasható
+          profilhitelesítési csatorna.
+        profile_secrets_inapplicable: A profilhitelesítési bemenet nem alkalmazható
+          erre a parancsra, ezért nem történt beolvasás.
+        profile_secrets_missing_target: A profilhitelesítéshez pontos célprofil szükséges,
+          amelyet a --profile vagy a parancs választ ki.
+        profile_secrets_stdin_collision: A szabványos bemenet nem hordozhatja egyszerre
+          a profilhitelesítési és a parancstitok-adatokat.
+        profile_secrets_stdin_invalid_json: 'A profilhitelesítési bemenetnek egy szigorú
+          UTF-8 JSON-objektumnak kell lennie ezekkel a mezőkkel: {expected_fields}.'
+        profile_secrets_stdin_missing_fields: 'A profilhitelesítési objektumnak pontosan
+          ezeket a mezőket kell tartalmaznia: {expected_fields}.'
+        profile_secrets_stdin_too_large: A profilhitelesítési adat meghaladja a 8192
+          bájtos korlátot.
+        profile_secrets_unused: A kiválasztott profil munkamenete már elérhető; a
+          megadott profilhitelesítési bemenet nem lett beolvasva.
         secrets_channel_conflict: A --secrets-stdin és a --secrets-fd nem adható meg
           egyszerre.
         secrets_fd_invalid_json: 'A gépi titok tartalma nem érvényes JSON-objektum.
@@ -1777,6 +1807,12 @@ cli:
           vagy váratlan mezőket tartalmaz. Pontosan ezeket a kulcsokat küldje: {expected_fields}.'
         secrets_stdin_too_large: A gépi titok tartalma meghaladja a megengedett maximális
           méretet.
+      profile_secrets_fd_help: A pontos célprofil jelmondatának beolvasása egy korlátozott
+        JSON-objektumból egy örökölt, olvasható fájlleíróból, miután a munkamenet
+        folytatása sikertelen.
+      profile_secrets_stdin_help: A pontos célprofil jelmondatának beolvasása egy
+        korlátozott JSON-objektumból a szabványos bemeneten, miután a munkamenet folytatása
+        sikertelen.
       recovery_words_confirm: Leírtam
       recovery_words_heading: Írd le ezt a helyreállítási kifejezést
       recovery_words_warning: Csak egyszer jelenik meg. Akinek megvan ez a kifejezés,
@@ -1997,8 +2033,9 @@ cli:
           változatlanul folytatódott.
         closed_previous_session: A korábban bejelentkezett profil munkamenete lezárult
           a bejelentkezés előtt.
-        session_not_persisted: Nincs használható rendszerkulcstár, ezért a munkamenet
-          nem menthető; ez a bejelentkezés csak a jelenlegi parancsra érvényes.
+        session_not_persisted: Nincs használható rendszerkulcstár, ezért ez a parancs
+          csak a saját folyamatát hitelesítette; a következő folyamatnak ismét adja
+          meg a profilhitelesítést.
       passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtassa ezt a parancsot
         terminálban, vagy használja a --secrets-stdin vagy --secrets-fd kapcsolót.
       passphrase_prompt: 'Profil jelszava: '

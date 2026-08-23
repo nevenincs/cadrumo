@@ -270,16 +270,21 @@ cli:
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
       inventory:
-        authority_invalid: El objeto de autoridad de cierre no es válido para este libro de existencias.
-        authority_channel_required: Seleccione exactamente un canal estructurado de autoridad de cierre.
-        authority_fd_help: Leer el objeto JSON completo de autoridad de cierre desde un descriptor de un solo uso
-        authority_stdin_help: Leer el objeto JSON completo de autoridad de cierre desde stdin
-        closing_authority_record_help: Registrar atómicamente la autoridad acreditada del cierre de existencias
         acquisition_cost_invalid: 'JSON de coste de adquisición no válido leído de
           la entrada estándar: {details}'
         acquisition_cost_stdin_help: Lee de la entrada estándar el objeto JSON de
           coste de adquisición completo
         actividad_id_help: Identificador de la actividad económica
+        authority_channel_required: Seleccione exactamente un canal estructurado de
+          autoridad de cierre.
+        authority_fd_help: Leer el objeto JSON completo de autoridad de cierre desde
+          un descriptor de un solo uso
+        authority_invalid: El objeto de autoridad de cierre no es válido para este
+          libro de existencias.
+        authority_stdin_help: Leer el objeto JSON completo de autoridad de cierre
+          desde stdin
+        closing_authority_record_help: Registrar atómicamente la autoridad acreditada
+          del cierre de existencias
         create_help: Crea un libro de existencias para una actividad y ejercicio
         group_help: Libros de existencias por actividad, movimientos y valoración
         iva_rate_help: Tipo de IVA en porcentaje
@@ -1783,6 +1788,35 @@ cli:
           una sesión interactiva.
         non_interactive_secret_required: Se requiere un secreto pero no hay una terminal
           interactiva; use --secrets-stdin o --secrets-fd.
+        profile_secrets_channel_conflict: 'Elija exactamente un canal de autenticación
+          del perfil: --profile-secrets-stdin o --profile-secrets-fd.'
+        profile_secrets_fd_collision: La autenticación del perfil y el secreto del
+          comando deben usar descriptores distintos.
+        profile_secrets_fd_invalid_json: 'La autenticación del perfil debe ser un
+          objeto JSON UTF-8 estricto con los campos: {expected_fields}.'
+        profile_secrets_fd_missing_fields: 'El objeto de autenticación del perfil
+          debe contener exactamente estos campos: {expected_fields}.'
+        profile_secrets_fd_reserved_stream: El descriptor {descriptor} no sirve para
+          autenticar el perfil; se admite el descriptor 0 y los descriptores 1 y 2
+          están reservados para salida.
+        profile_secrets_fd_too_large: La autenticación del perfil supera el límite
+          de 8192 bytes.
+        profile_secrets_fd_unreadable: El descriptor {descriptor} no es un canal legible
+          heredado para autenticar el perfil.
+        profile_secrets_inapplicable: La entrada de autenticación del perfil no se
+          aplica a este comando y no se leyó.
+        profile_secrets_missing_target: La autenticación del perfil requiere un destino
+          exacto seleccionado mediante --profile o el comando.
+        profile_secrets_stdin_collision: La entrada estándar no puede contener a la
+          vez la autenticación del perfil y el secreto del comando.
+        profile_secrets_stdin_invalid_json: 'La autenticación del perfil debe ser
+          un objeto JSON UTF-8 estricto con los campos: {expected_fields}.'
+        profile_secrets_stdin_missing_fields: 'El objeto de autenticación del perfil
+          debe contener exactamente estos campos: {expected_fields}.'
+        profile_secrets_stdin_too_large: La autenticación del perfil supera el límite
+          de 8192 bytes.
+        profile_secrets_unused: La sesión del perfil seleccionado ya está disponible;
+          la entrada de autenticación suministrada no se leyó.
         secrets_channel_conflict: No se puede especificar --secrets-stdin y --secrets-fd
           a la vez.
         secrets_fd_invalid_json: 'El contenido de secretos de máquina no es un objeto
@@ -1803,6 +1837,12 @@ cli:
           claves: {expected_fields}.'
         secrets_stdin_too_large: El contenido de secretos de máquina supera el tamaño
           máximo permitido.
+      profile_secrets_fd_help: Lee la contraseña del perfil de destino exacto desde
+        un objeto JSON acotado en un descriptor legible heredado después de que falle
+        la reanudación de la sesión.
+      profile_secrets_stdin_help: Lee la contraseña del perfil de destino exacto desde
+        un objeto JSON acotado en la entrada estándar después de que falle la reanudación
+        de la sesión.
       recovery_words_confirm: Ya la he anotado
       recovery_words_heading: Guarda esta frase de recuperación
       recovery_words_warning: Solo se muestra una vez. Quien tenga esta frase puede
@@ -2021,8 +2061,8 @@ cli:
         closed_previous_session: Se cerró la sesión del perfil anterior antes de iniciar
           esta.
         session_not_persisted: No hay un almacén de claves del sistema utilizable,
-          así que la sesión no se puede guardar; este inicio de sesión solo vale para
-          el comando actual.
+          así que este comando solo autenticó su propio proceso; vuelva a proporcionar
+          la autenticación del perfil al proceso siguiente.
       passphrase_channel_absent: No hay ningún canal de contraseña disponible. Ejecute
         este verbo en un terminal o use --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contraseña del perfil: '

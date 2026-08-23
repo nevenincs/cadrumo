@@ -246,15 +246,20 @@ cli:
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
       inventory:
-        authority_invalid: The closing-authority object is invalid for this inventory ledger.
-        authority_channel_required: Select exactly one structured closing-authority input channel.
-        authority_fd_help: Read the complete closing-authority JSON object from a one-shot file descriptor
-        authority_stdin_help: Read the complete closing-authority JSON object from stdin
-        closing_authority_record_help: Atomically record evidenced inventory closing authority
         acquisition_cost_invalid: 'Invalid acquisition-cost JSON from stdin: {details}'
         acquisition_cost_stdin_help: Read the complete acquisition-cost JSON object
           from stdin
         actividad_id_help: Economic activity identifier
+        authority_channel_required: Select exactly one structured closing-authority
+          input channel.
+        authority_fd_help: Read the complete closing-authority JSON object from a
+          one-shot file descriptor
+        authority_invalid: The closing-authority object is invalid for this inventory
+          ledger.
+        authority_stdin_help: Read the complete closing-authority JSON object from
+          stdin
+        closing_authority_record_help: Atomically record evidenced inventory closing
+          authority
         create_help: Create an inventory ledger for one activity and tax year
         group_help: Inventory ledgers by activity, movements, and valuation
         iva_rate_help: IVA rate as a percentage
@@ -1650,6 +1655,35 @@ cli:
           and no terminal is attached. Re-run the command from an interactive session.
         non_interactive_secret_required: A secret is required but no interactive terminal
           is available; use --secrets-stdin or --secrets-fd.
+        profile_secrets_channel_conflict: 'Choose exactly one profile authentication
+          channel: --profile-secrets-stdin or --profile-secrets-fd.'
+        profile_secrets_fd_collision: The profile authentication payload and command
+          secret payload must use different descriptors.
+        profile_secrets_fd_invalid_json: 'The profile authentication input must be
+          one strict UTF-8 JSON object with fields: {expected_fields}.'
+        profile_secrets_fd_missing_fields: 'The profile authentication object must
+          contain exactly these fields: {expected_fields}.'
+        profile_secrets_fd_reserved_stream: Descriptor {descriptor} cannot be used
+          for profile authentication; descriptor 0 is allowed and descriptors 1 and
+          2 are reserved for output.
+        profile_secrets_fd_too_large: The profile authentication payload exceeds the
+          8192-byte limit.
+        profile_secrets_fd_unreadable: Descriptor {descriptor} is not an inherited
+          readable profile authentication channel.
+        profile_secrets_inapplicable: Profile authentication input does not apply
+          to this command and was not read.
+        profile_secrets_missing_target: Profile authentication input requires an exact
+          profile target selected by --profile or the command.
+        profile_secrets_stdin_collision: Standard input cannot carry both the profile
+          authentication payload and the command secret payload.
+        profile_secrets_stdin_invalid_json: 'The profile authentication input must
+          be one strict UTF-8 JSON object with fields: {expected_fields}.'
+        profile_secrets_stdin_missing_fields: 'The profile authentication object must
+          contain exactly these fields: {expected_fields}.'
+        profile_secrets_stdin_too_large: The profile authentication payload exceeds
+          the 8192-byte limit.
+        profile_secrets_unused: The selected profile session is already available;
+          the supplied profile authentication input was not read.
         secrets_channel_conflict: Cannot specify both --secrets-stdin and --secrets-fd.
         secrets_fd_invalid_json: 'The machine-secret payload is not a valid JSON object.
           Send one object with these keys: {expected_fields}.'
@@ -1666,6 +1700,10 @@ cli:
           fields or has unexpected ones. Send exactly these keys: {expected_fields}.'
         secrets_stdin_too_large: The machine-secret payload exceeds the maximum allowed
           size.
+      profile_secrets_fd_help: Read the exact target profile passphrase from one bounded
+        JSON object on an inherited readable descriptor after session resume fails.
+      profile_secrets_stdin_help: Read the exact target profile passphrase from one
+        bounded JSON object on standard input after session resume fails.
       recovery_words_confirm: I have written it down
       recovery_words_heading: Write down this recovery phrase
       recovery_words_warning: It is shown only once. Anyone with this phrase can open
@@ -1862,8 +1900,8 @@ cli:
           was resumed unchanged.
         closed_previous_session: The previously logged-in profile was signed out before
           this login.
-        session_not_persisted: No usable OS keychain found, so the session cannot
-          be saved; this login applies to the current command only.
+        session_not_persisted: No usable OS keychain found, so this command authenticated
+          only its own process; supply profile authentication again to the next process.
       passphrase_channel_absent: No passphrase channel is available. Run this verb
         at a terminal, or pass --secrets-stdin or --secrets-fd.
       passphrase_prompt: 'Profile passphrase: '

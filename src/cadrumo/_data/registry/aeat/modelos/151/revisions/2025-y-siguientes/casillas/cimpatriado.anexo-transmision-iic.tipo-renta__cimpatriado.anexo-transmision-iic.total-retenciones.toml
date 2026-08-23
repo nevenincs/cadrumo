@@ -23,7 +23,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.tipo-renta"
 number = "01"
-segmento = "151-07"
+segmento = "M15107000"
 section = ["anexo", "transmision_iic"]
 data_type = "text"
 required = false
@@ -35,7 +35,7 @@ source_refs = ["aeat-dr-151-2023"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.nif-entidad"
 number = "53"
-segmento = "151-07"
+segmento = "M15107000"
 section = ["anexo", "transmision_iic"]
 data_type = "nif"
 required = false
@@ -47,7 +47,7 @@ source_refs = ["aeat-dr-151-2023"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.ganancia-patrimonial"
 number = "02"
-segmento = "151-07"
+segmento = "M15107000"
 section = ["anexo", "transmision_iic"]
 data_type = "money"
 required = false
@@ -60,7 +60,7 @@ source_refs = ["aeat-dr-151-2023"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.retencion"
 number = "03"
-segmento = "151-07"
+segmento = "M15107000"
 section = ["anexo", "transmision_iic"]
 data_type = "money"
 required = false
@@ -73,7 +73,7 @@ source_refs = ["aeat-dr-151-2023"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.total-ganancias"
 number = "04"
-segmento = "151-07"
+segmento = "M15107000"
 section = ["anexo", "transmision_iic"]
 data_type = "money"
 required = false
@@ -84,7 +84,7 @@ source_refs = ["aeat-dr-151-2023"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.total-retenciones"
 number = "05"
-segmento = "151-07"
+segmento = "M15107000"
 section = ["anexo", "transmision_iic"]
 data_type = "money"
 required = false

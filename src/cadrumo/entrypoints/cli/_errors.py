@@ -702,7 +702,9 @@ def render_error_payload(
     if action is not None:
         text = _render_precondition_action_text(text, command=command, action=action)
     if authentication_notices:
-        text = "\n".join((*[item.message for item in authentication_notices], text))
+        from ._common import notice_lines
+
+        text = "\n".join((*notice_lines(authentication_notices), text))
     if notice is None:
         return text
     from ...application.operator_output import sandbox_banner_line

@@ -290,6 +290,36 @@ def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_pat
         assert passphrase not in _combined_output(result)
 
 
+def test_keychain_free_root_login_notice_survives_a_real_leaf_refusal(tmp_path: Path) -> None:
+    """A refusal after real Argon2 login carries the staged Notice on stderr."""
+    _register_profile(tmp_path, "custody")
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+
+    refused = _run_cadrumo(
+        tmp_path,
+        (
+            "--format",
+            "json",
+            "--profile-secrets-stdin",
+            "app",
+            "ledger",
+            "view",
+            "transaction-does-not-exist",
+        ),
+        extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
+        stdin_payload=json.dumps({"profile_passphrase": passphrase}),
+    )
+
+    output = _combined_output(refused)
+    assert refused.returncode != 0, output
+    envelope = json.loads(refused.stderr)
+    assert envelope["command"] == "ledger.view"
+    assert [notice["code"] for notice in envelope["notices"]] == [
+        "config.login.session_not_persisted"
+    ]
+    assert passphrase not in output
+
+
 def test_root_and_leaf_stdin_collision_refuses_before_fresh_tree_mutation(tmp_path: Path) -> None:
     """Parsed cross-scope collision wins before profile lookup, reads, or setup writes."""
     result = _run_cadrumo(

@@ -268,16 +268,21 @@ cli:
         yes_help: Confirma l'eliminació del justificant
         yes_required: Has de passar --yes per eliminar un justificant
       inventory:
-        authority_invalid: L'objecte d'autoritat de tancament no és vàlid per a aquest llibre d'existències.
-        authority_channel_required: Seleccioneu exactament un canal estructurat d'autoritat de tancament.
-        authority_fd_help: Llegir l'objecte JSON complet d'autoritat de tancament des d'un descriptor d'un sol ús
-        authority_stdin_help: Llegir l'objecte JSON complet d'autoritat de tancament des de stdin
-        closing_authority_record_help: Registrar atòmicament l'autoritat acreditada del tancament d'existències
         acquisition_cost_invalid: 'JSON de cost d''adquisició no vàlid llegit de l''entrada
           estàndard: {details}'
         acquisition_cost_stdin_help: Llegeix de l'entrada estàndard l'objecte JSON
           de cost d'adquisició complet
         actividad_id_help: Identificador de l'activitat econòmica
+        authority_channel_required: Seleccioneu exactament un canal estructurat d'autoritat
+          de tancament.
+        authority_fd_help: Llegir l'objecte JSON complet d'autoritat de tancament
+          des d'un descriptor d'un sol ús
+        authority_invalid: L'objecte d'autoritat de tancament no és vàlid per a aquest
+          llibre d'existències.
+        authority_stdin_help: Llegir l'objecte JSON complet d'autoritat de tancament
+          des de stdin
+        closing_authority_record_help: Registrar atòmicament l'autoritat acreditada
+          del tancament d'existències
         create_help: Crea un llibre d'existències per a una activitat i exercici
         group_help: Llibres d'existències per activitat, moviments i valoració
         iva_rate_help: Tipus d'IVA en percentatge
@@ -1765,6 +1770,35 @@ cli:
           d'una sessió interactiva.
         non_interactive_secret_required: Cal un secret però no hi ha cap terminal
           interactiu; utilitzeu --secrets-stdin o --secrets-fd.
+        profile_secrets_channel_conflict: 'Trieu exactament un canal d''autenticació
+          del perfil: --profile-secrets-stdin o --profile-secrets-fd.'
+        profile_secrets_fd_collision: L'autenticació del perfil i el secret de l'ordre
+          han d'usar descriptors diferents.
+        profile_secrets_fd_invalid_json: 'L''autenticació del perfil ha de ser un
+          objecte JSON UTF-8 estricte amb els camps: {expected_fields}.'
+        profile_secrets_fd_missing_fields: 'L''objecte d''autenticació del perfil
+          ha de contenir exactament aquests camps: {expected_fields}.'
+        profile_secrets_fd_reserved_stream: El descriptor {descriptor} no es pot usar
+          per autenticar el perfil; s'admet el descriptor 0 i els descriptors 1 i
+          2 estan reservats per a sortida.
+        profile_secrets_fd_too_large: L'autenticació del perfil supera el límit de
+          8192 bytes.
+        profile_secrets_fd_unreadable: El descriptor {descriptor} no és un canal llegible
+          heretat per autenticar el perfil.
+        profile_secrets_inapplicable: L'entrada d'autenticació del perfil no s'aplica
+          a aquesta ordre i no s'ha llegit.
+        profile_secrets_missing_target: L'autenticació del perfil requereix una destinació
+          exacta seleccionada amb --profile o amb l'ordre.
+        profile_secrets_stdin_collision: L'entrada estàndard no pot contenir alhora
+          l'autenticació del perfil i el secret de l'ordre.
+        profile_secrets_stdin_invalid_json: 'L''autenticació del perfil ha de ser
+          un objecte JSON UTF-8 estricte amb els camps: {expected_fields}.'
+        profile_secrets_stdin_missing_fields: 'L''objecte d''autenticació del perfil
+          ha de contenir exactament aquests camps: {expected_fields}.'
+        profile_secrets_stdin_too_large: L'autenticació del perfil supera el límit
+          de 8192 bytes.
+        profile_secrets_unused: La sessió del perfil seleccionat ja està disponible;
+          l'entrada d'autenticació proporcionada no s'ha llegit.
         secrets_channel_conflict: No es pot especificar --secrets-stdin i --secrets-fd
           alhora.
         secrets_fd_invalid_json: 'El contingut de secrets de màquina no és un objecte
@@ -1784,6 +1818,12 @@ cli:
           {expected_fields}.'
         secrets_stdin_too_large: El contingut de secrets de màquina supera la mida
           màxima permesa.
+      profile_secrets_fd_help: Llegeix la contrasenya del perfil de destinació exacte
+        des d'un objecte JSON acotat en un descriptor llegible heretat després que
+        falli la represa de la sessió.
+      profile_secrets_stdin_help: Llegeix la contrasenya del perfil de destinació
+        exacte des d'un objecte JSON acotat a l'entrada estàndard després que falli
+        la represa de la sessió.
       recovery_words_confirm: Ja l'he anotada
       recovery_words_heading: Desa aquesta frase de recuperació
       recovery_words_warning: Només es mostra una vegada. Qui tingui aquesta frase
@@ -2000,8 +2040,8 @@ cli:
         closed_previous_session: S'ha tancat la sessió del perfil anterior abans d'iniciar
           aquesta.
         session_not_persisted: No hi ha cap magatzem de claus del sistema utilitzable,
-          així que la sessió no es pot desar; aquest inici de sessió només val per
-          a l'ordre actual.
+          així que aquesta ordre només ha autenticat el seu propi procés; torneu a
+          proporcionar l'autenticació del perfil al procés següent.
       passphrase_channel_absent: No hi ha cap canal de contrasenya disponible. Executeu
         aquest verb en un terminal o useu --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contrasenya del perfil: '
