@@ -4263,3 +4263,66 @@ were dropped in transcription.
 ### Scale
 
 **10389 of 11570 slots remain** across 109 numbered records; 1181 modelled, zero orphaned.
+
+## 2026-08-23 — T22005A01, and the derivation that was right most of the time
+
+### What landed
+
+Record **T22005A01** — the *estado de ingresos y gastos reconocidos consolidado*, the
+entidades de crédito variant (IFRS shape: otro resultado global split into items that will
+and will not be reclassified). **43 casillas**, revision 1347 → **1390**, twenty-five of 137
+records. Every box carries AEAT's own number.
+
+Suite: **identical FAILED list, zero regressions.**
+
+### I nearly invented a hierarchy into a filing-grade record
+
+**Nineteen of the 43 boxes share their printed text with a sibling** — six read `Transferido
+a resultados`, six `Otras reclasificaciones`, five `Ganancias o (-) pérdidas de valor
+contabilizadas en el patrimonio neto`, two `Activos no corrientes…`. On the printed modelo
+they sit indented under different parents.
+
+**The diseño de registro carries no indentation at all** — no level column, no `validation`,
+no `components`, only flat description text. The generator now *asserts* that emptiness, so
+a future workbook that does carry structure cannot be read blind under this fragment's
+claim.
+
+The obvious derivation — parent = nearest preceding non-repeated line — **looks right and is
+wrong in four places**, each verified against the design:
+
+- `00276` would take `00275` as parent; it is a *sibling* of it under `00274`.
+- `00287`/`00288` would hang off `00286`, which is itself a child of `00285`.
+- `00292` would be read as parent of `00293`; both are siblings under `00289`.
+- `00298`–`00301` would all hang off `00656`; `00298` is itself parent of the other three.
+
+**A derivation that is right most of the time is a worse outcome than no derivation**,
+because the wrong attributions are invisible — they look exactly like the right ones. It was
+discarded on that evidence.
+
+### An assumption every previous stamp carried was wrong
+
+Every earlier iteration reported "duplicate Spanish labels across the revision: **0**" as
+though it were an invariant. Measured elsewhere: **modelo 200 carries 96 shared label texts
+(one used 20 times) and modelo 100 carries 198.**
+
+The zero was a *property of the records happened to be authored so far*, never a
+requirement — and treating it as a requirement here would have forced a false distinction
+into 19 filing-grade labels. The revision now reports 4 duplicated texts covering 19
+casillas: exactly what the design duplicates.
+
+**The right invariant is not "no duplicates" but "the duplicated set equals the design's."**
+That version still bites — and did: a Hungarian translation collapsed `00277` and `00306`,
+which AEAT separates **by a definite article alone** (`de inversiones` vs `de las
+inversiones`). Without the assertion the two would have become indistinguishable in one
+catalogue only.
+
+### Also
+
+AEAT misspells `valorados` as **`calorados`** on `00647`. Corrected by name in the label,
+never by a general rule, kept as printed in the comment.
+
+### Scale
+
+**10346 of 11570 slots remain** across 108 numbered records; 1224 modelled, zero orphaned.
+The nesting of this record is **not modelled at all**; if a layout or UI ever needs the tree
+it must come from a source that carries it.
