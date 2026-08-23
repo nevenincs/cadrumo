@@ -319,7 +319,7 @@ disposition = "not_applicable"
 owner = "source-connectivity-campaign"
 capability_locators = ["dev/source_connectivity/discovery.py"]
 capability_selector = "remaining_ingress_surfaces"
-expected_capability_digest = "sha256:f3a5bea0df1c652545461d264cdf64fc22396c7a76e7614387175f2ce9c5ab2c"
+expected_capability_digest = "sha256:0c80ce3e4e93d7d202e256bcaf4c9b1b540a936876e96c7f54f81b82726196fd"
 
 [[entries.grounding]]
 locator_kind = "repository"

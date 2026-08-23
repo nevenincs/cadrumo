@@ -60,6 +60,57 @@ def ingest_probe() -> None:
     ]
 
 
+def test_new_command_spec_ingress_is_detected_without_a_typer_decorator(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "src/cadrumo/entrypoints/cli/_probe_command_specs.py",
+        '''PROBE_WRITE = ExecutionPolicySpec(
+    capabilities=frozenset({"encrypted-facts"}),
+    side_effects=frozenset({"local-state"}),
+    performance="local-io",
+    write_route="profile-bound",
+)
+
+PROBE_COMMAND_SPECS = (
+    CommandSpec(
+        key="probe_add",
+        parent_key="probe",
+        token="add",
+        kind="leaf",
+        policy=PROBE_WRITE,
+        handler=LazyBinding.available(
+            DeferredTarget("cadrumo.entrypoints.cli._probe", "probe_add")
+        ),
+    ),
+)
+''',
+    )
+    _write(
+        tmp_path,
+        "src/cadrumo/entrypoints/cli/_probe.py",
+        "def probe_add() -> None:\n    pass\n",
+    )
+
+    rows = discover_ingress_surfaces(tmp_path)
+
+    assert [
+        (
+            row.capability_id,
+            row.evidence_locator,
+            row.command_name,
+            row.execution_policy,
+        )
+        for row in rows
+    ] == [
+        (
+            "ingress:src/cadrumo/entrypoints/cli/_probe.py:probe_add",
+            "src/cadrumo/entrypoints/cli/_probe_command_specs.py:9",
+            "add",
+            "PROBE_WRITE",
+        )
+    ]
+
+
 def test_new_exported_calculation_helper_is_detected_independently(tmp_path: Path) -> None:
     _write(
         tmp_path,

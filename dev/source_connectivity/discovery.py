@@ -62,11 +62,12 @@ class IngressCapability:
     command_group_symbol: str
     command_name: str
     execution_policy: str
+    declaration_module: str | None = None
 
     @property
     def evidence_locator(self) -> str:
         """Return a re-fetchable source locator for review and census rows."""
-        return f"{self.module}:{self.line}"
+        return f"{self.declaration_module or self.module}:{self.line}"
 
     @property
     def capability_id(self) -> str:
@@ -321,6 +322,139 @@ def _execution_policy(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str | Non
     return None
 
 
+def _string_value(node: ast.AST, bindings: dict[str, ast.AST] | None = None) -> str | None:
+    bindings = bindings or {}
+    if isinstance(node, ast.Name) and node.id in bindings:
+        return _string_value(bindings[node.id], bindings)
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.JoinedStr):
+        parts: list[str] = []
+        for value in node.values:
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                parts.append(value.value)
+            elif isinstance(value, ast.FormattedValue):
+                resolved = _string_value(value.value, bindings)
+                if resolved is None:
+                    return None
+                parts.append(resolved)
+            else:
+                return None
+        return "".join(parts)
+    return None
+
+
+def _call_bindings(function: ast.FunctionDef, call: ast.Call) -> dict[str, ast.AST]:
+    names = [argument.arg for argument in function.args.args]
+    bound = dict(zip(names, call.args, strict=False))
+    bound.update({keyword.arg: keyword.value for keyword in call.keywords if keyword.arg is not None})
+    return bound
+
+
+def _call_argument(
+    call: ast.Call,
+    name: str,
+    position: int,
+    bindings: dict[str, ast.AST],
+) -> ast.AST:
+    """Resolve one constructor argument from keyword or canonical positional form."""
+    keyword = next((item.value for item in call.keywords if item.arg == name), None)
+    value = keyword if keyword is not None else call.args[position]
+    if isinstance(value, ast.Name) and value.id in bindings:
+        return bindings[value.id]
+    return value
+
+
+def _deferred_handler_target(
+    expression: ast.AST,
+    functions: dict[str, ast.FunctionDef],
+    bindings: dict[str, ast.AST] | None = None,
+) -> tuple[str, str] | None:
+    bindings = bindings or {}
+    if isinstance(expression, ast.Call) and (helper := functions.get(_dotted_name(expression.func))) is not None:
+        return _deferred_handler_target(helper, functions, _call_bindings(helper, expression) | bindings)
+    for node in ast.walk(expression):
+        if not isinstance(node, ast.Call) or _dotted_name(node.func).rsplit(".", maxsplit=1)[-1] != "DeferredTarget":
+            continue
+        if len(node.args) < 2:
+            continue
+        module = _string_value(node.args[0], bindings)
+        handler = _string_value(node.args[1], bindings)
+        if module and handler and module.startswith("cadrumo.entrypoints.cli"):
+            return module, handler
+    return None
+
+
+def _write_policy_names(cli_root: Path) -> frozenset[str]:
+    names: set[str] = set()
+    for path in _production_python_files(cli_root):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in tree.body:
+            if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+                continue
+            value = node.value
+            targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
+            if value is None or "local-state" not in {
+                child.value
+                for child in ast.walk(value)
+                if isinstance(child, ast.Constant) and isinstance(child.value, str)
+            }:
+                continue
+            names.update(target.id for target in targets if isinstance(target, ast.Name))
+    return frozenset(names)
+
+
+def _command_spec_ingress(repo_root: Path, cli_root: Path) -> tuple[IngressCapability, ...]:
+    write_policies = _write_policy_names(cli_root)
+    capabilities: list[IngressCapability] = []
+    for path in _production_python_files(cli_root):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
+        leaf_wrapper = functions.get("_leaf")
+        for call in (node for node in ast.walk(tree) if isinstance(node, ast.Call)):
+            call_name = _dotted_name(call.func).rsplit(".", maxsplit=1)[-1]
+            bindings: dict[str, ast.AST] = {}
+            command_call = call
+            if call_name == "_leaf" and leaf_wrapper is not None:
+                bindings = _call_bindings(leaf_wrapper, call)
+                command_call = next(
+                    (
+                        child
+                        for child in ast.walk(leaf_wrapper)
+                        if isinstance(child, ast.Call)
+                        and _dotted_name(child.func).rsplit(".", maxsplit=1)[-1] == "CommandSpec"
+                    ),
+                    call,
+                )
+            elif call_name != "CommandSpec":
+                continue
+            kind = _string_value(_call_argument(command_call, "kind", 3, bindings), bindings)
+            policy_node = _call_argument(command_call, "policy", 8, bindings)
+            policy = _dotted_name(policy_node) if policy_node is not None else ""
+            if kind != "leaf" or policy.rsplit(".", maxsplit=1)[-1] not in write_policies:
+                continue
+            target = _deferred_handler_target(_call_argument(command_call, "handler", 9, bindings), functions, bindings)
+            token = _string_value(_call_argument(command_call, "token", 2, bindings), bindings)
+            parent = _string_value(_call_argument(command_call, "parent_key", 1, bindings), bindings)
+            if target is None or token is None or parent is None:
+                raise ValueError(f"write command spec cannot be resolved structurally: {path}:{call.lineno}")
+            module_name, handler_name = target
+            module_path = f"src/{module_name.replace('.', '/')}.py"
+            capabilities.append(
+                IngressCapability(
+                    module=module_path,
+                    callback_name=handler_name,
+                    line=call.lineno,
+                    channel="cli",
+                    command_group_symbol=parent,
+                    command_name=token,
+                    execution_policy=policy,
+                    declaration_module=path.relative_to(repo_root).as_posix(),
+                )
+            )
+    return tuple(capabilities)
+
+
 def discover_ingress_surfaces(repo_root: Path) -> tuple[IngressCapability, ...]:
     """Enumerate policy-declared CLI writes, distinguishing worksheet pulls."""
     cli_root = repo_root / "src" / "cadrumo" / "entrypoints" / "cli"
@@ -355,7 +489,10 @@ def discover_ingress_surfaces(repo_root: Path) -> tuple[IngressCapability, ...]:
                     execution_policy=policy,
                 )
             )
-    return tuple(sorted(capabilities, key=lambda item: (item.module, item.line, item.callback_name)))
+    by_id = {row.capability_id: row for row in capabilities}
+    for row in _command_spec_ingress(repo_root, cli_root):
+        by_id[row.capability_id] = row
+    return tuple(sorted(by_id.values(), key=lambda item: (item.module, item.line, item.callback_name)))
 
 
 def _exported_symbols(source_root: Path) -> frozenset[str]:
