@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:2144402dc624fe35a7b8d3bf0b0df5fb5386f778ef2121adecb7a7b1f8091626'
+body_hash: 'sha256:7dd2fa69a8a17b02730abb0aef0de4908930a12a961b6ef8639e73de78aaf1aa'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7869,3 +7869,39 @@ Remaining in the lanes, both attributed: four `test_censo_pull_verb` cases refer
 and next; and one transient `RegistryLoadError` ("registry directory changed during cache
 fingerprinting"), which is the registry loader's own quiescence guard firing while another
 campaign writes, not a failure.
+
+### Censo traversal repaired; the module's remaining failure predates it
+
+Four `test_censo_pull_verb` cases died on
+`module '_censo_file' has no attribute 'censo_app'`. Checked before repairing, as with the
+login setups: the VERBS are intact -- `config profile censo file` and `censo pull` both resolve
+and are `profile-bound` -- so nothing was lost. Only the route was stale. The command-spec
+kernel builds groups from specs, so a module-level Typer object stopped being the surface, and
+`censo_app` now exists nowhere but that one test line.
+
+Rewalked from the live CLI root through the Click API. Two things learned doing it, both
+recorded in the helper's docstring because both are easy to get wrong:
+
+The kernel's groups resolve children LAZILY, so the root's `.commands` dict is empty -- reading
+it reports a CLI with no commands at all. `get_command(ctx, name)` is what resolves each child.
+
+And `materialise_lazy_subcommands` must NOT be called here. The first version did, copying a
+sibling gate that legitimately needs the whole tree. It mutates the shared `app` process-wide,
+and that is exactly the kind of global side effect a test should not leave behind. It also
+turned out to be unnecessary: lazy resolution walks the path perfectly well on its own.
+
+**The module's fifth failure is not mine and predates the change.**
+`test_pull_refuses_before_the_read_when_no_profile_is_active` asserts the refusal envelope
+carries `command == "config.profile.censo.pull"` and gets `None`. Verified by stashing the
+change and running the case at HEAD, where it fails identically. It had passed in an earlier
+full-lane run only because the four stale cases were failing ahead of it -- so it is
+order-dependent, and repairing them unmasked it. `test_config.py::test_error_envelope_carries_
+the_active_command_identifier` asserts the same property and fails the same way, which points
+at a real contract defect rather than two stale tests: the envelope spine requires `command`,
+and lazily-resolved commands appear not to set it.
+
+Attribution of the wider lane movement is DEFERRED rather than guessed. Between runs a peer
+landed a change that stops `test_config.py` collecting at all -- `ValueContract.__init__() got
+an unexpected keyword argument 'nullable'` -- so the comparison that would separate "unmasked
+by my repair" from "broken by their commit" cannot be made honestly right now. Next tick, on a
+quieter tree.
