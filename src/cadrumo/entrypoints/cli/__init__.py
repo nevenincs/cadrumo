@@ -1176,15 +1176,15 @@ def _app_root(
 
 
 _LAZY_COMMAND_REGISTRATIONS: tuple[tuple[str, str, str, str], ...] = (
-    ("app", "overview", "._overview", "cli.overview.app_help"),
-    ("app", "diagnostics", "._app_diagnostics", "cli.diagnostics.app_help"),
-    ("app", "ledger", "._ledger", "cli.ledger.app_help"),
-    ("app", "live", "._app_live", "cli.app.live.app_help"),
-    ("app", "maintenance", "._app_maintenance", "cli.app.maintenance.help"),
-    ("app", "modelo", "._modelo", "cli.app.modelo.app_help"),
+    ("app", "overview", "._app_lazy_families", "cli.overview.app_help"),
+    ("app", "diagnostics", "._app_lazy_families", "cli.diagnostics.app_help"),
+    ("app", "ledger", "._app_lazy_families", "cli.ledger.app_help"),
+    ("app", "live", "._app_lazy_families", "cli.app.live.app_help"),
+    ("app", "maintenance", "._app_lazy_families", "cli.app.maintenance.help"),
+    ("app", "modelo", "._app_lazy_families", "cli.app.modelo.app_help"),
     ("app", "quickfile", "._app_quickfile", "cli.app.quickfile.app_help"),
-    ("app", "registry", ".registry", "cli.registry.app_help"),
-    ("app", "review", "._review", "cli.review.app_help"),
+    ("app", "registry", "._app_lazy_families", "cli.registry.app_help"),
+    ("app", "review", "._app_lazy_families", "cli.review.app_help"),
     (_PRODUCT_IDENTITY.cli_executable, "config", "._config", "cli.config.app_help"),
 )
 
@@ -1228,8 +1228,12 @@ def _lazy(group_name: str, name: str, module_name: str, help_key: str) -> None:
             name,
             _LazyImportTarget(
                 module=module_name,
+                attribute=f"{name}_app" if module_name == "._app_lazy_families" else "app",
                 package=__name__,
                 optional_dependencies=_LazyOptionalDependencyProvider(_optional_dependency_names),
+            ),
+            child_registry_key=(
+                f"app.{name}" if group_name == "app" and module_name == "._app_lazy_families" else None
             ),
             decorate=_decorate_typer_app,
             optional_unavailable=_optional_import_surface,
