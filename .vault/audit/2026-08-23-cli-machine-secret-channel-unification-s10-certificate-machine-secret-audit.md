@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:e61370389c32d44a1ff17042679da31db2d996435b2e4d58b3349b275695f90f'
+body_hash: 'sha256:0d0d461ab5a285c0a0121a8a74bd559c594c3526f9333acac3462f7c94db60ab'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
 ---
@@ -41,6 +41,16 @@ ordering regression. The implementation currently delegates correctly at
 `certificate_secret_set`, but its security boundary is under-proved until the
 certificate handler or the planned subprocess matrix exercises these paths.
 
+Resolved in the S10 remediation: near-handler tests now drive stdin and a real
+pipe descriptor through `certificate_secret_set`, observe the supplied value at
+the application boundary, prove the descriptor closes, preserve unread pipe
+bytes during a dual-channel conflict, and prove both conflict and retired-field
+refusals occur without application mutation or emitted output. They also assert
+that the supplied value is absent from emitted and refusal representations. fd 0
+remains proven by the canonical reader tests and is reserved for the later real
+subprocess matrix, avoiding unsafe process-global descriptor replacement in
+this unit lane.
+
 ### stale-certificate-carrier-description | low | The existing absent-channel integration test describes superseded channel and login behavior
 
 The prose in `test_config.py` still describes the refusal as naming only
@@ -72,3 +82,6 @@ auditing why this certificate command is the carrier.
   and mutation, inherits fd 0 and unconditional closure from the canonical
   reader, uses the hardened non-TTY prompt refusal, emits only non-secret result
   facts, and introduces no duplicate parser or local channel implementation.
+- Close `certificate-handler-proof`: the focused remediation supplies the
+  missing handler-level mutation-order, routing, closure, hard-cut, and
+  non-disclosure evidence without duplicating the planned subprocess matrix.
