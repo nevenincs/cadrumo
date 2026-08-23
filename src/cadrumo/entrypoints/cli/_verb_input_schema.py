@@ -118,7 +118,17 @@ def cli_path_for_command_key(command_key: str) -> tuple[str, ...]:
 
 
 def is_exposable_command(command_key: str) -> bool:
-    return command_key in _rows()
+    from ._command_spec import BindingState
+    from ._command_specs import COMMAND_GRAPH
+
+    spec = COMMAND_GRAPH.by_schema_identity().get(command_key)
+    return (
+        spec is not None
+        and spec.parent_key not in {None, "root"}
+        and spec.handler is not None
+        and spec.handler.state is BindingState.TARGET
+        and (spec.kind == "leaf" or spec.invocation.invoke_without_command)
+    )
 
 
 def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, ...]) -> None:

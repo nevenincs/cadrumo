@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....application.aggregation import DEFERRED_SOURCE_KINDS
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
@@ -40,7 +41,7 @@ from .._bindings import (
 )
 from .._errors import RegistryValidationError
 from .._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_modelo, _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -51,6 +52,16 @@ _M130_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id(
     surface="_M130_PAGOS_FRACCIONADOS_CASILLA",
 )
 _M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("07", surface="_M130_RESULTADO_PREVIO_CASILLA")
+
+
+def _deferred_validator_exemptions(
+    *,
+    deferred: frozenset[BindingSourceKind],
+    declared: frozenset[BindingSourceKind],
+    implemented: frozenset[BindingSourceKind],
+) -> frozenset[BindingSourceKind]:
+    """Return only sources that are deferred, undeclared, and validatorless."""
+    return deferred - declared - implemented
 
 
 def _committed_modelo_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -332,13 +343,46 @@ def test_every_binding_source_kind_is_validator_dispatched_or_documented_mesh_on
         f"{sorted(str(s) for s in validated & _DOCUMENTED_MESH_ONLY_SOURCE_KINDS)}"
     )
 
-    # Completeness: the two classes partition the whole enum, so a newly added
-    # member forces an explicit decision (validator + selector, or mesh-only).
-    unclassified = frozenset(BindingSourceKind) - validated - _DOCUMENTED_MESH_ONLY_SOURCE_KINDS
-    assert not unclassified, (
-        f"unclassified BindingSourceKind member(s): {sorted(str(s) for s in unclassified)} — "
-        "register a validator in _BINDING_VALIDATOR_REGISTRY (with its selector model), "
-        "or enroll the member in _DOCUMENTED_MESH_ONLY_SOURCE_KINDS with its mesh-only rationale"
+    # A deferred member without a validator is the only further legal class.
+    # The exemption is derived from production disposition and disappears as
+    # soon as the source gains a validator (or leaves deferral on enrollment).
+    modelos, _ = _committed_registry_tree()
+    declared = frozenset(
+        binding.source for modelo in modelos for revision in modelo.revisions.values() for binding in revision.bindings
+    )
+    deferred_without_validator = _deferred_validator_exemptions(
+        deferred=DEFERRED_SOURCE_KINDS,
+        declared=declared,
+        implemented=validated,
+    )
+    unclassified = (
+        frozenset(BindingSourceKind) - validated - _DOCUMENTED_MESH_ONLY_SOURCE_KINDS - deferred_without_validator
+    )
+    assert not unclassified
+
+
+@pytest.mark.parametrize("ratchet", ["binding", "validator", "deferral"])
+def test_inventory_validator_exemption_disappears_on_each_enrollment_ratchet(ratchet: str) -> None:
+    """Any declaration, validator, or end of deferral removes the exemption."""
+    inventory = BindingSourceKind.INVENTORY
+    deferred = frozenset({inventory})
+    declared: frozenset[BindingSourceKind] = frozenset()
+    implemented: frozenset[BindingSourceKind] = frozenset()
+    assert inventory in _deferred_validator_exemptions(
+        deferred=deferred,
+        declared=declared,
+        implemented=implemented,
+    )
+    if ratchet == "binding":
+        declared = frozenset({inventory})
+    elif ratchet == "validator":
+        implemented = frozenset({inventory})
+    else:
+        deferred = frozenset()
+    assert inventory not in _deferred_validator_exemptions(
+        deferred=deferred,
+        declared=declared,
+        implemented=implemented,
     )
 
 

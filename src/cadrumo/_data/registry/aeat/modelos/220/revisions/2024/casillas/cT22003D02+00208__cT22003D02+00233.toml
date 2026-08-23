@@ -1,0 +1,499 @@
+# Modelo 220 RECORD T22003D02 -- BALANCE CONSOLIDADO, PATRIMONIO NETO, in the shape used by entidades
+# aseguradoras: fondos propios with capital, reservas and results, ajustes
+# por cambios de valor, subvenciones, socios externos, and the two closing
+# totals TOTAL PATRIMONIO NETO and TOTAL PASIVO Y PATRIMONIO NETO.
+#
+# 36 casillas describe all 46 design fields -- 36 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position. Every box carries AEAT's own five-digit
+# number, so not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# AEAT ABBREVIATES A PARENT NAME ON ONE CHILD AND NOT ITS SIBLING. [00219]
+# reads "Resultados de ejercicios anteriores atribuidos a la sociedad dominante.
+# Remanente" while [00220] reads "Resultados de ejercicios anteriores.
+# (Resultados negativos ... dominante)" -- the same parent, written short. The
+# two therefore do NOT share a prefix. The short form is NOT a standalone box of
+# this record, so it stays INSIDE the leaf label rather than being promoted to a
+# heading it never was; expanding it to match its sibling would be a guess that
+# two lines AEAT wrote differently mean the same thing.
+#
+# FIVE LABELS ARE PARENTHESISED because AEAT marks a SUBTRACTING line that way:
+# [00211] (Capital no exigido), [00217] (Acciones propias y de la sociedad
+# dominante), [00220] (Resultados negativos ...), [00693] (Perdidas y ganancias
+# socios externos) and [00223] (Dividendo a cuenta y reserva de estabilizacion a
+# cuenta). Kept verbatim in every catalogue. NOTHING here acts on the
+# convention: a consumer treating these as additive will be wrong.
+#
+# THIS RECORD CLOSES THE ASEGURADORAS BALANCE SHEET. [00233] TOTAL PASIVO Y
+# PATRIMONIO NETO is the counterpart of [00162] TOTAL ACTIVO on page 3B. With
+# both sides declared the accounting identity is now EXPRESSIBLE, and it is
+# still not EXPRESSED -- no formula, construct or binding relates them.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
+# intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is
+# derived as the common prefix of every numbered line and the remainder is stripped, so
+# both spellings land on the same heading. 0 parent-child separator repair(s)
+# applied: none needed.
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 0
+# rejoin(s) applied: none.
+
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22003D02 tiles
+# 1..789 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 03, letra D, hoja 02. Sibling sector pages of this
+# family share every heading AEAT prints in the BODY -- two records both head their
+# lines "ACTIVO" and both declare a "Total activo" -- so the envelope is the ONLY
+# non-inferential way to tell them apart. The operator label carries it for exactly
+# that reason; it claims no sector, which the design does not state.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @628+150 RESERVADO PARA LA ADMINISTRACION; and
+# @778+12 Fin de registro.
+#
+# NOT CLAIMED: THIS BALANCE SHEET DOES NOT BALANCE HERE. Every subtotal and the TOTAL are
+# DECLARED, not computed: no formula, construct or binding sums a group into its head or
+# the heads into the total, and nothing checks activo against patrimonio neto plus pasivo.
+# Every box is a manual input.
+
+# @16+17 N. PATRIMONIO NETO. Fondos propios. [00208]
+[[revisions."2024".casillas]]
+id = "T22003D02:00208"
+number = "00208"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. PATRIMONIO NETO. Fondos propios. Capital o fondo mutual. [00209]
+[[revisions."2024".casillas]]
+id = "T22003D02:00209"
+number = "00209"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. PATRIMONIO NETO. Fondos propios. Capital escriturado o fondo mutual. [00210]
+[[revisions."2024".casillas]]
+id = "T22003D02:00210"
+number = "00210"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. PATRIMONIO NETO. Fondos propios. (Capital no exigido). [00211]
+[[revisions."2024".casillas]]
+id = "T22003D02:00211"
+number = "00211"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. PATRIMONIO NETO. Fondos propios. Prima de emisión. [00212]
+[[revisions."2024".casillas]]
+id = "T22003D02:00212"
+number = "00212"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. PATRIMONIO NETO. Fondos propios. Reservas. [00213]
+[[revisions."2024".casillas]]
+id = "T22003D02:00213"
+number = "00213"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. PATRIMONIO NETO. Fondos propios. Reservas. Legal y estatutarias. [00214]
+[[revisions."2024".casillas]]
+id = "T22003D02:00214"
+number = "00214"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. PATRIMONIO NETO. Fondos propios. Reservas. Reserva de estabilización. [00215]
+[[revisions."2024".casillas]]
+id = "T22003D02:00215"
+number = "00215"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. PATRIMONIO NETO. Fondos propios. Reservas. Reservas en sociedades consolidadas. [00649]
+[[revisions."2024".casillas]]
+id = "T22003D02:00649"
+number = "00649"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. PATRIMONIO NETO. Fondos propios. Reservas. Reservas en sociedades puestas en equivalencia. [00728]
+[[revisions."2024".casillas]]
+id = "T22003D02:00728"
+number = "00728"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. PATRIMONIO NETO. Fondos propios. Reservas. Reserva de capitalización [00734]
+[[revisions."2024".casillas]]
+id = "T22003D02:00734"
+number = "00734"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. PATRIMONIO NETO. Fondos propios. Reservas. Reserva de nivelación [00735]
+[[revisions."2024".casillas]]
+id = "T22003D02:00735"
+number = "00735"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. PATRIMONIO NETO. Fondos propios. Reservas. Otras reservas. [00216]
+[[revisions."2024".casillas]]
+id = "T22003D02:00216"
+number = "00216"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. PATRIMONIO NETO. Fondos propios. (Acciones propias y de la sociedad dominante). [00217]
+[[revisions."2024".casillas]]
+id = "T22003D02:00217"
+number = "00217"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. PATRIMONIO NETO. Fondos propios. Resultados de ejercicios anteriores atribuidos a la sociedad dominante. [00218]
+[[revisions."2024".casillas]]
+id = "T22003D02:00218"
+number = "00218"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. PATRIMONIO NETO. Fondos propios. Resultados de ejercicios anteriores atribuidos a la sociedad dominante. Remanente. [00219]
+[[revisions."2024".casillas]]
+id = "T22003D02:00219"
+number = "00219"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. PATRIMONIO NETO. Fondos propios. Resultados de ejercicios anteriores. (Resultados negativos de ejercicios anteriores atribuidos a la sociedad dominante). [00220]
+[[revisions."2024".casillas]]
+id = "T22003D02:00220"
+number = "00220"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. PATRIMONIO NETO. Fondos propios. Otras aportaciones de socios y mutualistas. [00221]
+[[revisions."2024".casillas]]
+id = "T22003D02:00221"
+number = "00221"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. PATRIMONIO NETO. Fondos propios. Resultado del ejercicio atribuido a la sociedad dominante. [00692]
+[[revisions."2024".casillas]]
+id = "T22003D02:00692"
+number = "00692"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. PATRIMONIO NETO. Fondos propios. Resultado del ejercicio atribuido a la sociedad dominante. Pérdidas y ganancias consolidadas. [00222]
+[[revisions."2024".casillas]]
+id = "T22003D02:00222"
+number = "00222"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 N. PATRIMONIO NETO. Fondos propios. Resultado del ejercicio atribuido a la sociedad dominante. (Pérdidas y ganancias socios externos). [00693]
+[[revisions."2024".casillas]]
+id = "T22003D02:00693"
+number = "00693"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17 N. PATRIMONIO NETO. Fondos propios. (Dividendo a cuenta y reserva de estabilización a cuenta). [00223]
+[[revisions."2024".casillas]]
+id = "T22003D02:00223"
+number = "00223"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17 N. PATRIMONIO NETO. Fondos propios. Otros instrumentos de patrimonio neto. [00224]
+[[revisions."2024".casillas]]
+id = "T22003D02:00224"
+number = "00224"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17 N. PATRIMONIO NETO. Ajustes por cambios de valor. [00225]
+[[revisions."2024".casillas]]
+id = "T22003D02:00225"
+number = "00225"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17 N. PATRIMONIO NETO. Ajustes por cambios de valor. Activos financieros disponibles para la venta. [00226]
+[[revisions."2024".casillas]]
+id = "T22003D02:00226"
+number = "00226"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17 N. PATRIMONIO NETO. Ajustes por cambios de valor. Operaciones de cobertura. [00227]
+[[revisions."2024".casillas]]
+id = "T22003D02:00227"
+number = "00227"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17 N. PATRIMONIO NETO. Ajustes por cambios de valor. Diferencias de cambio y conversión. [00228]
+[[revisions."2024".casillas]]
+id = "T22003D02:00228"
+number = "00228"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @475+17 N. PATRIMONIO NETO. Ajustes por cambios de valor. Corrección de asimetrías contables. [00229]
+[[revisions."2024".casillas]]
+id = "T22003D02:00229"
+number = "00229"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @492+17 N. PATRIMONIO NETO. Ajustes por cambios de valor. Sociedades puestas en equivalencia. [00729]
+[[revisions."2024".casillas]]
+id = "T22003D02:00729"
+number = "00729"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @509+17 N. PATRIMONIO NETO. Ajustes por cambios de valor. Otros ajustes. [00230]
+[[revisions."2024".casillas]]
+id = "T22003D02:00230"
+number = "00230"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @526+17 N. PATRIMONIO NETO. Subvenciones, donaciones y legados recibidos. [00231]
+[[revisions."2024".casillas]]
+id = "T22003D02:00231"
+number = "00231"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @543+17 N. PATRIMONIO NETO. Socios externos. [00652]
+[[revisions."2024".casillas]]
+id = "T22003D02:00652"
+number = "00652"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @560+17 N. PATRIMONIO NETO. Socios externos. Ajustes por valoración. [00694]
+[[revisions."2024".casillas]]
+id = "T22003D02:00694"
+number = "00694"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @577+17 N. PATRIMONIO NETO. Socios externos. Resto. [00695]
+[[revisions."2024".casillas]]
+id = "T22003D02:00695"
+number = "00695"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @594+17 N. PATRIMONIO NETO. TOTAL PATRIMONIO NETO. [00232]
+[[revisions."2024".casillas]]
+id = "T22003D02:00232"
+number = "00232"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @611+17 N. PATRIMONIO NETO. TOTAL PASIVO Y PATRIMONIO NETO. [00233]
+[[revisions."2024".casillas]]
+id = "T22003D02:00233"
+number = "00233"
+segmento = "T22003D02"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

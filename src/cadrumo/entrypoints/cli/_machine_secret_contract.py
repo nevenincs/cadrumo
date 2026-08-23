@@ -141,18 +141,6 @@ MACHINE_SECRET_COMMANDS: Final[tuple[MachineSecretCommandContract, ...]] = (
         variants=(_variant("passphrase", "passphrase", "passphrase_confirmation"),),
     ),
     MachineSecretCommandContract(
-        command_key="config.passphrase.change",
-        cli_path=("config", "passphrase", "change"),
-        variants=(
-            _variant(
-                "rotation",
-                "current_passphrase",
-                "new_passphrase",
-                "new_passphrase_confirmation",
-            ),
-        ),
-    ),
-    MachineSecretCommandContract(
         command_key="config.profile.restore",
         cli_path=("config", "profile", "restore"),
         variants=(

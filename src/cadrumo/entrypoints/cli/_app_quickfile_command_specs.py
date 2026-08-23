@@ -111,6 +111,10 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             DeferredTarget("cadrumo.entrypoints.cli._app_quickfile_payloads", "QuickfileResultPayload"),
             identity="app.quickfile",
         ),
+        search_terms=(
+            "file my taxes do my taxes file my return file quarterly taxes submit quarterly IVA tax return declaration",
+            "presentar la declaración trimestral autoliquidación de impuestos one command full filing chain",
+        ),
     ),
 )
 

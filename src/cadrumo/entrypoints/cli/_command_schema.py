@@ -201,14 +201,17 @@ def _json_type(parameter: ParameterSpec) -> CommandJsonType:
 
 
 def _choices(parameter: ParameterSpec) -> tuple[str, ...]:
-    target = parameter.value.annotation
+    target = parameter.value.click_type or parameter.value.annotation
     try:
         value: object = __import__(target.module, fromlist=(target.qualname.split(".", 1)[0],))
         for segment in target.qualname.split("."):
             value = getattr(value, segment)
     except (ImportError, AttributeError):
         return ()
-    return tuple(str(member.value) for member in value) if isinstance(value, type) and issubclass(value, Enum) else ()
+    if isinstance(value, type) and issubclass(value, Enum):
+        return tuple(str(member.value) for member in value)
+    declared = getattr(value, "choices", ())
+    return tuple(str(choice) for choice in declared)
 
 
 def _parameter(parameter: ParameterSpec) -> CommandParameterMetadata:

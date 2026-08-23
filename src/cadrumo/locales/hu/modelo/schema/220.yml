@@ -765,6 +765,115 @@ modelo:
             x-agp34c1g6d1j0chq60o3ec1l:
               label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
                 es kotelezettsegek. Egyeb tartozasok. Egyeb
+            x-agp34c1g6d230chq60o34c1o:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok
+            x-agp34c1g6d230chq60o34c1p:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Jegyzett toke vagy kolcsonos alap
+            x-agp34c1g6d230chq60o34c9g:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Bejegyzett jegyzett toke vagy kolcsonos alap
+            x-agp34c1g6d230chq60o34c9h:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                (Be nem fizetett jegyzett toke)
+            x-agp34c1g6d230chq60o34c9i:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Toketartalek
+            x-agp34c1g6d230chq60o34c9j:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Eredmenytartalekok
+            x-agp34c1g6d230chq60o34c9k:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Eredmenytartalekok. Torvenyi es alapszabaly szerinti
+            x-agp34c1g6d230chq60o34c9l:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Eredmenytartalekok. Stabilizacios tartalek
+            x-agp34c1g6d230chq60o34c9m:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Eredmenytartalekok. Egyeb eredmenytartalekok
+            x-agp34c1g6d230chq60o34c9n:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                (Sajat reszvenyek es az anyavallalat reszvenyei)
+            x-agp34c1g6d230chq60o34c9o:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Korabbi evek anyavallalatnak tulajdonitott eredmenyei
+            x-agp34c1g6d230chq60o34c9p:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Korabbi evek anyavallalatnak tulajdonitott eredmenyei. Eredmenytartalek
+            x-agp34c1g6d230chq60o34chg:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Korabbi evek eredmenyei. (Korabbi evek anyavallalatnak tulajdonitott
+                negativ eredmenyei)
+            x-agp34c1g6d230chq60o34chh:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Tagok es kolcsonos tagok egyeb hozzajarulasai
+            x-agp34c1g6d230chq60o34chi:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Az uzleti ev anyavallalatnak tulajdonitott eredmenye. Konszolidalt
+                eredmeny
+            x-agp34c1g6d230chq60o34chj:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                (Osztalekeloleg es stabilizacios tartalek eloleg)
+            x-agp34c1g6d230chq60o34chk:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Egyeb tokeinstrumentumok
+            x-agp34c1g6d230chq60o34chl:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Ertekelesi
+                korrekciok
+            x-agp34c1g6d230chq60o34chm:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Ertekelesi
+                korrekciok. Ertekesitheto penzugyi eszkozok
+            x-agp34c1g6d230chq60o34chn:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Ertekelesi
+                korrekciok. Fedezeti ugyletek
+            x-agp34c1g6d230chq60o34cho:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Ertekelesi
+                korrekciok. Arfolyam- es atvaltasi kulonbozetek
+            x-agp34c1g6d230chq60o34chp:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Ertekelesi
+                korrekciok. Szamviteli aszimmetriak korrekcioja
+            x-agp34c1g6d230chq60o34cpg:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Ertekelesi
+                korrekciok. Egyeb korrekciok
+            x-agp34c1g6d230chq60o34cph:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Kapott tamogatasok,
+                adomanyok es hagyatekok
+            x-agp34c1g6d230chq60o34cpi:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat toke
+                osszesen
+            x-agp34c1g6d230chq60o34cpj:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Kotelezettsegek
+                es sajat toke osszesen
+            x-agp34c1g6d230chq60o3cd1p:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Eredmenytartalekok. Konszolidalt tarsasagok eredmenytartalekai
+            x-agp34c1g6d230chq60o3cd9i:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Kulso tagok
+            x-agp34c1g6d230chq60o3ce9i:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Az uzleti ev anyavallalatnak tulajdonitott eredmenye
+            x-agp34c1g6d230chq60o3ce9j:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Az uzleti ev anyavallalatnak tulajdonitott eredmenye. (Kulso tagok
+                eredmenye)
+            x-agp34c1g6d230chq60o3ce9k:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Kulso tagok.
+                Ertekelesi korrekciok
+            x-agp34c1g6d230chq60o3ce9l:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Kulso tagok.
+                Tobbi
+            x-agp34c1g6d230chq60o3echo:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Eredmenytartalekok. Tokemodszerrel elszamolt tarsasagok eredmenytartalekai
+            x-agp34c1g6d230chq60o3echp:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Ertekelesi
+                korrekciok. Tokemodszerrel elszamolt tarsasagok
+            x-agp34c1g6d230chq60o3ecpk:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Eredmenytartalekok. Tokesitesi tartalek
+            x-agp34c1g6d230chq60o3ecpl:
+              label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
+                Eredmenytartalekok. Kiegyenlitesi tartalek
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.

@@ -198,6 +198,14 @@ def test_ledger_frozenset_covers_all_ledger_aggregation_members() -> None:
     assert len(LEDGER_BINDING_SOURCE_KINDS) == 7
 
 
+def test_inventory_is_a_distinct_non_ledger_non_invoice_source_kind() -> None:
+    """Inventory names its schedule proposition without joining another family."""
+    assert BindingSourceKind.INVENTORY.value == "inventory"
+    assert BindingSourceKind.INVENTORY not in LEDGER_BINDING_SOURCE_KINDS
+    assert BindingSourceKind.INVENTORY not in INVOICE_BINDING_SOURCE_KINDS
+    assert BindingSourceKind.INVENTORY not in COUNTERPART_SOURCE_KINDS
+
+
 def test_counterpart_frozenset_is_a_subset_of_the_enum() -> None:
     """The counterpart source kinds are a derived subset of :class:`BindingSourceKind`.
 

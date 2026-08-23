@@ -754,6 +754,119 @@ modelo:
             x-agp34c1g6d1j0chq60o3ec1l:
               label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
                 a pagar. Otras deudas. Otros
+            x-agp34c1g6d230chq60o34c1o:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios
+            x-agp34c1g6d230chq60o34c1p:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Capital o fondo mutual
+            x-agp34c1g6d230chq60o34c9g:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Capital escriturado o fondo mutual
+            x-agp34c1g6d230chq60o34c9h:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. (Capital no exigido)
+            x-agp34c1g6d230chq60o34c9i:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Prima de emision
+            x-agp34c1g6d230chq60o34c9j:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Reservas
+            x-agp34c1g6d230chq60o34c9k:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Reservas. Legal y estatutarias
+            x-agp34c1g6d230chq60o34c9l:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Reservas. Reserva de estabilizacion
+            x-agp34c1g6d230chq60o34c9m:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Reservas. Otras reservas
+            x-agp34c1g6d230chq60o34c9n:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. (Acciones propias y de la sociedad dominante)
+            x-agp34c1g6d230chq60o34c9o:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Resultados de ejercicios anteriores atribuidos a la sociedad
+                dominante
+            x-agp34c1g6d230chq60o34c9p:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Resultados de ejercicios anteriores atribuidos a la sociedad
+                dominante. Remanente
+            x-agp34c1g6d230chq60o34chg:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Resultados de ejercicios anteriores. (Resultados negativos
+                de ejercicios anteriores atribuidos a la sociedad dominante)
+            x-agp34c1g6d230chq60o34chh:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Otras aportaciones de socios y mutualistas
+            x-agp34c1g6d230chq60o34chi:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Resultado del ejercicio atribuido a la sociedad dominante.
+                Perdidas y ganancias consolidadas
+            x-agp34c1g6d230chq60o34chj:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. (Dividendo a cuenta y reserva de estabilizacion a cuenta)
+            x-agp34c1g6d230chq60o34chk:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Otros instrumentos de patrimonio neto
+            x-agp34c1g6d230chq60o34chl:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Ajustes
+                por cambios de valor
+            x-agp34c1g6d230chq60o34chm:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Ajustes
+                por cambios de valor. Activos financieros disponibles para la venta
+            x-agp34c1g6d230chq60o34chn:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Ajustes
+                por cambios de valor. Operaciones de cobertura
+            x-agp34c1g6d230chq60o34cho:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Ajustes
+                por cambios de valor. Diferencias de cambio y conversion
+            x-agp34c1g6d230chq60o34chp:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Ajustes
+                por cambios de valor. Correccion de asimetrias contables
+            x-agp34c1g6d230chq60o34cpg:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Ajustes
+                por cambios de valor. Otros ajustes
+            x-agp34c1g6d230chq60o34cph:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Subvenciones,
+                donaciones y legados recibidos
+            x-agp34c1g6d230chq60o34cpi:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Total
+                patrimonio neto
+            x-agp34c1g6d230chq60o34cpj:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Total
+                pasivo y patrimonio neto
+            x-agp34c1g6d230chq60o3cd1p:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Reservas. Reservas en sociedades consolidadas
+            x-agp34c1g6d230chq60o3cd9i:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Socios
+                externos
+            x-agp34c1g6d230chq60o3ce9i:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Resultado del ejercicio atribuido a la sociedad dominante
+            x-agp34c1g6d230chq60o3ce9j:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Resultado del ejercicio atribuido a la sociedad dominante.
+                (Perdidas y ganancias socios externos)
+            x-agp34c1g6d230chq60o3ce9k:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Socios
+                externos. Ajustes por valoracion
+            x-agp34c1g6d230chq60o3ce9l:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Socios
+                externos. Resto
+            x-agp34c1g6d230chq60o3echo:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Reservas. Reservas en sociedades puestas en equivalencia
+            x-agp34c1g6d230chq60o3echp:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Ajustes
+                por cambios de valor. Sociedades puestas en equivalencia
+            x-agp34c1g6d230chq60o3ecpk:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Reservas. Reserva de capitalizacion
+            x-agp34c1g6d230chq60o3ecpl:
+              label: Balance consolidado. Patrimonio neto (pag. 3D hoja 02). Fondos
+                propios. Reservas. Reserva de nivelacion
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: Estado de ingresos y gastos consolidados reconocidos. Total de

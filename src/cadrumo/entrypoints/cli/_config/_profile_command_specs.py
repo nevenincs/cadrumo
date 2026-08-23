@@ -184,7 +184,7 @@ def _wizard_option(token: str) -> OptionSpec:
     if token in _WIZARD_CONFIRM_FIELDS:
         return _option(
             name,
-            (f"--{token}/--no-{token}",),
+            (f"--{token}", f"--no-{token}"),
             _BOOL,
             help_key,
             flag=True,

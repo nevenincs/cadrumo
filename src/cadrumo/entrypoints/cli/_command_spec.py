@@ -422,6 +422,7 @@ class CommandSpec:
     policy: ExecutionPolicySpec
     handler: LazyBinding | None
     result_schema: ResultSchemaSpec
+    search_terms: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         _require_identifier(self.key, field="command key")
@@ -455,6 +456,8 @@ class CommandSpec:
         ]
         if len(option_tokens) != len(set(option_tokens)):
             raise ValueError("command option tokens must be unique")
+        if any(not term.strip() for term in self.search_terms):
+            raise ValueError("command search terms must be non-empty")
 
 
 @dataclass(frozen=True, slots=True)

@@ -30,7 +30,6 @@ _EXPECTED_CHANNELS: tuple[tuple[object, ...], ...] = (
 _SPEC_KEYS = (
     "config_login",
     "config_profile_create",
-    "config_passphrase_change",
     "config_profile_restore",
     "config_auth_certificate_secret_set",
 )

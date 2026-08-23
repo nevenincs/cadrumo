@@ -8,8 +8,9 @@ from pathlib import Path
 import pytest
 
 from .._command_schema import command_registration_metadata, command_schema_refs
+from .._command_spec import OptionSpec
 from .._command_specs import COMMAND_GRAPH
-from .._verb_input_schema import build_verb_input_schemas, cli_path_for_command_key
+from .._verb_input_schema import build_verb_input_schemas, cli_path_for_command_key, is_exposable_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -23,6 +24,23 @@ def test_schema_and_input_projections_are_exact_graph_sets() -> None:
     schemas = build_verb_input_schemas(tuple(sorted(expected)))
     assert set(schemas) == set(expected)
     assert all(schema.cli_path == cli_path_for_command_key(key) for key, schema in schemas.items())
+
+
+def test_non_leaf_retirement_boolean_pairs_and_modelo_choices_are_truthful() -> None:
+    assert cli_path_for_command_key("root.status") == ()
+    assert not is_exposable_command("root.status")
+    assert "config.passphrase.change" not in COMMAND_GRAPH.by_schema_identity()
+    create = COMMAND_GRAPH.by_schema_identity()["config.profile.create"]
+    boolean_pair = next(p for p in create.parameters if p.name == "new_entity_first_two_profit_periods")
+    assert isinstance(boolean_pair, OptionSpec)
+    assert boolean_pair.declarations == (
+        "--new-entity-first-two-profit-periods",
+        "--no-new-entity-first-two-profit-periods",
+    )
+    amend = build_verb_input_schemas(("modelo.work.amend_wizard",))["modelo.work.amend_wizard"]
+    modelo = next(parameter for parameter in amend.parameters if parameter.name == "modelo")
+    assert "100" in modelo.choices
+    assert "303" in modelo.choices
 
 
 def test_every_projected_target_matches_its_authored_spec() -> None:

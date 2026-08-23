@@ -25,3 +25,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_bienes_inversion_regularizacion_is_not_deferred_after_live_m303_promotion() -> None:
     """The casilla-43 source must not remain deferred after live M303 enrollment."""
     assert BindingSourceKind.BIENES_INVERSION_REGULARIZACION not in DEFERRED_SOURCE_KINDS
+
+
+def test_inventory_is_deferred_until_its_mesh_resolver_is_enrolled() -> None:
+    """The canonical inventory source must not imply premature live routing."""
+    assert BindingSourceKind.INVENTORY in DEFERRED_SOURCE_KINDS

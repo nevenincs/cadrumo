@@ -698,6 +698,7 @@ cli:
           operacion_vinculada: kapcsolt ügylet
           registro_retenciones: levonási nyilvántartás
           regularizacion_bienes_inversion: tárgyi eszközök korrekciója
+          inventario: készletnyilvántartás
           regularizacion_prorrata: prorrata-korrekció
           retencion: levonás
           withholding296_perceptor: visszatartás-bevallás kedvezményezettje

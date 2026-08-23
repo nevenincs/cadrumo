@@ -763,6 +763,117 @@ modelo:
             x-agp34c1g6d1j0chq60o3ec1l:
               label: Consolidated balance sheet. Liabilities (pag. 3C hoja 02). Debts
                 and payables. Other debts. Other
+            x-agp34c1g6d230chq60o34c1o:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds
+            x-agp34c1g6d230chq60o34c1p:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Capital or mutual fund
+            x-agp34c1g6d230chq60o34c9g:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Registered capital or mutual fund
+            x-agp34c1g6d230chq60o34c9h:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. (Uncalled capital)
+            x-agp34c1g6d230chq60o34c9i:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Share premium
+            x-agp34c1g6d230chq60o34c9j:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Reserves
+            x-agp34c1g6d230chq60o34c9k:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Reserves. Legal and statutory
+            x-agp34c1g6d230chq60o34c9l:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Reserves. Stabilisation reserve
+            x-agp34c1g6d230chq60o34c9m:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Reserves. Other reserves
+            x-agp34c1g6d230chq60o34c9n:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. (Own shares and shares of the parent company)
+            x-agp34c1g6d230chq60o34c9o:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Results of prior years attributed to the parent company
+            x-agp34c1g6d230chq60o34c9p:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Results of prior years attributed to the parent company. Retained
+                surplus
+            x-agp34c1g6d230chq60o34chg:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Results of prior years. (Negative results of prior years attributed
+                to the parent company)
+            x-agp34c1g6d230chq60o34chh:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Other contributions from shareholders and mutual members
+            x-agp34c1g6d230chq60o34chi:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Result for the year attributed to the parent company. Consolidated
+                profit and loss
+            x-agp34c1g6d230chq60o34chj:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. (Interim dividend and interim stabilisation reserve)
+            x-agp34c1g6d230chq60o34chk:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Other equity instruments
+            x-agp34c1g6d230chq60o34chl:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Valuation
+                adjustments
+            x-agp34c1g6d230chq60o34chm:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Valuation
+                adjustments. Available-for-sale financial assets
+            x-agp34c1g6d230chq60o34chn:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Valuation
+                adjustments. Hedging operations
+            x-agp34c1g6d230chq60o34cho:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Valuation
+                adjustments. Exchange and translation differences
+            x-agp34c1g6d230chq60o34chp:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Valuation
+                adjustments. Correction of accounting mismatches
+            x-agp34c1g6d230chq60o34cpg:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Valuation
+                adjustments. Other adjustments
+            x-agp34c1g6d230chq60o34cph:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Grants,
+                donations and bequests received
+            x-agp34c1g6d230chq60o34cpi:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Total equity
+            x-agp34c1g6d230chq60o34cpj:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Total liabilities
+                and equity
+            x-agp34c1g6d230chq60o3cd1p:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Reserves. Reserves in consolidated companies
+            x-agp34c1g6d230chq60o3cd9i:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Non-controlling
+                interests
+            x-agp34c1g6d230chq60o3ce9i:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Result for the year attributed to the parent company
+            x-agp34c1g6d230chq60o3ce9j:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Result for the year attributed to the parent company. (Profit
+                and loss of non-controlling interests)
+            x-agp34c1g6d230chq60o3ce9k:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Non-controlling
+                interests. Valuation adjustments
+            x-agp34c1g6d230chq60o3ce9l:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Non-controlling
+                interests. Remainder
+            x-agp34c1g6d230chq60o3echo:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Reserves. Reserves in equity-method companies
+            x-agp34c1g6d230chq60o3echp:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Valuation
+                adjustments. Equity-method companies
+            x-agp34c1g6d230chq60o3ecpk:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Reserves. Capitalisation reserve
+            x-agp34c1g6d230chq60o3ecpl:
+              label: Consolidated balance sheet. Equity (pag. 3D hoja 02). Shareholders'
+                funds. Reserves. Levelling reserve
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: Statement of recognised consolidated income and expense. Total

@@ -65,7 +65,6 @@ from ...core.json_contract import strict_round_trip as _strict_round_trip
 from ...core.output_rendering import OutputFormat as _OutputFormat
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
-from ._command_spec import ExecutionPolicySpec as _ExecutionPolicySpec
 from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 from ._common import (
     _emit_envelope,
@@ -985,7 +984,7 @@ def full_command_tree() -> _TyCommand:
 
 def _declared_execution_policy_for_cli_path(
     cli_path: tuple[str, ...],
-) -> _CommandExecutionPolicy | _ExecutionPolicySpec:
+) -> _CommandExecutionPolicy:
     from ._command_schema import CommandCapabilityClass
 
     declared = _COMMAND_GRAPH.resolve_path((_PRODUCT_IDENTITY.cli_executable, *cli_path)).policy
@@ -1004,7 +1003,7 @@ def _declared_execution_policy_for_cli_path(
 
 def command_execution_policy_for_cli_path(
     cli_path: tuple[str, ...],
-) -> _CommandExecutionPolicy | _ExecutionPolicySpec:
+) -> _CommandExecutionPolicy:
     """Return callback-attached policy for one live path, loading only that path.
 
     The concrete policy type remains owned by the CLI metadata module.  This
@@ -1012,6 +1011,14 @@ def command_execution_policy_for_cli_path(
     without importing the complete command tree.
     """
     return _declared_execution_policy_for_cli_path(cli_path)
+
+
+def command_search_terms(command_key: str) -> tuple[str, ...]:
+    """Return spec-authored semantic search terms for one command key."""
+    spec = _COMMAND_GRAPH.by_schema_identity().get(command_key) or _COMMAND_GRAPH.by_key().get(command_key)
+    if spec is None:
+        raise LookupError(f"unknown command key: {command_key!r}")
+    return spec.search_terms
 
 
 #: The per-verb input-schema projection re-exported from this facade. The module
@@ -1220,6 +1227,7 @@ __all__ = [
     "command_schema_refs",
     "command_schema_type",
     "command_schema_types",
+    "command_search_terms",
     "full_command_tree",
     "is_exposable_command",
     "main",

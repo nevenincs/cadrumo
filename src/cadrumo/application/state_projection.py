@@ -451,6 +451,7 @@ CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION: (
             "cli.app.modelo.bindings.readiness.regularizacion_bienes_inversion"
         ),
+        BindingSourceKind.INVENTORY: "cli.app.modelo.bindings.readiness.inventario",
         BindingSourceKind.PRORRATA_REGULARIZACION: "cli.app.modelo.bindings.readiness.regularizacion_prorrata",
         BindingSourceKind.BORRADOR: "cli.app.modelo.bindings.readiness.borrador_aeat",
         BindingSourceKind.IVA_WALLET_DECISION: "cli.app.modelo.bindings.readiness.decision_compensacion_iva",
@@ -491,6 +492,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
         BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: OperatorActionAxis.FILE_PRIOR_PERIOD,
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
+        BindingSourceKind.INVENTORY: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.PRORRATA_REGULARIZACION: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.BORRADOR: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
         BindingSourceKind.IVA_WALLET_DECISION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,

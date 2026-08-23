@@ -2324,7 +2324,10 @@ MODELO_NONWORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="modelo",
                 declarations=("--modelo",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
+                value=ValueContract(
+                    DeferredTarget("builtins", "str"),
+                    click_type=DeferredTarget("cadrumo.entrypoints.cli._common", "MODELO_CODE_CHOICE"),
+                ),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.modelo.work.modelo_help"),
                 multiple=False,

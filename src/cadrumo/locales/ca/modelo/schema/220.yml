@@ -741,6 +741,116 @@ modelo:
             x-agp34c1g6d1j0chq60o3ec1l:
               label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
                 a pagar. Altres deutes. Altres
+            x-agp34c1g6d230chq60o34c1o:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis
+            x-agp34c1g6d230chq60o34c1p:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Capital o fons mutual
+            x-agp34c1g6d230chq60o34c9g:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Capital escripturat o fons mutual
+            x-agp34c1g6d230chq60o34c9h:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                (Capital no exigit)
+            x-agp34c1g6d230chq60o34c9i:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Prima d'emissio
+            x-agp34c1g6d230chq60o34c9j:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Reserves
+            x-agp34c1g6d230chq60o34c9k:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Reserves. Legals i estatutaries
+            x-agp34c1g6d230chq60o34c9l:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Reserves. Reserva d'estabilitzacio
+            x-agp34c1g6d230chq60o34c9m:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Reserves. Altres reserves
+            x-agp34c1g6d230chq60o34c9n:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                (Accions propies i de la societat dominant)
+            x-agp34c1g6d230chq60o34c9o:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Resultats d'exercicis anteriors atribuits a la societat dominant
+            x-agp34c1g6d230chq60o34c9p:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Resultats d'exercicis anteriors atribuits a la societat dominant.
+                Romanent
+            x-agp34c1g6d230chq60o34chg:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Resultats d'exercicis anteriors. (Resultats negatius d'exercicis anteriors
+                atribuits a la societat dominant)
+            x-agp34c1g6d230chq60o34chh:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Altres aportacions de socis i mutualistes
+            x-agp34c1g6d230chq60o34chi:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Resultat de l'exercici atribuit a la societat dominant. Perdues i
+                guanys consolidats
+            x-agp34c1g6d230chq60o34chj:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                (Dividend a compte i reserva d'estabilitzacio a compte)
+            x-agp34c1g6d230chq60o34chk:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Altres instruments de patrimoni net
+            x-agp34c1g6d230chq60o34chl:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Ajustos per
+                canvis de valor
+            x-agp34c1g6d230chq60o34chm:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Ajustos per
+                canvis de valor. Actius financers disponibles per a la venda
+            x-agp34c1g6d230chq60o34chn:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Ajustos per
+                canvis de valor. Operacions de cobertura
+            x-agp34c1g6d230chq60o34cho:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Ajustos per
+                canvis de valor. Diferencies de canvi i conversio
+            x-agp34c1g6d230chq60o34chp:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Ajustos per
+                canvis de valor. Correccio d'asimetries comptables
+            x-agp34c1g6d230chq60o34cpg:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Ajustos per
+                canvis de valor. Altres ajustos
+            x-agp34c1g6d230chq60o34cph:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Subvencions,
+                donacions i llegats rebuts
+            x-agp34c1g6d230chq60o34cpi:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Total patrimoni
+                net
+            x-agp34c1g6d230chq60o34cpj:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Total passiu
+                i patrimoni net
+            x-agp34c1g6d230chq60o3cd1p:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Reserves. Reserves en societats consolidades
+            x-agp34c1g6d230chq60o3cd9i:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Socis externs
+            x-agp34c1g6d230chq60o3ce9i:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Resultat de l'exercici atribuit a la societat dominant
+            x-agp34c1g6d230chq60o3ce9j:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Resultat de l'exercici atribuit a la societat dominant. (Perdues i
+                guanys de socis externs)
+            x-agp34c1g6d230chq60o3ce9k:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Socis externs.
+                Ajustos per valoracio
+            x-agp34c1g6d230chq60o3ce9l:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Socis externs.
+                Resta
+            x-agp34c1g6d230chq60o3echo:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Reserves. Reserves en societats posades en equivalencia
+            x-agp34c1g6d230chq60o3echp:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Ajustos per
+                canvis de valor. Societats posades en equivalencia
+            x-agp34c1g6d230chq60o3ecpk:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Reserves. Reserva de capitalitzacio
+            x-agp34c1g6d230chq60o3ecpl:
+              label: Balanc consolidat. Patrimoni net (pag. 3D hoja 02). Fons propis.
+                Reserves. Reserva d'anivellacio
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: Estat d'ingressos i despeses consolidats reconeguts. Total d'ingressos
