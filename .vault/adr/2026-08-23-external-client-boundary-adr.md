@@ -5,18 +5,19 @@ tags:
 date: '2026-08-23'
 related:
   - "[[2026-08-23-external-client-boundary-research]]"
-supersedes:
-  - '2026-06-30-agent-harness-adr'
-  - '2026-07-01-agent-harness-adr'
-  - '2026-07-02-agent-harness-refoundation-adr'
-  - '2026-07-03-claude-ecosystem-packaging-adr'
-  - '2026-07-16-distribution-harness-identity-adr'
-  - '2026-07-18-mcpb-signing-publisher-adr'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:528d2651b43ae6f804ae22987a1bb996ee027405f810626c46540260ca8ec12f'
+body_hash: 'sha256:3b2f3485603ee238b90fabf70095650d86ae79ac2bef7013558c7df8183b4165'
 ---
-# `external-client-boundary` adr: `base product is client-blind` | (**status:** `accepted`)
+# `external-client-boundary` adr: `base product is client-blind` | (**status:** `rejected`)
+
+## Rejection
+
+Operator correction: separating the harness from the CLI and base package does not
+authorize deleting the separately owned harness, Claude plugin, build, deployment, or
+release surfaces. The harness is a promised product surface with its own distribution
+boundary. This proposal therefore does not govern implementation and supersedes none
+of the accepted harness or packaging decisions.
 
 ## Problem Statement
 
