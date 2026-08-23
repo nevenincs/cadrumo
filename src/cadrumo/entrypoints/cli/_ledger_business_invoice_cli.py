@@ -1,4 +1,4 @@
-"""Typer registration for the unified ledger business invoice command.
+"""Behavior handlers for the unified ledger business invoice command.
 
 One ``aeat app ledger invoice`` noun-group gated by ``--kind issued|received``
 replaces the prior payable-invoice / collectible-invoice split. Every verb

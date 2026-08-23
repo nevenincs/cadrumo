@@ -17,7 +17,10 @@ _STALE = re.compile(
     r"(?:schema\s+decorator|decorat(?:ed|or).{0,80}commandspec|"
     r"registered\s+(?:result\s+|output\s+|payload\s+)?schemas?|"
     r"schemas?\s+(?:is\s+|are\s+)?registered|registers\s+its\s+own\s+schema|"
-    r"not\s+registered)",
+    r"(?:schema|result|model|command).{0,80}not\s+registered|"
+    r"not\s+registered.{0,80}(?:schema|result|model|command)|"
+    r"(?:typer|command)\s+registrations?|"
+    r"registrations?\s+(?:with|through|on)\s+typer)",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -47,14 +50,18 @@ def test_stale_schema_authority_detector_rejects_each_retired_mechanism() -> Non
         '"""This schema is registered at import time."""',
         "# Shared models (not registered)",
         '"""Each subclass registers its own schema."""',
+        '"""Typer registration for this command family."""',
     )
     assert all(_stale_blocks(plant) for plant in plants)
 
 
 @pytest.mark.parametrize(
     "path",
-    tuple(sorted(_CLI_ROOT.glob("*payloads*.py")))
-    + tuple(sorted((_CLI_ROOT / "_config").glob("*payloads*.py"))),
+    tuple(
+        path
+        for path in sorted(_CLI_ROOT.rglob("*.py"))
+        if "tests" not in path.relative_to(_CLI_ROOT).parts
+    ),
     ids=lambda path: path.relative_to(_CLI_ROOT).as_posix(),
 )
 def test_payload_prose_names_only_deferred_commandspec_schema_ownership(path: Path) -> None:

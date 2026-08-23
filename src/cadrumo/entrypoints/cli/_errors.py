@@ -22,7 +22,7 @@ The :func:`command_error_boundary` decorator wraps a callback so that
 :class:`CadrumoError` instances are emitted via
 :func:`_emit_error_and_exit`.
 :func:`decorate_typer_app` walks a
-:class:`~typer.Typer` tree and applies the decorator to every registered command
+:class:`~typer.Typer` tree and applies the error boundary to every graph-materialized command
 and group callback (with an opt-out via ``skip_paths``).
 :func:`error_boundary_under_test` toggles the
 boundary off for tests that want to assert on the raised exception directly.

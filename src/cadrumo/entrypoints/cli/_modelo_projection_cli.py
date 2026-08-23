@@ -1,4 +1,4 @@
-"""Typer registrations for modelo projection and comparison commands.
+"""Behavior handlers for modelo projection and comparison commands.
 
 The ``modelo.project`` adapter calls :func:`project_modelo_100_from_m130`
 and serializes the service result as :class:`ModeloProjectResult`.  Its

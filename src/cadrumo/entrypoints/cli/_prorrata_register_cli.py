@@ -1,4 +1,4 @@
-"""Typer registration for the cross-period IVA prorrata register.
+"""Behavior handlers for the cross-period IVA prorrata register.
 
 The commands delegate register persistence to
 :class:`ProrrataRegisterService` and emit typed payloads from

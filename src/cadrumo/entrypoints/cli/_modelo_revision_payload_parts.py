@@ -6,7 +6,7 @@ work-revision result schemas. They project
 :class:`RegistryCalculationResult` and
 :class:`ResultSummaryRow` headline-result rows into
 strict :class:`OutputSchema` fragments.
-They are not registered command results on their own; registered
+They are not direct CommandSpec result targets on their own; graph-declared
 :class:`WorkRevisionResult`,
 :class:`WorkObservationsResult`,
 and :class:`WorkCalculateResult` models
@@ -134,7 +134,7 @@ class CalculationRevisionProjectionFields(OutputSchema):
     fields, plus their own command-specific extras (``saved``/
     ``saved_confirmation``, Modelo 202 modality, the wizard's
     ``prompted_casillas``, …). Not itself a CommandSpec schema authority target: each
-    concrete result subclasses this mixin and registers its own command
+    concrete result subclasses this mixin and is referenced by its own command
     path, so the shared fields stay declared once while each command keeps
     its own strict, independently declared schema target.
     """

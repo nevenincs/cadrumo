@@ -1,4 +1,4 @@
-"""Typer registration for the human review gate over pending extraction drafts.
+"""Behavior handlers for the human review gate over pending extraction drafts.
 
 The operator-facing half of document ingestion. A draft is what a reader
 proposed; these verbs are where a person meets it before anything is minted.

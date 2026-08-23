@@ -1,4 +1,4 @@
-"""Typer registrations for Modelo 145 local communication commands.
+"""Behavior handlers for Modelo 145 local communication commands.
 
 The command group is a thin transport boundary for local payer communication
 records. It parses Typer arguments, resolves the active bucket, delegates all
@@ -17,7 +17,7 @@ See Also:
     :mod:`~entrypoints.cli._modelo_m145_parsing`
         CLI-only parsing helpers for casilla assignments and actor labels.
     :mod:`~entrypoints.cli._modelo_m145_rendering`
-        Text/JSON envelope emitters for the registered commands.
+        Text/JSON envelope emitters for the graph-declared commands.
     :mod:`~entrypoints.cli._modelo_payloads_m145`
         Typed JSON payload schemas declared for Modelo 145 CLI operations.
 """

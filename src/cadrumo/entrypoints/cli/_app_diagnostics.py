@@ -68,11 +68,11 @@ def diagnostics_root(ctx: typer.Context) -> None:
     """Render the ``aeat app diagnostics`` group help when invoked bare.
 
     A real (non-collapsing) group callback is required here: a Typer
-    instance carrying exactly one registered command and no callback is
+    instance carrying exactly one graph-materialized command and no callback is
     collapsed by ``typer.main.get_command`` into that bare command, which
     would silently swallow the ``run-health`` verb name as an unexpected
     positional argument. The callback's presence keeps this a genuine
-    Click Group even while only one verb is registered.
+    Click Group even while only one verb is materialized.
     """
     if ctx.invoked_subcommand is None:
         typer.echo(ctx.get_help())

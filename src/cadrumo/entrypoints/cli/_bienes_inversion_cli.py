@@ -1,4 +1,4 @@
-"""Typer registration for the capital-goods IVA regularización register.
+"""Behavior handlers for the capital-goods IVA regularización register.
 
 The commands delegate register persistence to
 :class:`BienesInversionRegisterService` and emit

@@ -1,5 +1,5 @@
 # ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
-"""Typer registrations for modelo IVA wallet commands."""
+"""Behavior handlers for modelo IVA wallet commands."""
 
 from __future__ import annotations
 

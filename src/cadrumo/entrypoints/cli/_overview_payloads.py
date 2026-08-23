@@ -463,7 +463,7 @@ class OverviewBacklogResult(OutputSchema):
     """JSON envelope result for ``aeat app overview backlog``.
 
     Accepts the JSON form of :class:`OverviewBacklog` while the CLI controls
-    only envelope registration and rendering. The backlog read model is a
+    only graph-derived envelope selection and rendering. The backlog read model is a
     filtered :class:`OverviewCalendar` projection, so its items remain calendar
     entry rows rather than command-local DTOs.
     """

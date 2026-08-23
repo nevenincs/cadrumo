@@ -1,4 +1,4 @@
-"""Config custody command registration."""
+"""Config custody behavior handlers."""
 
 from __future__ import annotations
 

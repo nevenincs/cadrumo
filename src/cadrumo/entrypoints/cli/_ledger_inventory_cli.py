@@ -1,4 +1,4 @@
-"""Typer registration for ledger inventory commands.
+"""Behavior handlers for ledger inventory commands.
 
 The commands delegate inventory persistence and valuation to
 :class:`InventoryService` and emit typed payloads

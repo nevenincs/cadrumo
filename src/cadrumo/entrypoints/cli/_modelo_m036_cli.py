@@ -1,5 +1,5 @@
 # ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
-"""Typer registrations for Modelo 036 declarative-recording commands."""
+"""Behavior handlers for Modelo 036 declarative-recording commands."""
 
 from __future__ import annotations
 
