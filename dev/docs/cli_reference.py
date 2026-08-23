@@ -210,11 +210,30 @@ def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec:
     if not isinstance(spec, CommandSpec):
         raise TypeError("CLI reference received a non-CommandSpec node")
     parts = [_rst_heading(" ".join(path), "-"), "\n", tr(spec.help_key.value), "\n\n"]
+    if spec.parameters:
+        parts.append(docs_chrome("docs.cli.command.parameters_heading", language) + "\n\n")
     for parameter in spec.parameters:
-        declaration = parameter.name if isinstance(parameter, ArgumentSpec) else " / ".join(parameter.declarations)
+        is_argument = isinstance(parameter, ArgumentSpec)
+        declaration = parameter.name if is_argument else " / ".join(parameter.declarations)
         required = parameter.default.kind.value == "required"
-        parts.append(f"{declaration}\n   {parameter.help_key.value if parameter.help_key else ''}")
-        parts.append(f" ({'required' if required else 'optional'})\n\n")
+
+        # The help key NAMES the operator-facing sentence rather than being it. Emitting
+        # the key put dotted identifiers such as ``cli.ledger.add.description_help`` on
+        # every parameter of every page of the published reference.
+        described = (
+            tr(parameter.help_key.value)
+            if parameter.help_key
+            else docs_chrome("docs.cli.command.no_description", language)
+        )
+
+        # Argument-versus-option and required-versus-optional are four authored strings,
+        # not one English word in parentheses: this reference is rendered once per
+        # language, and a hardcoded "required" is the only untranslated text on the page.
+        kind = "argument" if is_argument else "option"
+        state = "required" if required else "optional"
+        classification = docs_chrome(f"docs.cli.param.{kind}_{state}", language)
+
+        parts.append(f"{declaration}\n   {described}\n   {classification}\n\n")
     return "".join(parts)
 
 
@@ -472,8 +491,24 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
         family_nodes = tuple(node for node in leaves if node.path[1] == family)
         groups = sorted({node.path[2] for node in family_nodes if len(node.path) > 3})
         direct = tuple(node for node in family_nodes if len(node.path) == 3)
-        family_parts = [_rst_heading(family, "="), "\n"]
+        # The family landing page is the reader's entry into a whole command family,
+        # and it rendered as a bare bullet list of links: the raw family token as its
+        # title, no orientation, no heading over the direct commands, and no way back
+        # to the index. Every string below already existed, authored in four locales,
+        # and went unused -- which is also why it kept being pruned as an unused key.
+        family_parts = [
+            _rst_heading(docs_chrome("docs.cli.family.title", language, command=family), "="),
+            "\n",
+            docs_chrome("docs.cli.family.intro", language, family=family) + "\n\n",
+        ]
+        if direct:
+            family_parts.append(
+                _rst_heading(docs_chrome("docs.cli.family.direct_commands_heading", language), "-") + "\n"
+            )
+            family_parts.append(docs_chrome("docs.cli.family.direct_commands_intro", language, family=family) + "\n\n")
         family_parts.extend(_render_graph_command(language, node.path, node.spec) for node in direct)
+        if groups:
+            family_parts.append(_rst_heading(docs_chrome("docs.cli.family.choose_group_heading", language), "-") + "\n")
         for group in groups:
             group_nodes = tuple(node for node in family_nodes if len(node.path) > 3 and node.path[2] == group)
             content = (
@@ -485,7 +520,19 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
             rendered[rel] = content
             (output_dir / family).mkdir(parents=True, exist_ok=True)
             _write_text_if_changed(output_dir / family / f"{group}.rst", content)
-            family_parts.append(f"* :doc:`{group} <{family}/{group}>`\n")
+            family_parts.append(
+                "* "
+                + docs_chrome(
+                    "docs.cli.family.group_link_line",
+                    language,
+                    target=f"{family}/{group}",
+                    family=family,
+                    group=group,
+                )
+                + "\n"
+            )
+        if groups or direct:
+            family_parts.append("\n" + docs_chrome("docs.cli.family.index_link_line", language) + "\n")
         family_content = "".join(family_parts)
         rel = f"cli/{family}.rst"
         rendered[rel] = family_content

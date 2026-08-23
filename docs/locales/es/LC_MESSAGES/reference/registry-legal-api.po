@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
@@ -27,9 +27,9 @@ msgid ""
 "The Agencia Estatal de Administración Tributaria (AEAT) owns the official"
 " modelo structure. API means application programming interface."
 msgstr ""
-"La Agencia Estatal de Administración Tributaria (AEAT) es la titular de la "
-"estructura oficial de los modelos. API significa interfaz de programación de "
-"aplicaciones."
+"La Agencia Estatal de Administración Tributaria (AEAT) es la titular de "
+"la estructura oficial de los modelos. API significa interfaz de "
+"programación de aplicaciones."
 
 #: ../../reference/registry-legal-api.md:6
 msgid "Registry and legal-source lookup"
@@ -44,11 +44,11 @@ msgid ""
 "later review can identify the exact rule set."
 msgstr ""
 "El registro de cálculo de Cadrumo conserva la estructura de la AEAT que "
-"representa: los identificadores de modelo, los periodos, las secciones, las "
-"casillas, las fórmulas, los bindings, las clasificaciones y las referencias "
-"de origen mantienen el nombre de la autoridad. Una revisión de cálculo "
-"resuelta registra la revisión del registro que usó, para que una revisión "
-"posterior pueda identificar el conjunto exacto de reglas."
+"representa: los identificadores de modelo, los periodos, las secciones, "
+"las casillas, las fórmulas, los bindings, las clasificaciones y las "
+"referencias de origen mantienen el nombre de la autoridad. Una revisión "
+"de cálculo resuelta registra la revisión del registro que usó, para que "
+"una revisión posterior pueda identificar el conjunto exacto de reglas."
 
 #: ../../reference/registry-legal-api.md
 msgid "Reference field"
@@ -99,10 +99,85 @@ msgid ""
 "Local record, document, observation, or prior filed revision that "
 "supplied a value"
 msgstr ""
-"Registro local, documento, observación o revisión presentada anterior que "
-"aportó un valor"
+"Registro local, documento, observación o revisión presentada anterior que"
+" aportó un valor"
 
 #: ../../reference/registry-legal-api.md:22
+msgid "Filing-input contract shapes"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:24
+msgid ""
+"The validated registry snapshot is the read-model authority for one "
+"modelo, filing year, and period. It defines the casillas, formulas, "
+"bindings, repeating fields, grounding, and export layout required by that"
+" filing revision. Source business records remain owned by their encrypted"
+" domain repositories."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Shape"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+#, fuzzy
+msgid "Registry contract"
+msgstr "Revisión del registro"
+
+#: ../../reference/registry-legal-api.md
+msgid "Runtime projection"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+#, fuzzy
+msgid "Scalar binding"
+msgstr "Fórmula o binding"
+
+#: ../../reference/registry-legal-api.md
+msgid "Typed source kind, selector, and aggregation"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "One numeric, enumerated, text, or date value for a binding id"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Repeating row binding"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Typed source kind plus grouping, row field, and aggregation"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid ""
+"Values keyed by binding id and one-based row index, with validated detail"
+" rows"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Formula"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Typed operands and operation grounded by registry references"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "A calculated casilla observation"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:35
+msgid ""
+"A binding is not an attachable data blob. It is the contract by which an "
+"enrolled source resolver projects an owned source record into one of "
+"these filing-input shapes. Modelo 720 foreign assets use an enrolled "
+"repeating-row projection. The binding-source taxonomy currently has no "
+"inventory member. No calculation resolver is enrolled for the encrypted "
+"`InventoryLedger`, so it remains a standalone business register."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:42
 #, python-brace-format
 msgid ""
 "Use the generated [application command reference](../cli/app.rst) to look"
@@ -110,17 +185,17 @@ msgid ""
 "report, and audit surfaces. Use the {doc}`glossary "
 "</_generated/glossary>` for taxpayer-facing definitions."
 msgstr ""
-"Usa la [referencia de comandos de la aplicación](../cli/app.rst) generada "
-"para consultar las superficies de inspección del registro, descripción de "
-"modelos, fórmulas, informes de verificación y auditoría. Usa el "
+"Usa la [referencia de comandos de la aplicación](../cli/app.rst) generada"
+" para consultar las superficies de inspección del registro, descripción "
+"de modelos, fórmulas, informes de verificación y auditoría. Usa el "
 "{doc}`glosario </_generated/glossary>` para las definiciones de cara al "
 "contribuyente."
 
-#: ../../reference/registry-legal-api.md:27
+#: ../../reference/registry-legal-api.md:47
 msgid "Python public API lookup"
 msgstr "Consulta de la API pública de Python"
 
-#: ../../reference/registry-legal-api.md:29
+#: ../../reference/registry-legal-api.md:49
 msgid ""
 "The generated [Cadrumo package API](../api/cadrumo.rst) is the entry "
 "point for Python lookup. Public consumers import from `cadrumo` and its "
@@ -128,18 +203,19 @@ msgid ""
 " adapters, application, core, domain, entrypoint, and locale surfaces."
 msgstr ""
 "La [API del paquete Cadrumo](../api/cadrumo.rst) generada es el punto de "
-"entrada para la consulta en Python. Los consumidores públicos importan desde "
-"`cadrumo` y sus fachadas públicas documentadas. El árbol de paquetes "
-"generado enumera las superficies admitidas de adaptadores, aplicación, "
-"núcleo, dominio, punto de entrada y locales."
+"entrada para la consulta en Python. Los consumidores públicos importan "
+"desde `cadrumo` y sus fachadas públicas documentadas. El árbol de "
+"paquetes generado enumera las superficies admitidas de adaptadores, "
+"aplicación, núcleo, dominio, punto de entrada y locales."
 
-#: ../../reference/registry-legal-api.md:34
+#: ../../reference/registry-legal-api.md:54
 msgid ""
 "There is no `aeat` Python import compatibility package. Names containing "
 "`aeat` inside the `cadrumo` package identify the external authority "
 "adapter or authority-owned vocabulary, not a second product API."
 msgstr ""
-"No existe un paquete `aeat` de compatibilidad de importación en Python. Los "
-"nombres que contienen `aeat` dentro del paquete `cadrumo` identifican el "
-"adaptador de la autoridad externa o el vocabulario propio de la autoridad, "
-"no una segunda API del producto."
+"No existe un paquete `aeat` de compatibilidad de importación en Python. "
+"Los nombres que contienen `aeat` dentro del paquete `cadrumo` identifican"
+" el adaptador de la autoridad externa o el vocabulario propio de la "
+"autoridad, no una segunda API del producto."
+

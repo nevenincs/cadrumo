@@ -54,10 +54,75 @@ def _translation_keys(value: object) -> tuple[TranslationKey, ...]:
 
 
 def _assert_no_forbidden_authority(
-    source: str, *, runtime_projection: bool = False, spec_declaration: bool = False
+    source: str,
+    *,
+    runtime_projection: bool = False,
+    callback_wrapper_projection: bool = False,
+    spec_declaration: bool = False,
 ) -> None:
     tree = ast.parse(source)
-    aliases = {name: name for name in ("Typer", "Option", "Argument", "CommandSpec")}
+
+    constants: dict[str, str] = {}
+
+    def constant_string(node: ast.expr) -> str | None:
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            return node.value
+        if isinstance(node, ast.Name):
+            return constants.get(node.id)
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+            left = constant_string(node.left)
+            right = constant_string(node.right)
+            return None if left is None or right is None else left + right
+        if isinstance(node, ast.JoinedStr) and all(
+            isinstance(value, ast.Constant) and isinstance(value.value, str) for value in node.values
+        ):
+            return "".join(value.value for value in node.values if isinstance(value, ast.Constant))
+        return None
+
+    conflicting_constants: set[str] = set()
+    changed = True
+    while changed:
+        changed = False
+        for statement in tree.body:
+            if not isinstance(statement, (ast.Assign, ast.AnnAssign)) or statement.value is None:
+                continue
+            targets = statement.targets if isinstance(statement, ast.Assign) else [statement.target]
+            value = constant_string(statement.value)
+            for target in targets:
+                if not isinstance(target, ast.Name) or target.id in conflicting_constants:
+                    continue
+                previous = constants.get(target.id)
+                if value is None or (previous is not None and previous != value):
+                    if previous is not None:
+                        constants.pop(target.id)
+                        conflicting_constants.add(target.id)
+                        changed = True
+                elif previous is None:
+                    constants[target.id] = value
+                    changed = True
+
+    def assignment_targets(node: ast.expr) -> tuple[ast.expr, ...]:
+        if isinstance(node, (ast.Tuple, ast.List)):
+            return tuple(child for item in node.elts for child in assignment_targets(item))
+        return (node,)
+
+    def is_materialized_callback_wrapper(target: ast.expr, value: ast.expr | None) -> bool:
+        if not callback_wrapper_projection or not isinstance(target, ast.Attribute) or target.attr != "callback":
+            return False
+        if not isinstance(value, ast.Call) or not isinstance(value.func, ast.Name):
+            return False
+        if value.func.id != "command_error_boundary" or len(value.args) != 1 or value.keywords:
+            return False
+        argument = value.args[0]
+        return (
+            isinstance(argument, ast.Attribute)
+            and argument.attr == "callback"
+            and ast.dump(argument.value) == ast.dump(target.value)
+        )
+    aliases = {
+        name: name
+        for name in ("Typer", "Option", "Argument", "CommandSpec", "getattr", "setattr")
+    }
     typer_modules = {"typer"}
     command_spec_modules: set[str] = set()
     for item in ast.walk(tree):
@@ -70,6 +135,14 @@ def _assert_no_forbidden_authority(
             for alias in item.names:
                 if alias.name in aliases:
                     aliases[alias.asname or alias.name] = alias.name
+                elif alias.name == "_command_spec":
+                    command_spec_modules.add(alias.asname or alias.name)
+                elif alias.name == "register":
+                    aliases[alias.asname or alias.name] = "register"
+                elif alias.name in {"register_command", "register_commands"} or (
+                    alias.name.startswith("register_") and alias.name.endswith("_commands")
+                ):
+                    aliases[alias.asname or alias.name] = "register_commands"
     changed = True
     while changed:
         changed = False
@@ -95,6 +168,20 @@ def _assert_no_forbidden_authority(
                     and value.value.id in command_spec_modules
                 ):
                     canonical = "CommandSpec"
+                elif (
+                    isinstance(value.value, ast.Name)
+                    and value.value.id == "object"
+                    and value.attr == "__setattr__"
+                ):
+                    canonical = "setattr"
+            elif (
+                isinstance(value, ast.Call)
+                and isinstance(value.func, ast.Name)
+                and aliases.get(value.func.id, value.func.id) == "getattr"
+                and len(value.args) >= 2
+                and constant_string(value.args[1]) is not None
+            ):
+                canonical = constant_string(value.args[1])
             if canonical is not None:
                 aliases[target.id] = canonical
                 changed = True
@@ -164,6 +251,7 @@ def _assert_no_forbidden_authority(
         "declare_metadata_group",
         "register_schema",
         "command_execution_policy",
+        "register_commands",
     }
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -173,6 +261,15 @@ def _assert_no_forbidden_authority(
         elif isinstance(node, ast.Call):
             name = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
             canonical_name = aliases.get(name, name)
+            if (
+                isinstance(node.func, ast.Call)
+                and isinstance(node.func.func, ast.Name)
+                and aliases.get(node.func.func.id, node.func.func.id) == "getattr"
+                and len(node.func.args) >= 2
+                and constant_string(node.func.args[1]) is not None
+            ):
+                canonical_name = constant_string(node.func.args[1]) or ""
+                assert runtime_projection or canonical_name not in {"command", "callback"}
             if (
                 isinstance(node.func, ast.Attribute)
                 and isinstance(node.func.value, ast.Name)
@@ -186,7 +283,39 @@ def _assert_no_forbidden_authority(
                 and node.func.attr == "CommandSpec"
             ):
                 canonical_name = "CommandSpec"
-            assert name not in forbidden_calls
+            assert canonical_name not in forbidden_calls
+            if canonical_name == "register":
+                positional_names = {
+                    argument.id for argument in node.args if isinstance(argument, ast.Name)
+                }
+                keyword_names = {keyword.arg for keyword in node.keywords if keyword.arg is not None}
+                assert not (positional_names | keyword_names).intersection(
+                    {"app", "typer_app", "command", "commands"}
+                )
+            if (
+                (
+                    (
+                        isinstance(node.func, ast.Name)
+                        and aliases.get(node.func.id, node.func.id) == "setattr"
+                    )
+                    or (
+                        isinstance(node.func, ast.Attribute)
+                        and isinstance(node.func.value, ast.Name)
+                        and node.func.value.id == "object"
+                        and node.func.attr == "__setattr__"
+                    )
+                )
+                and len(node.args) >= 2
+                and constant_string(node.args[1]) is not None
+            ):
+                assert constant_string(node.args[1]) not in {
+                    "callback",
+                    "command",
+                    "commands",
+                    "command_spec",
+                    "__command_spec__",
+                    "execution_policy",
+                }
             if not runtime_projection:
                 assert canonical_name not in {
                     "Typer",
@@ -206,7 +335,13 @@ def _assert_no_forbidden_authority(
             parameter_names = {argument.arg for argument in (*node.args.posonlyargs, *node.args.args)}
             assert not (
                 (node.name == "register" and parameter_names.intersection({"app", "typer_app"}))
-                or (node.name.startswith("register_") and "command" in node.name)
+                or (
+                    (
+                        node.name in {"register_command", "register_commands"}
+                        or (node.name.startswith("register_") and node.name.endswith("_commands"))
+                    )
+                    and parameter_names.intersection({"app", "typer_app", "command", "commands"})
+                )
             )
             if not runtime_projection:
                 for decorator in node.decorator_list:
@@ -217,13 +352,61 @@ def _assert_no_forbidden_authority(
                     )
                     assert name not in {"command", "callback"}
         elif isinstance(node, (ast.Assign, ast.AnnAssign)):
-            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            raw_targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            targets = [target for raw_target in raw_targets for target in assignment_targets(raw_target)]
             names = {target.id for target in targets if isinstance(target, ast.Name)}
             assert not any(
                 ("COMMAND" in name or "CLI" in name) and name.endswith(("_PATHS", "_ALIASES", "_PATH_MAP"))
                 for name in names
             )
+            assert not any(
+                name.endswith(
+                    (
+                        "COMMAND_TARGETS",
+                        "PACKAGE_TARGETS",
+                        "IMPORT_GATES",
+                        "CALLBACK_METADATA",
+                        "REGISTRARS",
+                    )
+                )
+                for name in names
+            )
+            attribute_targets = {
+                target.attr
+                for target in targets
+                if isinstance(target, ast.Attribute)
+            }
+            forbidden_attributes = attribute_targets.intersection(
+                {
+                    "callback",
+                    "command",
+                    "commands",
+                    "command_spec",
+                    "__command_spec__",
+                    "execution_policy",
+                }
+            )
+            if not runtime_projection and forbidden_attributes:
+                assert all(
+                    is_materialized_callback_wrapper(target, node.value)
+                    for target in targets
+                    if isinstance(target, ast.Attribute) and target.attr in forbidden_attributes
+                )
             value = node.value
+            for target in targets:
+                if (
+                    isinstance(target, ast.Subscript)
+                    and isinstance(target.value, ast.Attribute)
+                    and target.value.attr == "__dict__"
+                ):
+                    assert constant_string(target.slice) not in {
+                        "callback",
+                        "command",
+                        "commands",
+                        "command_spec",
+                        "__command_spec__",
+                        "execution_policy",
+                    }
             route_names = {
                 name
                 for name in names
@@ -494,6 +677,7 @@ def test_former_authority_edges_are_absent_and_detector_bites() -> None:
             _assert_no_forbidden_authority(
                 source,
                 runtime_projection=path.name == "_command_runtime.py",
+                callback_wrapper_projection=path.name == "_errors.py",
                 spec_declaration=bool(_locally_authored_export_names(source)),
             )
 
@@ -532,9 +716,45 @@ RESOURCE = 'command_registration_metadata.v1.json'
         "attach = app.add_command\nattach(handler)",
         "from x import CommandSpec\nCS2 = CommandSpec\nrogue = CS2(key='rogue')",
         "import cadrumo.entrypoints.cli._command_spec as cs\nmaker = cs.CommandSpec\nrogue = maker(key='rogue')",
+        "from cadrumo.entrypoints.cli import _command_spec as cs\nmaker = cs.CommandSpec\nrogue = maker(key='rogue')",
+        "from x import register_commands as enroll\nenroll(app)",
+        "from x import register as enroll\nenroll(app)",
+        "maker = getattr(app, 'command')\nmaker()(handler)",
+        "maker = getattr(app, 'com' + 'mand')\nmaker()(handler)",
+        "KEY = 'com' + 'mand'\nmaker = getattr(app, KEY)\nmaker()(handler)",
+        "lookup = getattr\nmaker = lookup(app, 'command')\nmaker()(handler)",
+        "getattr(app, 'callback')()(handler)",
+        "getattr(app, f'call' 'back')()(handler)",
+        "setattr(handler, '__command_spec__', rogue)",
+        "setattr(handler, '__command_' + 'spec__', rogue)",
+        "KEY = '__command_' + 'spec__'\nsetattr(handler, KEY, rogue)",
+        "mutate = setattr\nmutate(handler, '__command_spec__', rogue)",
+        "object.__setattr__(handler, 'call' + 'back', rogue)",
+        "mutate = object.__setattr__\nmutate(handler, 'callback', rogue)",
+        "handler.callback = rogue",
+        "(handler.callback, other) = (rogue, value)",
+        "handler.metadata.callback = rogue",
+        "handler.__dict__['call' + 'back'] = rogue",
+        "PACKAGE_TARGETS = {'app live': 'cadrumo.somewhere:handler'}",
+        "COMMAND_TARGETS = {'app live': 'cadrumo.somewhere:handler'}",
+        "COMMAND_IMPORT_GATES = {'app live': ('registry',)}",
+        "COMMAND_CALLBACK_METADATA = {'app live': handler}",
+        "COMMAND_REGISTRARS = (register_commands,)",
     ):
         with pytest.raises(AssertionError):
             _assert_no_forbidden_authority(former_authority)
+    _assert_no_forbidden_authority("from x import register\nregister(record)")
+    _assert_no_forbidden_authority(
+        "registered.callback = command_error_boundary(registered.callback)",
+        callback_wrapper_projection=True,
+    )
+    for malformed_wrapper in (
+        "registered.callback = other(registered.callback)",
+        "registered.callback = command_error_boundary(other.callback)",
+        "registered.command = command_error_boundary(registered.command)",
+    ):
+        with pytest.raises(AssertionError):
+            _assert_no_forbidden_authority(malformed_wrapper, callback_wrapper_projection=True)
     dead_factory = """
 from x import CommandSpec
 def helper():

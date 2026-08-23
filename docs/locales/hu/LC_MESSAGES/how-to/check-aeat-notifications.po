@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
@@ -54,12 +54,12 @@ msgid ""
 msgstr ""
 "Minden élő olvasás ugyanúgy működik. A beállított hitelesítését "
 "használja, csak olvasható módon olvas az AEAT sedéjéről, és titkosított "
-"helyi másolatot ment a profiljába. Semmit sem alkalmaz automatikusan: egy "
-"pull helyi másolatot ment, és egy letöltött adat alkalmazása csak a helyi "
-"profilját vagy nyilvántartásait frissíti, és csak azután, hogy áttekinti. "
-"Semmi sem kerül vissza az AEAT-hoz. Ön marad az egyetlen, aki benyújt. "
-"Ennek a határnak a megértéséhez lásd [A benyújtás rögzítése és a "
-"határvonal](../explanation/recording-a-filing-and-the-boundary.md)."
+"helyi másolatot ment a profiljába. Semmit sem alkalmaz automatikusan: egy"
+" pull helyi másolatot ment, és egy letöltött adat alkalmazása csak a "
+"helyi profilját vagy nyilvántartásait frissíti, és csak azután, hogy "
+"áttekinti. Semmi sem kerül vissza az AEAT-hoz. Ön marad az egyetlen, aki "
+"benyújt. Ennek a határnak a megértéséhez lásd [A benyújtás rögzítése és a"
+" határvonal](../explanation/recording-a-filing-and-the-boundary.md)."
 
 #: ../../how-to/check-aeat-notifications.md:19
 msgid ""
@@ -69,9 +69,9 @@ msgid ""
 "and-store-the-justificante)."
 msgstr ""
 "Két élő felületnek saját útmutatója van: a censo-adatokat a [Modelo 036 "
-"censo-információ összekapcsolása](censo-update.md) tárgyalja, a benyújtási "
-"bizonylatokat (justificantéket) pedig a [Húzza le és tárolja a "
-"justificantét](reconcile.md#pull-and-store-the-justificante)."
+"censo-információ összekapcsolása](censo-update.md) tárgyalja, a "
+"benyújtási bizonylatokat (justificantéket) pedig a [Húzza le és tárolja a"
+" justificantét](reconcile.md#pull-and-store-the-justificante)."
 
 #: ../../how-to/check-aeat-notifications.md:24
 msgid ""
@@ -87,8 +87,8 @@ msgstr ""
 "előellenőrzésnél elutasításra kerül; az elutasítás szövege egy Cl@ve "
 "azonossági ellenőrzést említ (`La identidad de Cl@ve Móvil no "
 "coincide...`), de a valódi ok az, hogy a hitelesítés nincs beállítva. "
-"Először állítson be egy szolgáltatót. Lásd [Hitelesítés az "
-"AEAT-nál](authenticate-with-aeat.md)."
+"Először állítson be egy szolgáltatót. Lásd [Hitelesítés az AEAT-nál"
+"](authenticate-with-aeat.md)."
 
 #: ../../how-to/check-aeat-notifications.md:31
 msgid "Before you start"
@@ -127,8 +127,8 @@ msgid ""
 "AEAT live-read authentication configured; see [Authenticate with AEAT"
 "](authenticate-with-aeat.md)"
 msgstr ""
-"beállított AEAT élő olvasási hitelesítés; lásd [Hitelesítés az "
-"AEAT-nál](authenticate-with-aeat.md)"
+"beállított AEAT élő olvasási hitelesítés; lásd [Hitelesítés az AEAT-nál"
+"](authenticate-with-aeat.md)"
 
 #: ../../how-to/check-aeat-notifications.md:48
 msgid "1. Official AEAT notifications (DEHu)"
@@ -144,25 +144,57 @@ msgid ""
 msgstr ""
 "A DEHu az AEAT hivatalos elektronikus postafiókja az értesítésekhez "
 "(comunicaciones és notificaciones). A kártya az értesítés-olvasásokat "
-"mutatja: a pull letölti és helyileg menti őket, a list a jelenlegi "
-"DEHu-értesítéseit mutatja, a view egy mentett letöltést nyit meg a "
-"hivatkozási száma alapján, a latest pedig a legutóbbi pillanatképet "
-"mutatja az aktív profilban."
+"mutatja: a pull letölti és helyileg menti őket, a list a jelenlegi DEHu-"
+"értesítéseit mutatja, a view egy mentett letöltést nyit meg a hivatkozási"
+" száma alapján, a latest pedig a legutóbbi pillanatképet mutatja az aktív"
+" profilban."
 
 #: ../../how-to/check-aeat-notifications.md:61
-msgid "2. Declaration history (expedientes)"
-msgstr "2. Bevallási előzmények (expedientes)"
+msgid "2. Read documents from notifications you already opened"
+msgstr ""
 
 #: ../../how-to/check-aeat-notifications.md:63
+msgid ""
+"Read a notification document only after you have personally opened that "
+"notification in the AEAT sede. Opening an unread electronic notification "
+"is a legally consequential act: it serves the notification and starts its"
+" appeal and payment periods. The tool therefore refuses to pull a "
+"document unless AEAT already reports its notification as read. Open an "
+"unread notification yourself when you decide that those periods should "
+"begin."
+msgstr ""
+
+#: ../../how-to/check-aeat-notifications.md:70
+msgid ""
+"Pull one eligible document into encrypted local custody, view a stored "
+"document without contacting AEAT, or list the figures reported by each "
+"parsed document:"
+msgstr ""
+
+#: ../../how-to/check-aeat-notifications.md:76
+msgid ""
+"Treat history as a document record, not as a balance. It does not total "
+"the figures, state what is currently payable, or replace the recaudación "
+"register shown by the `aeat app live deudas` commands. A document alone "
+"does not establish whether its amount was paid, appealed, reduced, or "
+"superseded."
+msgstr ""
+
+#: ../../how-to/check-aeat-notifications.md:83
+#, fuzzy
+msgid "3. Declaration history (expedientes)"
+msgstr "2. Bevallási előzmények (expedientes)"
+
+#: ../../how-to/check-aeat-notifications.md:85
 msgid ""
 "Expedientes are the official AEAT record of your past declarations: each "
 "filed return for each modelo and year, with its status and filing date."
 msgstr ""
-"Az expedientes az AEAT hivatalos nyilvántartása a múltbeli bevallásairól: "
-"minden modelóra és évre benyújtott bevallás, az állapotával és a "
+"Az expedientes az AEAT hivatalos nyilvántartása a múltbeli bevallásairól:"
+" minden modelóra és évre benyújtott bevallás, az állapotával és a "
 "benyújtási dátumával."
 
-#: ../../how-to/check-aeat-notifications.md:66
+#: ../../how-to/check-aeat-notifications.md:88
 msgid ""
 "The card shows the expedientes reads: pull downloads the history for one "
 "form and year, pull with a year range covers several years at once (leave"
@@ -179,11 +211,12 @@ msgstr ""
 "dátumok és a justificantékre mutató hivatkozások), a latest pedig a "
 "legutóbbi pillanatképet mutatja."
 
-#: ../../how-to/check-aeat-notifications.md:77
-msgid "3. Filed declaration detail"
+#: ../../how-to/check-aeat-notifications.md:99
+#, fuzzy
+msgid "4. Filed declaration detail"
 msgstr "3. Benyújtott bevallás részletei"
 
-#: ../../how-to/check-aeat-notifications.md:79
+#: ../../how-to/check-aeat-notifications.md:101
 msgid ""
 "Download the box-by-box values from a return you have already filed with "
 "AEAT."
@@ -191,7 +224,7 @@ msgstr ""
 "Töltse le a rovatonkénti értékeket egy olyan bevallásból, amelyet már "
 "benyújtott az AEAT-nál."
 
-#: ../../how-to/check-aeat-notifications.md:81
+#: ../../how-to/check-aeat-notifications.md:103
 msgid ""
 "The card shows the filed-detail reads. `filed list` lists the filed "
 "returns AEAT holds without saving their box values (it still reads from "
@@ -211,20 +244,21 @@ msgstr ""
 "303 bevallásokat, amelyekre egy Modelo 390 éves összesítőnek szüksége "
 "van)."
 
-#: ../../how-to/check-aeat-notifications.md:94
-msgid "4. NIF and EU VAT verification"
+#: ../../how-to/check-aeat-notifications.md:116
+#, fuzzy
+msgid "5. NIF and EU VAT verification"
 msgstr "4. NIF- és EU áfaszám-ellenőrzés"
 
-#: ../../how-to/check-aeat-notifications.md:96
+#: ../../how-to/check-aeat-notifications.md:118
 msgid ""
 "Verify whether a NIF is registered for intra-EU VAT purposes (the VIES "
 "register), or check a Spanish NIF in the Spanish ROI register."
 msgstr ""
 "Ellenőrizze, hogy egy NIF nyilvántartásba van-e véve a közösségen belüli "
-"áfa céljából (a VIES-nyilvántartás), vagy ellenőrizzen egy spanyol NIF-et "
-"a spanyol ROI-nyilvántartásban."
+"áfa céljából (a VIES-nyilvántartás), vagy ellenőrizzen egy spanyol NIF-et"
+" a spanyol ROI-nyilvántartásban."
 
-#: ../../how-to/check-aeat-notifications.md:99
+#: ../../how-to/check-aeat-notifications.md:121
 msgid ""
 "The card shows the verification reads. `verify nif-iva` checks whether a "
 "foreign EU VAT number is valid, and `verify tgvi` checks whether a "
@@ -234,20 +268,21 @@ msgid ""
 "observation id, and `verify latest` shows the latest observation for a "
 "NIF."
 msgstr ""
-"A kártya az ellenőrzés-olvasásokat mutatja. A `verify nif-iva` "
-"ellenőrzi, hogy egy külföldi EU-s áfaszám érvényes-e, a `verify tgvi` "
-"pedig ellenőrzi, hogy egy spanyol NIF vagy NIE megjelenik-e a spanyol "
-"ROI-nyilvántartásban (adja hozzá a `--expected valid|invalid|unknown` "
+"A kártya az ellenőrzés-olvasásokat mutatja. A `verify nif-iva` ellenőrzi,"
+" hogy egy külföldi EU-s áfaszám érvényes-e, a `verify tgvi` pedig "
+"ellenőrzi, hogy egy spanyol NIF vagy NIE megjelenik-e a spanyol ROI-"
+"nyilvántartásban (adja hozzá a `--expected valid|invalid|unknown` "
 "kapcsolót egy elvárt eredménnyel való összevetéshez). A `verify list` a "
 "korábbi ellenőrzéseket mutatja, a `verify view` egyet nyit meg a "
 "megfigyelés-azonosítója alapján, a `verify latest` pedig egy NIF "
 "legutóbbi megfigyelését mutatja."
 
-#: ../../how-to/check-aeat-notifications.md:111
-msgid "5. Official AEAT portal catalogue"
+#: ../../how-to/check-aeat-notifications.md:133
+#, fuzzy
+msgid "6. Official AEAT portal catalogue"
 msgstr "5. Hivatalos AEAT-portálkatalógus"
 
-#: ../../how-to/check-aeat-notifications.md:113
+#: ../../how-to/check-aeat-notifications.md:135
 msgid ""
 "The card shows the portal-catalogue reads. `portals list` shows the "
 "official AEAT online portals the tool knows about and their "
@@ -258,19 +293,20 @@ msgid ""
 " mutually exclusive. `portals view` opens one portal's details."
 msgstr ""
 "A kártya a portálkatalógus-olvasásokat mutatja. A `portals list` az "
-"eszköz által ismert hivatalos AEAT online portálokat és azok "
-"hitelesítési követelményeit mutatja; szűkítse egy nyomtatványra a "
-"`--modelo` kapcsolóval vagy egy kategóriára a `--category` kapcsolóval (az "
+"eszköz által ismert hivatalos AEAT online portálokat és azok hitelesítési"
+" követelményeit mutatja; szűkítse egy nyomtatványra a `--modelo` "
+"kapcsolóval vagy egy kategóriára a `--category` kapcsolóval (az "
 "elfogadott kategóriák: `auth`, `filing`, `censo`, `consultation`, "
 "`borrador`, `payment` és `calendar_reference`). A `--modelo` vagy a "
 "`--category` kapcsolót használja, ne mindkettőt: kizárják egymást. A "
 "`portals view` egy portál részleteit nyitja meg."
 
-#: ../../how-to/check-aeat-notifications.md:125
-msgid "6. Borrador (draft Modelo 100)"
+#: ../../how-to/check-aeat-notifications.md:147
+#, fuzzy
+msgid "7. Borrador (draft Modelo 100)"
 msgstr "6. Borrador (Modelo 100 piszkozat)"
 
-#: ../../how-to/check-aeat-notifications.md:127
+#: ../../how-to/check-aeat-notifications.md:149
 msgid ""
 "The borrador is the pre-calculated Modelo 100 IRPF draft that AEAT makes "
 "available to wage earners. The card shows the borrador reads: list shows "
@@ -278,16 +314,17 @@ msgid ""
 " latest active draft for a filing year."
 msgstr ""
 "A borrador az az előre kiszámított Modelo 100 IRPF-piszkozat, amelyet az "
-"AEAT a munkabérből élők számára elérhetővé tesz. A kártya a "
-"borrador-olvasásokat mutatja: a list a pillanatképeket mutatja, a view "
-"egy borrador rovatértékeit nyitja meg, a latest pedig egy benyújtási év "
+"AEAT a munkabérből élők számára elérhetővé tesz. A kártya a borrador-"
+"olvasásokat mutatja: a list a pillanatképeket mutatja, a view egy "
+"borrador rovatértékeit nyitja meg, a latest pedig egy benyújtási év "
 "legutóbbi aktív piszkozatát mutatja."
 
-#: ../../how-to/check-aeat-notifications.md:137
-msgid "7. IVA compensation balance"
+#: ../../how-to/check-aeat-notifications.md:159
+#, fuzzy
+msgid "8. IVA compensation balance"
 msgstr "7. IVA-kompenzációs egyenleg"
 
-#: ../../how-to/check-aeat-notifications.md:139
+#: ../../how-to/check-aeat-notifications.md:161
 msgid ""
 "Your IVA compensation balance (saldo a compensar) is the amount of "
 "overpaid IVA from prior quarters that can be deducted from future Modelo "
@@ -298,32 +335,32 @@ msgid ""
 "run, and `history` lists the persisted balances and decisions held "
 "locally."
 msgstr ""
-"Az IVA-kompenzációs egyenlege (saldo a compensar) a korábbi "
-"negyedévekből származó túlfizetett IVA összege, amely levonható a jövőbeli "
-"Modelo 303 benyújtásokból. A kártya az IVA-tárca olvasásait mutatja. A "
-"`pull` letölti és nyomon követi a jelenlegi egyenlegét, a `pull-history` "
-"a korábbi Modelo 303 benyújtásokból rekonstruálja a múltbeli "
-"kompenzációs döntéseket, a `pull-evidence` egyetlen csak olvasható "
-"futtatásban rögzíti a múltbeli bevallásokat és a jelenlegi IVA-bizonyítékot, "
-"a `history` pedig felsorolja a helyileg tárolt megőrzött egyenlegeket és "
-"döntéseket."
+"Az IVA-kompenzációs egyenlege (saldo a compensar) a korábbi negyedévekből"
+" származó túlfizetett IVA összege, amely levonható a jövőbeli Modelo 303 "
+"benyújtásokból. A kártya az IVA-tárca olvasásait mutatja. A `pull` "
+"letölti és nyomon követi a jelenlegi egyenlegét, a `pull-history` a "
+"korábbi Modelo 303 benyújtásokból rekonstruálja a múltbeli kompenzációs "
+"döntéseket, a `pull-evidence` egyetlen csak olvasható futtatásban rögzíti"
+" a múltbeli bevallásokat és a jelenlegi IVA-bizonyítékot, a `history` "
+"pedig felsorolja a helyileg tárolt megőrzött egyenlegeket és döntéseket."
 
-#: ../../how-to/check-aeat-notifications.md:152
+#: ../../how-to/check-aeat-notifications.md:174
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/check-aeat-notifications.md:154
+#: ../../how-to/check-aeat-notifications.md:176
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Tervezze meg a benyújtási naptárát](filing-calendar.md)"
 
-#: ../../how-to/check-aeat-notifications.md:155
+#: ../../how-to/check-aeat-notifications.md:177
 msgid "[Authenticate with AEAT](authenticate-with-aeat.md)"
 msgstr "[Hitelesítés az AEAT-nál](authenticate-with-aeat.md)"
 
-#: ../../how-to/check-aeat-notifications.md:156
+#: ../../how-to/check-aeat-notifications.md:178
 msgid "[Set up your taxpayer profile](profile-setup.md)"
 msgstr "[Az adózói profil beállítása](profile-setup.md)"
 
-#: ../../how-to/check-aeat-notifications.md:157
+#: ../../how-to/check-aeat-notifications.md:179
 msgid "[Reconcile filing justificantes](reconcile.md)"
 msgstr "[Benyújtási justificanték egyeztetése](reconcile.md)"
+

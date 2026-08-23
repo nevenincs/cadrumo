@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 10:30+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -58,16 +58,19 @@ msgstr ""
 "Renda del Model 100](../how-to/modelo-100.md)."
 
 #: ../../explanation/how-renta-is-assembled.md:18
-msgid "One declaration, four kinds of source"
+#, fuzzy
+msgid "One declaration, four source routes used here"
 msgstr "Una declaració, quatre menes de font"
 
 #: ../../explanation/how-renta-is-assembled.md:20
+#, fuzzy
 msgid ""
 "Modelo 100 is the largest form the tool prepares - the 2025 revision "
 "defines over two thousand casillas and two hundred formulas. Every value "
-"on it arrives through a declared data source - the listing below calls "
-"each one a *binding* - and every source is one of four kinds. List them "
-"for your filing year:"
+"on it arrives through a declared data source. The binding listing calls "
+"each contract a *binding*. The current Renta flow uses four broad routes."
+" They are not the complete source-kind taxonomy for every modelo. List "
+"them for your filing year:"
 msgstr ""
 "El Model 100 és el formulari més gran que prepara l'eina: la revisió del "
 "2025 defineix més de dues mil caselles i dues-centes fórmules. Cada valor"
@@ -75,7 +78,7 @@ msgstr ""
 "anomena cadascuna un *binding*) i cada font és d'una de quatre menes. "
 "Llista-les per al teu any de presentació:"
 
-#: ../../explanation/how-renta-is-assembled.md:30
+#: ../../explanation/how-renta-is-assembled.md:31
 msgid ""
 "**Profile facts.** Who you are: tax id, residence comunidad, marital "
 "status, spouse and descendant data, disability grades, declaration type. "
@@ -88,7 +91,7 @@ msgstr ""
 "contribuent, un binding per dada (les files `renta-2025-profile-*` del "
 "llistat)."
 
-#: ../../explanation/how-renta-is-assembled.md:34
+#: ../../explanation/how-renta-is-assembled.md:35
 #, fuzzy
 msgid ""
 "**Ledger aggregations.** What your activity earned and spent: the year's "
@@ -102,7 +105,7 @@ msgstr ""
 "mateix ledger que llegeixen les teves presentacions trimestrals; la Renda"
 " llegeix tot l'any de cop."
 
-#: ../../explanation/how-renta-is-assembled.md:38
+#: ../../explanation/how-renta-is-assembled.md:39
 msgid ""
 "**Prior filings folded in.** What you already reported during the year: "
 "the Modelo 130 or 131 instalments you paid, and the retenciones reported "
@@ -116,7 +119,7 @@ msgstr ""
 "(les files que el llistat etiqueta `relation_prefill`). L'eina les "
 "llegeix dels teus propis registres presentats, no de l'AEAT."
 
-#: ../../explanation/how-renta-is-assembled.md:43
+#: ../../explanation/how-renta-is-assembled.md:44
 #, fuzzy
 msgid ""
 "**Last year's declaration.** What carries across years: a negative base "
@@ -130,7 +133,7 @@ msgstr ""
 "aquesta font `previous_filing`), de manera que la declaració d'aquest any"
 " la pugui compensar."
 
-#: ../../explanation/how-renta-is-assembled.md:48
+#: ../../explanation/how-renta-is-assembled.md:49
 msgid ""
 "Everything else - employment income details, capital income, deductions "
 "the ledger cannot know about - is a manual casilla you supply when it "
@@ -140,11 +143,21 @@ msgstr ""
 "capital, deduccions que el ledger no pot conèixer) és una casella manual "
 "que aportes quan t'aplica. L'inventari complet per al teu any:"
 
-#: ../../explanation/how-renta-is-assembled.md:56
+#: ../../explanation/how-renta-is-assembled.md:57
+msgid ""
+"Stock inventory is one such current boundary. The encrypted inventory "
+"register can record movements and calculate valuations, but it is not "
+"enrolled in the Renta source mesh. For the 2025 revision, boxes 0177 "
+"(increase in stock variation), 0181 (stock purchases), and 0182 (decrease"
+" in stock variation) remain manual inputs. Box 0155 is not an inventory "
+"input and does not connect the inventory register to the declaration."
+msgstr ""
+
+#: ../../explanation/how-renta-is-assembled.md:64
 msgid "How the quarterly filings fold in"
 msgstr "Com s'hi pleguen les presentacions trimestrals"
 
-#: ../../explanation/how-renta-is-assembled.md:58
+#: ../../explanation/how-renta-is-assembled.md:66
 msgid ""
 "Across the year you paid income tax in pieces: instalments on Modelo 130 "
 "(or 131 under módulos), and withholdings that clients or payers reported "
@@ -160,7 +173,7 @@ msgstr ""
 "troben. La declaració els contraposa als teus ingressos de tot l'any i "
 "liquida la diferència: el que encara es deu, o el que et retornen."
 
-#: ../../explanation/how-renta-is-assembled.md:65
+#: ../../explanation/how-renta-is-assembled.md:73
 msgid ""
 "The fold-in is evidence-gated. Before the annual verify passes, every "
 "prior filing the declaration depends on must be filed and evidenced on "
@@ -172,7 +185,7 @@ msgstr ""
 "d'estar presentada i evidenciada al teu registre. Mira què espera la "
 "declaració i què la bloqueja actualment:"
 
-#: ../../explanation/how-renta-is-assembled.md:73
+#: ../../explanation/how-renta-is-assembled.md:81
 msgid ""
 "Each dependency row names the source modelo and period and whether its "
 "clean-state evidence is satisfied. A dependency that does not apply to "
@@ -187,7 +200,7 @@ msgstr ""
 " dades del teu perfil i es mostra com a no aplicable, mai s'omet "
 "silenciosament."
 
-#: ../../explanation/how-renta-is-assembled.md:79
+#: ../../explanation/how-renta-is-assembled.md:87
 msgid ""
 "The tool never fabricates a missing prior period: a gap stays visible for"
 " you to resolve. [How filings build on earlier ones](building-on-earlier-"
@@ -198,11 +211,11 @@ msgstr ""
 "d'anteriors](building-on-earlier-filings.md) explica aquesta regla de "
 "disseny."
 
-#: ../../explanation/how-renta-is-assembled.md:83
+#: ../../explanation/how-renta-is-assembled.md:91
 msgid "What carries between years"
 msgstr "Què s'arrossega entre anys"
 
-#: ../../explanation/how-renta-is-assembled.md:85
+#: ../../explanation/how-renta-is-assembled.md:93
 msgid ""
 "A Renta with a negative base liquidable does not just end: the negative "
 "carries forward, and a later year's declaration offsets it. The carry "
@@ -220,17 +233,18 @@ msgstr ""
 " comptes d'importar silenciosament xifres calculades sota una llei "
 "diferent."
 
-#: ../../explanation/how-renta-is-assembled.md:92
+#: ../../explanation/how-renta-is-assembled.md:100
 msgid "Tracing any figure to its source and its law"
 msgstr "Traçar qualsevol xifra fins a la seva font i la seva llei"
 
-#: ../../explanation/how-renta-is-assembled.md:94
+#: ../../explanation/how-renta-is-assembled.md:102
+#, fuzzy
 msgid ""
 "After a calculation, every resolved value carries typed provenance: the "
 "binding or formula that produced it, its operands, and its legal and "
-"source references. Read them (the setup steps calculate the employee "
-"filer's draft the reads inspect, and the last step looks up one box's "
-"definition):"
+"source references. The setup steps calculate an employee filer's draft. "
+"The read commands inspect that draft, and the final step looks up one "
+"box's definition:"
 msgstr ""
 "Després d'un càlcul, cada valor resolt porta una procedència tipada: el "
 "binding o la fórmula que el va produir, els seus operands, i les seves "
@@ -238,7 +252,7 @@ msgstr ""
 "calculen l'esborrany del declarant assalariat que inspeccionen les "
 "lectures, i l'últim pas consulta la definició d'una casella):"
 
-#: ../../explanation/how-renta-is-assembled.md:103
+#: ../../explanation/how-renta-is-assembled.md:111
 msgid ""
 "The JSON output of any of these commands carries `legal_refs` and "
 "`source_refs` on every row. This is the property Cadrumo preserves end to"
@@ -253,11 +267,11 @@ msgstr ""
 "darrere, la regla que els va encaminar i l'article de llei que hi ha "
 "darrere de la regla)."
 
-#: ../../explanation/how-renta-is-assembled.md:109
+#: ../../explanation/how-renta-is-assembled.md:117
 msgid "Where this sits in the journey"
 msgstr "On se situa això dins del recorregut"
 
-#: ../../explanation/how-renta-is-assembled.md:111
+#: ../../explanation/how-renta-is-assembled.md:119
 msgid ""
 "This page is part of the [how-it-works overview](index.md) cluster and "
 "goes one level deeper than [How filings build on earlier ones](building-"

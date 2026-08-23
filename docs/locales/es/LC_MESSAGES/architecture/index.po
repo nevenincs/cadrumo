@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -34,8 +34,8 @@ msgstr ""
 "Cadrumo es una aplicación local-first que prepara declaraciones "
 "tributarias españolas a través de la interfaz de línea de comandos "
 "`aeat`. Modela el registro normativo de la autoridad tributaria, ingiere "
-"y clasifica tus registros financieros y calcula las casillas numeradas de "
-"cada modelo. Después comprueba el borrador y exporta un fichero que tú "
+"y clasifica tus registros financieros y calcula las casillas numeradas de"
+" cada modelo. Después comprueba el borrador y exporta un fichero que tú "
 "mismo presentas. La AEAT es la Agencia Estatal de Administración "
 "Tributaria, la agencia tributaria de España."
 
@@ -91,9 +91,9 @@ msgid ""
 msgstr ""
 "**El registro es la autoridad.** Las reglas tributarias (tipos, tramos, "
 "plazos y la base legal de cada casilla) no están escritas en el código. "
-"Se redactan como datos, se compilan, se validan y se leen a través de una "
-"única autoridad. Una cifra siempre puede rastrearse hasta la regla que la "
-"produjo."
+"Se redactan como datos, se compilan, se validan y se leen a través de una"
+" única autoridad. Una cifra siempre puede rastrearse hasta la regla que "
+"la produjo."
 
 #: ../../architecture/index.md:30
 msgid ""
@@ -167,11 +167,11 @@ msgstr ""
 "[La persistencia y el límite de seguridad](#persistence-and-the-safety-"
 "boundary): dónde vive el estado y por qué nada sale."
 
-#: ../../architecture/index.md:53
+#: ../../architecture/index.md:54
 msgid "The layers"
 msgstr "Las capas"
 
-#: ../../architecture/index.md:55
+#: ../../architecture/index.md:56
 msgid ""
 "Cadrumo separates responsibilities into five layers under `src/cadrumo/`."
 " Layers normally depend only on layers inside them; application "
@@ -182,7 +182,7 @@ msgstr ""
 "composición de la aplicación tiene la excepción documentada de los "
 "adaptadores."
 
-#: ../../architecture/index.md:77
+#: ../../architecture/index.md:78
 msgid ""
 "**Text alternative.** Entrypoints call the application and core layers. "
 "The application calls the domain, adapters, and core layers; adapters "
@@ -194,7 +194,7 @@ msgstr ""
 "adapters llaman a domain y core; y domain llama a core. El domain llega a"
 " los adapters solo a través de la costura anotada del repositorio seguro."
 
-#: ../../architecture/index.md:82
+#: ../../architecture/index.md:83
 msgid ""
 "**`core`** is the innermost layer. It owns the cross-cutting primitives "
 "every other layer shares. Its typed enums define closed value sets such "
@@ -210,7 +210,7 @@ msgstr ""
 "configuración, los tipos de dinero y de tiempo, y la taxonomía de "
 "errores."
 
-#: ../../architecture/index.md:87
+#: ../../architecture/index.md:88
 msgid ""
 "**`domain`** holds pure tax rules and records: the modelo registry, "
 "casilla definitions (a casilla is one numbered box on a form), filing "
@@ -221,18 +221,18 @@ msgstr ""
 "numerado de un modelo), las observaciones de presentación y los cálculos "
 "sobre ellas. Depende solo de `core`."
 
-#: ../../architecture/index.md:90
+#: ../../architecture/index.md:91
 msgid ""
 "**`application`** orchestrates use cases. It joins domain rules with "
 "adapters to build filing drafts, aggregate the ledger, run diagnostics, "
 "and project state. It performs no input or output of its own."
 msgstr ""
-"**`application`** orquesta los casos de uso. Une las reglas del domain con"
-" los adaptadores para construir borradores de presentación, agregar el "
-"ledger, ejecutar diagnósticos y proyectar el estado. No realiza ninguna "
+"**`application`** orquesta los casos de uso. Une las reglas del domain "
+"con los adaptadores para construir borradores de presentación, agregar el"
+" ledger, ejecutar diagnósticos y proyectar el estado. No realiza ninguna "
 "entrada ni salida por sí misma."
 
-#: ../../architecture/index.md:93
+#: ../../architecture/index.md:94
 msgid ""
 "**`adapters`** connects the application to the outside world in three "
 "parts. `inbound` parses incoming Portable Document Format (PDF), comma-"
@@ -250,7 +250,7 @@ msgstr ""
 "proveedores de autenticación). `persistence` almacena las cargas cifradas"
 " en la base de datos local."
 
-#: ../../architecture/index.md:99
+#: ../../architecture/index.md:100
 msgid ""
 "**`entrypoints`** exposes the application to operators. The command line "
 "lives here, and its root surface is limited to two command families, "
@@ -260,7 +260,7 @@ msgstr ""
 "comandos vive aquí, y su superficie raíz se limita a dos familias de "
 "comandos, `config` y `app`."
 
-#: ../../architecture/index.md:103
+#: ../../architecture/index.md:104
 msgid ""
 "Two boundary rules keep the layers honest. Boundary data crosses as "
 "validated pydantic v2 models, never loose dictionaries. Closed value sets"
@@ -273,7 +273,7 @@ msgstr ""
 "enums tipados en `core` y circulan como miembros del enum, de modo que un"
 " valor no válido se rechaza en la frontera."
 
-#: ../../architecture/index.md:108
+#: ../../architecture/index.md:109
 msgid ""
 "The dependency arrows point inward with one annotated exception. Three "
 "domain repositories - filing, justificante, and submission - sit directly"
@@ -281,12 +281,12 @@ msgid ""
 "diagram draws that seam as a dashed edge rather than hiding it."
 msgstr ""
 "Las flechas de dependencia apuntan hacia dentro con una única excepción "
-"anotada. Tres repositorios del domain (filing, justificante y submission) "
-"se apoyan directamente en la clase base de almacenamiento cifrado de "
+"anotada. Tres repositorios del domain (filing, justificante y submission)"
+" se apoyan directamente en la clase base de almacenamiento cifrado de "
 "`adapters.persistence`. El diagrama dibuja esa costura como una arista "
 "discontinua en lugar de ocultarla."
 
-#: ../../architecture/index.md:113
+#: ../../architecture/index.md:114
 msgid ""
 "Inside `domain` and `application`, the subpackages cluster into five "
 "conceptual groups. Some subpackages are omitted for clarity; the API "
@@ -296,83 +296,83 @@ msgstr ""
 "grupos conceptuales. Algunos subpaquetes se omiten por claridad; la "
 "referencia de la API los enumera todos."
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Cluster"
 msgstr "Grupo"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`domain` subpackages"
 msgstr "Subpaquetes de `domain`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`application` subpackages"
 msgstr "Subpaquetes de `application`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Registry and calculations"
 msgstr "Registro y cálculos"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`calculations`, `modelos`, `normatives`, `manuals`"
 msgstr "`calculations`, `modelos`, `normatives`, `manuals`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`calculations`, `modelo`, `registry`, `aggregation`, `verification`"
 msgstr "`calculations`, `modelo`, `registry`, `aggregation`, `verification`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Ledger and transactions"
 msgstr "Ledger y transacciones"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`transactions`, `invoices`, `categories`, `iva`, `currency`, `attachments`"
 msgstr "`transactions`, `invoices`, `categories`, `iva`, `currency`, `attachments`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`ledger`, `transactions`, `invoices`, `evidence`, `inventory`"
 msgstr "`ledger`, `transactions`, `invoices`, `evidence`, `inventory`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Filing and export"
 msgstr "Presentación y exportación"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`filing`, `justificante`, `submission`"
 msgstr "`filing`, `justificante`, `submission`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`filing`, `export`, `review`"
 msgstr "`filing`, `export`, `review`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Live, portals, and auth"
 msgstr "Live, portales y autenticación"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`portals`, `auth`, `fincas`"
 msgstr "`portals`, `auth`, `fincas`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`live`, `portals`, `auth`, `workflow`"
 msgstr "`live`, `portals`, `auth`, `workflow`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Profile and storage"
 msgstr "Perfil y almacenamiento"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`buckets`, `user_profile`, `contribuyente`, `deadlines`"
 msgstr "`buckets`, `user_profile`, `contribuyente`, `deadlines`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`profile`, `storage`, `bucket_maintenance`, `setup`, `wizard`"
 msgstr "`profile`, `storage`, `bucket_maintenance`, `setup`, `wizard`"
 
-#: ../../architecture/index.md:125
+#: ../../architecture/index.md:127
 msgid "The registry authority pipeline"
 msgstr "El flujo de la autoridad del registro"
 
-#: ../../architecture/index.md:127
+#: ../../architecture/index.md:129
 msgid ""
 "The authoritative tax-model definitions aren't hard-coded. They move "
 "through a deterministic pipeline, from hand-authored source to the "
@@ -382,10 +382,10 @@ msgstr ""
 "Las definiciones autorizadas de los modelos tributarios no están escritas"
 " en el código. Recorren un flujo determinista, desde la fuente redactada "
 "a mano hasta los snapshots inmutables que lee el código en tiempo de "
-"ejecución. TOML es Tom's Obvious Minimal Language, un formato pensado para"
-" editar."
+"ejecución. TOML es Tom's Obvious Minimal Language, un formato pensado "
+"para editar."
 
-#: ../../architecture/index.md:146
+#: ../../architecture/index.md:148
 msgid ""
 "**Text alternative.** Authoring fragments flow through deterministic "
 "loading, compilation, and schema validation before the validated registry"
@@ -400,7 +400,7 @@ msgstr ""
 " tanto la caché del compilador como la de la autoridad cada vez que "
 "cambian los ficheros del registro."
 
-#: ../../architecture/index.md:152
+#: ../../architecture/index.md:154
 msgid ""
 "Each modelo and revision is authored as fragments of TOML under "
 "`src/cadrumo/_data/registry/`. The loader and compiler (`_loader.py`) "
@@ -421,7 +421,7 @@ msgstr ""
 "una edición hace que el cargador revalide la huella antes de servir el "
 "siguiente resultado."
 
-#: ../../architecture/index.md:160
+#: ../../architecture/index.md:162
 msgid ""
 "`ValidatedRegistryAuthority` is the production boundary. It validates a "
 "modelo once, caches the result, and builds a `RegistrySnapshot` for a "
@@ -433,15 +433,25 @@ msgid ""
 msgstr ""
 "`ValidatedRegistryAuthority` es la frontera de producción. Valida un "
 "modelo una vez, almacena en caché el resultado y construye un "
-"`RegistrySnapshot` para un modelo, un año y un periodo dados. El snapshot "
-"es congelado y está ligado a su contexto: sus referencias legales y de "
+"`RegistrySnapshot` para un modelo, un año y un periodo dados. El snapshot"
+" es congelado y está ligado a su contexto: sus referencias legales y de "
 "origen están indexadas, y su integridad referencial se comprueba en el "
 "momento de la construcción. Los consumidores en tiempo de ejecución "
 "(proveedores de esquema de presentación, ejecución de fórmulas, análisis "
 "de exportaciones y verificación) leen de los snapshots, nunca del "
 "cargador en crudo."
 
-#: ../../architecture/index.md:167
+#: ../../architecture/index.md:169
+msgid ""
+"The snapshot is also the filing read-model authority. Its casilla "
+"definitions say which numbered fields exist, whether each field is "
+"manual, bound, or calculated, which formulas and binding contracts apply,"
+" and which repeating fields and export positions belong to that revision."
+" It describes what one filing requires; it does not own a taxpayer's "
+"transactions, invoices, foreign assets, or stock movements."
+msgstr ""
+
+#: ../../architecture/index.md:176
 msgid ""
 "The split matters. The authoring and compilation stages before the "
 "authority are implementation details. Production code requests validated "
@@ -453,11 +463,11 @@ msgstr ""
 "solicita modelos validados, ventanas de plazo y snapshots a través de la "
 "autoridad, de modo que el cargador se mantiene detrás de esa línea."
 
-#: ../../architecture/index.md:172
+#: ../../architecture/index.md:182
 msgid "The modelo lifecycle"
 msgstr "El ciclo de vida del modelo"
 
-#: ../../architecture/index.md:174
+#: ../../architecture/index.md:184
 msgid ""
 "A modelo is a numbered AEAT tax form. Its data flows one way, from your "
 "records to a file you upload yourself."
@@ -466,7 +476,7 @@ msgstr ""
 "fluyen en un solo sentido, desde tus registros hasta un fichero que tú "
 "mismo subes."
 
-#: ../../architecture/index.md:200
+#: ../../architecture/index.md:210
 msgid ""
 "**Text alternative.** Financial records are ingested and classified into "
 "the encrypted ledger. An operator creates work, calculates it, verifies "
@@ -478,7 +488,7 @@ msgstr ""
 " lo verifica, lo marca como presentado localmente y exporta un fichero. "
 "Luego una persona sube ese fichero a la AEAT fuera de Cadrumo."
 
-#: ../../architecture/index.md:205
+#: ../../architecture/index.md:215
 msgid ""
 "The tool ingests and classifies financial records - bank statements, "
 "invoices, and their evidence - into the encrypted ledger. From there the "
@@ -489,27 +499,27 @@ msgstr ""
 "ahí, el recorrido sigue una secuencia fija de verbos de la línea de "
 "comandos:"
 
-#: ../../architecture/index.md:209
+#: ../../architecture/index.md:219
 msgid "`aeat app modelo work create` pins a filing to a modelo, year, and period."
 msgstr ""
 "`aeat app modelo work create` fija una presentación a un modelo, un año y"
 " un periodo."
 
-#: ../../architecture/index.md:210
+#: ../../architecture/index.md:220
 msgid "`calculate` resolves every casilla and saves a `CalculationRevision`."
 msgstr "`calculate` resuelve cada casilla y guarda una `CalculationRevision`."
 
-#: ../../architecture/index.md:211
+#: ../../architecture/index.md:221
 msgid "`verify` runs a completeness and consistency gate over the draft."
 msgstr ""
 "`verify` ejecuta una comprobación de integridad y coherencia sobre el "
 "borrador."
 
-#: ../../architecture/index.md:212
+#: ../../architecture/index.md:222
 msgid "`file` marks a verified revision as internally filed."
 msgstr "`file` marca una revisión verificada como presentada internamente."
 
-#: ../../architecture/index.md:213
+#: ../../architecture/index.md:223
 msgid ""
 "`aeat app modelo export` writes the official upload file (a fixed-layout "
 "fichero-BOE artifact) to disk."
@@ -517,7 +527,7 @@ msgstr ""
 "`aeat app modelo export` escribe en disco el fichero oficial de subida "
 "(un artefacto fichero-BOE de formato fijo)."
 
-#: ../../architecture/index.md:216
+#: ../../architecture/index.md:226
 msgid ""
 "The boundary is structural. `file` is a local marker, not a submission, "
 "and `export` writes a file to your disk. No command transmits anything to"
@@ -536,22 +546,22 @@ msgstr ""
 "aparte `CADRUMO_LIVE_TESTS_ENABLED` controla las pruebas de lectura en "
 "vivo de los desarrolladores."
 
-#: ../../architecture/index.md:223
+#: ../../architecture/index.md:233
 msgid "How a figure is grounded"
 msgstr "Cómo se fundamenta una cifra"
 
-#: ../../architecture/index.md:225
+#: ../../architecture/index.md:235
 msgid ""
 "A casilla value isn't a bare number. It carries its provenance - the "
 "legal references, source references, and formula identifier that produced"
 " it - from the registry definition through to the operator-facing output."
 msgstr ""
 "El valor de una casilla no es un número a secas. Lleva su procedencia "
-"(las referencias legales, las referencias de origen y el identificador de "
-"fórmula que lo produjeron) desde la definición del registro hasta la "
+"(las referencias legales, las referencias de origen y el identificador de"
+" fórmula que lo produjeron) desde la definición del registro hasta la "
 "salida dirigida al operador."
 
-#: ../../architecture/index.md:253
+#: ../../architecture/index.md:263
 msgid ""
 "**Text alternative.** A registry casilla definition and resolved ledger, "
 "invoice, previous-filing, and relation inputs feed the formula engine. It"
@@ -564,7 +574,7 @@ msgstr ""
 "procedencia que se convierte en una revisión de cálculo, en la carga de "
 "la CLI y en la salida dirigida al operador."
 
-#: ../../architecture/index.md:258
+#: ../../architecture/index.md:268
 msgid ""
 "Each binding on a casilla declares a typed source. A mesh of resolvers - "
 "ledger aggregation, invoice catalogue, previous-filing carry, and cross-"
@@ -587,11 +597,34 @@ msgstr ""
 "`CalculationRevision` persistida, luego a las cargas de la CLI y luego "
 "hasta el operador. La procedencia nunca se pierde por el camino."
 
-#: ../../architecture/index.md:267
+#: ../../architecture/index.md:277
+msgid ""
+"A binding is a projection contract, not an attachment slot. It identifies"
+" the owned source family, validates the selector and aggregation, and "
+"says how that source becomes a filing input. A scalar contract produces "
+"one value. Repeating record families declare one typed binding per row "
+"field. They join the values by grouping and one-based row index. The "
+"calculation revision freezes the resolved row bindings. Paths that "
+"produce validated detail rows store those separately. It never attaches "
+"an opaque record blob to a casilla."
+msgstr ""
+
+#: ../../architecture/index.md:285
+msgid ""
+"Modelo 720 demonstrates the repeating shape: its foreign-asset resolver "
+"is enrolled in the source mesh and projects typed asset fields into "
+"registry row bindings. Stock inventory is different. `InventoryLedger` is"
+" an implemented, encrypted business aggregate. The binding-source "
+"taxonomy currently has no inventory kind or enrolled inventory resolver. "
+"It therefore remains outside modelo calculation revisions until a legally"
+" grounded projection is added."
+msgstr ""
+
+#: ../../architecture/index.md:293
 msgid "Persistence and the safety boundary"
 msgstr "La persistencia y el límite de seguridad"
 
-#: ../../architecture/index.md:269
+#: ../../architecture/index.md:295
 msgid ""
 "All sensitive financial data lives in one place: an encrypted, per-"
 "profile store. The structure, not a convention, keeps it there."
@@ -600,7 +633,7 @@ msgstr ""
 " cifrado, por perfil. Es la estructura, no una convención, la que los "
 "mantiene ahí."
 
-#: ../../architecture/index.md:300
+#: ../../architecture/index.md:326
 msgid ""
 "**Text alternative.** An operator selects one active profile. The "
 "resulting bucket session opens runtime factories and a secure repository,"
@@ -615,7 +648,7 @@ msgstr ""
 "siguen siendo de solo lectura; solo la acción humana de presentación "
 "puede enviar a la AEAT."
 
-#: ../../architecture/index.md:305
+#: ../../architecture/index.md:331
 msgid ""
 "Key-encryption keys (KEKs) protect data-encryption keys (DEKs). The "
 "repository uses authenticated encryption with associated data (AEAD) "
@@ -630,17 +663,15 @@ msgstr ""
 "basado en hash. El cifrado es el Advanced Encryption Standard con claves "
 "de 256 bits (AES-256)."
 
-#: ../../architecture/index.md:311
+#: ../../architecture/index.md:337
+#, fuzzy
 msgid ""
 "You work one taxpayer at a time. Selecting a profile opens a bucket "
 "session, which scopes a `SecureObjectRepository` to that taxpayer's "
 "encrypted store. The repository encrypts every payload at the column "
 "boundary with a key from the `MasterKeyProvider` - the operating system "
 "keychain, or a passphrase-derived fallback. It persists the ciphertext to"
-" a local SQLite database with encrypted payload columns. Evidence bytes -"
-" invoices, statements, and decrypted documents - go through the content-"
-"addressed `AttachmentStore`, which stores the bytes themselves, never a "
-"link."
+" a local SQLite database with encrypted payload columns."
 msgstr ""
 "Trabajas con un contribuyente a la vez. Seleccionar un perfil abre una "
 "sesión de bucket, que acota un `SecureObjectRepository` al almacén "
@@ -652,7 +683,29 @@ msgstr ""
 "documentos descifrados) pasan por el `AttachmentStore` direccionado por "
 "contenido, que almacena los bytes en sí, nunca un enlace."
 
-#: ../../architecture/index.md:321
+#: ../../architecture/index.md:344
+msgid ""
+"Evidence bytes - invoices, statements, and decrypted documents - go "
+"through the content-addressed `AttachmentStore`, which stores the bytes "
+"themselves, never a link."
+msgstr ""
+
+#: ../../architecture/index.md:348
+msgid ""
+"Parsed business records do not become attachments merely because they may"
+" later support a filing. Transactions, invoice catalogues, and stock "
+"inventory remain separate typed aggregates in encrypted storage. Modelo "
+"720 instead receives typed foreign-asset observations from the caller. An"
+" enrolled source resolver projects only the fields requested by the "
+"registry into a calculation revision. In the current Modelo 100 registry,"
+" stock-related boxes 0177, 0181, and 0182 remain manual inputs. The "
+"inventory domain now splits 2025 opening-to-closing variation between "
+"0177 and 0182, but that domain projection is not evidence of a live "
+"inventory-to-Renta route and does not yet claim complete purchases for "
+"0181."
+msgstr ""
+
+#: ../../architecture/index.md:359
 msgid ""
 "Nothing in this store crosses outward to the agency as a write. The read-"
 "only live checks reach the agency only to read. The single path that "
@@ -660,19 +713,19 @@ msgid ""
 "tool's boundary. A structural test enforces the absence of any write verb"
 " in the AEAT sede adapter, so the safety posture can't erode by accident."
 msgstr ""
-"Nada de este almacén cruza hacia fuera, hacia la agencia, como "
-"escritura. Las comprobaciones en vivo de solo lectura alcanzan la agencia"
-" únicamente para leer. La única vía que alcanza la agencia como escritura"
-" es la subida humana, que queda más allá de la frontera de la "
-"herramienta. Una prueba estructural exige la ausencia de cualquier verbo "
-"de escritura en el adaptador de la sede de la AEAT, de modo que la "
-"postura de seguridad no pueda erosionarse por accidente."
+"Nada de este almacén cruza hacia fuera, hacia la agencia, como escritura."
+" Las comprobaciones en vivo de solo lectura alcanzan la agencia "
+"únicamente para leer. La única vía que alcanza la agencia como escritura "
+"es la subida humana, que queda más allá de la frontera de la herramienta."
+" Una prueba estructural exige la ausencia de cualquier verbo de escritura"
+" en el adaptador de la sede de la AEAT, de modo que la postura de "
+"seguridad no pueda erosionarse por accidente."
 
-#: ../../architecture/index.md:327
+#: ../../architecture/index.md:365
 msgid "How the documentation stays true to the code"
 msgstr "Cómo se mantiene la documentación fiel al código"
 
-#: ../../architecture/index.md:329
+#: ../../architecture/index.md:367
 msgid ""
 "The discipline that governs the layers governs the documentation too. "
 "Cadrumo keeps three English documentation surfaces close to the code that"
@@ -682,7 +735,7 @@ msgstr ""
 "Cadrumo mantiene tres superficies de documentación en inglés cerca del "
 "código que aporta sus datos."
 
-#: ../../architecture/index.md:333
+#: ../../architecture/index.md:371
 msgid ""
 "Documentation authors write the repository markdown - this guide and the "
 "others under `docs/` - for people orienting to the project. Technical "
@@ -695,11 +748,11 @@ msgstr ""
 "guía y las demás bajo `docs/`) para las personas que se están orientando "
 "en el proyecto. Los revisores técnicos comprueban cada afirmación contra "
 "el código antes de que se incorpore. Los docstrings dentro del código "
-"aportan la referencia de la API, de modo que los autores nunca copian una "
-"firma en el texto. Los generadores levantan las referencias del código "
+"aportan la referencia de la API, de modo que los autores nunca copian una"
+" firma en el texto. Los generadores levantan las referencias del código "
 "fuente y de la línea de comandos a partir del propio código."
 
-#: ../../architecture/index.md:339
+#: ../../architecture/index.md:377
 msgid ""
 "Because generators derive the API and command-line references from "
 "source, those surfaces cannot silently drift. A strict build treats "
@@ -707,20 +760,20 @@ msgid ""
 " or a command reference that no longer matches the commands."
 msgstr ""
 "Como los generadores derivan las referencias de la API y de la línea de "
-"comandos a partir del código fuente, esas superficies no pueden "
-"desviarse en silencio. Una construcción estricta trata las advertencias "
-"como errores y falla ante una referencia cruzada rota, un stub que falta "
-"o una referencia de comando que ya no coincide con los comandos."
+"comandos a partir del código fuente, esas superficies no pueden desviarse"
+" en silencio. Una construcción estricta trata las advertencias como "
+"errores y falla ante una referencia cruzada rota, un stub que falta o una"
+" referencia de comando que ya no coincide con los comandos."
 
-#: ../../architecture/index.md:344
+#: ../../architecture/index.md:383
 msgid "Crossing into the code"
 msgstr "Entrar en el código"
 
-#: ../../architecture/index.md:346
+#: ../../architecture/index.md:385
 msgid "Use this overview to orient, then drop into the detail:"
 msgstr "Usa esta visión general para orientarte y luego baja al detalle:"
 
-#: ../../architecture/index.md:348
+#: ../../architecture/index.md:387
 msgid ""
 "**The layer tree** - browse `src/cadrumo/core`, `src/cadrumo/domain`, "
 "`src/cadrumo/application`, `src/cadrumo/adapters`, and "
@@ -730,7 +783,7 @@ msgstr ""
 "`src/cadrumo/application`, `src/cadrumo/adapters` y "
 "`src/cadrumo/entrypoints` para ver los subpaquetes que nombra cada grupo."
 
-#: ../../architecture/index.md:351
+#: ../../architecture/index.md:390
 #, python-brace-format
 msgid ""
 "**The command-line reference** - {doc}`/cli/index` for exact verbs, "
@@ -739,7 +792,7 @@ msgstr ""
 "**La referencia de la línea de comandos**: {doc}`/cli/index` para los "
 "verbos, las opciones y la salida exactos."
 
-#: ../../architecture/index.md:353
+#: ../../architecture/index.md:392
 #, python-brace-format
 msgid ""
 "**The API reference** - {doc}`/api/cadrumo` for module signatures and the"
@@ -748,7 +801,7 @@ msgstr ""
 "**La referencia de la API**: {doc}`/api/cadrumo` para las firmas de los "
 "módulos y la lista completa de subpaquetes."
 
-#: ../../architecture/index.md:355
+#: ../../architecture/index.md:394
 #, python-brace-format
 msgid ""
 "**The registry authoring guide** - {doc}`/authoring-guide` for how to "
@@ -757,7 +810,7 @@ msgstr ""
 "**La guía de redacción del registro**: {doc}`/authoring-guide` para saber"
 " cómo redactar el TOML que compila el flujo."
 
-#: ../../architecture/index.md:357
+#: ../../architecture/index.md:396
 #, python-brace-format
 msgid ""
 "**The pipeline explanation** - {doc}`/explanation/index` for the same "
@@ -766,7 +819,7 @@ msgstr ""
 "**La explicación del flujo**: {doc}`/explanation/index` para el mismo "
 "recorrido contado para el contribuyente."
 
-#: ../../architecture/index.md:359
+#: ../../architecture/index.md:398
 #, python-brace-format
 msgid ""
 "**The glossary** - {doc}`/_generated/glossary` for any term (casilla, "
@@ -775,7 +828,7 @@ msgstr ""
 "**El glosario**: {doc}`/_generated/glossary` para cualquier término "
 "(casilla, modelo, fichero-BOE o justificante) que quieras ver definido."
 
-#: ../../architecture/index.md:361
+#: ../../architecture/index.md:400
 #, python-brace-format
 msgid ""
 "**Getting it running** - {doc}`/how-to/quickstart` to install and prepare"
@@ -784,10 +837,11 @@ msgstr ""
 "**Ponerlo en marcha**: {doc}`/how-to/quickstart` para instalar y preparar"
 " una primera presentación."
 
-#: ../../architecture/index.md:363
+#: ../../architecture/index.md:402
 msgid ""
 "**Contributing** - the project source and issue tracker live on "
 "[GitHub](https://github.com/nevenincs/cadrumo)."
 msgstr ""
 "**Contribuir**: el código fuente del proyecto y el gestor de incidencias "
 "están en [GitHub](https://github.com/nevenincs/cadrumo)."
+

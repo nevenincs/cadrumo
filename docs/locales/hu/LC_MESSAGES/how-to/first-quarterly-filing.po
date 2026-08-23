@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 10:30+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -23,13 +23,14 @@ msgid "Prepare your first quarterly IRPF filing"
 msgstr "Készítse elő az első negyedéves IRPF-benyújtását"
 
 #: ../../how-to/first-quarterly-filing.md:3
+#, fuzzy
 msgid ""
 "This page covers your first quarterly Modelo 130 filing, end to end: "
 "bring a quarter of transactions into the ledger, classify them as "
 "business income and deductible expenses, prepare the draft, and check "
-"that it passed verification before you export it. It is written for a "
-"self-employed taxpayer with a NIF, CIF, NIE, or other filing identity who"
-" is running Cadrumo for the first time."
+"that it passed verification before you file it. It is written for a self-"
+"employed taxpayer with a NIF, CIF, NIE, or other filing identity who is "
+"running Cadrumo for the first time."
 msgstr ""
 "Ez az oldal az első negyedéves Modelo 130 benyújtását tárgyalja, elejétől"
 " a végéig: hozzon be egy negyedévnyi tranzakciót a ledgerbe, osztályozza "
@@ -40,10 +41,11 @@ msgstr ""
 "először használja a Cadrumót."
 
 #: ../../how-to/first-quarterly-filing.md:9
+#, fuzzy
 msgid ""
 "Cadrumo never submits a return to the Agencia Estatal de Administración "
-"Tributaria (AEAT). Every command below builds and checks a local file. "
-"You upload the exported file yourself through the official AEAT channel."
+"Tributaria (AEAT). Modelo 130 has no fichero-BOE layout, so you enter the"
+" calculated box values yourself through the official AEAT channel."
 msgstr ""
 "A Cadrumo soha nem nyújt be bevallást az Agencia Estatal de "
 "Administración Tributariának (AEAT). Az alábbi minden parancs egy helyi "
@@ -192,27 +194,28 @@ msgstr ""
 "amely egy valódi első negyedévnek nincs."
 
 #: ../../how-to/first-quarterly-filing.md:85
+#, fuzzy
 msgid ""
 "Verify the draft. The result reads `granted_verificado_completo` true, so"
-" the draft is complete and ready to export."
+" the draft is complete and ready to file."
 msgstr ""
 "Ellenőrizze a piszkozatot. Az eredmény `granted_verificado_completo` igaz"
 " értéket mutat, így a piszkozat teljes és exportálásra kész."
 
 #: ../../how-to/first-quarterly-filing.md:88
-msgid "Check the figures and export"
+#, fuzzy
+msgid "Check the figures and record the filing"
 msgstr "Ellenőrizze a számokat és exportáljon"
 
 #: ../../how-to/first-quarterly-filing.md:90
 #, fuzzy
 msgid ""
-"The verification result is the signal that the draft is ready. When "
-"`granted_verificado_completo` reads true, export the file. Export refuses"
-" until every deductible-expense row carries linked purchase-invoice "
-"evidence, so this example registers the supplier invoice and attaches it "
-"before it calculates. Attach in that order: a draft bundles its evidence "
-"when you verify it, so an invoice attached afterwards does not reach the "
-"filing."
+"The verification result is the signal that the draft is ready. "
+"Verification refuses until every deductible-expense row carries linked "
+"purchase-invoice evidence, so this example registers the supplier invoice"
+" and attaches it before it calculates. Attach in that order: a draft "
+"bundles its evidence when you verify it, so an invoice attached "
+"afterwards does not reach the filing."
 msgstr ""
 "Az ellenőrzés eredménye a jelzés arról, hogy a piszkozat kész. Amikor a "
 "`granted_verificado_completo` igaz értéket mutat, exportálja a fájlt. Az "
@@ -223,7 +226,13 @@ msgstr ""
 "bizonyítéktól exportig tartó lánc elejétől a végéig, végrehajtva fut a "
 "[Modelo 303 IVA-benyújtás előkészítése](modelo-303.md) oldalon:"
 
-#: ../../how-to/first-quarterly-filing.md:101
+#: ../../how-to/first-quarterly-filing.md:96
+msgid ""
+"The sequence below shows `export` refusing - Modelo 130 has no fichero-"
+"BOE layout - and then the local filed marker recording."
+msgstr ""
+
+#: ../../how-to/first-quarterly-filing.md:103
 msgid ""
 "A later quarter builds on this one: leave the three prior-period bindings"
 " unset so they resolve from your filed history. See [Prepare a Modelo 130"
@@ -235,23 +244,23 @@ msgstr ""
 "eleji halmozott viselkedésért lásd [Egy Modelo 130 IRPF-előleg "
 "előkészítése](modelo-130.md)."
 
-#: ../../how-to/first-quarterly-filing.md:106
+#: ../../how-to/first-quarterly-filing.md:108
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/first-quarterly-filing.md:108
+#: ../../how-to/first-quarterly-filing.md:110
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr "[Egy Modelo 130 IRPF-előleg előkészítése](modelo-130.md)"
 
-#: ../../how-to/first-quarterly-filing.md:109
+#: ../../how-to/first-quarterly-filing.md:111
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Tranzakciók osztályozása](classify-transactions.md)"
 
-#: ../../how-to/first-quarterly-filing.md:110
+#: ../../how-to/first-quarterly-filing.md:112
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[A benyújtási munkafolyamat](filing-spine.md)"
 
-#: ../../how-to/first-quarterly-filing.md:111
+#: ../../how-to/first-quarterly-filing.md:113
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Töltse fel az exportált modelóját az AEAT-portálon](file-at-aeat.md)"
 

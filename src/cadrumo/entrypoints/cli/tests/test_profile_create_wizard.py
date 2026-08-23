@@ -26,7 +26,7 @@ from ....application.wizard import WIZARD_FLOWS
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from ....tests.user_profile import register_cli_profile
-from .. import _prefer_complete_verb_path
+from .._root_support import _prefer_complete_verb_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

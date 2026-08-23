@@ -141,18 +141,8 @@ docs:
       table_meaning_header: Significado
       title: Códigos de salida y contrato de salida
     command:
-      bare_payload_note: Este comando emite una carga simple (todavía sin envoltorio).
-        La estructura de la salida es propia de cada comando; consulte ``--help``
-        para más detalles.
-      group_fallback: Grupo de comandos.
       no_description: Sin descripción.
-      no_description_available: No hay descripción disponible.
-      output_schema_heading: Esquema de salida
       parameters_heading: Parámetros
-      path_label: Ruta del comando
-      registry_key_label: Clave del registro
-      schema_envelope_note: Este comando emite un ``SchemaEnvelope`` cuyo campo ``result``
-        se valida contra ``{schema}``.
     env:
       default_empty: vacío
       default_unset: sin definir
@@ -171,7 +161,6 @@ docs:
       intro: '``aeat {family}`` está organizado por grupo de verbos principal. La
         página de cada grupo empieza con su salida real de ``--help``, seguida de
         todos los comandos finales que contiene.'
-      open_group_link: Abrir la referencia de ``aeat {family} {group}``
       title: '{command}: referencia de comandos'
     index:
       app_card: 'Comandos del flujo de trabajo operativo: libro de movimientos, modelos,

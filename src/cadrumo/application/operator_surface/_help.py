@@ -179,9 +179,9 @@ def _root_help() -> HelpDocument:
             tr(
                 "cli.operator_surface.help.config.paragraph_storage_isolation",
                 default=(
-                    "For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT, "
-                    "CADRUMO_SECRET_STORE_DIR, and CADRUMO_SECRET_PASSPHRASE; "
-                    "logs default under that storage root."
+                    "For isolated state, set CADRUMO_LOCAL_STORAGE_ROOT and CADRUMO_SECRET_STORE_DIR. "
+                    "Pass profile secrets through --profile-secrets-stdin or --profile-secrets-fd, "
+                    "and command secrets through --secrets-stdin or --secrets-fd."
                 ),
             ),
         ),
@@ -360,9 +360,9 @@ def _config_help() -> HelpDocument:
             tr(
                 "cli.operator_surface.help.config.paragraph_storage_isolation",
                 default=(
-                    "For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT, "
-                    "CADRUMO_SECRET_STORE_DIR, and CADRUMO_SECRET_PASSPHRASE; "
-                    "logs default under that storage root."
+                    "For isolated state, set CADRUMO_LOCAL_STORAGE_ROOT and CADRUMO_SECRET_STORE_DIR. "
+                    "Pass profile secrets through --profile-secrets-stdin or --profile-secrets-fd, "
+                    "and command secrets through --secrets-stdin or --secrets-fd."
                 ),
             ),
         ),

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 14:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -166,11 +166,11 @@ msgstr ""
 "[La persistència i el límit de seguretat](#persistence-and-the-safety-"
 "boundary) - on resideix l'estat, i per què no en surt res."
 
-#: ../../architecture/index.md:53
+#: ../../architecture/index.md:54
 msgid "The layers"
 msgstr "Les capes"
 
-#: ../../architecture/index.md:55
+#: ../../architecture/index.md:56
 msgid ""
 "Cadrumo separates responsibilities into five layers under `src/cadrumo/`."
 " Layers normally depend only on layers inside them; application "
@@ -180,7 +180,7 @@ msgstr ""
 " Normalment, les capes només depenen de les capes que tenen a dins; la "
 "composició de l'aplicació té l'excepció d'adaptador documentada."
 
-#: ../../architecture/index.md:77
+#: ../../architecture/index.md:78
 msgid ""
 "**Text alternative.** Entrypoints call the application and core layers. "
 "The application calls the domain, adapters, and core layers; adapters "
@@ -192,7 +192,7 @@ msgstr ""
 " criden domain i core; i domain crida core. El domain arriba als adapters"
 " només a través de la costura anotada del repositori segur."
 
-#: ../../architecture/index.md:82
+#: ../../architecture/index.md:83
 msgid ""
 "**`core`** is the innermost layer. It owns the cross-cutting primitives "
 "every other layer shares. Its typed enums define closed value sets such "
@@ -207,7 +207,7 @@ msgstr ""
 "core també posseeix el contracte d'embolcall JSON, la configuració, els "
 "tipus de diners i de temps, i la taxonomia d'errors."
 
-#: ../../architecture/index.md:87
+#: ../../architecture/index.md:88
 msgid ""
 "**`domain`** holds pure tax rules and records: the modelo registry, "
 "casilla definitions (a casilla is one numbered box on a form), filing "
@@ -218,7 +218,7 @@ msgstr ""
 "d'un formulari), les observacions de presentació i els càlculs que s'hi "
 "fan. Només depèn de `core`."
 
-#: ../../architecture/index.md:90
+#: ../../architecture/index.md:91
 msgid ""
 "**`application`** orchestrates use cases. It joins domain rules with "
 "adapters to build filing drafts, aggregate the ledger, run diagnostics, "
@@ -229,7 +229,7 @@ msgstr ""
 "ledger, executar diagnòstics i projectar l'estat. No fa cap entrada ni "
 "sortida per si mateixa."
 
-#: ../../architecture/index.md:93
+#: ../../architecture/index.md:94
 msgid ""
 "**`adapters`** connects the application to the outside world in three "
 "parts. `inbound` parses incoming Portable Document Format (PDF), comma-"
@@ -247,7 +247,7 @@ msgstr ""
 "d'autenticació). `persistence` desa càrregues útils xifrades a la base de"
 " dades local."
 
-#: ../../architecture/index.md:99
+#: ../../architecture/index.md:100
 msgid ""
 "**`entrypoints`** exposes the application to operators. The command line "
 "lives here, and its root surface is limited to two command families, "
@@ -257,7 +257,7 @@ msgstr ""
 "aquí, i la seva superfície arrel es limita a dues famílies d'ordres, "
 "`config` i `app`."
 
-#: ../../architecture/index.md:103
+#: ../../architecture/index.md:104
 msgid ""
 "Two boundary rules keep the layers honest. Boundary data crosses as "
 "validated pydantic v2 models, never loose dictionaries. Closed value sets"
@@ -270,7 +270,7 @@ msgstr ""
 "circulen com a membres d'enum, de manera que un valor no vàlid es rebutja"
 " al límit."
 
-#: ../../architecture/index.md:108
+#: ../../architecture/index.md:109
 msgid ""
 "The dependency arrows point inward with one annotated exception. Three "
 "domain repositories - filing, justificante, and submission - sit directly"
@@ -283,7 +283,7 @@ msgstr ""
 "`adapters.persistence`. El diagrama dibuixa aquesta costura com una "
 "aresta discontínua en lloc d'amagar-la."
 
-#: ../../architecture/index.md:113
+#: ../../architecture/index.md:114
 msgid ""
 "Inside `domain` and `application`, the subpackages cluster into five "
 "conceptual groups. Some subpackages are omitted for clarity; the API "
@@ -293,83 +293,83 @@ msgstr ""
 "conceptuals. Alguns subpaquets s'ometen per claredat; la referència de "
 "l'API els enumera tots."
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Cluster"
 msgstr "Grup"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`domain` subpackages"
 msgstr "Subpaquets de `domain`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`application` subpackages"
 msgstr "Subpaquets de `application`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Registry and calculations"
 msgstr "Registre i càlculs"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`calculations`, `modelos`, `normatives`, `manuals`"
 msgstr "`calculations`, `modelos`, `normatives`, `manuals`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`calculations`, `modelo`, `registry`, `aggregation`, `verification`"
 msgstr "`calculations`, `modelo`, `registry`, `aggregation`, `verification`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Ledger and transactions"
 msgstr "Ledger i transaccions"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`transactions`, `invoices`, `categories`, `iva`, `currency`, `attachments`"
 msgstr "`transactions`, `invoices`, `categories`, `iva`, `currency`, `attachments`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`ledger`, `transactions`, `invoices`, `evidence`, `inventory`"
 msgstr "`ledger`, `transactions`, `invoices`, `evidence`, `inventory`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Filing and export"
 msgstr "Presentació i exportació"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`filing`, `justificante`, `submission`"
 msgstr "`filing`, `justificante`, `submission`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`filing`, `export`, `review`"
 msgstr "`filing`, `export`, `review`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Live, portals, and auth"
 msgstr "Live, portals i auth"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`portals`, `auth`, `fincas`"
 msgstr "`portals`, `auth`, `fincas`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`live`, `portals`, `auth`, `workflow`"
 msgstr "`live`, `portals`, `auth`, `workflow`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Profile and storage"
 msgstr "Perfil i emmagatzematge"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`buckets`, `user_profile`, `contribuyente`, `deadlines`"
 msgstr "`buckets`, `user_profile`, `contribuyente`, `deadlines`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`profile`, `storage`, `bucket_maintenance`, `setup`, `wizard`"
 msgstr "`profile`, `storage`, `bucket_maintenance`, `setup`, `wizard`"
 
-#: ../../architecture/index.md:125
+#: ../../architecture/index.md:127
 msgid "The registry authority pipeline"
 msgstr "El pipeline de l'autoritat del registre"
 
-#: ../../architecture/index.md:127
+#: ../../architecture/index.md:129
 msgid ""
 "The authoritative tax-model definitions aren't hard-coded. They move "
 "through a deterministic pipeline, from hand-authored source to the "
@@ -382,7 +382,7 @@ msgstr ""
 "temps d'execució. TOML és Tom's Obvious Minimal Language, un format "
 "pensat per editar."
 
-#: ../../architecture/index.md:146
+#: ../../architecture/index.md:148
 msgid ""
 "**Text alternative.** Authoring fragments flow through deterministic "
 "loading, compilation, and schema validation before the validated registry"
@@ -397,7 +397,7 @@ msgstr ""
 "tant la memòria cau del compilador com la de l'autoritat cada cop que "
 "canvien els fitxers del registre."
 
-#: ../../architecture/index.md:152
+#: ../../architecture/index.md:154
 msgid ""
 "Each modelo and revision is authored as fragments of TOML under "
 "`src/cadrumo/_data/registry/`. The loader and compiler (`_loader.py`) "
@@ -418,7 +418,7 @@ msgstr ""
 "memòria cau de l'empremta, una edició fa que el carregador revalidi "
 "l'empremta abans de servir el resultat següent."
 
-#: ../../architecture/index.md:160
+#: ../../architecture/index.md:162
 msgid ""
 "`ValidatedRegistryAuthority` is the production boundary. It validates a "
 "modelo once, caches the result, and builds a `RegistrySnapshot` for a "
@@ -437,7 +437,17 @@ msgstr ""
 " d'esquema de presentació, l'execució de fórmules, l'anàlisi d'exportació"
 " i la verificació) llegeixen dels snapshots, mai del carregador en brut."
 
-#: ../../architecture/index.md:167
+#: ../../architecture/index.md:169
+msgid ""
+"The snapshot is also the filing read-model authority. Its casilla "
+"definitions say which numbered fields exist, whether each field is "
+"manual, bound, or calculated, which formulas and binding contracts apply,"
+" and which repeating fields and export positions belong to that revision."
+" It describes what one filing requires; it does not own a taxpayer's "
+"transactions, invoices, foreign assets, or stock movements."
+msgstr ""
+
+#: ../../architecture/index.md:176
 msgid ""
 "The split matters. The authoring and compilation stages before the "
 "authority are implementation details. Production code requests validated "
@@ -450,11 +460,11 @@ msgstr ""
 "l'autoritat, de manera que el carregador es queda darrere d'aquesta "
 "línia."
 
-#: ../../architecture/index.md:172
+#: ../../architecture/index.md:182
 msgid "The modelo lifecycle"
 msgstr "El cicle de vida del modelo"
 
-#: ../../architecture/index.md:174
+#: ../../architecture/index.md:184
 msgid ""
 "A modelo is a numbered AEAT tax form. Its data flows one way, from your "
 "records to a file you upload yourself."
@@ -463,7 +473,7 @@ msgstr ""
 "flueixen en un sol sentit, dels teus registres a un fitxer que puges tu "
 "mateix."
 
-#: ../../architecture/index.md:200
+#: ../../architecture/index.md:210
 msgid ""
 "**Text alternative.** Financial records are ingested and classified into "
 "the encrypted ledger. An operator creates work, calculates it, verifies "
@@ -475,7 +485,7 @@ msgstr ""
 "calcula, la verifica, la marca com a presentada localment i exporta un "
 "fitxer. Després, una persona puja aquest fitxer a l'AEAT fora de Cadrumo."
 
-#: ../../architecture/index.md:205
+#: ../../architecture/index.md:215
 msgid ""
 "The tool ingests and classifies financial records - bank statements, "
 "invoices, and their evidence - into the encrypted ledger. From there the "
@@ -485,27 +495,27 @@ msgstr ""
 " factures i les seves proves) dins del ledger xifrat. A partir d'aquí, el"
 " trajecte segueix una seqüència fixa de verbs de línia d'ordres:"
 
-#: ../../architecture/index.md:209
+#: ../../architecture/index.md:219
 msgid "`aeat app modelo work create` pins a filing to a modelo, year, and period."
 msgstr ""
 "`aeat app modelo work create` fixa una presentació a un modelo, any i "
 "període."
 
-#: ../../architecture/index.md:210
+#: ../../architecture/index.md:220
 msgid "`calculate` resolves every casilla and saves a `CalculationRevision`."
 msgstr "`calculate` resol cada casella i desa una `CalculationRevision`."
 
-#: ../../architecture/index.md:211
+#: ../../architecture/index.md:221
 msgid "`verify` runs a completeness and consistency gate over the draft."
 msgstr ""
 "`verify` executa una comprovació d'integritat i coherència sobre "
 "l'esborrany."
 
-#: ../../architecture/index.md:212
+#: ../../architecture/index.md:222
 msgid "`file` marks a verified revision as internally filed."
 msgstr "`file` marca una revisió verificada com a presentada internament."
 
-#: ../../architecture/index.md:213
+#: ../../architecture/index.md:223
 msgid ""
 "`aeat app modelo export` writes the official upload file (a fixed-layout "
 "fichero-BOE artifact) to disk."
@@ -513,7 +523,7 @@ msgstr ""
 "`aeat app modelo export` escriu el fitxer de pujada oficial (un artefacte"
 " fichero-BOE de format fix) al disc."
 
-#: ../../architecture/index.md:216
+#: ../../architecture/index.md:226
 msgid ""
 "The boundary is structural. `file` is a local marker, not a submission, "
 "and `export` writes a file to your disk. No command transmits anything to"
@@ -532,11 +542,11 @@ msgstr ""
 "`CADRUMO_LIVE_TESTS_ENABLED` controla les proves de lectura en directe "
 "dels desenvolupadors."
 
-#: ../../architecture/index.md:223
+#: ../../architecture/index.md:233
 msgid "How a figure is grounded"
 msgstr "Com es fonamenta una xifra"
 
-#: ../../architecture/index.md:225
+#: ../../architecture/index.md:235
 msgid ""
 "A casilla value isn't a bare number. It carries its provenance - the "
 "legal references, source references, and formula identifier that produced"
@@ -547,7 +557,7 @@ msgstr ""
 "fórmula que el van produir) des de la definició del registre fins a la "
 "sortida orientada a l'operador."
 
-#: ../../architecture/index.md:253
+#: ../../architecture/index.md:263
 msgid ""
 "**Text alternative.** A registry casilla definition and resolved ledger, "
 "invoice, previous-filing, and relation inputs feed the formula engine. It"
@@ -560,7 +570,7 @@ msgstr ""
 "procedència i que es converteix en una revisió de càlcul, una càrrega "
 "útil de la CLI i una sortida orientada a l'operador."
 
-#: ../../architecture/index.md:258
+#: ../../architecture/index.md:268
 msgid ""
 "Each binding on a casilla declares a typed source. A mesh of resolvers - "
 "ledger aggregation, invoice catalogue, previous-filing carry, and cross-"
@@ -584,11 +594,34 @@ msgstr ""
 " CLI i després cap a l'operador. La procedència no es perd mai en el camí"
 " de sortida."
 
-#: ../../architecture/index.md:267
+#: ../../architecture/index.md:277
+msgid ""
+"A binding is a projection contract, not an attachment slot. It identifies"
+" the owned source family, validates the selector and aggregation, and "
+"says how that source becomes a filing input. A scalar contract produces "
+"one value. Repeating record families declare one typed binding per row "
+"field. They join the values by grouping and one-based row index. The "
+"calculation revision freezes the resolved row bindings. Paths that "
+"produce validated detail rows store those separately. It never attaches "
+"an opaque record blob to a casilla."
+msgstr ""
+
+#: ../../architecture/index.md:285
+msgid ""
+"Modelo 720 demonstrates the repeating shape: its foreign-asset resolver "
+"is enrolled in the source mesh and projects typed asset fields into "
+"registry row bindings. Stock inventory is different. `InventoryLedger` is"
+" an implemented, encrypted business aggregate. The binding-source "
+"taxonomy currently has no inventory kind or enrolled inventory resolver. "
+"It therefore remains outside modelo calculation revisions until a legally"
+" grounded projection is added."
+msgstr ""
+
+#: ../../architecture/index.md:293
 msgid "Persistence and the safety boundary"
 msgstr "La persistència i el límit de seguretat"
 
-#: ../../architecture/index.md:269
+#: ../../architecture/index.md:295
 msgid ""
 "All sensitive financial data lives in one place: an encrypted, per-"
 "profile store. The structure, not a convention, keeps it there."
@@ -597,7 +630,7 @@ msgstr ""
 "magatzem xifrat per perfil. És l'estructura, no una convenció, la que les"
 " hi manté."
 
-#: ../../architecture/index.md:300
+#: ../../architecture/index.md:326
 msgid ""
 "**Text alternative.** An operator selects one active profile. The "
 "resulting bucket session opens runtime factories and a secure repository,"
@@ -612,7 +645,7 @@ msgstr ""
 " només de lectura; només l'acció humana de presentació pot enviar res a "
 "l'AEAT."
 
-#: ../../architecture/index.md:305
+#: ../../architecture/index.md:331
 msgid ""
 "Key-encryption keys (KEKs) protect data-encryption keys (DEKs). The "
 "repository uses authenticated encryption with associated data (AEAD) "
@@ -628,17 +661,15 @@ msgstr ""
 "xifratge és l'Advanced Encryption Standard amb claus de 256 bits "
 "(AES-256)."
 
-#: ../../architecture/index.md:311
+#: ../../architecture/index.md:337
+#, fuzzy
 msgid ""
 "You work one taxpayer at a time. Selecting a profile opens a bucket "
 "session, which scopes a `SecureObjectRepository` to that taxpayer's "
 "encrypted store. The repository encrypts every payload at the column "
 "boundary with a key from the `MasterKeyProvider` - the operating system "
 "keychain, or a passphrase-derived fallback. It persists the ciphertext to"
-" a local SQLite database with encrypted payload columns. Evidence bytes -"
-" invoices, statements, and decrypted documents - go through the content-"
-"addressed `AttachmentStore`, which stores the bytes themselves, never a "
-"link."
+" a local SQLite database with encrypted payload columns."
 msgstr ""
 "Treballes amb un contribuent alhora. En seleccionar un perfil s'obre una "
 "sessió de bucket, que limita un `SecureObjectRepository` al magatzem "
@@ -650,7 +681,29 @@ msgstr ""
 "documents desxifrats) passen pel `AttachmentStore` adreçat per contingut,"
 " que desa els bytes mateixos, mai un enllaç."
 
-#: ../../architecture/index.md:321
+#: ../../architecture/index.md:344
+msgid ""
+"Evidence bytes - invoices, statements, and decrypted documents - go "
+"through the content-addressed `AttachmentStore`, which stores the bytes "
+"themselves, never a link."
+msgstr ""
+
+#: ../../architecture/index.md:348
+msgid ""
+"Parsed business records do not become attachments merely because they may"
+" later support a filing. Transactions, invoice catalogues, and stock "
+"inventory remain separate typed aggregates in encrypted storage. Modelo "
+"720 instead receives typed foreign-asset observations from the caller. An"
+" enrolled source resolver projects only the fields requested by the "
+"registry into a calculation revision. In the current Modelo 100 registry,"
+" stock-related boxes 0177, 0181, and 0182 remain manual inputs. The "
+"inventory domain now splits 2025 opening-to-closing variation between "
+"0177 and 0182, but that domain projection is not evidence of a live "
+"inventory-to-Renta route and does not yet claim complete purchases for "
+"0181."
+msgstr ""
+
+#: ../../architecture/index.md:359
 msgid ""
 "Nothing in this store crosses outward to the agency as a write. The read-"
 "only live checks reach the agency only to read. The single path that "
@@ -666,11 +719,11 @@ msgstr ""
 "d'escriptura a l'adaptador de la sede de l'AEAT, de manera que l'estat de"
 " seguretat no es pot erosionar per accident."
 
-#: ../../architecture/index.md:327
+#: ../../architecture/index.md:365
 msgid "How the documentation stays true to the code"
 msgstr "Com la documentació es manté fidel al codi"
 
-#: ../../architecture/index.md:329
+#: ../../architecture/index.md:367
 msgid ""
 "The discipline that governs the layers governs the documentation too. "
 "Cadrumo keeps three English documentation surfaces close to the code that"
@@ -680,7 +733,7 @@ msgstr ""
 "manté tres superfícies de documentació en anglès a prop del codi que en "
 "proporciona els fets."
 
-#: ../../architecture/index.md:333
+#: ../../architecture/index.md:371
 msgid ""
 "Documentation authors write the repository markdown - this guide and the "
 "others under `docs/` - for people orienting to the project. Technical "
@@ -697,7 +750,7 @@ msgstr ""
 " a la prosa. Els generadors basteixen les referències del codi font i de "
 "la línia d'ordres a partir del codi mateix."
 
-#: ../../architecture/index.md:339
+#: ../../architecture/index.md:377
 msgid ""
 "Because generators derive the API and command-line references from "
 "source, those surfaces cannot silently drift. A strict build treats "
@@ -710,17 +763,17 @@ msgstr ""
 "errors i falla si hi ha una referència creuada trencada, un stub que "
 "falta o una referència d'ordre que ja no coincideix amb les ordres."
 
-#: ../../architecture/index.md:344
+#: ../../architecture/index.md:383
 msgid "Crossing into the code"
 msgstr "Entrar al codi"
 
-#: ../../architecture/index.md:346
+#: ../../architecture/index.md:385
 msgid "Use this overview to orient, then drop into the detail:"
 msgstr ""
 "Utilitza aquesta visió general per orientar-te, i després endinsa't en el"
 " detall:"
 
-#: ../../architecture/index.md:348
+#: ../../architecture/index.md:387
 msgid ""
 "**The layer tree** - browse `src/cadrumo/core`, `src/cadrumo/domain`, "
 "`src/cadrumo/application`, `src/cadrumo/adapters`, and "
@@ -731,7 +784,7 @@ msgstr ""
 " `src/cadrumo/entrypoints` per veure els subpaquets que anomena cada "
 "grup."
 
-#: ../../architecture/index.md:351
+#: ../../architecture/index.md:390
 #, python-brace-format
 msgid ""
 "**The command-line reference** - {doc}`/cli/index` for exact verbs, "
@@ -740,7 +793,7 @@ msgstr ""
 "**La referència de la línia d'ordres** - {doc}`/cli/index` per als verbs,"
 " opcions i sortida exactes."
 
-#: ../../architecture/index.md:353
+#: ../../architecture/index.md:392
 #, python-brace-format
 msgid ""
 "**The API reference** - {doc}`/api/cadrumo` for module signatures and the"
@@ -749,7 +802,7 @@ msgstr ""
 "**La referència de l'API** - {doc}`/api/cadrumo` per a les signatures de "
 "mòdul i la llista completa de subpaquets."
 
-#: ../../architecture/index.md:355
+#: ../../architecture/index.md:394
 #, python-brace-format
 msgid ""
 "**The registry authoring guide** - {doc}`/authoring-guide` for how to "
@@ -758,7 +811,7 @@ msgstr ""
 "**La guia d'autoria del registre** - {doc}`/authoring-guide` per saber "
 "com escriure el TOML que compila el pipeline."
 
-#: ../../architecture/index.md:357
+#: ../../architecture/index.md:396
 #, python-brace-format
 msgid ""
 "**The pipeline explanation** - {doc}`/explanation/index` for the same "
@@ -767,7 +820,7 @@ msgstr ""
 "**L'explicació del pipeline** - {doc}`/explanation/index` per al mateix "
 "trajecte explicat per al contribuent."
 
-#: ../../architecture/index.md:359
+#: ../../architecture/index.md:398
 #, python-brace-format
 msgid ""
 "**The glossary** - {doc}`/_generated/glossary` for any term (casilla, "
@@ -776,7 +829,7 @@ msgstr ""
 "**El glossari** - {doc}`/_generated/glossary` per a qualsevol terme "
 "(casella, modelo, fichero-BOE o justificante) que vulguis definir."
 
-#: ../../architecture/index.md:361
+#: ../../architecture/index.md:400
 #, python-brace-format
 msgid ""
 "**Getting it running** - {doc}`/how-to/quickstart` to install and prepare"
@@ -785,7 +838,7 @@ msgstr ""
 "**Posar-ho en marxa** - {doc}`/how-to/quickstart` per instal·lar i "
 "preparar una primera presentació."
 
-#: ../../architecture/index.md:363
+#: ../../architecture/index.md:402
 msgid ""
 "**Contributing** - the project source and issue tracker live on "
 "[GitHub](https://github.com/nevenincs/cadrumo)."

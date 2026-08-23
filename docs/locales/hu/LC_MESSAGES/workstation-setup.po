@@ -6,14 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 23:20+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
@@ -22,13 +22,14 @@ msgid "Install Cadrumo"
 msgstr "A Cadrumo telepítése"
 
 #: ../../workstation-setup.md:3
+#, fuzzy
 msgid ""
 "This page covers installation only: get the package, install the `aeat` "
-"command, add the optional extras you want, and (if you use an AI "
-"assistant) install the agent surface. If you do not have Cadrumo on your "
-"machine yet, start at [Get Cadrumo](download.md) for the acquisition "
-"paths and their current availability. Configuration and first use start "
-"in the [quickstart](how-to/quickstart.md) once the install checks pass."
+"command, and add the optional extras you want. If you do not have Cadrumo"
+" on your machine yet, start at [Get Cadrumo](download.md) for the "
+"acquisition paths and their current availability. Configuration and first"
+" use start in the [quickstart](how-to/quickstart.md) once the install "
+"checks pass."
 msgstr ""
 "Ez az oldal csak a telepítéssel foglalkozik: szerezze be a csomagot, "
 "telepítse az `aeat` parancsot, adja hozzá a kívánt opcionális "
@@ -40,10 +41,11 @@ msgstr ""
 "ellenőrzések sikeresen lefutottak."
 
 #: ../../workstation-setup.md:10
+#, fuzzy
 msgid ""
 "Cadrumo works without any optional service. Google export, on-host LLM "
-"vision, cloud LLM upload, and the agent surface are all opt-in. The core "
-"filing workflow runs with none of them."
+"vision, and cloud LLM upload are all opt-in. The core filing workflow "
+"runs with none of them."
 msgstr ""
 "A Cadrumo bármilyen opcionális szolgáltatás nélkül működik. A Google "
 "export, a helyi (on-host) LLM-alapú képfeldolgozás, a felhőbeli LLM-"
@@ -121,11 +123,11 @@ msgid "Install optional extras from the checkout"
 msgstr "Opcionális kiegészítők telepítése a forráskód-kimásolásból"
 
 #: ../../workstation-setup.md:55
+#, fuzzy
 msgid ""
 "The core install is lean. Google export, the live AEAT browser, the "
-"Anthropic-API provider, OFX/QFX bank-statement import, and the agent "
-"surface are optional package extras. Name the extras you need when you "
-"install:"
+"Anthropic-API provider and OFX/QFX bank-statement import are optional "
+"package extras. Name the extras you need when you install:"
 msgstr ""
 "Az alaptelepítés karcsú. A Google export, az élő AEAT-böngésző, az "
 "Anthropic-API szolgáltató, az OFX/QFX bankkivonat-importálás és az "
@@ -133,11 +135,12 @@ msgstr ""
 "szükséges kiegészítőket:"
 
 #: ../../workstation-setup.md:63
+#, fuzzy
 msgid ""
-"The available extras are `google`, `browser`, `anthropic`, `ofx`, "
-"`agent`, and `all`. `aeat config check` lists each extra and prints the "
-"exact install command for any that is missing. A feature whose extra is "
-"not installed refuses with the same hint instead of failing obscurely."
+"The available extras are `google`, `browser`, `anthropic`, `ofx`, and "
+"`all`. `aeat config check` lists each extra and prints the exact install "
+"command for any that is missing. A feature whose extra is not installed "
+"refuses with the same hint instead of failing obscurely."
 msgstr ""
 "Az elérhető kiegészítők: `google`, `browser`, `anthropic`, `ofx`, `agent`"
 " és `all`. Az `aeat config check` felsorolja az egyes kiegészítőket, és "
@@ -188,54 +191,10 @@ msgstr ""
 "hogy megerősítse a hiányosság megszűnését."
 
 #: ../../workstation-setup.md:91
-msgid "Run the Model Context Protocol (MCP) surface"
-msgstr "A Model Context Protocol (MCP) felület futtatása"
-
-#: ../../workstation-setup.md:93
-msgid ""
-"Cadrumo ships an MCP server, `cadrumo-mcp`, so an AI assistant can "
-"operate the same local, gated commands the CLI exposes, together with an "
-"agent harness: the operator rules, taxpayer-situation skills, and scoped "
-"agent personas that keep the assistant inside the safety boundary."
-msgstr ""
-"A Cadrumo egy MCP-kiszolgálóval, a `cadrumo-mcp`-vel érkezik, így egy AI-"
-"asszisztens ugyanazokat a helyi, védett parancsokat működtetheti, "
-"amelyeket a CLI is elérhetővé tesz, egy ügynökkerettel együtt: a kezelői "
-"szabályokkal, az adózói helyzethez kapcsolódó képességekkel és a "
-"hatókörrel ellátott ügynökszemélyiségekkel, amelyek az asszisztenst a "
-"biztonsági határon belül tartják."
-
-#: ../../workstation-setup.md:99
-msgid "In the beta, run the server from the same repository checkout:"
-msgstr "A bétában ugyanabból a tároló-kicsekkolásból futtassa a kiszolgálót:"
-
-#: ../../workstation-setup.md:106
-msgid ""
-"[Connect an agent](how-to/connect-an-agent.md) shows the source-checkout "
-"registration and explains what the agent can and cannot do."
-msgstr ""
-"Az [Ügynök csatlakoztatása](how-to/connect-an-agent.md) bemutatja a "
-"forráskód-kimásolásból való regisztrálást, és elmagyarázza, hogy mit "
-"tehet és mit nem tehet meg az ügynök."
-
-#: ../../workstation-setup.md:109
-msgid "Materialize the agent harness in a project workspace"
-msgstr "Az ügynökkeret létrehozása egy projekt-munkaterületen"
-
-#: ../../workstation-setup.md:111
-msgid ""
-"To place the harness (rules, personas, skills, and a `CLAUDE.md`) "
-"directly into a project directory, materialize it with the CLI:"
-msgstr ""
-"Ahhoz, hogy a keretet (szabályokat, személyiségeket, képességeket és egy "
-"`CLAUDE.md`-t) közvetlenül egy projektkönyvtárba helyezze, hozza létre a "
-"CLI-vel:"
-
-#: ../../workstation-setup.md:118
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../workstation-setup.md:120
+#: ../../workstation-setup.md:93
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -243,7 +202,7 @@ msgstr ""
 "[Gyorsindító](how-to/quickstart.md) - az üres profiltól az exportált "
 "modelo fájlig."
 
-#: ../../workstation-setup.md:122
+#: ../../workstation-setup.md:95
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -252,11 +211,7 @@ msgstr ""
 "szolgáltatásképességeket (Google export, LLM-alapú képfeldolgozás, "
 "felhőbeli bizonyítékfeltöltés)."
 
-#: ../../workstation-setup.md:124
-msgid "[Connect an agent](how-to/connect-an-agent.md)"
-msgstr "[Ügynök csatlakoztatása](how-to/connect-an-agent.md)"
-
-#: ../../workstation-setup.md:125
+#: ../../workstation-setup.md:97
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Hibaelhárítás](how-to/troubleshooting.md)"
 
@@ -292,4 +247,60 @@ msgstr "[Hibaelhárítás](how-to/troubleshooting.md)"
 #~ " csomagcsatornák még nem érhetők el. "
 #~ "Futtassa a kiszolgálót ugyanabból az "
 #~ "engedélyezett forráskód-kimásolásból:"
+
+#~ msgid "Run the Model Context Protocol (MCP) surface"
+#~ msgstr "A Model Context Protocol (MCP) felület futtatása"
+
+#~ msgid ""
+#~ "Cadrumo ships an MCP server, "
+#~ "`cadrumo-mcp`, so an AI assistant can"
+#~ " operate the same local, gated "
+#~ "commands the CLI exposes, together with"
+#~ " an agent harness: the operator "
+#~ "rules, taxpayer-situation skills, and "
+#~ "scoped agent personas that keep the "
+#~ "assistant inside the safety boundary."
+#~ msgstr ""
+#~ "A Cadrumo egy MCP-kiszolgálóval, a "
+#~ "`cadrumo-mcp`-vel érkezik, így egy "
+#~ "AI-asszisztens ugyanazokat a helyi, védett"
+#~ " parancsokat működtetheti, amelyeket a CLI"
+#~ " is elérhetővé tesz, egy ügynökkerettel "
+#~ "együtt: a kezelői szabályokkal, az "
+#~ "adózói helyzethez kapcsolódó képességekkel és"
+#~ " a hatókörrel ellátott ügynökszemélyiségekkel,"
+#~ " amelyek az asszisztenst a biztonsági "
+#~ "határon belül tartják."
+
+#~ msgid "In the beta, run the server from the same repository checkout:"
+#~ msgstr "A bétában ugyanabból a tároló-kicsekkolásból futtassa a kiszolgálót:"
+
+#~ msgid ""
+#~ "[Connect an agent](how-to/connect-an-"
+#~ "agent.md) shows the source-checkout "
+#~ "registration and explains what the agent"
+#~ " can and cannot do."
+#~ msgstr ""
+#~ "Az [Ügynök csatlakoztatása](how-to/connect-"
+#~ "an-agent.md) bemutatja a forráskód-"
+#~ "kimásolásból való regisztrálást, és "
+#~ "elmagyarázza, hogy mit tehet és mit "
+#~ "nem tehet meg az ügynök."
+
+#~ msgid "Materialize the agent harness in a project workspace"
+#~ msgstr "Az ügynökkeret létrehozása egy projekt-munkaterületen"
+
+#~ msgid ""
+#~ "To place the harness (rules, personas,"
+#~ " skills, and a `CLAUDE.md`) directly "
+#~ "into a project directory, materialize it"
+#~ " with the CLI:"
+#~ msgstr ""
+#~ "Ahhoz, hogy a keretet (szabályokat, "
+#~ "személyiségeket, képességeket és egy "
+#~ "`CLAUDE.md`-t) közvetlenül egy projektkönyvtárba "
+#~ "helyezze, hozza létre a CLI-vel:"
+
+#~ msgid "[Connect an agent](how-to/connect-an-agent.md)"
+#~ msgstr "[Ügynök csatlakoztatása](how-to/connect-an-agent.md)"
 

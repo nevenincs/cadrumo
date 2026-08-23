@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 10:30+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -121,7 +121,15 @@ msgstr ""
 " transaccions](import-bank-statements.md) i [Classifica transaccions"
 "](classify-transactions.md); confirma-ho amb:"
 
-#: ../../how-to/modelo-100.md:42
+#: ../../how-to/modelo-100.md:43
+msgid ""
+"The transaction ledger is not the stock-inventory register. If your "
+"activity holds stock, maintain its encrypted inventory ledger separately,"
+" then enter the applicable Renta stock figures manually. There is no "
+"automatic inventory-to-Modelo-100 projection in this version."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:47
 msgid ""
 "File and evidence the year's quarterly instalments first. Modelo 100 "
 "folds in your Modelo 130/131 payments on account and the retenciones "
@@ -133,7 +141,7 @@ msgstr ""
 "130/131 i les retenciones declarades als modelos 111, 123, 190 i 193 quan"
 " n'hi ha. Comprova què espera aquesta declaració i què la bloqueja:"
 
-#: ../../how-to/modelo-100.md:51
+#: ../../how-to/modelo-100.md:56
 msgid ""
 "`dependencies` names each source filing and whether its clean-state "
 "evidence is satisfied; an unfiled or unevidenced quarter blocks the "
@@ -145,18 +153,19 @@ msgstr ""
 "bloqueja la verificació anual. Registra o concilia primer aquestes "
 "presentacions: consulta [Concilia una presentació](reconcile.md)."
 
-#: ../../how-to/modelo-100.md:56
+#: ../../how-to/modelo-100.md:61
 msgid "Create, calculate, and verify"
 msgstr "Crea, calcula i verifica"
 
-#: ../../how-to/modelo-100.md:58
+#: ../../how-to/modelo-100.md:63
+#, fuzzy
 msgid ""
 "The example below follows an employee filer - a Madrid-resident salaried "
 "taxpayer filing an individual 2025 return, with no self-employed "
 "activity, so the Modelo 130/131 and retención-model folds are scoped out "
-"and the annual grants on the employment figures alone. If you also file "
-"quarterly Modelo 130 instalments, they fold in as payments on account - "
-"see [Prepare a Modelo 130 IRPF instalment](modelo-130.md)."
+"and the annual calculation uses the employment figures alone. If you also"
+" file quarterly Modelo 130 instalments, they fold in as payments on "
+"account - see [Prepare a Modelo 130 IRPF instalment](modelo-130.md)."
 msgstr ""
 "L'exemple següent segueix un declarant assalariat: un contribuent "
 "resident a Madrid amb rendes del treball que presenta una declaració "
@@ -167,7 +176,7 @@ msgstr ""
 " com a pagaments a compte: consulta [Prepara un pagament fraccionat de "
 "l'IRPF amb el Modelo 130](modelo-130.md)."
 
-#: ../../how-to/modelo-100.md:69
+#: ../../how-to/modelo-100.md:74
 msgid ""
 "Calculation reads the year's classified ledger, the profile facts, the "
 "prior filings the registry binds in, and any carry-forward from last "
@@ -191,7 +200,7 @@ msgstr ""
 "registres roman com un buit visible perquè tu el resolguis, i no pas com "
 "un zero endevinat."
 
-#: ../../how-to/modelo-100.md:78
+#: ../../how-to/modelo-100.md:83
 msgid ""
 "Most of Modelo 100's casillas are optional manual inputs for situations "
 "the ledger cannot know (employment income details, capital income, "
@@ -202,7 +211,15 @@ msgstr ""
 "treball, rendes del capital, deduccions). Descobreix què t'aplica i què "
 "encara falta:"
 
-#: ../../how-to/modelo-100.md:86
+#: ../../how-to/modelo-100.md:91
+msgid ""
+"For stock under estimación directa, inspect and supply boxes 0177, 0181, "
+"and 0182 when they apply. They are manual inputs in the current registry."
+" Do not use 0155 as an inventory substitute. Calculation does not treat "
+"it as an inventory input."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:96
 msgid ""
 "Supply a manual casilla and recalculate by passing `--casilla 0003=24000`"
 " on the calculate command, alongside the bindings the declaration still "
@@ -215,7 +232,7 @@ msgstr ""
 "mostra la forma completa). Tornar a calcular reemplaça la revisió en "
 "esborrany actual."
 
-#: ../../how-to/modelo-100.md:91
+#: ../../how-to/modelo-100.md:101
 msgid ""
 "For the full input workflow - bound versus manual casillas, offsets, and "
 "revision selection - see [Review and supply calculation inputs](review-"
@@ -229,18 +246,19 @@ msgstr ""
 "càlcul de la declaració assemblada, consulta [Revisa càlculs amb Google "
 "Sheets](review-with-google-sheets.md)."
 
-#: ../../how-to/modelo-100.md:97
+#: ../../how-to/modelo-100.md:107
 msgid "Export and file"
 msgstr "Exporta i presenta"
 
-#: ../../how-to/modelo-100.md:99
+#: ../../how-to/modelo-100.md:109
+#, fuzzy
 msgid ""
 "The verify step in the sequence above ran the annual completeness check, "
 "including the cross-period gates: every dependency filing must be filed "
 "and evidenced, and every carried figure must still point at the revision "
-"it was filed under. A blocked report names the dependency in the way - "
-"resolve it and re-run. See [Verify a draft filing](verification-"
-"reports.md)."
+"it was filed under. A blocked report names the unresolved dependency. "
+"Resolve it, then rerun verification. See [Verify a draft filing"
+"](verification-reports.md)."
 msgstr ""
 "El pas de verificació de la seqüència de més amunt ha executat la "
 "comprovació de completesa anual, incloses les portes de període creuat: "
@@ -250,7 +268,7 @@ msgstr ""
 "pel mig: resol-la i torna a executar. Consulta [Verifica una presentació "
 "en esborrany](verification-reports.md)."
 
-#: ../../how-to/modelo-100.md:105
+#: ../../how-to/modelo-100.md:115
 msgid ""
 "Export the verified declaration. Export is the local finish line. "
 "Recording the filed marker afterwards is optional and applies only while "
@@ -261,17 +279,17 @@ msgid ""
 "reads from AEAT:"
 msgstr ""
 
-#: ../../how-to/modelo-100.md:116
+#: ../../how-to/modelo-100.md:126
 msgid "See [Reconcile a filing](reconcile.md) for the reconciliation verdicts."
 msgstr ""
 "Consulta [Concilia una presentació](reconcile.md) per als veredictes de "
 "conciliació."
 
-#: ../../how-to/modelo-100.md:118
+#: ../../how-to/modelo-100.md:128
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/modelo-100.md:120
+#: ../../how-to/modelo-100.md:130
 msgid ""
 "[How the Renta declaration is assembled](../explanation/how-renta-is-"
 "assembled.md)"
@@ -279,21 +297,21 @@ msgstr ""
 "[Com s'assembla la declaració de la Renta](../explanation/how-renta-is-"
 "assembled.md)"
 
-#: ../../how-to/modelo-100.md:121
+#: ../../how-to/modelo-100.md:131
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr ""
 "[Prepara un pagament fraccionat de l'IRPF amb el Modelo "
 "130](modelo-130.md)"
 
-#: ../../how-to/modelo-100.md:122
+#: ../../how-to/modelo-100.md:132
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/modelo-100.md:123
+#: ../../how-to/modelo-100.md:133
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Puja el teu modelo exportat al portal de l'AEAT](file-at-aeat.md)"
 
-#: ../../how-to/modelo-100.md:124
+#: ../../how-to/modelo-100.md:134
 msgid "[Reconcile a filing](reconcile.md)"
 msgstr "[Concilia una presentació](reconcile.md)"
 

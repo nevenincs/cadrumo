@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 10:30+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -23,13 +23,14 @@ msgid "Prepare your first quarterly IRPF filing"
 msgstr "Preparar tu primera presentación trimestral del IRPF"
 
 #: ../../how-to/first-quarterly-filing.md:3
+#, fuzzy
 msgid ""
 "This page covers your first quarterly Modelo 130 filing, end to end: "
 "bring a quarter of transactions into the ledger, classify them as "
 "business income and deductible expenses, prepare the draft, and check "
-"that it passed verification before you export it. It is written for a "
-"self-employed taxpayer with a NIF, CIF, NIE, or other filing identity who"
-" is running Cadrumo for the first time."
+"that it passed verification before you file it. It is written for a self-"
+"employed taxpayer with a NIF, CIF, NIE, or other filing identity who is "
+"running Cadrumo for the first time."
 msgstr ""
 "Esta página cubre tu primera presentación trimestral del Modelo 130, de "
 "principio a fin: llevar un trimestre de transacciones al ledger, "
@@ -39,10 +40,11 @@ msgstr ""
 "NIE u otra identidad de presentación que usa Cadrumo por primera vez."
 
 #: ../../how-to/first-quarterly-filing.md:9
+#, fuzzy
 msgid ""
 "Cadrumo never submits a return to the Agencia Estatal de Administración "
-"Tributaria (AEAT). Every command below builds and checks a local file. "
-"You upload the exported file yourself through the official AEAT channel."
+"Tributaria (AEAT). Modelo 130 has no fichero-BOE layout, so you enter the"
+" calculated box values yourself through the official AEAT channel."
 msgstr ""
 "Cadrumo nunca presenta una declaración ante la Agencia Estatal de "
 "Administración Tributaria (AEAT). Todas las órdenes de abajo construyen y"
@@ -192,27 +194,28 @@ msgstr ""
 "verdadero primer trimestre no tiene."
 
 #: ../../how-to/first-quarterly-filing.md:85
+#, fuzzy
 msgid ""
 "Verify the draft. The result reads `granted_verificado_completo` true, so"
-" the draft is complete and ready to export."
+" the draft is complete and ready to file."
 msgstr ""
 "Verifica el borrador. El resultado muestra `granted_verificado_completo` "
 "en true, así que el borrador está completo y listo para exportar."
 
 #: ../../how-to/first-quarterly-filing.md:88
-msgid "Check the figures and export"
+#, fuzzy
+msgid "Check the figures and record the filing"
 msgstr "Comprueba las cifras y exporta"
 
 #: ../../how-to/first-quarterly-filing.md:90
 #, fuzzy
 msgid ""
-"The verification result is the signal that the draft is ready. When "
-"`granted_verificado_completo` reads true, export the file. Export refuses"
-" until every deductible-expense row carries linked purchase-invoice "
-"evidence, so this example registers the supplier invoice and attaches it "
-"before it calculates. Attach in that order: a draft bundles its evidence "
-"when you verify it, so an invoice attached afterwards does not reach the "
-"filing."
+"The verification result is the signal that the draft is ready. "
+"Verification refuses until every deductible-expense row carries linked "
+"purchase-invoice evidence, so this example registers the supplier invoice"
+" and attaches it before it calculates. Attach in that order: a draft "
+"bundles its evidence when you verify it, so an invoice attached "
+"afterwards does not reach the filing."
 msgstr ""
 "El resultado de la verificación es la señal de que el borrador está "
 "listo. Cuando `granted_verificado_completo` está en true, exporta el "
@@ -224,7 +227,13 @@ msgstr ""
 " principio a fin, realmente, en [Preparar una presentación de IVA con el "
 "Modelo 303](modelo-303.md):"
 
-#: ../../how-to/first-quarterly-filing.md:101
+#: ../../how-to/first-quarterly-filing.md:96
+msgid ""
+"The sequence below shows `export` refusing - Modelo 130 has no fichero-"
+"BOE layout - and then the local filed marker recording."
+msgstr ""
+
+#: ../../how-to/first-quarterly-filing.md:103
 msgid ""
 "A later quarter builds on this one: leave the three prior-period bindings"
 " unset so they resolve from your filed history. See [Prepare a Modelo 130"
@@ -237,23 +246,23 @@ msgstr ""
 "IRPF con el Modelo 130](modelo-130.md) para el comportamiento acumulado "
 "del año en curso."
 
-#: ../../how-to/first-quarterly-filing.md:106
+#: ../../how-to/first-quarterly-filing.md:108
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/first-quarterly-filing.md:108
+#: ../../how-to/first-quarterly-filing.md:110
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr "[Preparar un pago fraccionado del IRPF con el Modelo 130](modelo-130.md)"
 
-#: ../../how-to/first-quarterly-filing.md:109
+#: ../../how-to/first-quarterly-filing.md:111
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Clasificar transacciones](classify-transactions.md)"
 
-#: ../../how-to/first-quarterly-filing.md:110
+#: ../../how-to/first-quarterly-filing.md:112
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flujo de presentación](filing-spine.md)"
 
-#: ../../how-to/first-quarterly-filing.md:111
+#: ../../how-to/first-quarterly-filing.md:113
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Subir tu modelo exportado en el portal de la AEAT](file-at-aeat.md)"
 

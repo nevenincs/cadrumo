@@ -256,6 +256,20 @@ def _generated_docs_registrations() -> tuple[FStringKeyRegistration, ...]:
             key_factory=lambda v: v,
             values=display_locale_keys(),
         ),
+        # The CLI reference classifies every parameter on every command page as one of
+        # exactly four things -- argument or option, required or optional. The renderer
+        # derives the key from those two booleans rather than writing four literals, so
+        # a fifth classification would fail loudly instead of rendering blank.
+        FStringKeyRegistration(
+            description="docs.cli.param.* (CLI-reference parameter classification)",
+            key_factory=lambda v: f"docs.cli.param.{v}",
+            values=(
+                "argument_required",
+                "argument_optional",
+                "option_required",
+                "option_optional",
+            ),
+        ),
     )
 
 

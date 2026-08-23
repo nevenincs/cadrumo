@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 23:20+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -23,13 +23,14 @@ msgid "Install Cadrumo"
 msgstr "Instalar Cadrumo"
 
 #: ../../workstation-setup.md:3
+#, fuzzy
 msgid ""
 "This page covers installation only: get the package, install the `aeat` "
-"command, add the optional extras you want, and (if you use an AI "
-"assistant) install the agent surface. If you do not have Cadrumo on your "
-"machine yet, start at [Get Cadrumo](download.md) for the acquisition "
-"paths and their current availability. Configuration and first use start "
-"in the [quickstart](how-to/quickstart.md) once the install checks pass."
+"command, and add the optional extras you want. If you do not have Cadrumo"
+" on your machine yet, start at [Get Cadrumo](download.md) for the "
+"acquisition paths and their current availability. Configuration and first"
+" use start in the [quickstart](how-to/quickstart.md) once the install "
+"checks pass."
 msgstr ""
 "Esta página cubre solo la instalación: obtener el paquete, instalar el "
 "comando `aeat`, añadir los extras opcionales que quieras y (si usas un "
@@ -40,10 +41,11 @@ msgstr ""
 "to/quickstart.md) una vez que pasen las comprobaciones de instalación."
 
 #: ../../workstation-setup.md:10
+#, fuzzy
 msgid ""
 "Cadrumo works without any optional service. Google export, on-host LLM "
-"vision, cloud LLM upload, and the agent surface are all opt-in. The core "
-"filing workflow runs with none of them."
+"vision, and cloud LLM upload are all opt-in. The core filing workflow "
+"runs with none of them."
 msgstr ""
 "Cadrumo funciona sin ningún servicio opcional. La exportación a Google, "
 "la visión LLM en el equipo, la subida a un LLM en la nube y la superficie"
@@ -122,11 +124,11 @@ msgid "Install optional extras from the checkout"
 msgstr "Instalar extras opcionales desde la copia del código"
 
 #: ../../workstation-setup.md:55
+#, fuzzy
 msgid ""
 "The core install is lean. Google export, the live AEAT browser, the "
-"Anthropic-API provider, OFX/QFX bank-statement import, and the agent "
-"surface are optional package extras. Name the extras you need when you "
-"install:"
+"Anthropic-API provider and OFX/QFX bank-statement import are optional "
+"package extras. Name the extras you need when you install:"
 msgstr ""
 "La instalación básica es ligera. La exportación a Google, el navegador en"
 " vivo de la AEAT, el proveedor de la API de Anthropic, la importación de "
@@ -134,11 +136,12 @@ msgstr ""
 "opcionales del paquete. Indica los extras que necesites al instalar:"
 
 #: ../../workstation-setup.md:63
+#, fuzzy
 msgid ""
-"The available extras are `google`, `browser`, `anthropic`, `ofx`, "
-"`agent`, and `all`. `aeat config check` lists each extra and prints the "
-"exact install command for any that is missing. A feature whose extra is "
-"not installed refuses with the same hint instead of failing obscurely."
+"The available extras are `google`, `browser`, `anthropic`, `ofx`, and "
+"`all`. `aeat config check` lists each extra and prints the exact install "
+"command for any that is missing. A feature whose extra is not installed "
+"refuses with the same hint instead of failing obscurely."
 msgstr ""
 "Los extras disponibles son `google`, `browser`, `anthropic`, `ofx`, "
 "`agent` y `all`. `aeat config check` enumera cada extra e imprime el "
@@ -189,52 +192,10 @@ msgstr ""
 "la carencia se ha resuelto."
 
 #: ../../workstation-setup.md:91
-msgid "Run the Model Context Protocol (MCP) surface"
-msgstr "Ejecutar la superficie del Model Context Protocol (MCP)"
-
-#: ../../workstation-setup.md:93
-msgid ""
-"Cadrumo ships an MCP server, `cadrumo-mcp`, so an AI assistant can "
-"operate the same local, gated commands the CLI exposes, together with an "
-"agent harness: the operator rules, taxpayer-situation skills, and scoped "
-"agent personas that keep the assistant inside the safety boundary."
-msgstr ""
-"Cadrumo incluye un servidor MCP, `cadrumo-mcp`, para que un asistente de "
-"IA pueda operar los mismos comandos locales y controlados que expone la "
-"CLI, junto con un arnés de agente: las reglas del operador, las "
-"habilidades según la situación del contribuyente y las personas de agente"
-" acotadas que mantienen al asistente dentro del límite de seguridad."
-
-#: ../../workstation-setup.md:99
-msgid "In the beta, run the server from the same repository checkout:"
-msgstr "En la beta, ejecuta el servidor desde la misma copia del repositorio:"
-
-#: ../../workstation-setup.md:106
-msgid ""
-"[Connect an agent](how-to/connect-an-agent.md) shows the source-checkout "
-"registration and explains what the agent can and cannot do."
-msgstr ""
-"[Conectar un agente](how-to/connect-an-agent.md) muestra el registro "
-"desde la copia del código fuente y explica lo que el agente puede y no "
-"puede hacer."
-
-#: ../../workstation-setup.md:109
-msgid "Materialize the agent harness in a project workspace"
-msgstr "Materializar el arnés de agente en un espacio de trabajo del proyecto"
-
-#: ../../workstation-setup.md:111
-msgid ""
-"To place the harness (rules, personas, skills, and a `CLAUDE.md`) "
-"directly into a project directory, materialize it with the CLI:"
-msgstr ""
-"Para colocar el arnés (reglas, personas, habilidades y un `CLAUDE.md`) "
-"directamente en un directorio de proyecto, materialízalo con la CLI:"
-
-#: ../../workstation-setup.md:118
 msgid "Next steps"
 msgstr "Siguientes pasos"
 
-#: ../../workstation-setup.md:120
+#: ../../workstation-setup.md:93
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -242,7 +203,7 @@ msgstr ""
 "[Guía rápida](how-to/quickstart.md): de un perfil vacío a un fichero de "
 "modelo exportado."
 
-#: ../../workstation-setup.md:122
+#: ../../workstation-setup.md:95
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -251,11 +212,7 @@ msgstr ""
 "capacidades de servicio por perfil (exportación a Google, visión LLM, "
 "subida de evidencias a la nube)."
 
-#: ../../workstation-setup.md:124
-msgid "[Connect an agent](how-to/connect-an-agent.md)"
-msgstr "[Conectar un agente](how-to/connect-an-agent.md)"
-
-#: ../../workstation-setup.md:125
+#: ../../workstation-setup.md:97
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolución de problemas](how-to/troubleshooting.md)"
 
@@ -293,4 +250,61 @@ msgstr "[Resolución de problemas](how-to/troubleshooting.md)"
 #~ "están disponibles. Ejecuta el servidor "
 #~ "desde la misma copia autorizada del "
 #~ "código:"
+
+#~ msgid "Run the Model Context Protocol (MCP) surface"
+#~ msgstr "Ejecutar la superficie del Model Context Protocol (MCP)"
+
+#~ msgid ""
+#~ "Cadrumo ships an MCP server, "
+#~ "`cadrumo-mcp`, so an AI assistant can"
+#~ " operate the same local, gated "
+#~ "commands the CLI exposes, together with"
+#~ " an agent harness: the operator "
+#~ "rules, taxpayer-situation skills, and "
+#~ "scoped agent personas that keep the "
+#~ "assistant inside the safety boundary."
+#~ msgstr ""
+#~ "Cadrumo incluye un servidor MCP, "
+#~ "`cadrumo-mcp`, para que un asistente "
+#~ "de IA pueda operar los mismos "
+#~ "comandos locales y controlados que "
+#~ "expone la CLI, junto con un arnés"
+#~ " de agente: las reglas del operador,"
+#~ " las habilidades según la situación "
+#~ "del contribuyente y las personas de "
+#~ "agente acotadas que mantienen al "
+#~ "asistente dentro del límite de "
+#~ "seguridad."
+
+#~ msgid "In the beta, run the server from the same repository checkout:"
+#~ msgstr "En la beta, ejecuta el servidor desde la misma copia del repositorio:"
+
+#~ msgid ""
+#~ "[Connect an agent](how-to/connect-an-"
+#~ "agent.md) shows the source-checkout "
+#~ "registration and explains what the agent"
+#~ " can and cannot do."
+#~ msgstr ""
+#~ "[Conectar un agente](how-to/connect-an-"
+#~ "agent.md) muestra el registro desde la"
+#~ " copia del código fuente y explica"
+#~ " lo que el agente puede y no"
+#~ " puede hacer."
+
+#~ msgid "Materialize the agent harness in a project workspace"
+#~ msgstr "Materializar el arnés de agente en un espacio de trabajo del proyecto"
+
+#~ msgid ""
+#~ "To place the harness (rules, personas,"
+#~ " skills, and a `CLAUDE.md`) directly "
+#~ "into a project directory, materialize it"
+#~ " with the CLI:"
+#~ msgstr ""
+#~ "Para colocar el arnés (reglas, personas,"
+#~ " habilidades y un `CLAUDE.md`) directamente"
+#~ " en un directorio de proyecto, "
+#~ "materialízalo con la CLI:"
+
+#~ msgid "[Connect an agent](how-to/connect-an-agent.md)"
+#~ msgstr "[Conectar un agente](how-to/connect-an-agent.md)"
 

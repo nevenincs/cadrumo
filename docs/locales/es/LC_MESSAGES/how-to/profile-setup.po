@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-08 07:17+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:1
+#: ../../how-to/profile-setup.md:1
 msgid "Set up your taxpayer profile"
 msgstr "Configura tu perfil de contribuyente"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:3
+#: ../../how-to/profile-setup.md:3
 #, python-brace-format
 msgid ""
 "A profile holds the facts about one taxpayer that every `aeat app` "
@@ -33,7 +33,7 @@ msgstr ""
 "app` lee y actualiza. Configura uno antes de importar movimientos, "
 "calcular un {term}`modelo` o exportar una presentación."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:7
+#: ../../how-to/profile-setup.md:7
 msgid ""
 "A profile is local. Creating, editing, showing, exporting, or importing a"
 " profile never submits anything to the Agencia Estatal de Administración "
@@ -45,7 +45,7 @@ msgstr ""
 "(AEAT). Cadrumo construye y verifica tu presentación en tu máquina; tú la"
 " subes por tu cuenta."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:12
+#: ../../how-to/profile-setup.md:12
 msgid ""
 "If you haven't installed Cadrumo and run the `aeat` command yet, start "
 "with the [quickstart](quickstart.md), then come back here."
@@ -53,11 +53,11 @@ msgstr ""
 "Si aún no ha instalado Cadrumo ni ha ejecutado el comando `aeat`, empieza"
 " por la [guía rápida](quickstart.md) y luego vuelve aquí."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:16
+#: ../../how-to/profile-setup.md:16
 msgid "What the active profile means"
 msgstr "Qué significa el perfil activo"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:18
+#: ../../how-to/profile-setup.md:18
 msgid ""
 "The active profile is the taxpayer context for `aeat app` commands. While"
 " a profile is active, commands such as ledger import, transaction "
@@ -70,7 +70,7 @@ msgstr ""
 "exportación y el historial de presentaciones local leen y actualizan los "
 "datos de ese perfil."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:23
+#: ../../how-to/profile-setup.md:23
 msgid ""
 "Keep one profile per taxpayer. Add a second profile when you prepare "
 "filings for another taxpayer, separate a test profile from a real one, or"
@@ -84,7 +84,7 @@ msgstr ""
 "por qué la herramienta es local primero y con control humano, consulta "
 "las [guías de explicación](../explanation/index.md)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:28
+#: ../../how-to/profile-setup.md:28
 msgid ""
 "List your profiles with `aeat config profile list`, see which one is "
 "active, add a second taxpayer, then switch to it. The example runs the "
@@ -96,7 +96,7 @@ msgstr ""
 "flujo: lista los perfiles, añade uno segundo y cambia el contexto activo "
 "a él."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:36
+#: ../../how-to/profile-setup.md:36
 msgid ""
 "Logging in changes which local ledger, modelo drafts, and filing markers "
 "`aeat app` commands use. The login verb is `aeat config login`, not `aeat"
@@ -106,7 +106,7 @@ msgstr ""
 "presentación locales usan los comandos `aeat app`. El verbo de inicio de "
 "sesión es `aeat config login`, no `aeat config profile login`."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:40
+#: ../../how-to/profile-setup.md:40
 msgid ""
 "Name the profile exactly. `aeat config login` accepts a profile UUID or "
 "the exact label, and nothing else: a partial name, a different "
@@ -116,18 +116,18 @@ msgid ""
 "under the wrong one."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:46
+#: ../../how-to/profile-setup.md:46
 msgid ""
 "Log out with `aeat config logout` when you finish. Logout closes the "
-"storage session and clears the active-profile selection; it deletes "
-"nothing."
+"storage session but keeps the profile selected for the next exact login; "
+"it deletes nothing."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:49
+#: ../../how-to/profile-setup.md:50
 msgid "Decide your facts before you start"
 msgstr "Decide tus datos antes de empezar"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:51
+#: ../../how-to/profile-setup.md:52
 msgid ""
 "Profile setup asks a series of questions. Most are conditional: the "
 "answers you give early decide which later questions appear. Decide these "
@@ -138,7 +138,7 @@ msgstr ""
 "posteriores aparecen. Decide primero estos datos y el resto de la "
 "configuración se deduce:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:55
+#: ../../how-to/profile-setup.md:56
 msgid ""
 "**Who the taxpayer is.** A natural person (an individual), a legal entity"
 " (a company such as an SL or SA), or an attribution entity (a co-"
@@ -150,7 +150,7 @@ msgstr ""
 "atribución (una copropiedad como una *comunidad de bienes*, donde la "
 "renta se atribuye a sus miembros)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:58
+#: ../../how-to/profile-setup.md:59
 msgid ""
 "**Which tax identifier applies.** Spanish citizens use their DNI as their"
 " tax identifier (NIF). Foreign individuals use their NIE. Companies use a"
@@ -160,7 +160,7 @@ msgstr ""
 "su DNI como identificador fiscal (NIF). Los particulares extranjeros usan"
 " su NIE. Las empresas usan un NIF o CIF."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:61
+#: ../../how-to/profile-setup.md:62
 msgid ""
 "**What the taxpayer does.** The economic activity and which kinds of "
 "income apply: business or professional activity, salaried work, rental "
@@ -171,7 +171,7 @@ msgstr ""
 "cuenta ajena, rendimientos del alquiler, rendimientos de inversiones, "
 "ganancias patrimoniales o una pensión."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:64
+#: ../../how-to/profile-setup.md:65
 msgid ""
 "**Which VAT regime applies.** Value Added Tax (IVA) determines whether "
 "the taxpayer charges and declares it, and how. The general regime files "
@@ -181,7 +181,7 @@ msgstr ""
 "(IVA) determina si el contribuyente lo repercute y lo declara, y cómo. El"
 " régimen general presenta el IVA mediante el Modelo 303."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:67
+#: ../../how-to/profile-setup.md:68
 msgid ""
 "**Where the taxpayer is resident.** The autonomous community for a "
 "Spanish resident, or the country of residence for a non-resident."
@@ -189,13 +189,13 @@ msgstr ""
 "**Dónde reside el contribuyente.** La comunidad autónoma para un "
 "residente en España, o el país de residencia para un no residente."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:69
+#: ../../how-to/profile-setup.md:70
 msgid ""
 "**Which output language you want.** The language `cadrumo` uses for its "
 "output."
 msgstr "**Qué idioma de salida desea.** El idioma que `cadrumo` usa en su salida."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:71
+#: ../../how-to/profile-setup.md:72
 msgid ""
 "You don't need to memorize flag names. The guided wizard walks you "
 "through these decisions. For the complete, current list of flags and "
@@ -207,21 +207,21 @@ msgstr ""
 "opciones y sus valores admitidos, ejecuta `aeat config profile create "
 "--help` y `aeat config profile edit --help`:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:79
+#: ../../how-to/profile-setup.md:80
 msgid "Create your profile"
 msgstr "Crea tu perfil"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:81
+#: ../../how-to/profile-setup.md:82
 msgid "Create a profile interactively, or non-interactively with flags."
 msgstr ""
 "Crea un perfil de forma interactiva, o de forma no interactiva con "
 "opciones."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:83
+#: ../../how-to/profile-setup.md:84
 msgid "Run the guided wizard when you're setting up a profile for the first time:"
 msgstr "Ejecuta el asistente guiado cuando configures un perfil por primera vez:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:88
+#: ../../how-to/profile-setup.md:89
 msgid ""
 "The wizard is a full-page, question-by-question walk. Answer one page, "
 "move to the next; go back to change an earlier answer at any time. The "
@@ -234,14 +234,14 @@ msgid ""
 "asks what applies to the answers you already gave."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:97
+#: ../../how-to/profile-setup.md:98
 msgid ""
 "Each page explains its choices and shows the expected format for dates, "
 "amounts, and identifiers, and refuses an invalid value on the spot. A "
 "malformed date or tax identifier never reaches your stored profile."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:101
+#: ../../how-to/profile-setup.md:102
 msgid ""
 "The wizard prompts for your master-key passphrase before it stores "
 "anything. For unattended runs, see [Run without a passphrase prompt"
@@ -252,7 +252,7 @@ msgstr ""
 "solicitud de frase de contraseña](protect-data-access.md#run-without-a"
 "-passphrase-prompt)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:105
+#: ../../how-to/profile-setup.md:106
 msgid ""
 "Use `--language en`, `es`, `ca`, or `hu` for one command. A profile can "
 "also store its default output language."
@@ -260,11 +260,11 @@ msgstr ""
 "Usa `--language en`, `es`, `ca` o `hu` para un solo comando. Un perfil "
 "también puede guardar su idioma de salida predeterminado."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:109
+#: ../../how-to/profile-setup.md:110
 msgid "Save now, finish later"
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:111
+#: ../../how-to/profile-setup.md:112
 msgid ""
 "Stop a first-time setup at any point and keep what you answered. Choose "
 "*save and exit* on any page: every answer you gave is already stored, and"
@@ -272,7 +272,7 @@ msgid ""
 " flags an incomplete profile so you can spot it later."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:116
+#: ../../how-to/profile-setup.md:117
 msgid ""
 "Resume by running the same create command again with the same profile "
 "name. The wizard picks up where you left off with your earlier answers in"
@@ -281,13 +281,13 @@ msgid ""
 "commands."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:121
+#: ../../how-to/profile-setup.md:122
 msgid ""
 "Descendientes are the one exception on resume: the wizard asks for them "
 "again so the set you confirm is always complete and current."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:124
+#: ../../how-to/profile-setup.md:125
 msgid ""
 "Use flags with `--quiet` when you want a repeatable, scriptable setup, "
 "passing the entity type, tax id, name, and surnames to `aeat config "
@@ -300,7 +300,7 @@ msgstr ""
 "práctico de más abajo](#worked-example-a-natural-person-with-an-activity)"
 " ejecuta una creación automatizada completa."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:129
+#: ../../how-to/profile-setup.md:130
 msgid ""
 "`--quiet` runs without prompts and uses only the flags you provide. A "
 "`--quiet` run refuses if a required flag is missing and tells you which "
@@ -313,7 +313,7 @@ msgstr ""
 " la identidad de presentación: el identificador fiscal, el tipo de "
 "entidad y el nombre y los apellidos:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:139
+#: ../../how-to/profile-setup.md:140
 msgid ""
 "Add `--accept-defaults` when you intentionally want Cadrumo to fill the "
 "questions you omit from its built-in defaults."
@@ -322,11 +322,11 @@ msgstr ""
 "rellene las preguntas que omite con sus valores predeterminados "
 "integrados."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:143
+#: ../../how-to/profile-setup.md:144
 msgid "Worked example: a natural person with an activity"
 msgstr "Ejemplo práctico: una persona física con una actividad"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:145
+#: ../../how-to/profile-setup.md:146
 msgid ""
 "This example creates a natural-person profile for an individual with an "
 "economic activity, then inspects and validates it before you rely on it:"
@@ -335,11 +335,11 @@ msgstr ""
 "actividad económica, y luego lo inspecciona y lo valida antes de que te "
 "fíes de él:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:152
+#: ../../how-to/profile-setup.md:153
 msgid "The facts setup asks for"
 msgstr "Los datos que pide la configuración"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:154
+#: ../../how-to/profile-setup.md:155
 msgid ""
 "Setup groups its questions by decision area. These values are stable "
 "command tokens: they're case-sensitive and don't translate. Run `aeat "
@@ -354,19 +354,19 @@ msgstr ""
 "cónyuge, unidad familiar, no residentes e inscripciones que esta guía "
 "resume en lugar de repetir."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:160
+#: ../../how-to/profile-setup.md:161
 msgid "Who the taxpayer is"
 msgstr "Quién es el contribuyente"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:162
+#: ../../how-to/profile-setup.md:163
 msgid "Choose the entity type:"
 msgstr "Elige el tipo de entidad:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:164
+#: ../../how-to/profile-setup.md:165
 msgid "`natural_person` - an individual."
 msgstr "`natural_person`: un particular."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:165
+#: ../../how-to/profile-setup.md:166
 msgid ""
 "`legal_entity` - a company. Record its legal form too, such as `sl`, "
 "`sa`, or `cooperativa`."
@@ -374,7 +374,7 @@ msgstr ""
 "`legal_entity`: una empresa. Registra también su forma jurídica, como "
 "`sl`, `sa` o `cooperativa`."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:167
+#: ../../how-to/profile-setup.md:168
 msgid ""
 "`attribution_entity` - a co-ownership or community of goods whose income "
 "is attributed to its members."
@@ -382,7 +382,7 @@ msgstr ""
 "`attribution_entity`: una copropiedad o comunidad de bienes cuya renta se"
 " atribuye a sus miembros."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:170
+#: ../../how-to/profile-setup.md:171
 msgid ""
 "For a natural person, list each kind of income that applies, repeating "
 "the flag once per category:"
@@ -390,33 +390,33 @@ msgstr ""
 "Para una persona física, enumera cada tipo de renta que corresponda, "
 "repitiendo la opción una vez por categoría:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:173
+#: ../../how-to/profile-setup.md:174
 msgid "`actividad_economica` - business or professional activity."
 msgstr "`actividad_economica`: actividad empresarial o profesional."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:174
+#: ../../how-to/profile-setup.md:175
 msgid "`trabajo` - salaried employment."
 msgstr "`trabajo`: trabajo por cuenta ajena."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:175
+#: ../../how-to/profile-setup.md:176
 msgid "`capital_inmobiliario` - rental income from property."
 msgstr "`capital_inmobiliario`: rendimientos del alquiler de inmuebles."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:176
+#: ../../how-to/profile-setup.md:177
 msgid "`capital_mobiliario` - investment income such as dividends or interest."
 msgstr ""
 "`capital_mobiliario`: rendimientos de inversiones como dividendos o "
 "intereses."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:177
+#: ../../how-to/profile-setup.md:178
 msgid "`ganancias_patrimoniales` - capital gains."
 msgstr "`ganancias_patrimoniales`: ganancias patrimoniales."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:178
+#: ../../how-to/profile-setup.md:179
 msgid "`pension` - a retirement or disability pension."
 msgstr "`pension`: una pensión de jubilación o de incapacidad."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:180
+#: ../../how-to/profile-setup.md:181
 msgid ""
 "Choose `actividad_economica` only when the taxpayer runs an activity. A "
 "pure landlord, a salaried-only taxpayer, or a pensioner with no activity "
@@ -426,7 +426,7 @@ msgstr ""
 "actividad. Un simple arrendador, un contribuyente solo asalariado o un "
 "pensionista sin actividad no deben seleccionarlo."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:184
+#: ../../how-to/profile-setup.md:185
 msgid ""
 "For an activity, record how IRPF estimates its yield. Direct estimation "
 "is the default and files Modelo 130. Use `--irpf-estimation-regime "
@@ -438,11 +438,11 @@ msgstr ""
 "`--irpf-estimation-regime objetiva` para el régimen de estimación "
 "objetiva (módulos), que presenta el Modelo 131 en su lugar."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:188
+#: ../../how-to/profile-setup.md:189
 msgid "Identity"
 msgstr "Identidad"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:190
+#: ../../how-to/profile-setup.md:191
 msgid ""
 "The tax identifier (NIF, CIF, DNI, or NIE) is required. Spanish citizens "
 "use their DNI as their NIF; foreign individuals use their NIE; companies "
@@ -456,11 +456,11 @@ msgstr ""
 "apellidos (o el nombre visible de la entidad), la actividad económica "
 "cuando la haya y el código postal del domicilio fiscal."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:195
+#: ../../how-to/profile-setup.md:196
 msgid "Where the taxpayer is resident"
 msgstr "Dónde reside el contribuyente"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:197
+#: ../../how-to/profile-setup.md:198
 msgid ""
 "For a Spanish IRPF (personal income tax) resident, set the autonomous "
 "community (`--tax-residence-ccaa`), such as `madrid` or `cataluna`."
@@ -469,7 +469,7 @@ msgstr ""
 " Físicas) español, establece la comunidad autónoma (`--tax-residence-"
 "ccaa`), como `madrid` o `cataluna`."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:200
+#: ../../how-to/profile-setup.md:201
 msgid ""
 "This tool does not model the foral regimes. Setting the community to "
 "`pais_vasco` or `navarra` is refused, because residents there file with "
@@ -481,7 +481,7 @@ msgstr ""
 "presentan ante su *Hacienda Foral* bajo el *Concierto Económico*, no ante"
 " la AEAT:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:210
+#: ../../how-to/profile-setup.md:211
 msgid ""
 "For a non-resident, set `--fiscal-residency non_resident_irnr` (not "
 "`--tax-residence-ccaa`), then supply the country of residence with "
@@ -495,25 +495,25 @@ msgstr ""
 "y, cuando sea necesario, un representante fiscal con `--representante-"
 "fiscal-nif` y `--representante-fiscal-nombre`."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:216
+#: ../../how-to/profile-setup.md:217
 msgid "Which IVA regime applies"
 msgstr "Qué régimen de IVA corresponde"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:218
+#: ../../how-to/profile-setup.md:219
 msgid "Set `--iva-regime` to the taxpayer's IVA regime:"
 msgstr "Establece `--iva-regime` con el régimen de IVA del contribuyente:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:220
+#: ../../how-to/profile-setup.md:221
 msgid "`GENERAL` - the standard regime; files quarterly IVA through Modelo 303."
 msgstr ""
 "`GENERAL`: el régimen estándar; presenta el IVA trimestral mediante el "
 "Modelo 303."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:222
 msgid "`SIMPLIFICADO` - the simplified, module-based regime."
 msgstr "`SIMPLIFICADO`: el régimen simplificado, basado en módulos."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:222
+#: ../../how-to/profile-setup.md:223
 msgid ""
 "`RECARGO_EQUIVALENCIA` - the equivalence surcharge for qualifying "
 "retailers."
@@ -521,15 +521,15 @@ msgstr ""
 "`RECARGO_EQUIVALENCIA`: el recargo de equivalencia para los comerciantes "
 "minoristas que cumplan los requisitos."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:223
+#: ../../how-to/profile-setup.md:224
 msgid "`REAGP` - the special regime for agriculture, livestock, and fishing."
 msgstr "`REAGP`: el régimen especial de la agricultura, la ganadería y la pesca."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:224
+#: ../../how-to/profile-setup.md:225
 msgid "`EXENTO` - exempt activities, such as some education or healthcare."
 msgstr "`EXENTO`: actividades exentas, como algunas de enseñanza o sanidad."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:226
+#: ../../how-to/profile-setup.md:227
 msgid ""
 "Record any IVA enrollments that apply, such as ROI (intra-community "
 "operators) or OSS (one-stop-shop for cross-border B2C sales)."
@@ -538,11 +538,11 @@ msgstr ""
 "(operadores intracomunitarios) o el OSS (ventanilla única para ventas "
 "transfronterizas B2C)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:229
+#: ../../how-to/profile-setup.md:230
 msgid "Which recurring obligations apply"
 msgstr "Qué obligaciones recurrentes corresponden"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:231
+#: ../../how-to/profile-setup.md:232
 msgid ""
 "These facts decide which forms the taxpayer must file. Record the ones "
 "that are true:"
@@ -550,7 +550,7 @@ msgstr ""
 "Estos datos deciden qué formularios debe presentar el contribuyente. "
 "Registra los que sean ciertos:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:234
+#: ../../how-to/profile-setup.md:235
 msgid ""
 "`--has-employees` or `--pays-professionals-with-retencion` - pays "
 "salaries or professional fees with withholding."
@@ -558,7 +558,7 @@ msgstr ""
 "`--has-employees` o `--pays-professionals-with-retencion`: paga salarios "
 "u honorarios profesionales con retención."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:236
+#: ../../how-to/profile-setup.md:237
 msgid ""
 "`--pays-rent-with-retencion` - pays business-premises rent with "
 "withholding."
@@ -566,11 +566,11 @@ msgstr ""
 "`--pays-rent-with-retencion`: paga el alquiler de locales de negocio con "
 "retención."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:237
+#: ../../how-to/profile-setup.md:238
 msgid "`--does-intracomunitario` - trades with businesses in other EU countries."
 msgstr "`--does-intracomunitario`: opera con empresas de otros países de la UE."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:238
+#: ../../how-to/profile-setup.md:239
 msgid ""
 "`--third-party-transactions-above-347-threshold` - transactions with "
 "third parties exceed the Modelo 347 threshold."
@@ -578,7 +578,7 @@ msgstr ""
 "`--third-party-transactions-above-347-threshold`: las operaciones con "
 "terceros superan el umbral del Modelo 347."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:240
+#: ../../how-to/profile-setup.md:241
 msgid ""
 "`--bienes-extranjero-above-threshold` - foreign assets exceed the legal "
 "threshold."
@@ -586,7 +586,7 @@ msgstr ""
 "`--bienes-extranjero-above-threshold`: los bienes en el extranjero "
 "superan el umbral legal."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:242
+#: ../../how-to/profile-setup.md:243
 msgid ""
 "`--art109-activity-income-withholding-ge-70pct` - the Art. 109 RIRPF 70 "
 "percent income-coverage exception applies for covered professional, "
@@ -599,7 +599,7 @@ msgstr ""
 " o forestales. Para los inicios de actividad, registra el dato de "
 "cobertura para el periodo de pago actual."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:247
+#: ../../how-to/profile-setup.md:248
 msgid ""
 "Leaving an obligation flag unset is not the same as marking it false. "
 "When a fact is undeclared, the readiness check reports the related form "
@@ -612,11 +612,11 @@ msgstr ""
 "puede determinar), no como *no aplicable*. Registra cada dato que "
 "conozca."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:251
+#: ../../how-to/profile-setup.md:252
 msgid "Check your facts before you calculate"
 msgstr "Comprueba tus datos antes de calcular"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:253
+#: ../../how-to/profile-setup.md:254
 msgid ""
 "A wrong or missing fact produces a wrong filing. Confirm the profile "
 "before you calculate a modelo. The example shows the active profile's "
@@ -630,7 +630,7 @@ msgstr ""
 " esquema, y luego comprueba si el perfil contiene los datos que un "
 "formulario concreto necesita para un contexto de presentación concreto:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:262
+#: ../../how-to/profile-setup.md:263
 msgid ""
 "`preflight` names the missing fields for that `(modelo, filing-year, "
 "period)` context. Use [Choose which modelo to file](choose-modelo.md) to "
@@ -642,11 +642,11 @@ msgstr ""
 "](choose-modelo.md) para encontrar los códigos de periodo que un modelo "
 "acepta. Corrige cualquier dato erróneo con `edit` antes de continuar."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:266
+#: ../../how-to/profile-setup.md:267
 msgid "How your facts decide which forms apply"
 msgstr "Cómo deciden tus datos qué formularios corresponden"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:268
+#: ../../how-to/profile-setup.md:269
 msgid ""
 "The profile facts you recorded determine which modelos the taxpayer must "
 "file. Use this mapping to sanity-check your profile, then confirm a "
@@ -656,27 +656,27 @@ msgstr ""
 "el contribuyente. Usa esta correspondencia para comprobar la coherencia "
 "de tu perfil, y luego confirma un formulario concreto con `preflight`:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "When this is true of the taxpayer"
 msgstr "Cuando esto es cierto del contribuyente"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "These forms apply"
 msgstr "Estos formularios corresponden"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Is a natural person"
 msgstr "Es una persona física"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Modelo 100 (annual Renta)"
 msgstr "Modelo 100 (Renta anual)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Is a company"
 msgstr "Es una empresa"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid ""
 "Modelo 200 (annual IS, corporate income tax), Modelo 202 (payments on "
 "account)"
@@ -684,79 +684,79 @@ msgstr ""
 "Modelo 200 (IS anual, impuesto sobre sociedades), Modelo 202 (pagos a "
 "cuenta)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Runs an activity under direct estimation"
 msgstr "Ejerce una actividad en estimación directa"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Modelo 130 (quarterly IRPF)"
 msgstr "Modelo 130 (IRPF trimestral)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Runs an activity under objective estimation (módulos)"
 msgstr "Ejerce una actividad en estimación objetiva (módulos)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Modelo 131"
 msgstr "Modelo 131"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Art. 109 activity-income coverage exception applies"
 msgstr "Se aplica la excepción de cobertura de renta de actividad del art. 109"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Removes the Modelo 130 obligation"
 msgstr "Elimina la obligación del Modelo 130"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Charges VAT under the general regime"
 msgstr "Repercute IVA bajo el régimen general"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Modelo 303 (quarterly), Modelo 390 (annual)"
 msgstr "Modelo 303 (trimestral), Modelo 390 (anual)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Pays employees or professionals with withholding"
 msgstr "Paga a empleados o profesionales con retención"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Modelo 111 (quarterly), Modelo 190 (annual)"
 msgstr "Modelo 111 (trimestral), Modelo 190 (anual)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Pays business-premises rent with withholding"
 msgstr "Paga el alquiler de locales de negocio con retención"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Modelo 115 (quarterly), Modelo 180 (annual)"
 msgstr "Modelo 115 (trimestral), Modelo 180 (anual)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Trades with EU businesses"
 msgstr "Opera con empresas de la UE"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Modelo 349"
 msgstr "Modelo 349"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Has third-party transactions over the 347 threshold"
 msgstr "Tiene operaciones con terceros por encima del umbral del 347"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Modelo 347"
 msgstr "Modelo 347"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Holds foreign assets over the legal threshold"
 msgstr "Posee bienes en el extranjero por encima del umbral legal"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:258
+#: ../../how-to/profile-setup.md:259
 msgid "Modelo 720"
 msgstr "Modelo 720"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:286
+#: ../../how-to/profile-setup.md:287
 msgid ""
 "This is a guide, not the authority. The tool decides applicability from "
 "the full profile and the registry rules. To see what applies to your "
@@ -767,16 +767,16 @@ msgstr ""
 "corresponde a tu perfil, usa [Elige qué modelo presentar](choose-"
 "modelo.md)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:291
+#: ../../how-to/profile-setup.md:292
 #, fuzzy
 msgid "Modify your profile"
 msgstr "Mantén tu perfil"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:293
+#: ../../how-to/profile-setup.md:294
 msgid "Re-run the wizard over an existing profile to change its facts:"
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:298
+#: ../../how-to/profile-setup.md:299
 msgid ""
 "Edit mode walks the same pages with your current answers in place. Change"
 " what you need, then confirm the review page. Nothing is written until "
@@ -786,35 +786,35 @@ msgid ""
 "interactive edit, so an edit never silently half-applies."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:305
+#: ../../how-to/profile-setup.md:306
 msgid ""
 "Descendientes are not part of profile edit. Manage them with the "
 "[descendiente command](#manage-your-descendants) below. The edit summary "
 "reminds you of this every time."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:309
+#: ../../how-to/profile-setup.md:310
 msgid ""
 "For a scripted change, pass `--quiet` with only the flags you want to "
 "change; every fact you don't name stays as it was."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:313
+#: ../../how-to/profile-setup.md:314
 msgid "Manage your descendants"
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:315
+#: ../../how-to/profile-setup.md:316
 msgid ""
 "Descendientes drive the *mínimo por descendientes* in the annual Renta. "
 "Declare them during first-time setup; manage them afterwards with the "
 "`descendiente` command."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:319
+#: ../../how-to/profile-setup.md:320
 msgid "Open the paged descendant editor:"
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:324
+#: ../../how-to/profile-setup.md:325
 msgid ""
 "The editor shows your declared descendientes, lets you change any answer,"
 " add one, or reduce the count, and commits the complete set when you "
@@ -822,11 +822,11 @@ msgid ""
 "stored set always matches exactly what you confirmed."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:329
+#: ../../how-to/profile-setup.md:330
 msgid "Script the same changes with the flag verbs:"
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:335
+#: ../../how-to/profile-setup.md:336
 msgid ""
 "`add` takes one `--descendiente` per child as `KEY=VALUE` pairs separated"
 " by commas. `NACIMIENTO` (birth date, `AAAA-MM-DD`) is required; "
@@ -836,39 +836,45 @@ msgid ""
 "`remove` takes the position from `list`, counting from `0`."
 msgstr ""
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:342
+#: ../../how-to/profile-setup.md:343
 msgid ""
 "`MESES_TRABAJO` names *which* months the mother worked, not how many. "
 "Write a month as two digits, a run as `MM-MM`, and separate entries with "
 "`;`. Write `MESES_TRABAJO=05-08` for May to August. Write "
 "`MESES_TRABAJO=01;03;09-12` for January, March, and September to "
 "December."
-msgstr "`MESES_TRABAJO` nombra *qué* meses trabajó la madre, no cuántos. Escriba el mes con dos dígitos, un intervalo como `MM-MM`, y separe las entradas con `;`. Escriba `MESES_TRABAJO=05-08` para mayo a agosto. Escriba `MESES_TRABAJO=01;03;09-12` para enero, marzo y de septiembre a diciembre."
+msgstr ""
+"`MESES_TRABAJO` nombra *qué* meses trabajó la madre, no cuántos. Escriba "
+"el mes con dos dígitos, un intervalo como `MM-MM`, y separe las entradas "
+"con `;`. Escriba `MESES_TRABAJO=05-08` para mayo a agosto. Escriba "
+"`MESES_TRABAJO=01;03;09-12` para enero, marzo y de septiembre a "
+"diciembre."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:347
+#: ../../how-to/profile-setup.md:348
 msgid ""
 "Name the months. The guardería increment counts only the months the "
 "mother worked *and* the child attended, so a count cannot say whether the"
 " two overlap."
-msgstr "Nombre los meses. El incremento por guardería cuenta solo los meses en que la madre trabajó *y* el menor asistió, así que un recuento no puede indicar si ambos coinciden."
+msgstr ""
+"Nombre los meses. El incremento por guardería cuenta solo los meses en "
+"que la madre trabajó *y* el menor asistió, así que un recuento no puede "
+"indicar si ambos coinciden."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:350
+#: ../../how-to/profile-setup.md:351
 msgid "Maintain your profile"
 msgstr "Mantén tu perfil"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:352
+#: ../../how-to/profile-setup.md:353
 msgid ""
-"The following steps edit a fact, rename the profile, duplicate it, delete"
-" the duplicate, and export the profile to a portable JSON file:"
+"The following steps edit a fact and back up the profile to a sealed "
+"archive:"
 msgstr ""
-"Los pasos siguientes editan un dato, renombran el perfil, lo duplican, "
-"eliminan el duplicado y exportan el perfil a un fichero JSON portátil:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:359
+#: ../../how-to/profile-setup.md:359
 msgid "What each step does:"
 msgstr "Qué hace cada paso:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:361
+#: ../../how-to/profile-setup.md:361
 #, fuzzy
 msgid ""
 "**Edit** re-runs the wizard, or changes only the flags you pass with "
@@ -878,81 +884,40 @@ msgstr ""
 "**Edit** cambia solo las opciones que pasas. Ejecuta `show`, `status` o "
 "`validate` de nuevo tras editar."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:364
+#: ../../how-to/profile-setup.md:364
 msgid ""
-"**Rename** changes only the visible label; the active-profile pointer "
-"follows it."
+"**Archive export** writes a sealed, encrypted copy of the profile. The "
+"target filename must end with `.cadrumo-bucket.tar.gz`. The archive is "
+"encrypted with the profile passphrase and does not carry the profile "
+"label. Restore it with `aeat config profile restore`, and read a sealed "
+"archive's header without decrypting it using `aeat config profile archive"
+" inspect`."
 msgstr ""
-"**Rename** cambia solo la etiqueta visible; el puntero del perfil activo "
-"la sigue."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:366
+#: ../../how-to/profile-setup.md:370
+#, fuzzy
 msgid ""
-"**Duplicate** starts a second profile from the same facts. The second "
-"name you pass is the new profile's name, the name you address it by in "
-"every later command. The new profile becomes the active one."
-msgstr ""
-"**Duplicate** inicia un segundo perfil a partir de los mismos datos. El "
-"segundo nombre que pasa es el nombre del nuevo perfil, el nombre con el "
-"que se refiere a él en todo comando posterior. El nuevo perfil pasa a ser"
-" el activo."
-
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:369
-msgid ""
-"**Delete** removes a profile for good. If the deleted profile was active,"
-" Cadrumo clears the active-profile pointer."
+"Delete a profile for good with `aeat config profile delete NAME --yes`. "
+"If the deleted profile was active, Cadrumo clears the active-profile "
+"pointer."
 msgstr ""
 "**Delete** elimina un perfil para siempre. Si el perfil eliminado era el "
 "activo, Cadrumo borra el puntero del perfil activo."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:371
+#: ../../how-to/profile-setup.md:373
+#, fuzzy
 msgid ""
-"**Export** writes a portable JSON file. Pass `--cleartext-local` for a "
-"local JSON file, or `--encrypt` for an encrypted transfer bundle; the "
-"passphrase is prompted (hidden), never given on the command line."
-msgstr ""
-"**Export** escribe un archivo JSON portátil. Pasa `--cleartext-local` "
-"para un archivo JSON local, o `--encrypt` para un paquete cifrado de "
-"transferencia; la frase de contraseña se solicita (oculta), nunca se pasa"
-" en la línea de comandos."
-
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:375
-msgid ""
-"Import a saved file back into another session or storage root. Import "
-"under a fresh label; the imported profile becomes the active one. A store"
-" that still holds the same profile refuses the import on the profile's "
-"identifier, so import is for restoring into a different storage root:"
-msgstr ""
-"Importa un fichero guardado de vuelta a otra sesión u otra raíz de "
-"almacenamiento. Importa con una etiqueta nueva; el perfil importado pasa "
-"a ser el activo. Un almacén que aún contiene el mismo perfil rechaza la "
-"importación por el identificador del perfil, así que la importación sirve"
-" para restaurar en una raíz de almacenamiento distinta:"
-
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:383
-msgid ""
-"A portable profile file contains taxpayer data, including the tax "
-"identifier, activity, and local filing history. Store it as sensitive tax"
-" data, and don't attach it to a support request unless you've removed "
-"personal details."
+"A sealed archive contains taxpayer data, including the tax identifier, "
+"activity, and local filing history. Store it as sensitive tax data, and "
+"don't attach it to a support request. See [import, export, and "
+"evidence](../reference/import-export-and-evidence.md)."
 msgstr ""
 "Un fichero de perfil portátil contiene datos del contribuyente, incluidos"
 " el identificador fiscal, la actividad y el historial de presentaciones "
 "local. Guárdalo como datos fiscales sensibles y no lo adjunte a una "
 "solicitud de soporte salvo que haya eliminado los datos personales."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:387
-msgid ""
-"Two related outputs are easy to confuse with this one. `aeat config "
-"profile subject-access-request` writes the *same* bundle, framed as a "
-"data-subject right-of-access response - so a cleartext bundle carries the"
-" same handoff risk whichever purpose produced it. The sealed custody "
-"archive is a different thing again: it is the encrypted backup you "
-"restore from, and neither export is a substitute for it. See [import, "
-"export, and evidence](../reference/import-export-and-evidence.md)."
-msgstr ""
-
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:395
+#: ../../how-to/profile-setup.md:378
 msgid ""
 "Sign out without deleting the profile using `aeat config logout`. Logout "
 "closes the active storage session, discards its in-memory keys, disposes "
@@ -963,11 +928,11 @@ msgstr ""
 " claves en memoria, libera los motores de bucket y borra el puntero local"
 " del perfil activo:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:403
+#: ../../how-to/profile-setup.md:386
 msgid "Choose your service capabilities"
 msgstr "Elige las capacidades de servicio"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:405
+#: ../../how-to/profile-setup.md:388
 msgid ""
 "Each profile carries its own opt-in for three optional services. The "
 "setup wizard asks these questions when you create or edit a profile, and "
@@ -979,11 +944,11 @@ msgstr ""
 "perfil, y puede cambiarlas en cualquier momento. Estos pasos muestran la "
 "postura actual, desactivan una capacidad y muestran de nuevo la postura:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:414
+#: ../../how-to/profile-setup.md:397
 msgid "The three capabilities are:"
 msgstr "Las tres capacidades son:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:416
+#: ../../how-to/profile-setup.md:399
 msgid ""
 "`cloud_evidence_upload` - allow sending sensitive evidence to a cloud LLM"
 " provider. Off by default. Barred for gestor profiles."
@@ -992,19 +957,19 @@ msgstr ""
 " de LLM en la nube. Desactivada por defecto. Vedada para los perfiles de "
 "gestor."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:418
+#: ../../how-to/profile-setup.md:401
 msgid "`llm_vision` - read invoices with the on-host vision model. On by default."
 msgstr ""
 "`llm_vision`: lee las facturas con el modelo de visión en el equipo. "
 "Activada por defecto."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:419
+#: ../../how-to/profile-setup.md:402
 msgid "`google_export` - export calculations to Google Sheets. On by default."
 msgstr ""
 "`google_export`: exporta los cálculos a Google Sheets. Activada por "
 "defecto."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:421
+#: ../../how-to/profile-setup.md:404
 msgid ""
 "Turn any capability on or off with `aeat config profile capabilities "
 "set`. The example turns `llm_vision` off. Pass `cloud_evidence_upload on`"
@@ -1017,18 +982,18 @@ msgstr ""
 " de paquete que falten producen el comando de instalación exacto. "
 "Consulta [Instala Cadrumo](../workstation-setup.md) para los extras."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:426
+#: ../../how-to/profile-setup.md:409
 msgid "See what changed"
 msgstr "Ve qué cambió"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:428
+#: ../../how-to/profile-setup.md:411
+#, fuzzy
 msgid ""
 "Every change to a profile - creation, edits, imports, classifications, "
 "calculations, and filings - is recorded as an event in that profile's "
 "append-only history (a log you can read but not alter). Reading history "
 "needs an active profile, so switch to it first after logout. The example "
-"creates, renames, and edits a profile before browsing and filtering its "
-"history:"
+"creates, renames, and edits a profile before filtering its history:"
 msgstr ""
 "Todo cambio en un perfil (creación, ediciones, importaciones, "
 "clasificaciones, cálculos y presentaciones) se registra como un evento en"
@@ -1037,7 +1002,7 @@ msgstr ""
 "cambia a él primero tras el cierre de sesión. El ejemplo crea, renombra y"
 " edita un perfil antes de recorrer y filtrar su historial:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:438
+#: ../../how-to/profile-setup.md:421
 msgid ""
 "Repeat `--event-type` to include several types. An unknown type is "
 "refused with the full accepted list, so an empty value is a quick way to "
@@ -1047,7 +1012,7 @@ msgstr ""
 "rechaza con la lista completa de admitidos, así que un valor vacío es una"
 " forma rápida de descubrir el vocabulario."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:442
+#: ../../how-to/profile-setup.md:425
 msgid ""
 "A rename appears as two events on purpose: `profile.renamed` records that"
 " the data changed, and `bucket.renamed` records that you ran the rename "
@@ -1058,11 +1023,11 @@ msgstr ""
 "registra que ejecutaste la acción de renombrar. Uno responde a «qué "
 "cambió», el otro a «qué se hizo»."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:446
+#: ../../how-to/profile-setup.md:429
 msgid "If setup looks wrong"
 msgstr "Si la configuración parece incorrecta"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:448
+#: ../../how-to/profile-setup.md:431
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1072,7 +1037,7 @@ msgstr ""
 "no válido o de que estás trabajando bajo el perfil equivocado, consulta "
 "[Diagnostica y repara tu configuración local](troubleshooting.md)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:452
+#: ../../how-to/profile-setup.md:435
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1085,27 +1050,27 @@ msgstr ""
 "Nombra las salidas que incluir y los datos personales que dejar fuera "
 "antes de llevar el problema al gestor de incidencias del proyecto."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:458
+#: ../../how-to/profile-setup.md:441
 msgid "Next steps"
 msgstr "Pasos siguientes"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:460
+#: ../../how-to/profile-setup.md:443
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa y gestiona los movimientos](import-bank-statements.md)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:461
+#: ../../how-to/profile-setup.md:444
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantén los datos censales del Modelo 036 en tu perfil](censo-update.md)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:462
+#: ../../how-to/profile-setup.md:445
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica tu calendario de presentaciones](filing-calendar.md)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:463
+#: ../../how-to/profile-setup.md:446
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa y aporta las entradas de cálculo](review-calculation-values.md)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/profile-setup.md:464
+#: ../../how-to/profile-setup.md:447
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
 
@@ -1138,5 +1103,104 @@ msgstr "[Referencia de la CLI](../cli/index.rst)"
 #~ "tax identifier is fine. Leave `NIF` "
 #~ "out. `remove` takes the position from"
 #~ " `list`, counting from `0`."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Log out with `aeat config logout` "
+#~ "when you finish. Logout closes the "
+#~ "storage session and clears the "
+#~ "active-profile selection; it deletes "
+#~ "nothing."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The following steps edit a fact, "
+#~ "rename the profile, duplicate it, delete"
+#~ " the duplicate, and export the "
+#~ "profile to a portable JSON file:"
+#~ msgstr ""
+#~ "Los pasos siguientes editan un dato, "
+#~ "renombran el perfil, lo duplican, "
+#~ "eliminan el duplicado y exportan el "
+#~ "perfil a un fichero JSON portátil:"
+
+#~ msgid ""
+#~ "**Rename** changes only the visible "
+#~ "label; the active-profile pointer "
+#~ "follows it."
+#~ msgstr ""
+#~ "**Rename** cambia solo la etiqueta "
+#~ "visible; el puntero del perfil activo"
+#~ " la sigue."
+
+#~ msgid ""
+#~ "**Duplicate** starts a second profile "
+#~ "from the same facts. The second "
+#~ "name you pass is the new profile's"
+#~ " name, the name you address it "
+#~ "by in every later command. The new"
+#~ " profile becomes the active one."
+#~ msgstr ""
+#~ "**Duplicate** inicia un segundo perfil a"
+#~ " partir de los mismos datos. El "
+#~ "segundo nombre que pasa es el "
+#~ "nombre del nuevo perfil, el nombre "
+#~ "con el que se refiere a él "
+#~ "en todo comando posterior. El nuevo "
+#~ "perfil pasa a ser el activo."
+
+#~ msgid ""
+#~ "**Export** writes a portable JSON file."
+#~ " Pass `--cleartext-local` for a local"
+#~ " JSON file, or `--encrypt` for an "
+#~ "encrypted transfer bundle; the passphrase "
+#~ "is prompted (hidden), never given on "
+#~ "the command line."
+#~ msgstr ""
+#~ "**Export** escribe un archivo JSON "
+#~ "portátil. Pasa `--cleartext-local` para "
+#~ "un archivo JSON local, o `--encrypt` "
+#~ "para un paquete cifrado de "
+#~ "transferencia; la frase de contraseña se"
+#~ " solicita (oculta), nunca se pasa en"
+#~ " la línea de comandos."
+
+#~ msgid ""
+#~ "Import a saved file back into "
+#~ "another session or storage root. Import"
+#~ " under a fresh label; the imported"
+#~ " profile becomes the active one. A"
+#~ " store that still holds the same "
+#~ "profile refuses the import on the "
+#~ "profile's identifier, so import is for"
+#~ " restoring into a different storage "
+#~ "root:"
+#~ msgstr ""
+#~ "Importa un fichero guardado de vuelta"
+#~ " a otra sesión u otra raíz de"
+#~ " almacenamiento. Importa con una etiqueta"
+#~ " nueva; el perfil importado pasa a"
+#~ " ser el activo. Un almacén que "
+#~ "aún contiene el mismo perfil rechaza "
+#~ "la importación por el identificador del"
+#~ " perfil, así que la importación sirve"
+#~ " para restaurar en una raíz de "
+#~ "almacenamiento distinta:"
+
+#~ msgid ""
+#~ "Two related outputs are easy to "
+#~ "confuse with this one. `aeat config "
+#~ "profile subject-access-request` writes "
+#~ "the *same* bundle, framed as a "
+#~ "data-subject right-of-access response "
+#~ "- so a cleartext bundle carries "
+#~ "the same handoff risk whichever purpose"
+#~ " produced it. The sealed custody "
+#~ "archive is a different thing again: "
+#~ "it is the encrypted backup you "
+#~ "restore from, and neither export is "
+#~ "a substitute for it. See [import, "
+#~ "export, and evidence](../reference/import-export-"
+#~ "and-evidence.md)."
 #~ msgstr ""
 

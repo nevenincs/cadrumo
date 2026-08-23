@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: hu\n"
@@ -34,8 +34,8 @@ msgstr ""
 "készít elő az `aeat` parancssori felületen keresztül. Modellezi az "
 "adóhatóság szabályozási registryjét, beolvassa és besorolja az Ön "
 "pénzügyi nyilvántartásait, és kiszámítja az egyes adóűrlapok számozott "
-"rovatait. Ezután ellenőrzi a borradort, és exportál egy fájlt, amelyet Ön "
-"maga nyújt be. Az AEAT az Agencia Estatal de Administración Tributaria, "
+"rovatait. Ezután ellenőrzi a borradort, és exportál egy fájlt, amelyet Ön"
+" maga nyújt be. Az AEAT az Agencia Estatal de Administración Tributaria, "
 "Spanyolország adóhivatala."
 
 #: ../../architecture/index.md:10
@@ -48,8 +48,8 @@ msgid ""
 msgstr ""
 "Használja ezt az oldalt belépési pontként, amikor először olvassa a "
 "kódbázist. Ez egy térkép, nem egy címtár: megnevezi a rétegeket, a "
-"teherhordó fogalmakat és a kanonikus típusokat, amelyekhez navigálni fog, "
-"és ott meg is áll. A pontos szignatúrákért és parancsokért kövesse a "
+"teherhordó fogalmakat és a kanonikus típusokat, amelyekhez navigálni fog,"
+" és ott meg is áll. A pontos szignatúrákért és parancsokért kövesse a "
 "[Belépés a kódba](#crossing-into-the-code) szakaszban lévő "
 "hivatkozásokat."
 
@@ -66,11 +66,11 @@ msgid ""
 "and they shape everything else:"
 msgstr ""
 "Egy spanyol adóbevallás kézi elkészítése hibalehetőségekkel teli és "
-"nehezen auditálható. Egy űrlapon szereplő adatnak vissza kell vezethetőnek "
-"lennie egy bankmozgásra, egy szabályozásra és egy közzétett szabályra. "
-"Egy későbbi éves űrlapnak összhangban kell maradnia az őt tápláló "
-"negyedéves űrlapokkal. Három tervezési döntés válaszol erre a problémára, "
-"és ezek alakítanak mindent mást:"
+"nehezen auditálható. Egy űrlapon szereplő adatnak vissza kell "
+"vezethetőnek lennie egy bankmozgásra, egy szabályozásra és egy közzétett "
+"szabályra. Egy későbbi éves űrlapnak összhangban kell maradnia az őt "
+"tápláló negyedéves űrlapokkal. Három tervezési döntés válaszol erre a "
+"problémára, és ezek alakítanak mindent mást:"
 
 #: ../../architecture/index.md:24
 msgid ""
@@ -131,8 +131,8 @@ msgid ""
 "Four views cover the system at the highest level. Each pairs a diagram "
 "with a short explanation:"
 msgstr ""
-"Négy nézet fedi le a rendszert a legmagasabb szinten. Mindegyik egy "
-"ábrát párosít egy rövid magyarázattal:"
+"Négy nézet fedi le a rendszert a legmagasabb szinten. Mindegyik egy ábrát"
+" párosít egy rövid magyarázattal:"
 
 #: ../../architecture/index.md:45
 msgid "[The layers](#the-layers) - the five hexagonal layers and what each owns."
@@ -155,8 +155,8 @@ msgid ""
 "to an export file, and how each figure is grounded."
 msgstr ""
 "[A modelo életciklusa](#the-modelo-lifecycle) - az út a "
-"nyilvántartásoktól egy exportfájlig, és hogy minden egyes adat hogyan van "
-"megalapozva."
+"nyilvántartásoktól egy exportfájlig, és hogy minden egyes adat hogyan van"
+" megalapozva."
 
 #: ../../architecture/index.md:50
 msgid ""
@@ -166,11 +166,11 @@ msgstr ""
 "[A perzisztencia és a biztonsági határ](#persistence-and-the-safety-"
 "boundary) - hol él az állapot, és miért nem hagy el semmi."
 
-#: ../../architecture/index.md:53
+#: ../../architecture/index.md:54
 msgid "The layers"
 msgstr "A rétegek"
 
-#: ../../architecture/index.md:55
+#: ../../architecture/index.md:56
 msgid ""
 "Cadrumo separates responsibilities into five layers under `src/cadrumo/`."
 " Layers normally depend only on layers inside them; application "
@@ -180,7 +180,7 @@ msgstr ""
 "rétegek általában csak a náluk beljebb lévő rétegektől függnek; az "
 "alkalmazás-összeállításnak van a dokumentált adapterkivétele."
 
-#: ../../architecture/index.md:77
+#: ../../architecture/index.md:78
 msgid ""
 "**Text alternative.** Entrypoints call the application and core layers. "
 "The application calls the domain, adapters, and core layers; adapters "
@@ -193,7 +193,7 @@ msgstr ""
 "hívja. A domain csak a megjelölt, biztonságos tárolóvarraton keresztül "
 "éri el az adaptereket."
 
-#: ../../architecture/index.md:82
+#: ../../architecture/index.md:83
 msgid ""
 "**`core`** is the innermost layer. It owns the cross-cutting primitives "
 "every other layer shares. Its typed enums define closed value sets such "
@@ -201,15 +201,14 @@ msgid ""
 "kinds. Core also owns the JSON envelope contract, configuration, money "
 "and time types, and the error taxonomy."
 msgstr ""
-"**A `core`** a legbelső réteg. Ez birtokolja azokat a "
-"keresztmetsző primitíveket, amelyeken minden más réteg osztozik. Típusos "
-"felsorolásai zárt értékkészleteket határoznak meg, például "
-"időszakkódokat, adódoméneket, modelo-azonosítókat és "
-"binding-forrástípusokat. A core birtokolja továbbá a JSON-boríték "
-"szerződését, a konfigurációt, a pénz- és időtípusokat, valamint a "
-"hibataxonómiát."
+"**A `core`** a legbelső réteg. Ez birtokolja azokat a keresztmetsző "
+"primitíveket, amelyeken minden más réteg osztozik. Típusos felsorolásai "
+"zárt értékkészleteket határoznak meg, például időszakkódokat, "
+"adódoméneket, modelo-azonosítókat és binding-forrástípusokat. A core "
+"birtokolja továbbá a JSON-boríték szerződését, a konfigurációt, a pénz- "
+"és időtípusokat, valamint a hibataxonómiát."
 
-#: ../../architecture/index.md:87
+#: ../../architecture/index.md:88
 msgid ""
 "**`domain`** holds pure tax rules and records: the modelo registry, "
 "casilla definitions (a casilla is one numbered box on a form), filing "
@@ -220,18 +219,18 @@ msgstr ""
 "számozott rovata), a benyújtási megfigyeléseket, és a rájuk épülő "
 "számításokat. Csak a `core`-tól függ."
 
-#: ../../architecture/index.md:90
+#: ../../architecture/index.md:91
 msgid ""
 "**`application`** orchestrates use cases. It joins domain rules with "
 "adapters to build filing drafts, aggregate the ledger, run diagnostics, "
 "and project state. It performs no input or output of its own."
 msgstr ""
 "**Az `application`** hangolja össze a felhasználási eseteket. A domain "
-"szabályait adapterekkel köti össze, hogy benyújtási borradorokat "
-"építsen, aggregálja a ledgert, diagnosztikát futtasson és állapotot "
-"vetítsen. Saját maga nem végez sem bemenetet, sem kimenetet."
+"szabályait adapterekkel köti össze, hogy benyújtási borradorokat építsen,"
+" aggregálja a ledgert, diagnosztikát futtasson és állapotot vetítsen. "
+"Saját maga nem végez sem bemenetet, sem kimenetet."
 
-#: ../../architecture/index.md:93
+#: ../../architecture/index.md:94
 msgid ""
 "**`adapters`** connects the application to the outside world in three "
 "parts. `inbound` parses incoming Portable Document Format (PDF), comma-"
@@ -241,25 +240,25 @@ msgid ""
 "providers). `persistence` stores encrypted payloads in the local "
 "database."
 msgstr ""
-"**Az `adapters`** három részben köti össze az alkalmazást a "
-"külvilággal. Az `inbound` a beérkező Portable Document Format (PDF), "
-"vesszővel elválasztott értékek (CSV), Open Financial Exchange (OFX) és "
-"Microsoft Excel Open XML (XLSX) kivonatokat elemzi. Az `outbound` külső "
+"**Az `adapters`** három részben köti össze az alkalmazást a külvilággal. "
+"Az `inbound` a beérkező Portable Document Format (PDF), vesszővel "
+"elválasztott értékek (CSV), Open Financial Exchange (OFX) és Microsoft "
+"Excel Open XML (XLSX) kivonatokat elemzi. Az `outbound` külső "
 "szolgáltatásokat ér el (AEAT-böngészőmenetek, számítási orákulumok és "
 "hitelesítési szolgáltatók). A `persistence` titkosított adatcsomagokat "
 "tárol a helyi adatbázisban."
 
-#: ../../architecture/index.md:99
+#: ../../architecture/index.md:100
 msgid ""
 "**`entrypoints`** exposes the application to operators. The command line "
 "lives here, and its root surface is limited to two command families, "
 "`config` and `app`."
 msgstr ""
-"**Az `entrypoints`** teszi elérhetővé az alkalmazást a kezelők számára. "
-"A parancssor itt él, és gyökérfelülete két parancscsaládra korlátozódik: "
+"**Az `entrypoints`** teszi elérhetővé az alkalmazást a kezelők számára. A"
+" parancssor itt él, és gyökérfelülete két parancscsaládra korlátozódik: "
 "`config` és `app`."
 
-#: ../../architecture/index.md:103
+#: ../../architecture/index.md:104
 msgid ""
 "Two boundary rules keep the layers honest. Boundary data crosses as "
 "validated pydantic v2 models, never loose dictionaries. Closed value sets"
@@ -268,11 +267,11 @@ msgid ""
 msgstr ""
 "Két határszabály tartja tisztán a rétegeket. A határon áthaladó adatok "
 "validált pydantic v2 modellként lépnek át, soha nem laza szótárként. A "
-"zárt értékkészletek típusos felsorolásként vannak deklarálva a `core`-ban, "
-"és felsorolástagként áramlanak, így egy érvénytelen érték elutasításra "
-"kerül a határon."
+"zárt értékkészletek típusos felsorolásként vannak deklarálva a "
+"`core`-ban, és felsorolástagként áramlanak, így egy érvénytelen érték "
+"elutasításra kerül a határon."
 
-#: ../../architecture/index.md:108
+#: ../../architecture/index.md:109
 msgid ""
 "The dependency arrows point inward with one annotated exception. Three "
 "domain repositories - filing, justificante, and submission - sit directly"
@@ -281,11 +280,11 @@ msgid ""
 msgstr ""
 "A függőségi nyilak befelé mutatnak, egyetlen megjelölt kivétellel. Három "
 "domain-tároló - filing, justificante és submission - közvetlenül a "
-"titkosított tárolás alaposztályára épül az `adapters.persistence`-ben. "
-"Az ábra ezt a varratot szaggatott élként rajzolja meg, ahelyett, hogy "
+"titkosított tárolás alaposztályára épül az `adapters.persistence`-ben. Az"
+" ábra ezt a varratot szaggatott élként rajzolja meg, ahelyett, hogy "
 "elrejtené."
 
-#: ../../architecture/index.md:113
+#: ../../architecture/index.md:114
 msgid ""
 "Inside `domain` and `application`, the subpackages cluster into five "
 "conceptual groups. Some subpackages are omitted for clarity; the API "
@@ -295,95 +294,96 @@ msgstr ""
 "csoportba rendeződnek. Néhány alcsomagot az áttekinthetőség kedvéért "
 "kihagytunk; az API-referencia mindet felsorolja."
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Cluster"
 msgstr "Csoport"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`domain` subpackages"
 msgstr "`domain` alcsomagok"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`application` subpackages"
 msgstr "`application` alcsomagok"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Registry and calculations"
 msgstr "Registry és számítások"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`calculations`, `modelos`, `normatives`, `manuals`"
 msgstr "`calculations`, `modelos`, `normatives`, `manuals`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`calculations`, `modelo`, `registry`, `aggregation`, `verification`"
 msgstr "`calculations`, `modelo`, `registry`, `aggregation`, `verification`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Ledger and transactions"
 msgstr "Ledger és tranzakciók"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`transactions`, `invoices`, `categories`, `iva`, `currency`, `attachments`"
 msgstr "`transactions`, `invoices`, `categories`, `iva`, `currency`, `attachments`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`ledger`, `transactions`, `invoices`, `evidence`, `inventory`"
 msgstr "`ledger`, `transactions`, `invoices`, `evidence`, `inventory`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Filing and export"
 msgstr "Benyújtás és export"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`filing`, `justificante`, `submission`"
 msgstr "`filing`, `justificante`, `submission`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`filing`, `export`, `review`"
 msgstr "`filing`, `export`, `review`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Live, portals, and auth"
 msgstr "Live, portálok és hitelesítés"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`portals`, `auth`, `fincas`"
 msgstr "`portals`, `auth`, `fincas`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`live`, `portals`, `auth`, `workflow`"
 msgstr "`live`, `portals`, `auth`, `workflow`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "Profile and storage"
 msgstr "Profil és tárolás"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`buckets`, `user_profile`, `contribuyente`, `deadlines`"
 msgstr "`buckets`, `user_profile`, `contribuyente`, `deadlines`"
 
-#: ../../architecture/index.md:59
+#: ../../architecture/index.md:60
 msgid "`profile`, `storage`, `bucket_maintenance`, `setup`, `wizard`"
 msgstr "`profile`, `storage`, `bucket_maintenance`, `setup`, `wizard`"
 
-#: ../../architecture/index.md:125
+#: ../../architecture/index.md:127
 msgid "The registry authority pipeline"
 msgstr "A registry-tekintély feldolgozási folyamata"
 
-#: ../../architecture/index.md:127
+#: ../../architecture/index.md:129
 msgid ""
 "The authoritative tax-model definitions aren't hard-coded. They move "
 "through a deterministic pipeline, from hand-authored source to the "
 "immutable snapshots runtime code reads. TOML is Tom's Obvious Minimal "
 "Language, a layout meant for editing."
 msgstr ""
-"A hiteles adómodell-definíciók nincsenek kódba égetve. Egy determinisztikus "
-"feldolgozási folyamaton haladnak át, a kézzel írt forrástól azokig a "
-"változtathatatlan pillanatképekig, amelyeket a futásidejű kód beolvas. A "
-"TOML a Tom's Obvious Minimal Language, egy szerkesztésre szánt formátum."
+"A hiteles adómodell-definíciók nincsenek kódba égetve. Egy "
+"determinisztikus feldolgozási folyamaton haladnak át, a kézzel írt "
+"forrástól azokig a változtathatatlan pillanatképekig, amelyeket a "
+"futásidejű kód beolvas. A TOML a Tom's Obvious Minimal Language, egy "
+"szerkesztésre szánt formátum."
 
-#: ../../architecture/index.md:146
+#: ../../architecture/index.md:148
 msgid ""
 "**Text alternative.** Authoring fragments flow through deterministic "
 "loading, compilation, and schema validation before the validated registry"
@@ -392,13 +392,13 @@ msgid ""
 "registry files change."
 msgstr ""
 "**Szöveges alternatíva.** A szerzői töredékek determinisztikus "
-"betöltésen, fordításon és sémavalidáláson haladnak át, mielőtt a "
-"validált registry-tekintély rögzített pillanatképeket hozna létre a "
-"futásidejű vetületekhez. Egy teljes fát lefedő ujjlenyomat érvényteleníti "
-"mind a fordító, mind a tekintély gyorsítótárát, valahányszor "
-"registry-fájlok változnak."
+"betöltésen, fordításon és sémavalidáláson haladnak át, mielőtt a validált"
+" registry-tekintély rögzített pillanatképeket hozna létre a futásidejű "
+"vetületekhez. Egy teljes fát lefedő ujjlenyomat érvényteleníti mind a "
+"fordító, mind a tekintély gyorsítótárát, valahányszor registry-fájlok "
+"változnak."
 
-#: ../../architecture/index.md:152
+#: ../../architecture/index.md:154
 msgid ""
 "Each modelo and revision is authored as fragments of TOML under "
 "`src/cadrumo/_data/registry/`. The loader and compiler (`_loader.py`) "
@@ -411,15 +411,15 @@ msgid ""
 msgstr ""
 "Minden modelo és revízió TOML-töredékekként van megírva a "
 "`src/cadrumo/_data/registry/` alatt. A betöltő és fordító (`_loader.py`) "
-"determinisztikus sorrendben fésüli össze ezeket a töredékeket, elutasítja "
-"a nem egyértelmű ütközéseket, és szigorú, rögzített `ModeloDefinition` és "
-"`ModeloRevision` objektumokká fordítja őket. A betöltő a teljes fa egy "
-"ujjlenyomatára kulcsolja a gyorsítótárát - minden fájl elérési útjára, "
+"determinisztikus sorrendben fésüli össze ezeket a töredékeket, elutasítja"
+" a nem egyértelmű ütközéseket, és szigorú, rögzített `ModeloDefinition` "
+"és `ModeloRevision` objektumokká fordítja őket. A betöltő a teljes fa egy"
+" ujjlenyomatára kulcsolja a gyorsítótárát - minden fájl elérési útjára, "
 "méretére és módosítási idejére. Egy rövid ujjlenyomat-gyorsítótár "
 "élettartam után egy szerkesztés hatására a betöltő újravalidálja az "
 "ujjlenyomatot, mielőtt a következő eredményt szolgáltatná."
 
-#: ../../architecture/index.md:160
+#: ../../architecture/index.md:162
 msgid ""
 "`ValidatedRegistryAuthority` is the production boundary. It validates a "
 "modelo once, caches the result, and builds a `RegistrySnapshot` for a "
@@ -430,39 +430,49 @@ msgid ""
 "from snapshots, never from the raw loader."
 msgstr ""
 "A `ValidatedRegistryAuthority` az éles határ. Egyszer validál egy "
-"modelót, gyorsítótárazza az eredményt, és felépít egy `RegistrySnapshot`-ot "
-"egy adott modelóhoz, évhez és időszakhoz. A pillanatkép rögzített és "
-"kontextushoz kötött: jogi és forráshivatkozásai indexeltek, referenciális "
-"integritása pedig építési időben ellenőrzött. A futásidejű fogyasztók - a "
-"benyújtási sémaszolgáltatók, a képletek végrehajtása, az "
-"exportelemzés és az ellenőrzés - a pillanatképekből olvasnak, soha nem a "
-"nyers betöltőből."
+"modelót, gyorsítótárazza az eredményt, és felépít egy "
+"`RegistrySnapshot`-ot egy adott modelóhoz, évhez és időszakhoz. A "
+"pillanatkép rögzített és kontextushoz kötött: jogi és forráshivatkozásai "
+"indexeltek, referenciális integritása pedig építési időben ellenőrzött. A"
+" futásidejű fogyasztók - a benyújtási sémaszolgáltatók, a képletek "
+"végrehajtása, az exportelemzés és az ellenőrzés - a pillanatképekből "
+"olvasnak, soha nem a nyers betöltőből."
 
-#: ../../architecture/index.md:167
+#: ../../architecture/index.md:169
+msgid ""
+"The snapshot is also the filing read-model authority. Its casilla "
+"definitions say which numbered fields exist, whether each field is "
+"manual, bound, or calculated, which formulas and binding contracts apply,"
+" and which repeating fields and export positions belong to that revision."
+" It describes what one filing requires; it does not own a taxpayer's "
+"transactions, invoices, foreign assets, or stock movements."
+msgstr ""
+
+#: ../../architecture/index.md:176
 msgid ""
 "The split matters. The authoring and compilation stages before the "
 "authority are implementation details. Production code requests validated "
 "modelos, deadline windows, and snapshots through the authority, so the "
 "loader stays behind that line."
 msgstr ""
-"A szétválasztás számít. A tekintély előtti szerzői és fordítási "
-"szakaszok megvalósítási részletek. Az éles kód a validált modelókat, "
-"határidő-ablakokat és pillanatképeket a tekintélyen keresztül kéri, így a "
-"betöltő e vonal mögött marad."
+"A szétválasztás számít. A tekintély előtti szerzői és fordítási szakaszok"
+" megvalósítási részletek. Az éles kód a validált modelókat, "
+"határidő-ablakokat és pillanatképeket a tekintélyen keresztül kéri, így a"
+" betöltő e vonal mögött marad."
 
-#: ../../architecture/index.md:172
+#: ../../architecture/index.md:182
 msgid "The modelo lifecycle"
 msgstr "A modelo életciklusa"
 
-#: ../../architecture/index.md:174
+#: ../../architecture/index.md:184
 msgid ""
 "A modelo is a numbered AEAT tax form. Its data flows one way, from your "
 "records to a file you upload yourself."
 msgstr ""
-"A modelo egy számozott AEAT-adóűrlap. Adatai egy irányba áramlanak, az Ön "
-"nyilvántartásaitól egy fájlig, amelyet Ön maga tölt fel."
+"A modelo egy számozott AEAT-adóűrlap. Adatai egy irányba áramlanak, az Ön"
+" nyilvántartásaitól egy fájlig, amelyet Ön maga tölt fel."
 
-#: ../../architecture/index.md:200
+#: ../../architecture/index.md:210
 msgid ""
 "**Text alternative.** Financial records are ingested and classified into "
 "the encrypted ledger. An operator creates work, calculates it, verifies "
@@ -475,7 +485,7 @@ msgstr ""
 "exportál egy fájlt. Egy ember ezután feltölti ezt a fájlt az AEAT-hoz, a "
 "Cadrumón kívül."
 
-#: ../../architecture/index.md:205
+#: ../../architecture/index.md:215
 msgid ""
 "The tool ingests and classifies financial records - bank statements, "
 "invoices, and their evidence - into the encrypted ledger. From there the "
@@ -485,29 +495,27 @@ msgstr ""
 "bankkivonatokat, számlákat és azok bizonyítékait - a titkosított "
 "ledgerbe. Innen az út a parancssori igék rögzített sorozatát követi:"
 
-#: ../../architecture/index.md:209
+#: ../../architecture/index.md:219
 msgid "`aeat app modelo work create` pins a filing to a modelo, year, and period."
 msgstr ""
 "Az `aeat app modelo work create` egy benyújtást egy modelóhoz, évhez és "
 "időszakhoz rögzít."
 
-#: ../../architecture/index.md:210
+#: ../../architecture/index.md:220
 msgid "`calculate` resolves every casilla and saves a `CalculationRevision`."
 msgstr ""
 "A `calculate` feloldja az összes casillát, és elment egy "
 "`CalculationRevision`-t."
 
-#: ../../architecture/index.md:211
+#: ../../architecture/index.md:221
 msgid "`verify` runs a completeness and consistency gate over the draft."
-msgstr ""
-"A `verify` teljességi és konzisztencia-kaput futtat a borrador felett."
+msgstr "A `verify` teljességi és konzisztencia-kaput futtat a borrador felett."
 
-#: ../../architecture/index.md:212
+#: ../../architecture/index.md:222
 msgid "`file` marks a verified revision as internally filed."
-msgstr ""
-"A `file` egy ellenőrzött revíziót belsőleg benyújtottként jelöl meg."
+msgstr "A `file` egy ellenőrzött revíziót belsőleg benyújtottként jelöl meg."
 
-#: ../../architecture/index.md:213
+#: ../../architecture/index.md:223
 msgid ""
 "`aeat app modelo export` writes the official upload file (a fixed-layout "
 "fichero-BOE artifact) to disk."
@@ -515,7 +523,7 @@ msgstr ""
 "Az `aeat app modelo export` a hivatalos feltöltési fájlt (egy rögzített "
 "elrendezésű fichero-BOE artefaktumot) írja a lemezre."
 
-#: ../../architecture/index.md:216
+#: ../../architecture/index.md:226
 msgid ""
 "The boundary is structural. `file` is a local marker, not a submission, "
 "and `export` writes a file to your disk. No command transmits anything to"
@@ -526,18 +534,18 @@ msgid ""
 "read tests."
 msgstr ""
 "A határ szerkezeti. A `file` egy helyi jelölés, nem benyújtás, az "
-"`export` pedig egy fájlt ír az Ön lemezére. Egyetlen parancs sem továbbít "
-"semmit a hatóságnak: a feltöltés emberi cselekvés az AEAT-portálon, "
+"`export` pedig egy fájlt ír az Ön lemezére. Egyetlen parancs sem továbbít"
+" semmit a hatóságnak: a feltöltés emberi cselekvés az AEAT-portálon, "
 "amelyet az eszköz határán túli lépésként modellezünk. A kezelői élő "
 "olvasások a szokásos hitelesítést és az aktív profil védelmét igénylik; "
 "csak olvashatók maradnak. A külön `CADRUMO_LIVE_TESTS_ENABLED` opt-in "
 "kapuzza a fejlesztői élő olvasási teszteket."
 
-#: ../../architecture/index.md:223
+#: ../../architecture/index.md:233
 msgid "How a figure is grounded"
 msgstr "Hogyan van megalapozva egy adat"
 
-#: ../../architecture/index.md:225
+#: ../../architecture/index.md:235
 msgid ""
 "A casilla value isn't a bare number. It carries its provenance - the "
 "legal references, source references, and formula identifier that produced"
@@ -548,7 +556,7 @@ msgstr ""
 "képletazonosítót - a registry-definíciótól egészen a kezelő felé mutató "
 "kimenetig."
 
-#: ../../architecture/index.md:253
+#: ../../architecture/index.md:263
 msgid ""
 "**Text alternative.** A registry casilla definition and resolved ledger, "
 "invoice, previous-filing, and relation inputs feed the formula engine. It"
@@ -557,11 +565,11 @@ msgid ""
 msgstr ""
 "**Szöveges alternatíva.** Egy registry casilla-definíció, valamint a "
 "feloldott ledger-, számla-, korábbi benyújtási és relációs bemenetek "
-"táplálják a képletmotort. Ez egy eredetet hordozó megfigyelést bocsát ki, "
-"amelyből számítási revízió, CLI-adatcsomag és kezelő felé mutató kimenet "
-"lesz."
+"táplálják a képletmotort. Ez egy eredetet hordozó megfigyelést bocsát ki,"
+" amelyből számítási revízió, CLI-adatcsomag és kezelő felé mutató kimenet"
+" lesz."
 
-#: ../../architecture/index.md:258
+#: ../../architecture/index.md:268
 msgid ""
 "Each binding on a casilla declares a typed source. A mesh of resolvers - "
 "ledger aggregation, invoice catalogue, previous-filing carry, and cross-"
@@ -575,20 +583,43 @@ msgid ""
 msgstr ""
 "Egy casilla minden bindingja típusos forrást deklarál. A feloldók hálója "
 "- ledger-aggregáció, számlakatalógus, korábbi benyújtás átvitele és "
-"modelók közötti relációs előtöltés - ezeket a forrásokat binding-értékekké "
-"alakítja, amelyeket a `merge_source_resolutions` fésül össze. A registry "
-"képletmotorja a casilla képletét a feloldott bemeneteken értékeli ki, és "
-"az eredményt egy `CasillaObservation`-ként bélyegzi le, amely magával "
-"viszi a `legal_refs`, `source_refs` és `formula_id` mezőit. Ez a "
-"megfigyelés a perzisztált `CalculationRevision`-ön belül halad, majd a "
-"CLI-adatcsomagokba, majd a kezelőhöz. Az eredet soha nem esik ki a kifelé "
-"vezető úton."
+"modelók közötti relációs előtöltés - ezeket a forrásokat binding-"
+"értékekké alakítja, amelyeket a `merge_source_resolutions` fésül össze. A"
+" registry képletmotorja a casilla képletét a feloldott bemeneteken "
+"értékeli ki, és az eredményt egy `CasillaObservation`-ként bélyegzi le, "
+"amely magával viszi a `legal_refs`, `source_refs` és `formula_id` mezőit."
+" Ez a megfigyelés a perzisztált `CalculationRevision`-ön belül halad, "
+"majd a CLI-adatcsomagokba, majd a kezelőhöz. Az eredet soha nem esik ki a"
+" kifelé vezető úton."
 
-#: ../../architecture/index.md:267
+#: ../../architecture/index.md:277
+msgid ""
+"A binding is a projection contract, not an attachment slot. It identifies"
+" the owned source family, validates the selector and aggregation, and "
+"says how that source becomes a filing input. A scalar contract produces "
+"one value. Repeating record families declare one typed binding per row "
+"field. They join the values by grouping and one-based row index. The "
+"calculation revision freezes the resolved row bindings. Paths that "
+"produce validated detail rows store those separately. It never attaches "
+"an opaque record blob to a casilla."
+msgstr ""
+
+#: ../../architecture/index.md:285
+msgid ""
+"Modelo 720 demonstrates the repeating shape: its foreign-asset resolver "
+"is enrolled in the source mesh and projects typed asset fields into "
+"registry row bindings. Stock inventory is different. `InventoryLedger` is"
+" an implemented, encrypted business aggregate. The binding-source "
+"taxonomy currently has no inventory kind or enrolled inventory resolver. "
+"It therefore remains outside modelo calculation revisions until a legally"
+" grounded projection is added."
+msgstr ""
+
+#: ../../architecture/index.md:293
 msgid "Persistence and the safety boundary"
 msgstr "A perzisztencia és a biztonsági határ"
 
-#: ../../architecture/index.md:269
+#: ../../architecture/index.md:295
 msgid ""
 "All sensitive financial data lives in one place: an encrypted, per-"
 "profile store. The structure, not a convention, keeps it there."
@@ -596,7 +627,7 @@ msgstr ""
 "Minden érzékeny pénzügyi adat egy helyen él: egy titkosított, "
 "profilonkénti tárolóban. A szerkezet, nem egy megegyezés tartja ott."
 
-#: ../../architecture/index.md:300
+#: ../../architecture/index.md:326
 msgid ""
 "**Text alternative.** An operator selects one active profile. The "
 "resulting bucket session opens runtime factories and a secure repository,"
@@ -604,14 +635,14 @@ msgid ""
 "Operator AEAT checks stay read-only; only the human filing action can "
 "submit to AEAT."
 msgstr ""
-"**Szöveges alternatíva.** A kezelő kiválaszt egy aktív profilt. Az "
-"ebből származó bucket-munkamenet futásidejű gyárakat és egy biztonságos "
-"tárolót nyit meg, amely titkosítja az adatcsomagokat a helyi adatbázisban "
-"és a csatolt bizonyítékokban. A kezelő AEAT-ellenőrzései csak olvashatók "
-"maradnak; kizárólag az emberi benyújtási cselekvés nyújthat be az "
-"AEAT-hoz."
+"**Szöveges alternatíva.** A kezelő kiválaszt egy aktív profilt. Az ebből "
+"származó bucket-munkamenet futásidejű gyárakat és egy biztonságos tárolót"
+" nyit meg, amely titkosítja az adatcsomagokat a helyi adatbázisban és a "
+"csatolt bizonyítékokban. A kezelő AEAT-ellenőrzései csak olvashatók "
+"maradnak; kizárólag az emberi benyújtási cselekvés nyújthat be az AEAT-"
+"hoz."
 
-#: ../../architecture/index.md:305
+#: ../../architecture/index.md:331
 msgid ""
 "Key-encryption keys (KEKs) protect data-encryption keys (DEKs). The "
 "repository uses authenticated encryption with associated data (AEAD) "
@@ -619,37 +650,57 @@ msgid ""
 "material. HMAC means hash-based message authentication code. The cipher "
 "is the Advanced Encryption Standard with 256-bit keys (AES-256)."
 msgstr ""
-"A kulcstitkosító kulcsok (KEK-ek) védik az adattitkosító kulcsokat "
-"(DEK-eket). A tároló hitelesített, társított adatot tartalmazó titkosítású "
+"A kulcstitkosító kulcsok (KEK-ek) védik az adattitkosító kulcsokat (DEK-"
+"eket). A tároló hitelesített, társított adatot tartalmazó titkosítású "
 "(AEAD) adatcsomagokat, valamint mesterkulcsból származtatott anyagból "
 "kulcsolt HMAC-SHA256 kereső-lenyomatokat használ. A HMAC hash-alapú "
 "üzenethitelesítő kódot jelent. A rejtjelezés a 256 bites kulcsokat "
 "használó Advanced Encryption Standard (AES-256)."
 
-#: ../../architecture/index.md:311
+#: ../../architecture/index.md:337
+#, fuzzy
 msgid ""
 "You work one taxpayer at a time. Selecting a profile opens a bucket "
 "session, which scopes a `SecureObjectRepository` to that taxpayer's "
 "encrypted store. The repository encrypts every payload at the column "
 "boundary with a key from the `MasterKeyProvider` - the operating system "
 "keychain, or a passphrase-derived fallback. It persists the ciphertext to"
-" a local SQLite database with encrypted payload columns. Evidence bytes -"
-" invoices, statements, and decrypted documents - go through the content-"
-"addressed `AttachmentStore`, which stores the bytes themselves, never a "
-"link."
+" a local SQLite database with encrypted payload columns."
 msgstr ""
 "Egyszerre egy adózóval dolgozik. Egy profil kiválasztása megnyit egy "
 "bucket-munkamenetet, amely egy `SecureObjectRepository`-t az adott adózó "
 "titkosított tárolójára hatókörez. A tároló minden adatcsomagot az "
-"oszlophatáron titkosít a `MasterKeyProvider` egy kulcsával - az operációs "
-"rendszer kulcstárolójából, vagy egy jelmondatból származtatott "
+"oszlophatáron titkosít a `MasterKeyProvider` egy kulcsával - az operációs"
+" rendszer kulcstárolójából, vagy egy jelmondatból származtatott "
 "tartalékkal. A rejtjelezett szöveget egy helyi SQLite-adatbázisban "
 "perzisztálja, titkosított adatcsomag-oszlopokkal. A bizonyítékbájtok - "
 "számlák, kivonatok és visszafejtett dokumentumok - a tartalomcímzett "
 "`AttachmentStore`-on haladnak át, amely magukat a bájtokat tárolja, soha "
 "nem egy hivatkozást."
 
-#: ../../architecture/index.md:321
+#: ../../architecture/index.md:344
+msgid ""
+"Evidence bytes - invoices, statements, and decrypted documents - go "
+"through the content-addressed `AttachmentStore`, which stores the bytes "
+"themselves, never a link."
+msgstr ""
+
+#: ../../architecture/index.md:348
+msgid ""
+"Parsed business records do not become attachments merely because they may"
+" later support a filing. Transactions, invoice catalogues, and stock "
+"inventory remain separate typed aggregates in encrypted storage. Modelo "
+"720 instead receives typed foreign-asset observations from the caller. An"
+" enrolled source resolver projects only the fields requested by the "
+"registry into a calculation revision. In the current Modelo 100 registry,"
+" stock-related boxes 0177, 0181, and 0182 remain manual inputs. The "
+"inventory domain now splits 2025 opening-to-closing variation between "
+"0177 and 0182, but that domain projection is not evidence of a live "
+"inventory-to-Renta route and does not yet claim complete purchases for "
+"0181."
+msgstr ""
+
+#: ../../architecture/index.md:359
 msgid ""
 "Nothing in this store crosses outward to the agency as a write. The read-"
 "only live checks reach the agency only to read. The single path that "
@@ -659,26 +710,26 @@ msgid ""
 msgstr ""
 "Ebben a tárolóban semmi sem lép kifelé a hatóság felé írásként. A csak "
 "olvasható élő ellenőrzések kizárólag olvasásra érik el a hatóságot. Az "
-"egyetlen útvonal, amely írásként éri el a hatóságot, az emberi feltöltés, "
-"amely az eszköz határán túl helyezkedik el. Egy szerkezeti teszt "
+"egyetlen útvonal, amely írásként éri el a hatóságot, az emberi feltöltés,"
+" amely az eszköz határán túl helyezkedik el. Egy szerkezeti teszt "
 "kikényszeríti bármely írási ige hiányát az AEAT sede-adapterében, így a "
 "biztonsági helyzet nem erodálódhat véletlenül."
 
-#: ../../architecture/index.md:327
+#: ../../architecture/index.md:365
 msgid "How the documentation stays true to the code"
 msgstr "Hogyan marad hű a dokumentáció a kódhoz"
 
-#: ../../architecture/index.md:329
+#: ../../architecture/index.md:367
 msgid ""
 "The discipline that governs the layers governs the documentation too. "
 "Cadrumo keeps three English documentation surfaces close to the code that"
 " supplies their facts."
 msgstr ""
-"Az a fegyelem, amely a rétegeket irányítja, a dokumentációt is irányítja. "
-"A Cadrumo három angol nyelvű dokumentációs felületet tart közel ahhoz a "
+"Az a fegyelem, amely a rétegeket irányítja, a dokumentációt is irányítja."
+" A Cadrumo három angol nyelvű dokumentációs felületet tart közel ahhoz a "
 "kódhoz, amely a tényeiket szolgáltatja."
 
-#: ../../architecture/index.md:333
+#: ../../architecture/index.md:371
 msgid ""
 "Documentation authors write the repository markdown - this guide and the "
 "others under `docs/` - for people orienting to the project. Technical "
@@ -687,15 +738,15 @@ msgid ""
 "into prose. Generators scaffold the source-code and command-line "
 "references from the code itself."
 msgstr ""
-"A dokumentáció szerzői a kódtár markdown-ját írják - ezt az útmutatót és a "
-"többit a `docs/` alatt - a projekthez tájékozódó emberek számára. A "
+"A dokumentáció szerzői a kódtár markdown-ját írják - ezt az útmutatót és "
+"a többit a `docs/` alatt - a projekthez tájékozódó emberek számára. A "
 "technikai felülvizsgálók minden állítást ellenőriznek a kóddal szemben, "
 "mielőtt bekerülne. A forráskódba ágyazott docstringek szolgáltatják az "
 "API-referenciát, így a szerzők soha nem másolnak egy szignatúrát a "
 "szövegbe. A generátorok magából a kódból állítják elő a forráskód- és "
 "parancssori referenciák vázát."
 
-#: ../../architecture/index.md:339
+#: ../../architecture/index.md:377
 msgid ""
 "Because generators derive the API and command-line references from "
 "source, those surfaces cannot silently drift. A strict build treats "
@@ -708,17 +759,17 @@ msgstr ""
 "törött kereszthivatkozásnál, egy hiányzó csonknál vagy egy olyan "
 "parancshivatkozásnál, amely már nem egyezik a parancsokkal."
 
-#: ../../architecture/index.md:344
+#: ../../architecture/index.md:383
 msgid "Crossing into the code"
 msgstr "Belépés a kódba"
 
-#: ../../architecture/index.md:346
+#: ../../architecture/index.md:385
 msgid "Use this overview to orient, then drop into the detail:"
 msgstr ""
 "Használja ezt az áttekintést a tájékozódáshoz, majd merüljön el a "
 "részletekben:"
 
-#: ../../architecture/index.md:348
+#: ../../architecture/index.md:387
 msgid ""
 "**The layer tree** - browse `src/cadrumo/core`, `src/cadrumo/domain`, "
 "`src/cadrumo/application`, `src/cadrumo/adapters`, and "
@@ -729,7 +780,7 @@ msgstr ""
 "`src/cadrumo/entrypoints` mappákat, hogy lássa az egyes csoportok által "
 "megnevezett alcsomagokat."
 
-#: ../../architecture/index.md:351
+#: ../../architecture/index.md:390
 #, python-brace-format
 msgid ""
 "**The command-line reference** - {doc}`/cli/index` for exact verbs, "
@@ -738,7 +789,7 @@ msgstr ""
 "**A parancssori referencia** - {doc}`/cli/index` a pontos igékhez, "
 "kapcsolókhoz és kimenethez."
 
-#: ../../architecture/index.md:353
+#: ../../architecture/index.md:392
 #, python-brace-format
 msgid ""
 "**The API reference** - {doc}`/api/cadrumo` for module signatures and the"
@@ -747,16 +798,16 @@ msgstr ""
 "**Az API-referencia** - {doc}`/api/cadrumo` a modulszignatúrákhoz és a "
 "teljes alcsomaglistához."
 
-#: ../../architecture/index.md:355
+#: ../../architecture/index.md:394
 #, python-brace-format
 msgid ""
 "**The registry authoring guide** - {doc}`/authoring-guide` for how to "
 "author the TOML that the pipeline compiles."
 msgstr ""
-"**A registry szerzői útmutatója** - {doc}`/authoring-guide` ahhoz, hogyan "
-"írja meg azt a TOML-t, amelyet a feldolgozási folyamat lefordít."
+"**A registry szerzői útmutatója** - {doc}`/authoring-guide` ahhoz, hogyan"
+" írja meg azt a TOML-t, amelyet a feldolgozási folyamat lefordít."
 
-#: ../../architecture/index.md:357
+#: ../../architecture/index.md:396
 #, python-brace-format
 msgid ""
 "**The pipeline explanation** - {doc}`/explanation/index` for the same "
@@ -765,7 +816,7 @@ msgstr ""
 "**A feldolgozási folyamat magyarázata** - {doc}`/explanation/index` "
 "ugyanahhoz az úthoz, az adózó számára elmesélve."
 
-#: ../../architecture/index.md:359
+#: ../../architecture/index.md:398
 #, python-brace-format
 msgid ""
 "**The glossary** - {doc}`/_generated/glossary` for any term (casilla, "
@@ -775,7 +826,7 @@ msgstr ""
 "(casilla, modelo, fichero-BOE vagy justificante), amelynek a "
 "meghatározását keresi."
 
-#: ../../architecture/index.md:361
+#: ../../architecture/index.md:400
 #, python-brace-format
 msgid ""
 "**Getting it running** - {doc}`/how-to/quickstart` to install and prepare"
@@ -784,10 +835,11 @@ msgstr ""
 "**A működésbe hozás** - {doc}`/how-to/quickstart` a telepítéshez és egy "
 "első benyújtás előkészítéséhez."
 
-#: ../../architecture/index.md:363
+#: ../../architecture/index.md:402
 msgid ""
 "**Contributing** - the project source and issue tracker live on "
 "[GitHub](https://github.com/nevenincs/cadrumo)."
 msgstr ""
 "**Közreműködés** - a projekt forráskódja és hibajegykövetője a "
 "[GitHubon](https://github.com/nevenincs/cadrumo) található."
+

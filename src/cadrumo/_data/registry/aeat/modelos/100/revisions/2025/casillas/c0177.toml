@@ -3,5 +3,7 @@ id = "0177"
 number = "0177"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 semantic_role = "irpf_ed_variacion_existencias_incremento"
+input_kind = "bound"
+binding = "renta-2025-inventory-activity-closing-increase-0177"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
