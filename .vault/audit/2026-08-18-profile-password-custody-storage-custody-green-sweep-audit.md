@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:34c6ddd703de5a5609e8b851918d40e7f6a1af39581e1707b8304fc79850d6cd'
+body_hash: 'sha256:00531aeff3e1cebb505f85b155b17d0c063418146195a41f46d93ca7f9631fd9'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7427,3 +7427,36 @@ HEAD) through the same window that produced 324 phantom failures.
 The cost of learning this was fourteen minutes of compute and no finding. The cost of NOT
 learning it is an iteration spent triaging 324 failures that would evaporate on re-run, and --
 worse -- a report naming a peer's in-flight refactor as a defect.
+
+### The fixture census cannot complete while the team is working
+
+Watchdog iteration: the three domain slices are green (370 / 1644 / 16), and the rotated
+unwatched slice was `dev/quality/tests` -- chosen over the full CLI tree because HEAD moved
+inside a five-minute window, which under the new quiescence rule would void a fourteen-minute
+sweep before it started. HEAD held still across the dev/quality run (`ef5b5bc3db` both sides),
+so that result IS attributable.
+
+Two failures, both nominally known -- but reading the CONTENTS rather than the count changed
+one of them. `test_doc_privacy` is exactly the seven standing offenders, unchanged, still
+awaiting the operator ruling. `test_fixture_census` is NOT the parked manifest drift any more.
+It now refuses with `fixture source universe changed during manifest generation`, naming the
+before/after SHA-256 of two files that moved while it ran (`application/registry/__init__.py`,
+`application/registry/source_connectivity.py`). Re-run in isolation it refused identically, and
+HEAD advanced again between the two attempts.
+
+So the census currently cannot complete at all. Generation takes about 65 seconds of stable
+file universe, and this worktree does not hold still that long: the guard watches WORKING-TREE
+content, and peers edit continuously, far more often than they commit. Its parked drift item is
+not merely unfixed, it is presently unmeasurable.
+
+Worth noting what the census is doing right, because it is the same discipline this document
+adopted for long sweeps one entry earlier, arrived at independently: it hashes its source
+universe before and after, and REFUSES rather than emitting a manifest it cannot attribute. A
+wrong manifest asserted confidently would be worse than a refusal. The design is correct.
+
+The problem is what a correct-but-unsatisfiable gate becomes. `dev/quality/tests` is in the
+per-push dev lane, so this is red for everyone, every push, for a reason that has nothing to do
+with fixtures -- and a gate that can never pass while the team works is precisely how a gate
+stops being read. That is a policy question for its owner (retry with backoff, generate from a
+committed tree snapshot, or scope the watched universe to the fixture roots it actually cares
+about), not a defect to patch from here, and not this campaign's to decide.
