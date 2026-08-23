@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:48e194a8372776b966915d5d45e0036c349aa055b980f052a2f1afb8d27cde3c'
+body_hash: 'sha256:eeac5d05306e74a9343ae0787e368e88d8e833a472d0eeaef22536c3af671f45'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]"
@@ -13,7 +13,7 @@ related:
 
 # `inventory-casilla-grounding` research: `Modelo 100 stock valuation mapping`
 
-Official 2025 evidence supports a three-output inventory source for each economic activity in direct estimation: purchases go to 0181, a positive closing-minus-opening difference goes to income box 0177, and the magnitude of a negative difference goes to expense box 0182. It does not support forwarding the existing signed “Anexo D 0155” helper. The encrypted ledger has the right activity/year grain and can calculate the two variation branches, but its purchase total is not yet a complete tax acquisition-cost fact when indirect tax is non-recoverable. The mapping ADR must therefore settle a corrected acquisition-cost projection, mutually exclusive variation outputs, supported revision window, explicit absence behavior, and override ownership before implementation.
+Official 2025 evidence supports a three-output inventory source for each economic activity in direct estimation: purchases go to 0181, a positive closing-minus-opening difference goes to income box 0177, and the magnitude of a negative difference goes to expense box 0182. It does not support forwarding the existing signed â€œAnexo D 0155â€� helper. The encrypted ledger has the right activity/year grain and can calculate the two variation branches, but its purchase total is not yet a complete tax acquisition-cost fact when indirect tax is non-recoverable. Runtime inspection further shows that a concrete activity identifier cannot live in immutable registry TOML: the registry can own the three operation-to-casilla templates, while encrypted ledger rows must supply the filing instance's activity identities through a repeating carrier. The mapping ADR must therefore also settle runtime activity-row expansion and whether those values use the existing row-indexed binding channel.
 
 ## Findings
 
@@ -47,6 +47,20 @@ The official form distinguishes the three values; it does not establish that abs
 
 Local registry roles repeat from 2020 through 2025, but this research directly verified only the 2025 annual form and manual. Repeated identifiers do not prove legal continuity. The first implementation can target 2025; extension to 2020-2024 requires each annual form/manual or a separately grounded continuity rule.
 
+### A literal inventory selector cannot represent taxpayer-specific activity rows
+
+The current strict selector requires one nonblank `actividad_id`, and the resolver groups bindings by that literal before loading the encrypted ledger at `(actividad_id, 2025)`. `DataBindingDefinition` hydrates the immutable TOML selector directly into its source-family model; neither hydration nor the common selector validator provides runtime interpolation, a wildcard, or a template-substitution phase. No production M100 inventory binding currently supplies an activity identifier; the only concrete examples are synthetic selector tests. Evidence: `src/cadrumo/domain/calculations/registry/_inventory_bindings.py:42-69`, `src/cadrumo/application/aggregation/_inventory.py:118-171`, `src/cadrumo/domain/calculations/registry/_schema.py:656-664`, `src/cadrumo/domain/calculations/registry/_schema.py:716-732`, and `src/cadrumo/domain/calculations/registry/_binding_selector_utils.py:525-550`.
+
+The work unit is keyed by bucket, modelo, filing year, period, and registry revision and carries no economic-activity coordinate. The taxpayer's actual activity identifiers instead occur in the encrypted inventory ledger. A static registry activity ID would therefore fabricate filing-instance data; a wildcard or taxpayer-wide sum would discard the exact activity grain established above. Evidence: `src/cadrumo/domain/modelos/_work_unit.py:7-20`, `src/cadrumo/domain/modelos/_work_unit.py:125-168`, and `src/cadrumo/application/aggregation/_inventory.py:118-171`.
+
+### Existing runtime-row mechanisms preserve registry semantics without static activity IDs
+
+The source mesh already has a first-class row-indexed carrier keyed by `(BindingId, row_index)`, with exclusive merge and serialization behavior, while its ordinary decimal channel is keyed only by `BindingId`. Existing row resolvers enumerate canonical runtime observations and emit one value for each binding and 1-based row index. Evidence: `src/cadrumo/application/aggregation/_source_mesh.py:839-853`, `src/cadrumo/application/aggregation/_source_mesh.py:930-966`, `src/cadrumo/application/aggregation/_source_mesh.py:1168-1171`, and `src/cadrumo/domain/calculations/registry/_detail_record_bindings.py:668-677`. The accepted M720 row-carrier decision rejects synthetic scalar IDs and unrelated detail-row DTO reuse in favor of this structured coordinate: `2026-07-05-modelo-720-row-carrier-adr`.
+
+M303 provides a complementary typed-row precedent: runtime activity rows carry durable `activity_id` values, and projection selects an exact matching immutable calculation activity rather than consuming an undifferentiated scalar. M349 demonstrates immutable row-template semantics and runtime field suppression through the row's active binding set. Evidence: `src/cadrumo/domain/iva/_regimen_simplificado_rows.py:268-303`, `src/cadrumo/domain/calculations/registry/_m303_regimen_simplificado_projection.py:248-266`, `src/cadrumo/domain/prorrata_register/__init__.py:181-198`, `src/cadrumo/application/filing/_record_renderer.py:232-243`, and `src/cadrumo/application/filing/_record_field_renderer.py:157-162`.
+
+The alternatives are a literal binding per activity, a wildcard followed by a taxpayer-wide fold, a new inventory-only carrier, or registry templates expanded into the existing row-indexed channel from encrypted ledger activity rows. Literal bindings cannot know taxpayer activity identities at registry-authoring time; wildcard folding violates the official grain; and a separate carrier duplicates a source-mesh capability already accepted for M720. The evidence favors runtime row expansion through the compatible existing carrier. Scalar formula consumption remains a separate decision because the accepted M720 carrier deliberately limits row values to draft, replay, and export unless a later decision authorizes a row fold.
+
 This research did not adjudicate production-cost composition, write-model changes, earlier annual revisions, estimation-objective activities, or accounting outside Modelo 100 direct estimation.
 
 ## Sources
@@ -61,4 +75,22 @@ This research did not adjudicate production-cost composition, write-model change
 - `src/cadrumo/domain/contribuyente/inventory/__init__.py:322-386`
 - `src/cadrumo/domain/contribuyente/inventory/__init__.py:406-476`
 - `src/cadrumo/application/inventory/_source_readiness.py:1-51`
+- `src/cadrumo/domain/calculations/registry/_inventory_bindings.py:42-69`
+- `src/cadrumo/application/aggregation/_inventory.py:118-171`
+- `src/cadrumo/domain/calculations/registry/_schema.py:656-664`
+- `src/cadrumo/domain/calculations/registry/_schema.py:716-732`
+- `src/cadrumo/domain/calculations/registry/_binding_selector_utils.py:525-550`
+- `src/cadrumo/domain/modelos/_work_unit.py:7-20`
+- `src/cadrumo/domain/modelos/_work_unit.py:125-168`
+- `src/cadrumo/application/aggregation/_source_mesh.py:839-853`
+- `src/cadrumo/application/aggregation/_source_mesh.py:930-966`
+- `src/cadrumo/application/aggregation/_source_mesh.py:1168-1171`
+- `src/cadrumo/domain/calculations/registry/_detail_record_bindings.py:668-677`
+- `src/cadrumo/domain/iva/_regimen_simplificado_rows.py:268-303`
+- `src/cadrumo/domain/calculations/registry/_m303_regimen_simplificado_projection.py:248-266`
+- `src/cadrumo/domain/prorrata_register/__init__.py:181-198`
+- `src/cadrumo/application/filing/_record_renderer.py:232-243`
+- `src/cadrumo/application/filing/_record_field_renderer.py:157-162`
+- `2026-07-05-modelo-720-row-carrier-adr`
 - `2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference`
+

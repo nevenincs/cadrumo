@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:cdacbc938847699de0785f2af0b7ecb1c9a1a48f3fa3fb0a3e3e977a3b8d8669'
+body_hash: 'sha256:173490b0e9776437502356b43cd3a9e0e974c825c48539ac2ae6fafc8602446c'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
 ---
@@ -50,66 +50,77 @@ path only, and in a snapshot outside the capsule. The replacement plants a
 foreign file, leaving the capsule parsing cleanly, so nothing but the digest
 comparison can be what refuses it.
 
-## Recorded unfixed: resume at the post-erase boundary
+## Resolved: resume at the post-erase boundary
 
-Three designs, three refusals, each for a defect the previous had not considered.
+The delete loop destroyed the capsule and only then advanced the phase and
+saved. A crash in that window left a durable record saying the target was being
+deleted while the capsule was already gone, and the loop's only skip was for a
+target already marked deleted -- so a resume re-entered preparation, tried to
+load a profile that no longer existed, and aborted. The reset was then
+unresumable for good: the data erased, the operation unable to reach completion.
 
-**Evidence alone lies.** A delete receipt proves a transaction finished, not that
-no capsule exists now, and republication reuses the identity. Trusting it would
-report a live profile as erased.
+The loop now recognises a target whose erase already landed and advances it,
+rather than re-driving a deletion against nothing. The check reuses the live
+assessment the retention re-derivation already computes, and sits ahead of the
+retention refusal: refusing on retention grounds is meaningless once the bytes
+are gone. All thirteen durable boundaries now roll forward in a fresh process.
 
-**Absence alone does not converge.** Removing the carve-out that holds the target
-existing does not fall through to completion; it raises, two ways, and forcing it
-through would discard the reset's own record that it authorised the deletion.
-That carve-out is also what keeps the target counted honestly.
+Absence alone does not authorise that advance. Absence is also what a capsule
+destroyed by something else looks like, and claiming that as this reset's work
+would be a false report in the one direction that matters. The deletion marker
+written immediately before the erase is what distinguishes them.
 
-**The pause self-cancels.** With the operator ruling that a resurrected capsule
-must pause rather than be erased, the pause rebuilds the target from a fresh
-assessment - dropping the marker and the phase the invariant is predicated on. The
-next confirmed resume sees an ordinary profile, mints a fresh transaction, and
-erases it. The guarantee holds for exactly one resume. Any workable design must
-key the check on the bucket carrying a completed delete receipt rather than on the
-phase, or persist something the rebuild does not drop.
+Establishing that turned up something better than the guard: BOTH dimensions of
+the marker's claim are already refused at the journal boundary, so a marker
+naming another operation or another bucket cannot be persisted or loaded at all.
+The attestation is structurally unforgeable rather than checked at the point of
+use, which is the stronger place for it and means no downstream path has to
+remember. The runtime check remains as defence in depth; its one reachable arm
+is a marker that is absent entirely.
 
-The mechanism itself was pinned afterwards, by an investigation that reproduced
-the failure six times out of six and read the child's own error rather than its
-exit code. The delete loop is not re-entrant across the erase. It destroys the
-capsule, then advances the phase and saves; between those two the durable record
-still says the target is being deleted while the capsule is already gone. The
-loop's only skip is for a target already marked deleted, so a resume re-enters
-preparation, loads a profile that no longer exists, and aborts. The boundary that
-fails is the one whose whole purpose is to prove that window recovers.
+Stated rather than hidden: the completion time recorded is the resume's clock,
+not the erase's. The instant the erase actually happened lives in the custody
+delete receipt, which this operation cannot address because it does not record
+the transaction id it started. That is a bounded imprecision; inventing an
+earlier timestamp would be worse.
 
-That is worth stating in operator terms: a crash or power loss in that window
-leaves the reset permanently unresumable -- the data is erased and the operation
-can never be driven to completion. Any fix must recognise the erase as its own
-before advancing, using the deletion marker already written just before it, and
-must not blanket-swallow the not-found error, which would silently absorb a
-target destroyed by something else.
+### What the three refused designs were worth
 
-Two further facts a future attempt needs. A restored capsule can never be
-fingerprint-identical, because the commit record mints a fresh transaction id and
-publication instant and the inventory covers records by content - verified by
-running a real create and restore and diffing the digests, where that single
-300-byte file was the only delta. Nothing pins that record into the covered set,
-so an exclusion added for a defensible reason would silently reopen the hole. And
-there is no behavioural test anywhere of resuming a deleting target whose capsule
-is still present, so claims that the present-capsule path is already covered are
-close to vacuous.
+The fix is small, and it took three rejected designs to find, each refused for a
+defect the previous had not considered. Trusting the custody receipt alone would
+have reported a live profile as erased, because a receipt proves a transaction
+finished, not that no capsule exists now, and republication reuses the identity.
+Removing the carve-out that keeps a vanished target existing does not converge:
+it raises, and forcing it through would discard the reset's own record that it
+authorised the deletion. And pausing on a resurrected capsule self-cancels,
+because the pause rebuilds the target and destroys the phase the guarantee is
+predicated on.
 
-## Recorded unfixed: the destruction path never releases its file handles
+None of that reasoning is wasted. Each refusal narrowed what a correct fix could
+look like, and the design that survives is the one none of the three proposed:
+recognise the landed erase, key the claim on the marker, and leave the exotic
+resurrection case to the boundary that already refuses it.
 
-The engine module documents that the bucket-destruction path disposes engines to
-release handles before removing a bucket directory. No such caller exists; the
-only disposal happens inside session close. The reset therefore renames a capsule
-whose database the same process may still hold open.
+## Resolved: the destruction path never released its file handles
 
-This is the root cause of five failures in the reset suite, each dying on a
-directory rename. It reads as environmental and is not: it bites hardest where
-the platform refuses the rename, and would stay hidden where the platform allows
-it. Any long-lived process driving a reset carries the same exposure. Fixing it
-introduces a dependency from the custody adapter onto the engine layer on a
-destructive path, which is why it is recorded rather than patched here.
+The engine module documented, in two places, that the bucket-destruction path
+disposes engines to release file handles before removing a bucket directory. No
+such caller existed. The reset therefore renamed a capsule directory while the
+same process still held its database open, which the platform refuses.
+
+Both destruction sites now release first -- the rename and the removal, since a
+handle can be reopened between them. Measured by neutralising the call from
+outside the tree: four failures become one. The guard reads the source rather
+than renaming a capsule, because a rename-succeeds assertion proves nothing on a
+platform that tolerates an open handle, and those are exactly the platforms
+where this stayed hidden.
+
+Fixing it stopped it masking four further defects, each a different thing: a
+removal helper holding its own handle while forging an external actor's removal;
+two cases asserting a pause from persisting a filing, which does not move the
+digest; a child that could not rename because the parent test process held the
+database open; and a case left stale by a re-pointing onto a deletion primitive
+with different semantics, whose expectations were never carried across.
 
 ## The suite cannot be trusted green while the tree is being written
 

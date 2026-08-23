@@ -10,8 +10,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
-
-
 # `source-casilla-integration` audit: `s163 acquisition cost review`
 
 ## Scope

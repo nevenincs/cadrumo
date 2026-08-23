@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:0f0ad0a6dc989f640d4c621df3217f0a47d304715c8712d1bfff28b8106723de'
+body_hash: 'sha256:6853d621782cb42a895100d972af90d70fd3c166a608f8f8e90bb33d5cbe7593'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]"

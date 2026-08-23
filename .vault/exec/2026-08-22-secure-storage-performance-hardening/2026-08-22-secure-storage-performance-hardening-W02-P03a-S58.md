@@ -11,9 +11,6 @@ related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
 ---
 
-
-
-
 # Bind one immutable Git-archive Python cohort to exhaustive installed-runtime CommandSpec identities, locale metadata, policy, schema, selected-path import budgets, and artifact absence, then require downstream smoke, Scoop, Homebrew, MCPB, marketplace, and publish lanes to consume that sealed cohort without rebuilding or regenerating command authority
 
 ## Scope

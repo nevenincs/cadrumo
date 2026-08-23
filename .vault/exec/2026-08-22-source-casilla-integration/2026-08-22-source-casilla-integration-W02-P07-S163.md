@@ -11,9 +11,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
-
-
-
 # define validated complete inventory acquisition-cost facts including attributable costs, non-recoverable IVA, and evidence completeness
 
 ## Scope

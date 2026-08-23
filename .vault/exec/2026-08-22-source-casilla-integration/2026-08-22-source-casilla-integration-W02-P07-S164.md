@@ -11,9 +11,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
-
-
-
 # propagate complete acquisition-cost facts through inventory application and operator ingress
 
 ## Scope

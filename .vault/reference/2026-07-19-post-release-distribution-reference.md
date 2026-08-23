@@ -688,4 +688,3 @@ pinned copy alone; this reconciliation only touches the ungoverned metadata tier
   explicit operator ruling: (1) keep the two registers separate as designed, and
   (2) resolve the README-alpha vs. docs-beta status conflict, which is orthogonal
   to the description text itself but was found in the same sweep.
-

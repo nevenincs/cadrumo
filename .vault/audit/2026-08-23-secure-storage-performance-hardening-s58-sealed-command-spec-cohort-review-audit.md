@@ -11,8 +11,6 @@ related:
   - "[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]"
 ---
 
-
-
 # `secure-storage-performance-hardening` audit: `s58 sealed command spec cohort review`
 
 ## Scope
