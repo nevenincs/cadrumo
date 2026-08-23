@@ -1,0 +1,49 @@
+# Modelo 210 declaración-PDF extraction profile.
+#
+# Every label_pattern below is grounded against the AEAT-published Modelo 210
+# instructions bundled at
+#   src/cadrumo/_data/corpus/aeat_official/instructions/modelo_210/files/
+#     modelo-210-instrucciones.html
+# and NOT against the registry's own casilla labels, which would be a
+# self-reference. AEAT prints each of these as the label followed by its casilla
+# number in parentheses -- "Base imponible (8):", "Gastos deducibles (7):",
+# "Cuota Ley IRNR (24):" -- so each pattern anchors on BOTH, which is what makes
+# it discriminating: "Base imponible" alone appears seven times in the document
+# (the 210 I, R, H and G determinations each have one), and only the parenthesised
+# number distinguishes the liquidación box the registry means.
+#
+# The number printed in each AEAT label agrees with the casilla's own `number`
+# field on this revision, independently confirming the join.
+#
+# Deliberately NOT strict, and deliberately not claiming a round trip: no filed
+# or synthetic Modelo 210 specimen is bundled, so nothing has yet proved these
+# patterns locate their value in a real document. `provisional_pending_specimen`
+# records exactly that, and `confidence = "review_required"` keeps any extraction
+# out of the strict path until a specimen exists. Raising either without adding
+# the specimen would convert an open gap into a verified-looking claim.
+
+[[revisions."2026-y-siguientes".extraction_profiles]]
+id = "modelo-210-2025-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaration_pdf"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = [
+    {casilla_id = "gastos_deducibles", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Gastos\s+deducibles\s*\(\s*7\s*\)'},
+    {casilla_id = "base_imponible", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Base\s+imponible\s*\(\s*8\s*\)'},
+    {casilla_id = "cuota_ley_irnr", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+Ley\s+IRNR\s*\(\s*24\s*\)'},
+]
+confidence = "review_required"
+provisional_pending_specimen = true
+corpus_round_trip_verified = false
+min_coverage = "1.0"
+failure_semantics = "fail_hard"
+legal_refs = [
+    "orden-eha-3316-2010:art-1",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+]
+source_refs = [
+    "aeat-modelo-210-procedure",
+    "aeat-dr-210-2026",
+]

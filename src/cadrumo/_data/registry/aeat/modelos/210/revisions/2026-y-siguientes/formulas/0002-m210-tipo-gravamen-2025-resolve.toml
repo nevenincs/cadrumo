@@ -1,0 +1,43 @@
+# M210 IRNR tipo-de-gravamen resolution formula.
+#
+# Dispatches through the modelo-neutral `irnr_resolve_tipo_gravamen` formula op:
+# - args[0]: text casilla `tipo_renta` (operator-supplied enum)
+# - args[1]: computed `base_imponible`
+# - args[2]: baseline TRLIRNR rate table `m210-tipo-gravamen-2025`
+# - args[3]: TRLIRNR Art 25.1.b pension tariff table
+# - args[4]: profile-bound `country_of_fiscal_residence`
+#
+# The Convenio doble imposicion treaty overrides are no longer a modelo-local
+# parameter: the op consults the cross-cutting `registry/aeat/treaties/` tree
+# projected onto the snapshot as the `ConvenioAuthority`, and branches on the
+# typed override kind (flat / ceiling / allocation_domestic_tariff / exempt).
+#
+# Returns the resolved Decimal rate, or one of the M210 rate-
+# sentinel constants when a deterministic rate cannot be produced
+# (deferred baseline or missing treaty override row).
+# For `tipo_renta="pension"` the returned Decimal is the effective
+# rate for the progressive Art 25.1.b tariff, so the downstream
+# `base_imponible * tipo_gravamen` formula lands on the statutory quota.
+# The application-layer verification sweep rewrites the sentinels
+# into BLOCKING findings post-engine.
+
+[[revisions."2026-y-siguientes".formulas]]
+id = "m210-tipo-gravamen-2025-resolve"
+target_casilla_id = "tipo_gravamen"
+expression = { op = "irnr_resolve_tipo_gravamen", args = [
+    { casilla_id = "tipo_renta" },
+    { casilla_id = "base_imponible" },
+    { parameter = "m210-tipo-gravamen-2025" },
+    { parameter = "m210-pension-tarifa-2025" },
+    { binding = "m210-2025-profile-country-of-fiscal-residence" },
+] }
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["tipo de gravamen", "no residentes"]

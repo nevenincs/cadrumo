@@ -1,0 +1,22 @@
+# M210 IRNR cuota Ley IRNR (official casilla [24]).
+#
+# Official diseño-de-registro rule (record T21001, field 110):
+#   [24] Cuota Ley IRNR = [22] - [23]
+# i.e. the cuota íntegra ([22]) minus the deducción por donativos ([23]).
+# Grounded in TRLIRNR Art 24. When no donativos are declared, [23]=0 and
+# [24] collapses to [22].
+
+[[revisions."2026-y-siguientes".formulas]]
+id = "m210-cuota-ley-irnr-2025"
+target_casilla_id = "cuota_ley_irnr"
+expression = { op = "subtract", args = [
+    { casilla_id = "cuota_integra" },
+    { casilla_id = "deduccion_donativos" },
+] }
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["cuota", "donativos"]

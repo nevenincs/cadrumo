@@ -1,0 +1,251 @@
+# M210 IRNR official tipo-de-renta code enrolment ledger.
+#
+# The official Modelo 210 form asks the operator for a two-digit
+# "Tipo de renta" code (Orden EHA/3316/2010, "HOJA INFORMATIVA 210 -
+# TIPOS DE RENTA"). This parameter declares the set of official codes the
+# 2025 revision currently accepts, so the codes carry the canonical registry
+# legal-grounding gate (legal_refs -> corpus). It is a presence ledger, not a
+# rate table: the `value` column is a sentinel (1) marking the code as
+# declared, and the RATE lives in `m210-tipo-gravamen-2025` keyed by the
+# conceptual `tipo_renta` the code projects to.
+#
+# KNOWN ITEM (cleanliness, not correctness): the sentinel presence-value abuses
+# the keyed_bracket_table (rate-table) shape with non-rate data. It is contained
+# and documented; if code-review pushes on the type-shape, the clean resolution
+# is a categorical / string-valued parameter type (representation C), and the
+# grounding stays exactly here — registry-resident.
+#
+# The code -> `TipoRentaIrnr` projection lives in `aeat.core._irnr`
+# (`OFFICIAL_M210_TIPO_RENTA_CODES`); the registry-build parity gate
+# (`validate_m210_tipo_renta_code_projection_parity`) refuses at build time if
+# this declared code set and that core projection diverge in either direction
+# (a declared code with no projection, or a projected code not declared here).
+#
+# Only the RATE-CONCEPT-grounded codes are declared. The bundled TRLIRNR corpus
+# is a partial extract carrying Art. 25 letters a) general 24%, b) pensiones,
+# and f) 19% dividendos/intereses/ganancias only; the special-rate letters
+# c/d/e/g/h are absent. The cánones codes 08/09/10/11/12/32 ARE enrolled: cánones
+# has no specific letter in the consolidated Art. 25.1, so it is the general
+# rendimiento rate under Art. 25.1.a (24%) — bundle-grounded, no fabrication. The
+# codes whose rate is still not bundle-verifiable are NOT enrolled yet: asistencia
+# técnica 13 (cánones-ADJACENT in the HOJA INFORMATIVA, a possible un-bundled
+# special letter, NOT cánones proper), reaseguros 19 (Art. 25.1.e 1.5%),
+# navegación 20 (Art. 25.1.d 4%), imposición complementaria 27 (Art. 19.2), and
+# premios de loterías 31 (D.A. 5ª gravamen especial). They enrol code-by-code
+# once the full consolidated Art. 25 is fetched. Force-mapping any to a rate
+# would fabricate it.
+
+[[revisions."2026-y-siguientes".parameters]]
+id = "m210-tipo-renta-code-2025"
+data_type = "keyed_bracket_table"
+unit = "code"
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = [
+    "aeat-modelo-210-procedure",
+    "boe-modelo-210-base-order",
+]
+
+# The code table lives in the AEAT instructions HOJA INFORMATIVA (an
+# official_source_guidance source, the only tier a source_citation admits);
+# the establishing Orden EHA/3316/2010 (boe-modelo-210-base-order,
+# layout_authority tier) stays a source_ref reference above without a citation.
+[[revisions."2026-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["HOJA INFORMATIVA 210", "TIPOS DE RENTA"]
+
+# Rendimientos de inmuebles arrendados o subarrendados (general 24%, Art 25.1.a).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "01"
+value = "1"
+valid_from = 2025-01-01
+
+# Rentas imputadas de inmuebles urbanos (inmobiliaria, Art 13.1.h + Art 24.5).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "02"
+value = "1"
+valid_from = 2025-01-01
+
+# Rentas de actividades empresariales sin EP (general 24%, Art 25.1.a).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "03"
+value = "1"
+valid_from = 2025-01-01
+
+# Dividendos y participación en fondos propios (dividend 19%, Art 25.1.f.1º).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "04"
+value = "1"
+valid_from = 2025-01-01
+
+# Intereses y otros rendimientos (interest 19%, Art 25.1.f.2º).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "05"
+value = "1"
+valid_from = 2025-01-01
+
+# Intereses exentos (interest concept, Art 25.1.f.2º; exención Art 14).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "06"
+value = "1"
+valid_from = 2025-01-01
+
+# Intereses bonificados (interest concept, Art 25.1.f.2º).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "07"
+value = "1"
+valid_from = 2025-01-01
+
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "08"
+value = "1"
+valid_from = 2025-01-01
+
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "09"
+value = "1"
+valid_from = 2025-01-01
+
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "10"
+value = "1"
+valid_from = 2025-01-01
+
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "11"
+value = "1"
+valid_from = 2025-01-01
+
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "12"
+value = "1"
+valid_from = 2025-01-01
+
+# Rentas de actividades artísticas (general 24%, Art 25.1.a).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "14"
+value = "1"
+valid_from = 2025-01-01
+
+# Rentas de actividades deportivas (general 24%, Art 25.1.a).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "15"
+value = "1"
+valid_from = 2025-01-01
+
+# Rentas de actividades profesionales (general 24%, Art 25.1.a).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "16"
+value = "1"
+valid_from = 2025-01-01
+
+# Rentas del trabajo (general 24%, Art 25.1.a).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "17"
+value = "1"
+valid_from = 2025-01-01
+
+# Pensiones y haberes pasivos (pension tariff, Art 25.1.b).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "18"
+value = "1"
+valid_from = 2025-01-01
+
+# Servicios de apoyo a la gestión (general 24%, Art 25.1.a).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "21"
+value = "1"
+valid_from = 2025-01-01
+
+# Otras rentas (general 24%, Art 25.1.a).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "22"
+value = "1"
+valid_from = 2025-01-01
+
+# Ganancias de acciones admitidas a negociación (ganancia 19%, Art 25.1.f.3º).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "24"
+value = "1"
+valid_from = 2025-01-01
+
+# Ganancias de IIC / fondos (ganancia 19%, Art 25.1.f.3º).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "25"
+value = "1"
+valid_from = 2025-01-01
+
+# Otras ganancias (ganancia 19%, Art 25.1.f.3º).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "26"
+value = "1"
+valid_from = 2025-01-01
+
+# Ganancias de transmisiones de bienes inmuebles (ganancia 19%, Art 25.1.f.3º).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "28"
+value = "1"
+valid_from = 2025-01-01
+
+# Dividendos exentos, fondos de pensiones (dividend concept, Art 25.1.f.1º; exención Art 14.1.k).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "29"
+value = "1"
+valid_from = 2025-01-01
+
+# Dividendos exentos, IIC Directiva 2009/65/CE (dividend concept, Art 25.1.f.1º; exención Art 14.1.l).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "30"
+value = "1"
+valid_from = 2025-01-01
+
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "32"
+value = "1"
+valid_from = 2025-01-01
+
+# Ganancias de vivienda habitual exenta por reinversión anticipada (ganancia 19%, Art 25.1.f.3º).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "33"
+value = "1"
+valid_from = 2025-01-01
+
+# Ganancias de vivienda habitual exenta por reinversión posterior (ganancia 19%, Art 25.1.f.3º).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "34"
+value = "1"
+valid_from = 2025-01-01
+
+# Rendimientos de inmuebles arrendados agrupados de varios pagadores (general 24%, Art 25.1.a).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "35"
+value = "1"
+valid_from = 2025-01-01
+
+# Ganancias de transmisión de derechos de suscripción (ganancia 19%, Art 25.1.f.3º).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "36"
+value = "1"
+valid_from = 2025-01-01
+
+# Intereses exentos, fondos de pensiones / IIC (interest concept, Art 25.1.f.2º; exención Art 14.1.c).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "37"
+value = "1"
+valid_from = 2025-01-01
+
+# Ganancias de bienes muebles exentas, fondos de pensiones / IIC (ganancia 19%, Art 25.1.f.3º; exención Art 14.1.c).
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "38"
+value = "1"
+valid_from = 2025-01-01

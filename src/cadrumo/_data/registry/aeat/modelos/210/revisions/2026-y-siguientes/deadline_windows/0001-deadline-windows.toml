@@ -1,0 +1,102 @@
+# Modelo 210 trimestral a-ingresar deadline windows, grounded in Orden
+# EHA/3316/2010 art 5 (plazo de presentación del modelo 210) as consolidated in
+# vigor 24/06/2026 — modified by Orden HAC/56/2024 art 4.2 (BOE-A-2024-1772) and
+# Orden HAC/623/2026 art 1.2 (BOE-A-2026-13573). Art 5.c.1º, resto de rentas con
+# resultado a ingresar (general): "el plazo de presentación e ingreso será los
+# veinte primeros días naturales de los meses de abril, julio, octubre y enero, en
+# relación con las rentas cuya fecha de devengo esté comprendida en el trimestre
+# natural anterior." Each window opens on the 1st and closes on the 20th natural
+# day of the month following the natural quarter of devengo (period token = the
+# devengo quarter), so 4T closes on the 20 January of the following calendar year.
+#
+# SCOPE: only the GENERAL a-ingresar trimestral plazo is a clean (modelo, period)
+# window. The resultado/tipo-dependent annual plazos of art 5 — arrendamiento
+# a-ingresar (20 primeros días de ABRIL del año siguiente), cuota cero (1-20 enero),
+# a devolver (desde el 1 de febrero, cuatro años), transmisiones de inmuebles
+# (art 14.4 Reglamento) and rentas imputadas tipo 02 (presentación todo el año
+# natural siguiente, 1 enero-31 diciembre; la domiciliación es 1 abril-23 diciembre) — depend
+# on a computed RESULTADO and on the TIPO de renta, which a single period token
+# cannot express; they are not yet modelled here. These windows are calendar-declared
+# registry authority and resolve through `resolve_filing_closes_on`; operator M210
+# work-unit creation for these periods (period_selector) is not yet modelled, alongside
+# the agrupación grouped-rentas detail model.
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-210-2025-1t"
+filing_year = 2025
+period = "2025 1T"
+period_kind = "quarterly"
+opens_on = 2025-04-01
+closes_on = 2025-04-20
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2026-deadline-update"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-210-2025-2t"
+filing_year = 2025
+period = "2025 2T"
+period_kind = "quarterly"
+opens_on = 2025-07-01
+closes_on = 2025-07-20
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2026-deadline-update"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-210-2025-3t"
+filing_year = 2025
+period = "2025 3T"
+period_kind = "quarterly"
+opens_on = 2025-10-01
+closes_on = 2025-10-20
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2026-deadline-update"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-210-2025-4t"
+filing_year = 2025
+period = "2025 4T"
+period_kind = "quarterly"
+opens_on = 2026-01-01
+closes_on = 2026-01-20
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2026-deadline-update"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-210-2026-1t"
+filing_year = 2026
+period = "2026 1T"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-20
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2026-deadline-update"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-210-2026-2t"
+filing_year = 2026
+period = "2026 2T"
+period_kind = "quarterly"
+opens_on = 2026-07-01
+closes_on = 2026-07-20
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2026-deadline-update"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-210-2026-3t"
+filing_year = 2026
+period = "2026 3T"
+period_kind = "quarterly"
+opens_on = 2026-10-01
+closes_on = 2026-10-20
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2026-deadline-update"]
+
+[[revisions."2026-y-siguientes".deadline_windows]]
+id = "modelo-210-2026-4t"
+filing_year = 2026
+period = "2026 4T"
+period_kind = "quarterly"
+opens_on = 2027-01-01
+closes_on = 2027-01-20
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2026-deadline-update"]

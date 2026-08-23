@@ -1,0 +1,29 @@
+# Modelo 210 workbook-parity declaration.
+#
+# This revision declares a single static_layout parity ref pointing at the
+# BOE form specifications. A record-design parity ref must be declared
+# separately when the canonical diseño-de-registro source is registered
+# alongside the complete casilla schema.
+#
+# runner_required = false because there is no XLSX fixture to run
+# against yet.
+
+[[revisions."2026-y-siguientes".workbook_parity_refs]]
+id = "modelo-210-procedure-2025"
+workbook_source = "boe-modelo-210-2024-form-layout"
+fixture_id = "modelo-210-2025-procedure-skeleton"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2024-form-layout"]
+
+[[revisions."2026-y-siguientes".workbook_parity_refs]]
+id = "modelo-210-procedure-2026"
+workbook_source = "boe-modelo-210-2026-form-layout"
+fixture_id = "modelo-210-2026-procedure-skeleton"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["boe-modelo-210-2026-form-layout"]

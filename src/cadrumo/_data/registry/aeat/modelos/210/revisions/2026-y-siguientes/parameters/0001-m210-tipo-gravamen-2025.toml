@@ -1,0 +1,113 @@
+# M210 IRNR baseline tipo-de-gravamen table.
+#
+# Keyed-bracket-table parameter mapping each declarable tipo_renta to
+# its TRLIRNR baseline rate. The lookup is exact-match on tipo_renta;
+# there is no notion of numeric-interval overlap because the domain is
+# an enum of regulatory categories, not an income amount.
+#
+# Current rows:
+# - general                 → 24% (TRLIRNR Art 25.1.a baseline)
+# - ue_residente            → 19% (TRLIRNR Art 25.1.a UE/EEE)
+# - ganancia_patrimonial    → 19% (TRLIRNR Art 25.1.f, savings-base rate)
+# - inmobiliaria            → 24% (TRLIRNR Art 25.1.a; Art 24.5 reaches
+#                                  the imputed-real-estate base mechanics)
+# - interest                → 19% (TRLIRNR Art 25.1.f.2º: "intereses y otros
+#                                  rendimientos obtenidos por la cesión a
+#                                  terceros de capitales propios" tributan al
+#                                  19% para TODO no residente sin EP, SIN
+#                                  condición de residencia UE/EEE — la letra f)
+#                                  fija el 19% por tipo de renta, igual que
+#                                  ganancia_patrimonial (25.1.f.3º). El previo
+#                                  24% "fallback no-UE" era incorrecto: confundía
+#                                  la reducción UE/EEE del tipo general (25.1.a)
+#                                  con el 25.1.f incondicional. Verified vs BOE
+#                                  RDLeg 5/2004 art.25.1.f + AEAT manual no
+#                                  residentes (2026-06-14 grounding pass).)
+# - dividend                → 19% (TRLIRNR Art 25.1.f.1º: "Dividendos y otros
+#                                  rendimientos derivados de la participación
+#                                  en los fondos propios de una entidad"
+#                                  tributan al 19% para TODO no residente sin
+#                                  EP, SIN condición de residencia UE/EEE —
+#                                  la misma letra f) incondicional que rige
+#                                  interest (25.1.f.2º) y ganancia_patrimonial
+#                                  (25.1.f.3º). Verified vs BOE RDLeg 5/2004
+#                                  art.25.1.f (2026-07-04 grounding pass,
+#                                  closing the missing 25.1.f.1º category).)
+# - canones                 → 24% (TRLIRNR Art 25.1.a: los cánones (royalties)
+#                                  no tienen letra específica en el art 25.1
+#                                  consolidado, por lo que tributan al tipo
+#                                  general de rendimientos, el 24% "con carácter
+#                                  general". La reducción al 19% para residentes
+#                                  UE/EEE del art 25.1.a se alcanza por el
+#                                  concepto `ue_residente`; los convenios de
+#                                  doble imposición (art 12 del CDI) rebajan o
+#                                  eximen habitualmente el tipo en fuente muy por
+#                                  debajo de ambos, y el ceiling min(doméstico,
+#                                  convenio) computa el resultado más favorable.)
+#
+# Pension is intentionally absent from this flat-rate table because
+# TRLIRNR Art 25.1.b is a progressive bracket tariff. The live branch
+# is represented by parameter `m210-pension-tarifa-2025`, and
+# `m210_resolve_rate` derives an effective rate from that table when
+# tipo_renta is `pension`. Other future tipos with no row still surface
+# as deferred/missing coverage through the lookup helper.
+#
+# `m210-convenio-rates` replaces this baseline when the profile declares a
+# treaty country with a matching row for the filed tipo_renta.
+
+[[revisions."2026-y-siguientes".parameters]]
+id = "m210-tipo-gravamen-2025"
+data_type = "keyed_bracket_table"
+unit = "percent"
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["tipo de gravamen", "no residentes"]
+
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "general"
+value = "0.24"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "ue_residente"
+value = "0.19"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "ganancia_patrimonial"
+value = "0.19"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "inmobiliaria"
+value = "0.24"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "interest"
+value = "0.19"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "dividend"
+value = "0.19"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "canones"
+value = "0.24"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25.1.a general rate (cánones has no specific letter in
+# the consolidated Art 25.1; the UE/EEE 19% reduction is the `ue_residente` concept).

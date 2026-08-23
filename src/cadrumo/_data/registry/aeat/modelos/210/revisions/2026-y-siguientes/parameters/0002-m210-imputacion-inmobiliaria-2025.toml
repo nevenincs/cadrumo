@@ -1,0 +1,55 @@
+# M210 IRNR imputed-real-estate coefficients.
+#
+# TRLIRNR Art. 13.1.h treats imputed real-estate income from Spanish
+# urban property as Spanish-source IRNR income. Art. 24.5 routes the
+# taxable base to the IRPF imputation rule. Current LIRPF Art. 85
+# provides the 1.1% / 2% coefficients and the no-cadastral-value
+# 50% substitute-base rule.
+
+[[revisions."2026-y-siguientes".parameters]]
+id = "m210-imputacion-rate-recent-revision-2025"
+data_type = "ratio"
+unit = "fraction"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+source_refs = ["aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2026-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-irnr-renta-imputada-inmueble-urbano"
+required_text = ["1,1%", "diez per&iacute;odos impositivos anteriores", "valor catastral"]
+
+[[revisions."2026-y-siguientes".parameters.values]]
+value = "0.011"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions."2026-y-siguientes".parameters]]
+id = "m210-imputacion-rate-old-or-no-revision-2025"
+data_type = "ratio"
+unit = "fraction"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+source_refs = ["aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2026-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-irnr-renta-imputada-inmueble-urbano"
+required_text = ["Restantes inmuebles: 2%", "valor catastral"]
+
+[[revisions."2026-y-siguientes".parameters.values]]
+value = "0.02"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions."2026-y-siguientes".parameters]]
+id = "m210-imputacion-no-catastral-base-fraction-2025"
+data_type = "ratio"
+unit = "fraction"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+source_refs = ["aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2026-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-irnr-renta-imputada-inmueble-urbano"
+required_text = ["50% del mayor", "valor de adquisici&oacute;n", "1,1%"]
+
+[[revisions."2026-y-siguientes".parameters.values]]
+value = "0.50"
+date_axis = "filing_period"
+valid_from = 2025-01-01

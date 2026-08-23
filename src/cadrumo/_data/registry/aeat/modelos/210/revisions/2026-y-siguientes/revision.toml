@@ -1,4 +1,4 @@
-[revisions."2025"]
+[revisions."2026-y-siguientes"]
 # Prepared and reviewed by an agent against the bundled diseno de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
@@ -18,14 +18,13 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
-id = "2025"
+id = "2026-y-siguientes"
 # valid_to is open: the TRLIRNR Art 24-25 tipo-de-gravamen schedule (24% general,
 # 19% ue_residente / ganancia_patrimonial / interest, plus the Art. 25.1.b
 # pension tariff) has no annual coefficient table. A separate revision is
 # authored only when a genuine statutory or form-structure change takes effect.
-valid_from = 2025-01-01
-valid_to = 2025-12-31
-period_selector = { year_from = 2025, year_to = 2025, periods = ["EVENT-N", "0A"] }
+valid_from = 2026-01-01
+period_selector = { year_from = 2026, periods = ["EVENT-N", "0A"] }
 orden_aplicabilidad = ["orden-eha-3316-2010:art-1"]
 legal_refs = [
     "orden-eha-3316-2010:art-1",
@@ -48,40 +47,40 @@ source_refs = [
     # and is open-ended, so it spans the boundary between them: AEAT governs
     # devengos up to 2025-12-31 with the first and "a partir del 01-01-2026"
     # with the second. Neither was cited.
-    "aeat-dr-210-2022",
+    "aeat-dr-210-2026",
 ]
 
 
-[revisions."2025".family_dispositions.live_cross_references]
+[revisions."2026-y-siguientes".family_dispositions.live_cross_references]
 reason = """
 A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for Modelo 210: no adapter under adapters/outbound/aeat references this modelo, and the application never performs live AEAT submission in any case, so there is no host to allow, no method to \
 bound and no guard policy to declare. Should a Modelo 210 consulta reader ever be built, this disposition must be replaced by the real declaration rather than widened -- the family is empty because the capability is absent, and it will stop being empty the moment the capability exists."""
 legal_refs = ["orden-eha-3316-2010:art-1"]
 source_refs = ["aeat-modelo-210-procedure"]
 
-[revisions."2025".family_dispositions.dependency_classifications]
+[revisions."2026-y-siguientes".family_dispositions.dependency_classifications]
 reason = """
 A dependency classification declares that this modelo's calculation depends on ANOTHER modelo the taxpayer files in an earlier or enclosing period, so the clean-state gate knows whether that source is present, suppressed or missing. Modelo 210 declares no such source. Its base and cuota are self-contained per renta (TRLIRNR arts. 24 and 25), and the one value arriving from outside -- casilla 29 retenciones e ingresos a cuenta -- is withholding SUFFERED by the non-resident and evidenced by the \
 payer's certificate. The payer, not this taxpayer, files the corresponding Modelo 216, so it is not a source in this taxpayer's own filing chain and there is no cross-period dependency for the gate to reason about. Verified against the revision itself: no casilla, construct or verification expectation references another modelo. Consistent with the relations disposition on this same revision, which records the same absence from the fold-in side."""
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "orden-eha-3316-2010:art-1"]
-source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
 
-[revisions."2025".family_dispositions.projection_endpoints]
+[revisions."2026-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
-A projection endpoint declares a typed coordinate inside a REPEATED row, so the family is empty only where the official design declares no repetition. Measured, not assumed, against the hash-pinned design aeat-dr-210-2022: both records are fixed (Pagina 01 at 2700 declared positions, Pagina 02 at 1400), neither declares a variable envelope or an auxiliary envelope header, neither carries a repeat axis, and the reviewed semantic map binds all 167 anchors as 10 literal, 18 filler, 108 header, 2 \
+A projection endpoint declares a typed coordinate inside a REPEATED row, so the family is empty only where the official design declares no repetition. Measured, not assumed, against the hash-pinned design aeat-dr-210-2026: both records are fixed (Pagina 01 at 2700 declared positions, Pagina 02 at 1400), neither declares a variable envelope or an auxiliary envelope header, neither carries a repeat axis, and the reviewed semantic map binds all 167 anchors as 10 literal, 18 filler, 108 header, 2 \
 draft and 29 casilla entries with zero projection entries. Modelo 210 declares one renta per autoliquidacion -- a taxpayer with several rentas files several 210s, and AEAT provides the agrupacion mechanism rather than repeated rows on one record -- so there is no repeated row for an endpoint to address."""
 legal_refs = ["orden-eha-3316-2010:art-1", "orden-eha-3316-2010:art-2"]
-source_refs = ["aeat-dr-210-2022", "aeat-modelo-210-procedure"]
+source_refs = ["aeat-dr-210-2026", "aeat-modelo-210-procedure"]
 
-[revisions."2025".family_dispositions.relations]
+[revisions."2026-y-siguientes".family_dispositions.relations]
 reason = """
 A relation is the canonical mechanism for a cross-MODELO fold-in: a value another modelo's calculation produces and this one consumes. Modelo 210 has none. Its base imponible is determined per renta from that renta's own gross amount, deductible gastos and, for ganancias, its own transmision and adquisicion values (TRLIRNR art. 24), and its cuota from the art. 25 tipo schedule. The two values that arrive from outside are not cross-modelo folds: casilla 29 retenciones/ingresos a cuenta is the \
 withholding the taxpayer suffered, evidenced by the payer's certificate and entered as operator input rather than read from a modelo this application files, and casilla 30 ingreso/devolucion anterior is a SAME-modelo prior-filing carry used only on an autoliquidacion complementaria, which the aggregation taxonomy assigns to a previous_filing binding and explicitly not to a relation. The revision declares zero relations and its only bindings resolve profile and ledger sources, never another \
 modelo."""
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "orden-eha-3316-2010:art-1"]
-source_refs = ["aeat-dr-210-2022", "aeat-modelo-210-procedure"]
+source_refs = ["aeat-dr-210-2026", "aeat-modelo-210-procedure"]
 
-[revisions."2025".family_dispositions.casilla_continuidad_evolutions]
+[revisions."2026-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
 CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2025' of modelo 210 has no strictly-earlier sibling revision of this modelo (valid_from 2025-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the \
 casilla_continuidad_evolutions family is empty by construction, not by omission."""

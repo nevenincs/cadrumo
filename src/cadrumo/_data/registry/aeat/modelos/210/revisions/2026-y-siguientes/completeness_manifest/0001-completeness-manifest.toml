@@ -1,0 +1,121 @@
+# Modelo 210 (IRNR) calculation-completeness manifest.
+#
+# Enumerates the casillas in this revision's calculation closure --
+# the casilla set the cross-connecting calculation engine traverses:
+# every formula target, every casilla referenced inside a formula
+# expression, every formula/binding endpoint casilla, and every
+# verification-expectation operand. Cross-modelo binding source
+# casillas belong to foreign modelos and are excluded.
+#
+# Derived off-load-path from the modelo's calculation surface, keyed
+# on each closure casilla's canonical casilla_id plus reviewed segment/number metadata.
+# A casilla the revision declares but the manifest does not list (a
+# pure data-entry field that feeds no calculation) is not a gate
+# failure. The off-load-path drift re-verification test re-derives
+# this set from the registry calculation surface.
+#
+# The diseño-de-registro pass added the official liquidación chain
+# [17]/[24]/[27]/[28] (computed) plus their operand boxes [12],[16],[23],[26],[30]
+# to the closure; the pure-input official boxes ([4],[6],[9],[10],[11],[13],[14],
+# [15],[18],[19],[20],[25]) feed no formula and are intentionally absent here.
+
+[revisions."2026-y-siguientes".completeness_manifest]
+source_ref = "aeat-modelo-210-procedure"
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1",
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+    "ley-35-2006:art-85",
+]
+source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "base_imponible"
+number = "8"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "base_imponible_ganancias_h"
+number = "17"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "coeficiente_imputacion_inmobiliaria"
+number = "coeficiente_imputacion_inmobiliaria"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "cuota_diferencial"
+number = "31"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "cuota_integra"
+number = "22"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "cuota_integra_reducida"
+number = "28"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "cuota_ley_irnr"
+number = "24"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "deduccion_donativos"
+number = "23"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "dias_imputacion"
+number = "dias_imputacion"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "ganancia_importe"
+number = "12"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "gastos_deducibles"
+number = "7"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "ingreso_devolucion_anterior"
+number = "30"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "limite_convenio"
+number = "26"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "mejora_ganancia"
+number = "16"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "reduccion_convenio"
+number = "27"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "rendimientos_integros"
+number = "5"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "retencion_practicada"
+number = "29"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "tipo_gravamen"
+number = "21"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "tipo_renta"
+number = "tipo_renta"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "valor_adquisicion"
+number = "valor_adquisicion"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "valor_catastral"
+number = "valor_catastral"
+
+[[revisions."2026-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "valor_comprobado_administracion"
+number = "valor_comprobado_administracion"

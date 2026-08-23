@@ -1,0 +1,524 @@
+[[revisions.2026-y-siguientes.export_layouts]]
+id = 'generated-modelo-210-2026-y-siguientes-fichero'
+
+[[revisions.2026-y-siguientes.export_layouts.records]]
+id = 'm210-autoliquidacion'
+record_type = 'autoliquidacion'
+order = 0
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f093'
+offset = 1536
+length = 17
+kind = 'casilla'
+casilla_id = 'ganancia_valor_adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f094'
+offset = 1553
+length = 17
+kind = 'casilla'
+casilla_id = 'ganancia_diferencia'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f095'
+offset = 1570
+length = 17
+kind = 'casilla'
+casilla_id = 'ganancia_importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f096'
+offset = 1587
+length = 17
+kind = 'casilla'
+casilla_id = 'mejora_valor_transmision'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f097'
+offset = 1604
+length = 17
+kind = 'casilla'
+casilla_id = 'mejora_valor_adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f098'
+offset = 1621
+length = 17
+kind = 'casilla'
+casilla_id = 'mejora_diferencia'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f099'
+offset = 1638
+length = 17
+kind = 'casilla'
+casilla_id = 'mejora_ganancia'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f100'
+offset = 1655
+length = 17
+kind = 'casilla'
+casilla_id = 'base_imponible_ganancias_h'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f101'
+offset = 1672
+length = 8
+kind = 'header'
+producer_key = 'irnr.ganancia_inmobiliaria.fecha_adquisicion'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'ddmmaaaa'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f102'
+offset = 1680
+length = 8
+kind = 'header'
+producer_key = 'irnr.ganancia_inmobiliaria.fecha_mejora'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'ddmmaaaa'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f103'
+offset = 1688
+length = 13
+kind = 'header'
+producer_key = 'irnr.ganancia_inmobiliaria.justificante_modelo_211'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f104'
+offset = 1701
+length = 17
+kind = 'casilla'
+casilla_id = 'base_imponible_directa_g'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f105'
+offset = 1718
+length = 1
+kind = 'casilla'
+casilla_id = 'exenciones_ley_irnr_indicador'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f106'
+offset = 1719
+length = 1
+kind = 'casilla'
+casilla_id = 'convenio_indicador'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f107'
+offset = 1720
+length = 5
+kind = 'casilla'
+casilla_id = 'tipo_gravamen'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f108'
+offset = 1725
+length = 17
+kind = 'casilla'
+casilla_id = 'cuota_integra'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f109'
+offset = 1742
+length = 17
+kind = 'casilla'
+casilla_id = 'deduccion_donativos'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f110'
+offset = 1759
+length = 17
+kind = 'casilla'
+casilla_id = 'cuota_ley_irnr'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f111'
+offset = 1776
+length = 5
+kind = 'casilla'
+casilla_id = 'porcentaje_convenio'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f112'
+offset = 1781
+length = 17
+kind = 'casilla'
+casilla_id = 'limite_convenio'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f113'
+offset = 1798
+length = 17
+kind = 'casilla'
+casilla_id = 'reduccion_convenio'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f114'
+offset = 1815
+length = 17
+kind = 'casilla'
+casilla_id = 'cuota_integra_reducida'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f115'
+offset = 1832
+length = 17
+kind = 'casilla'
+casilla_id = 'retencion_practicada'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f116'
+offset = 1849
+length = 17
+kind = 'casilla'
+casilla_id = 'ingreso_devolucion_anterior'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f117'
+offset = 1866
+length = 17
+kind = 'casilla'
+casilla_id = 'cuota_diferencial'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f118'
+offset = 1883
+length = 1
+kind = 'header'
+producer_key = 'amendment_evidence.is_complementaria'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f119'
+offset = 1884
+length = 13
+kind = 'header'
+producer_key = 'amendment_evidence.original_aeat_receipt'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f120'
+offset = 1897
+length = 100
+kind = 'header'
+producer_key = 'contact_person.full_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f121'
+offset = 1997
+length = 15
+kind = 'header'
+producer_key = 'contact_person.phone'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f122'
+offset = 2012
+length = 15
+kind = 'header'
+producer_key = 'contact_person.secondary_phone'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f123'
+offset = 2027
+length = 100
+kind = 'header'
+producer_key = 'contact_person.email'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f124'
+offset = 2127
+length = 13
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f125'
+offset = 2140
+length = 20
+kind = 'header'
+producer_key = 'irnr.contribuyente.foreign_tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f126'
+offset = 2160
+length = 1832
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm210-2026.pagina01.f127'
+offset = 3992
+length = 9
+kind = 'literal'
+literal = '</T21001>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.row_field_casilla_ids]
