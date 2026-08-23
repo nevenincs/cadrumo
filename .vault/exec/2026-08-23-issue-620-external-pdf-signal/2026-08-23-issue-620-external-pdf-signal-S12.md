@@ -5,14 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:9e15b4e0c0e49d06ff2402e70765e02e01ce9b827d6a7d00e78bcd82611621cb'
+body_hash: 'sha256:cce2787df42f90083668750cf90dd278ea0a0339f9517d500c7342b41eb9353f'
 step_id: 'S12'
 related:
   - "[[2026-08-23-issue-620-external-pdf-signal-plan]]"
 ---
-
-
-
 
 # Adjudicate all ten candidates against pinned official bases and registry applicability
 

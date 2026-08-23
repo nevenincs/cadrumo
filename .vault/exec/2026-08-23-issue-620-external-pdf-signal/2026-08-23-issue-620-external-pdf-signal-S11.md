@@ -11,9 +11,6 @@ related:
   - "[[2026-08-23-issue-620-external-pdf-signal-plan]]"
 ---
 
-
-
-
 # Define the three-axis authority-adjudication contract and offline official-source evidence schema
 
 ## Scope
