@@ -2113,16 +2113,6 @@ LEDGER_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            ArgumentSpec(
-                name="record_id",
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.ledger.review.id_help"),
-                metavar=None,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
             OptionSpec(
                 name="filters",
                 declarations=("--filter",),
