@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:fa7594d05de0dfe8db9977833b666d488d3b592129d225498a3b342af83393d4'
+body_hash: 'sha256:ad8aff4a2527765970eb0c550b599238643c967d75fff524b9703ff5fde1ee68'
 related:
   - "[[2026-08-22-source-casilla-integration-research]]"
   - "[[2026-08-22-modelo-work-binding-architecture-reference]]"
@@ -118,3 +118,49 @@ This is an atomic, no-legacy replacement of the existing provenance shape. Compa
 - IVA wallet decisions can connect through an already durable event identity.
 - Foreign assets remain visibly blocked instead of receiving a convenient but ungrounded primary identity.
 - Existing provenance constructors and encrypted revision fixtures require a coordinated migration, and primary-only authority checks become stricter.
+
+## Amendment (2026-08-23): canonical live connected-proof composition
+
+### Problem
+
+The accepted census may classify a row as `connected` only when production enrollment, operator reachability, source evidence, and encrypted calculation-revision survival agree. Those axes already have canonical authorities, but a connected claim is not trustworthy if it is assembled from census-authored assertions, repository descriptors without content proof, or a synthetic fixture derived from the same claim it is intended to verify.
+
+The decision must define one production composition and one deterministic CI proof lifecycle without introducing a parallel ownership catalogue, workflow catalogue, storage path, or evidence vocabulary.
+
+### Considered options
+
+- Trust census declarations. Rejected because the proof would repeat the claim under test.
+- Use ad hoc test-only ownership, workflow, or storage substitutes. Rejected because green tests could describe a route production does not own.
+- Require operator financial data or external credentials. Rejected because the gate must be deterministic, safe, and runnable in isolated CI.
+- Compose the existing live authority from canonical production catalogues plus independently authored encrypted proof evidence. Accepted.
+
+### Decision
+
+`LiveSourceConnectivityProofAuthority` is the sole authority for promoting a census row to `connected`. It composes, without copying or widening them:
+
+- the canonical production source-ownership catalogue;
+- the canonical supported operator-workflow catalogue;
+- repository-root evidence descriptors whose declared files are verified by content digest relative to the repository root; and
+- a real encrypted `CalculationRevision` read through the production calculation-revision repository.
+
+Connected-proof composition occurs automatically only when the census contains at least one row claiming `connected`. A census with no connected rows does not create an encrypted fixture, temporary repository, credential request, or vacuous connected-proof result.
+
+For each connected row, CI creates an independently authored synthetic source fixture whose expected resolver, owned source, durable source reference, fingerprint, workflow route, and target connection identity are defined outside the census claim. The fixture is calculated and persisted through the real encrypted `CalculationRevision` repository, then reloaded and adjudicated by `LiveSourceConnectivityProofAuthority`. The proof must fail when the census claim changes without a matching change to the independent fixture, when the fixture changes without matching production behavior, when ownership or workflow membership is absent, when a repository evidence digest diverges, or when encrypted provenance does not match the required primary connection.
+
+The synthetic proof fixture uses fabricated, non-personal, non-financial values. It does not read an operator profile, production bucket, environment credential, external service, or persistent developer storage. CI creates an isolated ephemeral secure-object repository and key context, executes the production write/read path, and destroys that lifecycle deterministically after the proof. No generated secret, ciphertext, database, or fixture state survives the run.
+
+Repository evidence is descriptor-safe: descriptors identify repository-relative files plus cryptographic content digests. Paths outside the repository root, unresolved traversal, missing files, non-regular targets, and digest mismatches fail closed. A filename, class name, or census locator alone is not evidence of executable connectivity.
+
+The connected-proof result is conjunctive. Resolver ownership, supported workflow reachability, repository evidence integrity, and encrypted revision survival must all pass for the same connection identity. No axis may infer or repair another, and contributor provenance cannot substitute for the primary resolver-owned proof defined by the composite-provenance amendment.
+
+### Rationale
+
+This composition reuses the accepted production authorities and makes the encrypted proof anti-tautological. It proves an independently authored source fact can traverse the actual production route and survive the actual encrypted repository while remaining deterministic and safe for CI.
+
+### Consequences
+
+- A `connected` row becomes an executable production claim rather than census metadata.
+- CI remains credential-free and contains no taxpayer or financial data.
+- Repositories with no connected rows incur no synthetic encrypted lifecycle.
+- Production ownership, workflow, evidence, or persistence drift breaks the gate independently.
+- Test fixtures require deliberate maintenance when a connection's production identity changes; updating only the census cannot restore green.
