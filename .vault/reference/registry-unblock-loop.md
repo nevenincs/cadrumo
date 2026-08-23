@@ -55,3 +55,54 @@ epicenter file whole, confirm exact symbols with grep.
   serialised form.
 - Believe a slow suite. One returned 558 failures in 1h50m against a normal 20-28 min; the
   three largest failing modules passed individually.
+
+## STATE AFTER 2026-08-23 — what is done and what is left, measured
+
+**Producer keys: 283 of 395 resolved, 6 of 7 modelos.** 222, 353, 232, 202, 210, 200 all
+resolve. Commits 198ae6d001, bdc69f7a17, 3e565b8754, 2c34058e00, 303ac8fd82, dccfad4649,
+9a9be68399. Baseline held at 63 failed / 449 passed in application/filing/tests throughout,
+verified with each change stashed.
+
+### m296 — the last 112 keys. DO NOT use the profile pattern.
+
+Its 44 perceptor fields are a record AEAT repeats per payee, and the data already exists as
+`Withholding296Observation` in `domain/calculations/registry/_withholding296_bindings.py`
+(perceptor_tax_id, perceptor_legal_name, naturaleza, clave, subclave, base_retenciones,
+retencion_practicada, fecha_devengo). A profile type would open a second path to data that
+already has one.
+
+The generator's record model supports `repeat: Literal["projection_rows"]` and NOT
+`binding_rows`, so through the pipeline the mechanism is a projection.
+
+DONE: the typed contract — `M296PerceptorField` (44 members) and
+`M296PerceptorProjectionRef` in `core/_filing_projection_ref.py`, in the discriminated
+union, verified to construct and route (commit 7097bd997c).
+
+LEFT, in order:
+1. Perceptor rows must reach `FilingProducerSnapshot` as typed facts. `_project_record`
+   (`application/filing/_projection.py:177`) sources rows from the snapshot, not the
+   registry — that is the missing link, and it is the real work.
+2. `build_m296_filing_projection_plan`, shaped like `build_m303_filing_projection_plan`.
+3. Dispatch it in `_projection_plan_for_layout` (`application/filing/_export.py:1500`),
+   which today returns an EMPTY plan for every modelo except M303.
+4. Rewrite the 44 entries in `dev/registry/mappings/modelo_296/2024/0003-perceptor.toml`
+   from `kind = "header"` to `kind = "projection"`, and set the record to
+   `repeat = "projection_rows"`.
+5. Regenerate through `dev/registry/pipeline/` — never hand-author the tree.
+
+### m200 CANNOT FILE, and no gate says so
+
+Modelo 200's generated layout carries **578 projection-kind fields**, and
+`_projection_plan_for_layout` returns an empty plan for everything but M303. With no
+context `_projection_field_value` raises "requires a snapshot-owned render context to
+address its projection" (`_record_field_renderer.py:265`).
+
+So the corporate tax return **refuses to export**. It fails CLOSED, which is the right
+direction, but it cannot file and nothing detects it. It needs the same four steps as m296,
+across 14 projection kinds. **A gate asserting every projection-kind field has a plan
+builder is missing and would be cheap.**
+
+### 30 of the 63 filing-test failures are ONE cause
+
+A fixture demands a filing-grade snapshot for modelo 036, which has no export layout. They
+clear when the blocked modelos get layouts — the same generator work, not a separate defect.
