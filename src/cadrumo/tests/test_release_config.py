@@ -342,83 +342,28 @@ def test_release_notes_template_exists_and_is_referenced(release_checklist: Rele
     assert release_checklist.changelog.template == "docs/_release_notes_template.md"
 
 
-def _operator_actions_section(text: str) -> str:
-    """Return the ``### Operator actions`` section body, bounded to the next H2/H3 heading.
-
-    Bounding matters: an unbounded ``text[start:]`` slice would let an
-    unrelated mention anywhere later in the document satisfy these
-    assertions by accident, which is exactly the drift class this test
-    exists to catch.
-    """
-    start = text.index("### Operator actions")
-    rest = text[start:]
-    next_heading = re.search(r"\n#{2,3} ", rest[1:])
-    return rest[: next_heading.start() + 1] if next_heading is not None else rest
-
-
-def test_releasing_doc_operator_actions_section_names_the_outstanding_halves() -> None:
-    """RELEASING.md's Operator actions section names exactly the outstanding operator work.
-
-    Prevents the operator-facing obligation inventory from silently drifting:
-    OP-9 (the required_reviewers removal on release AND docs), OP-12 (delete
-    the orphaned pypi-data-official environment) plus its carried-forward
-    index-side PyPI Trusted Publisher check from issue #618, and OP-3 narrowed
-    to its one remaining half (the docs deploy-role variable) -- none of them
-    silently absorbed or told to redo work already done.
-    """
-    section = _operator_actions_section(RELEASING_PATH.read_text(encoding="utf-8"))
-    # Prose wraps at ~80 columns, so a multi-word phrase can straddle a line
-    # break in the raw text; normalize whitespace before substring checks so
-    # the assertions test content, not incidental line-wrap position.
-    normalized = " ".join(section.split())
-
-    assert "OP-9" in section
-    assert "required_reviewers" in section
-    assert "`release`" in section
-    assert "`docs`" in section
-
-    assert "OP-10" in section
-    assert "alerting channel" in section
-    assert "release-alert" in section
-    # The label OP-10's default path depends on does not exist on the live
-    # repository (measured via gh api .../labels/release-alert -> 404); the
-    # create command and the verification path must both be named, not just
-    # the label's name in passing.
-    assert "gh label create release-alert" in section
-    assert "dev.release.environment_inventory" in normalized
-
-    assert "OP-11" in section
-    assert "node" in section
-    assert "unverified" in normalized
-
-    assert "OP-12" in section
-    assert "pypi-data-official" in section
-    assert "orphaned" in section.lower()
-
-    assert "#618" in section
-    assert "Trusted Publisher" in section
-    assert "index-account" in section.lower() or "index-side" in section.lower()
-
-    assert "OP-3" in section
-    assert "deploy-role" in section
-    # The docs environment already exists; a reader must never be told to
-    # create it, and the required_reviewers removal on it is OP-9's second
-    # half, not a second OP-3 obligation -- both are asserted explicitly so
-    # a future edit cannot silently reintroduce either confusion.
-    assert "already exists" in normalized
-    assert "second half of OP-9" in normalized
-
-
-def test_releasing_doc_documents_rc_soak_and_rollback() -> None:
-    """RELEASING.md documents the RC-soak procedure and the rollback procedure.
-
-    Prevents the RC-soak / rollback narrative from silently drifting out of
-    sync with the machine-validated checklist and the release-readiness gate
-    and `just release-rollback` recipe that implement it.
-    """
+def test_releasing_doc_matches_the_executable_release_entry_and_recovery() -> None:
+    """The operator guide must describe the current orchestrator, not retired ceremony."""
     text = RELEASING_PATH.read_text(encoding="utf-8")
-    assert "release-candidate soak" in text
-    assert "## Rollback procedure" in text
+    assert "gh workflow run release-orchestrator.yml" in text
+    assert "-f dry_run=true" in text
+    assert "-f dry_run=false" in text
+    assert "resume_packaging_run_id=<PACKAGING_RUN_ID>" in text
+    assert "## Diagnose and recover" in text
     assert "just release-readiness" in text
     assert "just release-rollback" in text
     assert "docs/_release_checklist.yaml" in text
+    assert "release-candidate soak" not in text.lower()
+    assert "release PR" in text
+
+
+def test_releasing_doc_keeps_the_marketing_site_outside_the_product_release() -> None:
+    """Website ownership is stated once; no product command or scaffold is reintroduced."""
+    text = RELEASING_PATH.read_text(encoding="utf-8")
+    lowered = text.lower()
+
+    assert lowered.count("marketing website") == 1
+    assert "cadrumo-marketing" in text
+    assert "frontend" not in lowered
+    assert "frontend-deploy" not in lowered
+    assert "docs-deploy" not in lowered

@@ -22,6 +22,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from ....core.errors import CadrumoError
 from ....core.logging import get_logger
 from ....domain.contribuyente.inventory import (
@@ -161,7 +163,7 @@ class InventoryLedgerRepository:
         """
         try:
             return self._storage.load()
-        except (OSError, CadrumoError) as exc:
+        except (OSError, CadrumoError, ValidationError) as exc:
             _log.debug(
                 "inventory ledger load failed",
                 extra={
@@ -170,11 +172,13 @@ class InventoryLedgerRepository:
                     "error_type": type(exc).__name__,
                 },
             )
-            raise InventoryLedgerError(
-                f"unable to load inventory ledger: {self._storage.object_key}",
-                context={"namespace": self._storage.namespace, "object_key": self._storage.object_key},
-                translated_message="adapters.persistence.profile.inventory.errors.load_inventory_ledger_failed",
-            ) from exc
+        # Raise outside the handler so Python does not retain the decrypted
+        # validation failure as ``__context__`` on the safe public error.
+        raise InventoryLedgerError(
+            f"unable to load inventory ledger: {self._storage.object_key}",
+            context={"namespace": self._storage.namespace, "object_key": self._storage.object_key},
+            translated_message="adapters.persistence.profile.inventory.errors.load_inventory_ledger_failed",
+        ) from None
 
     def save(self, document: InventoryLedgerDocument) -> None:
         """Persist ``document`` as FINANCIAL-class ciphertext.

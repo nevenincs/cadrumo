@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import Protocol, get_args
 
 from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
-from ...core import BindingSourceKind, CalculationSourceLineageRole
+from ...core import BindingSourceKind, CalculationSourceLineageRole, Modelo
 from ...domain.calculations.registry import (
     BindingId,
     DataBindingDefinition,
@@ -85,7 +85,7 @@ class InventorySourceResolver:
         if not bindings:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
         binding_ids = tuple(sorted(binding.id for binding in bindings))
-        if context.modelo != "100" or context.filing_year != 2025 or context.period.filing_year != 2025:
+        if context.modelo != Modelo.M100 or context.filing_year != 2025 or context.period.filing_year != 2025:
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

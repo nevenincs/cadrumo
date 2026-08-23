@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import traceback
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from sqlalchemy import select
 
 from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
+from ....adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
+from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....adapters.persistence.storage.sql.engine import get_engine
 from ....core import BindingSourceKind, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.resources import resources
@@ -38,7 +43,7 @@ from ....domain.contribuyente.inventory import (
     fingerprint_prior_authoritative_closing,
 )
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._inventory import _VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
 from .._source_mesh import CalculationSourceContext
 
@@ -367,3 +372,75 @@ def test_real_encrypted_empty_repository_reports_absence(tmp_path: Path) -> None
 
     assert result.binding_values == {}
     assert result.diagnostics[0].reason == "unresolved_binding"
+
+
+def test_real_encrypted_complete_repository_resolves_projection(tmp_path: Path) -> None:
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="00000000-0000-4000-8000-000000000139",
+    ) as runtime:
+        repository = InventoryLedgerRepository(objects=runtime.repository)
+        ledger = _ledger()
+        repository.save(InventoryLedgerDocument(ledgers=(ledger,)))
+        result = InventorySourceResolver(inventory_repository=repository).resolve(
+            _context(_revision(), bucket_id=runtime.bucket_id)
+        )
+
+    assert result.binding_values["inventory-0181"] == Decimal("100.00")
+    assert result.provenance[0].fingerprint == compute_inventory_anexo_d_projection(ledger).projection_fingerprint
+
+
+def test_real_encrypted_corruption_becomes_value_free_storage_diagnostic(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="00000000-0000-4000-8000-000000000239",
+    ) as runtime:
+        repository = InventoryLedgerRepository(objects=runtime.repository)
+        repository.save(InventoryLedgerDocument(ledgers=(_ledger(),)))
+        statement = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
+            SecureObjectRow.object_key == PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
+        )
+
+        def remove_authority(document: dict[str, object]) -> None:
+            ledgers = document["ledgers"]
+            assert isinstance(ledgers, list) and isinstance(ledgers[0], dict)
+            assert ledgers[0].pop("closing_authority_record") is not None
+
+        mutate_encrypted_secure_object_json(
+            get_engine(runtime.settings),
+            row_statement=statement,
+            mutate=remove_authority,
+        )
+        with pytest.raises(InventoryLedgerError) as exc_info:
+            repository.load()
+        assert exc_info.value.translated_message == (
+            "adapters.persistence.profile.inventory.errors.load_inventory_ledger_failed"
+        )
+        assert exc_info.value.__cause__ is None
+        assert exc_info.value.__context__ is None
+        assert exc_info.value.__suppress_context__ is True
+        result = InventorySourceResolver(inventory_repository=repository).resolve(
+            _context(_revision(), bucket_id=runtime.bucket_id)
+        )
+
+    assert result.binding_values == {}
+    assert result.diagnostics[0].reason == "storage_degraded"
+    rendered = "".join(traceback.format_exception(exc_info.value))
+    rendered += " ".join(item.message for item in result.diagnostics) + caplog.text
+    for secret in (
+        "invoice-secret",
+        "cost-review-secret",
+        "iva-review-secret",
+        "decision-secret",
+        "prior-secret",
+        "reviewer-secret",
+        "inventory-secret-command",
+        "100.00",
+        "21.00",
+        *(character * 64 for character in "abcdef12"),
+    ):
+        assert secret not in rendered
