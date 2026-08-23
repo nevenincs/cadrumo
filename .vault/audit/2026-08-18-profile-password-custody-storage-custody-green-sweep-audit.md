@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:052fe308ad910bf7ca238a872639e6078f4a1e59c7e8ae109807e411479d4d68'
+body_hash: 'sha256:d7b21e5cd99868b9b6bbb0add59551f81094df3a0a4cfe07c3be3f82b1d27174'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7948,3 +7948,44 @@ precondition cannot currently be verified would be guessing.
 Handover: `entrypoints/cli/_errors.py:726` (`_active_command_identifier`) is the one site;
 `_common.current_requested_cli_leaf()` is the alternative source; `_errors.py` has been
 untouched for hours, so the edit is low-collision whenever its owner takes it.
+
+### Two error funnels, one renderer, and drift anyway
+
+The command-identifier defect diagnosed last entry resolved into something sharper than "the
+root callback has no segments". There are TWO terminal funnels. `_errors._emit_error_and_exit`
+serves the command boundary; `_terminal_errors._emit_crash` serves the process boundary. Both
+call `render_error_payload`, whose docstring says it is "the single renderer both terminal
+funnels use ... so the two cannot drift on which spine fields an error document carries".
+
+They had drifted anyway, because a shared renderer does not constrain what its CALLERS pass.
+`render_error_payload` takes `command: str | None = None`; the command boundary passes it, and
+the process boundary passed nothing at all. Every refusal escaping to the process boundary
+therefore published `"command": null` even where the leaf was known -- and preflight refusals
+raised before the callback runs, which the profile-active guard made routine, all escape that
+way.
+
+Located by stack capture rather than by reading, after three probes returned nothing and were
+correctly read as broken instruments rather than as evidence: patches on
+`_active_command_identifier`, `_boundary_no_recovery_verdict` and `current_requested_cli_leaf`
+all saw zero calls, which said the document was rendered somewhere else entirely. A traceback
+taken at refusal construction named the path in one shot.
+
+Fixed by having the process boundary derive `command` from the policy projection's
+`requested_leaf`, the only source available there -- the active-command context var is set at
+callback ENTRY, and this funnel exists precisely for failures that never reached one. Proven
+from outside the repo: a `sitecustomize` dropping the `command` kwarg reds the case again with
+the identical `assert None == 'config.profile.censo.pull'`.
+
+**Half the symptom remains, and it is honestly out of reach here.**
+`config profile show no-such-profile` raises `ProfileNotFoundError` with NO projection attached
+at all, and `current_requested_cli_leaf()` returns `None` at the process boundary because the
+Click context is gone by then. So that case has no leaf source to fall back on; giving it one
+means either attaching a projection at the raise site or preserving the leaf in a context var
+that outlives the click stack -- plumbing in the CLI campaign's active area, not a fallback to
+guess at. The sibling case `test_pre_resolution_error_envelope_command_stays_null` is the reason
+not to paper over it: a fabricated command name is worse than an honest null.
+
+Custody note: this edit reached HEAD inside a peer's broad commit
+(`a6d3393949 src: source connectivity census and application follow-ups`) before it could be
+committed here -- the THIRD absorption this session. Verified present and intact at HEAD by
+content rather than by assuming the commit was ours.
