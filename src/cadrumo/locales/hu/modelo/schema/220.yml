@@ -7,6 +7,228 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g6l0j0c1q60o36cpj:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Az elszamolt konszolidalt bevetelek es raforditasok osszesen. Az anyavallalatnak
+                tulajdonitott bevetelek es raforditasok osszesen
+            x-agp34c1g6l0j0c1q60o36cpk:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Az elszamolt konszolidalt bevetelek es raforditasok osszesen. A kulso
+                tagoknak tulajdonitott bevetelek es raforditasok osszesen
+            x-agp34c1g6l0j0c1q60o36cpm:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Penzugyi instrumentumok ertekelesebol
+            x-agp34c1g6l0j0c1q60o36cpn:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Penzugyi instrumentumok ertekelesebol. Valos erteken ertekelt penzugyi
+                eszkozok, a sajat tokevel szemben
+            x-agp34c1g6l0j0c1q60o36cpo:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Penzugyi instrumentumok ertekelesebol. Egyeb bevetel / raforditas
+            x-agp34c1g6l0j0c1q60o36cpp:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Cash flow fedezeti ugyletekbol
+            x-agp34c1g6l0j0c1q60o36d1g:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Kapott tamogatasok, adomanyok es hagyatekok
+            x-agp34c1g6l0j0c1q60o36d1h:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Aktuariusi nyeresegekbol es vesztesegekbol es egyeb korrekciokbol
+            x-agp34c1g6l0j0c1q60o36d1i:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Ertekesitesre tartott befektetett eszkozokbol es kapcsolodo kotelezettsegekbol
+            x-agp34c1g6l0j0c1q60o36d1k:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Adohatas
+            x-agp34c1g6l0j0c1q60o36d1l:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok
+                osszesen
+            x-agp34c1g6l0j0c1q60o36d1m:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Penzugyi instrumentumok
+                ertekelesebol
+            x-agp34c1g6l0j0c1q60o36d1n:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Penzugyi instrumentumok
+                ertekelesebol. Valos erteken ertekelt penzugyi eszkozok, a sajat tokevel
+                szemben
+            x-agp34c1g6l0j0c1q60o36d1o:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Penzugyi instrumentumok
+                ertekelesebol. Egyeb bevetel / raforditas
+            x-agp34c1g6l0j0c1q60o36d1p:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Cash flow fedezeti
+                ugyletekbol
+            x-agp34c1g6l0j0c1q60o36d9g:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Kapott tamogatasok,
+                adomanyok es hagyatekok
+            x-agp34c1g6l0j0c1q60o36d9h:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Ertekesitesre tartott
+                befektetett eszkozokbol es kapcsolodo kotelezettsegekbol
+            x-agp34c1g6l0j0c1q60o36d9j:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Adohatas
+            x-agp34c1g6l0j0c1q60o36d9k:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Atvezetesek a konszolidalt
+                eredmenykimutatasba osszesen
+            x-agp34c1g6l0j0c1q60o36d9l:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Az elszamolt konszolidalt bevetelek es raforditasok osszesen
+            x-agp34c1g6l0j0c1q60o3ac1g:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Az uzleti ev konszolidalt eredmenye
+            x-agp34c1g6l0j0c9q60o34dpj:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Egyeb atfogo eredmeny
+            x-agp34c1g6l0j0c9q60o34dpk:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az eredmenybe at nem sorolhato tetelek
+            x-agp34c1g6l0j0c9q60o34dpl:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Aktuariusi nyereseg vagy (-) veszteseg meghatarozott juttatasu nyugdijterveken
+            x-agp34c1g6l0j0c9q60o34dpm:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Ertekesitesre tartott befektetett eszkozok es elidegenitesi csoportok
+            x-agp34c1g6l0j0c9q60o34dpn:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Reszesedes kozos vallalkozasokban es tarsult vallalkozasokban levo
+                befektetesek egyeb elszamolt bevetelebol es raforditasabol
+            x-agp34c1g6l0j0c9q60o34dpp:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az at nem sorolhato tetelekhez kapcsolodo nyeresegado
+            x-agp34c1g6l0j0c9q60o34e1g:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az eredmenybe atsorolhato tetelek
+            x-agp34c1g6l0j0c9q60o34e1h:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Kulfoldi erdekeltsegekbe torteno netto befektetesek fedezese [hatekony
+                resz]
+            x-agp34c1g6l0j0c9q60o34e1i:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                A sajat tokeben elszamolt ertekelesi nyereseg vagy (-) veszteseg
+            x-agp34c1g6l0j0c9q60o34e1j:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az eredmenybe atvezetve
+            x-agp34c1g6l0j0c9q60o34e1k:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Egyeb atsorolasok
+            x-agp34c1g6l0j0c9q60o34e1l:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Devizaatvaltas
+            x-agp34c1g6l0j0c9q60o34e1m:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                A sajat tokeben elszamolt arfolyamnyereseg vagy (-) veszteseg
+            x-agp34c1g6l0j0c9q60o34e1n:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az eredmenybe atvezetve
+            x-agp34c1g6l0j0c9q60o34e1o:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Egyeb atsorolasok
+            x-agp34c1g6l0j0c9q60o34e1p:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Cash flow fedezeti ugyletek [hatekony resz]
+            x-agp34c1g6l0j0c9q60o34e9g:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                A sajat tokeben elszamolt ertekelesi nyereseg vagy (-) veszteseg
+            x-agp34c1g6l0j0c9q60o34e9h:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az eredmenybe atvezetve
+            x-agp34c1g6l0j0c9q60o34e9i:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                A fedezett tetelek kezdeti konyv szerinti ertekebe atvezetve
+            x-agp34c1g6l0j0c9q60o34e9j:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Egyeb atsorolasok
+            x-agp34c1g6l0j0c9q60o34e9o:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Ertekesitesre tartott befektetett eszkozok es elidegenitesi csoportok
+            x-agp34c1g6l0j0c9q60o34e9p:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                A sajat tokeben elszamolt ertekelesi nyereseg vagy (-) veszteseg
+            x-agp34c1g6l0j0c9q60o36c1g:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az eredmenybe atvezetve
+            x-agp34c1g6l0j0c9q60o36c1h:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Egyeb atsorolasok
+            x-agp34c1g6l0j0c9q60o36c1i:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az eredmenybe atsorolhato tetelekhez kapcsolodo nyeresegado
+            x-agp34c1g6l0j0c9q60o36c1j:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az uzleti ev teljes atfogo eredmenye
+            x-agp34c1g6l0j0c9q60o36c1k:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Kisebbsegi reszesedeseknek tulajdonithato
+            x-agp34c1g6l0j0c9q60o36c1l:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az anyavallalat tulajdonosainak tulajdonithato
+            x-agp34c1g6l0j0c9q60o36c1m:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Reszesedes a kozos vallalkozasokban es tarsult vallalkozasokban levo
+                befektetesek egyeb elszamolt bevetelebol es raforditasabol
+            x-agp34c1g6l0j0c9q60o3ac1g:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az uzleti ev konszolidalt eredmenye
+            x-agp34c1g6l0j0c9q60o3cd1n:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az egyeb atfogo eredmennyel szemben valos erteken ertekelt tokeinstrumentumok
+                valos ertekenek valtozasa
+            x-agp34c1g6l0j0c9q60o3cd1o:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az egyeb atfogo eredmennyel szemben valos erteken ertekelt tokeinstrumentumok
+                fedezeti elszamolasabol eredo netto nyereseg vagy (-) veszteseg
+            x-agp34c1g6l0j0c9q60o3cd1p:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az egyeb atfogo eredmennyel szemben valos erteken ertekelt tokeinstrumentumok
+                valos ertekenek valtozasa (fedezett tetel)
+            x-agp34c1g6l0j0c9q60o3cd9g:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az egyeb atfogo eredmennyel szemben valos erteken ertekelt tokeinstrumentumok
+                valos ertekenek valtozasa (fedezeti instrumentum)
+            x-agp34c1g6l0j0c9q60o3cd9h:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az eredmennyel szemben valos erteken ertekelt penzugyi kotelezettsegek
+                valos ertekenek a hitelkockazat valtozasabol eredo valtozasa
+            x-agp34c1g6l0j0c9q60o3cd9i:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Fedezeti instrumentumok [nem megjelolt tetelek]
+            x-agp34c1g6l0j0c9q60o3cd9j:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                A sajat tokeben elszamolt ertekelesi nyereseg vagy (-) veszteseg
+            x-agp34c1g6l0j0c9q60o3cd9k:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az eredmenybe atvezetve
+            x-agp34c1g6l0j0c9q60o3cd9l:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Egyeb atsorolasok
+            x-agp34c1g6l0j0c9q60o3cd9m:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az egyeb atfogo eredmennyel szemben valos erteken ertekelt hitelviszonyt
+                megtestesito instrumentumok
+            x-agp34c1g6l0j0c9q60o3cd9n:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                A sajat tokeben elszamolt ertekelesi nyereseg vagy (-) veszteseg
+            x-agp34c1g6l0j0c9q60o3cd9o:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Az eredmenybe atvezetve
+            x-agp34c1g6l0j0c9q60o3cd9p:
+              label: Az uzleti ev konszolidalt elszamolt bevetel- es rafordituskimutatasa.
+                Egyeb atsorolasok
             x-agp34c1g6t230c1q60o30e1g:
               label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport nem
                 mentes belso osztalekainak kiszurese. Osszesen'
@@ -89,6 +311,138 @@ modelo:
               label: 'Egyeb korrekciok az adoalapok osszegehez: egyeb korrekciok az
                 egyedi adoalapok osszegehez, amelyeket az elozo pontok nem fednek
                 le. Az adoalap korrekcioja'
+            x-agp34c1g6t6j0c1q60p34c9p:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. j6) Az uzemi eredmeny reszet kepezo
+                bevetelek, raforditasok vagy jovedelmek, amelyek nem kerulnek be az
+                adoalapba
+            x-agp34c1g6t6j0c1q60p34chg:
+              label: 'A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS
+                16.1. es 16.2. cikke szerinti korlat. m) A netto penzugyi raforditasok
+                levonasanak teljes korlatja: minden esetben 1 millio euro, ha a netto
+                penzugyi raforditasok levonasi korlatja a k) es l) pontban szereplo
+                hozzaadassal egyutt 1 millio alatt marad'
+            x-agp34c1g6t6j0c1q60pj2e9m:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.5.,
+                67. b) vagy 83. cikke szerinti korlat. a) Az adozasi idoszak reszesedesszerzeshez
+                felvett adossagbol eredo penzugyi raforditasai a LIS 16.5., 67. b)
+                vagy 83. cikke szerint (elojel nelkul)
+            x-agp34c1g6t6j0c1q60pj2e9n:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.5.,
+                67. b) vagy 83. cikke szerinti korlat. b) A penzugyi raforditasok
+                levonasara vonatkozo tovabbi korlat (LIS 16.5., 67. b) vagy 83. cikk)
+                (elojel nelkul)
+            x-agp34c1g6t6j0c1q60pj2e9o:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.5.,
+                67. b) vagy 83. cikke szerinti korlat. c1) Az adozasi idoszak levonhato
+                penzugyi raforditasai a LIS 16.5., 67. b) vagy 83. cikke szerinti
+                korlat alkalmazasa utan (<= [b], [a=c1+c2], >= 0)
+            x-agp34c1g6t6j0c1q60pj2e9p:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.5.,
+                67. b) vagy 83. cikke szerinti korlat. c2) Az adozasi idoszak nem
+                levonhato penzugyi raforditasai a LIS 16.5., 67. b) es/vagy 83. cikke
+                szerinti korlat alkalmazasa utan (= [a-c1], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c1g:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.5.,
+                67. b) vagy 83. cikke szerinti korlat. d) A csoport korabbi idoszakokbol
+                fennmarado, a LIS 16.5., 67. b) es/vagy 83. cikke ala eso penzugyi
+                raforditasai, e korlat utan levonhatoan ([b >= c1+d+e], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c1h:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.5.,
+                67. b) vagy 83. cikke szerinti korlat. e) Korabbi idoszakokbol fennmarado,
+                a LIS 16.5., 67. b) es/vagy 83. cikke ala eso penzugyi raforditasok,
+                e korlat utan levonhatoan, amelyek a csoporthoz valo csatlakozas elott
+                keletkeztek vagy kerultek atvallalasra (LIS 67. b) es 74.3. b) cikk)
+                ([b >= c1+d+e], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c1i:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. f) Az adozasi idoszak penzugyi raforditasai,
+                amelyekre a LIS 16.5., 67. b) es/vagy 83. cikke nem vonatkozik (elojel
+                nelkul)
+            x-agp34c1g6t6j0c1q60pj4c1j:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. g) A csoport adozasi idoszaki penzugyi
+                raforditasai (= [c1+f])
+            x-agp34c1g6t6j0c1q60pj4c1k:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. h) A csoport adozasi idoszaki penzugyi
+                bevetelei sajat toke harmadik feleknek torteno atengedesebol
+            x-agp34c1g6t6j0c1q60pj4c1l:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. i) A csoport adozasi idoszaki netto
+                penzugyi raforditasai (= [g-h])
+            x-agp34c1g6t6j0c1q60pj4c1m:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. j) A netto penzugyi raforditasok levonasanak
+                korlatja (= 30% * [j1-j2-j3-j4+j5-j6])
+            x-agp34c1g6t6j0c1q60pj4c1n:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. j1) Uzemi eredmeny (az eredmenykimutatassal
+                azonos elojellel)
+            x-agp34c1g6t6j0c1q60pj4c1o:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. j2) A befektetett eszkozok ertekcsokkenese
+                (az eredmenykimutatassal azonos elojellel)
+            x-agp34c1g6t6j0c1q60pj4c1p:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. j3) Nem penzugyi befektetett eszkozokre
+                kapott tamogatasok es egyebek elszamolasa (az eredmenykimutatassal
+                azonos elojellel)
+            x-agp34c1g6t6j0c1q60pj4c9g:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. j4) A befektetett eszkozok ertekvesztese
+                es ertekesitesenek eredmenye (az eredmenykimutatassal azonos elojellel)
+            x-agp34c1g6t6j0c1q60pj4c9h:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. j5) Tokeinstrumentumokban levo reszesedesekbol
+                szarmazo penzugyi bevetel (az eredmenykimutatassal azonos elojellel)
+            x-agp34c1g6t6j0c1q60pj4c9i:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. k) Az elozo ot adoevben fel nem hasznalt,
+                a csoporton belul keletkezett uzemi eredmeny korlat hozzaadasa
+            x-agp34c1g6t6j0c1q60pj4c9j:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. l) Az elozo ot adoevben fel nem hasznalt
+                uzemi eredmeny korlat hozzaadasa, amely a csoporthoz valo csatlakozas
+                elott keletkezett vagy kerult atvallalasra (LIS 67. a) es 74.3. b)
+                cikk)
+            x-agp34c1g6t6j0c1q60pj4c9k:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. n1) Az adozasi idoszak levonhato netto
+                penzugyi raforditasai ([i=n1+n2], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9l:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. n2) Az adozasi idoszak nem levonhato
+                netto penzugyi raforditasai (= [i-n1], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9m:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. o) A csoport korabbi adozasi idoszakokbol
+                fennmarado, a LIS 16.5., 67. b) es/vagy 83. cikke ala eso penzugyi
+                raforditasai, mindket korlat alkalmazasa utan levonhatoan (<= [d],
+                >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9n:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. p) Korabbi idoszakokbol fennmarado,
+                a LIS 16.5., 67. b) es/vagy 83. cikke ala eso penzugyi raforditasok,
+                mindket korlat alkalmazasa utan levonhatoan, amelyek a csoporthoz
+                valo csatlakozas elott keletkeztek vagy kerultek atvallalasra (LIS
+                67. b) es 74.3. b) cikk) (<= [e], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9o:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. q) A csoport korabbi adozasi idoszakokbol
+                fennmarado netto penzugyi raforditasai, amelyekre a LIS 16.5., 67.
+                b) es/vagy 83. cikke nem vonatkozik, ervenyesitve
+            x-agp34c1g6t6j0c1q60pj4c9p:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. r) Korabbi idoszakokbol fennmarado,
+                ervenyesitett netto penzugyi raforditasok, amelyekre a LIS 16.5.,
+                67. b) es/vagy 83. cikke nem vonatkozik, es amelyek a csoporthoz valo
+                csatlakozas elott keletkeztek vagy kerultek atvallalasra (LIS 67.
+                b) es 74.3. b) cikk)
+            x-agp34c1g6t6j0c1q60pj4chg:
+              label: A penzugyi raforditasok levonhatosaganak korlatozasa. A LIS 16.1.
+                es 16.2. cikke szerinti korlat. Az adozasi idoszak nem levonhato penzugyi
+                raforditasai osszesen (= [c2+n2])
             x-agp34c1g710j0c1q60o34chl:
               label: Szamviteli eredmenyek es adoalapok konszolidacioja. D. A csoport
                 elozetes adoalapja

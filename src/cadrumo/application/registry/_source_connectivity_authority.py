@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core import (
     BindingSourceKind,
+    CalculationSourceLineageRole,
     ModeloCalculationRouteId,
     SourceConnectivityConnectionIdentity,
     SourceConnectivityEncryptedRevisionProof,
@@ -299,15 +300,26 @@ class LiveSourceConnectivityProofAuthority:
         revision = catalogue.revisions.get(connection.calculation_revision_id)
         if revision is None or revision.calculation_revision_id != connection.calculation_revision_id:
             return False
+        primary_ref_counts: dict[str, int] = {}
+        for row in revision.source_provenance:
+            if row.lineage_role is CalculationSourceLineageRole.PRIMARY:
+                primary_ref_counts[row.source_ref] = primary_ref_counts.get(row.source_ref, 0) + 1
+        if any(
+            row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
+            and (row.parent_source_ref is None or primary_ref_counts.get(row.parent_source_ref) != 1)
+            for row in revision.source_provenance
+        ):
+            return False
         source_identity_rows = tuple(
             row
             for row in revision.source_provenance
-            if row.binding_source is connection.source_kind and row.source_ref == proof.persisted_source_identity
+            if row.lineage_role is CalculationSourceLineageRole.PRIMARY
+            and row.resolved_binding_source is connection.source_kind
+            and row.source_ref == proof.persisted_source_identity
         )
         return (
             len(source_identity_rows) == 1
             and source_identity_rows[0].resolver_id == connection.resolver_id
-            and source_identity_rows[0].source_kind == connection.source_kind.value
             and source_identity_rows[0].fingerprint == proof.persisted_source_fingerprint
         )
 

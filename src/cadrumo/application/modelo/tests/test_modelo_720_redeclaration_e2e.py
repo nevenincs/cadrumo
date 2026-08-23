@@ -317,7 +317,7 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
     assert frozenset(resolution_n2.unresolved_binding_ids) == expected_binding_ids_n2
 
     previous_filing_provenance = tuple(
-        item for item in resolution_n1.provenance if item.source_kind == "previous_filing"
+        item for item in resolution_n1.provenance if item.contributor_source_kind == "previous_filing"
     )
     assert previous_filing_provenance
     assert {item.dependency_treatment for item in previous_filing_provenance} == {"factual_evidence"}

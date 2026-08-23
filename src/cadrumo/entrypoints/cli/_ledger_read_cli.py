@@ -76,9 +76,7 @@ from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
     project_ledger_list,
 )
-from ._ledger_review_cli import register_ledger_review_command
 from ._ledger_support import _ledger_cli_no_recovery
-from ._participation_cli import register_participation_commands
 
 if TYPE_CHECKING:
     from ...application.ledger import (
@@ -129,8 +127,6 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
     _register_ledger_view_command(app, resolve_transaction_id=resolve_transaction_id)
     _register_ledger_status_command(app)
     _register_ledger_track_command(app, resolve_transaction_id=resolve_transaction_id)
-    register_ledger_review_command(app, resolve_transaction_id=resolve_transaction_id)
-    register_participation_commands(app, resolve_transaction_id=resolve_transaction_id)
 
 
 def _ledger_list_pairing_error_year(filters: list[str], option_year: int | None) -> int | None:

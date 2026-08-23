@@ -201,6 +201,40 @@ def _child_env(root: Path) -> dict[str, str]:
     return env
 
 
+def _refuse_with_child_stderr(
+    result: subprocess.CompletedProcess[str],
+    *,
+    what: str,
+) -> subprocess.CompletedProcess[str]:
+    """Fail with the child's OWN error rather than an opaque exit code.
+
+    These harnesses run the reset in a real child process, so everything that
+    explains a failure -- the traceback, the refusal, an import that could not
+    resolve -- is written to that child's stderr. ``check=True`` discards it:
+    ``CalledProcessError`` renders only the argv, so a red case reports that a
+    process exited 1 and nothing whatever about why.
+
+    That gap has twice turned a one-look diagnosis into hours of search. The
+    second time, the child had died importing ``cadrumo`` while a peer was
+    mid-write in this shared worktree -- a fact stated plainly in one line of
+    the stderr surfaced here, and wholly invisible in the exit code.
+    """
+    if result.returncode == 0:
+        return result
+    separator = chr(10)
+    raise AssertionError(
+        separator.join(
+            (
+                f"{what} child exited {result.returncode}",
+                "--- child stdout ---",
+                result.stdout[-2000:],
+                "--- child stderr ---",
+                result.stderr[-4000:],
+            ),
+        ),
+    )
+
+
 def _run_crashing_start(root: Path, boundary: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned harness
         [sys.executable, "-c", _CRASH_HARNESS, str(root), boundary],
@@ -219,7 +253,7 @@ def _run_fresh_resume(
     root: Path,
     operation_id: str,
 ) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned harness
+    resumed = subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned harness
         [
             sys.executable,
             "-c",
@@ -230,13 +264,14 @@ def _run_fresh_resume(
         ],
         cwd=Path.cwd(),
         env=_child_env(root),
-        check=True,
+        check=False,
         capture_output=True,
         text=True,
         encoding="utf-8",
         errors="replace",
         timeout=90,
     )
+    return _refuse_with_child_stderr(resumed, what="fresh resume")
 
 
 @pytest.mark.parametrize("boundary", _BOUNDARIES)

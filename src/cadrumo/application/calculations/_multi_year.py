@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING, Literal, override
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind
+from ...core import BindingSourceKind, CalculationSourceLineageRole
 from ...core.errors import CoreValidationError
 
 if TYPE_CHECKING:
@@ -551,12 +551,15 @@ class PreviousFilingSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
-                    binding_source=BindingSourceKind.PREVIOUS_FILING,
-                    source_kind="previous_filing",
+                    resolved_binding_source=BindingSourceKind.PREVIOUS_FILING,
+                    contributor_source_kind="previous_filing",
+                    contributor_binding_source=BindingSourceKind.PREVIOUS_FILING,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=(
                         f"{item.source_modelo}:{item.source_filing_year}:"
                         f"{','.join(item.source_periods)}:{item.binding_id}"
                     ),
+                    parent_source_ref=None,
                     dependency_treatment=item.dependency_treatment,
                 )
                 for item in report.prefilled

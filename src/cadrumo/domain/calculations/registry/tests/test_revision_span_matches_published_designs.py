@@ -421,7 +421,6 @@ def _content_ejercicio_years(path: Path) -> tuple[int, ...]:
     return tuple(sorted(set(_title_ejercicio_years(path)) | set(_constant_ejercicio_years(path))))
 
 
-
 @cache
 def _catalogue_ejercicio_span() -> dict[str, tuple[int, int]]:
     """Design filename -> the ejercicio span its SOURCE ENTRY declares, where it states one.
@@ -1446,7 +1445,6 @@ def _compare_design_pair(earlier: Path, later: Path) -> list[str]:
     return evidence
 
 
-
 def _straddle_evidence(earlier: Path, later: Path) -> str | None:
     """SEVENTH SIGNAL: a field DISPLACED so it overlaps another without containing it.
 
@@ -1495,10 +1493,7 @@ def _straddle_evidence(earlier: Path, later: Path) -> str | None:
 
     if not straddles:
         return None
-    return (
-        f"{len(straddles)} field(s) displaced so they straddle the other design's "
-        f"boundaries (e.g. {straddles[0]})"
-    )
+    return f"{len(straddles)} field(s) displaced so they straddle the other design's boundaries (e.g. {straddles[0]})"
 
 
 def _occupancy_evidence(earlier: Path, later: Path) -> list[str]:
@@ -2317,6 +2312,35 @@ def test_a_design_title_never_contradicts_a_trustworthy_filename_year() -> None:
     )
 
 
+#: Designs whose coverage IS stated, on an axis that is not an ejercicio. Each entry
+#: names the axis the file itself uses, so the reason is checkable against the
+#: filename rather than merely asserted. Keyed by ``(modelo, filename)`` -- never by
+#: index or line -- and audited for staleness below.
+#:
+#: This is NOT a place to park a design whose era is merely unknown. An orden-named
+#: design states no coverage at all, and absorbing it here would relabel "nobody
+#: knows" as "known on another axis", which is the exact confusion the assertion
+#: below exists to prevent.
+_NON_EJERCICIO_COVERAGE_AXIS: dict[tuple[str, str], str] = {
+    (
+        "036",
+        "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx",
+    ): "censal declaration scoped by the date it comes into force ('03-02-2025-y-siguientes'), not by ejercicio",
+    (
+        "036",
+        "02-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-provisional-107-kb-xlsx.xlsx",
+    ): "the provisional edition of the same in-force-date scope ('03-02-2025-y-siguientes')",
+    (
+        "210",
+        "01-210-devengos-a-partir-de-2026.xlsx",
+    ): "non-resident income scoped by DEVENGO ('devengos-a-partir-de-2026'), an accrual span rather than an ejercicio",
+    (
+        "210",
+        "02-210-devengos-entre-01-06-2022-y-01-01-2026.xls",
+    ): "a closed devengo span ('devengos-entre-01-06-2022-y-01-01-2026'), again an accrual axis",
+}
+
+
 def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured() -> None:
     """A design nothing can attribute is UNMEASURED, never absorbed under a guess.
 
@@ -2353,6 +2377,8 @@ def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured()
             if _design_coverage_years(path):
                 attributed += 1
                 continue
+            if (modelo_id, path.name) in _NON_EJERCICIO_COVERAGE_AXIS:
+                continue  # coverage stated on a declared non-ejercicio axis
             unattributed.append(f"modelo {modelo_id} design {path.name!r}")
     assert attributed, "no bundled design could be attributed to any year at all; attribution has broken"
     assert not unattributed, (
@@ -3026,3 +3052,41 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
         "passed:\n  " + "\n  ".join(sorted(holes)) + "\n"
         "OVERLAPS -- two or more revisions both claim this year:\n  " + "\n  ".join(sorted(overlaps))
     )
+
+
+def test_every_non_ejercicio_declaration_is_still_earned() -> None:
+    """Each declared non-ejercicio design must still exist AND still state no ejercicio.
+
+    Two ways an entry goes stale, and both must fail rather than pass quietly. The
+    design can be renamed or dropped from the corpus, leaving an entry that excuses
+    nothing. Or the design can BECOME attributable -- a better title read, a widened
+    filename pattern -- at which point the entry silently suppresses a design the
+    module can now measure, which is precisely the invisibility the assertion above
+    was written against.
+
+    Keyed by ``(modelo, filename)`` so a rename fails loudly instead of drifting onto
+    whatever file happens to sit at some position.
+    """
+    design_root = bundled_path(*_DESIGN_ROOT_PARTS)
+    on_disk: dict[tuple[str, str], Path] = {}
+    for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):
+        modelo_id = directory.name.removeprefix("modelo_")
+        for path in _design_sources(modelo_id):
+            on_disk[(modelo_id, path.name)] = path
+
+    assert _NON_EJERCICIO_COVERAGE_AXIS, "the declaration is empty; this audit would be vacuous"
+
+    missing = sorted(key for key in _NON_EJERCICIO_COVERAGE_AXIS if key not in on_disk)
+    assert not missing, (
+        "these designs are declared non-ejercicio-scoped but are no longer bundled under that "
+        f"name, so the declaration excuses nothing: {missing}"
+    )
+
+    now_attributable = sorted(key for key in _NON_EJERCICIO_COVERAGE_AXIS if _design_coverage_years(on_disk[key]))
+    assert not now_attributable, (
+        "these designs now yield ejercicio coverage, so the declaration is suppressing a design "
+        f"the module can measure -- remove the entry: {now_attributable}"
+    )
+
+    unreasoned = sorted(k for k, why in _NON_EJERCICIO_COVERAGE_AXIS.items() if len(why.strip()) < 30)
+    assert not unreasoned, f"every entry must state the axis the file itself uses: {unreasoned}"

@@ -459,7 +459,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
             )
             assert ambient_invoice_repo.exists() is False
             assert any(
-                ref.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
+                ref.resolved_binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
                 for ref in result.revision.source_provenance
             ), result.revision.source_provenance
             assert result.revision.source_issues == ()
@@ -668,7 +668,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
         issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION and issue.reason == "unrouted_observation"
         for issue in result.revision.source_issues
     ), result.revision.source_issues
-    assert any(ref.source_kind == "ledger_oss_aggregation" for ref in result.revision.source_provenance), (
+    assert any(ref.contributor_source_kind == "ledger_oss_aggregation" for ref in result.revision.source_provenance), (
         result.revision.source_provenance
     )
 
@@ -780,7 +780,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
         for diagnostic in result.source_diagnostics
     ), result.source_diagnostics
     assert result.revision.source_issues == ()
-    assert any(ref.source_kind == "ledger_oss_aggregation" for ref in result.revision.source_provenance), (
+    assert any(ref.contributor_source_kind == "ledger_oss_aggregation" for ref in result.revision.source_provenance), (
         result.revision.source_provenance
     )
     report = verify_modelo_revision(

@@ -63,7 +63,7 @@ from ...core import (
     M210GrossIncomeSourceMode,
     validated_casilla_id,
 )
-from ...core.aggregation import BindingSourceKind
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
 from ...core.identity import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.time import validate_utc_aware
@@ -314,9 +314,12 @@ def _source_provenance_revision_id_payload(
         sorted(
             (
                 ref.resolver_id,
-                ref.binding_source.value if ref.binding_source is not None else "",
-                ref.source_kind,
+                ref.resolved_binding_source.value,
+                ref.contributor_source_kind,
+                ref.contributor_binding_source.value if ref.contributor_binding_source is not None else "",
+                ref.lineage_role.value,
                 ref.source_ref,
+                ref.parent_source_ref or "",
                 ref.fingerprint or "",
                 ref.dependency_treatment,
             )
@@ -612,11 +615,12 @@ class CalculationSourceRef(BaseModel):
 
     Attributes:
         resolver_id: Exact canonical resolver identity that produced this row.
-        source_kind: Free-form resolver source token (e.g. ``collectible_invoice``).
-            Always the token the resolver declared for the contributing source.
-        binding_source: The canonical :class:`BindingSourceKind` when
-            ``source_kind`` names a registry binding source; ``None`` for advisory
-            or non-binding provenance rows.
+        resolved_binding_source: Canonical binding source owned by the resolver.
+        contributor_source_kind: Upstream taxonomy token for this source node.
+        contributor_binding_source: Canonical :class:`BindingSourceKind` when
+            ``contributor_source_kind`` belongs to the binding taxonomy; ``None``
+            for an external or non-binding contributor.
+        lineage_role: Whether this row is the resolver-owned primary or supporting contributor.
         source_ref: Stable reference to the contributing source object
             (e.g. ``collectible_invoice:{invoice_id}``).
         fingerprint: Data-dependent digest of the contributing source object when
@@ -636,23 +640,36 @@ class CalculationSourceRef(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     resolver_id: str = Field(min_length=1, max_length=128)
-    source_kind: str = Field(min_length=1, max_length=64)
-    binding_source: BindingSourceKind | None
+    resolved_binding_source: BindingSourceKind
+    contributor_source_kind: str = Field(min_length=1, max_length=64)
+    contributor_binding_source: BindingSourceKind | None
+    lineage_role: CalculationSourceLineageRole
     source_ref: str = Field(min_length=1, max_length=256)
+    parent_source_ref: str | None = Field(min_length=1, max_length=256)
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
     dependency_treatment: str = ""
 
     @model_validator(mode="after")
-    def _require_coherent_binding_source(self) -> CalculationSourceRef:
+    def _require_coherent_lineage(self) -> CalculationSourceRef:
         try:
-            source_kind = BindingSourceKind(self.source_kind)
+            contributor_kind = BindingSourceKind(self.contributor_source_kind)
         except ValueError:
-            source_kind = None
-        if self.binding_source is None:
-            if source_kind is not None:
-                raise ModeloValidationError("source provenance binding_source is required for a binding source kind")
-        elif source_kind is not self.binding_source:
-            raise ModeloValidationError("source provenance binding_source must equal source_kind")
+            contributor_kind = None
+        if self.contributor_binding_source is None:
+            if contributor_kind is not None:
+                raise ModeloValidationError(
+                    "source provenance contributor_binding_source is required when contributor_source_kind "
+                    "is a binding source kind",
+                )
+        elif contributor_kind is not self.contributor_binding_source:
+            raise ModeloValidationError(
+                "source provenance contributor_binding_source must equal contributor_source_kind",
+            )
+        if self.lineage_role is CalculationSourceLineageRole.PRIMARY:
+            if self.parent_source_ref is not None:
+                raise ModeloValidationError("primary source provenance cannot have a parent")
+        elif self.parent_source_ref is None:
+            raise ModeloValidationError("contributor source provenance requires a parent")
         return self
 
 
@@ -1026,6 +1043,20 @@ class CalculationRevision(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_invariants(self, info: ValidationInfo) -> CalculationRevision:
+        primary_refs = tuple(
+            row.source_ref
+            for row in self.source_provenance
+            if row.lineage_role is CalculationSourceLineageRole.PRIMARY
+        )
+        if len(primary_refs) != len(set(primary_refs)):
+            raise ModeloValidationError("source provenance primary reference is ambiguous")
+        primary_ref_set = frozenset(primary_refs)
+        if any(
+            row.parent_source_ref not in primary_ref_set
+            for row in self.source_provenance
+            if row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
+        ):
+            raise ModeloValidationError("source provenance contributor parent does not resolve to a primary")
         derived = derive_calculation_revision_id_from_revision(self)
         _validate_revision_identity(self, derived)
         _validate_annual_summary_handoff_target(self)

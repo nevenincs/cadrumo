@@ -381,9 +381,12 @@ def test_authority_admits_a_complete_supported_connected_claim() -> None:
 def test_connectivity_source_reference_acceptance_matches_persisted_model_exactly(source_ref: str) -> None:
     persisted = CalculationSourceRef(
         resolver_id="invoice-source-resolver",
-        source_kind=core.BindingSourceKind.COLLECTIBLE_INVOICE.value,
-        binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
+        resolved_binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
+        contributor_source_kind=core.BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        contributor_binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
+        lineage_role=core.CalculationSourceLineageRole.PRIMARY,
         source_ref=source_ref,
+        parent_source_ref=None,
         fingerprint=_FINGERPRINT,
     )
     connection = _connection(source_ref=source_ref)
@@ -397,8 +400,11 @@ def test_connectivity_source_reference_rejection_matches_persisted_model(source_
     with pytest.raises(ValidationError):
         CalculationSourceRef(
             resolver_id="invoice-source-resolver",
-            source_kind=core.BindingSourceKind.COLLECTIBLE_INVOICE.value,
-            binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
+            resolved_binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
+            contributor_source_kind=core.BindingSourceKind.COLLECTIBLE_INVOICE.value,
+            contributor_binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
+            lineage_role=core.CalculationSourceLineageRole.PRIMARY,
+            parent_source_ref=None,
             source_ref=source_ref,
             fingerprint=_FINGERPRINT,
         )

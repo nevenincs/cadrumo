@@ -118,42 +118,6 @@ class GoogleLogoutResult(OutputSchema):
 
 
 # ---------------------------------------------------------------------------
-# Drive folder sub-app
-# ---------------------------------------------------------------------------
-
-
-@register_schema("config.google.folder.set")
-class GoogleFolderSetResult(OutputSchema):
-    """JSON envelope for ``aeat config google folder set``.
-
-    Mirrors the :class:`DriveConfig` written by
-    :func:`save_drive_config` for
-    the active profile. The folder id becomes the Google Drive root consumed by
-    the storage provider and calc-sheets export commands.
-    """
-
-    operation: str = "config.google.folder.set"
-    profile: str
-    root_folder_id: str
-
-
-@register_schema("config.google.folder.get")
-class GoogleFolderGetResult(OutputSchema):
-    """JSON envelope for ``aeat config google folder get``.
-
-    Projects the optional
-    :class:`DriveConfig` loaded from the active
-    profile. ``configured`` distinguishes an absent persisted root from a root
-    folder id that is present and ready for provider construction.
-    """
-
-    operation: str = "config.google.folder.get"
-    profile: str
-    configured: bool
-    root_folder_id: str | None = None
-
-
-# ---------------------------------------------------------------------------
 # Drive sync sub-app
 # ---------------------------------------------------------------------------
 

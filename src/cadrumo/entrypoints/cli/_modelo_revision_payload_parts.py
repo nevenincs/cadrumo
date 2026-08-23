@@ -19,7 +19,7 @@ from __future__ import annotations
 from pydantic import Field, model_validator
 
 from ...application.modelo import ResultSummaryRole
-from ...core import BindingSourceKind, CasillaId
+from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
@@ -100,9 +100,12 @@ class SourceProvenancePayload(OutputSchema):
     """
 
     resolver_id: str
-    source_kind: str
-    binding_source: BindingSourceKind | None = None
+    resolved_binding_source: BindingSourceKind
+    contributor_source_kind: str
+    contributor_binding_source: BindingSourceKind | None
+    lineage_role: CalculationSourceLineageRole
     source_ref: str
+    parent_source_ref: str | None
     fingerprint: str | None = None
     dependency_treatment: str = ""
 

@@ -358,23 +358,34 @@ def register_lazy_wizard_leaf(
     """
 
     def _factory() -> typer.Typer:
-        from ....application.wizard import build_wizard_command
-
-        leaf = typer.Typer()
-        passthrough: _LeafPassthrough = {"help": help, "epilog": epilog}
-        leaf.command(name, **passthrough)(
-            _command_execution_policy(_BOOTSTRAP_WRITE if mode == "create" else _ENCRYPTED_WRITE)(
-                _command_error_boundary(
-                    with_manager_frontend(
-                        build_wizard_command(_get_setup_flow(), mode=mode),
-                        mode=mode,
-                    ),
-                )
-            ),
-        )
-        return leaf
+        return build_wizard_leaf_app(name, mode, help=help, epilog=epilog)
 
     _register_lazy_subcommand(
         "profile",
         _LazySubcommand(name, _LazyFactoryTarget(_factory), decorate=_decorate_typer_app),
     )
+
+
+def build_wizard_leaf_app(
+    name: str,
+    mode: WizardPersistMode,
+    *,
+    help: str,
+    epilog: str | None = None,
+) -> typer.Typer:
+    """Build one wizard leaf for any owning lazy-registry key."""
+    from ....application.wizard import build_wizard_command
+
+    leaf = typer.Typer()
+    passthrough: _LeafPassthrough = {"help": help, "epilog": epilog}
+    leaf.command(name, **passthrough)(
+        _command_execution_policy(_BOOTSTRAP_WRITE if mode == "create" else _ENCRYPTED_WRITE)(
+            _command_error_boundary(
+                with_manager_frontend(
+                    build_wizard_command(_get_setup_flow(), mode=mode),
+                    mode=mode,
+                ),
+            )
+        ),
+    )
+    return leaf

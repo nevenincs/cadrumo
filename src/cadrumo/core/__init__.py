@@ -427,6 +427,7 @@ if TYPE_CHECKING:
         OBSERVATION_BACKED_BINDING_SOURCE_KINDS,
         AggregationCaptureKind,
         BindingSourceKind,
+        CalculationSourceLineageRole,
         IntracomOperationType,
     )
     from .compatibility_lifecycle import (
@@ -587,6 +588,7 @@ __all__: list[str] = [
     "AuthProviderKind",
     "BindingSourceKind",
     "BucketPointer",
+    "CalculationSourceLineageRole",
     "CasillaId",
     "CasillaValueKind",
     "ClassifierInputSource",
@@ -915,6 +917,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "AuthProviderKind": "._auth_provider",
     "BROWSER_EXTRA": "._optional_extras",
     "BindingSourceKind": ".aggregation",
+    "CalculationSourceLineageRole": ".aggregation",
     "BucketPointer": "._bucket_pointer",
     "COMPATIBILITY_REGIME": ".compatibility_lifecycle",
     "CasillaId": "._casilla_id",

@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import BindingSourceKind, CasillaId, Modelo, Period
+from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period
 from ...core.errors import CoreValidationError
 from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import (
@@ -113,12 +113,15 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             provenance=(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
-                    binding_source=_SOURCE_KIND,
-                    source_kind=_SOURCE_KIND.value,
+                    resolved_binding_source=_SOURCE_KIND,
+                    contributor_source_kind=_SOURCE_KIND.value,
+                    contributor_binding_source=_SOURCE_KIND,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=(
                         "m303-regimen-simplificado-annual-summary:"
                         f"{source.work_unit_id}:{source_revision.calculation_revision_id}"
                     ),
+                    parent_source_ref=None,
                     fingerprint=handoff.digest,
                     source_modelo=requirement.source_modelo,
                     source_filing_year=source.filing_year,

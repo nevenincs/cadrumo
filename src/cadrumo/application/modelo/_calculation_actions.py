@@ -949,9 +949,12 @@ def _source_provenance_refs(
     return tuple(
         CalculationSourceRef(
             resolver_id=provenance.resolver_id,
-            source_kind=provenance.source_kind,
-            binding_source=provenance.binding_source,
+            resolved_binding_source=provenance.resolved_binding_source,
+            contributor_source_kind=provenance.contributor_source_kind,
+            contributor_binding_source=provenance.contributor_binding_source,
+            lineage_role=provenance.lineage_role,
             source_ref=provenance.source_ref,
+            parent_source_ref=provenance.parent_source_ref,
             fingerprint=provenance.fingerprint,
             dependency_treatment=provenance.dependency_treatment,
         )

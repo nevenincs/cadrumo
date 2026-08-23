@@ -1,0 +1,295 @@
+# Modelo 220 RECORD T22005A00 -- ESTADO DE INGRESOS Y GASTOS CONSOLIDADOS RECONOCIDOS:
+# the resultado consolidado del ejercicio, the ingresos y gastos imputados directamente en
+# el patrimonio neto consolidado, the transferencias a la cuenta de perdidas y ganancias
+# consolidada, and the three closing totals.
+#
+# 21 casillas describe all 31 design fields -- 21 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position. Every box carries AEAT's own five-digit
+# number, so not one number here is minted. This is a FLAT record: no repeating block.
+#
+# THE SECTION IS DERIVED FROM THE ALL-CAPS HEADING AEAT PRINTS ON EACH LINE, and the
+# headings found are asserted to be exactly the 4 this fragment knows. The
+# resultado consolidado line carries no heading at all and is filed under its own section
+# rather than inheriting a neighbour's.
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY. AEAT emits U+FB01 307
+# times and U+FB02 twice across this design, and 29 of those are followed by a SPACE that
+# splits the word. THIS RECORD CARRIES ALL THREE FORMS OF ONE WORD: "instrumentos
+# U+FB01 nancieros" at @33, "instrumentos U+FB01nancieros" at @50, and plain "Activos
+# financieros" in the same line at @50. Expanding the codepoint alone would leave
+# "fi nancieros" in an operator label. A split is therefore rejoined ONLY when the joined
+# token already appears as a whole word elsewhere in this design -- evidence from AEAT's
+# own text, not a guess about where a word breaks. 3 rejoin(s) applied here:
+#   'fi nancieros' -> 'financieros', attested 615 time(s) elsewhere in the design
+#   'fl ujos' -> 'flujos', attested 7 time(s) elsewhere in the design
+#
+# NUMBERS 00343 AND 00352 ARE ABSENT from this record's otherwise consecutive runs
+# (00336..00345 skips 00343, 00346..00354 skips 00352). Recorded because a reader checking
+# for a contiguous range would conclude two boxes were dropped in transcription. They are
+# not in this sheet at all.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22005A00 tiles
+# 1..534 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @373+150 RESERVADO PARA LA ADMINISTRACION; and
+# @523+12 Fin de registro.
+#
+# NOT CLAIMED: the three totals are DECLARED, not computed. AEAT's own structure says
+# [00345] sums its section, [00354] sums its section, and [00355] is the consolidated
+# total split between the sociedad dominante and the socios externos -- and NO formula,
+# construct or binding expresses any of that here.
+
+# @16+17 N. Resultado consolidado del ejercicio [00500]
+[[revisions."2024".casillas]]
+id = "T22005A00:00500"
+number = "00500"
+segmento = "T22005A00"
+section = ["liquidacion", "resultado_consolidado"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Por valoración de instrumentos ﬁ nancieros [00336]
+[[revisions."2024".casillas]]
+id = "T22005A00:00336"
+number = "00336"
+segmento = "T22005A00"
+section = ["liquidacion", "ingresos_gastos_patrimonio_neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Por valoración de instrumentos ﬁnancieros. Activos financieros a valor razonable con cambios en el patrimonio neto [00337]
+[[revisions."2024".casillas]]
+id = "T22005A00:00337"
+number = "00337"
+segmento = "T22005A00"
+section = ["liquidacion", "ingresos_gastos_patrimonio_neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Por valoración de instrumentos ﬁnancieros. Otros ingresos / gastos [00338]
+[[revisions."2024".casillas]]
+id = "T22005A00:00338"
+number = "00338"
+segmento = "T22005A00"
+section = ["liquidacion", "ingresos_gastos_patrimonio_neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Por coberturas de ﬂ ujos de efectivo [00339]
+[[revisions."2024".casillas]]
+id = "T22005A00:00339"
+number = "00339"
+segmento = "T22005A00"
+section = ["liquidacion", "ingresos_gastos_patrimonio_neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Subvenciones, donaciones y legados recibidos [00340]
+[[revisions."2024".casillas]]
+id = "T22005A00:00340"
+number = "00340"
+segmento = "T22005A00"
+section = ["liquidacion", "ingresos_gastos_patrimonio_neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Por ganancias y pérdidas actuariales y otros ajustes [00341]
+[[revisions."2024".casillas]]
+id = "T22005A00:00341"
+number = "00341"
+segmento = "T22005A00"
+section = ["liquidacion", "ingresos_gastos_patrimonio_neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Por activos no corrientes y pasivos vinculados, mantenidos para la venta [00342]
+[[revisions."2024".casillas]]
+id = "T22005A00:00342"
+number = "00342"
+segmento = "T22005A00"
+section = ["liquidacion", "ingresos_gastos_patrimonio_neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Efecto impositivo [00344]
+[[revisions."2024".casillas]]
+id = "T22005A00:00344"
+number = "00344"
+segmento = "T22005A00"
+section = ["liquidacion", "ingresos_gastos_patrimonio_neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Total ingresos y gastos imputados directamente en el patrimonio neto consolidado [00345]
+[[revisions."2024".casillas]]
+id = "T22005A00:00345"
+number = "00345"
+segmento = "T22005A00"
+section = ["liquidacion", "ingresos_gastos_patrimonio_neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Por valoración de instrumentos ﬁnancieros [00346]
+[[revisions."2024".casillas]]
+id = "T22005A00:00346"
+number = "00346"
+segmento = "T22005A00"
+section = ["liquidacion", "transferencias_perdidas_ganancias"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Por valoración de instrumentos ﬁnancieros. Activos financieros a valor razonable con cambios en el patrimonio neto [00347]
+[[revisions."2024".casillas]]
+id = "T22005A00:00347"
+number = "00347"
+segmento = "T22005A00"
+section = ["liquidacion", "transferencias_perdidas_ganancias"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Por valoración de instrumentos ﬁnancieros. Otros ingresos / gastos [00348]
+[[revisions."2024".casillas]]
+id = "T22005A00:00348"
+number = "00348"
+segmento = "T22005A00"
+section = ["liquidacion", "transferencias_perdidas_ganancias"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Por coberturas de ﬂ ujos de efectivo [00349]
+[[revisions."2024".casillas]]
+id = "T22005A00:00349"
+number = "00349"
+segmento = "T22005A00"
+section = ["liquidacion", "transferencias_perdidas_ganancias"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Subvenciones, donaciones y legados recibidos [00350]
+[[revisions."2024".casillas]]
+id = "T22005A00:00350"
+number = "00350"
+segmento = "T22005A00"
+section = ["liquidacion", "transferencias_perdidas_ganancias"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Por activos no corrientes y pasivos vinculados, mantenidos para la venta [00351]
+[[revisions."2024".casillas]]
+id = "T22005A00:00351"
+number = "00351"
+segmento = "T22005A00"
+section = ["liquidacion", "transferencias_perdidas_ganancias"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Efecto impositivo [00353]
+[[revisions."2024".casillas]]
+id = "T22005A00:00353"
+number = "00353"
+segmento = "T22005A00"
+section = ["liquidacion", "transferencias_perdidas_ganancias"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Total transferencia a la cuenta de pérdidas y ganancias consolidada [00354]
+[[revisions."2024".casillas]]
+id = "T22005A00:00354"
+number = "00354"
+segmento = "T22005A00"
+section = ["liquidacion", "transferencias_perdidas_ganancias"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. TOTAL DE INGRESOS Y GASTOS CONSOLIDADOS RECONOCIDOS [00355]
+[[revisions."2024".casillas]]
+id = "T22005A00:00355"
+number = "00355"
+segmento = "T22005A00"
+section = ["liquidacion", "total_ingresos_gastos_reconocidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. TOTAL DE INGRESOS Y GASTOS CONSOLIDADOS RECONOCIDOS.Total de ingresos y gastos atribuidos a la sociedad dominante [00333]
+[[revisions."2024".casillas]]
+id = "T22005A00:00333"
+number = "00333"
+segmento = "T22005A00"
+section = ["liquidacion", "total_ingresos_gastos_reconocidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 N. TOTAL DE INGRESOS Y GASTOS CONSOLIDADOS RECONOCIDOS. Total de ingresos y gastos atribuidos a socios externos [00334]
+[[revisions."2024".casillas]]
+id = "T22005A00:00334"
+number = "00334"
+segmento = "T22005A00"
+section = ["liquidacion", "total_ingresos_gastos_reconocidos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

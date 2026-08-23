@@ -42,7 +42,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
+from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry import (
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
     RegistryModeloObservation,
@@ -617,9 +617,12 @@ def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate()
                 provenance=(
                     CalculationSourceProvenance(
                         resolver_id="previous_filing",
-                        binding_source=BindingSourceKind.PREVIOUS_FILING,
-                        source_kind="previous_filing",
+                        resolved_binding_source=BindingSourceKind.PREVIOUS_FILING,
+                        contributor_source_kind="previous_filing",
+                        contributor_binding_source=BindingSourceKind.PREVIOUS_FILING,
+                        lineage_role=CalculationSourceLineageRole.PRIMARY,
                         source_ref=f"100:2025:0A:{reused_binding_id}",
+                        parent_source_ref=None,
                     ),
                 ),
             ),
@@ -629,9 +632,12 @@ def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate()
                 provenance=(
                     CalculationSourceProvenance(
                         resolver_id="relation_prefill",
-                        binding_source=BindingSourceKind.RELATION_PREFILL,
-                        source_kind="relation_prefill",
+                        resolved_binding_source=BindingSourceKind.RELATION_PREFILL,
+                        contributor_source_kind="relation_prefill",
+                        contributor_binding_source=BindingSourceKind.RELATION_PREFILL,
+                        lineage_role=CalculationSourceLineageRole.PRIMARY,
                         source_ref=f"{reused_relation_id}:100:2025:0A",
+                        parent_source_ref=None,
                     ),
                 ),
             ),

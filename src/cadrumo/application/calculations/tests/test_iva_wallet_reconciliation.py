@@ -123,7 +123,8 @@ def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_proven
 
     assert resolution.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200")}
     assert resolution.owned_sources == (BindingSourceKind.IVA_WALLET_DECISION,)
-    assert {item.source_kind for item in resolution.provenance} == {
+    assert {item.contributor_source_kind for item in resolution.provenance} == {
+        "iva_wallet_decision",
         "aeat_wallet",
         "local_recurrence",
     }
