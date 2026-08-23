@@ -1,0 +1,302 @@
+# Modelo 220 RECORD T22003B02 -- BALANCE CONSOLIDADO, ACTIVO (continuation), in the shape used by entidades
+# aseguradoras: inmovilizado intangible, participaciones en entidades del
+# grupo y asociadas, activos fiscales, otros activos, activos en venta, and
+# the closing TOTAL ACTIVO.
+#
+# 20 casillas describe all 30 design fields -- 20 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position. Every box carries AEAT's own five-digit
+# number, so not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# THE SHEET SUFFIX SAYS B AND THIS RECORD IS AN ACTIVO PAGE. It continues
+# T22003A02 and closes it on [00162] TOTAL ACTIVO. The suffix letters in this
+# family do NOT track the side of the balance -- read the descriptions, never
+# the sheet names.
+#
+# FOUR BOXES READ AS SIBLINGS AND ARE LEFT THAT WAY: [00150] participaciones en
+# Empresas asociadas, [00151] participaciones en empresas multigrupo and [00152]
+# participaciones en entidades del grupo no consolidadas carry NO prefix naming
+# [00149] participaciones en entidades del grupo y asociadas, though on the
+# printed modelo they break it down. Nested only where the line says so.
+#
+# AEAT CAPITALISES "Empresas" ON [00150] AND NOT ON [00151], inside one group of
+# three otherwise parallel lines. Transcribed as printed; a rule that
+# regularised the casing would be a rule about AEAT's typography, and this
+# campaign has paid three times for rules like that.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
+# intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is
+# derived as the common prefix of every numbered line and the remainder is stripped, so
+# both spellings land on the same heading. 0 parent-child separator repair(s)
+# applied: none needed.
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 0
+# rejoin(s) applied: none.
+
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22003B02 tiles
+# 1..517 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 03, letra B, hoja 02. Sibling sector pages of this
+# family share every heading AEAT prints in the BODY -- two records both head their
+# lines "ACTIVO" and both declare a "Total activo" -- so the envelope is the ONLY
+# non-inferential way to tell them apart. The operator label carries it for exactly
+# that reason; it claims no sector, which the design does not state.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @356+150 RESERVADO PARA LA ADMINISTRACION; and
+# @506+12 Fin de registro.
+#
+# NOT CLAIMED: THIS BALANCE SHEET DOES NOT BALANCE HERE. Every subtotal and the TOTAL are
+# DECLARED, not computed: no formula, construct or binding sums a group into its head or
+# the heads into the total, and nothing checks activo against patrimonio neto plus pasivo.
+# Every box is a manual input.
+
+# @16+17 N. ACTIVO. Inmovilizado intangible. [00145]
+[[revisions."2024".casillas]]
+id = "T22003B02:00145"
+number = "00145"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. ACTIVO. Inmovilizado intangible. Fondo de comercio. [00647]
+[[revisions."2024".casillas]]
+id = "T22003B02:00647"
+number = "00647"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. ACTIVO. Inmovilizado intangible. Fondo de comercio de consolidación. [00648]
+[[revisions."2024".casillas]]
+id = "T22003B02:00648"
+number = "00648"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. ACTIVO. Inmovilizado intangible. Otros. [00146]
+[[revisions."2024".casillas]]
+id = "T22003B02:00146"
+number = "00146"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. ACTIVO. Inmovilizado intangible. Derechos económicos derivados de carteras de pólizas adquiridas a mediadores. [00147]
+[[revisions."2024".casillas]]
+id = "T22003B02:00147"
+number = "00147"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. ACTIVO. Inmovilizado intangible. Otro activo intangible. [00148]
+[[revisions."2024".casillas]]
+id = "T22003B02:00148"
+number = "00148"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. ACTIVO. Participaciones en entidades del grupo y asociadas. [00149]
+[[revisions."2024".casillas]]
+id = "T22003B02:00149"
+number = "00149"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. ACTIVO. Participaciones en Empresas asociadas. [00150]
+[[revisions."2024".casillas]]
+id = "T22003B02:00150"
+number = "00150"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. ACTIVO. Participaciones en empresas multigrupo. [00151]
+[[revisions."2024".casillas]]
+id = "T22003B02:00151"
+number = "00151"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. ACTIVO. Participaciones en entidades del grupo no consolidadas. [00152]
+[[revisions."2024".casillas]]
+id = "T22003B02:00152"
+number = "00152"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. ACTIVO. Activos fiscales. [00153]
+[[revisions."2024".casillas]]
+id = "T22003B02:00153"
+number = "00153"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. ACTIVO. Activos fiscales. Activos por impuesto corriente. [00154]
+[[revisions."2024".casillas]]
+id = "T22003B02:00154"
+number = "00154"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. ACTIVO. Activos fiscales. Activos por impuesto diferido. [00155]
+[[revisions."2024".casillas]]
+id = "T22003B02:00155"
+number = "00155"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. ACTIVO. Otros activos. [00156]
+[[revisions."2024".casillas]]
+id = "T22003B02:00156"
+number = "00156"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. ACTIVO. Otros activos. Activos y derechos de reembolso por retribuciones a largo plazo al personal. [00157]
+[[revisions."2024".casillas]]
+id = "T22003B02:00157"
+number = "00157"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. ACTIVO. Otros activos. Comisiones anticipadas y otros costes de adquisición. [00158]
+[[revisions."2024".casillas]]
+id = "T22003B02:00158"
+number = "00158"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. ACTIVO. Otros activos. Periodificaciones. [00159]
+[[revisions."2024".casillas]]
+id = "T22003B02:00159"
+number = "00159"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. ACTIVO. Otros activos. Resto de activos. [00160]
+[[revisions."2024".casillas]]
+id = "T22003B02:00160"
+number = "00160"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. ACTIVO. Activos y grupos de activos en venta. [00161]
+[[revisions."2024".casillas]]
+id = "T22003B02:00161"
+number = "00161"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. ACTIVO. TOTAL ACTIVO. [00162]
+[[revisions."2024".casillas]]
+id = "T22003B02:00162"
+number = "00162"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

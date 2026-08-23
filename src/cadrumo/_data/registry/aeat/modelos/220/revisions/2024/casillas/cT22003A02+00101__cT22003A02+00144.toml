@@ -54,6 +54,13 @@
 # 2024-12-31 -- exactly the single ejercicio this revision claims. T22003A02 tiles
 # 1..976 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
 #
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 03, letra A, hoja 02. Sibling sector pages of this
+# family share every heading AEAT prints in the BODY -- two records both head their
+# lines "ACTIVO" and both declare a "Total activo" -- so the envelope is the ONLY
+# non-inferential way to tell them apart. The operator label carries it for exactly
+# that reason; it claims no sector, which the design does not state.
+#
 # NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
 # pagina-complementaria mechanics; @815+150 RESERVADO PARA LA ADMINISTRACION; and
 # @965+12 Fin de registro.
