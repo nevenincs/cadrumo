@@ -21,6 +21,7 @@ from ._producer_snapshot import (
     Modelo202ProducerProfile,
     Modelo210ProfileFacts,
     Modelo222ProfileFacts,
+    Modelo296ProfileFacts,
     Modelo353ProfileFacts,
     RefundAccountSelection,
 )
@@ -413,6 +414,10 @@ def filing_producer_ownership() -> dict[FilingProducerKey, str]:
         FilingProducerKey.M202_NORMATIVA_TERRITORIO_FORAL,
         FilingProducerKey.M202_COMUNICACION_DATOS_ADICIONALES,
         FilingProducerKey.M202_NUMERO_REFERENCIA_SOCIEDADES,
+        # Derived from the resolver's own map rather than restated: a second copy
+        # here would let the ownership claim and the resolver drift apart, and the
+        # exhaustiveness assertion below would then fire on a key one of them forgot.
+        *_M296_DECLARANTE_FIELD_BY_KEY,
     }
     owners = {key: "shared_snapshot" for key in shared}
     for key in FilingProducerKey:
@@ -467,6 +472,47 @@ def m222_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingP
     profile = model_profile if isinstance(model_profile, Modelo222ProfileFacts) else None
     return {
         key: (getattr(profile, field) if profile is not None else None) for key, field in _M222_FIELD_BY_KEY.items()
+    }
+
+
+_M296_DECLARANTE_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M296_DEC_EJERCICIO: "ejercicio",
+    FilingProducerKey.M296_DEC_NIF_DEL_DECLARANTE: "nif_del_declarante",
+    FilingProducerKey.M296_DEC_APELLIDOS_Y_NOMBRE_O_RAZON_SOCIAL_DEL: "apellidos_y_nombre_o_razon_social_del",
+    FilingProducerKey.M296_DEC_TIPO_DE_SOPORTE: "tipo_de_soporte",
+    FilingProducerKey.M296_DEC_TELEFONO: "telefono",
+    FilingProducerKey.M296_DEC_APELLIDOS_Y_NOMBRE: "apellidos_y_nombre",
+    FilingProducerKey.M296_DEC_NUMERO_IDENTIFICATIVO_DE_LA_DECLARACIO: "numero_identificativo_de_la_declaracio",
+    FilingProducerKey.M296_DEC_DECLARACION_COMPLEMENTARIA_O_SUSTITUTI: "declaracion_complementaria_o_sustituti",
+    FilingProducerKey.M296_DEC_NUMERO_IDENTIFICATIVO_DE_LA_DECLARACIO_2: "numero_identificativo_de_la_declaracio_2",
+    FilingProducerKey.M296_DEC_NUMERO_TOTAL_DE_PERCEPTORES: "numero_total_de_perceptores",
+    FilingProducerKey.M296_DEC_N: "n",
+    FilingProducerKey.M296_DEC_SELLO_ELECTRONICO: "sello_electronico",
+}
+
+
+def m296_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
+    """Resolve the declarante identities Modelo 296's tipo-1 record cites.
+
+    All twelve ``m296.dec.*`` keys were declared in the vocabulary and produced by nothing,
+    so the ejercicio, the declarante NIF and the razon social rendered blank on the IRNR
+    annual withholding summary.
+
+    This covers the declarante record only. The four detail records -- perceptor,
+    perceptor-intereses and the two anexos -- cite a further hundred keys that are NOT
+    header facts: they are per-payee and per-pago rows, and each of those records is
+    published as a single non-repeating record, so a resolver here would put one payee into
+    a one-row layout and drop the rest. They are deliberately left unresolved until the
+    records repeat.
+
+    A profile of the wrong type yields every key as ``None`` rather than raising: this
+    resolver runs for every modelo, and only Modelo 296's snapshot validator may decide
+    that a 296 filing without declarante facts is invalid.
+    """
+    profile = model_profile if isinstance(model_profile, Modelo296ProfileFacts) else None
+    return {
+        key: (getattr(profile, field) if profile is not None else None)
+        for key, field in _M296_DECLARANTE_FIELD_BY_KEY.items()
     }
 
 
@@ -914,6 +960,7 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
     values.update(m202_producer_values(snapshot.model_profile))
     values.update(m210_producer_values(snapshot.model_profile))
     values.update(m200_producer_values(snapshot.model_profile))
+    values.update(m296_producer_values(snapshot.model_profile))
     values.update(m353_producer_values(snapshot.model_profile))
     shared_owned = {key for key, owner in filing_producer_ownership().items() if owner == "shared_snapshot"}
     if set(values) != shared_owned:

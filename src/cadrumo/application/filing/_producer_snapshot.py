@@ -265,6 +265,73 @@ class Modelo353ProfileFacts(BaseModel):
     grupo_normativa_foral: _XOrBlankMark | None = None
 
 
+_M296SupportType = Annotated[str, StringConstraints(pattern=r"^[TC]$")]
+_M296AmendmentMark = Annotated[str, StringConstraints(min_length=1, max_length=2)]
+_FourDigitYear = Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+_DigitString9 = Annotated[str, StringConstraints(pattern=r"^\d{1,9}$")]
+
+
+class Modelo296ProfileFacts(BaseModel):
+    """Declarant identity the Modelo 296 tipo-1 record declares.
+
+    Modelo 296 is the IRNR annual summary of retenciones e ingresos a cuenta on rentas
+    obtained by non-residents without permanent establishment (TRLIRNR art. 24, Orden
+    EHA/3290/2008 art. 6). Its first record identifies who is declaring, for which
+    ejercicio, and how many perceptores the file carries.
+
+    All twelve ``m296.dec.*`` keys were declared in the vocabulary and produced by nothing,
+    so every one of them rendered blank: the ejercicio at offset 5, the declarante NIF at
+    offset 9 and the razon social at offset 18 among them. A 296 emitted that way names
+    nobody.
+
+    Field names are the AEAT key tails verbatim, including two the source design truncated:
+    ``apellidos_y_nombre`` is *persona con quien relacionarse* (design ordinal 7, the
+    49-byte contact block AEAT splits into a 9-byte telefono and a 40-byte name), and ``n``
+    is ``N.I.F. DEL REPRESENTANTE LEGAL.`` (design ordinal 16, offset 391) -- the slug
+    stopped at the first period in the label. Renaming either would change a published
+    layout, so the name stays and the meaning is recorded here.
+
+    ``ejercicio`` restates a year the draft already knows. The structurally better home is
+    a ``draft`` field carrying ``ExportDraftAttribute.FILING_YEAR``, which cannot disagree
+    with the draft; that is a layout change and is not made here. Until it is, a snapshot
+    builder must populate this from the draft's own filing year rather than from an
+    independently entered value.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    #: Ejercicio -- design offset 5, length 4, four-digit year.
+    ejercicio: _FourDigitYear
+    #: NIF del declarante -- design offset 9, length 9.
+    nif_del_declarante: _NonBlankName
+    #: Apellidos y nombre o razon social del declarante -- design offset 18, length 40.
+    apellidos_y_nombre_o_razon_social_del: _NonBlankName
+    #: Tipo de soporte -- design offset 58, length 1, alfabetico.
+    tipo_de_soporte: _M296SupportType | None = None
+    #: Persona con quien relacionarse, telefono -- design offset 59, length 9.
+    telefono: _DigitString9 | None = None
+    #: Persona con quien relacionarse, apellidos y nombre -- design offset 68, length 40.
+    apellidos_y_nombre: _NonBlankName | None = None
+    #: Numero identificativo de la declaracion -- design offset 108, length 13.
+    numero_identificativo_de_la_declaracio: _AeatReceiptNumber | None = None
+    #: Declaracion complementaria o sustitutiva -- design offset 121, length 2.
+    declaracion_complementaria_o_sustituti: _M296AmendmentMark | None = None
+    #: Numero identificativo de la declaracion anterior -- design offset 123, length 13.
+    numero_identificativo_de_la_declaracio_2: _AeatReceiptNumber | None = None
+    #: Numero total de perceptores -- design offset 136, length 9.
+    #:
+    #: An operator-supplied count that the perceptor rows themselves determine. It is
+    #: optional here deliberately: once the perceptor record repeats its rows, the count is
+    #: derived from them, and a value stated here that disagrees with the rows is a defect
+    #: rather than a fact.
+    numero_total_de_perceptores: _DigitString9 | None = None
+    #: N.I.F. del representante legal -- design offset 391, length 9. See the class note on
+    #: why the key tail is ``n``.
+    n: _NonBlankName | None = None
+    #: Sello electronico -- design offset 488, length 13.
+    sello_electronico: str | None = None
+
+
 class Modelo210ContribuyenteFacts(BaseModel):
     """Modelo 210 contribuyente facts, flat members named from the AEAT component vocabulary."""
 
@@ -1115,6 +1182,7 @@ type FilingModelProfileFacts = (
     | Modelo200ProfileFacts
     | Modelo210ProfileFacts
     | Modelo222ProfileFacts
+    | Modelo296ProfileFacts
     | Modelo353ProfileFacts
     | ModeloIVAProfile
 )
@@ -1169,10 +1237,19 @@ def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo is Modelo.M303:
         _validate_modelo_303_snapshot(snapshot)
         return
+    if snapshot.modelo is Modelo.M296:
+        _validate_modelo_296_snapshot(snapshot)
+        return
     if snapshot.modelo is Modelo.M353:
         _validate_modelo_353_snapshot(snapshot)
         return
     _validate_general_modelo_snapshot(snapshot)
+
+
+def _validate_modelo_296_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    """Modelo 296 identifies a declarante and an ejercicio; it cannot be filed without them."""
+    if not isinstance(snapshot.model_profile, Modelo296ProfileFacts):
+        raise ValueError("modelo 296 requires Modelo296ProfileFacts")
 
 
 def _validate_modelo_353_snapshot(snapshot: FilingProducerSnapshot) -> None:
