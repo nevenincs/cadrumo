@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:17115ae44615640f9ba928f746494d981889cc7a58a73095c3b993e14fd843bd'
+body_hash: 'sha256:1c578829c996bdaafe1dfdb2b7a3ff1027579aa757ded169058d43422b71fe51'
 ---
 
 # `source-casilla-integration` plan
@@ -126,7 +126,7 @@ Resolve the inventory tax mapping before changing production behavior, then deli
 
 Settle revision coverage, source facts, sign, units, activity grain, absence semantics, and override ownership.
 
-- [ ] `W02.P06.S31` - ground M100 inventory increase, purchases, and decrease semantics against official AEAT and BOE sources; `.vault/research/2026-08-22-inventory-casilla-grounding-research.md`.
+- [x] `W02.P06.S31` - ground M100 inventory increase, purchases, and decrease semantics against official AEAT and BOE sources; `.vault/research/2026-08-23-inventory-casilla-grounding-research.md`.
 - [ ] `W02.P06.S32` - adjudicate the mapping from opening stock, purchase movements, and closing stock to 0177, 0181, and 0182; `.vault/adr/2026-08-22-inventory-casilla-mapping-adr.md`.
 - [ ] `W02.P06.S33` - decide revision windows, activity aggregation, sign, rounding, missing-ledger behavior, and caller override policy; `.vault/adr/2026-08-22-inventory-casilla-mapping-adr.md`.
 - [ ] `W02.P06.S34` - remove or correct the stale Anexo D casilla 0155 intent after adjudication; `src/cadrumo/domain/contribuyente/inventory/__init__.py`.
