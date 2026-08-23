@@ -135,6 +135,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from bisect import bisect_right
 from datetime import date
 from functools import cache, lru_cache
 from itertools import combinations, pairwise
@@ -1388,7 +1389,67 @@ def _compare_design_pair(earlier: Path, later: Path) -> list[str]:
     if description:
         evidence.append(description)
 
+    # SEVENTH SIGNAL: a pure displacement, which every signal above is blind to.
+    straddle = _straddle_evidence(earlier, later)
+    if straddle:
+        evidence.append(straddle)
+
     return evidence
+
+
+
+def _straddle_evidence(earlier: Path, later: Path) -> str | None:
+    """SEVENTH SIGNAL: a field DISPLACED so it overlaps another without containing it.
+
+    The signal every other one here is blind to, and the blindness is structural
+    rather than incidental. The box signals key on a bracketed number, so a
+    design that prints none -- Modelo 347's do not -- gives them nothing to
+    watch. The membership signals key on a field being added or removed, so a
+    pure WIDENING leaves them seeing the same set before and after. Modelo 347's
+    2010 and 2011 declarante records have the SAME field count and the same
+    descriptions; all that changed is that ``IMPORTE TOTAL ANUAL`` grew from 15
+    bytes to 16 and pushed everything after it one position along.
+
+    That is a re-layout by any useful definition -- a filing written at the
+    wrong one is a byte out from position 145 to the end of the record -- and it
+    went unreported.
+
+    WHAT STRADDLING MEANS, AND WHY IT IS THE RIGHT TEST. Where a field of one
+    design sits wholly INSIDE a field of the other, the narrower is a
+    subdivision of the wider: AEAT split or merged a slot, and the bytes still
+    correspond. Where two fields overlap with neither containing the other, each
+    covers bytes the other does not, and no correspondence survives. So
+    containment is tolerated and straddling is evidence, which is the same
+    distinction the record-design contiguity rules already turn on.
+
+    Reads BYTES, so it needs neither a box number nor a description change.
+    """
+    before = {sheet.name: sheet for sheet in _design_sheets(earlier)}
+    after = {sheet.name: sheet for sheet in _design_sheets(later)}
+
+    straddles: list[str] = []
+    for name in sorted(set(before) & set(after)):
+        later_fields = sorted(after[name].fields, key=lambda field: field.offset)
+        starts = [field.offset for field in later_fields]
+        for a in before[name].fields:
+            a_start, a_end = a.offset, a.offset + a.length - 1
+            # Only fields starting at or before a_end can overlap; walk back far
+            # enough to catch one that starts earlier and reaches into a.
+            index = bisect_right(starts, a_end)
+            for b in reversed(later_fields[:index]):
+                b_start, b_end = b.offset, b.offset + b.length - 1
+                if b_end < a_start:
+                    break
+                if (a_start >= b_start and a_end <= b_end) or (b_start >= a_start and b_end <= a_end):
+                    continue
+                straddles.append(f"{name} @{a_start}-{a_end} vs @{b_start}-{b_end}")
+
+    if not straddles:
+        return None
+    return (
+        f"{len(straddles)} field(s) displaced so they straddle the other design's "
+        f"boundaries (e.g. {straddles[0]})"
+    )
 
 
 def _occupancy_evidence(earlier: Path, later: Path) -> list[str]:

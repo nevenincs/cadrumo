@@ -120,6 +120,594 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+            x-chim8bj9dpq2qp3k68piqob3egp38bb4d4p30chk5lgn0r39cc:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. 2024. uzleti ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qp3k68piqob3egp38bb4d4p30chk5ljmarg:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. 2024. uzleti ev. keletkezett levonas
+            x-chim8bj9dpq2qp3k68piqob3egp38bb4d4p30chk5lo6arj45lj7at0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. 2024. uzleti ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojabb1e1m6ioo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2015. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojabbgcln68bb1dpq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2015. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojabbgcln68bb5d8:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2015. evi kettos adoztatas. 2024-ben
+                fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojabbgcln68bb6elq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2015. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojcbb1e1m6ioo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2016. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojcbbgcln68bb1dpq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2016. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojcbbgcln68bb5d8:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2016. evi kettos adoztatas. 2024-ben
+                fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojcbbgcln68bb6elq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2016. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojebb1e1m6ioo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2017. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojebbgcln68bb1dpq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2017. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojebbgcln68bb5d8:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2017. evi kettos adoztatas. 2024-ben
+                fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojebbgcln68bb6elq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2017. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojgbb1e1m6ioo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2018. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojgbbgcln68bb1dpq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2018. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojgbbgcln68bb5d8:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2018. evi kettos adoztatas. 2024-ben
+                fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojgbbgcln68bb6elq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2018. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojibb1e1m6ioo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2019. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojibbgcln68bb1dpq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2019. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojibbgcln68bb5d8:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2019. evi kettos adoztatas. 2024-ben
+                fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60ojibbgcln68bb6elq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2019. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p30bb1e1m6ioo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2020. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p30bbgcln68bb1dpq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2020. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p30bbgcln68bb5d8:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2020. evi kettos adoztatas. 2024-ben
+                fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p30bbgcln68bb6elq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2020. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p32bb1e1m6ioo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2021. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p32bbgcln68bb1dpq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2021. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p32bbgcln68bb5d8:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2021. evi kettos adoztatas. 2024-ben
+                fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p32bbgcln68bb6elq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2021. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p34bb1e1m6ioo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2022. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p34bbgcln68bb1dpq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2022. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p34bbgcln68bb5d8:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2022. evi kettos adoztatas. 2024-ben
+                fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p34bbgcln68bb6elq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2022. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p36bb1e1m6ioo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2023. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p36bbgcln68bb1dpq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2023. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p36bbgcln68bb5d8:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2023. evi kettos adoztatas. 2024-ben
+                fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p36bbgcln68bb6elq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2023. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p38bb1e1m6ioo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2024. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p38bbgcln68bb1dpq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2024. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p38bbgcln68bb5d8:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2024. evi kettos adoztatas. 2024-ben
+                fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmm8q9i60p38bbgcln68bb6elq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2024. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qp3k68piqobeegmn8rrkc5m2qobgdhkm6:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. osszesen. ebben az elszamolasban
+                ervenyesitve
+            x-chim8bj9dpq2qp3k68piqobeegmn8rrkc5m2qs35dpi2qobeeg:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. osszesen. korabbi idoszakokbol fennallo
+                levonas
+            x-chim8bj9dpq2qp3k68piqobeegmn8rrkc5m2qs35dpi2qpba:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. osszesen. 2024-ben fennallo levonas
+            x-chim8bj9dpq2qp3k68piqobeegmn8rrkc5m2qs35dpi2qpjleg:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. osszesen. jovobeli idoszakokban
+                ervenyesitheto
+            x-chim8bj9dpq2qp3k68piqt3fehgmobb1e1m6ioo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. osszesen. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qp3k68piqt3fehgmobb7cln0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. osszesen. keletkezett levonas
+            x-chim8bj9dpq2qp3k68piqt3fehgmobbgcln68bb6elq0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. osszesen. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g70mm2s3cd5hg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g70mn0pbecgmm2rjk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g70mn0pbecgmmaqg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g70mn0pbecgmmctbk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g74mm2s3cd5hg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g74mn0pbecgmm2rjk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g74mn0pbecgmmaqg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1g74mn0pbecgmmctbk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h60mm2s3cd5hg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h60mn0pbecgmm2rjk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h60mn0pbecgmmaqg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h60mn0pbecgmmctbk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h64mm2s3cd5hg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h64mn0pbecgmm2rjk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h64mn0pbecgmmaqg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h64mn0pbecgmmctbk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h68mm2s3cd5hg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h68mn0pbecgmm2rjk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h68mn0pbecgmmaqg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h68mn0pbecgmmctbk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6cmm2s3cd5hg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6cmn0pbecgmm2rjk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6cmn0pbecgmmaqg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6cmn0pbecgmmctbk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6gmm2s3cd5hg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6gmn0pbecgmm2rjk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6gmn0pbecgmmaqg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebb7cln34c1h6gmn0pbecgmmctbk:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq2qsj4dhimebbkdtq62r1dc5o6oqb3:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq2qsj4dhimebbkdtq62r1de1imsp1dc5n78:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebbkdtq62r1de1imsp1dcll0:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                2024-ben fennallo levonas
+            x-chim8bj9dpq2qsj4dhimebbkdtq62r1de1imsp1dcpqn8:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojabb1e1m6ioo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2015. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojabbgcln68bb1dpq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2015. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojabbgcln68bb5d8:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2015. evi kettos adoztatas. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojabbgcln68bb6elq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2015. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojcbb1e1m6ioo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2016. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojcbbgcln68bb1dpq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2016. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojcbbgcln68bb5d8:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2016. evi kettos adoztatas. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojcbbgcln68bb6elq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2016. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojebb1e1m6ioo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2017. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojebbgcln68bb1dpq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2017. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojebbgcln68bb5d8:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2017. evi kettos adoztatas. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojebbgcln68bb6elq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2017. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojgbb1e1m6ioo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2018. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojgbbgcln68bb1dpq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2018. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojgbbgcln68bb5d8:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2018. evi kettos adoztatas. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojgbbgcln68bb6elq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2018. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojibb1e1m6ioo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2019. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojibbgcln68bb1dpq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2019. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojibbgcln68bb5d8:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2019. evi kettos adoztatas. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60ojibbgcln68bb6elq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2019. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p30bb1e1m6ioo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2020. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p30bbgcln68bb1dpq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2020. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p30bbgcln68bb5d8:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2020. evi kettos adoztatas. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p30bbgcln68bb6elq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2020. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p32bb1e1m6ioo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2021. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p32bbgcln68bb1dpq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2021. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p32bbgcln68bb5d8:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2021. evi kettos adoztatas. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p32bbgcln68bb6elq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2021. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p34bb1e1m6ioo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2022. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p34bbgcln68bb1dpq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2022. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p34bbgcln68bb5d8:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2022. evi kettos adoztatas. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p34bbgcln68bb6elq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2022. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p36bb1e1m6ioo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2023. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p36bbgcln68bb1dpq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2023. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p36bbgcln68bb5d8:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2023. evi kettos adoztatas. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p36bbgcln68bb6elq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2023. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p38bb1e1m6ioo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2024. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p38bbgcln68bb1dpq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2024. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p38bbgcln68bb5d8:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2024. evi kettos adoztatas. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmm8q9i60p38bbgcln68bb6elq0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2024. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobeegmn8rrkc5m2qobgdhkm6:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. osszesen. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobeegmn8rrkc5m2qs35dpi2qobeeg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. osszesen. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmn8rrkc5m2qs35dpi2qpba:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. osszesen. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbcd5piqobeegmn8rrkc5m2qs35dpi2qpjleg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. osszesen. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobiegpj2bb4d4p30chk5lgn0r39cc:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. jogi kettos
+                adoztatas, az adozo altal viselt ado (LIS 31. cikk). 2024. evi kettos
+                adoztatas. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobiegpj2bb4d4p30chk5ljmarg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. jogi kettos
+                adoztatas, az adozo altal viselt ado (LIS 31. cikk). 2024. evi kettos
+                adoztatas. keletkezett levonas
+            x-chim8bj9dpq6obbcd5piqobiegpj2bb4d4p30chk5lo6arj45lj7at0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. jogi kettos
+                adoztatas, az adozo altal viselt ado (LIS 31. cikk). 2024. evi kettos
+                adoztatas. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqobiegpj4bb4d4p30chk5lgn0r39cc:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. gazdasagi
+                kettos adoztatas, osztalek es nyeresegreszesedes (LIS 32. cikk). 2024.
+                evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqobiegpj4bb4d4p30chk5ljmarg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. gazdasagi
+                kettos adoztatas, osztalek es nyeresegreszesedes (LIS 32. cikk). 2024.
+                evi kettos adoztatas. keletkezett levonas
+            x-chim8bj9dpq6obbcd5piqobiegpj4bb4d4p30chk5lo6arj45lj7at0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. gazdasagi
+                kettos adoztatas, osztalek es nyeresegreszesedes (LIS 32. cikk). 2024.
+                evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbcd5piqt3fegp38bb4d4p30chk5lgn0r39cc:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. a 2024. uzleti
+                ev osszesen. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbcd5piqt3fegp38bb4d4p30chk5ljmarg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. a 2024. uzleti
+                ev osszesen. keletkezett levonas
+            x-chim8bj9dpq6obbcd5piqt3fegp38bb4d4p30chk5lo6arj45lj7at0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. a 2024. uzleti
+                ev osszesen. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbichm6appdctimschg60qiqobgdhkm6:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2005.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbichm6appdctimschg60qiqs35dpi2qobeeg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2005.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg60qiqs35dpi2qpba:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2005.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg60qiqs35dpi2qpjleg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2005.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbichm6appdctimschg60r2qobgdhkm6:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2006.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbichm6appdctimschg60r2qs35dpi2qobeeg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2006.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg60r2qs35dpi2qpba:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2006.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg60r2qs35dpi2qpjleg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2006.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbichm6appdctimschg60riqobgdhkm6:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2007.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbichm6appdctimschg60riqs35dpi2qobeeg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2007.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg60riqs35dpi2qpba:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2007.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg60riqs35dpi2qpjleg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2007.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbichm6appdctimschg60s2qobgdhkm6:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbichm6appdctimschg60s2qs35dpi2qobeeg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg60s2qs35dpi2qpba:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg60s2qs35dpi2qpjleg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbichm6appdctimschg60siqobgdhkm6:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbichm6appdctimschg60siqs35dpi2qobeeg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg60siqs35dpi2qpba:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg60siqs35dpi2qpjleg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbichm6appdctimschg64o2qobgdhkm6:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbichm6appdctimschg64o2qs35dpi2qobeeg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg64o2qs35dpi2qpba:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg64o2qs35dpi2qpjleg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbichm6appdctimschg64oiqobgdhkm6:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbichm6appdctimschg64oiqs35dpi2qobeeg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg64oiqs35dpi2qpba:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg64oiqs35dpi2qpjleg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbichm6appdctimschg64p2qobgdhkm6:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbichm6appdctimschg64p2qs35dpi2qobeeg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg64p2qs35dpi2qpba:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg64p2qs35dpi2qpjleg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbichm6appdctimschg64piqobgdhkm6:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbichm6appdctimschg64piqs35dpi2qobeeg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg64piqs35dpi2qpba:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg64piqs35dpi2qpjleg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbichm6appdctimschg64q2qobgdhkm6:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbichm6appdctimschg64q2qs35dpi2qobeeg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg64q2qs35dpi2qpba:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. 2024-ben fennallo levonas
+            x-chim8bj9dpq6obbichm6appdctimschg64q2qs35dpi2qpjleg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto
+            x-chim8bj9dpq6obbichm6appdehnn8obc5lgn0r39cc:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                ebben az elszamolasban ervenyesitve
+            x-chim8bj9dpq6obbichm6appdehnn8obc5lo6arj45lgmst0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                korabbi idoszakokbol fennallo levonas
+            x-chim8bj9dpq6obbichm6appdehnn8obc5lo6arj45limk:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                2024-ben fennallo levonas
+            x-chim8bj9dpq6obbichm6appdehnn8obc5lo6arj45lj7at0:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                jovobeli idoszakokban ervenyesitheto
+            x-chim8bjkd5o6ubbkd5o6ubbmc5m6usg:
+              label: Adokulcs
             x-cln78qb4c5i2qp3fdlkmsobeehiisobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
               label: Anyavallalat. Vezeteknev vagy cegnev
             x-cln78qb4c5i2qp3fdlkmsobeehiisrjfdlh74p8:
