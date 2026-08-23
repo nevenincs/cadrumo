@@ -575,8 +575,8 @@ def run_installed_mcp_oracle(
     if resolved_server.stem.lower() != "cadrumo-mcp":
         try:
             project_index = tuple(server_args).index("--project") + 1
-        project = Path(server_args[project_index]).resolve(strict=True)
-        runtime_project_root = str(project)
+            project = Path(server_args[project_index]).resolve(strict=True)
+            runtime_project_root = str(project)
         except (ValueError, IndexError) as exc:
             raise InstalledMcpOracleError(
                 "wrapped MCP launch must declare its exact runtime project with --project",
