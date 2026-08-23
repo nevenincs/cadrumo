@@ -8,8 +8,12 @@ related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-research]]'
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
+  - '[[2026-08-23-inventory-casilla-mapping-adr]]'
+  - '[[2026-08-23-amortization-casilla-mapping-adr]]'
+  - '[[2026-08-23-inventory-casilla-grounding-research]]'
+  - '[[2026-08-23-amortization-casilla-grounding-research]]'
 modified: '2026-08-23'
-body_hash: 'sha256:386f0bcb2cd3e8251c8d0c2ea848ba48db064ba410d4037b5c4df1646595739c'
+body_hash: 'sha256:2ce6ee948db9e2db745c4d4a4857013000fbb010c218e43951ff5d80dabe5cc3'
 ---
 
 # `source-casilla-integration` plan
@@ -138,6 +142,13 @@ Add inventory to the canonical taxonomy and resolution mesh without bypassing se
 - [x] `W02.P07.S36` - add the inventory source kind to the canonical taxonomy; `src/cadrumo/core/aggregation.py`.
 - [x] `W02.P07.S37` - define and validate the typed inventory selector contract; `src/cadrumo/domain/calculations/registry/_inventory_bindings.py`.
 - [ ] `W02.P07.S38` - enroll inventory selector validation in registry binding construction; `src/cadrumo/domain/calculations/registry/_bindings.py`.
+- [ ] `W02.P07.S163` - define validated complete inventory acquisition-cost facts including attributable costs, non-recoverable IVA, and evidence completeness; `src/cadrumo/domain/contribuyente/inventory`.
+- [ ] `W02.P07.S164` - propagate complete acquisition-cost facts through inventory application and operator ingress; `src/cadrumo/application/inventory; src/cadrumo/entrypoints/cli`.
+- [ ] `W02.P07.S165` - prove complete acquisition-cost fields survive the encrypted inventory repository round trip; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_roundtrip.py`.
+- [ ] `W02.P07.S166` - replace bare closing-stock authority with a provenance-bearing physical-closing observation and prior-closing continuity contract; `src/cadrumo/domain/contribuyente/inventory`.
+- [ ] `W02.P07.S167` - propagate physical-closing authority and continuity evidence through secure inventory ingress; `src/cadrumo/application/inventory; src/cadrumo/entrypoints/cli`.
+- [ ] `W02.P07.S168` - produce the strict complete 0177, 0181, and 0182 inventory domain projection; `src/cadrumo/domain/contribuyente/inventory`.
+- [ ] `W02.P07.S169` - formally review the inventory source prerequisites before resolver implementation; `.vault/audit/2026-08-23-inventory-source-prerequisites-code-review.md`.
 - [ ] `W02.P07.S39` - implement inventory repository resolution, diagnostics, source identity, and fingerprint provenance; `src/cadrumo/application/aggregation/_inventory.py`.
 - [ ] `W02.P07.S40` - enroll the inventory resolver and explicit source disposition; `src/cadrumo/application/aggregation/_source_mesh.py`.
 - [ ] `W02.P07.S41` - supply the encrypted inventory repository through calculation orchestration; `src/cadrumo/application/modelo/_calculation_actions.py`.

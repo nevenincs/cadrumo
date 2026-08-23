@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:19b0e5dbf5b5fab982ddd9219bc6fc48fde63e2a87fba3dbb39370634bd202e3'
+body_hash: 'sha256:3ce33130a6236659ce668dcb97b6590652b16db82fb881934e4be795b4f2fed2'
 step_id: 'S37'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -29,5 +29,4 @@ The inventory binding family now has a closed typed authoring vocabulary for the
 
 ## Notes
 
-Formal review passed with no findings. Nineteen focused selector tests, Ruff, and `ty` pass. Registry dispatch, bindings, source resolution, and readiness were deliberately not changed in this step.
-
+The activity-identity audit reopened this step because grain without an exact activity key was falsely typed. The selector now requires the canonical non-empty `actividad_id`; formal remediation review passed with no findings. Twenty-four focused selector tests, Ruff, and `ty` pass. Concurrent registry dispatch, bindings, source resolution, and readiness work was preserved and not changed here.

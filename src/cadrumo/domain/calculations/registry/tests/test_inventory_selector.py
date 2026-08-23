@@ -20,11 +20,17 @@ _OPERATION_DESTINATIONS = {
 }
 
 
-def _selector(operation: str, target_casilla_id: str) -> dict[str, object]:
+def _selector(
+    operation: str,
+    target_casilla_id: str,
+    *,
+    actividad_id: object = "actividad-profesional-1",
+) -> dict[str, object]:
     return {
         "modelo": Modelo.M100,
         "filing_year": 2025,
         "projection_grain": "taxpayer_year_activity",
+        "actividad_id": actividad_id,
         "operation": operation,
         "target_casilla_id": target_casilla_id,
     }
@@ -40,6 +46,7 @@ def test_inventory_selector_accepts_each_exact_2025_operation_destination(
     assert selector.operation == operation
     assert selector.target_casilla_id == destination
     assert selector.projection_grain == "taxpayer_year_activity"
+    assert selector.actividad_id == "actividad-profesional-1"
 
 
 @pytest.mark.parametrize(
@@ -65,6 +72,9 @@ def test_inventory_selector_refuses_crossed_operation_destination_identity(
         {"filing_year": "2025"},
         {"modelo": "130"},
         {"projection_grain": "taxpayer_year"},
+        {"actividad_id": ""},
+        {"actividad_id": 7},
+        {"actividad_id": None},
         {"operation": "signed_stock_variation"},
         {"target_casilla_id": "0155"},
         {"signed": True},
@@ -79,6 +89,27 @@ def test_inventory_selector_refuses_unsupported_scope_stale_signed_and_readiness
 
     with pytest.raises(ValidationError):
         InventorySelector.model_validate(raw)
+
+
+def test_inventory_selector_requires_exact_actividad_identity() -> None:
+    raw = _selector("complete_acquisition_cost", "0181")
+    del raw["actividad_id"]
+
+    with pytest.raises(ValidationError, match="actividad_id"):
+        InventorySelector.model_validate(raw)
+
+
+def test_inventory_selector_distinguishes_activity_and_roundtrips_exactly() -> None:
+    first = InventorySelector.model_validate(
+        _selector("complete_acquisition_cost", "0181", actividad_id="actividad-a"),
+    )
+    second = InventorySelector.model_validate(
+        _selector("complete_acquisition_cost", "0181", actividad_id="actividad-b"),
+    )
+
+    assert first != second
+    assert first.actividad_id != second.actividad_id
+    assert InventorySelector.model_validate(first.model_dump()) == first
 
 
 def test_inventory_binding_validator_preserves_the_operation_destination_failure() -> None:

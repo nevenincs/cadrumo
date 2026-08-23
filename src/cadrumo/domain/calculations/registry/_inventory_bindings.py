@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ....core import CasillaId, Modelo, validated_casilla_id
 from ._binding_selector_utils import selector_against_model
@@ -53,6 +53,7 @@ class _InventorySelector(BaseModel):
     modelo: Literal[Modelo.M100] = Modelo.M100
     filing_year: Literal[2025] = 2025
     projection_grain: Literal["taxpayer_year_activity"] = "taxpayer_year_activity"
+    actividad_id: str = Field(min_length=1)
     operation: InventoryProjectionOperation
     target_casilla_id: CasillaId
 
