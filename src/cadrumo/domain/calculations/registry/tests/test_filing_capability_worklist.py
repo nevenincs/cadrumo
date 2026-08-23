@@ -188,10 +188,47 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
             f"({len(uncovered)} year(s)) fall outside every cited design's era -- a layout authored "
             "from it would write those years at offsets no bundled design evidences"
         )
+    short = _casilla_surface_shortfall(modelo, revision)
+    if short is not None:
+        return short
     return (
         f"AUTHORABLE on era: cites {cited[0]}, {len(revision.casillas or ())} casilla(s) declared "
         "-- needs its semantic map and layout, AND its design's extraction checked for partial "
         "overlap first (see test_cited_design_field_bounds_are_self_consistent)"
+    )
+
+
+def _casilla_surface_shortfall(modelo: object, revision: object) -> str | None:
+    """Return why this revision cannot be exported YET, when its casilla surface is short.
+
+    An era match says the cited design governs the years claimed. It says nothing about
+    whether the revision declares the boxes that design carries, and the two were being
+    conflated: modelo 390's 2021 revision declares TEN casillas while every filing-grade
+    sibling of the same modelo declares 325 or more, so a layout authored from it would
+    emit a return missing almost every box AEAT expects -- structurally thin, correctly
+    sized, and valid to every digest.
+
+    The yardstick is the modelo's OWN filing-grade revisions rather than a threshold: a
+    ratio would be a constant to argue about, while a revision declaring strictly fewer
+    casillas than every sibling that already files is short by the modelo's own standard.
+    Where a modelo has no filing-grade sibling there is nothing to compare against and
+    this returns ``None`` -- the era verdict stands on its own.
+    """
+    declared = len(revision.casillas or ())
+    peers = [
+        len(sibling.casillas or ())
+        for sibling in (modelo.revisions or {}).values()
+        if sibling is not revision
+        and str(getattr(sibling, "authority_grade", "") or "").lower() == "filing"
+        and (sibling.casillas or ())
+    ]
+    if not peers or declared >= min(peers):
+        return None
+    return (
+        f"BLOCKED on casilla surface: declares {declared} casilla(s) while every filing-grade "
+        f"revision of this modelo declares at least {min(peers)} -- the cited design's era "
+        "matches, but a layout authored over this surface would emit a return missing the "
+        "boxes AEAT expects; author the casillas before the export"
     )
 
 
