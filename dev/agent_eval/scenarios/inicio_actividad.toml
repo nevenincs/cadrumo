@@ -1,0 +1,27 @@
+# Golden scenario: inicio de actividad (starting an activity, WHEN layer).
+#
+# Asserts the activity-start itinerary's own driven app-surface: confirm the
+# active profile, derive the new activity's first obligations from the bounded
+# calendar and agenda, and confirm one doubtful obligation explicitly. The
+# profile-fact recording and censo mirroring steps are config-root verbs the
+# skill cites (the drift gate resolves them) but trajectory keys are app-root
+# envelope commands. The first quarterly filing itself is covered by the
+# owning per-modelo scenario (modelo_130.toml). The runner additionally
+# asserts the skill playbook cites each verb, the resolved 130 revision's
+# casillas carry registry legal grounding, and the revision declares an
+# AEAT-grounded verification contract containing `expected_computed_casillas`.
+
+name = "inicio-actividad-first-obligations"
+modelo = "130"
+filing_year = 2024
+period = "1T"
+skill_name = "cadrumo-inicio-actividad"
+provenance_required = true
+expected_computed_casillas = ["03", "04", "07"]
+
+expected_trajectory = [
+  "overview.status",
+  "overview.calendar",
+  "overview.agenda",
+  "overview.explain",
+]
