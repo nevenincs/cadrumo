@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:0e905f9b9f5b6f2e3b2e552bb91f8d2bee943579c7ebc0557656c6ad0e9cb93f'
+body_hash: 'sha256:d869bd2415873cdfd3ed9137e37469af583f290b5724b7be727045d5fe0df6e4'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7604,3 +7604,39 @@ enumerated above". The operator-facing consequence stays worth stating plainly: 
 writes passphrase-encrypted profile bundles that nothing can read back, so an operator who
 exports one holds a backup they cannot restore. The export already warns of this in all four
 catalogues.
+
+### "Committed and still failing" is necessary but NOT sufficient to claim a finding
+
+This campaign's attribution rule -- defer while a file is dirty, and treat "committed and still
+failing" as the moment a deferral becomes a finding -- fired correctly once (the unswept
+`help_key` consumer) and would have fired WRONGLY here. The refinement is worth more than the
+tick that produced it.
+
+The domain lanes stood red at 7+7 across three ticks, attributed to a peer refactoring
+`entrypoints/cli/_config`. This tick their source files came back CLEAN: committed. By the
+stated rule that promotes the reds to a finding in this domain, and the failures are real --
+profile creation now refuses with "No passphrase channel is available. Run this verb at a
+terminal, pass --secrets-stdin or --secrets-fd, or set CADRUMO_SECRET_PASSPHRASE for an
+unattended run", which is a deliberate and sensible tightening whose test setups are stale, the
+same shape as the censo repair earlier in this document.
+
+Three signals said otherwise, and only the third is conclusive. The commit landed SIX MINUTES
+before the run. Four test modules already carry the new channel, so a sweep is demonstrably
+under way rather than abandoned. And decisively: among the failures is
+`test_lazy_create_help_declares_exactly_one_canonical_machine_secret_option_pair` -- the
+peer's OWN newly-added test for the feature they just shipped, red in their own landing. An
+author whose own new test is failing has not finished; picking up their stale setups now would
+duplicate work in flight and collide with an active sweep.
+
+**The sharpened criterion: the question is not whether the source is committed, it is whether
+the OWNER'S OWN tests pass.** A feature landing is a sequence of commits, not one, and the
+window between the production change and the test sweep looks identical to an abandoned
+regression from the outside. The tell that separates them is cheap and reliable -- commit age,
+whether sibling tests already adopted the new contract, and above all whether the owner's own
+new cases are among the failures.
+
+One measurement note. The first reading this tick was taken while `git status` reported 1,247
+dirty files and finished with 25, a peer landing a very large commit mid-run; it reported unit
+at 12 failures. Re-measured on the settled tree it was 7. The five extra were churn artifacts,
+which is the quiescence principle applying to the SHORT slices after all -- they are immune in
+practice only while the tree is merely busy, not while it is transitioning by four figures.

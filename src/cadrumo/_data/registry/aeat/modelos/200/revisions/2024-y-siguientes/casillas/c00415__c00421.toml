@@ -1,0 +1,77 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00415"
+number = "00415"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200011.f0020", "m200-2025.dp200012.f0049", "m200-2025.dp200032.f0055", "m200-2025.dp200042.f0008"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00416"
+number = "00416"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200011.f0021", "m200-2025.dp200012.f0061", "m200-2025.dp200032.f0056", "m200-2025.dp200042.f0009"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200011:00417"
+number = "00417"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200011:00418"
+number = "00418"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00419"
+number = "00419"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200011.f0024", "m200-2025.dp200017.f0140", "m200-2025.dp200033.f0048", "m200-2025.dp200042.f0012"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00420"
+number = "00420"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200011.f0025", "m200-2025.dp200026.f0018", "m200-2025.dp200033.f0049", "m200-2025.dp200043.f0006"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00421"
+number = "00421"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+data_type = "money"
+semantic_role = "is_ecpn_ajuste_errores_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200011.f0026", "m200-2025.dp200026.f0019", "m200-2025.dp200043.f0007"]

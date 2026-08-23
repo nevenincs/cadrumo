@@ -1,0 +1,66 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02261"
+number = "02261"
+section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
+data_type = "money"
+semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_inicial_cumplido_condiciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020d.f0055"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02262"
+number = "02262"
+section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
+data_type = "money"
+semantic_role = "is_correccion_dotaciones_deterioro_creditos_dotaciones_aplicadas"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020d.f0056"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02263"
+number = "02263"
+section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
+data_type = "money"
+semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_final_cumplido_condiciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020d.f0059"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02264"
+number = "02264"
+section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
+data_type = "money"
+semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_inicial_no_cumplido_condiciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020d.f0060"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02265"
+number = "02265"
+section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
+data_type = "money"
+semantic_role = "is_dotaciones_deterioro_creditos_aplicadas_conversion_aid"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020d.f0063"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02266"
+number = "02266"
+section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
+data_type = "money"
+semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_final_no_cumplido_condiciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020d.f0064"]
