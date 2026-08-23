@@ -456,31 +456,6 @@ class ConfigProfileRestoreResult(OutputSchema):
     password_unchanged: bool
 
 
-class ConfigPassphraseChangeResult(OutputSchema):
-    """JSON envelope for ``aeat config passphrase change``.
-
-    Reports one completed credential rotation. ``password_generation`` names
-    the wrapper the new passphrase now opens, so a caller can tell a rotation
-    apart from a retry without parsing prose.
-
-    The two retention facts answer what an operator actually needs to know
-    after changing a credential: ``dek_epoch_preserved`` says the data key was
-    re-wrapped rather than replaced, so every existing record still decrypts,
-    and ``recovery_enrollment_retained`` says a recovery phrase written down
-    before the change is still the right one. A rotation that silently
-    invalidated either would be indistinguishable from a successful one
-    without them.
-
-    No passphrase, key material, or wrapper bytes enter this payload.
-    """
-
-    profile_id: BucketId
-    changed: bool
-    password_generation: int = Field(ge=2)
-    dek_epoch_preserved: bool
-    recovery_enrollment_retained: bool
-
-
 class ConfigLogoutResult(OutputSchema):
     """JSON envelope for ``aeat config logout``.
 

@@ -328,6 +328,12 @@ class BindingSourceKind(StrEnum):
     # available for operator review when the definitive prorrata fact is missing
     # or only a non-blocking proposed value can be shown.
     BIENES_INVERSION_REGULARIZACION = "bienes_inversion_regularizacion"
+    # Modelo 100 inventory stock valuation. This source consumes the dedicated,
+    # profile-scoped inventory schedule and owns the mutually exclusive 0177 /
+    # 0182 projection from audited opening and closing stock. It is deliberately
+    # distinct from the transaction-ledger aggregation family and from capital-
+    # goods IVA regularisation.
+    INVENTORY = "inventory"
     # Annual prorrata-general regularización por porcentaje definitivo (LIVA arts.
     # 104-105): the source that would materialise Modelo 303 casilla 44 / the
     # Modelo 390 annual regularización field from the provisional percentage

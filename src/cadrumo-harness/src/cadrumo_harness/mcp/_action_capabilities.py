@@ -16,7 +16,7 @@ capability axis on top.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -34,7 +34,7 @@ from cadrumo.application.operator_surface import (
     ResultSchemaInventoryRow,
     resolve_action_catalogue,
 )
-from cadrumo.entrypoints.cli import (
+from cadrumo.entrypoints.cli.command_api import (
     DECLARED_UNIMPLEMENTED_SURFACES,
     VerbInputSchema,
     build_verb_input_schemas,
@@ -114,6 +114,7 @@ class McpVerbInputSchema(VerbInputSchema):
                 )
         return self
 
+    @override
     def json_schema(self) -> dict[str, Any]:
         """Return the CLI projection plus the capability extension."""
         schema = super().json_schema()

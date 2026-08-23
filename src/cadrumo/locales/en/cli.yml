@@ -647,6 +647,7 @@ cli:
           operacion_vinculada: related-party operation
           registro_retenciones: withholding register
           regularizacion_bienes_inversion: capital-goods adjustment
+          inventario: inventory stock schedule
           regularizacion_prorrata: prorrata adjustment
           retencion: withholding
           withholding296_perceptor: withholding-declaration perceptor

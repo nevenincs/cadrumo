@@ -37,7 +37,7 @@ from cadrumo.core.json_contract import (
     NoticeSeverity,
     validate_registered_envelope_document,
 )
-from cadrumo.entrypoints.cli import cli_argv_for
+from cadrumo.entrypoints.cli.command_api import cli_argv_for
 
 from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
 from ._inprocess import (

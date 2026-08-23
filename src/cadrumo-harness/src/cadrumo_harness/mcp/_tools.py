@@ -25,8 +25,7 @@ from cadrumo.application.operator_surface import (
 )
 from cadrumo.core.errors import ErrorEnvelope
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice
-from cadrumo.entrypoints.cli import VerbInputSchema, is_exposable_command
-from cadrumo.entrypoints.cli import command_schema_type
+from cadrumo.entrypoints.cli.command_api import VerbInputSchema, command_schema_type, is_exposable_command
 
 from ._action_capabilities import build_mcp_action_input_schemas
 from ._annotations import McpAnnotations, annotations_for_command
@@ -143,7 +142,7 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     Returns:
         Tuple of exposed :class:`McpToolDescriptor` entries.
     """
-    from cadrumo.entrypoints.cli import command_schema_refs
+    from cadrumo.entrypoints.cli.command_api import command_schema_refs
 
     refs: tuple[CommandSchemaRef, ...] = command_schema_refs()
     family_map = _family_mutability()

@@ -961,6 +961,12 @@ def _redact_structured_for_cli_output(
     key: object | None = None,
     reveal_identifiers: bool = False,
 ) -> object:
+    # Registry source-reference identifiers are public authority keys, not
+    # taxpayer identifiers. Their validated kebab-case spelling can contain a
+    # modelo/year/period segment that resembles a separated NIF; redacting that
+    # segment both corrupts the identifier and violates the SourceRefId schema.
+    if key in {"source_refs", "workbook_source"} and isinstance(value, str):
+        return value
     placeholder = _cli_placeholder_for_key(key, value, reveal_identifiers=reveal_identifiers)
     if placeholder is not None:
         return placeholder
@@ -986,9 +992,13 @@ def _redact_structured_for_cli_output(
             )
         return redacted
     if isinstance(value, list):
-        return [_redact_structured_for_cli_output(item, reveal_identifiers=reveal_identifiers) for item in value]
+        return [
+            _redact_structured_for_cli_output(item, key=key, reveal_identifiers=reveal_identifiers) for item in value
+        ]
     if isinstance(value, tuple):
-        return tuple(_redact_structured_for_cli_output(item, reveal_identifiers=reveal_identifiers) for item in value)
+        return tuple(
+            _redact_structured_for_cli_output(item, key=key, reveal_identifiers=reveal_identifiers) for item in value
+        )
     return value
 
 

@@ -693,6 +693,7 @@ cli:
           operacion_vinculada: operació vinculada
           registro_retenciones: registre de retencions
           regularizacion_bienes_inversion: regularització de béns d’inversió
+          inventario: inventari d’existències
           regularizacion_prorrata: regularització de prorrata
           retencion: retenció
           withholding296_perceptor: perceptor de la declaració de retencions

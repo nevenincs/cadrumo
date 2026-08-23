@@ -32,7 +32,7 @@ from cadrumo.application.operator_surface import (
     build_operator_surface_manifest,
 )
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
-from cadrumo.entrypoints.cli import is_exposable_command
+from cadrumo.entrypoints.cli.command_api import is_exposable_command
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -132,7 +132,7 @@ def build_toolsets() -> tuple[ToolsetGroup, ...]:
     Returns:
         One :class:`ToolsetGroup` per toolset, in :class:`Toolset` order.
     """
-    from cadrumo.entrypoints.cli import command_schema_refs
+    from cadrumo.entrypoints.cli.command_api import command_schema_refs
 
     family_map = _family_domain_map()
     members: dict[Toolset, list[str]] = {toolset: [] for toolset in Toolset}

@@ -3,8 +3,8 @@
 The strict-frozen record and context-independent readiness check describe only
 whether inventory state crosses the canonical secure-storage revision boundary.
 They do not resolve calculation values, adapt or enroll a source, participate
-in the source mesh, or emit diagnostics. The raw ``inventory`` source token is
-not a :class:`~core.BindingSourceKind` member.
+in the source mesh, or emit diagnostics. Its source identity is the canonical
+:attr:`~core.BindingSourceKind.INVENTORY` member.
 
 See Also:
     :class:`~application.inventory.InventoryService`
@@ -16,9 +16,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
-
-INVENTORY_SOURCE_KIND = "inventory"
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind
 
 
 class InventorySourceReadiness(BaseModel):
@@ -27,7 +25,7 @@ class InventorySourceReadiness(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     ready: bool
-    source_kind: str = Field(min_length=1, max_length=64)
+    source_kind: BindingSourceKind
     reason: str = Field(min_length=1, max_length=512)
 
 
@@ -43,7 +41,7 @@ def inventory_source_readiness() -> InventorySourceReadiness:
     """
     return InventorySourceReadiness(
         ready=False,
-        source_kind=INVENTORY_SOURCE_KIND,
+        source_kind=BindingSourceKind.INVENTORY,
         reason=(
             "inventory is not yet a calculation source: its movements and "
             "valuations are not persisted through the canonical secure-storage "
@@ -53,7 +51,6 @@ def inventory_source_readiness() -> InventorySourceReadiness:
 
 
 __all__ = [
-    "INVENTORY_SOURCE_KIND",
     "InventorySourceReadiness",
     "inventory_source_readiness",
 ]

@@ -100,6 +100,10 @@ from ._gasto193_bindings import (
     validate_gasto193_binding_selector_shape,
 )
 from ._ids import BindingId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
+from ._inventory_bindings import (
+    InventorySelector,
+    validate_inventory_binding,
+)
 from ._invoice_bindings import (
     INVOICE_BINDING_SOURCE_KINDS,
     InvoiceObservation,
@@ -229,6 +233,7 @@ __all__ = [
     "DonativoDonorObservation",
     "Gasto193Observation",
     "ImpatriadoIncomeObservationProtocol",
+    "InventorySelector",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
     "IrnrIncomeObservationProtocol",
@@ -1414,6 +1419,7 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.DONATIVO_DONOR: _DonativoSelector,
     BindingSourceKind.GASTO193_CONTRIBUTOR: _Gasto193Selector,
     BindingSourceKind.WITHHOLDING296: _Withholding296Selector,
+    BindingSourceKind.INVENTORY: InventorySelector,
     BindingSourceKind.MANUAL_INPUT: _ManualInputSelector,
     BindingSourceKind.PROFILE: ProfileSelector,
 }
@@ -1517,6 +1523,7 @@ _BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = 
     BindingSourceKind.GASTO193_CONTRIBUTOR: validate_gasto193_binding_selector_shape,
     BindingSourceKind.WITHHOLDING296: validate_withholding296_binding_selector_shape,
     BindingSourceKind.WITHHOLDING: validate_withholding_binding_selector_shape,
+    BindingSourceKind.INVENTORY: validate_inventory_binding,
     BindingSourceKind.MANUAL_INPUT: _validate_selector_only(_ManualInputSelector),
     BindingSourceKind.PROFILE: _validate_selector_only(ProfileSelector),
 }

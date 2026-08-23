@@ -54,13 +54,11 @@ from ._service import (
     InventoryValuationPreviewResult,
 )
 from ._source_readiness import (
-    INVENTORY_SOURCE_KIND,
     InventorySourceReadiness,
     inventory_source_readiness,
 )
 
 __all__ = [
-    "INVENTORY_SOURCE_KIND",
     "InventoryActividadConflictError",
     "InventoryActividadNotFoundError",
     "InventoryActividadSummary",

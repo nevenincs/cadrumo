@@ -178,7 +178,7 @@ _META_EXECUTE_TOOL = "execute"
 _META_TOOLSETS_TOOL = "toolsets"
 # The per-command descriptor meta-tool:
 # returns one command's full shape by key - schema, annotations, confirmation
-# tier, callback-attached policy, owning toolset, and reachable personas - so a model can
+# tier, CommandSpec-owned policy, owning toolset, and reachable personas - so a model can
 # inspect a verb fully before spending an ``execute`` round-trip on it.
 _META_DESCRIBE_TOOL = "describe"
 

@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Literal, cast
 
 from ...core.i18n import output_language, tr
 from ._command_spec import DefaultKind, OptionSpec, SchemaState
-from ._machine_secret_contract import MACHINE_SECRET_COMMANDS
 
 if TYPE_CHECKING:
     from ...application.operator_surface import CommandSchemaRef
@@ -38,7 +37,6 @@ CommandPerformanceClass = Literal["metadata", "local-io", "compute", "external-i
 CommandParameterKind = Literal["argument", "option"]
 CommandJsonType = Literal["string", "integer", "number", "boolean"]
 CommandParameterDefault = bool | int | float | str | tuple[bool | int | float | str | None, ...] | None
-_MACHINE_SECRETS = {contract.command_key: contract for contract in MACHINE_SECRET_COMMANDS}
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,15 +104,16 @@ class MachineSecretPayloadMetadata:
     condition: MachineSecretVariantConditionMetadata | None
 
 
-def machine_secret_payload_metadata(command: str) -> tuple[MachineSecretPayloadMetadata, ...]:
-    contract = _MACHINE_SECRETS.get(command)
+def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPayloadMetadata, ...]:
+    """Project value-free secret shapes directly from their owning command spec."""
+    contract = spec.machine_secret
     if contract is None:
         return ()
     return tuple(
         MachineSecretPayloadMetadata(
             variant.key,
-            tuple(MachineSecretFieldMetadata(field.name, field.json_type.value) for field in variant.fields),
-            MachineSecretVariantConditionMetadata(variant.condition.option_name, variant.condition.presence.value)
+            tuple(MachineSecretFieldMetadata(field.name, field.json_type) for field in variant.fields),
+            MachineSecretVariantConditionMetadata(variant.condition.option_name, variant.condition.presence)
             if variant.condition is not None
             else None,
         )
@@ -201,14 +200,17 @@ def _json_type(parameter: ParameterSpec) -> CommandJsonType:
 
 
 def _choices(parameter: ParameterSpec) -> tuple[str, ...]:
-    target = parameter.value.annotation
+    target = parameter.value.click_type or parameter.value.annotation
     try:
         value: object = __import__(target.module, fromlist=(target.qualname.split(".", 1)[0],))
         for segment in target.qualname.split("."):
             value = getattr(value, segment)
     except (ImportError, AttributeError):
         return ()
-    return tuple(str(member.value) for member in value) if isinstance(value, type) and issubclass(value, Enum) else ()
+    if isinstance(value, type) and issubclass(value, Enum):
+        return tuple(str(member.value) for member in value)
+    declared = getattr(value, "choices", ())
+    return tuple(str(choice) for choice in declared)
 
 
 def _parameter(parameter: ParameterSpec) -> CommandParameterMetadata:
@@ -236,11 +238,15 @@ def _operator_path(path: tuple[str, ...]) -> tuple[str, ...]:
     return path[1:] if path and path[0] == "aeat" else path
 
 
-@cache
 def command_registration_projection() -> CommandRegistrationProjection:
+    """Project graph metadata in the currently selected output language."""
+    return _command_registration_projection(output_language())
+
+
+@cache
+def _command_registration_projection(language: str) -> CommandRegistrationProjection:
     from ._command_specs import COMMAND_GRAPH
 
-    language = output_language()
     commands: list[CommandRegistrationMetadata] = []
     nodes: list[LiveNodeRegistrationMetadata] = []
     for node in COMMAND_GRAPH.nodes():
@@ -267,7 +273,7 @@ def command_registration_projection() -> CommandRegistrationProjection:
                 policy,
                 owner,
                 None,
-                machine_secret_payload_metadata(schema.identity),
+                machine_secret_payload_metadata(spec),
             )
         )
     return CommandRegistrationProjection(tuple(sorted(commands, key=lambda row: row.command)), tuple(nodes))

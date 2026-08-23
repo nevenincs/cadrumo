@@ -17,11 +17,10 @@ if TYPE_CHECKING:
     from ....application.user_profile import ProfileLoginOutcome
 
 
-from .._machine_secret_contract import register_machine_secret_payload_model
 from ._secure_input import MachineSecretPayload, MachineSecretSelection
 
 
-class _LoginSecrets(MachineSecretPayload):
+class LoginSecrets(MachineSecretPayload):
     """Strict machine-channel payload for ``config login``.
 
     One bounded JSON object carrying only the profile passphrase as a
@@ -31,9 +30,6 @@ class _LoginSecrets(MachineSecretPayload):
     """
 
     passphrase: SecretStr
-
-
-register_machine_secret_payload_model("config.login", "passphrase", _LoginSecrets)
 
 
 def _settings_has_explicit_output_language() -> bool:
@@ -216,7 +212,7 @@ def _login_through_the_prompt(
     )
 
     if machine_secret is not None:
-        secrets = read_machine_secret_payload(_LoginSecrets, selection=machine_secret)
+        secrets = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
         secret = secrets.passphrase.get_secret_value()
 
         def passphrase_callback() -> str:

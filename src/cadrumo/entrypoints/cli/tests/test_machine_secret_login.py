@@ -9,17 +9,15 @@ import pytest
 import typer
 
 from .._config import _secure_input
-from .._config._custody import _login_through_the_prompt, _LoginSecrets
+from .._config._custody import LoginSecrets, _login_through_the_prompt
 from .._errors import CliRefusedBoundaryError
-from .._machine_secret_contract import registered_machine_secret_payload_models
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def test_login_registers_one_canonical_strict_payload_model() -> None:
-    """Discovery and runtime validation share the exact command-local model."""
-    assert issubclass(_LoginSecrets, _secure_input.MachineSecretPayload)
-    assert registered_machine_secret_payload_models()["config.login", "passphrase"] is _LoginSecrets
+def test_login_exposes_one_canonical_strict_payload_model() -> None:
+    assert issubclass(LoginSecrets, _secure_input.MachineSecretPayload)
+    assert tuple(LoginSecrets.model_fields) == ("passphrase",)
 
 
 def test_login_without_an_explicit_channel_or_verified_terminal_refuses_before_authentication(

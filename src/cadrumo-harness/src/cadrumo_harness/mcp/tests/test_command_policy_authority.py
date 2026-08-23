@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import pytest
+
 from cadrumo.entrypoints.cli import cli_path_for_command_key, command_execution_policy_for_cli_path
 
 from .._command_policy import CommandPolicyProjection, policy_projection_is_coherent, project_command_policy
@@ -29,7 +30,7 @@ def test_every_exposed_descriptor_carries_its_live_policy_projection() -> None:
 
 
 def test_unknown_and_unclassified_paths_fail_closed() -> None:
-    with pytest.raises(LookupError, match="no execution policy"):
+    with pytest.raises(LookupError, match="unknown command spec path"):
         command_execution_policy_for_cli_path(("missing",))
 
 

@@ -49,7 +49,6 @@ from ....core.i18n import OutputLanguage, tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from .._machine_secret_contract import register_machine_secret_payload_model
 from ._secure_input import MachineSecretPayload, MachineSecretSelection
 
 if TYPE_CHECKING:
@@ -58,20 +57,16 @@ if TYPE_CHECKING:
 _RECOVERY_LIMIT_NOTICE_CODE = "config.profile.restore.password_unchanged"
 
 
-class _RestorePassphraseSecrets(MachineSecretPayload):
+class RestorePassphraseSecrets(MachineSecretPayload):
     """Strict machine-channel payload for the passphrase door."""
 
     passphrase: SecretStr
 
 
-class _RestoreRecoverySecrets(MachineSecretPayload):
+class RestoreRecoverySecrets(MachineSecretPayload):
     """Strict machine-channel payload for the recovery-artifact door."""
 
     recovery_secret: SecretStr
-
-
-register_machine_secret_payload_model("config.profile.restore", "passphrase", _RestorePassphraseSecrets)
-register_machine_secret_payload_model("config.profile.restore", "recovery", _RestoreRecoverySecrets)
 
 
 def _collect_passphrase(*, selection: MachineSecretSelection | None) -> str:
@@ -80,7 +75,7 @@ def _collect_passphrase(*, selection: MachineSecretSelection | None) -> str:
 
     if selection is not None:
         return read_machine_secret_payload(
-            _RestorePassphraseSecrets,
+            RestorePassphraseSecrets,
             selection=selection,
         ).passphrase.get_secret_value()
     return prompt_secret_no_echo(tr("cli.config.custody.current_passphrase_prompt"))
@@ -92,7 +87,7 @@ def _collect_recovery_secret(*, selection: MachineSecretSelection | None) -> str
 
     if selection is not None:
         return read_machine_secret_payload(
-            _RestoreRecoverySecrets,
+            RestoreRecoverySecrets,
             selection=selection,
         ).recovery_secret.get_secret_value()
     return prompt_secret_no_echo(tr("cli.config.profile.restore.recovery_secret_prompt"))

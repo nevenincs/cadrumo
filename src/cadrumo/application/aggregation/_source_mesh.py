@@ -270,12 +270,13 @@ def _infer_binding_source(payload: object) -> object:
 # advisory. A deferred kind is never on the ``manual_sources`` allowlist, which
 # would suppress that advisory.
 #
-# All three are Sheets-pull-only informativa detail-row producers (M232
-# operaciones vinculadas, M360 IVA refunds, M182 donativos): they need a row
-# taxonomy, an evidence shape, and a detail-record fold before a resolver can
-# exist.
+# The detail-row producers need a row taxonomy, an evidence shape, and a
+# detail-record fold before a resolver can exist. Inventory already has its
+# authoritative schedule contract, but remains deferred until its selector,
+# binding declaration, and mesh resolver are enrolled by their ordered steps.
 DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
+        BindingSourceKind.INVENTORY,
         BindingSourceKind.RELATED_PARTY_OPERATION,
         BindingSourceKind.REFUND_OPERATION,
         BindingSourceKind.DONATIVO_DONOR,
