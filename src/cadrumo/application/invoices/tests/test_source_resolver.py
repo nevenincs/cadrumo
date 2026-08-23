@@ -235,7 +235,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1000.00")
     assert resolution.source_transaction_ids == ("1" * 64,)
-    assert {item.source_kind for item in resolution.provenance} == {"collectible_invoice"}
+    assert {item.contributor_source_kind for item in resolution.provenance} == {"collectible_invoice"}
     assert {item.resolver_id for item in resolution.provenance} == {"invoice_catalogue"}
     assert {item.source_ref for item in resolution.provenance} == {f"collectible_invoice:{declarable.invoice_id}"}
     assert all(item.fingerprint and item.fingerprint.startswith("sha256:") for item in resolution.provenance)
@@ -276,7 +276,7 @@ def test_invoice_catalogue_source_resolver_folds_received_acquisition_for_m349(
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1200.00")
     assert resolution.source_transaction_ids == ("2" * 64,)
-    assert {item.source_kind for item in resolution.provenance} == {"payable_invoice"}
+    assert {item.contributor_source_kind for item in resolution.provenance} == {"payable_invoice"}
     assert {item.source_ref for item in resolution.provenance} == {f"payable_invoice:{acquisition.invoice_id}"}
 
 

@@ -224,13 +224,17 @@ def _source_provenance_trace_sha256(source_provenance: tuple[CalculationSourceRe
     Emitted on the ``modelo.calculation.created`` bucket event so an audit reader
     can detect a source-connectivity change without decrypting the calculation
     revision. The digest folds each provenance row's stable
-    ``resolver_id``/``source_kind``/``source_ref``/``fingerprint`` identity in a sort-canonical
+    complete resolver, ownership, lineage, reference, and fingerprint identity in a sort-canonical
     order so the value is order-independent, mirroring the existing
     ``borrador_bindings_trace_sha256`` join-record pattern. An empty provenance
     tuple yields the digest of the empty string.
     """
     lines = sorted(
-        f"{ref.resolver_id}\x1f{ref.source_kind}\x1f{ref.source_ref}\x1f{ref.fingerprint or ''}"
+        f"{ref.resolver_id}\x1f{ref.resolved_binding_source.value}\x1f"
+        f"{ref.contributor_source_kind}\x1f"
+        f"{ref.contributor_binding_source.value if ref.contributor_binding_source is not None else ''}\x1f"
+        f"{ref.lineage_role.value}\x1f{ref.source_ref}\x1f{ref.parent_source_ref or ''}\x1f"
+        f"{ref.fingerprint or ''}"
         for ref in source_provenance
     )
     return sha256_hex("\n".join(lines).encode("utf-8"))

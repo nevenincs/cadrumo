@@ -194,7 +194,7 @@ def test_source_resolver_projects_repository_register_to_binding_and_bound_casil
     assert resolution.diagnostics == ()
     assert BindingSourceKind.BIENES_INVERSION_REGULARIZACION in resolution.owned_sources
     assert resolution.provenance
-    assert resolution.provenance[0].binding_source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
+    assert resolution.provenance[0].resolved_binding_source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
 
 
 def test_source_resolver_projects_m390_binding_from_stamped_m303_prorrata_observation(tmp_path: Path) -> None:

@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
-from ...core import BindingSourceKind
+from ...core import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
 from ...core.identity import tax_id_identity_token
 from ...core.resources import resources
@@ -94,9 +94,12 @@ class AtribucionMemberSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
-                    binding_source=BindingSourceKind.ATRIBUCION_MEMBER,
-                    source_kind=BindingSourceKind.ATRIBUCION_MEMBER.value,
+                    resolved_binding_source=BindingSourceKind.ATRIBUCION_MEMBER,
+                    contributor_source_kind=BindingSourceKind.ATRIBUCION_MEMBER.value,
+                    contributor_binding_source=BindingSourceKind.ATRIBUCION_MEMBER,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"profile:{context.bucket_id}:attribution_entity_socios:{socio.index}",
+                    parent_source_ref=None,
                     fingerprint=fingerprint,
                 )
                 for socio in projection.complete

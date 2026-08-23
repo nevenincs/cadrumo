@@ -35,7 +35,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ActionEvidenceProvenance, BindingSourceKind, Period
+from ...core import ActionEvidenceProvenance, BindingSourceKind, CalculationSourceLineageRole, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...domain.calculations.registry import BindingId, DataBindingDefinition, RegistrySnapshot
@@ -217,9 +217,12 @@ def resolve_modelo_100_borrador_bindings(
         provenance=tuple(
             CalculationSourceProvenance(
                 resolver_id="modelo_100_borrador",
-                binding_source=BindingSourceKind.BORRADOR,
-                source_kind="borrador",
+                resolved_binding_source=BindingSourceKind.BORRADOR,
+                contributor_source_kind="borrador",
+                contributor_binding_source=BindingSourceKind.BORRADOR,
+                lineage_role=CalculationSourceLineageRole.PRIMARY,
                 source_ref=f"borrador:{snapshot.snapshot_id}:binding:{binding_id}",
+                parent_source_ref=None,
                 fingerprint=snapshot_fingerprint,
             )
             for binding_id in sourced

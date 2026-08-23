@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import BindingSourceKind
+from ....core import BindingSourceKind, CalculationSourceLineageRole
 from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution
 from .._calculation_actions import _source_provenance_refs
 
@@ -18,9 +18,12 @@ def test_source_provenance_projection_retains_exact_resolver_identity() -> None:
         provenance=(
             CalculationSourceProvenance(
                 resolver_id="invoice_catalogue",
-                binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
-                source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+                resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+                contributor_source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+                contributor_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+                lineage_role=CalculationSourceLineageRole.PRIMARY,
                 source_ref="collectible_invoice:inv-0001",
+                parent_source_ref=None,
                 fingerprint="sha256:" + "a" * 64,
             ),
         ),

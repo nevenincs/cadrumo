@@ -25,7 +25,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import BindingSourceKind, CasillaId, Modelo, Period
+from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period
 from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,
     BienInversionRecordError,
@@ -416,9 +416,12 @@ class BienesInversionRegularizacionSourceResolver:
             provenance = (
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
-                    binding_source=_SOURCE_KIND,
-                    source_kind=_SOURCE_KIND.value,
+                    resolved_binding_source=_SOURCE_KIND,
+                    contributor_source_kind=_SOURCE_KIND.value,
+                    contributor_binding_source=_SOURCE_KIND,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"bienes-inversion-register:{context.filing_year}",
+                    parent_source_ref=None,
                     legal_refs=(
                         "ley-37-1992:art-107",
                         "ley-37-1992:art-108",

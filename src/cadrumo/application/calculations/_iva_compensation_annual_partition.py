@@ -15,7 +15,14 @@ from decimal import Decimal
 from typing import Final
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import BindingSourceKind, CasillaId, IvaCompensationStateProvenance, Modelo, Period
+from ...core import (
+    BindingSourceKind,
+    CalculationSourceLineageRole,
+    CasillaId,
+    IvaCompensationStateProvenance,
+    Modelo,
+    Period,
+)
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -299,13 +306,16 @@ class IvaCompensationAnnualPartitionSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
-                    source_kind=_SOURCE_KIND.value,
+                    resolved_binding_source=_SOURCE_KIND,
+                    contributor_source_kind=_SOURCE_KIND.value,
+                    contributor_binding_source=_SOURCE_KIND,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=(
                         "303:"
                         f"{envelope.observation.filing_year}:{envelope.observation.period}:"
                         "iva-compensation-annual-partition"
                     ),
-                    binding_source=_SOURCE_KIND,
+                    parent_source_ref=None,
                     source_modelo=requirement.source_modelo,
                     source_filing_year=envelope.observation.filing_year,
                     source_periods=requirement.source_periods,

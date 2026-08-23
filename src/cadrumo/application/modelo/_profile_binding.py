@@ -42,7 +42,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel
 
-from ...core import BindingSourceKind
+from ...core import BindingSourceKind, CalculationSourceLineageRole
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR, UTF_8_ENCODING
 from ...core.hashing import sha256_hex
@@ -1476,9 +1476,12 @@ def resolve_profile_sourced_bindings(
         provenance=tuple(
             CalculationSourceProvenance(
                 resolver_id=_PROFILE_RESOLVER_ID,
-                binding_source=BindingSourceKind.PROFILE,
-                source_kind=BindingSourceKind.PROFILE.value,
+                resolved_binding_source=BindingSourceKind.PROFILE,
+                contributor_source_kind=BindingSourceKind.PROFILE.value,
+                contributor_binding_source=BindingSourceKind.PROFILE,
+                lineage_role=CalculationSourceLineageRole.PRIMARY,
                 source_ref=f"profile:{bucket_id}:binding:{binding_id}",
+                parent_source_ref=None,
                 fingerprint=fingerprint,
             )
             for binding_id in sourced

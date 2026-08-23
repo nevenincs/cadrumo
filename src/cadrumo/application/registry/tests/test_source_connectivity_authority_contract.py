@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from ....core import (
     BindingSourceKind,
+    CalculationSourceLineageRole,
     SourceConnectivityConnectionIdentity,
     SourceConnectivityExecutableEvidence,
     SourceConnectivityExecutableEvidenceRole,
@@ -360,9 +361,12 @@ def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -
     revision_id = "a" * 64
     persisted = CalculationSourceRef(
         resolver_id="invoice-source-resolver",
-        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
-        binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        contributor_source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        contributor_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref="collectible_invoice:inv-0001",
+        parent_source_ref=None,
         fingerprint="sha256:" + "b" * 64,
     )
     revision = SimpleNamespace(calculation_revision_id=revision_id, source_provenance=(persisted,))
@@ -408,7 +412,7 @@ def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -
     incoherent = CalculationSourceRef.model_construct(
         **{
             **persisted.model_dump(),
-            "source_kind": BindingSourceKind.PAYABLE_INVOICE.value,
+            "resolved_binding_source": BindingSourceKind.PAYABLE_INVOICE,
         },
     )
     incoherent_revision = SimpleNamespace(

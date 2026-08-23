@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from ....core import (
     BindingSourceKind,
+    CalculationSourceLineageRole,
     CasillaId,
     M210GrossIncomeSourceMode,
     Period,
@@ -622,17 +623,23 @@ def test_revision_id_changes_when_work_unit_id_changes() -> None:
 def test_revision_id_canonicalizes_complete_source_provenance_and_refuses_identity_collisions() -> None:
     first = CalculationSourceRef(
         resolver_id="invoice_catalogue",
-        binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
-        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        contributor_source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        contributor_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref="collectible_invoice:inv-0001",
+        parent_source_ref=None,
         fingerprint="sha256:" + "a" * 64,
         dependency_treatment="factual_evidence",
     )
     second = CalculationSourceRef(
         resolver_id="foreign_assets_aggregation",
-        binding_source=BindingSourceKind.FOREIGN_ASSET,
-        source_kind=BindingSourceKind.FOREIGN_ASSET.value,
+        resolved_binding_source=BindingSourceKind.FOREIGN_ASSET,
+        contributor_source_kind=BindingSourceKind.FOREIGN_ASSET.value,
+        contributor_binding_source=BindingSourceKind.FOREIGN_ASSET,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref="foreign_asset:asset-0001",
+        parent_source_ref=None,
         fingerprint="sha256:" + "b" * 64,
     )
     common = {
@@ -662,14 +669,17 @@ def test_revision_id_canonicalizes_complete_source_provenance_and_refuses_identi
 def test_persisted_source_ref_requires_a_coherent_explicit_binding_axis() -> None:
     payload = {
         "resolver_id": "invoice_catalogue",
-        "source_kind": BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        "resolved_binding_source": BindingSourceKind.COLLECTIBLE_INVOICE,
+        "contributor_source_kind": BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        "lineage_role": CalculationSourceLineageRole.PRIMARY,
         "source_ref": "collectible_invoice:inv-0001",
+        "parent_source_ref": None,
     }
     with pytest.raises(ValidationError):
         CalculationSourceRef.model_validate(payload)
     with pytest.raises(ValidationError, match="must equal source_kind"):
         CalculationSourceRef.model_validate(
-            {**payload, "binding_source": BindingSourceKind.PAYABLE_INVOICE},
+            {**payload, "contributor_binding_source": BindingSourceKind.PAYABLE_INVOICE},
         )
 
 

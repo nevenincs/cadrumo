@@ -61,7 +61,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Final, NamedTuple, TypedDict
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import BindingSourceKind, CasillaId, Modelo, Period
+from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
@@ -1198,9 +1198,12 @@ class RelationPrefillSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
-                    binding_source=BindingSourceKind.RELATION_PREFILL,
-                    source_kind="relation_prefill",
+                    resolved_binding_source=BindingSourceKind.RELATION_PREFILL,
+                    contributor_source_kind="relation_prefill",
+                    contributor_binding_source=BindingSourceKind.RELATION_PREFILL,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=_relation_provenance_ref(item),
+                    parent_source_ref=None,
                     relation_id=item.relation,
                     source_modelo=item.source_modelo,
                     source_filing_year=item.source_filing_year,

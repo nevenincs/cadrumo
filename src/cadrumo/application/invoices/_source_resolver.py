@@ -29,7 +29,7 @@ from ...adapters.persistence.storage import (
     DecryptionError,
     EnvelopeVersionError,
 )
-from ...core import BindingSourceKind, IntracomOperationType, Modelo, Period
+from ...core import BindingSourceKind, CalculationSourceLineageRole, IntracomOperationType, Modelo, Period
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry import (
@@ -763,9 +763,12 @@ def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> Ca
     source_kind = _invoice_source_kind(invoice)
     return CalculationSourceProvenance(
         resolver_id=InvoiceCatalogueSourceResolver.resolver_id,
-        binding_source=BindingSourceKind(source_kind),
-        source_kind=source_kind,
+        resolved_binding_source=BindingSourceKind(source_kind),
+        contributor_source_kind=source_kind,
+        contributor_binding_source=BindingSourceKind(source_kind),
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref=f"{source_kind}:{observation.invoice_id}",
+        parent_source_ref=None,
         fingerprint=f"sha256:{sha256_hex(payload.encode('utf-8'))}",
     )
 

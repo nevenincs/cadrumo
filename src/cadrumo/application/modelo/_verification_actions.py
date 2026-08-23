@@ -1367,7 +1367,7 @@ def _m369_unresolved_oss_source_finding(
     )
     if unrouted_issues:
         return _unrouted_oss_source_finding(unrouted_issues, legal_refs=legal_refs, source_refs=source_refs)
-    if any(ref.binding_source is _OSS_AGGREGATION_SOURCE for ref in target.source_provenance):
+    if any(ref.resolved_binding_source is _OSS_AGGREGATION_SOURCE for ref in target.source_provenance):
         return None
     return _missing_oss_evidence_finding(legal_refs=legal_refs, source_refs=source_refs)
 

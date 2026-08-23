@@ -33,7 +33,7 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CalculationSourceLineageRole, Period
 from ...core.money import CENT, round_to_cents
 from ...domain.calculations.registry import (
     BindingId,
@@ -627,9 +627,12 @@ class OssIossLedgerSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
-                    binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
-                    source_kind="ledger_oss_aggregation",
+                    resolved_binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+                    contributor_source_kind="ledger_oss_aggregation",
+                    contributor_binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"transaction:{observation.ledger_id}",
+                    parent_source_ref=None,
                 )
                 for observation in observations
             ),

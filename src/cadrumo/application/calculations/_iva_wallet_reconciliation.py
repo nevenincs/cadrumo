@@ -39,7 +39,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import BindingSourceKind, Modelo, Period
+from ...core import BindingSourceKind, CalculationSourceLineageRole, Modelo, Period
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry import RegistrySnapshot
 from ...domain.iva_compensation import (
@@ -131,21 +131,46 @@ class IvaWalletDecisionSourceResolver:
                 },
             )
         fingerprint = f"sha256:{sha256_hex(decision.model_dump_json().encode('utf-8'))}"
+        from ._observations_repository import iva_wallet_decision_event_key
+
+        primary_ref = iva_wallet_decision_event_key(decision)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values={self.binding_id: Decimal(decision.selected_amount)},
-            provenance=tuple(
+            provenance=(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
-                    binding_source=None,
-                    source_kind=source.source_kind,
-                    source_ref=source.source_locator,
+                    resolved_binding_source=BindingSourceKind.IVA_WALLET_DECISION,
+                    contributor_source_kind=BindingSourceKind.IVA_WALLET_DECISION.value,
+                    contributor_binding_source=BindingSourceKind.IVA_WALLET_DECISION,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
+                    source_ref=primary_ref,
+                    parent_source_ref=None,
                     fingerprint=fingerprint,
-                )
-                for source in decision.authority_sources
+                ),
+                *tuple(
+                    CalculationSourceProvenance(
+                        resolver_id=self.resolver_id,
+                        resolved_binding_source=BindingSourceKind.IVA_WALLET_DECISION,
+                        contributor_source_kind=source.source_kind,
+                        contributor_binding_source=_binding_source_or_none(source.source_kind),
+                        lineage_role=CalculationSourceLineageRole.CONTRIBUTOR,
+                        source_ref=source.source_locator,
+                        parent_source_ref=primary_ref,
+                    )
+                    for source in decision.authority_sources
+                ),
             ),
         )
+
+
+def _binding_source_or_none(source_kind: str) -> BindingSourceKind | None:
+    """Project an authority-source token only when it belongs to the binding taxonomy."""
+    try:
+        return BindingSourceKind(source_kind)
+    except ValueError:
+        return None
 
 
 def _resolve_reconciliation_repositories(

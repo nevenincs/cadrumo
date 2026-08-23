@@ -26,6 +26,7 @@ from ...adapters.persistence.storage import (
     DecryptionError,
     EnvelopeVersionError,
 )
+from ...core import CalculationSourceLineageRole
 from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry import (
     ModeloRevision,
@@ -55,9 +56,12 @@ def _provenance(observations: tuple[WithholdingObservation, ...]) -> tuple[Calcu
     return tuple(
         CalculationSourceProvenance(
             resolver_id=WithholdingSourceResolver.resolver_id,
-            binding_source=BindingSourceKind.WITHHOLDING,
-            source_kind=_WITHHOLDING_SOURCE,
+            resolved_binding_source=BindingSourceKind.WITHHOLDING,
+            contributor_source_kind=_WITHHOLDING_SOURCE,
+            contributor_binding_source=BindingSourceKind.WITHHOLDING,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref=f"percepcion:{observation.perceptor_tax_id}:{observation.clave}:{observation.subclave or '-'}",
+            parent_source_ref=None,
         )
         for observation in observations
     )

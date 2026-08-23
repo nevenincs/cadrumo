@@ -31,7 +31,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import CasillaId, Period, validated_casilla_id
-from .....core.aggregation import BindingSourceKind
+from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....domain.calculations.registry import CasillaObservation
 from .....domain.modelos import (
     CalculationRevision,
@@ -68,7 +68,7 @@ def bucket_id() -> str:
 def _source_provenance() -> tuple[CalculationSourceRef, ...]:
     """Two provenance rows with every field populated non-default.
 
-    A binding-backed invoice row (fingerprint present, typed ``binding_source``)
+    A binding-backed invoice row (fingerprint present, typed resolved/contributor axes)
     plus a second invoice row, so the persisted tuple carries more than one entry
     and every :class:`CalculationSourceRef` field is exercised. The two rows
     carry distinct, non-default ``dependency_treatment`` values so a
@@ -78,17 +78,23 @@ def _source_provenance() -> tuple[CalculationSourceRef, ...]:
     return (
         CalculationSourceRef(
             resolver_id="invoice_catalogue",
-            source_kind="collectible_invoice",
-            binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+            resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+            contributor_source_kind="collectible_invoice",
+            contributor_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref="collectible_invoice:inv-0001",
+            parent_source_ref=None,
             fingerprint="sha256:1111111111111111111111111111111111111111111111111111111111111111",
             dependency_treatment="direct_annual_settlement",
         ),
         CalculationSourceRef(
             resolver_id="invoice_catalogue",
-            source_kind="payable_invoice",
-            binding_source=BindingSourceKind.PAYABLE_INVOICE,
+            resolved_binding_source=BindingSourceKind.PAYABLE_INVOICE,
+            contributor_source_kind="payable_invoice",
+            contributor_binding_source=BindingSourceKind.PAYABLE_INVOICE,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref="payable_invoice:inv-0002",
+            parent_source_ref=None,
             fingerprint="sha256:2222222222222222222222222222222222222222222222222222222222222222",
             dependency_treatment="factual_evidence",
         ),
@@ -145,7 +151,7 @@ def test_source_provenance_roundtrips_through_encrypted_revision(secure_objects:
     assert loaded is not None
     assert loaded == original
     assert loaded.source_provenance == provenance
-    assert loaded.source_provenance[0].binding_source is BindingSourceKind.COLLECTIBLE_INVOICE
+    assert loaded.source_provenance[0].resolved_binding_source is BindingSourceKind.COLLECTIBLE_INVOICE
     assert loaded.source_provenance[0].resolver_id == "invoice_catalogue"
     assert loaded.source_provenance[0].fingerprint == provenance[0].fingerprint
     assert loaded.source_provenance[1].source_ref == "payable_invoice:inv-0002"
@@ -189,13 +195,17 @@ def test_source_provenance_roundtrips_through_encrypted_revision(secure_objects:
     ("missing_field", "expected_value"),
     [
         ("resolver_id", "invoice_catalogue"),
-        ("binding_source", BindingSourceKind.COLLECTIBLE_INVOICE.value),
+        ("resolved_binding_source", BindingSourceKind.COLLECTIBLE_INVOICE.value),
+        ("contributor_source_kind", BindingSourceKind.COLLECTIBLE_INVOICE.value),
+        ("contributor_binding_source", BindingSourceKind.COLLECTIBLE_INVOICE.value),
+        ("lineage_role", CalculationSourceLineageRole.PRIMARY.value),
+        ("parent_source_ref", None),
     ],
 )
 def test_legacy_source_provenance_without_required_identity_is_rejected_at_encrypted_load(
     secure_objects: SecureObjectRepository,
     missing_field: str,
-    expected_value: str,
+    expected_value: object,
 ) -> None:
     import json as _json
 

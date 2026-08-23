@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.errors import DecryptionError
-from ....core import BindingSourceKind, CasillaId, validated_casilla_id
+from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, validated_casilla_id
 from ....core.resources import resources
 from .. import (
     CalculationSourceDiagnostic,
@@ -53,9 +53,12 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
         provenance=(
             CalculationSourceProvenance(
                 resolver_id="ledger-iva",
-                binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                source_kind="ledger_iva_aggregation",
+                resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+                contributor_source_kind="ledger_iva_aggregation",
+                contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+                lineage_role=CalculationSourceLineageRole.PRIMARY,
                 source_ref="transaction:tx-1",
+                parent_source_ref=None,
                 fingerprint="sha256:abc",
             ),
         ),
@@ -63,7 +66,7 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
 
     assert tuple(resolution.source_transaction_ids) == ("tx-1", "tx-2")
     assert resolution.diagnostics[0].binding_source is BindingSourceKind.WITHHOLDING
-    assert resolution.provenance[0].binding_source is BindingSourceKind.LEDGER_IVA_AGGREGATION
+    assert resolution.provenance[0].resolved_binding_source is BindingSourceKind.LEDGER_IVA_AGGREGATION
     assert resolution.model_dump(mode="json")["binding_values"] == {"modelo-303-iva-repercutido-general-cuota": "21.00"}
     assert resolution.model_dump(mode="json")["date_binding_values"] == {"profile-birth-date": "1980-01-31"}
     assert resolution.model_dump(mode="json")["row_binding_values"] == [
@@ -249,9 +252,12 @@ def test_source_diagnostic_rejects_reversed_out_of_window_summary_span() -> None
 def test_source_provenance_projects_canonical_binding_source() -> None:
     provenance = CalculationSourceProvenance(
         resolver_id="relation_prefill",
-        binding_source=BindingSourceKind.RELATION_PREFILL,
-        source_kind=BindingSourceKind.RELATION_PREFILL.value,
+        resolved_binding_source=BindingSourceKind.RELATION_PREFILL,
+        contributor_source_kind=BindingSourceKind.RELATION_PREFILL.value,
+        contributor_binding_source=BindingSourceKind.RELATION_PREFILL,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref="relation:modelo-100-rel-130",
+        parent_source_ref=None,
         relation_id="modelo-100-rel-130-pagos-fraccionados",
         source_modelo="130",
         source_filing_year=2026,
@@ -261,9 +267,9 @@ def test_source_provenance_projects_canonical_binding_source() -> None:
         source_refs=("aeat-modelo-130-instructions",),
     )
 
-    assert provenance.source_kind == BindingSourceKind.RELATION_PREFILL.value
-    assert provenance.binding_source is BindingSourceKind.RELATION_PREFILL
-    assert provenance.model_dump(mode="json")["binding_source"] == BindingSourceKind.RELATION_PREFILL.value
+    assert provenance.contributor_source_kind == BindingSourceKind.RELATION_PREFILL.value
+    assert provenance.resolved_binding_source is BindingSourceKind.RELATION_PREFILL
+    assert provenance.model_dump(mode="json")["resolved_binding_source"] == BindingSourceKind.RELATION_PREFILL.value
     assert provenance.model_dump(mode="json")["source_casilla_ids"] == ["19"]
 
 
@@ -271,17 +277,23 @@ def test_source_provenance_requires_resolver_identity_and_resolution_refuses_mis
     with pytest.raises(ValidationError):
         CalculationSourceProvenance.model_validate(
             {
-                "source_kind": "collectible_invoice",
-                "binding_source": BindingSourceKind.COLLECTIBLE_INVOICE,
+                "resolved_binding_source": BindingSourceKind.COLLECTIBLE_INVOICE,
+                "contributor_source_kind": "collectible_invoice",
+                "contributor_binding_source": BindingSourceKind.COLLECTIBLE_INVOICE,
+                "lineage_role": CalculationSourceLineageRole.PRIMARY,
                 "source_ref": "collectible_invoice:inv-0001",
+                "parent_source_ref": None,
             },
         )
 
     provenance = CalculationSourceProvenance(
         resolver_id="invoice_catalogue",
-        binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
-        source_kind="collectible_invoice",
+        resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        contributor_source_kind="collectible_invoice",
+        contributor_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref="collectible_invoice:inv-0001",
+        parent_source_ref=None,
     )
     with pytest.raises(ValidationError) as exc_info:
         CalculationSourceResolution(
@@ -296,25 +308,74 @@ def test_source_provenance_refuses_binding_source_contradictions_and_marks_non_b
     with pytest.raises(ValidationError, match="provenance_binding_source_mismatch"):
         CalculationSourceProvenance(
             resolver_id="invoice_catalogue",
-            binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
-            source_kind=BindingSourceKind.PAYABLE_INVOICE.value,
+            resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+            contributor_source_kind=BindingSourceKind.PAYABLE_INVOICE.value,
+            contributor_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref="payable_invoice:inv-0001",
+            parent_source_ref=None,
         )
     with pytest.raises(ValidationError, match="provenance_binding_source_missing"):
         CalculationSourceProvenance(
             resolver_id="invoice_catalogue",
-            binding_source=None,
-            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+            resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+            contributor_source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+            contributor_binding_source=None,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref="collectible_invoice:inv-0001",
+            parent_source_ref=None,
         )
 
     non_binding = CalculationSourceProvenance(
         resolver_id="iva_wallet_decision",
-        binding_source=None,
-        source_kind="filed-revision-authority",
+        resolved_binding_source=BindingSourceKind.IVA_WALLET_DECISION,
+        contributor_source_kind="filed-revision-authority",
+        contributor_binding_source=None,
+        lineage_role=CalculationSourceLineageRole.CONTRIBUTOR,
         source_ref="revision:abc",
+        parent_source_ref="iva-wallet-decision:event-1",
     )
-    assert non_binding.binding_source is None
+    assert non_binding.contributor_binding_source is None
+
+
+def test_source_resolution_refuses_orphan_and_ambiguous_lineage_edges() -> None:
+    primary = CalculationSourceProvenance(
+        resolver_id="iva_wallet_decision",
+        resolved_binding_source=BindingSourceKind.IVA_WALLET_DECISION,
+        contributor_source_kind=BindingSourceKind.IVA_WALLET_DECISION.value,
+        contributor_binding_source=BindingSourceKind.IVA_WALLET_DECISION,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
+        source_ref="iva-wallet-decision:event-1",
+        parent_source_ref=None,
+    )
+    contributor = CalculationSourceProvenance(
+        resolver_id="iva_wallet_decision",
+        resolved_binding_source=BindingSourceKind.IVA_WALLET_DECISION,
+        contributor_source_kind="aeat_wallet",
+        contributor_binding_source=None,
+        lineage_role=CalculationSourceLineageRole.CONTRIBUTOR,
+        source_ref="https://sede.agenciatributaria.gob.es/wallet",
+        parent_source_ref=primary.source_ref,
+    )
+    valid = CalculationSourceResolution(
+        resolver_id="iva_wallet_decision",
+        owned_sources=(BindingSourceKind.IVA_WALLET_DECISION,),
+        provenance=(primary, contributor),
+    )
+    assert valid.provenance == (primary, contributor)
+
+    with pytest.raises(ValidationError, match="provenance_contributor_parent_missing"):
+        CalculationSourceResolution(
+            resolver_id="iva_wallet_decision",
+            owned_sources=(BindingSourceKind.IVA_WALLET_DECISION,),
+            provenance=(contributor.model_copy(update={"parent_source_ref": "missing-primary"}),),
+        )
+    with pytest.raises(ValidationError, match="provenance_primary_ref_ambiguous"):
+        CalculationSourceResolution(
+            resolver_id="iva_wallet_decision",
+            owned_sources=(BindingSourceKind.IVA_WALLET_DECISION,),
+            provenance=(primary, primary),
+        )
 
 
 def test_reserved_composite_owner_ids_require_the_closed_typed_identity() -> None:
@@ -328,9 +389,12 @@ def test_relation_source_provenance_rejects_incomplete_typed_trace() -> None:
     with pytest.raises(ValidationError) as exc_info:
         CalculationSourceProvenance(
             resolver_id="relation_prefill",
-            binding_source=BindingSourceKind.RELATION_PREFILL,
-            source_kind=BindingSourceKind.RELATION_PREFILL.value,
+            resolved_binding_source=BindingSourceKind.RELATION_PREFILL,
+            contributor_source_kind=BindingSourceKind.RELATION_PREFILL.value,
+            contributor_binding_source=BindingSourceKind.RELATION_PREFILL,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref="relation:modelo-100-rel-130",
+            parent_source_ref=None,
             relation_id="modelo-100-rel-130-pagos-fraccionados",
         )
 
@@ -562,9 +626,12 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
     )
     provenance = CalculationSourceProvenance(
         resolver_id="ledger-iva",
-        binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        source_kind="ledger_iva_aggregation",
+        resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        contributor_source_kind="ledger_iva_aggregation",
+        contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref="transaction:tx-1",
+        parent_source_ref=None,
         fingerprint="sha256:abc",
     )
 

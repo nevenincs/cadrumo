@@ -406,7 +406,7 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance(
     ]
     assert len(prorrata_provenance) == 1
     provenance = prorrata_provenance[0]
-    assert provenance.binding_source is BindingSourceKind.LEDGER_IVA_AGGREGATION
+    assert provenance.resolved_binding_source is BindingSourceKind.LEDGER_IVA_AGGREGATION
     assert provenance.source_ref == (
         "prorrata-apportionment:2026:general:"
         "percentage:80:provenance:carried_prior_definitiva:source-observation:303:2025:4T"

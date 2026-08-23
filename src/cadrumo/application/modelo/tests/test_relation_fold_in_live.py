@@ -275,7 +275,7 @@ def test_modelo_180_115_fold_in_fires_on_live_calculate(secure_objects: SecureOb
     # encrypted-catalogue-bound domain record — not merely at the in-memory
     # resolution the resolver-level tests already cover.
     relation_prefill_provenance = [
-        item for item in result.revision.source_provenance if item.source_kind == "relation_prefill"
+        item for item in result.revision.source_provenance if item.contributor_source_kind == "relation_prefill"
     ]
     assert relation_prefill_provenance, "the live calculate revision must persist relation_prefill provenance rows"
     assert all(item.dependency_treatment == "direct_annual_settlement" for item in relation_prefill_provenance)

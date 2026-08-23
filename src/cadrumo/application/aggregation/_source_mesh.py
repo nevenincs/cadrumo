@@ -33,6 +33,7 @@ from ...core import (
     OBJECT_TUPLE_ADAPTER,
     STR_KEYED_MAPPING_ADAPTER,
     BindingSourceKind,
+    CalculationSourceLineageRole,
     CasillaId,
     ElidedProse,
     M210GrossIncomeSourceMode,
@@ -678,15 +679,17 @@ def casilla_registry_legal_refs(revision: ModeloRevision, casilla_id: CasillaId)
 
 
 class CalculationSourceProvenance(BaseModel):
-    """Stable source object provenance naming its exact producing resolver."""
+    """One primary or contributing node in a resolver-owned provenance graph."""
 
     model_config = _STRICT_FROZEN
 
     resolver_id: str = Field(min_length=1, max_length=128)
-    source_kind: str = Field(min_length=1, max_length=64)
-    binding_source: BindingSourceKind | None
-    """Canonical binding source when ``source_kind`` names one; ``None`` for non-binding provenance."""
+    resolved_binding_source: BindingSourceKind
+    contributor_source_kind: str = Field(min_length=1, max_length=64)
+    contributor_binding_source: BindingSourceKind | None
+    lineage_role: CalculationSourceLineageRole
     source_ref: str = Field(min_length=1, max_length=256)
+    parent_source_ref: str | None = Field(min_length=1, max_length=256)
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
     relation_id: RelationId | None = None
     source_modelo: ModeloId | None = None
@@ -706,16 +709,21 @@ class CalculationSourceProvenance(BaseModel):
     dependency_treatment: str = ""
 
     @model_validator(mode="after")
-    def _require_coherent_binding_source(self) -> CalculationSourceProvenance:
+    def _require_coherent_lineage(self) -> CalculationSourceProvenance:
         try:
-            source_kind = BindingSourceKind(self.source_kind)
+            contributor_kind = BindingSourceKind(self.contributor_source_kind)
         except ValueError:
-            source_kind = None
-        if self.binding_source is None:
-            if source_kind is not None:
+            contributor_kind = None
+        if self.contributor_binding_source is None:
+            if contributor_kind is not None:
                 raise SourceMeshError("aggregation.source_mesh.errors.provenance_binding_source_missing")
-        elif source_kind is not self.binding_source:
+        elif contributor_kind is not self.contributor_binding_source:
             raise SourceMeshError("aggregation.source_mesh.errors.provenance_binding_source_mismatch")
+        if self.lineage_role is CalculationSourceLineageRole.PRIMARY:
+            if self.parent_source_ref is not None:
+                raise SourceMeshError("aggregation.source_mesh.errors.provenance_primary_has_parent")
+        elif self.parent_source_ref is None:
+            raise SourceMeshError("aggregation.source_mesh.errors.provenance_contributor_missing_parent")
         return self
 
     @model_validator(mode="after")
@@ -1000,6 +1008,18 @@ class CalculationSourceResolution(BaseModel):
         mismatched = tuple(row.resolver_id for row in self.provenance if row.resolver_id != self.resolver_id)
         if mismatched:
             raise SourceMeshError("aggregation.source_mesh.errors.provenance_resolver_mismatch")
+        primary_refs = tuple(
+            row.source_ref for row in self.provenance if row.lineage_role is CalculationSourceLineageRole.PRIMARY
+        )
+        if len(primary_refs) != len(set(primary_refs)):
+            raise SourceMeshError("aggregation.source_mesh.errors.provenance_primary_ref_ambiguous")
+        primary_ref_set = frozenset(primary_refs)
+        if any(
+            row.parent_source_ref not in primary_ref_set
+            for row in self.provenance
+            if row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
+        ):
+            raise SourceMeshError("aggregation.source_mesh.errors.provenance_contributor_parent_missing")
         return self
 
     @field_serializer("binding_values")

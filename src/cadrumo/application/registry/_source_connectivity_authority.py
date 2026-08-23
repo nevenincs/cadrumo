@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core import (
     BindingSourceKind,
+    CalculationSourceLineageRole,
     ModeloCalculationRouteId,
     SourceConnectivityConnectionIdentity,
     SourceConnectivityEncryptedRevisionProof,
@@ -302,12 +303,13 @@ class LiveSourceConnectivityProofAuthority:
         source_identity_rows = tuple(
             row
             for row in revision.source_provenance
-            if row.binding_source is connection.source_kind and row.source_ref == proof.persisted_source_identity
+            if row.lineage_role is CalculationSourceLineageRole.PRIMARY
+            and row.resolved_binding_source is connection.source_kind
+            and row.source_ref == proof.persisted_source_identity
         )
         return (
             len(source_identity_rows) == 1
             and source_identity_rows[0].resolver_id == connection.resolver_id
-            and source_identity_rows[0].source_kind == connection.source_kind.value
             and source_identity_rows[0].fingerprint == proof.persisted_source_fingerprint
         )
 

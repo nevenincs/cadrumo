@@ -42,7 +42,7 @@ from .._foreign_asset_thresholds import (
     foreign_asset_declaration_thresholds_for_revision,
 )
 from ._grouping import assert_rollup_totals_match, group_observations
-from ._source_mesh import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution
+from ._source_mesh import CalculationSourceContext, CalculationSourceResolution
 
 _CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
@@ -340,15 +340,10 @@ class ForeignAssetsAggregationSourceResolver:
                     if observation.source_kind is BindingSourceKind.LEDGER_TRANSACTION
                 ),
             ),
-            provenance=tuple(
-                CalculationSourceProvenance(
-                    resolver_id=self.resolver_id,
-                    binding_source=observation.source_kind,
-                    source_kind=observation.source_kind.value,
-                    source_ref=f"{observation.source_kind.value}:{observation.source_object_id}",
-                )
-                for observation in selected_observations
-            ),
+            # M720 has no authoritative persisted identity for the resolved asset.
+            # Upstream carrier ids cannot truthfully stand in for a primary node,
+            # so this resolver remains grounding-blocked and emits no provenance.
+            provenance=(),
         )
 
 

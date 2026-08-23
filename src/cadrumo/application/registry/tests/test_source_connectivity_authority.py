@@ -13,6 +13,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import (
     BindingSourceKind,
+    CalculationSourceLineageRole,
     ModeloCalculationRouteId,
     SourceConnectivityCensusRow,
     SourceConnectivityConnectedProof,
@@ -199,9 +200,12 @@ def _composition(
     assert isinstance(owner, CalculationRouteResolverSourceOwnership)
     provenance = CalculationSourceRef(
         resolver_id=owner.resolver_id,
-        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
-        binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        contributor_source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        contributor_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref=_SOURCE_REF,
+        parent_source_ref=None,
         fingerprint=_FINGERPRINT,
     )
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)

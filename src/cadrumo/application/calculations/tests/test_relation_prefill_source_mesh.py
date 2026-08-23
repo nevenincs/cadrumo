@@ -112,7 +112,7 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
         }
         assert source_resolution.owned_sources == (BindingSourceKind.RELATION_PREFILL,)
         assert source_resolution.provenance
-        assert all(item.source_kind == "relation_prefill" for item in source_resolution.provenance)
+        assert all(item.contributor_source_kind == "relation_prefill" for item in source_resolution.provenance)
         relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
         for item in prefill.values:
             relation = relations_by_id[item.relation]

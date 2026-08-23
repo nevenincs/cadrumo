@@ -10,7 +10,7 @@ from typing import Literal
 
 import pytest
 
-from ....core import CasillaId, ObservedHeaderFact, Period, ResultDisposition
+from ....core import BindingSourceKind, CasillaId, ObservedHeaderFact, Period, ResultDisposition
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
     RegistryValidationError,
@@ -163,7 +163,9 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
     assert resolution.binding_values[_BOX_97_BINDING] + resolution.binding_values[_BOX_662_BINDING] == _4t_disponible
     assert resolution.provenance
     assert {item.dependency_treatment for item in resolution.provenance} == {"direct_annual_settlement"}
-    assert {item.binding_source for item in resolution.provenance} == {"iva_compensation_annual_partition"}
+    assert {item.resolved_binding_source for item in resolution.provenance} == {
+        BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
+    }
     assert {item.source_modelo for item in resolution.provenance} == {"303"}
 
 

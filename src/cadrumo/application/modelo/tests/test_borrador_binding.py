@@ -473,7 +473,7 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
     assert resolution.binding_values == expected.binding_values
     assert resolution.enum_binding_values == expected.enum_binding_values
     assert resolution.owned_sources == (BindingSourceKind.BORRADOR,)
-    assert {item.source_kind for item in resolution.provenance} == {"borrador"}
+    assert {item.contributor_source_kind for item in resolution.provenance} == {"borrador"}
     assert {item.source_ref for item in resolution.provenance} == {
         f"borrador:{snapshot_id}:binding:{_DECIMAL_BINDING}",
         f"borrador:{snapshot_id}:binding:{_ENUM_BINDING}",

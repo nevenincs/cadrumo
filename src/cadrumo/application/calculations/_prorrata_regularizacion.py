@@ -48,6 +48,7 @@ from ...adapters.persistence.storage import ClassificationError, DecryptionError
 from ...core import (
     STRICT_FROZEN_CONFIG,
     BindingSourceKind,
+    CalculationSourceLineageRole,
     CasillaId,
     Modelo,
     Period,
@@ -621,9 +622,12 @@ def _current_year_values_provenance(
     period_ref = ",".join(periods)
     return CalculationSourceProvenance(
         resolver_id=ProrrataRegularizacionSourceResolver.resolver_id,
-        binding_source=_SOURCE_KIND,
-        source_kind=_SOURCE_KIND.value,
+        resolved_binding_source=_SOURCE_KIND,
+        contributor_source_kind=_SOURCE_KIND.value,
+        contributor_binding_source=_SOURCE_KIND,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref=f"{Modelo.M303.value}:{context.filing_year}:{period_ref}:prorrata-current-year-values",
+        parent_source_ref=None,
         source_modelo=Modelo.M303.value,
         source_filing_year=context.filing_year,
         source_periods=periods,
@@ -661,9 +665,12 @@ def _register_provenance(
         suffix = f"{provenance_token}:{entry.authorisation_reference}"
     return CalculationSourceProvenance(
         resolver_id=ProrrataRegularizacionSourceResolver.resolver_id,
-        binding_source=_SOURCE_KIND,
-        source_kind=_SOURCE_KIND.value,
+        resolved_binding_source=_SOURCE_KIND,
+        contributor_source_kind=_SOURCE_KIND.value,
+        contributor_binding_source=_SOURCE_KIND,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref=f"prorrata-register:{context.filing_year}:{suffix}",
+        parent_source_ref=None,
         source_filing_year=context.filing_year,
         legal_refs=_binding_legal_refs(revision),
         source_refs=_binding_source_refs(revision),
@@ -677,9 +684,12 @@ def _prior_definitiva_provenance(
 ) -> CalculationSourceProvenance:
     return CalculationSourceProvenance(
         resolver_id=ProrrataRegularizacionSourceResolver.resolver_id,
-        binding_source=_SOURCE_KIND,
-        source_kind=_SOURCE_KIND.value,
+        resolved_binding_source=_SOURCE_KIND,
+        contributor_source_kind=_SOURCE_KIND.value,
+        contributor_binding_source=_SOURCE_KIND,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref=f"{Modelo.M303.value}:{carry.source_filing_year}:{carry.source_period}:{_PORCENTAJE_ID}",
+        parent_source_ref=None,
         source_modelo=Modelo.M303.value,
         source_filing_year=carry.source_filing_year,
         source_periods=(carry.source_period,),

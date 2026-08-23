@@ -14,7 +14,7 @@ from ....adapters.outbound.aeat.sede import (
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
-from ....core import Period
+from ....core import CalculationSourceLineageRole, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -30,7 +30,6 @@ _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
 _BUCKET_ID = _PROFILE_ID
 _CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
-_PROFILE_FINGERPRINT = "sha256:a2163dffc4d956186d63f53548026176dfda6cf90ceeec02aafa843fb46ae4b9"
 # Derived-fact profile bindings that unconditionally resolve a grounded value
 # (zero/false for a childless, non-Madrid, non-anualidades profile) alongside
 # the CCAA binding: minimo por descendientes estatal + autonomico (Art. 58/61
@@ -144,12 +143,12 @@ def test_profile_source_resolver_matches_direct_profile_binding_resolution() -> 
     assert resolution.enum_binding_values == direct_resolution.enum_binding_values
     assert resolution.source_transaction_ids == ()
     assert resolution.provenance
-    assert {item.source_ref for item in resolution.provenance if item.source_kind == "profile"} == {
+    assert {item.source_ref for item in resolution.provenance if item.contributor_source_kind == "profile"} == {
         f"profile:{_BUCKET_ID}:binding:{binding_id}"
         for binding_id in ({_CCAA_BINDING} | _DERIVED_FACT_PROFILE_BINDINGS)
     }
-    assert {item.fingerprint for item in resolution.provenance if item.source_kind == "profile"} == {
-        _PROFILE_FINGERPRINT,
+    assert {item.fingerprint for item in resolution.provenance if item.contributor_source_kind == "profile"} == {
+        item.fingerprint for item in direct_resolution.provenance
     }
 
 
@@ -157,7 +156,8 @@ def test_profile_source_resolver_fingerprints_storage_loaded_profile(
     secure_profile_backend: None,  # noqa: F811
 ) -> None:
     snapshot = _modelo_100_snapshot()
-    seed_test_profile_record(_profile_with_ccaa("madrid"))
+    profile_record = _profile_with_ccaa("madrid")
+    seed_test_profile_record(profile_record)
 
     resolution = ProfileSourceResolver(registry_snapshot=snapshot).resolve(
         CalculationSourceContext(
@@ -170,8 +170,13 @@ def test_profile_source_resolver_fingerprints_storage_loaded_profile(
     )
 
     assert resolution.enum_binding_values[_CCAA_BINDING] == "madrid"
-    assert {item.fingerprint for item in resolution.provenance if item.source_kind == "profile"} == {
-        _PROFILE_FINGERPRINT,
+    direct_resolution = resolve_profile_sourced_bindings(
+        snapshot,
+        bucket_id=_BUCKET_ID,
+        profile_record=profile_record,
+    )
+    assert {item.fingerprint for item in resolution.provenance if item.contributor_source_kind == "profile"} == {
+        item.fingerprint for item in direct_resolution.provenance
     }
 
 
@@ -198,7 +203,7 @@ def test_profile_source_resolver_respects_caller_owned_precedence() -> None:
     # Only the CCAA binding is caller-owned here; the unconditional derived-fact
     # profile bindings (minimo por descendientes, Madrid nacimiento/adopcion,
     # anualidades sin minimo) still resolve their grounded zero/false values.
-    assert {item.source_ref for item in resolution.provenance if item.source_kind == "profile"} == {
+    assert {item.source_ref for item in resolution.provenance if item.contributor_source_kind == "profile"} == {
         f"profile:{_BUCKET_ID}:binding:{binding_id}" for binding_id in _DERIVED_FACT_PROFILE_BINDINGS
     }
 
@@ -260,7 +265,7 @@ def test_profile_source_resolver_projects_each_registered_modelo_revision(
     resolved_values = resolution.enum_binding_values if channel == "enum" else resolution.binding_values
     assert resolved_values[binding_id] == expected_value
     assert f"profile:{_BUCKET_ID}:binding:{binding_id}" in {
-        item.source_ref for item in resolution.provenance if item.source_kind == "profile"
+        item.source_ref for item in resolution.provenance if item.contributor_source_kind == "profile"
     }
 
 
@@ -287,5 +292,8 @@ def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> Non
 
     assert resolution.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200")}
     assert resolution.provenance
-    assert all(item.fingerprint for item in resolution.provenance)
+    primary = tuple(item for item in resolution.provenance if item.lineage_role is CalculationSourceLineageRole.PRIMARY)
+    assert len(primary) == 1
+    assert primary[0].fingerprint
+    assert all(item.parent_source_ref == primary[0].source_ref for item in resolution.provenance[1:])
     assert {item.fingerprint for item in resolution.provenance} == {resolution.provenance[0].fingerprint}
