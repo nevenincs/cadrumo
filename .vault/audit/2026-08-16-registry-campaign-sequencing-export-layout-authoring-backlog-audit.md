@@ -19508,3 +19508,69 @@ partially-read case is already covered by the extraction's own `skipped` check.
 ### Still open
 
 Modelo 200's split. Modelo 347's 2008-2009 and 2010 revisions. Both unchanged.
+
+## Tick: modelo 200's epoch-2024 semantic map derived, complete, and landed unwired
+
+The modelo 200 split's map exists. Every one of the 6,709 fields in the 2024
+design resolves -- **zero unresolved** -- and the map loads and joins as far as
+it can without its revision.
+
+### The 86 "ambiguous" fields were an artifact of the wrong key, again
+
+They were not the formula-operand case found on modelo 123. Each carries exactly
+one tag; the box simply appears at more than one position in the 2025 design.
+Keying on `(record, box)` rather than box alone resolves ALL of them -- 241
+fields, none left over. AEAT reuses a box number across records, so the record is
+part of the identity, and reading the number alone was the omission.
+
+### The full resolution, by rule
+
+* 6,278 aligned on `(length, normalized description)`;
+* 241 resolved by `(record, box)`;
+* 185 whose box exists only in 2024 -- these need a casilla authored, and their
+  grounding is mechanical: every affected record carries ONE legal_ref set;
+* 3 `RESERVADO PARA LA AEAT` classified as filler;
+* 2 year-labelled I+D+i rows carrying NO tag at all, resolved against the 2025
+  twin whose text differs only in the year token.
+
+Nothing was left to a guess and nothing was dropped.
+
+### Four generator contracts met, each found by being refused
+
+* a `projection_ref` is a nested mapping, so the entry emitter had to render TOML
+  inline tables rather than flattening every value to a scalar;
+* `source_cell` belongs in the anchor for a spreadsheet design;
+* the parser envelope `DP200000` needs its `variable_envelopes` contract, which
+  lives in the records fragment and is not an entry;
+* that envelope declares its body records in an exact reviewed ORDER, and the
+  2024 design has 74 of the 2025 design's 76 -- `m200-page-016c` and
+  `m200-page-019b` are 2025-only -- so the carried list had to be filtered while
+  preserving order.
+
+### Where it stops, precisely
+
+The join now refuses with `references unknown target-revision casilla '93'` --
+one of the 185 boxes that exist only in 2024. That is the map working correctly:
+it is validated against the CURRENT revision, which is 2025-shaped, and casilla
+93 is exactly what the new revision must declare. The map is right; its revision
+does not exist yet.
+
+The map is landed UNWIRED, and that is safe rather than half-done: no gate
+enumerates the mappings tree -- all three consumers load a map by explicit path
+-- so an epoch nothing references is inert. It is 74 records and ~88,000 lines of
+generator input that a following tick consumes rather than re-derives.
+
+### Verified
+
+* the map loads through `load_semantic_map`; the join reaches casilla resolution
+  and stops only on the absent casillas.
+* registry package plus the generated-tree gates: 9 failed, 5,990 passed -- the
+  standing declared inventories, unchanged, with the new map present.
+* authority loads CLEAN.
+
+### Still open
+
+Modelo 200's revision half: copy the 3,462-casilla revision, drop the 246 boxes
+that are 2025-only, author the 185 that are 2024-only, then two publish cycles.
+Modelo 347's 2008-2009 and 2010 revisions remain unauthored and are blocked on a
+per-field reading rather than a derivation.

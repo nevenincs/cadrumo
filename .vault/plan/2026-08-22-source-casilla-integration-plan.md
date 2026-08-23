@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:28b6b9bf810967ad3eb4d5b4a69cb16e9fcc6262f21dc66a93082bb669d285b6'
+body_hash: 'sha256:6c816d4d4be4af9a87d975c3669719f7f5f53938361f7da2e32c20dd9e575278'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -135,7 +135,7 @@ Settle revision coverage, source facts, sign, units, activity grain, absence sem
 
 Add inventory to the canonical taxonomy and resolution mesh without bypassing secure domain ownership.
 
-- [ ] `W02.P07.S36` - add the inventory source kind to the canonical taxonomy; `src/cadrumo/core/aggregation.py`.
+- [x] `W02.P07.S36` - add the inventory source kind to the canonical taxonomy; `src/cadrumo/core/aggregation.py`.
 - [ ] `W02.P07.S37` - define and validate the typed inventory selector contract; `src/cadrumo/domain/calculations/registry/_inventory_bindings.py`.
 - [ ] `W02.P07.S38` - enroll inventory selector validation in registry binding construction; `src/cadrumo/domain/calculations/registry/_bindings.py`.
 - [ ] `W02.P07.S39` - implement inventory repository resolution, diagnostics, source identity, and fingerprint provenance; `src/cadrumo/application/aggregation/_inventory.py`.
