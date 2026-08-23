@@ -46,7 +46,7 @@ from .._smoke_common import (
 )
 from ..installed_mcp_oracle import run_installed_mcp_oracle
 from ..installed_tax_oracle import run_installed_tax_oracle
-from ..python_cohort import PythonCohort, load_python_cohort
+from ..python_cohort import PythonCohort, _attest_installed_command_specs, load_python_cohort
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -228,6 +228,9 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
                 "sha256": {name: sha256_path(cohort_dir / filename) for name, filename in artifacts.items()},
                 "source_commit": source_commit,
                 "version": version,
+                "command_spec_attestation": _attest_installed_command_specs(
+                    root_wheel, work_root=work_dir, uv=uv
+                ),
             },
         )
         supplied = load_python_cohort(cohort_dir)

@@ -22,6 +22,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 from dev.packaging._distribution_names import normalise_distribution_name  # noqa: E402
 from dev.packaging._hashing import sha256_path  # noqa: E402
+from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
 
 _COMPANIONS = (
     ("cadrumo-data-manuals", "cadrumo_data_manuals"),
@@ -373,6 +374,7 @@ def generate_formula(
     release_base_url: str,
 ) -> str:
     """Return one deterministic formula for the exact supplied cohort."""
+    load_python_cohort(cohort_dir)
     base_url = _release_base_url(release_base_url, version=version)
     root = _sdist_artifact(
         cohort_dir,
