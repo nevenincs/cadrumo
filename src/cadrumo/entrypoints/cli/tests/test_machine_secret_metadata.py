@@ -89,11 +89,15 @@ def test_inventory_channels_are_single_ordered_and_semantically_identical_where_
 
 def test_no_command_outside_the_closed_inventory_adopts_either_channel() -> None:
     adopters = {
-        spec.key
-        for spec in CONFIG_COMMAND_SPECS
-        if any(parameter.name in {"secrets_stdin", "secrets_fd"} for parameter in spec.parameters)
+        row.command
+        for row in command_registration_metadata()
+        if any(
+            parameter.name in {"secrets_stdin", "secrets_fd"}
+            for parameters in row.parameters.values()
+            for parameter in (parameters or ())
+        )
     }
-    assert adopters == set(_SPEC_KEYS)
+    assert adopters == set(_COMMAND_KEYS)
 
 
 def test_payload_metadata_is_value_free_exact_and_restore_is_conditional() -> None:

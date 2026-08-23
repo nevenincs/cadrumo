@@ -19,6 +19,7 @@ from .._command_spec import (
 from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, STATE_FREE
 
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
+_INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
@@ -393,6 +394,7 @@ AUTH_COMMAND_SPECS = (
         (
             _option("name", ("--name",), _STR, "cli.config.auth.certificate.secret.set.name_help", required=True),
             _option("secrets_stdin", ("--secrets-stdin",), _BOOL, "cli.config.custody.secrets_stdin_help", flag=True),
+            _option("secrets_fd", ("--secrets-fd",), _INT, "cli.config.custody.secrets_fd_help"),
         ),
     ),
     _leaf(
