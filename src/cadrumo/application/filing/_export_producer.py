@@ -102,6 +102,7 @@ def filing_producer_ownership() -> dict[FilingProducerKey, str]:
         FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA,
         FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA,
         FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT,
+        FilingProducerKey.AMENDMENT_SUSTITUTIVA_OR_COMPLEMENTARIA_MARKER,
         FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES,
         FilingProducerKey.AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO,
         FilingProducerKey.SELECTED_ACCOUNT_IBAN,
@@ -269,6 +270,18 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
         FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA: amendment.is_rectificativa if amendment else None,
         FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: amendment.is_complementaria if amendment else None,
         FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT: amendment.original_aeat_receipt if amendment else None,
+        # ONE official slot holding "S", "C" or blank. Derived from the amendment KIND,
+        # never from the boolean pair: rendering "S" because is_complementaria is false
+        # would assert a substitution nobody declared, which is why this is its own key.
+        FilingProducerKey.AMENDMENT_SUSTITUTIVA_OR_COMPLEMENTARIA_MARKER: (
+            None
+            if amendment is None
+            else "S"
+            if amendment.is_sustitutiva
+            else "C"
+            if amendment.is_complementaria
+            else None
+        ),
         FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES: m303_motive[
             FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES
         ],
