@@ -14,7 +14,9 @@ from typing import cast
 import typer
 
 from ...core.output_rendering import OutputFormat
-from . import (
+from ._common import preserve_requested_cli_leaf
+from ._log_levels import resolve_log_level
+from ._root_support import (
     _activate_profile_override,
     _emit_bare_invocation_and_exit,
     _emit_root_help_and_exit,
@@ -22,8 +24,6 @@ from . import (
     _is_introspection_only_invocation,
     _normalize_root_active_profile,
 )
-from ._common import preserve_requested_cli_leaf
-from ._log_levels import resolve_log_level
 
 
 def root_command(

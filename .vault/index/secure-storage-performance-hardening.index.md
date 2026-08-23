@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:8e4e47379499bca66f94094dd989aeaca959878fdad93e383b249e6bcaff6d07'
+body_hash: 'sha256:83a9d2d3bc1602fa95b5aebc828270791a8aa0792eb4b339da5f6f5842f2c662'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
@@ -36,6 +36,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P03a-S59]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P04-S13]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P04-S15]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-W02-P04-S16]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
@@ -56,6 +57,7 @@ related:
   - '[[2026-08-23-secure-storage-performance-hardening-s12-lazy-import-failure-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s14-app-command-demand-loading-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s15-import-light-command-spec-review-audit]]'
+  - '[[2026-08-23-secure-storage-performance-hardening-s16-owned-lazy-target-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s54-command-spec-convergence-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s55-command-spec-universal-gates-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s56-source-lane-review-audit]]'
@@ -99,6 +101,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-23-secure-storage-performance-hardening-s12-lazy-import-failure-review-audit` - `secure-storage-performance-hardening` audit: `S12 nested lazy import failure review`
 - `2026-08-23-secure-storage-performance-hardening-s14-app-command-demand-loading-review-audit` - `secure-storage-performance-hardening` audit: `S14 app CommandSpec demand-loading review`
 - `2026-08-23-secure-storage-performance-hardening-s15-import-light-command-spec-review-audit` - `secure-storage-performance-hardening` audit: `s15 import light command spec review`
+- `2026-08-23-secure-storage-performance-hardening-s16-owned-lazy-target-review-audit` - `secure-storage-performance-hardening` audit: `s16 owned lazy target review`
 - `2026-08-23-secure-storage-performance-hardening-s54-command-spec-convergence-review-audit` - `secure-storage-performance-hardening` audit: `S54 command-spec convergence review`
 - `2026-08-23-secure-storage-performance-hardening-s55-command-spec-universal-gates-audit` - `secure-storage-performance-hardening` audit: `S55 CommandSpec universal gate review`
 - `2026-08-23-secure-storage-performance-hardening-s56-source-lane-review-audit` - `secure-storage-performance-hardening` audit: `S56 clean source and editable lane review`
@@ -143,6 +146,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-W02-P03a-S59` - Run two independent post-cutover architecture reviews and reconcile all command-authority, production-development boundary, build-lane, shipping-lane, and installed-runtime findings before resuming the remaining performance campaign
 - `2026-08-22-secure-storage-performance-hardening-W02-P04-S13` - Convert the complete config subtree from eager registrar imports to nested loader references
 - `2026-08-22-secure-storage-performance-hardening-W02-P04-S15` - Keep distributed CommandSpec modules import-light by splitting heavyweight handler payload and schema implementations behind owned lazy public targets while retaining all structural declarations in production specs
+- `2026-08-22-secure-storage-performance-hardening-W02-P04-S16` - Replace hidden first-party function-local coupling with owned lazy public handler and schema boundaries referenced only by CommandSpec targets
 
 ### plan
 
