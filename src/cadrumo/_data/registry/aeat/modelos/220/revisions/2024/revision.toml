@@ -62,61 +62,66 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the Impuesto sobre Sociedades grupo-fiscal \
 consolidated declaration. DISCLOSURE -- self-review: the same agent authored the casillas \
-being reviewed. VERIFIED -- RECORD T22012000 IS AUTHORED, 180 casillas, EVERY ONE carrying \
-a real AEAT box number. Revision total 275 casillas. The record holds the deducciones por \
-doble imposicion: interna bajo el RDLEG 4/2004, interna bajo la DT 23a LIS, internacional \
-bajo el RDLEG 4/2004, internacional bajo la LIS, and the tipo de gravamen del ejercicio. \
-This is the THIRD of the design's 137 records to be authored, and the FIRST on this modelo \
-in which every casilla is numbered -- T22001000 numbered twelve of seventy-seven, and \
-T22002000 numbered none at all because it prints none. The record is a numbered grid of \
-179 money cells of seventeen positions plus the tipo de gravamen, with a distinct AEAT \
-number on every cell, so there is no repetition to collapse and no slug anywhere in it. \
-VERIFIED -- THE IDS ARE DERIVED FROM A CHECKED DECOMPOSITION, NOT A GUESS, and the \
-checking is the substance of this review. The 180 field descriptions were decomposed into \
-four closed axes -- family with 5 values, group with 6, scope with 22 and column with 6 -- \
-and the decomposition was verified two ways BEFORE any id was minted: every one of the 180 \
-resolves into known vocabulary with NOTHING unresolved, and the resulting four-part keys \
-are UNIQUE across all 180 with no collision. THE COLLISION CHECK EARNED ITS KEEP \
-IMMEDIATELY. A first attempt used only three axes and produced SEVEN COLLIDING KEYS \
-covering NINETEEN numbers -- ids that would have merged distinct cells and silently \
-mis-declared them. The missing axis was the group qualifier AEAT prints before a colon, \
-\"DI interna ejerc. anteriores:\", \"DI juridica: Imp. soportado por el contribuyente \
-(art. 31 LIS)\", \"DI economica: Dividendos y part. en beneficios (art. 32 LIS)\" and \
-\"Total 2024\". Without that check the nineteen would have shipped as wrong ids that \
-nothing downstream would have flagged. VERIFIED -- A THIRD, INDEPENDENT CONFIRMATION: the \
-180 Spanish labels are composed from the same four axes and are ALL DISTINCT, zero \
-duplicates. Two casillas describing the same thing would have surfaced there, and none \
-did. VERIFIED -- AEAT MISSPELLS ITS OWN SECTION HEADING FOUR WAYS IN THIS RECORD: \"RDLEG \
-4/2004\", \"RDLEG4/2004\", \"RDL 4/2004\" and \"RDLRG 4/2004\"; and it twice truncates a \
-column label, printing \"licado en esta liquidacion\" for \"Aplicado en esta \
-liquidacion\". All four spellings and both truncations are MATCHED DELIBERATELY rather \
-than corrected, so the decomposition reflects what the design actually says. The casilla \
-labels use the corrected form, because a label is read by an operator while the match is \
-read against AEAT. This is a transcription judgement and is flagged as one. VERIFIED -- \
-180 design numbers, 180 authored, ZERO missing and ZERO invented; every one of the \
-record's 190 fields is either authored or explicitly excluded with a stated reason, so \
-nothing is unaccounted for. T22012000 tiles 1..3226 exactly once with NO gap and NO \
-PARTIAL OVERLAP, both checked. VERIFIED -- YEAR-CLEAN: aeat-dr-220-2024 applies from \
-2024-01-01 to 2024-12-31, exactly the single ejercicio this revision claims. VERIFIED -- \
-TYPES: every cell is money except the tipo de gravamen at @3059+6, which is a rate and is \
-typed ratio. NOT CLAIMED -- THESE CASILLAS DECLARE THE DEDUCTION GRID; NONE OF THEM \
-COMPUTES IT. No formula, no construct and no binding is attached to any of the 180, so \
-nothing here reconciles a carried-forward deduction against the amount applied, and \
-nothing validates that the pendiente-futuro column equals pendiente minus aplicado. A \
-reader should not mistake a complete set of declared cells for a modelled calculation. NOT \
-CLAIMED -- 134 OF THE DESIGN'S 137 RECORDS REMAIN UNAUTHORED, and 7412 of its 7604 AEAT \
-box numbers remain unmodelled. The 192 modelled are the twelve caracteres flags on \
-T22001000 and the 180 here. Progress on this modelo should not be read from the casilla \
-count: 275 casillas describe three records out of 137. NOT CLAIMED -- NO EXPORT LAYOUT AND \
-NO CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be filed. model_law_authority_scope \
-remains inspection_only, so this stamp is made under the LOWER inspection bar and MUST be \
-re-made if a layout lands and lifts the derived scope to filing. NOT CLAIMED -- LOCALES \
-COMPLETE BUT UNAUDITED: 720 strings across es/en/ca/hu, composed from the four checked \
-axes rather than from free text, so a label can only be wrong if one of four small \
-vocabularies is wrong; all 275 label keys verified non-null by counting VALUES rather than \
-keys. The translations were not reviewed by a second party, and the Spanish is unaccented \
-ASCII, a known presentation limitation. NOT CLAIMED -- independent_check_coverage is n/a: \
-NO CLAIM, not zero."""
+being reviewed. VERIFIED -- RECORD T22012B00 IS AUTHORED and RECORD T22012000 IS \
+RE-AUTHORED: 344 casillas across the two deduction-grid records, every one carrying a real \
+AEAT box number. Revision total 439 casillas, four of the design's 137 records. THE \
+SUBSTANCE OF THIS REVIEW IS A CORRECTION TO THE PREVIOUS ONE. AEAT REUSES BOX NUMBERS \
+ACROSS RECORDS: number 00285 is a different declared cell in T22012000 than in T22012B00, \
+and the two records share many such numbers. The modelo is therefore MULTI-SEGMENT, and \
+the registry loader refuses bare casilla ids for it. Every casilla in both records now \
+declares `segmento` set to the record name and takes the `<SEGMENTO>:<number>` id shape -- \
+the convention MODELO 200, the other multi-record Sociedades declaration, already \
+established. Both halves of the id are TRANSCRIBED from AEAT: its record name and its box \
+number. Nothing is derived. THAT SHAPE REPLACED A DERIVED ONE, AND BOTH LESSONS WERE PAID \
+FOR. The previous stamp described ids minted from a four-axis decomposition of the field \
+descriptions, and described the checking that made them trustworthy: nothing unresolved, \
+no duplicate key within a record, and -- added this iteration -- no duplicate key across \
+records. Each check caught a real defect: a missing group axis collided nineteen numbers, \
+and a missing \"Total periodos anteriores\" scope collided four more AND silently \
+mislabelled five casillas that had already been committed under the previous stamp. Those \
+five are corrected here. But the scheme was wrong anyway. The loader refused it because \
+the modelo needs `segmento` regardless, and an established convention already existed for \
+exactly this shape. FIRST LESSON: a derived id that passes every check you thought of is \
+still worse than a transcribed one. SECOND LESSON: re-implementing a convention the \
+registry already has is a defect in itself, however carefully the re-implementation is \
+verified -- and the cost was two full authoring passes over 180 casillas. A THIRD \
+CONVENTION WAS ALSO REACHED FOR BY GUESS AND CORRECTED BY A GATE: a segment-qualified \
+fragment filename joins the id's colon as \"+\", not \"-\". test_casilla_fragment_naming \
+named the expected stem exactly; the four files were renamed and it is green. All three \
+conventions were cheaper to read than to invent. VERIFIED -- THE DECOMPOSITION SURVIVES \
+WHERE IT IS ACTUALLY NEEDED: the casilla LABELS, which must say what a cell means in four \
+languages and are composed from the four checked axes rather than from free text, so a \
+label can only be wrong if one of four small vocabularies is wrong. VERIFIED -- THE TWO \
+GRIDS SHARE 113 CELL MEANINGS and the design gives NO wording to tell them apart; nothing \
+in any field description says what \"B00\" scopes differently from \"000\". Each label \
+therefore carries AEAT's own record identifier. That is opaque but truthful and \
+distinguishing: 113 identical labels would leave an operator unable to tell which cell \
+they were filling. Duplicate Spanish labels across the revision: ZERO. The segmento \
+likewise records AEAT's record identifier and asserts no semantics beyond it. VERIFIED -- \
+180 and 164 design numbers respectively, ALL authored, zero missing and zero invented; \
+every field of both records is either authored or explicitly excluded with a stated \
+reason. Both tile exactly once with NO gap and NO PARTIAL OVERLAP, both checked. \
+Year-clean: aeat-dr-220-2024 applies exactly the single ejercicio this revision claims. \
+THE DENOMINATOR FOR THIS MODELO IS RESTATED, because the segmento discovery changes it. \
+Counting DISTINCT box numbers gives 7604, which UNDERCOUNTS the declarable cells, since a \
+number reused across records is several cells. Counting (record, number) SLOTS gives \
+11605. Modelled: 356 slots. NOT CLAIMED -- 11249 SLOTS REMAIN UNMODELLED across 133 of the \
+design's 137 records. 439 casillas describe four records. Progress on this modelo must not \
+be read from the casilla count. NOT CLAIMED -- THESE CASILLAS DECLARE THE DEDUCTION GRIDS; \
+NONE OF THEM COMPUTES ONE. No formula, construct or binding is attached to any of the 344, \
+so nothing reconciles a carried-forward deduction against the amount applied and nothing \
+checks that pendiente-futuro equals pendiente minus aplicado. A complete set of declared \
+cells is not a modelled calculation. NOT CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT \
+MEMBERSHIP CHANGE. The modelo cannot be filed. model_law_authority_scope remains \
+inspection_only, so this stamp is made under the LOWER inspection bar and MUST be re-made \
+if a layout lands and lifts the derived scope to filing. NOT CLAIMED -- the two earlier \
+records, T22001000 and T22002000, do NOT carry `segmento`: their fields are largely or \
+wholly unnumbered, so the convention has nothing to key on there and no collision has \
+arisen. That divergence is deliberate and is recorded so a later reader does not read it \
+as an oversight. NOT CLAIMED -- LOCALES COMPLETE BUT UNAUDITED: all 439 label keys \
+verified non-null across es/en/ca/hu by counting VALUES rather than keys; the translations \
+were not reviewed by a second party and the Spanish is unaccented ASCII. NOT CLAIMED -- \
+independent_check_coverage is n/a: NO CLAIM, not zero."""
 reviewed_at = 2026-08-23
 
 [revisions."2024".family_dispositions.casilla_continuidad_evolutions]

@@ -3510,3 +3510,70 @@ formula, construct or binding is attached, so nothing reconciles a carried-forwa
 deduction against the amount applied, and nothing checks that pendiente-futuro equals
 pendiente minus aplicado. 134 of 137 records remain unauthored and **7412 of 7604 AEAT
 numbers remain unmodelled** — 275 casillas describe three records.
+
+## 2026-08-23 — modelo 220 is MULTI-SEGMENT: three conventions I invented that already existed
+
+### What landed
+
+Modelo 220 record **T22012B00** authored and **T22012000 re-authored**: 344 casillas
+across the two deduction-grid records, every one carrying a real AEAT box number.
+Revision 275 → **439 casillas**, four of 137 records. Suite back to **13 failures, zero
+net regressions**.
+
+### AEAT reuses box numbers across records — the modelo is multi-segment
+
+Number `00285` is a **different declared cell** in T22012000 than in T22012B00, and the
+two records share many such numbers. The loader refuses bare casilla ids for such a
+modelo. Every casilla in both records now declares `segmento` and takes the
+`<SEGMENTO>:<number>` id shape — **the convention modelo 200 already established.**
+
+### The finding: three conventions reached for by guess, all of which already existed
+
+| what I invented | what already existed | how it surfaced |
+|---|---|---|
+| four-axis derived ids | `segmento` + `<SEGMENTO>:<number>`, from modelo 200 | loader refused the result |
+| — | — | |
+| `-` joining a segment-qualified filename | `+` | `test_casilla_fragment_naming` named the expected stem |
+
+The derived scheme was not careless. It survived three checks — nothing unresolved, no
+duplicate key within a record, and no duplicate key **across** records — and every one of
+those checks caught a real defect:
+
+- a missing **group** axis collided nineteen numbers;
+- a missing **"Total períodos anteriores"** scope collided four more **and silently
+  mislabelled five casillas already committed** under the previous stamp (corrected here).
+
+And it was still the wrong thing to build. **Two lessons, both paid for with two full
+authoring passes over 180 casillas:**
+
+1. **A derived id that passes every check you thought of is still worse than a
+   transcribed one.** `segmento` + `number` are both AEAT's own; nothing can drift.
+2. **Re-implementing a convention the registry already has is a defect in itself**,
+   however carefully the re-implementation is verified. The architecture rules say this
+   about code; it applies just as directly to data conventions.
+
+The cheap move I skipped: before minting an id scheme, look at how the *other*
+multi-record modelo in the same tax does it. Modelo 200 is the nearest analogue by
+meaning and was one grep away.
+
+### The decomposition survives where it is genuinely needed
+
+The four axes still drive the **labels**, which must say what a cell means in four
+languages and are composed from checked vocabularies rather than free text. The two grids
+share **113 cell meanings** with no wording to tell them apart, so each label carries
+AEAT's own record identifier — opaque but truthful, and 113 identical labels would leave
+an operator unable to tell which cell they were filling. Duplicate Spanish labels: **0**.
+
+### The denominator for modelo 220 was undercounted
+
+Counting **distinct** box numbers gives 7604. That undercounts the declarable cells,
+because a number reused across records is several cells. Counting **(record, number)
+slots** gives **11605**. Modelled: **356 slots**; 11249 remain across 133 records.
+
+Every m220 figure reported in earlier entries used the distinct-number denominator and
+was therefore too small.
+
+### Deliberate divergence, recorded so it is not read as an oversight
+
+T22001000 and T22002000 do **not** carry `segmento`: their fields are largely or wholly
+unnumbered, so the convention has nothing to key on and no collision has arisen.
