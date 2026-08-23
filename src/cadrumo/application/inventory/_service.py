@@ -16,14 +16,13 @@ from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ...adapters.persistence.storage import secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
-from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ...core.time import now as _now_utc
 from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
@@ -32,6 +31,7 @@ from ...domain.buckets import (
     emit_bucket_event,
 )
 from ...domain.contribuyente.inventory import (
+    InventoryAcquisitionCost,
     InventoryLedger,
     InventoryLedgerDocument,
     InventoryLedgerError,
@@ -81,7 +81,18 @@ class InventoryMovementCommand(BaseModel):
     quantity: Decimal
     unit_cost: Decimal | None = Field(default=None)
     taxable_base: Decimal | None = Field(default=None)
-    iva_rate: Decimal = DEFAULT_IVA_GENERAL_RATE_PCT
+    acquisition_cost: InventoryAcquisitionCost | None = None
+
+    @model_validator(mode="after")
+    def _purchase_has_one_cost_authority(self) -> InventoryMovementCommand:
+        if self.kind is MovementKind.PURCHASE:
+            if self.acquisition_cost is None:
+                raise ValueError("purchase movements require acquisition_cost")
+            if self.unit_cost is not None or self.taxable_base is not None:
+                raise ValueError("purchase movements refuse legacy unit_cost and taxable_base authorities")
+        elif self.acquisition_cost is not None:
+            raise ValueError("acquisition_cost is permitted only for purchase movements")
+        return self
 
 
 class InventoryValuationPreview(BaseModel):
@@ -318,15 +329,22 @@ class InventoryService:
                 translated_message="application.inventory.service.errors.duplicate_movement_id",
                 context={"movement_id": movement.movement_id},
             )
-        record = MovementRecord(
-            movement_id=movement.movement_id,
-            movement_date=movement.movement_date,
-            kind=movement.kind,
-            quantity=movement.quantity,
-            unit_cost=movement.unit_cost,
-            taxable_base=movement.taxable_base,
-            iva_rate=movement.iva_rate,
-        )
+        if movement.acquisition_cost is not None:
+            record = MovementRecord.from_purchase_acquisition(
+                movement_id=movement.movement_id,
+                movement_date=movement.movement_date,
+                quantity=movement.quantity,
+                acquisition_cost=movement.acquisition_cost,
+            )
+        else:
+            record = MovementRecord(
+                movement_id=movement.movement_id,
+                movement_date=movement.movement_date,
+                kind=movement.kind,
+                quantity=movement.quantity,
+                unit_cost=movement.unit_cost,
+                taxable_base=movement.taxable_base,
+            )
         updated = ledger.model_copy(
             update={"period_movements": (*ledger.period_movements, record)},
         )

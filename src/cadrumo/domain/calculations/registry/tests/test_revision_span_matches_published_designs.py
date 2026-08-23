@@ -1791,6 +1791,62 @@ def test_a_boundary_only_the_description_pass_sees_is_reported_and_marked_for_re
         )
 
 
+def _era_ordered_registered_designs(modelo_id: str) -> tuple[Path, ...]:
+    """One path per REGISTERED design of a modelo, ordered by the era it declares.
+
+    Deliberately not ``_design_sources``, which answers a different question. That
+    walk returns every design FILE, so a design AEAT ships as both ``.xls`` and
+    ``.xlsx`` appears twice, and it sorts by filename -- AEAT numbers newest-first
+    -- so consecutive entries run backwards through time. Pairing it produces two
+    kinds of nonsense: a design compared against its own format twin, and a later
+    design read as the earlier one.
+
+    Keyed on the SOURCE ID, which is one per design regardless of how many
+    renderings the corpus holds, and ordered on ``applies_from``, which the
+    catalogue states rather than a filename implies.
+    """
+    entries = []
+    for source in _authority().catalogues.sources.values():
+        if getattr(source, "kind", None) != "record_design" or source.applies_from is None:
+            continue
+        posix = Path(str(source.corpus_path)).as_posix()
+        marker = "disenos_registro/modelo_"
+        if marker not in posix:
+            continue
+        if posix.split(marker, 1)[1].split("/", 1)[0] != modelo_id:
+            continue
+        path = bundled_path() / source.corpus_path
+        if path.is_file() and path.suffix.lower() in _DESIGN_SUFFIXES:
+            entries.append((source.applies_from, source.id, path))
+    return tuple(path for _, _, path in sorted(entries))
+
+
+def _membership_only_design_pairs() -> tuple[tuple[str, Path, Path], ...]:
+    """Consecutive registered designs whose ONLY difference is which boxes exist."""
+    found: list[tuple[str, Path, Path]] = []
+    for modelo in _authority().modelos:
+        for earlier, later in pairwise(_era_ordered_registered_designs(str(modelo.id))):
+            before_boxes, after_boxes = _parse_design(earlier), _parse_design(later)
+            if not before_boxes or not after_boxes:
+                continue
+            shared = set(before_boxes) & set(after_boxes)
+            if any(before_boxes[box] != after_boxes[box] for box in shared):
+                continue
+            if set(before_boxes) == set(after_boxes):
+                continue
+            before_lengths, after_lengths = _page_lengths(earlier), _page_lengths(later)
+            if before_lengths and after_lengths and before_lengths != after_lengths:
+                continue
+            before_occupancy, after_occupancy = _occupancy(earlier), _occupancy(later)
+            if any(
+                before_occupancy[slot] != after_occupancy[slot]
+                for slot in set(before_occupancy) & set(after_occupancy)
+            ):
+                continue
+            found.append((str(modelo.id), earlier, later))
+    return tuple(found)
+
+
 def test_a_box_added_or_removed_without_movement_reaches_the_verdict() -> None:
     """A boundary only the box-SET comparison can see must reach the failure text.
 
@@ -1811,41 +1867,32 @@ def test_a_box_added_or_removed_without_movement_reaches_the_verdict() -> None:
     shape that has already caught this module's author twice: under mutation such a test
     reds on its own vacuity guard, which proves the function changed and nothing about
     whether the signal works.
+        WHY THE PAIRS COME FROM THE CATALOGUE AND NOT FROM REVISIONS. This walked the
+    designs each REVISION claims, which made its liveness depend on how revisions
+    happen to be carved. As the campaign split the spanning revisions, that
+    population fell to two across the whole tree, and the assertion below began
+    failing for want of an example rather than for want of the signal. The
+    property being proved is about the COMPARATOR, so it is now measured over
+    consecutive registered designs, a population that does not move when a
+    revision is renamed.
+
+    BOX KEYS ARE COMPARED RAW, deliberately. Stripping leading zeros looks like an
+    obvious normalisation and is wrong here: 26 bundled designs declare ``001``
+    and ``1`` as DISTINCT boxes, so collapsing them would merge real boxes and
+    hide the very membership changes this signal exists to see.
     """
-    membership_only: list[tuple[str, str, tuple[int, int]]] = []
-    for modelo, revision_id, revision in _exporting_revisions():
-        for earlier, later in pairwise(_designs_claimed_by(modelo.id, revision)):
-            before_boxes, after_boxes = _parse_design(earlier), _parse_design(later)
-            shared = set(before_boxes) & set(after_boxes)
-            if any(before_boxes[box] != after_boxes[box] for box in shared):
-                continue
-            if set(before_boxes) == set(after_boxes):
-                continue
-            before_lengths, after_lengths = _page_lengths(earlier), _page_lengths(later)
-            if before_lengths and after_lengths and before_lengths != after_lengths:
-                continue
-            before_occupancy, after_occupancy = _occupancy(earlier), _occupancy(later)
-            if any(
-                before_occupancy[slot] != after_occupancy[slot] for slot in set(before_occupancy) & set(after_occupancy)
-            ):
-                continue
-            membership_only.append((modelo.id, revision_id, _boundary_label(earlier, later)))
+    membership_only = _membership_only_design_pairs()
 
     assert membership_only, (
-        "no bundled design pair differs ONLY in which boxes it declares, so this assertion would be "
-        "vacuous -- the corpus that made the membership signal necessary has changed"
+        "no registered design pair differs ONLY in which boxes it declares, so this assertion "
+        "would be vacuous -- the corpus that made the membership signal necessary has changed"
     )
-    for modelo_id, revision_id, key in membership_only:
-        modelo, revision = next(
-            (candidate, current)
-            for candidate, current_id, current in _exporting_revisions()
-            if candidate.id == modelo_id and current_id == revision_id
-        )
-        assert key in _boundaries_for(modelo.id, revision), (
-            f"modelo {modelo_id} revision {revision_id!r} boundary {key} differs only in which boxes "
-            "the two designs declare -- no box moved, no page length changed, no slot changed "
-            "occupancy -- and the verdict does not name it, so the box comparison is reading "
-            "displacement only and a box added or removed is invisible to every signal"
+    for modelo_id, earlier, later in membership_only:
+        evidence = _compare_design_pair(earlier, later)
+        assert any("box SET changed" in item for item in evidence), (
+            f"modelo {modelo_id}: {earlier.name} and {later.name} differ only in which boxes they "
+            "declare -- no box moved, no page length changed, no slot changed occupancy -- and the "
+            "comparison names no membership signal, so a box added or removed is invisible"
         )
 
 

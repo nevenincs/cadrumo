@@ -330,6 +330,33 @@ class MovementRecord(BaseModel):
     acquisition_cost: InventoryAcquisitionCost | None = None
     schema_version: str = INVENTORY_SCHEMA_VERSION
 
+    @classmethod
+    def from_purchase_acquisition(
+        cls,
+        *,
+        movement_id: str,
+        movement_date: date,
+        quantity: Decimal,
+        acquisition_cost: InventoryAcquisitionCost,
+        sku: str = "default",
+    ) -> MovementRecord:
+        """Project one complete acquisition into its canonical purchase movement."""
+        consideration = acquisition_cost.consideration_excluding_iva
+        iva_amount = acquisition_cost.consideration_iva_amount
+        iva_rate = _ZERO if consideration == _ZERO else iva_amount * _HUNDRED / consideration
+        return cls(
+            movement_id=movement_id,
+            movement_date=movement_date,
+            kind=MovementKind.PURCHASE,
+            sku=sku,
+            quantity=quantity,
+            taxable_base=consideration,
+            iva_rate=iva_rate,
+            iva_amount=iva_amount,
+            deductible_iva_ratio=acquisition_cost.consideration_deductible_iva_ratio,
+            acquisition_cost=acquisition_cost,
+        )
+
     @property
     def value(self) -> Decimal:
         """Return the IVA-exclusive movement value."""

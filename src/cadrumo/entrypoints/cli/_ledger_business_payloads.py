@@ -32,7 +32,11 @@ from pydantic import AfterValidator, Field
 
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
-from ...domain.contribuyente.inventory import INVENTORY_SCHEMA_VERSION, MovementKind, ValuationMethod
+from ...domain.contribuyente.inventory import (
+    INVENTORY_SCHEMA_VERSION,
+    MovementKind,
+    ValuationMethod,
+)
 from ._decimal_wire import bounded_decimal_wire_text
 from ._wire_scalars import IsoDateText, enum_value_text
 
@@ -77,6 +81,19 @@ class InventoryStockLayerPayload(OutputSchema):
     source_movement_id: str = Field(min_length=1)
 
 
+class InventoryAcquisitionCostSummaryPayload(OutputSchema):
+    """Operator-safe acquisition summary without evidence identities."""
+
+    consideration_excluding_iva: _NonNegativeAmount  # type: ignore[valid-type]
+    directly_attributable_cost_total: _NonNegativeAmount  # type: ignore[valid-type]
+    nonrecoverable_iva_included: _NonNegativeAmount  # type: ignore[valid-type]
+    recoverable_iva_excluded: _NonNegativeAmount  # type: ignore[valid-type]
+    total_acquisition_cost: _NonNegativeAmount  # type: ignore[valid-type]
+    component_count: int = Field(ge=0)
+    evidence_count: int = Field(ge=1)
+    complete: bool
+
+
 class InventoryMovementPayload(OutputSchema):
     """One :class:`MovementRecord` transport row."""
 
@@ -90,6 +107,7 @@ class InventoryMovementPayload(OutputSchema):
     iva_rate: _IvaRatePct  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     iva_amount: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     deductible_iva_ratio: _DeductibleRatio  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    acquisition_cost: InventoryAcquisitionCostSummaryPayload | None = None
     schema_version: _InventorySchemaVersion
 
 

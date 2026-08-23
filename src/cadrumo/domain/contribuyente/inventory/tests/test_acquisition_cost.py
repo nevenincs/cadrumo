@@ -128,6 +128,53 @@ def test_complete_acquisition_is_the_sole_fifo_and_pmp_cost_authority() -> None:
         assert result.closing_value == Decimal("61.30")
 
 
+@pytest.mark.parametrize(
+    ("ratio", "recoverable", "nonrecoverable", "total"),
+    [
+        ("0", "0.00", "23.10", "133.10"),
+        ("0.50", "10.50", "12.60", "122.60"),
+        ("1", "21.00", "2.10", "112.10"),
+    ],
+)
+def test_purchase_factory_preserves_every_iva_recoverability_boundary(
+    ratio: str, recoverable: str, nonrecoverable: str, total: str
+) -> None:
+    acquisition = _acquisition(
+        consideration_deductible_iva_ratio=Decimal(ratio),
+        recoverable_iva_excluded=Decimal(recoverable),
+        nonrecoverable_iva_included=Decimal(nonrecoverable),
+        total_acquisition_cost=Decimal(total),
+    )
+    movement = MovementRecord.from_purchase_acquisition(
+        movement_id="purchase-ratio",
+        movement_date=date(2025, 2, 1),
+        quantity=Decimal("2"),
+        acquisition_cost=acquisition,
+    )
+    assert movement.deductible_iva_ratio == Decimal(ratio)
+    assert movement.acquisition_cost == acquisition
+
+
+def test_purchase_factory_uses_zero_rate_for_zero_consideration() -> None:
+    acquisition = _acquisition(
+        consideration_excluding_iva=Decimal("0.00"),
+        consideration_iva_amount=Decimal("0.00"),
+        consideration_deductible_iva_ratio=Decimal("0"),
+        attributable_cost_components=(),
+        directly_attributable_cost_total=Decimal("0.00"),
+        recoverable_iva_excluded=Decimal("0.00"),
+        nonrecoverable_iva_included=Decimal("0.00"),
+        total_acquisition_cost=Decimal("0.00"),
+    )
+    movement = MovementRecord.from_purchase_acquisition(
+        movement_id="free-purchase",
+        movement_date=date(2025, 2, 1),
+        quantity=Decimal("1"),
+        acquisition_cost=acquisition,
+    )
+    assert movement.iva_rate == Decimal("0")
+
+
 def test_pmp_repeating_unit_cost_layers_reconcile_to_exact_closing_value() -> None:
     acquisition = _acquisition(
         consideration_excluding_iva=Decimal("100.00"),

@@ -39,6 +39,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.contribuyente.inventory import (
+    InventoryAcquisitionCost,
     InventoryLedger,
     MovementKind,
     MovementRecord,
@@ -51,8 +52,36 @@ from .._ledger_business_payloads import (
     InventoryMovementPayload,
     InventoryStockLayerPayload,
 )
+from .._ledger_inventory_cli import _safe_inventory_ledger_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def _acquisition() -> InventoryAcquisitionCost:
+    return InventoryAcquisitionCost.model_validate_json(
+        json.dumps(
+            {
+                "consideration_excluding_iva": "60.00",
+                "consideration_iva_amount": "12.60",
+                "consideration_deductible_iva_ratio": "1.00",
+                "attributable_cost_components": [],
+                "evidence": [
+                    {"reference": {"reference": "invoice"}, "evidence_kind": "purchase_invoice", "content_digest": "a" * 64},
+                    {"reference": {"reference": "cost-review"}, "evidence_kind": "attributable_cost_review", "content_digest": "b" * 64},
+                    {"reference": {"reference": "iva-review"}, "evidence_kind": "iva_recoverability_review", "content_digest": "c" * 64},
+                ],
+                "completeness": {
+                    "consideration_evidence": {"reference": "invoice"},
+                    "attributable_cost_review_evidence": {"reference": "cost-review"},
+                    "iva_recoverability_review_evidence": {"reference": "iva-review"},
+                },
+                "directly_attributable_cost_total": "0.00",
+                "nonrecoverable_iva_included": "0.00",
+                "recoverable_iva_excluded": "12.60",
+                "total_acquisition_cost": "60.00",
+            }
+        )
+    )
 
 
 def _canonical_ledger() -> InventoryLedger:
@@ -71,17 +100,12 @@ def _canonical_ledger() -> InventoryLedger:
             ),
         ),
         period_movements=(
-            MovementRecord(
+            MovementRecord.from_purchase_acquisition(
                 movement_id="mv-1",
                 movement_date=date(2026, 3, 1),
-                kind=MovementKind.PURCHASE,
                 sku="widget",
                 quantity=Decimal("5"),
-                unit_cost=Decimal("12.00"),
-                taxable_base=Decimal("60.00"),
-                iva_rate=Decimal("21"),
-                iva_amount=Decimal("12.60"),
-                deductible_iva_ratio=Decimal("1.00"),
+                acquisition_cost=_acquisition(),
             ),
         ),
     )
@@ -108,7 +132,17 @@ def _movement(**overrides: object) -> InventoryMovementPayload:
         "unit_cost": "12.00",
         "iva_rate": "21",
         "deductible_iva_ratio": "1.00",
-        "schema_version": "1",
+        "acquisition_cost": {
+            "consideration_excluding_iva": "60.00",
+            "directly_attributable_cost_total": "0.00",
+            "nonrecoverable_iva_included": "0.00",
+            "recoverable_iva_excluded": "12.60",
+            "total_acquisition_cost": "60.00",
+            "component_count": 0,
+            "evidence_count": 3,
+            "complete": True,
+        },
+        "schema_version": "2",
     }
     fields.update(overrides)
     return InventoryMovementPayload.model_validate(fields)
@@ -120,7 +154,7 @@ def _ledger_row(**overrides: object) -> InventoryLedgerPayload:
         "year": 2026,
         "valuation_method": ValuationMethod.FIFO.value,
         "opening_stock": "100.00",
-        "schema_version": "1",
+        "schema_version": "2",
     }
     fields.update(overrides)
     return InventoryLedgerPayload.model_validate(fields)
@@ -131,7 +165,7 @@ class TestCanonicalBridge:
 
     def test_real_dump_bridge_round_trips(self) -> None:
         """Drive the exact construction ``_ledger_inventory_cli`` performs."""
-        payload = json.loads(_canonical_ledger().model_dump_json())
+        payload = _safe_inventory_ledger_payload(_canonical_ledger())
         payload["bucket_event_ids"] = ["evt-1"]
 
         result = InventoryCreateResult.model_validate_json(json.dumps(payload))
@@ -143,7 +177,7 @@ class TestCanonicalBridge:
 
     def test_bridge_output_is_wire_identical(self) -> None:
         """Validation must not reshape the JSON the operator receives."""
-        payload = json.loads(_canonical_ledger().model_dump_json())
+        payload = _safe_inventory_ledger_payload(_canonical_ledger())
         payload["bucket_event_ids"] = []
 
         rendered = InventoryCreateResult.model_validate_json(json.dumps(payload)).model_dump(mode="json")

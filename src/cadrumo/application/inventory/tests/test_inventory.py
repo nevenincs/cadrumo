@@ -13,7 +13,16 @@ from ....adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE,
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....domain.buckets import BucketEventType
-from ....domain.contribuyente.inventory import InventoryLedgerError, MovementKind, ValuationMethod
+from ....domain.contribuyente.inventory import (
+    InventoryAcquisitionCompleteness,
+    InventoryAcquisitionCost,
+    InventoryAcquisitionEvidence,
+    InventoryAcquisitionEvidenceKind,
+    InventoryLedgerError,
+    MovementKind,
+    ValuationMethod,
+)
+from ....domain.filing_evidence import FilingEvidenceReference
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     InventoryActividadConflictError,
@@ -42,6 +51,32 @@ def _make_svc(profile: TestRuntimeProfile) -> InventoryService:
 
 def _event_repo(profile: TestRuntimeProfile) -> BucketEventHistoryRepository:
     return BucketEventHistoryRepository(objects=profile.repository)
+
+
+def _acquisition(value: str) -> InventoryAcquisitionCost:
+    invoice = FilingEvidenceReference(reference="invoice-evidence")
+    cost_review = FilingEvidenceReference(reference="cost-review-evidence")
+    iva_review = FilingEvidenceReference(reference="iva-review-evidence")
+    return InventoryAcquisitionCost(
+        consideration_excluding_iva=Decimal(value),
+        consideration_iva_amount=Decimal("0.00"),
+        consideration_deductible_iva_ratio=Decimal("1"),
+        attributable_cost_components=(),
+        evidence=(
+            InventoryAcquisitionEvidence(reference=invoice, evidence_kind=InventoryAcquisitionEvidenceKind.PURCHASE_INVOICE, content_digest="a" * 64),
+            InventoryAcquisitionEvidence(reference=cost_review, evidence_kind=InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW, content_digest="b" * 64),
+            InventoryAcquisitionEvidence(reference=iva_review, evidence_kind=InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW, content_digest="c" * 64),
+        ),
+        completeness=InventoryAcquisitionCompleteness(
+            consideration_evidence=invoice,
+            attributable_cost_review_evidence=cost_review,
+            iva_recoverability_review_evidence=iva_review,
+        ),
+        directly_attributable_cost_total=Decimal("0.00"),
+        nonrecoverable_iva_included=Decimal("0.00"),
+        recoverable_iva_excluded=Decimal("0.00"),
+        total_acquisition_cost=Decimal(value),
+    )
 
 
 class TestCreate:
@@ -118,7 +153,7 @@ class TestShow:
                 movement_date=date(2025, 3, 15),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("10"),
-                unit_cost=Decimal("50.00"),
+                acquisition_cost=_acquisition("500.00"),
             ),
         )
         ledger = svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
@@ -146,7 +181,7 @@ class TestMovementAdd:
                 movement_date=date(2025, 3, 1),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("5"),
-                unit_cost=Decimal("100.00"),
+                acquisition_cost=_acquisition("500.00"),
             ),
         )
         result = svc.movement_add(
@@ -174,7 +209,7 @@ class TestMovementAdd:
             movement_date=date(2025, 3, 1),
             kind=MovementKind.PURCHASE,
             quantity=Decimal("1"),
-            unit_cost=Decimal("100.00"),
+            acquisition_cost=_acquisition("100.00"),
         )
         svc.movement_add(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, movement=cmd)
         with pytest.raises(InventoryServiceInputError) as exc_info:
@@ -189,7 +224,7 @@ class TestMovementAdd:
             movement_date=date(2025, 3, 1),
             kind=MovementKind.PURCHASE,
             quantity=Decimal("1"),
-            unit_cost=Decimal("100.00"),
+            acquisition_cost=_acquisition("100.00"),
         )
         with pytest.raises(InventoryActividadNotFoundError):
             svc.movement_add(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, movement=cmd)
@@ -212,7 +247,7 @@ class TestMovementAdd:
                 movement_date=date(2025, 3, 1),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("1"),
-                unit_cost=Decimal("10.00"),
+                acquisition_cost=_acquisition("10.00"),
             ),
         )
         with pytest.raises(InventoryLedgerError, match="consume more stock"):
@@ -248,7 +283,7 @@ class TestValuationPreview:
                 movement_date=date(2025, 1, 10),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("10"),
-                unit_cost=Decimal("50.00"),
+                acquisition_cost=_acquisition("500.00"),
             ),
         )
         result = svc.valuation_preview(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
@@ -301,7 +336,7 @@ class TestInventoryEventEmission:
                 movement_date=date(2025, 3, 1),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("5"),
-                unit_cost=Decimal("100.00"),
+                acquisition_cost=_acquisition("500.00"),
             ),
         )
         assert len(result.bucket_event_ids) == 1

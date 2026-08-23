@@ -10,10 +10,11 @@ from __future__ import annotations
 import json
 
 import typer
+from pydantic import ValidationError
 
 from ...application.inventory import InventoryMovementCommand, InventoryService
-from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
-from ...domain.contribuyente.inventory import MovementKind
+from ...core.i18n import tr
+from ...domain.contribuyente.inventory import InventoryAcquisitionCost, InventoryLedger, MovementKind
 from ._common import (
     _emit_envelope,
     _parse_iso_date,
@@ -33,6 +34,46 @@ from ._ledger_payloads import (
 
 def _inventory_service() -> InventoryService:
     return InventoryService()
+
+
+def _safe_inventory_ledger_payload(ledger: InventoryLedger) -> dict[str, object]:
+    """Project a ledger without evidence references or content digests."""
+    payload: dict[str, object] = json.loads(ledger.model_dump_json())
+    movements = payload["period_movements"]
+    assert isinstance(movements, list)
+    for movement in movements:
+        assert isinstance(movement, dict)
+        acquisition = movement.get("acquisition_cost")
+        if not isinstance(acquisition, dict):
+            continue
+        evidence = acquisition.get("evidence")
+        components = acquisition.get("attributable_cost_components")
+        movement["acquisition_cost"] = {
+            "consideration_excluding_iva": acquisition["consideration_excluding_iva"],
+            "directly_attributable_cost_total": acquisition["directly_attributable_cost_total"],
+            "nonrecoverable_iva_included": acquisition["nonrecoverable_iva_included"],
+            "recoverable_iva_excluded": acquisition["recoverable_iva_excluded"],
+            "total_acquisition_cost": acquisition["total_acquisition_cost"],
+            "component_count": len(components) if isinstance(components, list) else 0,
+            "evidence_count": len(evidence) if isinstance(evidence, list) else 0,
+            "complete": True,
+        }
+    return payload
+
+
+def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCost | None:
+    """Read one acquisition-cost object from the non-argv stdin channel."""
+    if not from_stdin:
+        return None
+    value = typer.get_text_stream("stdin").read()
+    try:
+        return InventoryAcquisitionCost.model_validate_json(value)
+    except ValidationError as exc:
+        details = "; ".join(f"{'.'.join(str(item) for item in error['loc'])}: {error['msg']}" for error in exc.errors())
+        raise typer.BadParameter(
+            tr("cli.app.ledger.inventory.acquisition_cost_invalid", details=details),
+            param_hint="--acquisition-cost-stdin",
+        ) from exc
 
 
 def inventory_list(ctx: typer.Context) -> None:
@@ -75,7 +116,7 @@ def inventory_create(
         opening_stock=parse_decimal_amount(opening_stock, label="opening-stock"),
     )
     ledger = result.ledger
-    payload = json.loads(ledger.model_dump_json())
+    payload = _safe_inventory_ledger_payload(ledger)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     _emit_envelope(
         ctx,
@@ -102,7 +143,7 @@ def inventory_movement_add(
     quantity: str,
     unit_cost: str | None = None,
     taxable_base: str | None = None,
-    iva_rate: str = str(DEFAULT_IVA_GENERAL_RATE_PCT),
+    acquisition_cost_stdin: bool = False,
 ) -> None:
     """Append an :class:`InventoryMovementCommand` to an actividad ledger."""
     bucket_id = _inventory_bucket_id()
@@ -113,7 +154,7 @@ def inventory_movement_add(
         quantity=parse_decimal_amount(quantity, label="quantity"),
         unit_cost=parse_optional_decimal_amount(unit_cost, label="unit-cost"),
         taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
-        iva_rate=parse_decimal_amount(iva_rate, label="iva-rate"),
+        acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
     )
     result = _inventory_service().movement_add(
         bucket_id=bucket_id,
@@ -122,12 +163,12 @@ def inventory_movement_add(
         movement=command,
     )
     ledger = result.ledger
-    payload = ledger.model_dump(mode="json")
+    payload = _safe_inventory_ledger_payload(ledger)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     _emit_envelope(
         ctx,
         command="ledger.inventory.movement.add",
-        result=InventoryMovementAddResult.model_validate(payload),
+        result=InventoryMovementAddResult.model_validate_json(json.dumps(payload)),
         lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{ledger.actividad_id}",
