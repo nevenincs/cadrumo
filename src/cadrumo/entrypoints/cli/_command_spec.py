@@ -273,6 +273,8 @@ class ValueContract:
             raise ValueError("value contract cannot declare both a Click type and parser")
         if len(self.choices) != len(set(self.choices)) or any(not choice for choice in self.choices):
             raise ValueError("value contract choices must be unique non-empty strings")
+        if self.choices and (self.click_type is not None or self.parser is not None):
+            raise ValueError("value contract choices cannot be combined with a Click type or parser")
 
 
 @dataclass(frozen=True, slots=True)

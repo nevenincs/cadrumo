@@ -141,11 +141,13 @@ def test_runtime_compiles_spec_owned_choices_without_a_handler_enum() -> None:
 
     accepted = CliRunner().invoke(build_command_app(exact_graph), ["greet", "--name", "Ada"])
     refused = CliRunner().invoke(build_command_app(exact_graph), ["greet", "--name", "Linus"])
+    help_result = CliRunner().invoke(build_command_app(exact_graph), ["greet", "--help"])
 
     assert accepted.exit_code == 0, accepted.output
     assert refused.exit_code == 2
     assert "Ada" in refused.output
     assert "Grace" in refused.output
+    assert "<Ada|Grace>" in help_result.output
 
 
 def test_runtime_preserves_repeated_options_as_a_list_of_items() -> None:

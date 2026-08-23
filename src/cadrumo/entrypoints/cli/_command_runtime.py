@@ -102,12 +102,16 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
     )
     if isinstance(click_type, type):
         click_type = click_type()
+    choice_metavar = None if not spec.value.choices else f"<{'|'.join(spec.value.choices)}>"
+    argument_choice_metavar = (
+        None if choice_metavar is None else f"{spec.name}:{choice_metavar}"
+    )
     if isinstance(spec, ArgumentSpec):
         argument_factory = cast(Any, typer.Argument)
         argument_kwargs: dict[str, object] = {
             "default_factory": default_factory,
             "help": None if spec.help_key is None else tr(spec.help_key.value),
-            "metavar": spec.metavar,
+            "metavar": spec.metavar or argument_choice_metavar,
             "show_default": spec.show_default,
             "hidden": spec.hidden,
             "min": spec.constraint.minimum,
@@ -135,7 +139,7 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
         option_kwargs: dict[str, object] = {
             "default_factory": default_factory,
             "help": None if spec.help_key is None else tr(spec.help_key.value),
-            "metavar": spec.metavar,
+            "metavar": spec.metavar or choice_metavar,
             "show_default": spec.show_default,
             "hidden": spec.hidden,
             "count": spec.count,
