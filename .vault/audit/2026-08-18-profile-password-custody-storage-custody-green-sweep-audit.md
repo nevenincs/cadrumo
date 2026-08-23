@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:77e66ef2f9c678d88d7ed0fbdc2ec43f66575f9e11b99ccef54e38aacd794262'
+body_hash: 'sha256:3acf63c5e701c1fd5d3f6ab45a7e1beae3b9680ff2a78a7ae1f6e5adb2627ed8'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7034,3 +7034,38 @@ modules, which would have made the arithmetic nonsense. The cause is the project
 `addopts` pinning `-m unit`, so a module carrying no unit cases collects nothing. `-o
 addopts=""` is what makes a whole-module count honest. The tell was that a total of zero for a
 module with known cases is impossible, not that the numbers looked odd.
+
+### The 28 held-out cases, actually run: 26 environmental, 2 real coverage, 0 hidden defects
+
+The standing context licenses dismissing the `os_keychain` failures as the Windows credential
+store on a network logon, and names FOURTEEN of them. The census found 28 in this domain, so
+the status of the remainder had never been established -- a blanket exemption covering more
+cases than were ever observed is where a real defect hides. Run at `-n0`: 26 failed, 2 passed.
+
+Classified by signature rather than waved through: 12 `KeyringUnavailableError`, 12 `OSError`,
+and 4 `AssertionError`. The assertion failures are the ones that matter, because an assertion
+means the case RAN and its claim was false, which is not obviously a missing credential store.
+All four trace back to the keyring anyway: two assert a refusal reason and receive
+`KEYRING_UNAVAILABLE` where they expect `ABSENT`, one fails a precondition that the displaced
+profile "must hold a receipt for the retirement to reach", and the five parameters of
+`test_crash_at_each_durable_handover_phase_recovers_selected_b` fail at line 1273's
+`assert crashed["resumed"] is True` -- its own anti-tautology probe, which needs a resumable
+session and therefore the store. The module says so at the marker: "cross-process resume needs
+a minted acceleration receipt". No defect is hiding behind the exemption.
+
+One design note found by running them, worth keeping. For the `a_retired` parameter that same
+anti-tautology guard asserts `resumed is False`, and on this host that holds VACUOUSLY -- false
+because the keychain is unavailable, not because retirement ran -- after which the case fails
+further down on the operation journal. The guard is sound on a desktop session and inert here,
+so a future partial run of this module must not read that branch reaching its later assertion
+as evidence the earlier one meant anything.
+
+The two that PASS here are exactly the two that never reach the store:
+`test_nonpositive_windows_refuse_before_keychain_write`, which refuses ahead of any keychain
+write by construction, and
+`test_create_orchestration_journals_stages_verifies_and_publishes_pointer_last`.
+
+This closes the verification question for the domain with an exact split: 2,049 cases =
+2,021 verified by the three lanes + 2 os_keychain cases that genuinely pass here + 26 that
+cannot, each with a named environmental cause. The residual risk is unchanged in size but no
+longer unexamined, and the standing context's "14" is superseded by a measured 26.
