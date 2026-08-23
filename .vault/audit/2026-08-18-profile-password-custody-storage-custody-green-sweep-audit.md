@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:38d2c6914987fbaf34df8b5c4d7036e950ecdf8785eacc71793859a27192ef58'
+body_hash: 'sha256:0e905f9b9f5b6f2e3b2e552bb91f8d2bee943579c7ebc0557656c6ad0e9cb93f'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7564,3 +7564,43 @@ in `core/errors/_registry.py`, the `runbook_id=code.runbook_id` line in `build_e
 636 `runbook_id=None,` lines across the nine `core/errors/registry/_*.py` files, four test files
 under `src/cadrumo`, and the two harness sites above -- one atomic commit, since a partial
 landing breaks envelope construction everywhere.
+
+### Ruling: the profile-bundle import half is KEPT, and what remains is feature scope, not a defect
+
+Measured before ruling, and the measurement moved the item. This is not "the import is dead".
+The application layer holds a COMPLETE inbound implementation --
+`deserialize_profile_bundle`, `register_imported_profile_bundle`, and per-record importers for
+work units, ledger transactions, calculation revisions and filing records -- and
+`_manager_actions.py` states the gap in its own prose: "No inbound bundle path exists on any
+surface". The code exists; the operator door does not.
+
+Keep-versus-delete was ALREADY settled in-tree and this campaign does not overturn it. The
+never-used-export register carries an explicit, well-reasoned entry: kept "because deleting it
+would remove the only code that could make those exports restorable", noting the export half is
+live (the TUI manager exports through it, and `app maintenance reconcile` cleans its crash
+orphans). That reasoning holds and is confirmed here.
+
+One detail in that entry needed correcting. It says "encrypt_* is live, decrypt_* is not",
+which reads as though the bundle cannot even be opened.
+`decrypt_profile_bundle_with_passphrase` exists AND is roundtrip-proven --
+`test_bundle_encryption_kdf_window.py` asserts `decrypt(reparsed, passphrase=...) == bundle`.
+So the missing piece is narrower than the register implies: decryption is proven, and it is the
+RECORD IMPORTERS that are functionally untested. Their only references are the register itself
+and an import-graph test; nothing exercises what they write.
+
+**Why this is not a tick-sized fix.** Wiring a verb onto untested restore logic would be
+reckless in a way this campaign has argued against all along: the importers write into an
+encrypted bucket, and a defect there destroys operator data rather than refusing. Building it
+honestly requires decisions no code inspection settles -- what happens when the bundle's
+profile collides with an existing one, whether restore is a create or a merge, what the
+idempotency key is (the CLI contract requires creating mutations to be retry-safe, and this
+operator is an autonomous agent), and a strict export-import-equality roundtrip with an
+anti-tautology proof at the persistence boundary. That is an ADR and a plan, not a watchdog
+iteration.
+
+So the item leaves the parked list in a different state than it entered: not "awaiting a
+keep-or-delete ruling" (settled: keep), but "a scoped feature whose design questions are
+enumerated above". The operator-facing consequence stays worth stating plainly: the product
+writes passphrase-encrypted profile bundles that nothing can read back, so an operator who
+exports one holds a backup they cannot restore. The export already warns of this in all four
+catalogues.
