@@ -18,6 +18,7 @@ from ._producer_snapshot import (
     M303InsolvencyFilingSubtype,
     Modelo111ProfileFacts,
     Modelo222ProfileFacts,
+    Modelo353ProfileFacts,
     RefundAccountSelection,
 )
 
@@ -149,6 +150,11 @@ def filing_producer_ownership() -> dict[FilingProducerKey, str]:
         FilingProducerKey.M222_NUMERO_REFERENCIA_SOCIEDADES,
         FilingProducerKey.M222_COMUNICACION_VARIACION_COMPOSICION_GRUPO,
         FilingProducerKey.M222_NUMERO_REFERENCIA_SOCIEDADES_VARIACION,
+        FilingProducerKey.M353_NUMERO_GRUPO,
+        FilingProducerKey.M353_REGIMEN_ESPECIAL_AVANZADO_ELECTED,
+        FilingProducerKey.M353_REGIMEN_ESPECIAL_INSCRITO_REDEME,
+        FilingProducerKey.M353_SIN_ACTIVIDAD,
+        FilingProducerKey.M353_GRUPO_NORMATIVA_FORAL,
     }
     owners = {key: "shared_snapshot" for key in shared}
     for key in FilingProducerKey:
@@ -160,7 +166,6 @@ def filing_producer_ownership() -> dict[FilingProducerKey, str]:
             raise FilingExportValidationError(f"filing producer key {key.value!r} has no declared owner")
         owners[key] = owner
     return owners
-
 
 
 _M222_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
@@ -202,7 +207,35 @@ def m222_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingP
     that a 222 filing without group facts is invalid.
     """
     profile = model_profile if isinstance(model_profile, Modelo222ProfileFacts) else None
-    return {key: (getattr(profile, field) if profile is not None else None) for key, field in _M222_FIELD_BY_KEY.items()}
+    return {
+        key: (getattr(profile, field) if profile is not None else None) for key, field in _M222_FIELD_BY_KEY.items()
+    }
+
+
+_M353_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M353_NUMERO_GRUPO: "numero_grupo",
+    FilingProducerKey.M353_REGIMEN_ESPECIAL_AVANZADO_ELECTED: "regimen_especial_avanzado_elected",
+    FilingProducerKey.M353_REGIMEN_ESPECIAL_INSCRITO_REDEME: "regimen_especial_inscrito_redeme",
+    FilingProducerKey.M353_SIN_ACTIVIDAD: "sin_actividad",
+    FilingProducerKey.M353_GRUPO_NORMATIVA_FORAL: "grupo_normativa_foral",
+}
+
+
+def m353_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
+    """Resolve the grupo de entidades producer identities Modelo 353's layout cites.
+
+    All five ``m353.*`` keys were declared in the vocabulary and produced by nothing, so
+    the número de grupo at offset 109 and the sin-actividad and normativa-foral marks
+    rendered blank on the aggregate return of a régimen especial del grupo de entidades.
+
+    A profile of the wrong type yields every key as ``None`` rather than raising: this
+    resolver runs for every modelo, and only Modelo 353's snapshot validator may decide
+    that a 353 filing without group facts is invalid.
+    """
+    profile = model_profile if isinstance(model_profile, Modelo353ProfileFacts) else None
+    return {
+        key: (getattr(profile, field) if profile is not None else None) for key, field in _M353_FIELD_BY_KEY.items()
+    }
 
 
 def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
@@ -297,6 +330,7 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
             },
         )
     values.update(m222_producer_values(snapshot.model_profile))
+    values.update(m353_producer_values(snapshot.model_profile))
     shared_owned = {key for key, owner in filing_producer_ownership().items() if owner == "shared_snapshot"}
     if set(values) != shared_owned:
         raise FilingExportValidationError("shared filing producer resolver is not exhaustive over its owned keys")

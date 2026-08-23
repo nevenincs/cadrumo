@@ -222,6 +222,44 @@ class Modelo222ProfileFacts(BaseModel):
     numero_referencia_sociedades_variacion: str | None = None
 
 
+_M353GrupoNumber = Annotated[str, StringConstraints(min_length=1, max_length=10)]
+_SiNoMark = Annotated[str, StringConstraints(pattern=r"^[12]$")]
+_XOrBlankMark = Annotated[str, StringConstraints(pattern=r"^X$")]
+
+
+class Modelo353ProfileFacts(BaseModel):
+    """Grupo de entidades IVA identity and régimen marks a Modelo 353 filing declares.
+
+    Modelo 353 is the *autoliquidación agregada* of the régimen especial del grupo de
+    entidades (LIVA art. 163 sexies), so the group's number is what the return is about
+    rather than optional colour.
+
+    Before this type existed the five ``m353.*`` producer keys were declared in the
+    vocabulary and resolved by nothing, so the número de grupo and the two marks rendered
+    from whatever the field's ``required`` flag allowed.
+
+    ``numero_grupo`` is required here. The two régimen marks are required too, and that is
+    a departure from the Modelo 222 shape for a grounded reason: AEAT's design gives them
+    ``1 -Sí, 2 -No`` and the published layout marks both ``required = true``, so there is
+    no blank state to represent -- a filer who is not inscrito declares ``"2"``, not
+    nothing. ``sin_actividad`` and ``grupo_normativa_foral`` are the genuinely optional
+    ones: the design reads ``X o blanco``.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    #: Identificación. Nº Grupo -- design offset 109, length 10.
+    numero_grupo: _M353GrupoNumber
+    #: Tipo régimen especial aplicable, art. 163 sexies.cinco: "1" sí, "2" no.
+    regimen_especial_avanzado_elected: _SiNoMark
+    #: Inscrito en el Registro de devolución mensual (art. 30 RIVA): "1" sí, "2" no.
+    regimen_especial_inscrito_redeme: _SiNoMark
+    #: "X o blanco" in the design; absent means the group had activity.
+    sin_actividad: _XOrBlankMark | None = None
+    #: "X o blanco" in the design; absent means the group is not sometido a normativa foral.
+    grupo_normativa_foral: _XOrBlankMark | None = None
+
+
 class GeneralFilingProfileFacts(BaseModel):
     """Explicit absence of modelo-specific producer facts for a layout."""
 
@@ -423,6 +461,7 @@ type FilingModelProfileFacts = (
     | Modelo111ProfileFacts
     | Modelo202ProducerProfile
     | Modelo222ProfileFacts
+    | Modelo353ProfileFacts
     | ModeloIVAProfile
 )
 
@@ -476,7 +515,16 @@ def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo is Modelo.M303:
         _validate_modelo_303_snapshot(snapshot)
         return
+    if snapshot.modelo is Modelo.M353:
+        _validate_modelo_353_snapshot(snapshot)
+        return
     _validate_general_modelo_snapshot(snapshot)
+
+
+def _validate_modelo_353_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    """Modelo 353 is the grupo de entidades aggregate; it cannot be filed without it."""
+    if not isinstance(snapshot.model_profile, Modelo353ProfileFacts):
+        raise ValueError("modelo 353 requires Modelo353ProfileFacts")
 
 
 def _validate_modelo_222_snapshot(snapshot: FilingProducerSnapshot) -> None:
