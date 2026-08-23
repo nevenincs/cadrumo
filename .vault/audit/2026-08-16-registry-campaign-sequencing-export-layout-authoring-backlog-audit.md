@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:1c565ad7bade953237ca9dbac856d44f3f7f7fddfc0997966a754bf8b378edb0'
+body_hash: 'sha256:6e5bd3c046abe2e3a4e7f3598d286ef24b359b45132d0469aa8189567c59c6d3'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -17372,3 +17372,157 @@ mid-authoring breakage.
 
 Eleven standing registry failures, from twelve, counting the modelo 220 label
 gap as theirs rather than ours. The three relayout splits are unchanged.
+
+## Tick: three more standing failures closed -- a substring match, and ten unstamped chains
+
+Re-measured at tick start: authority CLEAN at `500a2a5e43`.
+
+### The legal-grounding gate was flagging an enum member
+
+`test_production_python_source_ref_literals_resolve_to_catalogue_and_corpus`
+reported one literal absent from the source catalogue:
+`source_reference` at `cadrumo/core/source_connectivity.py:126`.
+
+That line is `SOURCE_REFERENCE = "source_reference"`, a member of
+`SourceConnectivityGroundingLocatorKind` -- a closed resolver family naming HOW
+a grounding reference is located. It is not a registry source ref and never was.
+
+The collector matched any assignment target whose name CONTAINS `SOURCE_REF`,
+and `SOURCE_REFERENCE` contains it. The narrowing is a token boundary: the name
+must end after `SOURCE_REF` or `SOURCE_REFS`, at the end or before an
+underscore.
+
+MEASURED BEFORE NARROWING, because a narrowing that tidies output is exactly
+what the method distrusts. Of the production names containing `SOURCE_REF`, the
+rule keeps `source_ref`, `source_refs`, `source_ref_ids`,
+`record_design_source_ref`, `reduction_source_refs`, `registry_source_refs`,
+`revision_source_refs`, `source_refs_by_key`, `target_binding_source_refs` and
+`xsd_source_refs` -- and drops only `source_reference` and
+`source_reference_count`, the attachments document-locator family. A
+plural-only rule was considered and rejected: it would have dropped
+`source_ref`, `source_ref_ids` and `record_design_source_ref`, which are real
+holders.
+
+Twelve real literals are still collected -- `aeat-dr-303-2022`,
+`boe-ley-19-1994-art-75-authority` and the rest -- so the collector is
+load-bearing rather than emptied, and injecting `aeat-dr-does-not-exist-2099`
+still reds the gate by name.
+
+### Ten continuity chains stamped in four revisions and not the fifth
+
+Both continuidad ratchet tests failed: modelo 390 showed 15 ungrounded groups
+against a baseline of 5, and ten casilla chains were "stamped with a
+continuidad_id in some revisions and unstamped in others".
+
+The ten are modelo 390's annual IVA spine, and the asymmetry is exact: 2022,
+2023, 2024 and 2025 each carry an IDENTICAL `continuidad_id` per chain, and
+2021 carries none. The 2021 revision landed seven hours before this tick
+(`fix(parser): resolve real M390 2021 declarations`) without the stamps.
+
+The gate names both remedies -- stamp every occurrence, or remove the stamp and
+leave the whole chain in the backlog. Stamping is the grounded one here, because
+the value is not a choice: four concurring revisions already establish it. Each
+stamp was READ from the siblings rather than typed, and the script refused any
+chain whose siblings disagreed or were absent. None did.
+
+The baseline was NOT raised. Raising it was the other branch the gate offers
+and it would have recorded ten un-reviewed ids as permanently ungrounded, when
+their chain identity is already settled elsewhere in the same modelo.
+
+### Verified
+
+* legal grounding: 11 passed, from one failure. Continuidad ratchet: 10 passed,
+  from two failures. 23 passed across those and the rate-box gate together.
+* the stamps bite: deleting ONE of the ten reds both ratchet tests -- the
+  partial-stamp check by name and the baseline check at 2734 against 2733 --
+  and restoring it returns to 10 passed.
+* authority loads CLEAN; ruff clean. Working tree shows four modified files and
+  nothing else.
+
+### Still open
+
+Eight standing registry failures, from eleven. Unchanged: the three relayout
+splits, the bundled-design read and registration inventories, the filing
+capability worklist, layout-design-applies, and the modelo 220 label gap, which
+remains its author's.
+
+## Tick: a FOURTH spanning revision, and every existing signal is blind to it
+
+Re-measured at tick start: authority CLEAN at `29c80ea186`. A full registry run
+confirms **8 failed, 5289 passed** -- the eight declared inventories and nothing
+else. Modelo 220's label gap, left to its author last tick, is closed by them.
+The run's single ERROR is this session's own `-p no:logging` flag disabling the
+plugin a structured-logging test asserts against, not a defect.
+
+### Following the layout-applies inventory to one concrete case
+
+`test_every_claimed_filing_year_is_covered_by_its_declared_layout_design` lists
+26 revisions. One reads as self-contradictory and was worth pulling:
+
+    modelo 210 revision '2025' claims ejercicio(s) 2026-2026,
+    which fall outside its declared layout design(s) aeat-dr-210-2022 (2022-2025)
+
+Modelo 210 has ONE revision. It is valid from 2025-01-01 with no end date and
+DECLARES BOTH designs -- `aeat-dr-210-2022` (devengos 2022-06-01 to 2025-12-31)
+and `aeat-dr-210-2026` (devengos from 2026-01-01). The gate reads designs from
+the EXPORT LAYOUT's `source_refs`, and that layout cites only the 2022 design.
+
+### What actually changed between the two designs
+
+Not one data field. All 127 positions on `Página 01` are byte-identical and
+nothing straddles. The RECORD LENGTH changed: the tail `Reservado para la
+Administración` grows from 532 bytes to 1832, and `Indicador de fin de registro`
+moves from 2692 to 3992, taking the record from 2700 positions to 4000.
+`Página 02` is identical in both.
+
+The committed layout emits extent **2700**. So a filing for a 2026 devengo goes
+out at the 2022 geometry -- 1300 bytes short, with its end-of-record marker
+1300 positions early. This is the modelo 720 short-record class, in a revision
+nothing currently flags.
+
+### Why every signal misses it
+
+* the RELAYOUT gate pairs a revision's designs by the ejercicios they cover, and
+  modelo 210's state DEVENGO spans. Enumerating those into years would invent
+  them -- the ledger's own documented refusal -- so the pair never forms and
+  modelo 210 sits on no spanning row while 200, 322 and 347 do;
+* the STRADDLE signal added two ticks ago detects a field DISPLACED across
+  another's boundary. Nothing here is displaced; a reserved run was extended at
+  the tail. It is correctly silent and correctly useless for this shape;
+* the record-EXTENT checks written for 193, 369 and 720 are per-modelo and
+  modelo 210 has none.
+
+One revision cannot serve both lengths, so this needs a split at 2025/2026 --
+the fourth, after 200, 322 and 347.
+
+### What was landed, and the line it does not cross
+
+`test_modelo_210_spans_a_record_length_change.py` pins the inputs a split needs:
+both designs readable, their data fields nesting with zero straddles, their
+record lengths differing, and that difference being EXACTLY the tail reserved
+run's growth -- so a future change that moved data positions would fail here
+rather than pass as "still just a length change".
+
+It deliberately does NOT assert the 2700 the layout currently emits. That figure
+is the defect, and pinning it would make the defect the contract.
+
+A first draft assumed a single reserved run per sheet and failed: `Página 01`
+carries six, and only the tail one grows. The check now takes the last by
+offset, which is the one the terminator abuts.
+
+The split-progress record carries a pointer to it, deliberately OUTSIDE
+`_KNOWN_SPANNING`: that frozenset tracks what the detector sees, and modelo 210
+is precisely what it cannot.
+
+### Verified
+
+* the new module: 4 passed; split-progress 3 passed after the cross-reference.
+* it bites: making the 2026 design identical to the 2022 one reds the
+  length-difference check at 2700.
+* authority loads CLEAN; ruff clean on both touched files.
+
+### Still open
+
+Eight standing failures, unchanged in count this tick -- the work here made an
+invisible defect visible rather than closing a gate. Four splits now: modelo
+200, 322, 347 (three revisions, not two) and 210.
