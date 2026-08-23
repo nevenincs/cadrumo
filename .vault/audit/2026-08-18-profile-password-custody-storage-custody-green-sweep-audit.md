@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:9573ed02468d96b395a4be62f461fe70e9f45e705d4a984b9fd52dd1ab666f88'
+body_hash: 'sha256:2144402dc624fe35a7b8d3bf0b0df5fb5386f778ef2121adecb7a7b1f8091626'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7833,3 +7833,39 @@ Handover, with the recovery path: the deleted module is retrievable at
 reshaping onto the new spec kernel rather than a straight revert. Restoring
 `config passphrase change` clears the contract refusal, `config profile show`, roughly twenty
 domain failures, and the peer's own outstanding case, in one change.
+
+### The handoff arrived: stale login setups repaired against the ADR
+
+The peer restored `config passphrase change` -- not by reviving the deleted module but by
+reshaping it onto the new command-spec kernel, so `_config/_passphrase.py` is still absent while
+the verb now resolves. The operator-surface contract went green with it, and `config profile
+show` refuses correctly again ("No active profile") instead of emitting nothing. The single
+diagnosis held: integration fell 13 to 7 and unit 9 to 2 on that one change.
+
+That is the handoff this campaign had been waiting for, and the leftovers behaved as predicted
+-- stale setups, not defects. Two were this domain's:
+`test_atomic_create_roundtrip` called `config login` with no secrets channel, relying on the
+isolated backend's `cadrumo_secret_passphrase` setting to unlock.
+
+Checked against intent before repairing, because "the test broke, adjust the test" is how a
+real regression gets papered over. The governing ADR settles it in the test's favour being
+wrong: **"Retain environment fallback -- rejected"**, and "CLI entrypoints never resolve
+caller-supplied scalar secrets from environment, settings, keyrings, or an implicit adapter
+fallback". The settings channel was removed deliberately, so the setup is stale and the verb is
+right.
+
+Repaired by handing the passphrase over the bounded strict-JSON channel the ADR mandates --
+`--secrets-stdin` with `{"passphrase": ...}` -- following the shape already established in
+`test_profile_login_session_lifecycle.py` rather than inventing one. The value is the same one
+the isolated backend seeded the custody envelope with, since no other value opens it.
+
+Proven load-bearing from outside the repo: a scratchpad `sitecustomize` let `login_profile` run
+and then closed the session it had just bound. All three cases in the module red immediately,
+so the roundtrip genuinely proves the unlock rather than passing on a profile that happened to
+be active. Nothing tracked was mutated.
+
+Remaining in the lanes, both attributed: four `test_censo_pull_verb` cases reference
+`_censo_file.censo_app`, a symbol the peer's refactor renamed -- the same stale-reference class,
+and next; and one transient `RegistryLoadError` ("registry directory changed during cache
+fingerprinting"), which is the registry loader's own quiescence guard firing while another
+campaign writes, not a failure.
