@@ -281,7 +281,14 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in root_text
     assert "CADRUMO_SECRET_STORE_DIR" in root_text
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in config_text
-    assert "CADRUMO_SECRET_PASSPHRASE" in config_text
+    assert "CADRUMO_SECRET_PASSPHRASE" not in config_text
+    for option in (
+        "--profile-secrets-stdin",
+        "--profile-secrets-fd",
+        "--secrets-stdin",
+        "--secrets-fd",
+    ):
+        assert option in config_text
     assert ("aeat config " + "init") not in root_text
     assert "aeat app ledger import" in root_text
     assert "aeat app modelo verification-report list" in root_text

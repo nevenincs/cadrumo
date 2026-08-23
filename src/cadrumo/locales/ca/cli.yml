@@ -3386,9 +3386,9 @@ cli:
         heading: Configuració i diagnòstic del contribuent.
         paragraph_durable_state: L'estat durador (perfil, autenticació, llibre) persisteix
           entre sessions.
-        paragraph_storage_isolation: Per a una execució aïllada des de zero, definiu
-          CADRUMO_LOCAL_STORAGE_ROOT i CADRUMO_SECRET_STORE_DIR; els registres queden
-          per defecte sota aquest directori d'emmagatzematge.
+        paragraph_storage_isolation: Per aïllar l'estat, definiu CADRUMO_LOCAL_STORAGE_ROOT
+          i CADRUMO_SECRET_STORE_DIR. Passeu secrets de perfil amb --profile-secrets-stdin
+          o --profile-secrets-fd, i secrets de l'ordre amb --secrets-stdin o --secrets-fd.
         passphrase_change: Canvia la contrasenya que protegeix el perfil actiu.
         profile_delete: Elimina un perfil emmagatzemat localment.
         profile_history: Inspecciona l'historial append-only d'esdeveniments del perfil.

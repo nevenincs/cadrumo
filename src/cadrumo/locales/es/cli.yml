@@ -3416,9 +3416,9 @@ cli:
         heading: Configuración y diagnóstico del contribuyente.
         paragraph_durable_state: El estado duradero (perfil, autenticación, libro)
           persiste entre sesiones.
-        paragraph_storage_isolation: Para una ejecución aislada desde cero, defina
-          CADRUMO_LOCAL_STORAGE_ROOT y CADRUMO_SECRET_STORE_DIR; los registros quedan
-          por defecto bajo ese directorio de almacenamiento.
+        paragraph_storage_isolation: Para aislar el estado, defina CADRUMO_LOCAL_STORAGE_ROOT
+          y CADRUMO_SECRET_STORE_DIR. Pase secretos de perfil con --profile-secrets-stdin
+          o --profile-secrets-fd, y secretos del comando con --secrets-stdin o --secrets-fd.
         passphrase_change: Cambia la contraseña que protege el perfil activo.
         profile_delete: Elimina un perfil almacenado localmente.
         profile_history: Inspecciona el historial append-only de eventos del perfil.

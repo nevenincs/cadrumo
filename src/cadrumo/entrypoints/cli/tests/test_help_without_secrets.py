@@ -204,6 +204,23 @@ def test_subgroup_help_renders_without_passphrase(
     assert "Traceback" not in combined
 
 
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_live_config_help_only_documents_explicit_secret_channels(tmp_path: Path, locale: str) -> None:
+    """Every shipped locale rejects the retired environment-secret instruction."""
+    result = _run(["--language", locale, "config", "--help"], tmp_path)
+    combined = f"{result.stdout}\n{result.stderr}"
+
+    assert result.returncode == 0, combined
+    assert _PASSPHRASE_ENV_VAR not in combined, combined
+    for option in (
+        "--profile-secrets-stdin",
+        "--profile-secrets-fd",
+        "--secrets-stdin",
+        "--secrets-fd",
+    ):
+        assert option in combined, combined
+
+
 def test_unknown_command_renders_usage_error_without_passphrase(tmp_path: Path) -> None:
     """A typo'd subcommand yields the exit-2 usage error, not a key refusal."""
     result = _run(["config", "nosuchcmd"], tmp_path)

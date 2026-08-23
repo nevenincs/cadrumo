@@ -3173,8 +3173,10 @@ cli:
         footer: Run aeat --help for the full overview.
         heading: aeat config - profile, auth, diagnostics
         paragraph_durable_state: Config commands manage local durable state.
-        paragraph_storage_isolation: For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT
-          and CADRUMO_SECRET_STORE_DIR; logs default under that storage root.
+        paragraph_storage_isolation: For isolated state, set CADRUMO_LOCAL_STORAGE_ROOT
+          and CADRUMO_SECRET_STORE_DIR. Pass profile secrets through --profile-secrets-stdin
+          or --profile-secrets-fd, and command secrets through --secrets-stdin or
+          --secrets-fd.
         passphrase_change: Change the passphrase that protects the active profile.
         profile_delete: Delete a locally stored profile.
         profile_history: Inspect the append-only profile event history.
