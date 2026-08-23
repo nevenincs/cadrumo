@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d869bd2415873cdfd3ed9137e37469af583f290b5724b7be727045d5fe0df6e4'
+body_hash: 'sha256:1f6c7d9ac16f58ea75d753bb4e6c4ed4da322435a31f99604d23da9bf096709e'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7640,3 +7640,27 @@ dirty files and finished with 25, a peer landing a very large commit mid-run; it
 at 12 failures. Re-measured on the settled tree it was 7. The five extra were churn artifacts,
 which is the quiescence principle applying to the SHORT slices after all -- they are immune in
 practice only while the tree is merely busy, not while it is transitioning by four figures.
+
+### A phrase grep over wrapped YAML is a broken instrument, and this is the second time
+
+Verifying that this campaign's work survived a peer's heavy refactor -- worth doing, since
+broad commits have twice absorbed its edits -- a phrase count reported the Catalan catalogue
+carrying the new KDF guidance in ONE of two messages where the other three locales carried
+both. That reads exactly like a regression in this campaign's own work, half-lost to someone
+else's sweep.
+
+It was the instrument. The catalogues wrap long values across lines, and `menys carregat`
+happens to split differently in the two entries, so a fixed-phrase grep matched one and missed
+the other. Parsing the YAML and checking the loaded values reports 2/2 in all four locales.
+Nothing was lost.
+
+This is the SECOND time this exact trap has fired here; earlier in the campaign a grep on
+wrapped YAML reported four newly-set locale strings absent when all four were present. Twice is
+a pattern, so the rule is worth stating rather than re-learning: NEVER assert presence or
+absence of catalogue content with a text search. Load the YAML and inspect the parsed value.
+The failure is silent and asymmetric -- it produces confident false NEGATIVES, which look like
+regressions and invite a "fix" that overwrites correct content.
+
+Everything checked is intact at HEAD: the dunder-init gate, the os-keychain lane-scope gate,
+the interpreter-exit sealing proof, the `retryable` ruling comment at the ErrorCode entry, and
+the KDF guidance in all four catalogues.
