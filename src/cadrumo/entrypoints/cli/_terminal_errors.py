@@ -322,13 +322,16 @@ def _emit_click_exception(exc: BaseException) -> NoReturn:
     """Emit a Click/usage failure honouring the JSON error contract."""
     exit_code = int(getattr(exc, "exit_code", _ABORTED_EXIT_CODE))
     if _json_requested_for(exc):
-        from ._errors import active_profile_label_for_error, write_stderr
+        from ._errors import write_stderr
 
         boundary = _build_parse_time_refusal(exc)
         write_stderr(
             render_error_json(
                 boundary,
-                active_profile=active_profile_label_for_error(),
+                # A parse-time refusal never executes a handler and therefore
+                # must not discover profile, sandbox, custody, or storage state
+                # merely to decorate its transport envelope.
+                active_profile=None,
                 command=_resolved_command_identifier(exc),
             ),
         )

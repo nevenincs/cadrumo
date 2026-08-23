@@ -35,6 +35,7 @@ never trigger a loader.
 
 from __future__ import annotations
 
+import inspect
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -43,14 +44,17 @@ from importlib.util import resolve_name
 from typing import Any, Literal, Never, cast, override
 
 import typer
+import typer.core as typer_core
 from typer._click.core import Command as TyCommand
 
 # Use typer's internal click re-export to align with TyperGroup's type signatures
 from typer._click.core import Context as TyContext
+from typer._click.core import make_default_short_help
 
 # TyperGroup is built on typer's vendored click, so its resolve_command raises
 # the vendored UsageError rather than top-level click's distinct exception.
 from typer._click.exceptions import UsageError as TyUsageError
+from typer._click.shell_completion import CompletionItem
 from typer.core import TyperGroup
 from typer.main import get_command as _typer_get_command
 
@@ -194,8 +198,12 @@ class LazySubcommand:
         "_child_registry_key",
         "_command",
         "_decorate",
+        "_deprecated",
+        "_help",
+        "_hidden",
         "_optional_unavailable",
         "_required_unavailable",
+        "_short_help",
         "_target",
         "name",
     )
@@ -209,6 +217,10 @@ class LazySubcommand:
         child_registry_key: str | None = None,
         optional_unavailable: OptionalUnavailableFactory | None = None,
         required_unavailable: RequiredUnavailableRefusal | None = None,
+        help: str | None = None,
+        hidden: bool = False,
+        short_help: str | None = None,
+        deprecated: bool | str = False,
     ) -> None:
         if not name:
             raise ValueError("a lazy command requires an operator-facing name")
@@ -218,6 +230,10 @@ class LazySubcommand:
         self._child_registry_key = child_registry_key or name
         self._optional_unavailable = optional_unavailable
         self._required_unavailable = required_unavailable
+        self._help = help
+        self._hidden = hidden
+        self._short_help = short_help
+        self._deprecated = deprecated
         self._command: TyCommand | None = None
 
     def load(self) -> TyCommand:
@@ -275,6 +291,39 @@ class LazySubcommand:
     def is_materialized(self) -> bool:
         """Report cached materialization without importing the target."""
         return self._command is not None
+
+    @property
+    def help(self) -> str | None:
+        """Return the immutable long-help registration metadata."""
+        return self._help
+
+    @property
+    def hidden(self) -> bool:
+        """Return whether discovery surfaces suppress this node."""
+        return self._hidden
+
+    @property
+    def short_help(self) -> str | None:
+        """Return the immutable explicit short-help metadata, if any."""
+        return self._short_help
+
+    @property
+    def deprecated(self) -> bool | str:
+        """Return the immutable Click deprecation metadata."""
+        return self._deprecated
+
+    def get_short_help_str(self, limit: int = 45) -> str:
+        """Render short help with the same rules as Click ``Command``."""
+        if self._short_help:
+            text = inspect.cleandoc(self._short_help)
+        elif self._help:
+            text = make_default_short_help(self._help, limit)
+        else:
+            text = ""
+        if self._deprecated:
+            marker = f"(DEPRECATED: {self._deprecated})" if isinstance(self._deprecated, str) else "(DEPRECATED)"
+            text = f"{text} {marker}"
+        return text.strip()
 
 
 CommandNodeKind = Literal["root", "group", "leaf"]
@@ -595,6 +644,68 @@ class CadrumoTyperGroup(TyperGroup):
         lazy = self._lazy_table()
         merged = [*eager, *(name for name in lazy if name not in eager)]
         return sorted(merged)
+
+    @override
+    def format_commands(self, ctx: TyContext, formatter: Any) -> None:
+        """Render lazy command rows from registration metadata only.
+
+        Typer's implementation obtains every command object before rendering
+        its short help.  That turns a parent ``--help`` into a sibling-handler
+        import sweep.  Lazy registrations already own the operator name and
+        short-help metadata, so only eager children need concrete resolution.
+        """
+        lazy = self._lazy_table()
+        eager_names = set(super().list_commands(ctx))
+        rows: list[tuple[str, str]] = []
+        visible_names: list[str] = []
+        entries: list[tuple[str, TyCommand | LazySubcommand]] = []
+        for name in self.list_commands(ctx):
+            declaration = lazy.get(name) if name not in eager_names else None
+            if declaration is not None:
+                if declaration.hidden:
+                    continue
+                entries.append((name, declaration))
+                visible_names.append(name)
+                continue
+            command = super().get_command(ctx, name)
+            if command is None or command.hidden:
+                continue
+            entries.append((name, command))
+            visible_names.append(name)
+        if not entries:
+            return
+        limit = formatter.width - 6 - max(len(name) for name in visible_names)
+        for name, entry in entries:
+            if isinstance(entry, LazySubcommand):
+                short_help = entry.get_short_help_str(limit)
+            else:
+                short_help = entry.get_short_help_str(limit)
+            rows.append((name, short_help))
+        if rows:
+            localise = cast(Callable[[str], str], typer_core.__dict__["_"])
+            with formatter.section(localise("Commands")):
+                formatter.write_dl(rows)
+
+    @override
+    def shell_complete(self, ctx: TyContext, incomplete: str) -> list[CompletionItem]:
+        """Complete lazy names and descriptions without loading their targets."""
+        lazy = self._lazy_table()
+        eager_names = set(super().list_commands(ctx))
+        results: list[CompletionItem] = []
+        for name in self.list_commands(ctx):
+            if not name.startswith(incomplete):
+                continue
+            declaration = lazy.get(name) if name not in eager_names else None
+            if declaration is not None:
+                if not declaration.hidden:
+                    results.append(CompletionItem(name, help=declaration.get_short_help_str()))
+                continue
+            command = super().get_command(ctx, name)
+            if command is not None and not command.hidden:
+                results.append(CompletionItem(name, help=command.get_short_help_str()))
+        # Command-level option completion does not inspect subcommands.
+        results.extend(TyCommand.shell_complete(self, ctx, incomplete))
+        return results
 
     @override
     def get_command(self, ctx: TyContext, cmd_name: str) -> TyCommand | None:

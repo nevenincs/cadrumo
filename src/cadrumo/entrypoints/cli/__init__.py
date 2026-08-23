@@ -1175,22 +1175,24 @@ def _app_root(
         raise typer.Exit()
 
 
-_LAZY_COMMAND_REGISTRATIONS: tuple[tuple[str, str, str], ...] = (
-    ("app", "overview", "._overview"),
-    ("app", "diagnostics", "._app_diagnostics"),
-    ("app", "ledger", "._ledger"),
-    ("app", "live", "._app_live"),
-    ("app", "maintenance", "._app_maintenance"),
-    ("app", "modelo", "._modelo"),
-    ("app", "quickfile", "._app_quickfile"),
-    ("app", "registry", ".registry"),
-    ("app", "review", "._review"),
-    (_PRODUCT_IDENTITY.cli_executable, "config", "._config"),
+_LAZY_COMMAND_REGISTRATIONS: tuple[tuple[str, str, str, str], ...] = (
+    ("app", "overview", "._overview", "cli.overview.app_help"),
+    ("app", "diagnostics", "._app_diagnostics", "cli.diagnostics.app_help"),
+    ("app", "ledger", "._ledger", "cli.ledger.app_help"),
+    ("app", "live", "._app_live", "cli.app.live.app_help"),
+    ("app", "maintenance", "._app_maintenance", "cli.app.maintenance.help"),
+    ("app", "modelo", "._modelo", "cli.app.modelo.app_help"),
+    ("app", "quickfile", "._app_quickfile", "cli.app.quickfile.app_help"),
+    ("app", "registry", ".registry", "cli.registry.app_help"),
+    ("app", "review", "._review", "cli.review.app_help"),
+    (_PRODUCT_IDENTITY.cli_executable, "config", "._config", "cli.config.app_help"),
 )
 
 # The dynamic-import guard is derived from the same registrations that wire
 # the command tree, so adding a command cannot leave one security list stale.
-_LAZY_COMMAND_MODULES: frozenset[str] = frozenset(module for _group, _name, module in _LAZY_COMMAND_REGISTRATIONS)
+_LAZY_COMMAND_MODULES: frozenset[str] = frozenset(
+    module for _group, _name, module, _help_key in _LAZY_COMMAND_REGISTRATIONS
+)
 
 
 def _required_import_failure(name: str, error: ModuleNotFoundError) -> Never:
@@ -1216,7 +1218,7 @@ def _optional_dependency_names() -> frozenset[str]:
     return frozenset(extra.import_name for extra in OPTIONAL_EXTRAS)
 
 
-def _lazy(group_name: str, name: str, module_name: str) -> None:
+def _lazy(group_name: str, name: str, module_name: str, help_key: str) -> None:
     """Register ``module_name`` as a lazily-loaded subcommand of ``group_name``."""
     if module_name not in _LAZY_COMMAND_MODULES:
         raise RuntimeError(f"unregistered lazy CLI module: {module_name}")
@@ -1232,6 +1234,7 @@ def _lazy(group_name: str, name: str, module_name: str) -> None:
             decorate=_decorate_typer_app,
             optional_unavailable=_optional_import_surface,
             required_unavailable=_required_import_failure,
+            help=tr(help_key),
         ),
     )
 
@@ -1243,8 +1246,8 @@ def _lazy(group_name: str, name: str, module_name: str) -> None:
 # ---------------------------------------------------------------------
 
 
-for _group_name, _command_name, _module_name in _LAZY_COMMAND_REGISTRATIONS:
-    _lazy(_group_name, _command_name, _module_name)
+for _group_name, _command_name, _module_name, _help_key in _LAZY_COMMAND_REGISTRATIONS:
+    _lazy(_group_name, _command_name, _module_name, _help_key)
 app.add_typer(app_app, name="app")
 _decorate_typer_app(app)
 

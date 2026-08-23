@@ -470,9 +470,18 @@ def attach_cli_policy_verdict[ExceptionT: Exception](
 
 
 def _is_metadata_invocation(ctx: typer.Context) -> bool:
-    """Read metadata posture from the invocation captured on ``ctx``."""
+    """Read metadata posture from captured tokens and eager callback flags.
+
+    Click consumes eager ``--help`` / ``--version`` options before group
+    :meth:`invoke` runs, so the captured remainder is intentionally not the
+    only authority.  The callback parameters are the lossless observation for
+    those root and curated-group flags; consulting them keeps metadata output
+    off profile, custody, and sandbox discovery even after parsing.
+    """
     arguments = tuple(str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
-    return is_metadata_invocation(arguments)
+    if is_metadata_invocation(arguments):
+        return True
+    return any(ctx.params.get(name) is True for name in ("help_", "version"))
 
 
 def _format_of(ctx: typer.Context) -> OutputFormat:

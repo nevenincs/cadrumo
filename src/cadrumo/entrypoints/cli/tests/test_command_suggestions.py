@@ -8,14 +8,19 @@ command (``app status`` -> ``app overview status``).
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import pytest
 import typer
+from typer.main import get_command
+from typer.testing import CliRunner
 
 from ....tests.cli_runner import invoke_cached_cli
 from .. import app
 from .._command_policy import CommandExecutionPolicy, command_execution_policy
 from .._command_schema import CommandCapabilityClass
 from .._command_suggestions import (
+    _LAZY_REGISTRY,
     CadrumoTyperGroup,
     LazyFactoryTarget,
     LazySubcommand,
@@ -201,3 +206,130 @@ def test_live_command_policy_is_callback_attached_not_path_inferred() -> None:
     assert census(_STATE_FREE_POLICY) == _STATE_FREE_POLICY
     assert census(_PROFILE_WRITE_POLICY) == _PROFILE_WRITE_POLICY
     assert _STATE_FREE_POLICY != _PROFILE_WRITE_POLICY
+
+
+def _metadata_probe(key: str, *, hidden: bool = False) -> tuple[typer.Typer, LazySubcommand, list[str]]:
+    loaded: list[str] = []
+    root = typer.Typer(name=key, cls=CadrumoTyperGroup)
+
+    @root.callback()
+    def _root() -> None:
+        pass
+
+    def _load() -> typer.Typer:
+        loaded.append("loaded")
+        child = typer.Typer(name="deferred", help="Deferred command help.", cls=CadrumoTyperGroup)
+
+        @child.command("run")
+        def _run() -> None:
+            pass
+
+        return child
+
+    declaration = LazySubcommand(
+        "deferred",
+        LazyFactoryTarget(_load),
+        help="Deferred command help.",
+        hidden=hidden,
+    )
+    register_lazy_subcommand(key, declaration)
+    return root, declaration, loaded
+
+
+def test_help_and_completion_use_lazy_registration_metadata_without_materialising() -> None:
+    """Parent discovery preserves text and descriptions without loading a handler."""
+    root, declaration, loaded = _metadata_probe("metadata-help-probe")
+    command = cast(Any, get_command(root))
+    context = typer.Context(command, info_name="metadata-help-probe")
+    try:
+        rendered = command.get_help(context)
+        completions = command.shell_complete(context, "def")
+    finally:
+        context.close()
+
+    assert loaded == []
+    assert declaration.is_materialized is False
+    assert "deferred  Deferred command help." in rendered
+    assert [(item.value, item.help) for item in completions] == [("deferred", "Deferred command help.")]
+
+
+def test_hidden_lazy_metadata_stays_out_of_help_and_completion_without_loading() -> None:
+    root, declaration, loaded = _metadata_probe("metadata-hidden-probe", hidden=True)
+    command = cast(Any, get_command(root))
+    context = typer.Context(command, info_name="metadata-hidden-probe")
+    try:
+        rendered = command.get_help(context)
+        completions = command.shell_complete(context, "def")
+    finally:
+        context.close()
+
+    assert loaded == []
+    assert declaration.is_materialized is False
+    assert "deferred" not in rendered
+    assert completions == []
+
+
+def test_unknown_resolution_does_not_materialise_candidate_handlers() -> None:
+    root, declaration, loaded = _metadata_probe("metadata-suggestion-probe")
+    result = CliRunner().invoke(root, ["defered"])
+
+    assert result.exit_code == 2
+    assert "No such command 'defered'" in result.output
+    assert loaded == []
+    assert declaration.is_materialized is False
+
+
+def test_live_lazy_help_and_visibility_metadata_match_materialised_targets() -> None:
+    """Registration metadata cannot silently drift from its handler target."""
+    initial = tuple(
+        declaration
+        for group_key in ("aeat", "app")
+        for declaration in tuple(_LAZY_REGISTRY.get(group_key, {}).values())
+    )
+    assert initial
+
+    for declaration in initial:
+        command = declaration.load()
+        assert declaration.help == command.help, declaration.loader_owner
+        assert declaration.hidden is command.hidden, declaration.loader_owner
+        assert declaration.short_help == command.short_help, declaration.loader_owner
+        assert declaration.deprecated == command.deprecated, declaration.loader_owner
+
+
+def test_eager_registration_keeps_dispatch_precedence_over_duplicate_lazy_metadata() -> None:
+    """Discovery and dispatch agree when an eager name shadows a lazy row."""
+    loaded: list[str] = []
+    root = typer.Typer(name="metadata-eager-precedence", cls=CadrumoTyperGroup)
+
+    @root.callback()
+    def _root() -> None:
+        pass
+
+    @root.command("same", help="Eager help.")
+    def _eager() -> None:
+        pass
+
+    def _load() -> typer.Typer:
+        loaded.append("loaded")
+        child = typer.Typer(name="same", help="Lazy help.")
+        return child
+
+    register_lazy_subcommand(
+        "metadata-eager-precedence",
+        LazySubcommand("same", LazyFactoryTarget(_load), help="Lazy help."),
+    )
+    command = cast(Any, get_command(root))
+    context = typer.Context(command, info_name="metadata-eager-precedence")
+    try:
+        rendered = command.get_help(context)
+        completions = command.shell_complete(context, "sa")
+        resolved = command.get_command(context, "same")
+    finally:
+        context.close()
+
+    assert "same  Eager help." in rendered
+    assert "Lazy help." not in rendered
+    assert [(item.value, item.help) for item in completions] == [("same", "Eager help.")]
+    assert resolved is not None
+    assert resolved.help == "Eager help."
+    assert loaded == []
