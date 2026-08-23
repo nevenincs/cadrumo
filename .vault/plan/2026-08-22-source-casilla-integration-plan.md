@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:2992614205c54e6fa3d80bf081796bbb7b788faff535e671385382f5fa8f7316'
+body_hash: 'sha256:ee407d8d9593734ce3573b3742d64c63b3828eb216d70ceb6a5d7616e6d020ac'
 ---
 
 # `source-casilla-integration` plan
@@ -176,9 +176,9 @@ Resolve whether the asset and finca amortization ledgers are authoritative filin
 Settle filing destination identity, substitutability, grain, precedence, absence semantics, rounding, and override policy.
 
 - [x] `W03.P10.S56` - ground amortization destinations, revision windows, eligible basis, rates, limits, and asset grain; `.vault/research/2026-08-23-amortization-casilla-grounding-research.md`.
-- [ ] `W03.P10.S57` - determine whether asset amortization is a direct filing source or a duplicate of transaction-ledger expenses; `.vault/adr/2026-08-22-amortization-casilla-mapping-adr.md`.
-- [ ] `W03.P10.S58` - determine whether finca amortization shares or requires a distinct source contract; `.vault/adr/2026-08-22-amortization-casilla-mapping-adr.md`.
-- [ ] `W03.P10.S59` - decide grain, precedence, absence semantics, rounding, and override policy; `.vault/adr/2026-08-22-amortization-casilla-mapping-adr.md`.
+- [x] `W03.P10.S57` - determine whether asset amortization is a direct filing source or a duplicate of transaction-ledger expenses; `.vault/adr/2026-08-23-amortization-casilla-mapping-adr.md`.
+- [ ] `W03.P10.S58` - determine whether finca amortization shares or requires a distinct source contract; `.vault/adr/2026-08-23-amortization-casilla-mapping-adr.md`.
+- [ ] `W03.P10.S59` - decide grain, precedence, absence semantics, rounding, and override policy; `.vault/adr/2026-08-23-amortization-casilla-mapping-adr.md`.
 - [ ] `W03.P10.S60` - record separate asset-amortization and finca-amortization dispositions; `src/cadrumo/_data/source_connectivity/census.toml`.
 
 ### Phase `W03.P11` - implement the amortization vertical slice
