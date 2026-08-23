@@ -3711,3 +3711,62 @@ Heading count is the cheap proxy for how much label vocabulary a family needs.
 
 **10762 of 11605 slots remain** across 129 records; 843 modelled. 926 casillas describe
 eight records.
+
+## 2026-08-23 — modelo 220 family 16, and the same truncation mistake made twice
+
+### What landed
+
+Family 16 authored, both records — **140 casillas** across T22016000 and T22016001, the
+*reparto entre Administraciones forales*. Revision 926 → **1066 casillas**, ten of 137
+records. Suite: **8 failures, zero new**.
+
+The family is a perfectly regular grid of **28 concepts × 5 territories**, verified rather
+than assumed: every concept occurs exactly five times, and 28 × 5 = 140 equals the
+numbered-field count exactly.
+
+### The finding: never build a matcher from truncated output — and I did it twice
+
+**First time.** I hand-wrote concept matchers from a survey that had truncated
+descriptions at 104 characters, so fragments like `Abono de de` and `Complementa`
+collapsed genuinely distinct concepts and produced **24 key collisions**. Fixed by
+*deriving* the concept as the remainder — what is left once heading, territory and row
+index are removed — which cannot mis-match because nothing is guessed at.
+
+**Second time, same iteration.** The derived concept was then **slugged to 34 characters**
+for use as a key, collapsing 28 concepts into 22 — six pairs would have shipped with
+identical labels, exactly the defect that made me hold two records back last iteration.
+Caught before shipping; keyed by full text instead.
+
+**Truncation is fine for reading and never for keying.** The same error twice in one
+iteration is why it is written down rather than merely fixed.
+
+### Measuring beat the obvious reading
+
+Two of the 140 rows name no territory. They sit fifth in a run of five. The obvious
+reading was *Territorio común* — and measuring the other runs showed **15 end in "Total
+territorios forales" against only 2 in "Territorio común"**. So the obvious reading was
+wrong, and the majority pattern is itself only positional evidence. The territory is
+recorded as **unnamed**, with the label saying so.
+
+### AEAT's own text, again
+
+Both Basque and Spanish territory names in one design — Araba/Álava, Gipuzkoa/Guipúzcoa,
+Bizkaia/Vizcaya — and a word broken across a space (`insufi ciencia`). Both spellings
+matched; labels use the Basque form and the corrected word.
+
+### A tree-wide failure count is not evidence about your own change
+
+An intermediate suite run this iteration reported **183 failures**. The cause was a peer's
+**untracked, half-authored modelo 210 revision directory** whose casillas referenced
+export fields that did not yet exist — which fails registry validation globally and
+therefore fails almost everything. It settled within the iteration; the re-run gave 8
+failures, zero new.
+
+Worth remembering alongside the CRLF incident: in a shared worktree, a sudden tree-wide
+red is more often another hand mid-authoring than a regression in the change under review.
+**Check what the failure actually says before attributing it.**
+
+### Scale
+
+**10622 of 11605 slots remain** across 127 records; 983 modelled. 1066 casillas describe
+ten records. T22012A00 and T22012A10 are still held back for colliding label keys.

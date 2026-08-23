@@ -62,59 +62,63 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the Impuesto sobre Sociedades grupo-fiscal \
 consolidated declaration. DISCLOSURE -- self-review: the same agent authored the casillas \
-being reviewed. VERIFIED -- RECORDS T22012A01 AND T22012A11 ARE AUTHORED, bringing family \
-12 to six of its eight records and 831 casillas, every one carrying a real AEAT box number \
-and a `segmento`. Revision total 926 casillas, EIGHT of the design's 137 records. TWO \
-RECORDS ARE DELIBERATELY NOT SHIPPED, AND THAT IS THE SUBSTANCE OF THIS REVIEW. T22012A00 \
-and T22012A10 now resolve COMPLETELY -- zero unresolved fields -- but their four-axis \
-decomposition keys still COLLIDE: twelve pairs in A00 and one in A10. Because casilla ids \
-are transcribed as SEGMENTO:number, a key collision no longer threatens the ids at all; it \
-threatens the LABELS, which are composed from those axes. Shipping those two records would \
-hand an operator two IDENTICAL labels inside one record with no way to tell which cell \
-they were filling. They are held back until a further distinguishing axis is found, rather \
-than shipped with knowingly ambiguous labels. A record that loads cleanly and passes every \
-gate can still be unfit to ship, and this is that case. VERIFIED -- THIS ITERATION WAS \
-MOSTLY VOCABULARY DISCOVERY, which is worth stating plainly rather than presenting the \
-outcome as though it were direct. FIVE rounds of extension were needed to reach \
-zero-unresolved across family 12, each round surfacing further variants of AEAT's own \
-headings: \"INTERNACIONALRDLEG\" with the space dropped, a title-case \"Deducciones por \
-doble imposicion internacional RDLEG\" beside the uppercase form, \"Ded. pendiente\" and \
-\"Ded. Pendiente\" beside \"Deduccion pendiente\", a phrase split by a stray dot, and a \
-heading naming no law at all. VERIFIED -- TWO HEADINGS RECEIVED THEIR OWN FAMILY KEYS \
-RATHER THAN AN ASSUMED HOME. \"DEDUCCIONES POR DOBLE IMPOSICION INTERNA .\" names NO law \
-and is ambiguous between the RDLEG and the DT 23 families; picking either would be an \
-inference the design does not support. \"Deducciones doble imposicion internacional 2024\" \
-names the YEAR where its sibling heading names the law. Both are recorded as what they say \
-and nothing more. The no-law matcher is tested LAST, because every other interna heading \
-contains it as a prefix -- an ordering constraint of the same kind that caused a real \
-defect in the previous iteration. NOT CLAIMED -- FAMILY 14 WAS ASSESSED AND REJECTED as \
-this iteration's target, and the reason is recorded so the next iteration does not \
-re-derive it: 33 records, 3959 numbered fields, and a concept axis running to hundreds of \
-distinct incentive types, each needing a correct label in four languages. That is not a \
-one-iteration unit, and guessing at it would produce user-facing labels that could not be \
-stood behind. The remaining families by vocabulary footprint, measured: T22004 has 8 \
-records and 315 numbers over only 8 distinct headings; T22016 has 2 records and 140 \
-numbers over 3 headings; T22013 has 18 records and 1644 numbers over 12 headings. Those \
-are the tractable next targets. VERIFIED for all six shipped records: every design number \
-authored, ZERO missing, ZERO invented, every field either authored, covered by a \
-reused-number casilla or explicitly excluded; all tile exactly once with no gap and no \
-partial overlap; ids unique across records; duplicate Spanish labels across the whole \
-revision ZERO. Year-clean: aeat-dr-220-2024 applies exactly the single ejercicio claimed. \
-NOT CLAIMED -- 10762 OF THE 11605 (record, number) SLOTS REMAIN UNMODELLED across 129 of \
-the design's 137 records; 843 slots are modelled. 926 casillas describe eight records. \
-Progress on this modelo must not be read from the casilla count. NOT CLAIMED -- THESE \
-CASILLAS DECLARE THE DEDUCTION GRIDS; NONE OF THEM COMPUTES ONE. No formula, construct or \
-binding is attached, so nothing reconciles a carried-forward deduction against the amount \
-applied and nothing applies a tipo de gravamen to anything. NOT CLAIMED -- NO EXPORT \
-LAYOUT AND NO CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be filed. \
-model_law_authority_scope remains inspection_only, so this stamp is made under the LOWER \
-inspection bar and MUST be re-made if a layout lands and lifts the derived scope to \
-filing. NOT CLAIMED -- T22001000 and T22002000 still do not carry `segmento`, because \
-their fields are largely or wholly unnumbered; deliberate, and recorded so it is not read \
-as an oversight. NOT CLAIMED -- LOCALES COMPLETE BUT UNAUDITED: all 926 label keys \
-verified non-null across es/en/ca/hu by counting VALUES rather than keys; labels are \
-composed from the checked axes rather than free text, but the translations were not \
-reviewed by a second party and the Spanish is unaccented ASCII. NOT CLAIMED -- \
+being reviewed. VERIFIED -- FAMILY 16 IS AUTHORED, both records: 140 casillas across \
+T22016000 and T22016001, the reparto entre Administraciones forales. Revision total 1066 \
+casillas, TEN of the design's 137 records. Every casilla carries a real AEAT box number \
+and a `segmento`. VERIFIED -- THE FAMILY IS A PERFECTLY REGULAR GRID of 28 concepts by 5 \
+territories, and that regularity was VERIFIED rather than assumed: every concept occurs \
+exactly five times, once per territory, and 28 times 5 equals 140, the numbered-field \
+count exactly. VERIFIED -- THE CONCEPT AXIS IS DERIVED, NOT MATCHED, and a real defect \
+forced the change. The first attempt hand-wrote matcher fragments taken from a survey that \
+had TRUNCATED the descriptions at 104 characters, so fragments such as \"Abono de de\" and \
+\"Complementa\" collapsed several genuinely distinct concepts into one and produced \
+TWENTY-FOUR key collisions. Deriving the concept as the REMAINDER -- what is left once the \
+family heading, the territory name and the row index are removed -- cannot mis-match, \
+because nothing is being guessed at. NEVER BUILD A MATCHER FROM TRUNCATED OUTPUT. A SECOND \
+VERSION OF THE SAME MISTAKE WAS CAUGHT BEFORE SHIPPING: the derived concept was then \
+slugged to 34 characters for use as a key, which collapsed the 28 concepts into 22 and \
+would have given SIX PAIRS of casillas identical labels -- exactly the defect that caused \
+two records to be held back from the previous iteration. Keyed by full text instead. \
+Truncation is acceptable for reading and never for keying, and the same error appearing \
+twice in one iteration is the reason it is written down here rather than merely fixed. \
+VERIFIED -- TWO OF THE 140 ROWS NAME NO TERRITORY. They sit fifth in a run of five. \
+Measuring the other runs showed FIFTEEN end in \"Total territorios forales\" against only \
+TWO in \"Territorio comun\", so the majority pattern points at the former. That is an \
+inference from position rather than something the design states, so the territory is \
+recorded as UNNAMED and the label says so. The measurement is what makes this honest: \
+before checking, the obvious reading was \"Territorio comun\", and it would have been \
+WRONG. VERIFIED -- AEAT USES BOTH THE BASQUE AND THE SPANISH TERRITORY NAMES within the \
+same design: Araba and Alava, Gipuzkoa and Guipuzcoa, Bizkaia and Vizcaya. Both spellings \
+are matched. The labels use the Basque form, which the design itself uses in the majority \
+of its rows; that is a presentation choice and is recorded as one. AEAT also breaks a word \
+across a space, printing \"insufi ciencia de cuota\"; transcribed as printed in the \
+fragment comment and corrected in the operator-facing label, the same treatment given to \
+its other typos on this modelo. VERIFIED -- 110 and 30 design numbers respectively, ALL \
+authored, ZERO missing and ZERO invented; both records tile exactly once with NO gap and \
+NO PARTIAL OVERLAP, both checked; label keys unique; duplicate Spanish labels across the \
+entire revision ZERO; all 1066 label keys non-null across es/en/ca/hu, verified by \
+counting VALUES. Year-clean: aeat-dr-220-2024 applies exactly the single ejercicio this \
+revision claims. NOTED, ABOUT THE SUITE RATHER THAN THE REGISTRY: an intermediate suite \
+run during this iteration reported 183 failures. The cause was a peer's UNTRACKED, \
+half-authored modelo 210 revision directory whose casillas referenced export fields that \
+did not yet exist, which fails registry validation globally and therefore fails almost \
+every test. It settled within the iteration and the re-run returned 8 failures with zero \
+new. Recorded because a tree-wide failure count is not evidence about the change under \
+review when another hand is mid-authoring in the same worktree. NOT CLAIMED -- 10622 OF \
+THE 11605 (record, number) SLOTS REMAIN UNMODELLED across 127 of the design's 137 records; \
+983 slots are modelled. 1066 casillas describe ten records. Progress on this modelo must \
+not be read from the casilla count. NOT CLAIMED -- THESE CASILLAS DECLARE THE FORAL \
+ALLOCATION; NONE OF THEM COMPUTES IT. Nothing here checks that the five territory shares \
+sum to the total, no formula, construct or binding is attached, and the percentages are \
+declared rather than derived from the volumes of operations that sit beside them. NOT \
+CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be \
+filed. model_law_authority_scope remains inspection_only, so this stamp is made under the \
+LOWER inspection bar and MUST be re-made if a layout lands and lifts the derived scope to \
+filing. NOT CLAIMED -- T22012A00 and T22012A10 remain held back from the previous \
+iteration, still unshipped, because their label keys collide and would leave an operator \
+with identical labels inside one record. NOT CLAIMED -- LOCALES COMPLETE BUT UNAUDITED: \
+the 28 concept translations and 7 territory names were authored by the same agent and \
+reviewed by nobody else; the Spanish is unaccented ASCII. NOT CLAIMED -- \
 independent_check_coverage is n/a: NO CLAIM, not zero."""
 reviewed_at = 2026-08-23
 
