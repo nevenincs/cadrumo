@@ -13,7 +13,7 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
 modified: '2026-08-23'
-body_hash: 'sha256:44d085f2423e152c6607d0410630940ffb4c624d37e7cab7b33fbd1823cf9fc3'
+body_hash: 'sha256:23215a89e271b1db32d411798ba95ad14ba8f6c5bef63d7df925374e0586bfc2'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -168,7 +168,7 @@ Declare only the revision-specific facts established by adjudication.
 - [x] `W02.P08.S175` - redact raw row-source identities while exposing safe cohort fingerprints in operator output; `src/cadrumo/entrypoints/cli`.
 - [x] `W02.P08.S176` - enumerate canonical runtime inventory activities into deterministic atomic three-operation row cohorts; `src/cadrumo/application/aggregation/_inventory.py`.
 - [x] `W02.P08.S43` - add grounded inventory operation row-template bindings for supported M100 revisions without taxpayer activity identities; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
-- [ ] `W02.P08.S185` - ground which supported M100 filing formats carry repeated economic-activity casilla rows and their exact official coordinates; `.vault/research/2026-08-23-inventory-casilla-grounding-research.md`.
+- [x] `W02.P08.S185` - ground which supported M100 filing formats carry repeated economic-activity casilla rows and their exact official coordinates; `.vault/research/2026-08-23-inventory-casilla-grounding-research.md`.
 - [ ] `W02.P08.S205` - amend this plan with one renderer step and one proof step per grounded row-capable format, or record no renderer when no supported format qualifies; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
 - [ ] `W02.P08.S186` - add typed row-indexed casilla values and direct-materialization provenance to the canonical source-resolution carrier; `src/cadrumo/application/aggregation/_source_mesh.py`.
 - [ ] `W02.P08.S187` - persist row-indexed casilla values and direct-materialization provenance through encrypted CalculationRevision state; `src/cadrumo/domain/modelos/_calculation_revision.py`.
