@@ -8,6 +8,91 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g6l0j0c1q60o36cpj:
+              label: Estado de ingresos y gastos consolidados reconocidos. Total de
+                ingresos y gastos consolidados reconocidos. Total de ingresos y gastos
+                atribuidos a la sociedad dominante
+            x-agp34c1g6l0j0c1q60o36cpk:
+              label: Estado de ingresos y gastos consolidados reconocidos. Total de
+                ingresos y gastos consolidados reconocidos. Total de ingresos y gastos
+                atribuidos a socios externos
+            x-agp34c1g6l0j0c1q60o36cpm:
+              label: Estado de ingresos y gastos consolidados reconocidos. Ingresos
+                y gastos imputados directamente en el patrimonio neto consolidado.
+                Por valoracion de instrumentos financieros
+            x-agp34c1g6l0j0c1q60o36cpn:
+              label: Estado de ingresos y gastos consolidados reconocidos. Ingresos
+                y gastos imputados directamente en el patrimonio neto consolidado.
+                Por valoracion de instrumentos financieros. Activos financieros a
+                valor razonable con cambios en el patrimonio neto
+            x-agp34c1g6l0j0c1q60o36cpo:
+              label: Estado de ingresos y gastos consolidados reconocidos. Ingresos
+                y gastos imputados directamente en el patrimonio neto consolidado.
+                Por valoracion de instrumentos financieros. Otros ingresos / gastos
+            x-agp34c1g6l0j0c1q60o36cpp:
+              label: Estado de ingresos y gastos consolidados reconocidos. Ingresos
+                y gastos imputados directamente en el patrimonio neto consolidado.
+                Por coberturas de flujos de efectivo
+            x-agp34c1g6l0j0c1q60o36d1g:
+              label: Estado de ingresos y gastos consolidados reconocidos. Ingresos
+                y gastos imputados directamente en el patrimonio neto consolidado.
+                Subvenciones, donaciones y legados recibidos
+            x-agp34c1g6l0j0c1q60o36d1h:
+              label: Estado de ingresos y gastos consolidados reconocidos. Ingresos
+                y gastos imputados directamente en el patrimonio neto consolidado.
+                Por ganancias y perdidas actuariales y otros ajustes
+            x-agp34c1g6l0j0c1q60o36d1i:
+              label: Estado de ingresos y gastos consolidados reconocidos. Ingresos
+                y gastos imputados directamente en el patrimonio neto consolidado.
+                Por activos no corrientes y pasivos vinculados, mantenidos para la
+                venta
+            x-agp34c1g6l0j0c1q60o36d1k:
+              label: Estado de ingresos y gastos consolidados reconocidos. Ingresos
+                y gastos imputados directamente en el patrimonio neto consolidado.
+                Efecto impositivo
+            x-agp34c1g6l0j0c1q60o36d1l:
+              label: Estado de ingresos y gastos consolidados reconocidos. Ingresos
+                y gastos imputados directamente en el patrimonio neto consolidado.
+                Total ingresos y gastos imputados directamente en el patrimonio neto
+                consolidado
+            x-agp34c1g6l0j0c1q60o36d1m:
+              label: Estado de ingresos y gastos consolidados reconocidos. Transferencias
+                a la cuenta de perdidas y ganancias consolidada. Por valoracion de
+                instrumentos financieros
+            x-agp34c1g6l0j0c1q60o36d1n:
+              label: Estado de ingresos y gastos consolidados reconocidos. Transferencias
+                a la cuenta de perdidas y ganancias consolidada. Por valoracion de
+                instrumentos financieros. Activos financieros a valor razonable con
+                cambios en el patrimonio neto
+            x-agp34c1g6l0j0c1q60o36d1o:
+              label: Estado de ingresos y gastos consolidados reconocidos. Transferencias
+                a la cuenta de perdidas y ganancias consolidada. Por valoracion de
+                instrumentos financieros. Otros ingresos / gastos
+            x-agp34c1g6l0j0c1q60o36d1p:
+              label: Estado de ingresos y gastos consolidados reconocidos. Transferencias
+                a la cuenta de perdidas y ganancias consolidada. Por coberturas de
+                flujos de efectivo
+            x-agp34c1g6l0j0c1q60o36d9g:
+              label: Estado de ingresos y gastos consolidados reconocidos. Transferencias
+                a la cuenta de perdidas y ganancias consolidada. Subvenciones, donaciones
+                y legados recibidos
+            x-agp34c1g6l0j0c1q60o36d9h:
+              label: Estado de ingresos y gastos consolidados reconocidos. Transferencias
+                a la cuenta de perdidas y ganancias consolidada. Por activos no corrientes
+                y pasivos vinculados, mantenidos para la venta
+            x-agp34c1g6l0j0c1q60o36d9j:
+              label: Estado de ingresos y gastos consolidados reconocidos. Transferencias
+                a la cuenta de perdidas y ganancias consolidada. Efecto impositivo
+            x-agp34c1g6l0j0c1q60o36d9k:
+              label: Estado de ingresos y gastos consolidados reconocidos. Transferencias
+                a la cuenta de perdidas y ganancias consolidada. Total transferencia
+                a la cuenta de perdidas y ganancias consolidada
+            x-agp34c1g6l0j0c1q60o36d9l:
+              label: Estado de ingresos y gastos consolidados reconocidos. Total de
+                ingresos y gastos consolidados reconocidos
+            x-agp34c1g6l0j0c1q60o3ac1g:
+              label: Estado de ingresos y gastos consolidados reconocidos. Resultado
+                consolidado del ejercicio
             x-agp34c1g6t230c1q60o30e1g:
               label: 'Otras correcciones a la suma de bases imponibles: eliminacion
                 de dividendos internos no exentos del grupo fiscal. Total'

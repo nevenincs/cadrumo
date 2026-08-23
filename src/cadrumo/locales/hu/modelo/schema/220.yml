@@ -7,6 +7,90 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g6l0j0c1q60o36cpj:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Az elszamolt konszolidalt bevetelek es raforditasok osszesen. Az anyavallalatnak
+                tulajdonitott bevetelek es raforditasok osszesen
+            x-agp34c1g6l0j0c1q60o36cpk:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Az elszamolt konszolidalt bevetelek es raforditasok osszesen. A kulso
+                tagoknak tulajdonitott bevetelek es raforditasok osszesen
+            x-agp34c1g6l0j0c1q60o36cpm:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Penzugyi instrumentumok ertekelesebol
+            x-agp34c1g6l0j0c1q60o36cpn:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Penzugyi instrumentumok ertekelesebol. Valos erteken ertekelt penzugyi
+                eszkozok, a sajat tokevel szemben
+            x-agp34c1g6l0j0c1q60o36cpo:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Penzugyi instrumentumok ertekelesebol. Egyeb bevetel / raforditas
+            x-agp34c1g6l0j0c1q60o36cpp:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Cash flow fedezeti ugyletekbol
+            x-agp34c1g6l0j0c1q60o36d1g:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Kapott tamogatasok, adomanyok es hagyatekok
+            x-agp34c1g6l0j0c1q60o36d1h:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Aktuariusi nyeresegekbol es vesztesegekbol es egyeb korrekciokbol
+            x-agp34c1g6l0j0c1q60o36d1i:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Ertekesitesre tartott befektetett eszkozokbol es kapcsolodo kotelezettsegekbol
+            x-agp34c1g6l0j0c1q60o36d1k:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Adohatas
+            x-agp34c1g6l0j0c1q60o36d1l:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok.
+                Kozvetlenul a konszolidalt sajat tokeben elszamolt bevetelek es raforditasok
+                osszesen
+            x-agp34c1g6l0j0c1q60o36d1m:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Penzugyi instrumentumok
+                ertekelesebol
+            x-agp34c1g6l0j0c1q60o36d1n:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Penzugyi instrumentumok
+                ertekelesebol. Valos erteken ertekelt penzugyi eszkozok, a sajat tokevel
+                szemben
+            x-agp34c1g6l0j0c1q60o36d1o:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Penzugyi instrumentumok
+                ertekelesebol. Egyeb bevetel / raforditas
+            x-agp34c1g6l0j0c1q60o36d1p:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Cash flow fedezeti
+                ugyletekbol
+            x-agp34c1g6l0j0c1q60o36d9g:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Kapott tamogatasok,
+                adomanyok es hagyatekok
+            x-agp34c1g6l0j0c1q60o36d9h:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Ertekesitesre tartott
+                befektetett eszkozokbol es kapcsolodo kotelezettsegekbol
+            x-agp34c1g6l0j0c1q60o36d9j:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Adohatas
+            x-agp34c1g6l0j0c1q60o36d9k:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Atvezetesek a konszolidalt eredmenykimutatasba. Atvezetesek a konszolidalt
+                eredmenykimutatasba osszesen
+            x-agp34c1g6l0j0c1q60o36d9l:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Az elszamolt konszolidalt bevetelek es raforditasok osszesen
+            x-agp34c1g6l0j0c1q60o3ac1g:
+              label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
+                Az uzleti ev konszolidalt eredmenye
             x-agp34c1g6t230c1q60o30e1g:
               label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport nem
                 mentes belso osztalekainak kiszurese. Osszesen'

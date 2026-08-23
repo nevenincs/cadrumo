@@ -7,6 +7,89 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g6l0j0c1q60o36cpj:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Total d'ingressos
+                i despeses consolidats reconeguts. Total d'ingressos i despeses atribuits
+                a la societat dominant
+            x-agp34c1g6l0j0c1q60o36cpk:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Total d'ingressos
+                i despeses consolidats reconeguts. Total d'ingressos i despeses atribuits
+                a socis externs
+            x-agp34c1g6l0j0c1q60o36cpm:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Ingressos
+                i despeses imputats directament al patrimoni net consolidat. Per valoracio
+                d'instruments financers
+            x-agp34c1g6l0j0c1q60o36cpn:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Ingressos
+                i despeses imputats directament al patrimoni net consolidat. Per valoracio
+                d'instruments financers. Actius financers a valor raonable amb canvis
+                en el patrimoni net
+            x-agp34c1g6l0j0c1q60o36cpo:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Ingressos
+                i despeses imputats directament al patrimoni net consolidat. Per valoracio
+                d'instruments financers. Altres ingressos / despeses
+            x-agp34c1g6l0j0c1q60o36cpp:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Ingressos
+                i despeses imputats directament al patrimoni net consolidat. Per cobertures
+                de fluxos d'efectiu
+            x-agp34c1g6l0j0c1q60o36d1g:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Ingressos
+                i despeses imputats directament al patrimoni net consolidat. Subvencions,
+                donacions i llegats rebuts
+            x-agp34c1g6l0j0c1q60o36d1h:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Ingressos
+                i despeses imputats directament al patrimoni net consolidat. Per guanys
+                i perdues actuarials i altres ajustos
+            x-agp34c1g6l0j0c1q60o36d1i:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Ingressos
+                i despeses imputats directament al patrimoni net consolidat. Per actius
+                no corrents i passius vinculats, mantinguts per a la venda
+            x-agp34c1g6l0j0c1q60o36d1k:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Ingressos
+                i despeses imputats directament al patrimoni net consolidat. Efecte
+                impositiu
+            x-agp34c1g6l0j0c1q60o36d1l:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Ingressos
+                i despeses imputats directament al patrimoni net consolidat. Total
+                ingressos i despeses imputats directament al patrimoni net consolidat
+            x-agp34c1g6l0j0c1q60o36d1m:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+                al compte de perdues i guanys consolidat. Per valoracio d'instruments
+                financers
+            x-agp34c1g6l0j0c1q60o36d1n:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+                al compte de perdues i guanys consolidat. Per valoracio d'instruments
+                financers. Actius financers a valor raonable amb canvis en el patrimoni
+                net
+            x-agp34c1g6l0j0c1q60o36d1o:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+                al compte de perdues i guanys consolidat. Per valoracio d'instruments
+                financers. Altres ingressos / despeses
+            x-agp34c1g6l0j0c1q60o36d1p:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+                al compte de perdues i guanys consolidat. Per cobertures de fluxos
+                d'efectiu
+            x-agp34c1g6l0j0c1q60o36d9g:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+                al compte de perdues i guanys consolidat. Subvencions, donacions i
+                llegats rebuts
+            x-agp34c1g6l0j0c1q60o36d9h:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+                al compte de perdues i guanys consolidat. Per actius no corrents i
+                passius vinculats, mantinguts per a la venda
+            x-agp34c1g6l0j0c1q60o36d9j:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+                al compte de perdues i guanys consolidat. Efecte impositiu
+            x-agp34c1g6l0j0c1q60o36d9k:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+                al compte de perdues i guanys consolidat. Total transferencia al compte
+                de perdues i guanys consolidat
+            x-agp34c1g6l0j0c1q60o36d9l:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Total d'ingressos
+                i despeses consolidats reconeguts
+            x-agp34c1g6l0j0c1q60o3ac1g:
+              label: Estat d'ingressos i despeses consolidats reconeguts. Resultat
+                consolidat de l'exercici
             x-agp34c1g6t230c1q60o30e1g:
               label: 'Altres correccions a la suma de bases imposables: eliminacio
                 de dividends interns no exempts del grup fiscal. Total'

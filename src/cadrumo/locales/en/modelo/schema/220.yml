@@ -7,6 +7,85 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g6l0j0c1q60o36cpj:
+              label: Statement of recognised consolidated income and expense. Total
+                recognised consolidated income and expense. Total income and expense
+                attributed to the parent company
+            x-agp34c1g6l0j0c1q60o36cpk:
+              label: Statement of recognised consolidated income and expense. Total
+                recognised consolidated income and expense. Total income and expense
+                attributed to non-controlling interests
+            x-agp34c1g6l0j0c1q60o36cpm:
+              label: Statement of recognised consolidated income and expense. Income
+                and expense recognised directly in consolidated equity. From the measurement
+                of financial instruments
+            x-agp34c1g6l0j0c1q60o36cpn:
+              label: Statement of recognised consolidated income and expense. Income
+                and expense recognised directly in consolidated equity. From the measurement
+                of financial instruments. Financial assets at fair value through equity
+            x-agp34c1g6l0j0c1q60o36cpo:
+              label: Statement of recognised consolidated income and expense. Income
+                and expense recognised directly in consolidated equity. From the measurement
+                of financial instruments. Other income / expense
+            x-agp34c1g6l0j0c1q60o36cpp:
+              label: Statement of recognised consolidated income and expense. Income
+                and expense recognised directly in consolidated equity. From cash
+                flow hedges
+            x-agp34c1g6l0j0c1q60o36d1g:
+              label: Statement of recognised consolidated income and expense. Income
+                and expense recognised directly in consolidated equity. Grants, donations
+                and bequests received
+            x-agp34c1g6l0j0c1q60o36d1h:
+              label: Statement of recognised consolidated income and expense. Income
+                and expense recognised directly in consolidated equity. From actuarial
+                gains and losses and other adjustments
+            x-agp34c1g6l0j0c1q60o36d1i:
+              label: Statement of recognised consolidated income and expense. Income
+                and expense recognised directly in consolidated equity. From non-current
+                assets and linked liabilities held for sale
+            x-agp34c1g6l0j0c1q60o36d1k:
+              label: Statement of recognised consolidated income and expense. Income
+                and expense recognised directly in consolidated equity. Tax effect
+            x-agp34c1g6l0j0c1q60o36d1l:
+              label: Statement of recognised consolidated income and expense. Income
+                and expense recognised directly in consolidated equity. Total income
+                and expense recognised directly in consolidated equity
+            x-agp34c1g6l0j0c1q60o36d1m:
+              label: Statement of recognised consolidated income and expense. Transfers
+                to the consolidated profit and loss account. From the measurement
+                of financial instruments
+            x-agp34c1g6l0j0c1q60o36d1n:
+              label: Statement of recognised consolidated income and expense. Transfers
+                to the consolidated profit and loss account. From the measurement
+                of financial instruments. Financial assets at fair value through equity
+            x-agp34c1g6l0j0c1q60o36d1o:
+              label: Statement of recognised consolidated income and expense. Transfers
+                to the consolidated profit and loss account. From the measurement
+                of financial instruments. Other income / expense
+            x-agp34c1g6l0j0c1q60o36d1p:
+              label: Statement of recognised consolidated income and expense. Transfers
+                to the consolidated profit and loss account. From cash flow hedges
+            x-agp34c1g6l0j0c1q60o36d9g:
+              label: Statement of recognised consolidated income and expense. Transfers
+                to the consolidated profit and loss account. Grants, donations and
+                bequests received
+            x-agp34c1g6l0j0c1q60o36d9h:
+              label: Statement of recognised consolidated income and expense. Transfers
+                to the consolidated profit and loss account. From non-current assets
+                and linked liabilities held for sale
+            x-agp34c1g6l0j0c1q60o36d9j:
+              label: Statement of recognised consolidated income and expense. Transfers
+                to the consolidated profit and loss account. Tax effect
+            x-agp34c1g6l0j0c1q60o36d9k:
+              label: Statement of recognised consolidated income and expense. Transfers
+                to the consolidated profit and loss account. Total transfers to the
+                consolidated profit and loss account
+            x-agp34c1g6l0j0c1q60o36d9l:
+              label: Statement of recognised consolidated income and expense. Total
+                recognised consolidated income and expense
+            x-agp34c1g6l0j0c1q60o3ac1g:
+              label: Statement of recognised consolidated income and expense. Consolidated
+                result for the year
             x-agp34c1g6t230c1q60o30e1g:
               label: 'Other corrections to the sum of taxable bases: elimination of
                 non-exempt internal dividends of the tax group. Total'
