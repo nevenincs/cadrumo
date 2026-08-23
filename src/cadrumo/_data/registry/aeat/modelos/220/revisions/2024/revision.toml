@@ -62,68 +62,69 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the Impuesto sobre Sociedades grupo-fiscal \
 consolidated declaration. DISCLOSURE -- self-review: the same agent authored the labels \
-being repaired. THIS ITERATION AUTHORED NO NEW RECORD. It continued paying off the \
-diacritic defect this campaign introduced, moving from Spanish to Catalan. Revision \
-unchanged at 1897 casillas over thirty-seven of the design's 137 record sheets. Suite, RUN \
-SEQUENTIALLY because a parallel run raced the loader cache and reported three failures \
-that all pass in isolation: 9 failed, 5397 passed. The one arriving failure is NOT this \
-work -- test_binding_source_kind_taxonomy reports BindingSourceKind.INVENTORY declared by \
-no registry binding and absent from the deferred carve-outs, from a peer's \
-inventory-resolver commit landing during this iteration. Reported, not fixed: it is \
-another hand's work still in flight. CORRECTED -- 1790 OF THE 1879 CATALAN LABELS NOW \
-CARRY THEIR DIACRITICS, from 1879 unaccented down to 87. Spanish was repairable from the \
-design's own vocabulary because the design IS Spanish and the source of truth was still in \
-the repository. CATALAN HAS NO SUCH DONOR, so every accent here is a HAND DECISION over \
-the token inventory: 859 distinct ASCII tokens were enumerated and 146 of them decided, \
-covering 5436 occurrences. Two properties keep that honest. First, THE SAME INVARIANT AS \
-THE SPANISH PASS is asserted for every label AND for every table entry before anything is \
-rewritten -- deaccenting the result must reproduce the input EXACTLY -- so a table entry \
-can only add a diacritic and can never respell a word. Second, EVERY TABLE ENTRY MUST \
-FIRE: an entry that is never reached is removed, because a decision that is never checked \
-is the defect this campaign has now found three times, in header prose, in a hand-decision \
-table, and here. VERIFIED -- THE 87 LABELS LEFT WITHOUT A DIACRITIC CONTAIN NO \
-ACCENT-BEARING CATALAN WORD. Their 137 distinct tokens were read individually and every \
-one is correct Catalan as written. This is the end state, not a residue, and an unchanged \
-label had to be SHOWN correct rather than assumed correct, because \"the table skipped \
-it\" and \"it was already right\" are indistinguishable from outside. VERIFIED -- NO \
-CATALAN LABEL IS IDENTICAL TO ITS SPANISH, checked by value across all 1897. CORRECTED -- \
-\"hoja\" IS SPANISH AND HAD NEVER BEEN TRANSLATED, on 473 Catalan labels. It sat inside \
-the composed record prefix, which is the largest single untranslated fragment in the \
-catalogue and exactly what a parity gate counting KEYS cannot see: every key was present, \
-every value non-null, and 473 of them carried a Spanish word. This was found by \
-enumerating the token inventory, not by any gate. CORRECTED -- THE PUNT VOLAT WAS LOST \
-TWICE, to a doubled L in \"Installacions\" and to a HYPHEN in \"intel-lectual\". Neither \
-is a diacritic, so neither could be repaired by the accent pass and both are declared \
-substitutions. The Catalan ordinals were written \"1o/2o/3o\" from the Spanish; Catalan \
-takes \"1r/2n/3r\", which is NOT the masculine ordinal indicator the Spanish repair used, \
-so the same cause needed a different fix in each language. CORRECTED -- \"Es entitat\" \
-needed the accent that separates the verb from the reflexive pronoun, and \"netes mes \
-l'addicio\" needed the one that separates \"more\" from \"month\". Both tokens are ABSENT \
-from the accent table on purpose, because both senses occur in these labels and a table \
-cannot tell them apart; only the specific occurrences were changed. VERIFIED -- A DECLARED \
-FIRING COUNT CAUGHT A REAL SEQUENCING BUG in this very iteration: one substitution \
-targeted text the accent pass had already rewritten, fired ZERO times against a declared \
-one, and refused. Written without the count it would have silently done nothing and the \
-defect would have shipped looking repaired. NOT CLAIMED, AND STILL OWED -- HUNGARIAN \
-CARRIES THE SAME DEFECT AND IS NOT REPAIRED HERE. 1848 of 1897 Hungarian labels carry no \
-non-ASCII character and Hungarian requires diacritics throughout, including the long-vowel \
-pairs o-vs-o-double-acute and u-vs-u-double-acute that carry meaning. There is no donor \
-for it either, its token inventory is 1031 distinct ASCII tokens, and it is owed hand \
-work. Recorded as known-wrong, not acceptable. NOT CLAIMED -- THE .help KEYS REMAIN \
-UNAUTHORED across this entire revision in all four locales. NOT CLAIMED -- 9873 OF THE \
-11603 (record, number) SLOTS REMAIN UNMODELLED across 95 of the 134 records that carry \
-numbers; 1730 slots are modelled, zero orphaned, unchanged by this iteration. NOT CLAIMED \
--- NOTHING COMPUTES ANY OF IT. No formula, construct or binding exists anywhere in this \
-revision; two complete balance sheets sit in it and neither balances. NOT CLAIMED -- NO \
-EXPORT LAYOUT AND NO CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be filed. \
-model_law_authority_scope remains inspection_only, so this stamp is made under the LOWER \
-inspection bar and MUST be re-made if a layout lands. NOT CLAIMED -- T22009001, T22012A00 \
-and T22012A10 remain deliberately held back on unresolved ambiguities. NOT CLAIMED -- \
-LOCALES STILL UNAUDITED BY ANY SECOND PARTY: every label in all four catalogues was \
-written and now repaired by the same agent, reviewed by nobody else. All 1897 casillas \
-resolve a non-null label in es, en, ca and hu, counted by VALUE rather than by key -- and \
-this iteration is the demonstration that a non-null value can still be the wrong language. \
-NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero."""
+being repaired. THIS ITERATION AUTHORED NO NEW RECORD. It closed the diacritic defect this \
+campaign introduced, across the last two catalogues, and CORRECTED A FALSE CLAIM MADE BY \
+AN EARLIER STAMP. Revision unchanged at 1897 casillas over thirty-seven of the design's \
+137 record sheets. CORRECTED, AND THE PREVIOUS STAMP WAS WRONG -- it said English and \
+Hungarian \"compose no page reference for that record at all\". THEY DO: 473 labels each, \
+and 50 of those named page \"70\", the page that does not exist. That conclusion was \
+reached by GREPPING THE LOCALE YAML, whose long values are LINE-WRAPPED, so the pattern \
+never matched across the fold. The loaded authority was available and answers correctly. \
+Measuring a catalogue by grepping its serialised form is the error; every count in this \
+iteration is taken from the loaded labels. CORRECTED -- THE UNTRANSLATED RECORD PREFIX WAS \
+NOT A CATALAN SLIP BUT A SYSTEMATIC ONE. English and Hungarian carried BOTH Spanish words, \
+\"pag.\" and \"hoja\", on 473 labels each. An English label read \"Consolidated balance \
+sheet. Assets (pag. 3A hoja 00). Non-current assets\" -- English, English, Spanish, \
+Spanish, English. English now reads \"(page 3A sheet 00)\" and Hungarian \"(3A. oldal, 00. \
+lap)\", with the page token corrected in the same pass. NO SPANISH PAGE VOCABULARY REMAINS \
+IN ANY NON-SPANISH CATALOGUE, asserted. CORRECTED -- HUNGARIAN DIACRITICS ARE COMPLETE: \
+1848 labels without a diacritic down to ZERO, over 1879 labels rewritten, from a hand \
+table of 730 entries covering 18716 occurrences of an enumerated 1031-token inventory. \
+Hungarian is the least forgiving of the three languages: o against o-umlaut against \
+o-double-acute, and u against u-umlaut against u-double-acute, are three distinct letters \
+each and the long forms are not decorative. The same two properties as the Catalan pass \
+hold: the accent-only invariant is asserted for EVERY TABLE ENTRY BEFORE ANY LABEL IS \
+TOUCHED and again for every rewritten label, so an entry can add a diacritic and can never \
+respell a word; and every entry must FIRE or it is removed. Genuine ambiguity is refused \
+-- \"meg\"/\"meg-with-accent\" and \"fel\"/\"fel-with-accent\" are different words and \
+neither is in the table. VERIFIED -- THE ACCENT-ONLY INVARIANT CAUGHT THREE REAL \
+MISSPELLINGS AND ONE ERROR IN THE REPAIR ITSELF, before a single label was written. It \
+refused a table entry where the agent had mistyped the Hungarian, and it refused three \
+entries whose SOURCE token was misspelled rather than merely unaccented: \"eloelegek\" and \
+\"eloezetes\" carry a stray letter, and \"rafordituskimutatasa\" carries a wrong stem \
+vowel while the CORRECTLY spelled form sits in the same catalogue. An invariant written to \
+constrain a repair identified a different defect class the repair was not looking for. All \
+three were then fixed as declared substitutions with their firing counts, 57 labels, and \
+the survivors are gated on the PROPERTY -- no misspelling in any casing -- rather than on \
+a second tally. VERIFIED -- ALL 1897 CASILLAS RESOLVE A NON-NULL LABEL IN es, en, ca AND \
+hu, counted by VALUE rather than by key, and NO label in any locale is identical to its \
+Spanish. NOT CLAIMED -- 142 Spanish and 87 Catalan labels still carry no diacritic; both \
+sets were read token by token in earlier iterations and contain no accent-bearing word. \
+English correctly carries none. NOT CLAIMED -- THE LOCALES ARE COMPLETE BUT STILL \
+UNAUDITED BY ANY SECOND PARTY. Every label in all four catalogues was written, and has now \
+been repaired, by the same agent. Three separate defect classes have been found in them by \
+enumeration -- lost diacritics, untranslated Spanish, and outright misspellings -- and \
+every parity and coverage gate in the tree was green throughout all three. A NON-NULL \
+VALUE UNDER THE RIGHT KEY IS NOT EVIDENCE OF THE RIGHT LANGUAGE, and nothing in this \
+repository checks language. RECORDED -- THIS WORK WAS LOST ONCE TO A CONCURRENT WRITER AND \
+RE-APPLIED. The English and Hungarian prefix translation was written through the locale \
+CLI and verified against the loaded authority, and while a twenty-minute suite run held \
+the iteration open a peer rewrote both catalogues from an older state; the English file \
+showed no commit of its own since the previous iteration. The Hungarian diacritics, \
+written later, survived. It was re-applied and committed IMMEDIATELY by pathspec, and the \
+state above was re-verified after the commit rather than before it. Suite, RUN \
+SEQUENTIALLY: 9 failed, 5406 passed, an IDENTICAL FAILED LIST to the previous run. NOT \
+CLAIMED -- THE .help KEYS REMAIN UNAUTHORED across this entire revision in all four \
+locales. NOT CLAIMED -- 9873 OF THE 11603 (record, number) SLOTS REMAIN UNMODELLED across \
+95 of the 134 records that carry numbers; 1730 slots are modelled, zero orphaned, \
+unchanged by this iteration. NOT CLAIMED -- NOTHING COMPUTES ANY OF IT. No formula, \
+construct or binding exists anywhere in this revision; two complete balance sheets sit in \
+it and neither balances. NOT CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT MEMBERSHIP \
+CHANGE. The modelo cannot be filed. model_law_authority_scope remains inspection_only, so \
+this stamp is made under the LOWER inspection bar and MUST be re-made if a layout lands. \
+NOT CLAIMED -- T22009001, T22012A00 and T22012A10 remain deliberately held back on \
+unresolved ambiguities. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not \
+zero."""
 reviewed_at = 2026-08-23
 
 [revisions."2024".family_dispositions.casilla_continuidad_evolutions]

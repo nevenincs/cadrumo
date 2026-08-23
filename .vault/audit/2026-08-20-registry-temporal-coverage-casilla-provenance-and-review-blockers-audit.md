@@ -5381,3 +5381,91 @@ re-run is the only list this iteration trusted.
 **Hungarian: 1848 of 1897 labels carry no diacritic**, over a 1031-token inventory, with no
 donor. It needs the same hand pass, and its long-vowel pairs (`o`/`ő`, `u`/`ű`) carry
 meaning, so it is less forgiving than Catalan. Recorded as known-wrong, not acceptable.
+
+## 2026-08-23 — Hungarian, a stamp that was wrong, and an invariant that found a defect it was not looking for
+
+### What this iteration did
+
+No new record. It closed the diacritic defect across the last two catalogues and
+**corrected a false claim made by an earlier stamp**. Hungarian: 1848 labels without a
+diacritic down to **zero**.
+
+### The previous stamp was wrong, and grep is why
+
+It said English and Hungarian "compose no page reference for that record at all." **They
+do — 473 labels each, 50 of them naming page `70`**, the page that does not exist.
+
+That conclusion came from grepping the locale YAML. Its long values are **line-wrapped**,
+so the pattern never matched across the fold, and an absence in the grep output was read as
+an absence in the catalogue. The loaded authority was available the whole time and answers
+correctly.
+
+**Measuring a catalogue by grepping its serialised form measures the serialiser.** Every
+count in this iteration is taken from the loaded labels. Worth pairing with the standing
+lesson that a gate's silence is not evidence of absence: here it was *my own* silence,
+manufactured by the wrong instrument, and it went into a stamp as fact.
+
+### The untranslated prefix was systematic, not a Catalan slip
+
+English and Hungarian carried **both** Spanish words. An English label read:
+
+    Consolidated balance sheet. Assets (pag. 3A hoja 00). Non-current assets
+
+English, English, Spanish, Spanish, English — on 473 labels. Now `(page 3A sheet 00)` and
+`(3A. oldal, 00. lap)`. No Spanish page vocabulary remains in any non-Spanish catalogue,
+asserted rather than inspected.
+
+Finding it once in Catalan and not immediately asking *"which other catalogues share this
+prefix?"* is the same incomplete-sweep shape this campaign already paid for when a reading
+correction reached two of its three readers.
+
+### An invariant found a defect class it was not designed for
+
+The Hungarian table is 730 hand entries. The accent-only invariant — an entry may add a
+diacritic and never respell a word — is asserted for **every entry before any label is
+touched**. It refused four:
+
+- one where the agent had **mistyped the Hungarian** in the repair table itself;
+- three where the **source token was misspelled rather than unaccented** — `eloelegek` and
+  `eloezetes` carry a stray letter, and `rafordituskimutatasa` has a wrong stem vowel while
+  the correctly spelled form sits in the same catalogue.
+
+An invariant written to constrain a repair **identified a different defect the repair was
+not looking for**, and did it before any write. The three misspellings were then fixed as
+declared substitutions (57 labels) and gated on the *property* — no misspelling in any
+casing — rather than on a second tally. A table entry declaring "expected 0" was written
+and then removed for being exactly the unexercised claim this campaign keeps deleting.
+
+### Three defect classes, all gates green throughout
+
+Enumeration has now found three separate classes in these catalogues: **lost diacritics,
+untranslated Spanish, and outright misspellings**. Every parity and coverage gate in the
+tree was green through all three, because they check that a key exists and that a value is
+non-null.
+
+**A non-null value under the right key is not evidence of the right language.** Nothing in
+this repository checks language, and the only thing that found any of this was reading the
+token inventory.
+
+### The work was lost once, mid-iteration
+
+The English and Hungarian prefix translation was written through the locale CLI and
+verified against the loaded authority. While a **twenty-minute** sequential suite run held
+the iteration open, a peer rewrote both catalogues from an older state and the change was
+gone — the English file showed no commit of its own since the previous iteration. The
+Hungarian diacritics, written later in the same window, survived.
+
+The standing instruction is to **commit early by pathspec** precisely because a peer will
+capture or clobber work. This iteration held its changes across a long verification step
+instead, which is the one window where that instruction has teeth. Re-applied and committed
+immediately, with the final state re-verified **after** the commit rather than before it.
+
+### State
+
+All 1897 casillas resolve a non-null label in es, en, ca and hu, counted by value; no label
+in any locale is identical to its Spanish. 142 Spanish and 87 Catalan labels carry no
+diacritic and were read token by token in earlier iterations — they contain no
+accent-bearing word. English correctly carries none.
+
+The locales are complete and **still unaudited by any second party**: written and repaired
+by the same agent throughout.
