@@ -20,7 +20,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2022"]
-export_refs = ["m322-2022.page-02.f020"]
+export_refs = ["m322-2022.page-02.f021"]
 
 [[revisions."2008-2022".casillas]]
 id = "65"
@@ -535,6 +535,23 @@ source_refs = ["aeat-dr-322-2022"]
 export_refs = ["m322-2022.page-04.f063"]
 
 [[revisions."2008-2022".casillas]]
+# Box [73] is carried by the 2022 diseno and dropped by the 2023 one, so it
+# belongs to this revision alone. AEAT prints it "Operaciones no sujetas o con
+# inversion del sujeto pasivo que originan el derecho a deduccion (hasta 30 de
+# junio, resto a 0)" -- a 17-byte money slot in the Informacion adicional block,
+# grounded like its siblings [71] [72] [74] [75] on the orden establishing this modelo.
+id = "73"
+number = "73"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_informacion_adicional_operaciones_no_sujetas_o_con_inversion_del_sujeto_pasivo_que_originan_el_derecho_a_deduccion"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2022"]
+export_refs = ["m322-2022.page-02.f015"]
+
+[[revisions."2008-2022".casillas]]
 id = "74"
 number = "74"
 section = ["iva", "regimen_general", "devengado"]
@@ -544,7 +561,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2022"]
-export_refs = ["m322-2022.page-02.f015"]
+export_refs = ["m322-2022.page-02.f016"]
 
 [[revisions."2008-2022".casillas]]
 id = "75"
@@ -556,7 +573,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2022"]
-export_refs = ["m322-2022.page-02.f016"]
+export_refs = ["m322-2022.page-02.f017"]
 
 [[revisions."2008-2022".casillas]]
 id = "76"

@@ -1,7 +1,7 @@
-[[revisions.2023.export_layouts]]
-id = 'generated-modelo-322-2023-fichero'
+[[revisions.2008-2022.export_layouts]]
+id = 'generated-modelo-322-2008-2022-fichero'
 
-[[revisions.2023.export_layouts.records]]
+[[revisions.2008-2022.export_layouts.records]]
 id = 'm322-page-02'
 record_type = 'page-02'
 order = 1
@@ -9,8 +9,8 @@ encoding = 'latin-1'
 line_ending = 'crlf'
 required = true
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f001'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f001'
 offset = 1
 length = 11
 kind = 'literal'
@@ -21,10 +21,10 @@ padding = 'none'
 justification = 'none'
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f002'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f002'
 offset = 12
 length = 1
 kind = 'header'
@@ -35,10 +35,10 @@ padding = 'right_space'
 justification = 'left'
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f003'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f003'
 offset = 13
 length = 17
 kind = 'casilla'
@@ -50,10 +50,10 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f004'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f004'
 offset = 30
 length = 17
 kind = 'casilla'
@@ -65,10 +65,10 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f005'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f005'
 offset = 47
 length = 5
 kind = 'filler'
@@ -78,10 +78,10 @@ padding = 'right_space'
 justification = 'left'
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f006'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f006'
 offset = 52
 length = 17
 kind = 'casilla'
@@ -93,10 +93,10 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f007'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f007'
 offset = 69
 length = 17
 kind = 'casilla'
@@ -108,10 +108,10 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f008'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f008'
 offset = 86
 length = 17
 kind = 'casilla'
@@ -123,10 +123,10 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f009'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f009'
 offset = 103
 length = 17
 kind = 'casilla'
@@ -138,10 +138,10 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f010'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f010'
 offset = 120
 length = 17
 kind = 'casilla'
@@ -153,10 +153,10 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f011'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f011'
 offset = 137
 length = 17
 kind = 'casilla'
@@ -168,10 +168,10 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f012'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f012'
 offset = 154
 length = 17
 kind = 'casilla'
@@ -183,10 +183,10 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f013'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f013'
 offset = 171
 length = 17
 kind = 'casilla'
@@ -198,10 +198,10 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f014'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f014'
 offset = 188
 length = 17
 kind = 'casilla'
@@ -213,11 +213,26 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f015'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f015'
 offset = 205
+length = 17
+kind = 'casilla'
+casilla_id = '73'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2022']
+
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f016'
+offset = 222
 length = 17
 kind = 'casilla'
 casilla_id = '74'
@@ -228,11 +243,11 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f016'
-offset = 222
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f017'
+offset = 239
 length = 17
 kind = 'casilla'
 casilla_id = '75'
@@ -243,11 +258,11 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f017'
-offset = 239
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f018'
+offset = 256
 length = 1
 kind = 'header'
 producer_key = 'amendment_evidence.is_complementaria'
@@ -257,11 +272,11 @@ padding = 'right_space'
 justification = 'left'
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f018'
-offset = 240
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f019'
+offset = 257
 length = 13
 kind = 'header'
 producer_key = 'amendment_evidence.original_aeat_receipt'
@@ -271,11 +286,11 @@ padding = 'right_space'
 justification = 'left'
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f019'
-offset = 253
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f020'
+offset = 270
 length = 1
 kind = 'computed'
 computed_key = 'm303_no_activity_marker'
@@ -285,11 +300,11 @@ padding = 'right_space'
 justification = 'left'
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f020'
-offset = 254
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f021'
+offset = 271
 length = 5
 kind = 'casilla'
 casilla_id = '64'
@@ -300,11 +315,11 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f021'
-offset = 259
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f022'
+offset = 276
 length = 17
 kind = 'casilla'
 casilla_id = '120'
@@ -315,11 +330,11 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f022'
-offset = 276
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f023'
+offset = 293
 length = 17
 kind = 'filler'
 data_type = 'text'
@@ -328,11 +343,11 @@ padding = 'right_space'
 justification = 'left'
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f023'
-offset = 293
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f024'
+offset = 310
 length = 17
 kind = 'casilla'
 casilla_id = '122'
@@ -343,11 +358,11 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f024'
-offset = 310
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f025'
+offset = 327
 length = 17
 kind = 'casilla'
 casilla_id = '123'
@@ -358,11 +373,11 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f025'
-offset = 327
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f026'
+offset = 344
 length = 17
 kind = 'casilla'
 casilla_id = '124'
@@ -373,12 +388,12 @@ justification = 'right'
 decimals = 2
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f026'
-offset = 344
-length = 1645
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f027'
+offset = 361
+length = 1628
 kind = 'filler'
 data_type = 'text'
 required = false
@@ -386,10 +401,10 @@ padding = 'right_space'
 justification = 'left'
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-02.f027'
+[[revisions.2008-2022.export_layouts.records.fields]]
+id = 'm322-2022.page-02.f028'
 offset = 1989
 length = 12
 kind = 'literal'
@@ -400,6 +415,6 @@ padding = 'none'
 justification = 'none'
 signed = false
 legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
+source_refs = ['aeat-dr-322-2022']
 
-[revisions.2023.export_layouts.records.row_field_casilla_ids]
+[revisions.2008-2022.export_layouts.records.row_field_casilla_ids]
