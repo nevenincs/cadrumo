@@ -1,0 +1,18 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "210"
+design_epoch = "2026"
+source_ref = "aeat-dr-210-2026"
+source_sha256 = "2f86f1b95cd64a0c2d5eb3bf503052e6d3cb7f76994466a933fb2b91be2ca6c2"
+
+[[records]]
+sheet = "Página 01"
+record_identity = "Página 01"
+export_record_id = "m210-autoliquidacion"
+record_type = "autoliquidacion"
+
+[[records]]
+sheet = "Página 02"
+record_identity = "Página 02"
+export_record_id = "m210-ingreso-devolucion"
+record_type = "ingreso-devolucion"
