@@ -19,7 +19,6 @@ import json
 import shutil
 import sys
 import tempfile
-import tomllib
 import zipfile
 from pathlib import Path
 from typing import Final, cast
@@ -38,8 +37,9 @@ from dev.packaging.uv_constraints import (  # noqa: E402
 
 _MANIFEST = _HERE / "manifest.json"
 _UTF_8: Final[str] = "utf-8"
-_DISTRIBUTIONS: Final[tuple[str, str, str]] = (
+_DISTRIBUTIONS: Final[tuple[str, str, str, str]] = (
     "cadrumo",
+    "cadrumo-harness",
     "cadrumo-data-manuals",
     "cadrumo-data-official",
 )
@@ -47,7 +47,6 @@ _DISTRIBUTIONS: Final[tuple[str, str, str]] = (
 #: versioned independently of the command/data cohort, so the bundle reads its
 #: version from its own project rather than reusing ``cohort.version``.
 _HARNESS_DISTRIBUTION: Final[str] = "cadrumo-harness"
-_HARNESS_PYPROJECT: Final[Path] = _REPO_ROOT / "src" / "cadrumo-harness" / "pyproject.toml"
 _MCP_LAUNCHER: Final[str] = "uv"
 _CONSOLE_SCRIPT: Final[str] = "cadrumo-mcp"
 _REQUIRED_VERSION_ENV: Final[str] = "CADRUMO_MCP_REQUIRED_VERSION"
@@ -365,20 +364,8 @@ def load_cohort(cohort_dir: Path) -> PythonCohort:
         raise ManifestError(f"invalid Python cohort: {exc}") from exc
 
 
-def _product_wheels(cohort: PythonCohort) -> tuple[Path, Path, Path]:
-    return (cohort.root_wheel, cohort.manuals_wheel, cohort.official_wheel)
-
-
-def harness_version() -> str:
-    """Read the sibling agent-harness distribution's own declared version."""
-    try:
-        document = tomllib.loads(_HARNESS_PYPROJECT.read_text(encoding=_UTF_8))
-    except (OSError, tomllib.TOMLDecodeError) as exc:
-        raise ManifestError(f"could not read {_HARNESS_DISTRIBUTION} version: {exc}") from exc
-    version = document.get("project", {}).get("version")
-    if not isinstance(version, str) or not version:
-        raise ManifestError(f"{_HARNESS_PYPROJECT} declares no project.version")
-    return version
+def _product_wheels(cohort: PythonCohort) -> tuple[Path, Path, Path, Path]:
+    return cohort.product_wheels
 
 
 def _product_sha256(cohort: PythonCohort) -> dict[str, str]:
@@ -430,7 +417,7 @@ def load_manifest() -> dict[str, object]:
     compatibility = data.get("compatibility")
     if compatibility != {"runtimes": {"python": ">=3.13,<3.14"}}:
         raise ManifestError("manifest compatibility must claim only the tested Python runtime range")
-    return data
+    return cast("dict[str, object]", data)
 
 
 def stamped_manifest(cohort: PythonCohort) -> dict[str, object]:
@@ -474,16 +461,11 @@ def runtime_pyproject(
             strict=True,
         ),
     )
-    # ``cadrumo-harness`` carries the ``cadrumo-mcp`` console script this bundle
-    # launches; it depends on ``cadrumo``, which the ``[tool.uv.sources]`` block
-    # below still resolves to the embedded, digest-verified wheel. The harness is
-    # NOT a member of the retained Python cohort, so it has no embedded wheel and
-    # no digest pin here: the first-launch ``uv sync`` resolves it from the
-    # configured index. Embedding it requires enrolling it in the cohort.
+    # Every product dependency resolves to an embedded, digest-verified cohort wheel.
     dependencies = "\n".join(
         (
             f'  "cadrumo=={cohort.version}",',
-            f'  "{_HARNESS_DISTRIBUTION}=={harness_version()}",',
+            f'  "{_HARNESS_DISTRIBUTION}=={cohort.harness_version}",',
             f'  "cadrumo-data-manuals=={cohort.version}",',
             f'  "cadrumo-data-official=={cohort.version}",',
         ),

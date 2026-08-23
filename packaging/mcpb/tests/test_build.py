@@ -477,13 +477,14 @@ def test_canonical_cohort_renders_bundle_local_sources(real_cohort: Path) -> Non
     project = tomllib.loads(BUILD.runtime_pyproject(cohort))
     assert project["project"]["dependencies"] == [
         f"cadrumo=={cohort.version}",
-        f"cadrumo-harness=={BUILD.harness_version()}",
+        f"cadrumo-harness=={cohort.harness_version}",
         f"cadrumo-data-manuals=={cohort.version}",
         f"cadrumo-data-official=={cohort.version}",
     ]
     sources = project["tool"]["uv"]["sources"]
     expected = {
         "cadrumo": cohort.root_wheel,
+        "cadrumo-harness": cohort.harness_wheel,
         "cadrumo-data-manuals": cohort.manuals_wheel,
         "cadrumo-data-official": cohort.official_wheel,
     }
@@ -507,12 +508,14 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
     assert bundle.name == f"cadrumo-{cohort.version}.mcpb"
     expected_wheels = {
         cohort.root_wheel.name: cohort.root_wheel,
+        cohort.harness_wheel.name: cohort.harness_wheel,
         cohort.manuals_wheel.name: cohort.manuals_wheel,
         cohort.official_wheel.name: cohort.official_wheel,
     }
     with zipfile.ZipFile(bundle) as archive:
         assert archive.namelist() == [
             f"artifacts/{cohort.root_wheel.name}",
+            f"artifacts/{cohort.harness_wheel.name}",
             f"artifacts/{cohort.manuals_wheel.name}",
             f"artifacts/{cohort.official_wheel.name}",
             "constraints.txt",

@@ -80,7 +80,7 @@ def release_cohort(
                         continue
                     if item.as_posix().endswith(".pyc") or "/__pycache__/" in item.as_posix():
                         continue
-                    source = distribution.locate_file(item)
+                    source = Path(str(distribution.locate_file(item)))
                     if source.is_file():
                         archive.write(source, item.as_posix())
                 if payload_suffix:
