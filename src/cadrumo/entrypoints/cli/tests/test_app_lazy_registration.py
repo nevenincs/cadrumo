@@ -39,6 +39,7 @@ def _app_nodes(root: typer.Typer) -> tuple[LiveCommandNode, ...]:
 
 def _require_exact_targets(nodes: tuple[LiveCommandNode, ...]) -> None:
     records = {record.path: record for record in APP_COMMAND_RECORDS}
+    assert {node.path[2:] for node in nodes} == set(records)
     for node in nodes:
         relative = node.path[2:]
         record = records.get(relative)
@@ -74,7 +75,7 @@ def test_complete_live_app_tree_is_generated_nested_lazy_and_path_owned() -> Non
 
 
 def test_generated_four_locale_source_manifest_is_current() -> None:
-    completed = subprocess.run(  # noqa: S603 - repository-owned generator with fixed argv
+    completed = subprocess.run(
         [sys.executable, "dev/quality/generate_app_lazy_manifest.py", "--check"],
         check=False,
         capture_output=True,

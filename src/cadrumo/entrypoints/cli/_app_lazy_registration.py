@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import json
 import inspect
+import json
 from dataclasses import dataclass
 from functools import cache
 from importlib import import_module, resources
@@ -90,7 +90,6 @@ def _load_records() -> tuple[AppCommandRecord, ...]:
 
 APP_COMMAND_RECORDS = _load_records()
 APP_COMMAND_TARGETS: dict[AppPath, AppCommandTarget] = {}
-DIAGNOSTIC_EAGER_SOURCE_PATHS: set[AppPath] = set()
 REGISTRAR_SOURCE_PATHS: set[AppPath] = set()
 _RECORD_BY_PATH = {record.path: record for record in APP_COMMAND_RECORDS}
 
@@ -213,50 +212,16 @@ def _find_command_info(module: object, record: AppCommandRecord) -> typer.models
     return next(iter(unique.values()))
 
 
-def _find_source_command_info(record: AppCommandRecord) -> typer.models.CommandInfo:
-    modules = {
-        "diagnostics": "cadrumo.entrypoints.cli._app_diagnostics",
-        "ledger": "cadrumo.entrypoints.cli._ledger",
-        "live": "cadrumo.entrypoints.cli._app_live",
-        "maintenance": "cadrumo.entrypoints.cli._app_maintenance",
-        "modelo": "cadrumo.entrypoints.cli._modelo",
-        "overview": "cadrumo.entrypoints.cli._overview",
-        "registry": "cadrumo.entrypoints.cli.registry",
-        "review": "cadrumo.entrypoints.cli._review",
-    }
-    source = import_module(modules[record.path[0]])
-    app = cast(typer.Typer, getattr(source, "app"))
-    current = app
-    for token in record.path[1:-1]:
-        group = next((group for group in current.registered_groups if _mounted_group_name(group) == token), None)
-        if group is None or group.typer_instance is None:
-            raise RuntimeError(f"source group is absent at {' '.join(record.path)!r}")
-        current = group.typer_instance
-    info = next(
-        (
-            info
-            for info in current.registered_commands
-            if _command_name(info) == record.path[-1] and _callback_owner(info.callback) == record.handler_owner
-        ),
-        None,
-    )
-    if info is None:
-        raise RuntimeError(f"source command is absent for {' '.join(record.path)!r}")
-    return info
-
-
 def _find_registrar_command_info(module: object, record: AppCommandRecord) -> typer.models.CommandInfo:
     if record.path[0] not in {"ledger", "live", "modelo"}:
-        DIAGNOSTIC_EAGER_SOURCE_PATHS.add(record.path)
-        return _find_source_command_info(record)
+        raise RuntimeError(f"command has no owned module target: {' '.join(record.path)!r}")
     host = _registrar_source_app(record.handler_owner.partition(":")[0], record.path[0])
     for current in _walk_typer_apps(host):
         for command in current.registered_commands:
             if _callback_owner(command.callback) == record.handler_owner and _command_name(command) == record.path[-1]:
                 REGISTRAR_SOURCE_PATHS.add(record.path)
                 return command
-    DIAGNOSTIC_EAGER_SOURCE_PATHS.add(record.path)
-    return _find_source_command_info(record)
+    raise RuntimeError(f"registrar command is absent for {' '.join(record.path)!r}")
 
 
 @cache
@@ -348,13 +313,6 @@ def _registration_dependency(family: str, name: str) -> object | None:
     return _DeferredRegistrationDependency(root_modules[family], attribute)
 
 
-def _mounted_group_name(group: typer.models.TyperInfo) -> str | None:
-    if isinstance(group.name, str):
-        return group.name
-    child = group.typer_instance
-    return None if child is None else child.info.name
-
-
 def _module_typer_apps(module: object) -> tuple[typer.Typer, ...]:
     return tuple(value for value in vars(module).values() if isinstance(value, typer.Typer))
 
@@ -387,7 +345,10 @@ def _command_name(info: typer.models.CommandInfo) -> str | None:
     if info.name is not None and not isinstance(info.name, DefaultPlaceholder):
         return cast(str, info.name)
     callback = info.callback
-    return None if callback is None else callback.__name__.replace("_", "-")
+    if callback is None:
+        return None
+    name = getattr(callback, "__name__", None)
+    return str(name).replace("_", "-") if isinstance(name, str) else None
 
 
 @cache
