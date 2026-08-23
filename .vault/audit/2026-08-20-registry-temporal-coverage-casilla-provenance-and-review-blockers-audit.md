@@ -5226,3 +5226,82 @@ what makes it a rule rather than an accident.
 
 **9873 of 11603 slots remain** across 95 of 134 numbered records; 1730 modelled, zero
 orphaned. Corpus re-derivation after the record landed: **zero problems**.
+
+## 2026-08-23 — paying off the accent defect, and what the corpus could and could not repair
+
+### What this iteration did instead of a record
+
+No new record. The previous iteration found that **1739 of this revision's 1897 Spanish
+labels were missing their accents** — the mandatory source locale, on filing-grade operator
+labels — and recorded it as owed. Paying that off outranked adding a thirty-eighth record.
+Suite: **identical FAILED list, zero regressions.**
+
+### The corpus could restore the accents, because the corpus is where they came from
+
+**1582 labels repaired, and not one accent invented.** The rule is the campaign's usual
+one — ground the repair in the workbook's own vocabulary — applied to spelling:
+
+- a token whose deaccented form has exactly **one** spelling in the design takes it;
+- a token whose deaccented form has **more than one** is refused;
+- a token the design does not contain is left alone.
+
+9255 distinct deaccented tokens, **28 ambiguous**. 100 distinct tokens accented over 4501
+occurrences.
+
+The property that makes this safe is asserted for **every single label**: deaccenting the
+result must reproduce the input *exactly*. Nothing but accents can change — no word added,
+dropped, reordered or respelled. That is a much stronger guarantee than reading the diff,
+and it is checkable on all 1582.
+
+**Independently of that invariant**, 428 of the 460 labels belonging to flat-generated
+records now end — case aside — in exactly the accented text the generator derived from
+AEAT *by a different route*. Two paths to the same string is evidence the invariant alone
+cannot give. The 32 exceptions are all T22007000's documented abbreviation expansions.
+
+### Refusing was the point, not a limitation
+
+`o`/`ó`, `si`/`sí`, `solo`/`sólo` are **different words**, and the design attests both. The
+pass refuses every ambiguous token not decided by hand, and 20 were decided with their
+reason and evidence recorded. One — `electronico`, which the design prints both ways once
+each — is decided on Spanish orthography and **recorded as a decision rather than as a
+count**, because a 1–1 tally is not evidence and should not be dressed as any.
+
+Five hand decisions **never fired and were removed**. A decision that is never reached is
+a claim that stopped being checked — precisely the defect the previous iteration found in
+the header prose. Applying that lesson to the fix for the *previous* lesson is the point:
+the failure mode recurs in whatever form is currently convenient.
+
+### The 157 that stayed unaccented are the answer, not the residue
+
+Of their 1711 tokens, 1617 are attested unaccented in the design and 94 are absent from
+it — all 94 correctly unaccented Spanish. **An unchanged label had to be shown correct,
+not assumed correct**, because "the tool left it alone" and "it was already right" look
+identical from the outside.
+
+### Two defects the accent pass surfaced by accident
+
+**Fifty labels named a page that does not exist.** The record prefix joins página and letra
+from the envelope; T22007000 declares página `07` and letra `0`, so the prefix read
+`pág. 70`. Every other record has an **alphabetic** letra where the join is unambiguous —
+which is why a formatting rule that was wrong from the first record stayed invisible until
+a record with a numeric letra was authored. Fixed in es and ca, and fixed at the cause.
+
+**AEAT writes the masculine ordinal indicator** in `1º pago fraccionado`; fifteen labels
+carried an ASCII `o`. The same `isascii()` rule, costing one more character than anyone had
+counted.
+
+Both repairs declared their expected firing count and were asserted against it — the
+discipline that caught a substitution reaching text it was not meant to touch earlier in
+this campaign.
+
+### What is still wrong
+
+**Catalan and Hungarian carry the same defect and are not repaired.** 1879 of 1897 Catalan
+labels and 1848 of 1897 Hungarian labels contain no non-ASCII character at all, and both
+languages need diacritics throughout. **There is no design donor for them** — the workbook
+is Spanish — so the mechanical route that worked here does not exist, and hand
+re-accenting is owed. Recorded as known-wrong, not as acceptable.
+
+That asymmetry is worth stating plainly: the Spanish was repairable *because the source of
+truth was still in the repository*. The other two languages were only ever in the author's
+head, and there is nothing to check them against.
