@@ -29,7 +29,6 @@ on:
       - ".gemini/**"
       - ".agents/**"
       - "docs/**"
-      - "frontend/**"
       - "**.md"
   # SAME-REPO pull_request only: fork PRs must never reach the self-hosted
   # fleet (see ci.yml). Today's flow is direct-push; this trigger gives a
@@ -45,7 +44,6 @@ on:
       - ".gemini/**"
       - ".agents/**"
       - "docs/**"
-      - "frontend/**"
       - "**.md"
 
 # Main pushes must produce a completed packaging signal. GitHub concurrency

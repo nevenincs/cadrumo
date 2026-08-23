@@ -64,6 +64,7 @@ from ..packaging.evidence import (
     PackagingSmokeManifest,
     load_distribution_evidence,
 )
+from ..packaging.python_cohort import load_python_cohort
 
 _UTF_8: Final = UTF_8
 _VERSION_RE: Final = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
@@ -158,7 +159,7 @@ def _read_init_version(repo_root: Path) -> str:
     match = _VERSION_RE.search(text)
     if not match:
         return ""
-    return match.group(1)
+    return str(match.group(1))
 
 
 def _read_manifest_version(repo_root: Path) -> str:
@@ -581,19 +582,15 @@ def check_generated_surface_versions(
     name = "generated-surface-versions"
     cohort_root = (cohort_directory or repo_root / "var" / "release-cohort").resolve()
     manifest_path = cohort_root / "release-cohort.json"
-    python_cohort_path = cohort_root / "python" / "python-cohort.json"
     try:
         cohort_manifest = _require_json_object(
             json.loads(manifest_path.read_text(encoding=_UTF_8)),
             surface="release cohort manifest",
         )
         version = str(cohort_manifest["version"])
-        python_cohort = _require_json_object(
-            json.loads(python_cohort_path.read_text(encoding=_UTF_8)),
-            surface="python cohort manifest",
-        )
-        python_sha = _require_json_object(python_cohort["sha256"], surface="python cohort digest map")
-    except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
+        python_cohort = load_python_cohort(cohort_root / "python")
+        python_sha = python_cohort.sha256
+    except (OSError, json.JSONDecodeError, KeyError, ValueError, SystemExit) as exc:
         return ReadinessCheck(
             name, "blocking", False, f"cohort version/digest surfaces unreadable under {cohort_root}: {exc}"
         )

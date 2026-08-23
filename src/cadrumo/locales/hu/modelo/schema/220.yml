@@ -1313,6 +1313,65 @@ modelo:
             x-agp34c1g6d230chq60o3ecpl:
               label: Konszolidalt merleg. Sajat toke (pag. 3D hoja 02). Sajat forrasok.
                 Eredmenytartalekok. Kiegyenlitesi tartalek
+            x-agp34c1g6h130chq60o34dpn:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai
+            x-agp34c1g6h130chq60o34dpo:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. Befektetések kezelési költségei
+            x-agp34c1g6h130chq60o34dpp:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. Befektetések kezelési költségei. A tárgyi
+                eszközök és az ingatlanbefektetések ráfordításai
+            x-agp34c1g6h130chq60o34e1g:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. Befektetések kezelési költségei. Befektetések
+                és pénzügyi számlák ráfordításai
+            x-agp34c1g6h130chq60o34e1h:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései
+            x-agp34c1g6h130chq60o34e1i:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései.
+                A tárgyi eszközök és az ingatlanbefektetések értékcsökkenése
+            x-agp34c1g6h130chq60o34e1j:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései.
+                A tárgyi eszközök és az ingatlanbefektetések értékvesztése
+            x-agp34c1g6h130chq60o34e1k:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései.
+                Pénzügyi befektetések értékvesztése
+            x-agp34c1g6h130chq60o34e1l:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. A tárgyi eszközökből és a befektetésekből
+                származó veszteségek
+            x-agp34c1g6h130chq60o34e1m:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. A tárgyi eszközökből és a befektetésekből
+                származó veszteségek. Tárgyi eszközökből és ingatlanbefektetésekből
+            x-agp34c1g6h130chq60o34e1n:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. A tárgyi eszközökből és a befektetésekből
+                származó veszteségek. Pénzügyi befektetésekből
+            x-agp34c1g6h130chq60o34e1o:
+              label: Nem-életbiztosítási technikai számla. Részösszeg (A nem-életbiztosítási
+                technikai számla eredménye)
+            x-agp34c1g6h130chq60o3cd9m:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. Konszolidált társaságokban lévő részesedések
+                elidegenítéséből származó veszteségek
+            x-agp34c1g6h130chq60o3ec1p:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. A konszolidációba bevont entitások ráfordításai
+            x-agp34c1g6h130chq60o3ec9g:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. Részesedés a tőkemódszerrel elszámolt entitások
+                veszteségeiből
+            x-agp34c1g6h130chq60o3ec9h:
+              label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
+                befektetések ráfordításai. Tőkemódszerrel elszámolt társaságokban
+                lévő részesedések elidegenítéséből származó veszteségek
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.

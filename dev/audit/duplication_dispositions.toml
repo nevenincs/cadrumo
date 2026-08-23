@@ -66,8 +66,10 @@ count_is_advisory = true
 #     tree only, so the tooling that gates the product has never been measured
 #     by it. A direct run over `dev/` observed 2 clone groups. The CloudFront
 #     invalidate-and-wait pair (deploy/docs_static_site.py +
-#     frontend_static_site.py) was substitutable and is consolidated. The
-#     remaining one is the argparse main() emit tail shared by
+#     frontend_static_site.py) was substitutable and was consolidated; that
+#     pairing has since dissolved on its own, the landing publisher having left
+#     with the website for the cadrumo-marketing repository. The remaining group
+#     is the argparse main() emit tail shared by
 #     packaging/installed_mcp_oracle.py and installed_tax_oracle.py: two
 #     separate console entry points whose only shared tail is
 #     parse-run-dump-print, left as advisory residue. Named here rather than

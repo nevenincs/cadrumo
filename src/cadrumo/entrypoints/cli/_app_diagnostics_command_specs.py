@@ -105,7 +105,12 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "group",
         _key("cli.diagnostics.app_help"),
         None,
-        InvocationSpec(invoke_without_command=True, no_args_is_help=True, context_parameter="ctx"),
+        InvocationSpec(
+            invoke_without_command=True,
+            no_args_is_help=True,
+            context_parameter="ctx",
+            terminal_behavior="introspection",
+        ),
         (),
         _READ,
         LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_diagnostics", "diagnostics_root")),

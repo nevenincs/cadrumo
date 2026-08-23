@@ -825,6 +825,21 @@ def detach_run_sink(sink: logging.Handler) -> None:
     sink.flush()
 
 
+_configuration_deferred = False
+
+
+def defer_logging_configuration() -> None:
+    """Keep CLI parse/preflight state-free until dispatch is authorized."""
+    global _configuration_deferred
+    _configuration_deferred = True
+
+
+def resume_logging_configuration() -> None:
+    """Release a prior startup deferral without configuring by itself."""
+    global _configuration_deferred
+    _configuration_deferred = False
+
+
 def get_logger(name: str) -> logging.Logger:
     """Return a configured logger for the given module name.
 
@@ -840,7 +855,8 @@ def get_logger(name: str) -> logging.Logger:
     Returns:
         A configured logging.Logger instance.
     """
-    configure_logging()
+    if not _configuration_deferred:
+        configure_logging()
     logger = logging.getLogger(name)
     if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in logger.filters):
         logger.addFilter(SecretScrubbingFilter())

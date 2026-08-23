@@ -123,7 +123,7 @@ dependencies = [
 ]
 
 [project.scripts]
-aeat = "cadrumo.entrypoints.cli:main"
+aeat = "cadrumo.entrypoints._cli_main:main"
 
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"

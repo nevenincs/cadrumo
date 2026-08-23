@@ -55,6 +55,21 @@ def test_registry_destination_candidates_have_one_census_owner() -> None:
     assert len(destination_ids) == len(set(destination_ids))
 
 
+def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
+    manifest = load_source_connectivity_census()
+    inventory = next(entry for entry in manifest.entries if entry.candidate_id == "inventory.stock-valuation")
+
+    assert inventory.disposition.value == "connect_candidate"
+    assert "prerequisites are complete" in inventory.review_condition
+    assert "S39" in inventory.review_condition
+    assert "complete acquisition cost" not in inventory.review_condition
+    assert "explicit-closing authority remain blocking" not in inventory.review_condition
+    summaries = " ".join(item.summary for item in inventory.grounding)
+    assert "schema-v3" in summaries
+    assert "0181" in summaries
+    assert "missing resolver" in summaries
+
+
 def test_registry_destination_candidates_resolve_against_live_authority() -> None:
     manifest = load_source_connectivity_census()
 

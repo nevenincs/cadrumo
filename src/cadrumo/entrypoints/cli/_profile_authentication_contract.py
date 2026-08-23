@@ -54,7 +54,9 @@ def root_profile_secret_model() -> type[MachineSecretPayload]:
 def profile_authentication_posture(node: CommandSpecNode) -> ProfileAuthenticationPosture:
     """Derive one leaf's root-gate posture from graph and exemption authority."""
     spec = node.spec
-    if spec.kind == "root" or (spec.kind != "leaf" and spec.handler is None):
+    if spec.kind == "root" or (
+        spec.kind != "leaf" and spec.invocation.terminal_behavior != "executable"
+    ):
         return ProfileAuthenticationPosture.NOT_APPLICABLE
     if spec.profile_authentication is ProfileAuthenticationPosture.SELF_AUTHENTICATING:
         return ProfileAuthenticationPosture.SELF_AUTHENTICATING

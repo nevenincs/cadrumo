@@ -31,6 +31,7 @@ class ArtifactKind(StrEnum):
     PYTHON_WHEEL = "python-wheel"
     PYTHON_SDIST = "python-sdist"
     PYTHON_MANIFEST = "python-manifest"
+    PYTHON_SOURCE_ARCHIVE = "python-source-archive"
     CLAUDE_PLUGIN = "claude-plugin"
     CLAUDE_MARKETPLACE = "claude-marketplace"
     MCPB = "mcpb"
@@ -151,6 +152,7 @@ REQUIRED_ARTIFACT_KINDS: Final[dict[str, ArtifactKind]] = {
     "cadrumo-data-official-wheel": ArtifactKind.PYTHON_WHEEL,
     "cadrumo-sdist": ArtifactKind.PYTHON_SDIST,
     "cadrumo-wheel": ArtifactKind.PYTHON_WHEEL,
+    "cadrumo-source-archive": ArtifactKind.PYTHON_SOURCE_ARCHIVE,
     "claude-marketplace": ArtifactKind.CLAUDE_MARKETPLACE,
     "claude-plugin": ArtifactKind.CLAUDE_PLUGIN,
     "homebrew-formula": ArtifactKind.HOMEBREW_FORMULA,

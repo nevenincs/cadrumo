@@ -624,7 +624,24 @@ def expected_wheel_data_paths(repo_root: Path) -> set[str]:
     data-budget wheel boundary (tests serve no installed consumer) and are
     likewise legitimately absent.
     """
-    tracked = tracked_source_data_paths(repo_root)
+    return _expected_wheel_data_paths(repo_root, tracked_source_data_paths(repo_root))
+
+
+def expected_wheel_data_paths_from_source_tree(source_root: Path) -> set[str]:
+    """Derive wheel data expectations solely from one sealed extracted source tree."""
+    data_root = source_root / _SOURCE_DATA_PREFIX.removesuffix("/")
+    tracked = {
+        path.relative_to(source_root).as_posix()
+        for path in scan_directory(data_root, recursive=True)
+        if path.is_file()
+    }
+    if not tracked:
+        raise SystemExit(f"sealed source tree has no shipped data under {data_root}")
+    return _expected_wheel_data_paths(source_root, tracked)
+
+
+def _expected_wheel_data_paths(repo_root: Path, tracked: set[str]) -> set[str]:
+    """Project one already-sealed source-data inventory into wheel member paths."""
     suffixes = _configured_corpus_binary_suffixes(repo_root)
     split_owned = {path for path in tracked if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
     _assert_split_files_have_companion_owners(repo_root, split_owned)
@@ -792,14 +809,12 @@ def assert_cadrumo_version_output(version: CommandResult, *, context: str) -> No
 def build_wheel(repo_root: Path, work_dir: Path, uv: str, *, build_root: Path) -> Path:
     """Build the Cadrumo wheel into the smoke work directory.
 
-    ``build_root`` is the tree the wheel is built FROM and is required rather
-    than defaulted: the expectations below come from ``git ls-files`` at HEAD,
-    so building from a working tree that carries uncommitted peer edits makes
-    artifact and expectation disagree for reasons outside this lane. Pass a
-    :func:`head_extract` tree. ``repo_root`` stays the real repository, because
-    the tracked-data queries need Git and the extract has no ``.git``.
+    ``build_root`` is both the tree the wheel is built from and the authority
+    for its expected shipped-data inventory. It must be a sealed source extract;
+    consulting ``repo_root`` for that inventory would reintroduce dirty shared
+    worktree bytes into an otherwise isolated artifact proof.
     """
-    expected_data_paths = expected_wheel_data_paths(repo_root)
+    expected_data_paths = expected_wheel_data_paths_from_source_tree(build_root)
     wheel_dir = work_dir / "wheel"
     wheel_dir.mkdir(parents=True, exist_ok=True)
     run_checked([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=build_root)

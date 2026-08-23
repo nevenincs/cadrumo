@@ -51,6 +51,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             add_help_option=False,
             add_completion=True,
             context_parameter="ctx",
+            terminal_behavior="introspection",
         ),
         parameters=(
             OptionSpec(
@@ -73,7 +74,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declarations=("--profile-secrets-stdin",),
                 value=_BOOL,
                 default=ParameterDefault.value(False),
-                help_key=TranslationKey("cli.config.custody.secrets_stdin_help"),
+                help_key=TranslationKey("cli.config.custody.profile_secrets_stdin_help"),
                 is_flag=True,
                 profile_secret_channel=ProfileSecretChannelKind.STDIN,
             ),
@@ -82,7 +83,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declarations=("--profile-secrets-fd",),
                 value=_INT,
                 default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.config.custody.secrets_fd_help"),
+                help_key=TranslationKey("cli.config.custody.profile_secrets_fd_help"),
                 profile_secret_channel=ProfileSecretChannelKind.FILE_DESCRIPTOR,
             ),
             OptionSpec(
@@ -170,6 +171,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             invoke_without_command=True,
             add_help_option=False,
             context_parameter="ctx",
+            terminal_behavior="introspection",
         ),
         parameters=(
             OptionSpec(
@@ -202,6 +204,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             add_help_option=False,
             add_completion=True,
             context_parameter="ctx",
+            terminal_behavior="introspection",
         ),
         parameters=(
             OptionSpec(

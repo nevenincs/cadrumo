@@ -491,6 +491,7 @@ class InvocationSpec:
     hidden: bool = False
     deprecated_key: TranslationKey | None = None
     context_parameter: str | None = None
+    terminal_behavior: Literal["introspection", "executable"] | None = None
 
     def __post_init__(self) -> None:
         if self.context_parameter is not None:
@@ -569,6 +570,12 @@ class CommandSpec:
             raise ValueError("non-executable groups cannot declare callback parameters")
         if self.invocation.invoke_without_command and self.handler is None:
             raise ValueError("executable root/group must declare a handler binding")
+        if self.invocation.invoke_without_command and self.invocation.terminal_behavior is None:
+            raise ValueError("invoke-without-command nodes must classify terminal behavior")
+        if not self.invocation.invoke_without_command and self.invocation.terminal_behavior is not None:
+            raise ValueError("non-terminal nodes cannot classify terminal behavior")
+        if self.invocation.terminal_behavior == "executable" and self.invocation.context_parameter is None:
+            raise ValueError("terminal executable groups require an invocation context")
         if not self.invocation.invoke_without_command and self.kind != "leaf" and self.handler is not None:
             raise ValueError("metadata-only root/group cannot declare a handler binding")
         parameter_names = tuple(parameter.name for parameter in self.parameters)

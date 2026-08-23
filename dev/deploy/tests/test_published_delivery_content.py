@@ -1,17 +1,20 @@
 """Post-publish verification reads what landed, not just that something answered.
 
-Both publishers verified delivery with HTTP status codes alone. A status cannot
+The publisher verified delivery with HTTP status codes alone. A status cannot
 distinguish a working root from a broken one: a docs root serving a record-free
-search index answers 200 on every checked URL, and a landing page whose bundles
-are missing answers 200 while rendering blank. This is the layer that is
+search index answers 200 on every checked URL. This is the layer that is
 supposed to confirm the thing that actually LANDED is correct, and it could only
 confirm that something replied.
 
-The artefacts here are real. The docs half builds two genuine Pagefind indexes —
-one with injected records, one without — and serves each as the published entry.
-The landing half reads a real built ``index.html`` when one exists. The network
-read is injected rather than faked at the socket, so the HTTPS guard on the
-production fetch stays intact and the comparison is still exercised end to end.
+The artefacts here are real: two genuine Pagefind indexes are built — one with
+injected records, one without — and each is served as the published entry. The
+network read is injected rather than faked at the socket, so the HTTPS guard on
+the production fetch stays intact and the comparison is still exercised end to
+end.
+
+This module covered both publishers until the website was rehomed to the
+cadrumo-marketing repository. The landing-page half — the bundle-reference
+comparison — moved there with it; what remains is the documentation half.
 """
 
 from __future__ import annotations
@@ -31,10 +34,6 @@ from ..docs_static_site import (
     _assert_served_index_matches_build,
     _localized_languages,
     _verify_published_search_index,
-)
-from ..frontend_static_site import (
-    _referenced_asset_names,
-    _verify_published_landing_page,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -153,49 +152,3 @@ def test_every_published_root_is_checked_not_only_the_default(tmp_path: Path) ->
         assert any(f"/{language}/pagefind/pagefind-entry.json" in url for url in requested), (
             f"the {language!r} root's own published index was never read: {requested}"
         )
-
-
-def test_a_served_page_missing_the_built_bundles_is_refused(tmp_path: Path) -> None:
-    """Landing page: a 200 that references different bundles is not the built page."""
-    dist = tmp_path / "dist"
-    dist.mkdir()
-    (dist / "index.html").write_text(
-        '<html><head><link rel="stylesheet" href="/assets/index-abc123.css">'
-        '<script src="/assets/index-abc123.js"></script></head><body></body></html>',
-        encoding="utf-8",
-    )
-
-    stale = '<html><head><script src="/assets/index-OLD999.js"></script></head><body></body></html>'
-    with pytest.raises(SystemExit) as excinfo:
-        _verify_published_landing_page(dist, base_url="https://example.invalid", fetch=lambda _url: stale.encode())
-    assert "index-abc123.js" in str(excinfo.value)
-
-    served = (dist / "index.html").read_text(encoding="utf-8")
-    _verify_published_landing_page(dist, base_url="https://example.invalid", fetch=lambda _url: served.encode())
-
-
-def test_a_page_referencing_no_bundles_refuses_rather_than_vacuously_passing(tmp_path: Path) -> None:
-    """An index.html with no asset references would make the comparison empty.
-
-    An empty expected set is satisfied by any served document at all, so the
-    check must refuse instead of reporting success on a comparison it cannot
-    make.
-    """
-    dist = tmp_path / "dist"
-    dist.mkdir()
-    (dist / "index.html").write_text("<html><body>no bundles here</body></html>", encoding="utf-8")
-
-    with pytest.raises(SystemExit) as excinfo:
-        _verify_published_landing_page(dist, base_url="https://example.invalid", fetch=lambda _url: b"anything")
-    assert "references no bundled assets" in str(excinfo.value)
-
-
-def test_the_asset_reference_reader_finds_real_bundle_names() -> None:
-    """Positive control on the regex: it matches the shapes a build emits."""
-    page = (
-        '<link rel="modulepreload" href="/assets/vendor-9f8e7d.js">'
-        '<script type="module" src="./assets/index-a1b2c3.js"></script>'
-        '<link rel="stylesheet" href="assets/index-d4e5f6.css">'
-    )
-    assert _referenced_asset_names(page) == {"vendor-9f8e7d.js", "index-a1b2c3.js", "index-d4e5f6.css"}
-    assert _referenced_asset_names("<html><body>nothing</body></html>") == frozenset()

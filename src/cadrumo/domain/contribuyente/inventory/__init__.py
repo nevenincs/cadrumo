@@ -11,18 +11,20 @@ Public functions:
     :class:`ValuationMethod`, refusing LIFO.
     :func:`compute_inventory_valuation` — value closing stock and
     COGS for one ledger.
-    :func:`compute_inventory_anexo_d_projection` — split the 2025
-    stock variation between casillas ``0177`` and ``0182``.
+    :func:`compute_inventory_anexo_d_projection` — project complete 2025
+    acquisition cost and stock variation to ``0181``, ``0177``, and ``0182``.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from dataclasses import fields as dataclass_fields
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationError, ValidationInfo, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.errors import CadrumoError as _CadrumoError
@@ -889,6 +891,9 @@ class InventoryLedger(BaseModel):
     @model_validator(mode="after")
     def _opening_stock_matches_layers(self) -> InventoryLedger:
         """Enforce that ``opening_layers`` value-balances with ``opening_stock``."""
+        movement_ids = tuple(movement.movement_id for movement in self.period_movements)
+        if len(set(movement_ids)) != len(movement_ids):
+            raise InventoryValidationError("inventory ledger movement_id values must be unique")
         if self.opening_layers and _quantize(_layers_value(self.opening_layers)) != _quantize(self.opening_stock):
             raise InventoryValidationError("opening_stock must equal the value of opening_layers")
         if self.closing_authority_record is not None:
@@ -1000,39 +1005,148 @@ class InventoryValuationResult(BaseModel):
     purchase_value: Decimal
 
 
-class InventoryAnexoDResult(BaseModel):
-    """Auditable 2025 stock-variation projection for one activity.
+@dataclass(frozen=True, slots=True)
+class _InventoryAnexoDDerivation:
+    source_ledger: InventoryLedger
+    source_ledger_fingerprint: ContentDigest
+    actividad_id: str
+    filing_year: int
+    opening_value: Decimal
+    movement_derived_closing_value: Decimal
+    authoritative_closing_value: Decimal
+    selected_authority: InventoryClosingAuthority
+    authority_record_fingerprint: ContentDigest
+    decision_id: str
+    decision_fingerprint: ContentDigest
+    physical_observation_id: str | None
+    physical_observation_fingerprint: ContentDigest | None
+    physical_observed_closing_value: Decimal | None
+    prior_closing_link_fingerprint: ContentDigest
+    complete_acquisition_total: Decimal
+    acquisition_fingerprints: tuple[ContentDigest, ...]
+    casilla_0177: Decimal
+    casilla_0181: Decimal
+    casilla_0182: Decimal
+    closing_conflict: InventoryClosingConflictDiagnostic | None
+    issues: tuple[Literal["physical_closing_conflict"], ...]
 
-    ``casilla_0177`` carries a closing-over-opening increase and
-    ``casilla_0182`` carries an opening-over-closing decrease. The source
-    opening and closing values remain on the result so the split can be
-    reviewed without reconstructing its basis. Purchase acquisition cost for
-    casilla ``0181`` is deliberately absent until the inventory source can
-    prove the complete acquisition-cost fact.
-    """
+
+class InventoryAnexoDResult(BaseModel):
+    """Complete source-owned 2025 inventory projection for one activity."""
 
     model_config = _STRICT_FROZEN_CONFIG
 
+    source_ledger: InventoryLedger = Field(exclude=True, repr=False)
+    source_ledger_fingerprint: ContentDigest
     actividad_id: str = Field(min_length=1)
     filing_year: Literal[2025]
     opening_value: Decimal = Field(ge=_ZERO)
-    closing_value: Decimal = Field(ge=_ZERO)
+    movement_derived_closing_value: Decimal = Field(ge=_ZERO)
+    authoritative_closing_value: Decimal = Field(ge=_ZERO)
+    selected_authority: InventoryClosingAuthority
+    authority_record_fingerprint: ContentDigest
+    decision_id: str = Field(min_length=1, max_length=128)
+    decision_fingerprint: ContentDigest
+    physical_observation_id: str | None = Field(default=None, min_length=1, max_length=128)
+    physical_observation_fingerprint: ContentDigest | None = None
+    physical_observed_closing_value: Decimal | None = Field(default=None, ge=_ZERO)
+    prior_closing_link_fingerprint: ContentDigest
+    complete_acquisition_total: Decimal = Field(ge=_ZERO)
+    acquisition_fingerprints: tuple[ContentDigest, ...]
     casilla_0177: Decimal = Field(ge=_ZERO)
+    casilla_0181: Decimal = Field(ge=_ZERO)
     casilla_0182: Decimal = Field(ge=_ZERO)
+    closing_conflict: InventoryClosingConflictDiagnostic | None = None
+    issues: tuple[Literal["physical_closing_conflict"], ...] = ()
+    projection_fingerprint: ContentDigest
+
+    @property
+    def expected_projection_fingerprint(self) -> ContentDigest:
+        """Derive the versioned identity of the complete projection envelope."""
+        return _content_hash_hex(
+            {
+                "fingerprint_schema_version": "1",
+                "projection": self.model_dump(mode="json", exclude={"projection_fingerprint"}),
+            },
+        )
 
     @model_validator(mode="after")
     def _variation_split_matches_audited_values(self) -> InventoryAnexoDResult:
         """Require an exact, mutually exclusive split of the audited basis."""
-        monetary_values = (self.opening_value, self.closing_value, self.casilla_0177, self.casilla_0182)
+        monetary_values = (
+            self.opening_value,
+            self.movement_derived_closing_value,
+            self.authoritative_closing_value,
+            *(value for value in (self.physical_observed_closing_value,) if value is not None),
+            self.complete_acquisition_total,
+            self.casilla_0177,
+            self.casilla_0181,
+            self.casilla_0182,
+        )
         if any(value != _quantize(value) for value in monetary_values):
             raise InventoryValidationError("inventory Anexo D values must be quantised to cents")
-        signed_variation = _quantize(self.closing_value - self.opening_value)
+        signed_variation = _quantize(self.authoritative_closing_value - self.opening_value)
         expected_increase = max(signed_variation, _ZERO)
         expected_decrease = max(-signed_variation, _ZERO)
         if self.casilla_0177 != expected_increase or self.casilla_0182 != expected_decrease:
             raise InventoryValidationError(
                 "inventory Anexo D outputs must be the mutually exclusive split of closing minus opening",
             )
+        if self.casilla_0181 != self.complete_acquisition_total:
+            raise InventoryValidationError("casilla 0181 must equal complete inventory acquisition cost")
+        if self.complete_acquisition_total > _ZERO and not self.acquisition_fingerprints:
+            raise InventoryValidationError("nonzero acquisition cost requires acquisition fingerprints")
+        if len(set(self.acquisition_fingerprints)) != len(self.acquisition_fingerprints):
+            raise InventoryValidationError("acquisition fingerprints must be unique")
+        physical_state = (
+            self.physical_observation_id,
+            self.physical_observation_fingerprint,
+            self.physical_observed_closing_value,
+        )
+        if any(value is None for value in physical_state) and any(value is not None for value in physical_state):
+            raise InventoryValidationError("physical observation identity, fingerprint, and value must travel together")
+        has_physical = self.physical_observation_id is not None
+        physical_differs = has_physical and self.physical_observed_closing_value != self.movement_derived_closing_value
+        if physical_differs != (self.closing_conflict is not None):
+            raise InventoryValidationError("divergent physical closing requires its retained conflict diagnostic")
+        if self.selected_authority is InventoryClosingAuthority.PHYSICAL_OBSERVATION:
+            if not has_physical:
+                raise InventoryValidationError("physical projection authority requires physical observation identity")
+            if self.closing_conflict is None:
+                if self.authoritative_closing_value != self.movement_derived_closing_value:
+                    raise InventoryValidationError("physical authority without conflict must equal movement closing")
+            elif self.authoritative_closing_value != self.closing_conflict.physical_observed_value:
+                raise InventoryValidationError("physical authoritative closing must match retained observation")
+        elif self.authoritative_closing_value != self.movement_derived_closing_value:
+            raise InventoryValidationError("movement-derived authority must select movement-derived closing")
+        if self.closing_conflict is not None:
+            conflict = self.closing_conflict
+            if not has_physical:
+                raise InventoryValidationError("closing conflict requires physical observation identity")
+            if (
+                conflict.actividad_id != self.actividad_id
+                or conflict.filing_year != self.filing_year
+                or conflict.movement_derived_value != self.movement_derived_closing_value
+                or conflict.physical_observed_value != self.physical_observed_closing_value
+                or conflict.physical_observation_fingerprint != self.physical_observation_fingerprint
+            ):
+                raise InventoryValidationError("closing conflict must exactly match projection provenance")
+        expected_issues = ("physical_closing_conflict",) if self.closing_conflict is not None else ()
+        if self.issues != expected_issues:
+            raise InventoryValidationError("inventory projection issues must exactly reflect retained conflicts")
+        try:
+            expected_source_values = _derive_inventory_anexo_d_values(self.source_ledger)
+        except InventoryLedgerError as exc:
+            raise InventoryValidationError("inventory projection retained source is invalid") from exc
+        for field in dataclass_fields(expected_source_values):
+            field_name = field.name
+            expected_value = getattr(expected_source_values, field_name)
+            if getattr(self, field_name) != expected_value:
+                raise InventoryValidationError(
+                    f"inventory projection field {field_name!r} does not match retained source authority"
+                )
+        if self.projection_fingerprint != self.expected_projection_fingerprint:
+            raise InventoryValidationError("inventory projection fingerprint does not match projection state")
         return self
 
 
@@ -1115,24 +1229,65 @@ def resolve_inventory_authoritative_closing(
     )
 
 
-def compute_inventory_anexo_d_projection(
-    ledger: InventoryLedger,
-) -> InventoryAnexoDResult:
-    """Project one 2025 activity ledger to inventory variation casillas.
+def _inventory_projection_source_fingerprint(ledger: InventoryLedger) -> ContentDigest:
+    """Hash canonical economic identities without exposing retained source facts."""
+    return _content_hash_hex(
+        {
+            "fingerprint_schema_version": "1",
+            "actividad_id": ledger.actividad_id,
+            "filing_year": ledger.year,
+            "valuation_method": ledger.valuation_method.value,
+            "opening_stock": _canonical_decimal_string(ledger.opening_stock),
+            "opening_layers": [
+                {
+                    "sku": layer.sku,
+                    "quantity": _canonical_decimal_string(layer.quantity),
+                    "unit_cost": _canonical_decimal_string(layer.unit_cost),
+                    "source_movement_id": layer.source_movement_id,
+                }
+                for layer in sorted(
+                    ledger.opening_layers,
+                    key=lambda item: (item.sku, item.source_movement_id, item.quantity, item.unit_cost),
+                )
+            ],
+            "movements": [
+                {
+                    "movement_id": movement.movement_id,
+                    "movement_date": movement.movement_date.isoformat(),
+                    "kind": movement.kind.value,
+                    "sku": movement.sku,
+                    "quantity": _canonical_decimal_string(movement.quantity),
+                    "unit_cost": (
+                        _canonical_decimal_string(movement.unit_cost) if movement.unit_cost is not None else None
+                    ),
+                    "taxable_base": (
+                        _canonical_decimal_string(movement.taxable_base)
+                        if movement.taxable_base is not None
+                        else None
+                    ),
+                    "iva_rate": _canonical_decimal_string(movement.iva_rate),
+                    "iva_amount": (
+                        _canonical_decimal_string(movement.iva_amount) if movement.iva_amount is not None else None
+                    ),
+                    "deductible_iva_ratio": _canonical_decimal_string(movement.deductible_iva_ratio),
+                    "schema_version": movement.schema_version,
+                    "acquisition_fingerprint": (
+                        inventory_acquisition_fingerprint(movement)
+                        if movement.kind is MovementKind.PURCHASE
+                        else None
+                    ),
+                }
+                for movement in _sorted_movements(ledger)
+            ],
+            "closing_authority_record_fingerprint": (
+                ledger.closing_authority_record.fingerprint if ledger.closing_authority_record is not None else None
+            ),
+        },
+    )
 
-    The canonical valuation engine supplies closing value. Authority
-    reconciliation is deliberately composed by the later projection step.
 
-    Args:
-        ledger: The single activity/year inventory coordinate to project.
-
-    Returns:
-        Audited values split between casillas ``0177`` and ``0182``.
-
-    Raises:
-        InventoryLedgerError: If the ledger is outside the grounded 2025
-            revision or an explicit closing conflicts with derived valuation.
-    """
+def _derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoDDerivation:
+    """Derive every public projection field from one retained canonical source."""
     if ledger.year != 2025:
         raise InventoryLedgerError(
             "inventory Anexo D projection is grounded only for filing year 2025",
@@ -1150,17 +1305,73 @@ def compute_inventory_anexo_d_projection(
                 "movement_ids": out_of_period_movements,
             },
         )
-    derived_closing = compute_inventory_valuation(ledger).closing_value
+    try:
+        validated = InventoryLedger.model_validate(ledger.model_dump())
+    except ValidationError as exc:
+        raise InventoryLedgerError("inventory projection source is incomplete or unreadable") from exc
+    validated = validated.model_copy(update={"period_movements": _sorted_movements(validated)})
+    record = validated.closing_authority_record
+    if record is None:
+        raise InventoryLedgerError("inventory projection requires a complete closing-authority record")
+    resolution = resolve_inventory_authoritative_closing(
+        validated,
+        decision=record.decision,
+        physical_observation=record.physical_observation,
+        prior_closing_link=record.prior_closing_link,
+    )
+    purchases = tuple(movement for movement in _sorted_movements(validated) if movement.kind is MovementKind.PURCHASE)
+    if any(movement.acquisition_cost is None for movement in purchases):
+        raise InventoryLedgerError("inventory projection requires complete acquisition cost for every purchase")
+    acquisition_total = _quantize(
+        sum(
+            (movement.acquisition_cost.total_acquisition_cost for movement in purchases if movement.acquisition_cost),
+            _ZERO,
+        ),
+    )
+    acquisition_fingerprints = tuple(inventory_acquisition_fingerprint(movement) for movement in purchases)
+    valuation = compute_inventory_valuation(validated)
+    if acquisition_total != valuation.purchase_value:
+        raise InventoryLedgerError("complete acquisition totals do not match inventory valuation purchase authority")
     opening = _quantize(ledger.opening_stock)
-    signed_variation = _quantize(derived_closing - opening)
-    return InventoryAnexoDResult(
-        actividad_id=ledger.actividad_id,
+    signed_variation = _quantize(resolution.authoritative_value - opening)
+    return _InventoryAnexoDDerivation(
+        source_ledger=validated,
+        source_ledger_fingerprint=_inventory_projection_source_fingerprint(validated),
+        actividad_id=validated.actividad_id,
         filing_year=2025,
         opening_value=opening,
-        closing_value=derived_closing,
+        movement_derived_closing_value=resolution.movement_derived_value,
+        authoritative_closing_value=resolution.authoritative_value,
+        selected_authority=resolution.authority,
+        authority_record_fingerprint=record.fingerprint,
+        decision_id=resolution.decision_id,
+        decision_fingerprint=resolution.decision_fingerprint,
+        physical_observation_id=resolution.physical_observation_id,
+        physical_observation_fingerprint=resolution.physical_observation_fingerprint,
+        physical_observed_closing_value=resolution.physical_observed_value,
+        prior_closing_link_fingerprint=resolution.prior_closing_link_fingerprint,
+        complete_acquisition_total=acquisition_total,
+        acquisition_fingerprints=acquisition_fingerprints,
         casilla_0177=max(signed_variation, _ZERO),
+        casilla_0181=acquisition_total,
         casilla_0182=max(-signed_variation, _ZERO),
+        closing_conflict=resolution.conflict,
+        issues=("physical_closing_conflict",) if resolution.conflict is not None else (),
     )
+
+
+def compute_inventory_anexo_d_projection(
+    ledger: InventoryLedger,
+) -> InventoryAnexoDResult:
+    """Project one complete 2025 activity ledger to inventory casillas."""
+    projection_values = _derive_inventory_anexo_d_values(ledger)
+    payload = {field.name: getattr(projection_values, field.name) for field in dataclass_fields(projection_values)}
+    projection = InventoryAnexoDResult.model_construct(
+        None,
+        **payload,
+        projection_fingerprint="0" * 64,
+    )
+    return InventoryAnexoDResult(**payload, projection_fingerprint=projection.expected_projection_fingerprint)
 
 
 def compute_inventory_valuation(ledger: InventoryLedger) -> InventoryValuationResult:

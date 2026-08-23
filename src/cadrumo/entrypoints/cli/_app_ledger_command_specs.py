@@ -2449,7 +2449,12 @@ LEDGER_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind="group",
         help_key=TranslationKey("cli.ledger.participation.help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=True, no_args_is_help=False, context_parameter="ctx"),
+        invocation=InvocationSpec(
+            invoke_without_command=True,
+            no_args_is_help=False,
+            context_parameter="ctx",
+            terminal_behavior="executable",
+        ),
         parameters=(
             ArgumentSpec(
                 name="transaction_id",

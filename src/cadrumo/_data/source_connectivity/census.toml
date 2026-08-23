@@ -10,13 +10,13 @@ census_id = "source-domain-to-casilla-connectivity"
 candidate_id = "inventory.stock-valuation"
 disposition = "connect_candidate"
 owner = "source-connectivity-campaign"
-review_condition = "The accepted 2025 adjudication authorizes split inventory-variation outputs for 0177 and 0182, but complete acquisition cost for 0181 and provenance-bearing explicit-closing authority remain blocking prerequisites before any inventory binding is authored."
+review_condition = "The accepted 2025 inventory prerequisites are complete through the strict schema-v3 projection for 0177, 0181, and 0182. The candidate remains disconnected until S39 and its follow-on resolver, source-mesh, orchestration, ownership, registry-binding, and live-proof steps connect that projection to calculation revisions."
 capability_locators = [
-  "src/cadrumo/adapters/persistence/profile/inventory.py:108",
-  "src/cadrumo/application/inventory/_source_readiness.py:34",
-  "src/cadrumo/domain/contribuyente/inventory/__init__.py:374",
-  "src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:102",
-  "src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:152",
+  "src/cadrumo/adapters/persistence/profile/inventory.py:113",
+  "src/cadrumo/application/inventory/_source_readiness.py:33",
+  "src/cadrumo/domain/contribuyente/inventory/__init__.py:1363",
+  "src/cadrumo/application/inventory/_service.py:413",
+  "src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:237",
 ]
 capability_ids = [
   "secure_repository:src/cadrumo/adapters/persistence/profile/inventory.py:InventoryLedgerRepository",
@@ -38,24 +38,29 @@ registry_destination_candidates = [
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/adapters/persistence/profile/inventory.py:108"
-summary = "Encrypted FINANCIAL inventory ledger repository keyed by activity and year."
+reference = "src/cadrumo/adapters/persistence/profile/inventory.py:113"
+summary = "Encrypted FINANCIAL schema-v3 inventory ledger repository persists activity/year movements, valuation inputs, complete acquisition cost, and closing authority."
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/inventory/_source_readiness.py:34"
-summary = "Executable readiness declaration states that inventory does not yet cross the canonical calculation-revision boundary."
+reference = "src/cadrumo/application/inventory/_source_readiness.py:33"
+summary = "Executable readiness acknowledges completed encrypted persistence while remaining false for the missing resolver, source-mesh, binding, orchestration, and ownership boundary."
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/domain/contribuyente/inventory/__init__.py:374"
-summary = "The 2025 projection splits audited opening-to-closing variation between 0177 and 0182 while deliberately exposing no 0181 acquisition-cost output."
+reference = "src/cadrumo/domain/contribuyente/inventory/__init__.py:1363"
+summary = "The strict 2025 source-owned projection emits complete acquisition cost to 0181 and the mutually exclusive authoritative closing variation to 0177 or 0182 with continuity and conflict provenance."
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/application/inventory/_service.py:413"
+summary = "The application persists the reviewed closing-authority record through the encrypted inventory repository with replay and divergent-replacement refusal."
 
 [entries.bounded_follow_up]
 action_id = "source-casilla.inventory-grounding"
 owner = "source-connectivity-campaign"
 deadline = 2026-10-31
-completion_criterion = "Complete acquisition-cost and explicit-closing authority prerequisites, then deliver the accepted 2025 inventory vertical slice through the canonical resolver and encrypted calculation-revision boundary."
+completion_criterion = "Deliver the completed 2025 inventory projection through the canonical resolver, source mesh, calculation orchestration, registry bindings, source ownership, encrypted calculation revision, and live connectivity proof."
 
 [[entries]]
 candidate_id = "assets.amortization-ledger"

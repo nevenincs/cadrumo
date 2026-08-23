@@ -239,3 +239,24 @@ def test_invocation_context_injection_is_explicit_and_validated() -> None:
     assert invocation.context_parameter == "ctx"
     with pytest.raises(ValueError, match="Python identifier"):
         InvocationSpec(context_parameter="not-valid")
+
+
+def test_every_terminal_group_explicitly_classifies_its_behavior() -> None:
+    from .._command_specs import COMMAND_GRAPH
+
+    terminal_groups = tuple(
+        node.spec
+        for node in COMMAND_GRAPH.nodes()
+        if node.spec.kind in {"root", "group"} and node.spec.invocation.invoke_without_command
+    )
+
+    assert terminal_groups
+    assert all(spec.invocation.terminal_behavior is not None for spec in terminal_groups)
+    assert {
+        spec.key for spec in terminal_groups if spec.invocation.terminal_behavior == "executable"
+    } == {
+        "app_ledger_participation",
+        "app_quickfile",
+        "config_profile_descendiente",
+        "config_repair",
+    }

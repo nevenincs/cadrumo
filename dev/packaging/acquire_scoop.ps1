@@ -275,6 +275,9 @@ function Invoke-HostAcquisition {
         [Parameter(Mandatory = $true)][hashtable]$ExecutionIdentity
     )
     $resolvedCohort = (Resolve-Path $SourceCohort).Path
+    Invoke-Native -FilePath "uv" -ArgumentList @(
+        "run", "python", "-m", "dev.packaging.python_cohort", "verify", "--cohort-dir", $resolvedCohort
+    )
     New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
     $resolvedEvidence = (Resolve-Path $OutputDir).Path
     $runId = [DateTimeOffset]::UtcNow.ToString("yyyyMMddTHHmmssfffZ")
@@ -362,6 +365,9 @@ function Invoke-ContainerAcquisition {
         [Parameter(Mandatory = $true)][int]$MaximumMinutes
     )
     $resolvedCohort = (Resolve-Path $SourceCohort).Path
+    Invoke-Native -FilePath "uv" -ArgumentList @(
+        "run", "python", "-m", "dev.packaging.python_cohort", "verify", "--cohort-dir", $resolvedCohort
+    )
     New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
     $resolvedEvidence = (Resolve-Path $OutputDir).Path
     $nonce = [Guid]::NewGuid().ToString("N")

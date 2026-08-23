@@ -57,7 +57,12 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "group",
         TranslationKey("cli.app.quickfile.app_help"),
         None,
-        InvocationSpec(invoke_without_command=True, add_completion=True, context_parameter="ctx"),
+        InvocationSpec(
+            invoke_without_command=True,
+            add_completion=True,
+            context_parameter="ctx",
+            terminal_behavior="executable",
+        ),
         (
             _option("modelo", ("--modelo",), _STR, "cli.app.modelo.work.modelo_help", required=True),
             _option("year", ("--year",), _INT, "cli.app.modelo.work.year_help", required=True),

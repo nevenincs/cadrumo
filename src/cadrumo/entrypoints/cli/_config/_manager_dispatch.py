@@ -142,10 +142,12 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
             # child task cannot flow back into this synchronous CLI context.
             # Resume the just-persisted login through the same authority used by
             # the root callback before the manager performs its first read.
-            from .. import _resume_profile_session_or_refuse
+            from .._profile_session_gate import resume_registered_profile_for_manager
 
             # CAST-RATIONALE-TYPER-CLICK-CONTEXT: see emit_manager_closed below.
-            _resume_profile_session_or_refuse(cast(typer.Context, ctx), outcome.bucket_id)
+            resume_registered_profile_for_manager(
+                cast(typer.Context, ctx), bucket_id=outcome.bucket_id
+            )
             present_profile_manager(label=outcome.label)
             emit_manager_closed(ctx, outcome.label, created=True)
             return None
@@ -200,18 +202,16 @@ def open_the_edit_target_or_refuse(ctx: _TyperClickContext, supplied: object) ->
     from ....application.profile_preconditions import profile_session_failure_verdict
     from ....application.user_profile import resolve_login_target
     from ....core import ProfileSessionRefusalReason, resolve_active_bucket_id
-    from .. import _authenticated_at_the_gate
     from .._common import attach_cli_policy_verdict
     from .._errors import CliRefusedBoundaryError
+    from .._profile_session_gate import authenticate_profile_for_manager
 
     target = resolve_login_target(supplied)
     if target.bucket_id == resolve_active_bucket_id():
         return
-    # CAST-RATIONALE-TYPER-CLICK-CONTEXT: ctx is typed as the vendored
-    # typer._click.core.Context this module accepts at its own boundary;
-    # _authenticated_at_the_gate's signature wants the public typer.Context
-    # alias for the same runtime object.
-    if _authenticated_at_the_gate(cast(typer.Context, ctx), bucket_id=target.bucket_id):
+    # CAST-RATIONALE-TYPER-CLICK-CONTEXT: both aliases name the same runtime
+    # context object at this transport boundary.
+    if authenticate_profile_for_manager(cast(typer.Context, ctx), bucket_id=target.bucket_id):
         return
     raise attach_cli_policy_verdict(
         CliRefusedBoundaryError(

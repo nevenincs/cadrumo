@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from ..python_cohort import load_python_cohort, source_snapshot_drift
+from ._cohort_attestation import add_test_source_archive, make_test_command_spec_attestation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -75,6 +76,7 @@ def _write_placeholder_cohort(root: Path) -> dict[str, str]:
         payload = f"{label}\n".encode()
         (root / filename).write_bytes(payload)
         sha256[label] = hashlib.sha256(payload).hexdigest()
+    add_test_source_archive(root, names, sha256)
     (root / "python-cohort.json").write_text(
         json.dumps(
             {
@@ -82,16 +84,9 @@ def _write_placeholder_cohort(root: Path) -> dict[str, str]:
                 "sha256": sha256,
                 "source_commit": "a" * 40,
                 "version": "1.0.0",
-                "command_spec_attestation": {
-                    "schema": "cadrumo.command-spec-cohort.v1",
-                    "node_count": 1,
-                    "forbidden_artifacts_absent": True,
-                    "identities_sha256": "a" * 64,
-                    "locales_sha256": "b" * 64,
-                    "policies_sha256": "c" * 64,
-                    "schemas_sha256": "d" * 64,
-                    "import_budgets_sha256": "e" * 64,
-                },
+                "command_spec_attestation": make_test_command_spec_attestation(
+                    root, names, source_commit="a" * 40
+                ),
             },
         ),
         encoding="utf-8",
@@ -143,6 +138,7 @@ def test_load_python_cohort_rejects_digest_drift_before_metadata_parsing(
         payload = f"{label}\n".encode()
         (tmp_path / filename).write_bytes(payload)
         sha256[label] = hashlib.sha256(payload).hexdigest()
+    add_test_source_archive(tmp_path, names, sha256)
     (tmp_path / "python-cohort.json").write_text(
         json.dumps(
             {
@@ -150,16 +146,9 @@ def test_load_python_cohort_rejects_digest_drift_before_metadata_parsing(
                 "sha256": sha256,
                 "source_commit": "a" * 40,
                 "version": "1.0.0",
-                "command_spec_attestation": {
-                    "schema": "cadrumo.command-spec-cohort.v1",
-                    "node_count": 1,
-                    "forbidden_artifacts_absent": True,
-                    "identities_sha256": "a" * 64,
-                    "locales_sha256": "b" * 64,
-                    "policies_sha256": "c" * 64,
-                    "schemas_sha256": "d" * 64,
-                    "import_budgets_sha256": "e" * 64,
-                },
+                "command_spec_attestation": make_test_command_spec_attestation(
+                    tmp_path, names, source_commit="a" * 40
+                ),
             },
         ),
         encoding="utf-8",

@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ...deploy import docs_static_site, frontend_static_site
+from ...deploy import docs_static_site
 from ..docs_static_site import (
     _CI_MARKERS,
     _DEPLOY_ROLE_VARIABLE,
@@ -32,7 +32,6 @@ from ..docs_static_site import (
     _require_authorized_publish_environment,
     _site_build_environment,
 )
-from ..frontend_static_site import _require_human_publish_environment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -150,34 +149,11 @@ def test_the_build_path_carries_no_automation_conditional() -> None:
     assert _language_build_command("es", Path("out")) == local_command
 
 
-def test_the_landing_publisher_refuses_every_automated_run() -> None:
-    """The landing page has no automated authority, so the role buys nothing.
-
-    Refused even holding the documentation role, because that role is scoped to
-    the documentation bucket prefix and no workflow publishes this site at all.
-    """
-    for marker in _CI_MARKERS:
-        environment = {marker: "true", _DEPLOY_ROLE_VARIABLE: _ROLE}
-        with pytest.raises(SystemExit) as refusal:
-            _require_human_publish_environment(environment=environment)
-        assert marker in str(refusal.value)
-
-
-def test_the_landing_guard_is_its_own_and_not_the_documentation_one() -> None:
-    """Two authorities, two guards.
-
-    Sharing one function is how the documentation site's new automated
-    authority would silently extend to a surface that was never granted any.
-    """
-    assert frontend_static_site._require_human_publish_environment.__module__ == frontend_static_site.__name__
-    assert not hasattr(docs_static_site, "_require_human_publish_environment")
-
-
 def test_the_local_publish_path_is_unaffected_by_the_role() -> None:
     """A stray role variable in a local shell does not classify the session.
 
     The marker decides whether a run is automated; the role only decides whether
-    an automated run is the sanctioned one. Both publishers agree.
+    an automated run is the sanctioned one.
 
     The environment mapping carries the role and, by construction, none of
     ``_CI_MARKERS`` — the property the old ambient-``os.environ`` assertion
@@ -186,4 +162,3 @@ def test_the_local_publish_path_is_unaffected_by_the_role() -> None:
     """
     environment = {_DEPLOY_ROLE_VARIABLE: _ROLE}
     _require_authorized_publish_environment(environment=environment)
-    _require_human_publish_environment(environment=environment)

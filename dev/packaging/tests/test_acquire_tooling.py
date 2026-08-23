@@ -81,6 +81,7 @@ def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
         version=_VERSION,
         root_wheel=download / wheel_payloads["cadrumo"][0],
         root_sdist=tmp_path / f"cadrumo-{_VERSION}.tar.gz",
+        source_archive=tmp_path / "cadrumo-source.zip",
         manuals_wheel=download / wheel_payloads["cadrumo-data-manuals"][0],
         manuals_sdist=tmp_path / f"cadrumo_data_manuals-{_VERSION}.tar.gz",
         official_wheel=download / wheel_payloads["cadrumo-data-official"][0],
@@ -91,7 +92,7 @@ def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
 
 
 def _make_release_cohort(tmp_path: Path) -> tuple[LoadedReleaseCohort, Path]:
-    """Build and load a complete twelve-artifact release cohort with real files."""
+    """Build and load a complete release cohort with real files."""
     root = tmp_path / "release-cohort"
     (root / "python").mkdir(parents=True)
     filenames = {
@@ -101,6 +102,7 @@ def _make_release_cohort(tmp_path: Path) -> tuple[LoadedReleaseCohort, Path]:
         "cadrumo-data-official-wheel": "python/cadrumo_data_official-0.99.0-py3-none-any.whl",
         "cadrumo-sdist": "python/cadrumo-0.99.0.tar.gz",
         "cadrumo-wheel": "python/cadrumo-0.99.0-py3-none-any.whl",
+        "cadrumo-source-archive": "python/cadrumo-source.zip",
         "claude-marketplace": "claude-marketplace.json",
         "claude-plugin": "claude-plugin.zip",
         "homebrew-formula": "cadrumo.rb",

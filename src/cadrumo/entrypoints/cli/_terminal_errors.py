@@ -433,9 +433,23 @@ def _emit_crash(exc: Exception) -> NoReturn:
         if verdict is not None:
             projection = project_cli_policy_refusal(requested_leaf=None, verdict=verdict)
     code = get_registered_error_code(boundary)
+    # Name the failing command on the spine, as the command boundary does.
+    # `render_error_payload` is deliberately the single renderer both funnels
+    # share "so the two cannot drift on which spine fields an error document
+    # carries" -- but sharing a renderer does not stop the CALLERS drifting on
+    # what they hand it, and this one passed no `command` at all. Every refusal
+    # reaching the process boundary therefore published `"command": null` even
+    # when the leaf was known, which is what a preflight refusal raised before
+    # the command callback runs always is now.
+    #
+    # The projection is the source here rather than the active-command context
+    # var: that var is set at callback ENTRY, and this funnel exists precisely
+    # for failures that never got that far.
+    requested_leaf = None if projection is None else projection.requested_leaf
     payload = render_error_payload(
         boundary,
         as_json=_json_requested_for(exc),
+        command=None if requested_leaf is None else requested_leaf.subject_leaf_key,
         action=None if projection is None else projection.precondition_action,
     )
     write_stderr(payload)

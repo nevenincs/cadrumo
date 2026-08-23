@@ -35,6 +35,7 @@ import functools
 import inspect
 import io
 import json
+import logging
 import sys
 from collections.abc import Callable, Generator, Mapping, Sequence
 from contextlib import contextmanager
@@ -56,11 +57,10 @@ from ...core.errors import (
     render_error_text,
 )
 from ...core.json_contract import Notice, ResolvedPreconditionAction
-from ...core.logging import get_logger
 from ...core.redaction import redact_for_cli_output
 from ...domain.user_profile import StoredProfileDriftError
 
-_log = get_logger(__name__)
+_log = logging.getLogger(__name__)
 
 _UNDER_TEST: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_under_test", default=False)
 #: Dotted identifier of the command whose callback is currently executing,
@@ -687,17 +687,22 @@ def render_error_payload(
     line without reconstructing a command or recovery sentence.
     """
     notice = sandbox_notice_for_error()
+    from ._profile_authentication_notice import drain_profile_authentication_notices
+
+    authentication_notices = drain_profile_authentication_notices()
     if as_json:
         return render_error_json(
             error,
             action=action,
             active_profile=active_profile_label_for_error(),
             command=command,
-            notices=() if notice is None else (notice,),
+            notices=(*(() if notice is None else (notice,)), *authentication_notices),
         )
     text = render_error_text(error)
     if action is not None:
         text = _render_precondition_action_text(text, command=command, action=action)
+    if authentication_notices:
+        text = "\n".join((*[item.message for item in authentication_notices], text))
     if notice is None:
         return text
     from ...application.operator_output import sandbox_banner_line
