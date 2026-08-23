@@ -12,10 +12,12 @@ from ...domain.modelos import M303RectificativaMotive
 from ._producer_snapshot import (
     AmendmentEvidence,
     ChargeAccountSelection,
+    FilingModelProfileFacts,
     FilingProducerSnapshot,
     M303FilingFacts,
     M303InsolvencyFilingSubtype,
     Modelo111ProfileFacts,
+    Modelo222ProfileFacts,
     RefundAccountSelection,
 )
 
@@ -124,6 +126,29 @@ def filing_producer_ownership() -> dict[FilingProducerKey, str]:
         FilingProducerKey.M303_EXONERADO_390_APPLICABLE,
         FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED,
         FilingProducerKey.M111_COLEGIO_CONCERTADO,
+        FilingProducerKey.M222_NUMERO_GRUPO,
+        FilingProducerKey.M222_REPRESENTANTE_O_DOMINANTE,
+        FilingProducerKey.M222_NORMATIVA_TERRITORIO_FORAL,
+        FilingProducerKey.M222_ENTIDAD_DOMINANTE_IDENTIFICACION,
+        FilingProducerKey.M222_ENTIDAD_DOMINANTE_PAIS_TERRITORIO_FORAL,
+        FilingProducerKey.M222_ENTIDAD_DOMINANTE_RAZON_SOCIAL,
+        FilingProducerKey.M222_FECHA_INICIO_PERIODO_IMPOSITIVO,
+        FilingProducerKey.M222_CNAE_ACTIVIDAD_PRINCIPAL,
+        FilingProducerKey.M222_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE,
+        FilingProducerKey.M222_REGIMEN_REDUCIDA_DIMENSION,
+        FilingProducerKey.M222_CIFRA_NEGOCIOS_GRUPO_DOCE_MESES,
+        FilingProducerKey.M222_COOPERATIVA_FISCALMENTE_PROTEGIDA,
+        FilingProducerKey.M222_REGIMEN_ENTIDADES_CAPITAL_RIESGO,
+        FilingProducerKey.M222_CIRCUNSTANCIA_CONCURRENTE,
+        FilingProducerKey.M222_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_TRAMO,
+        FilingProducerKey.M222_MULTIPLES_TIPOS_IMPOSITIVOS,
+        FilingProducerKey.M222_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES,
+        FilingProducerKey.M222_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO,
+        FilingProducerKey.M222_MODALIDAD_LIQUIDACION,
+        FilingProducerKey.M222_COMUNICACION_DATOS_ADICIONALES,
+        FilingProducerKey.M222_NUMERO_REFERENCIA_SOCIEDADES,
+        FilingProducerKey.M222_COMUNICACION_VARIACION_COMPOSICION_GRUPO,
+        FilingProducerKey.M222_NUMERO_REFERENCIA_SOCIEDADES_VARIACION,
     }
     owners = {key: "shared_snapshot" for key in shared}
     for key in FilingProducerKey:
@@ -135,6 +160,49 @@ def filing_producer_ownership() -> dict[FilingProducerKey, str]:
             raise FilingExportValidationError(f"filing producer key {key.value!r} has no declared owner")
         owners[key] = owner
     return owners
+
+
+
+_M222_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M222_NUMERO_GRUPO: "numero_grupo",
+    FilingProducerKey.M222_REPRESENTANTE_O_DOMINANTE: "representante_o_dominante",
+    FilingProducerKey.M222_NORMATIVA_TERRITORIO_FORAL: "normativa_territorio_foral",
+    FilingProducerKey.M222_ENTIDAD_DOMINANTE_IDENTIFICACION: "entidad_dominante_identificacion",
+    FilingProducerKey.M222_ENTIDAD_DOMINANTE_PAIS_TERRITORIO_FORAL: "entidad_dominante_pais_territorio_foral",
+    FilingProducerKey.M222_ENTIDAD_DOMINANTE_RAZON_SOCIAL: "entidad_dominante_razon_social",
+    FilingProducerKey.M222_FECHA_INICIO_PERIODO_IMPOSITIVO: "fecha_inicio_periodo_impositivo",
+    FilingProducerKey.M222_CNAE_ACTIVIDAD_PRINCIPAL: "cnae_actividad_principal",
+    FilingProducerKey.M222_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE: "regimen_entidades_navieras_tonelaje",
+    FilingProducerKey.M222_REGIMEN_REDUCIDA_DIMENSION: "regimen_reducida_dimension",
+    FilingProducerKey.M222_CIFRA_NEGOCIOS_GRUPO_DOCE_MESES: "cifra_negocios_grupo_doce_meses",
+    FilingProducerKey.M222_COOPERATIVA_FISCALMENTE_PROTEGIDA: "cooperativa_fiscalmente_protegida",
+    FilingProducerKey.M222_REGIMEN_ENTIDADES_CAPITAL_RIESGO: "regimen_entidades_capital_riesgo",
+    FilingProducerKey.M222_CIRCUNSTANCIA_CONCURRENTE: "circunstancia_concurrente",
+    FilingProducerKey.M222_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_TRAMO: "cifra_negocios_periodo_anterior_tramo",
+    FilingProducerKey.M222_MULTIPLES_TIPOS_IMPOSITIVOS: "multiples_tipos_impositivos",
+    FilingProducerKey.M222_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES: "tipo_gravamen_impuesto_sociedades",
+    FilingProducerKey.M222_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO: "importe_neto_cifra_negocios_tramo",
+    FilingProducerKey.M222_MODALIDAD_LIQUIDACION: "modalidad_liquidacion",
+    FilingProducerKey.M222_COMUNICACION_DATOS_ADICIONALES: "comunicacion_datos_adicionales",
+    FilingProducerKey.M222_NUMERO_REFERENCIA_SOCIEDADES: "numero_referencia_sociedades",
+    FilingProducerKey.M222_COMUNICACION_VARIACION_COMPOSICION_GRUPO: "comunicacion_variacion_composicion_grupo",
+    FilingProducerKey.M222_NUMERO_REFERENCIA_SOCIEDADES_VARIACION: "numero_referencia_sociedades_variacion",
+}
+
+
+def m222_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
+    """Resolve the grupo-fiscal producer identities Modelo 222's layout cites.
+
+    Every one of these keys was declared in the vocabulary and produced by nothing, so the
+    layout's twenty-three header fields -- numero de grupo and entidad dominante among
+    them -- rendered blank on a return that exists to identify a fiscal group.
+
+    A profile of the wrong type yields every key as ``None`` rather than raising: this
+    resolver runs for every modelo, and only Modelo 222's snapshot validator may decide
+    that a 222 filing without group facts is invalid.
+    """
+    profile = model_profile if isinstance(model_profile, Modelo222ProfileFacts) else None
+    return {key: (getattr(profile, field) if profile is not None else None) for key, field in _M222_FIELD_BY_KEY.items()}
 
 
 def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
@@ -228,6 +296,7 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
                 FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
             },
         )
+    values.update(m222_producer_values(snapshot.model_profile))
     shared_owned = {key for key, owner in filing_producer_ownership().items() if owner == "shared_snapshot"}
     if set(values) != shared_owned:
         raise FilingExportValidationError("shared filing producer resolver is not exhaustive over its owned keys")

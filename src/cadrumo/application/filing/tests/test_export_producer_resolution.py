@@ -30,9 +30,13 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from cadrumo.application.filing import filing_producer_ownership
+import pytest
 
-_REGISTRY_MODELOS = Path(__file__).resolve().parents[4] / "_data" / "registry" / "aeat" / "modelos"
+from cadrumo.application.filing._export_producer import filing_producer_ownership
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+_REGISTRY_MODELOS = Path(__file__).resolve().parents[3] / "_data" / "registry" / "aeat" / "modelos"
 _PRODUCER_KEY = re.compile(r"""producer_key\s*=\s*['"]([^'"]+)['"]""")
 
 

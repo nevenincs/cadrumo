@@ -171,6 +171,57 @@ class Modelo111ProfileFacts(BaseModel):
     colegio_concertado: bool | None
 
 
+_GrupoNumber = Annotated[str, StringConstraints(min_length=1, max_length=7)]
+_ForalTerritory = Annotated[str, StringConstraints(min_length=1, max_length=2)]
+
+
+class Modelo222ProfileFacts(BaseModel):
+    """Fiscal-group identity and régimen facts a Modelo 222 filing declares.
+
+    Modelo 222 is the pago fraccionado of a *grupo fiscal*, so the group's own identity is
+    not optional context -- it is what the return is about. AEAT's design prescribes a
+    format for the número de grupo (``Nota 8``: ``----/--`` estatal, ``---/--A`` foral),
+    which is a rule about content, not about an empty field.
+
+    Before this type existed the twenty-three ``m222.*`` producer keys were declared in the
+    vocabulary and resolved by nothing, so every one of them rendered blank on a
+    non-required field and the return emitted with its group number and its entidad
+    dominante empty.
+
+    Every field below is optional EXCEPT the group identity, because AEAT's own design
+    leaves the régimen marks blank when they do not apply, and a mark that does not apply
+    is genuinely absent rather than unknown. The group number and the dominante are not in
+    that category.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    numero_grupo: _GrupoNumber
+    entidad_dominante_identificacion: str
+    entidad_dominante_razon_social: str
+    #: "1" representante (entidad no dominante), "2" dominante incluida en el grupo fiscal.
+    representante_o_dominante: str | None = None
+    normativa_territorio_foral: str | None = None
+    entidad_dominante_pais_territorio_foral: _ForalTerritory | None = None
+    fecha_inicio_periodo_impositivo: str | None = None
+    cnae_actividad_principal: _CnaeCode | None = None
+    regimen_entidades_navieras_tonelaje: str | None = None
+    regimen_reducida_dimension: str | None = None
+    cifra_negocios_grupo_doce_meses: str | None = None
+    cooperativa_fiscalmente_protegida: str | None = None
+    regimen_entidades_capital_riesgo: str | None = None
+    circunstancia_concurrente: str | None = None
+    cifra_negocios_periodo_anterior_tramo: str | None = None
+    multiples_tipos_impositivos: str | None = None
+    tipo_gravamen_impuesto_sociedades: str | None = None
+    importe_neto_cifra_negocios_tramo: str | None = None
+    modalidad_liquidacion: str | None = None
+    comunicacion_datos_adicionales: str | None = None
+    numero_referencia_sociedades: str | None = None
+    comunicacion_variacion_composicion_grupo: str | None = None
+    numero_referencia_sociedades_variacion: str | None = None
+
+
 class GeneralFilingProfileFacts(BaseModel):
     """Explicit absence of modelo-specific producer facts for a layout."""
 
@@ -368,7 +419,11 @@ class ChargeAccountSelection(BaseModel):
 
 type SelectedFilingAccount = RefundAccountSelection | ChargeAccountSelection
 type FilingModelProfileFacts = (
-    GeneralFilingProfileFacts | Modelo111ProfileFacts | Modelo202ProducerProfile | ModeloIVAProfile
+    GeneralFilingProfileFacts
+    | Modelo111ProfileFacts
+    | Modelo202ProducerProfile
+    | Modelo222ProfileFacts
+    | ModeloIVAProfile
 )
 
 
@@ -415,10 +470,19 @@ def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo is Modelo.M202:
         _validate_modelo_202_snapshot(snapshot)
         return
+    if snapshot.modelo is Modelo.M222:
+        _validate_modelo_222_snapshot(snapshot)
+        return
     if snapshot.modelo is Modelo.M303:
         _validate_modelo_303_snapshot(snapshot)
         return
     _validate_general_modelo_snapshot(snapshot)
+
+
+def _validate_modelo_222_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    """Modelo 222 is a grupo fiscal return; it cannot be filed without the group."""
+    if not isinstance(snapshot.model_profile, Modelo222ProfileFacts):
+        raise ValueError("modelo 222 requires Modelo222ProfileFacts")
 
 
 def _validate_modelo_111_snapshot(snapshot: FilingProducerSnapshot) -> None:
