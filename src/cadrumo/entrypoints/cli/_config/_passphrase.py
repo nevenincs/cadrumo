@@ -23,43 +23,47 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 import typer
-from pydantic import BaseModel, ConfigDict, SecretStr
+from pydantic import SecretStr
 
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.i18n import OutputLanguage, tr
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError
+from .._machine_secret_contract import register_machine_secret_payload_model
+from ._secure_input import MachineSecretPayload
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfilePassphraseRotationOutcome
 
 
-class _PassphraseChangeSecrets(BaseModel):
+class _PassphraseChangeSecrets(MachineSecretPayload):
     """Strict machine-channel payload for ``config passphrase change``.
 
-    One bounded JSON object carrying exactly the three passphrases as
-    :class:`~pydantic.SecretStr`; ``extra="forbid"`` refuses an unexpected
-    field, and the secret type keeps the values out of any repr.
+    One bounded JSON object carries exactly the three passphrases as
+    :class:`~pydantic.SecretStr`; the canonical base refuses unexpected fields
+    and keeps the values out of any repr.
     """
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
 
     current_passphrase: SecretStr
     new_passphrase: SecretStr
     new_passphrase_confirmation: SecretStr
 
 
+register_machine_secret_payload_model("config.passphrase.change", "rotation", _PassphraseChangeSecrets)
+
+
 def _collect_passphrases(*, secrets_stdin: bool, secrets_fd: int | None) -> _PassphraseChangeSecrets:
     """Resolve the three values from one channel, machine or interactive."""
-    from ._secure_input import prompt_secret_no_echo, read_secrets_fd, read_secrets_stdin
+    from ._secure_input import (
+        prompt_secret_no_echo,
+        read_machine_secret_payload,
+        select_machine_secret_channel,
+    )
 
-    # Naming both machine channels is refused upstream, so at most one is read
-    # here; the ordering expresses no precedence.
-    if secrets_fd is not None:
-        return read_secrets_fd(_PassphraseChangeSecrets, descriptor=secrets_fd)
-    if secrets_stdin:
-        return read_secrets_stdin(_PassphraseChangeSecrets)
+    selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+    if selection is not None:
+        return read_machine_secret_payload(_PassphraseChangeSecrets, selection=selection)
     return _PassphraseChangeSecrets(
         current_passphrase=SecretStr(prompt_secret_no_echo(tr("cli.config.custody.current_passphrase_prompt"))),
         new_passphrase=SecretStr(prompt_secret_no_echo(tr("cli.config.profile.create_passphrase_prompt"))),
@@ -95,9 +99,7 @@ def passphrase_change(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile import rotate_profile_passphrase
     from .._config_payloads import ConfigPassphraseChangeResult
-    from ._secure_input import resolve_secrets_channel
 
-    resolve_secrets_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     secrets = _collect_passphrases(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
 
     # A bucket identifier IS the profile UUID -- the capsule directory is

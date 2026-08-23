@@ -41,7 +41,6 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from ...core.output_rendering import OutputFormat
 from ...domain.iva import InvoiceKind
-from ._command_policy import command_execution_policy
 from ._common import (
     _bad,
     _emit_envelope,
@@ -54,7 +53,6 @@ from ._common import (
 )
 from ._config._status_rendering import precondition_action_lines
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
-from ._ledger_execution_policies import LEDGER_NETWORK_WRITE
 
 if TYPE_CHECKING:
     from ...application.ledger import BatchItemResult, BatchRunResult, UnresolvedBatchSource
@@ -63,75 +61,45 @@ if TYPE_CHECKING:
 __all__ = ["register_evidence_batch_command"]
 
 
-def register_evidence_batch_command(evidence_app: typer.Typer) -> None:
-    """Mount ``aeat app ledger evidence batch`` on the evidence sub-app."""
+def evidence_batch(
+    ctx: typer.Context, directory: str | None = None, kind: InvoiceKind = ..., file: tuple[str, ...] = ()
+) -> None:
+    """Run the ingestion pipeline over every source, one typed row per document.
 
-    @evidence_app.command(
-        "batch",
-        help=tr("cli.app.ledger.evidence.batch_help"),
+    One document cannot end the run: every source finishes in a row of its
+    own -- ingested, an idempotent no-op, refused with its reason, held for
+    review, or deferred because the machine could not admit a reading model
+    -- and the run reports the list plus the tally. The exit status reads
+    "any item was refused", never "the first item was refused".
+
+    A re-run over the same sources is the resume. Each item's identity is
+    its content address plus the declared kind, so an already-ingested
+    document is reported as a no-op and nothing is written twice.
+    """
+    sources: list[str] = [*file]
+    if directory is not None:
+        sources.insert(0, directory)
+    if not sources:
+        raise _bad(tr("cli.app.ledger.evidence.batch_source_required"))
+    from ...application.ledger import run_evidence_batch
+
+    bucket_id = _tx_repo(_state()).bucket_id
+    text_mode = _format_of(ctx) is not OutputFormat.JSON
+    run = run_evidence_batch(
+        bucket_id=bucket_id,
+        sources=sources,
+        direction=kind,
+        on_item=(lambda item: emit_progress_line(_progress_line(item))) if text_mode else None,
     )
-    @command_execution_policy(LEDGER_NETWORK_WRITE)
-    def evidence_batch(
-        ctx: typer.Context,
-        directory: str | None = typer.Argument(
-            None,
-            help=tr("cli.app.ledger.evidence.batch_directory_help"),
-        ),
-        kind: InvoiceKind = typer.Option(
-            ...,
-            "--kind",
-            help=tr("cli.app.ledger.invoice.kind_help"),
-        ),
-        file: list[str] = typer.Option(
-            [],
-            "--file",
-            help=tr("cli.app.ledger.evidence.batch_file_help"),
-        ),
-    ) -> None:
-        """Run the ingestion pipeline over every source, one typed row per document.
-
-        One document cannot end the run: every source finishes in a row of its
-        own -- ingested, an idempotent no-op, refused with its reason, held for
-        review, or deferred because the machine could not admit a reading model
-        -- and the run reports the list plus the tally. The exit status reads
-        "any item was refused", never "the first item was refused".
-
-        A re-run over the same sources is the resume. Each item's identity is
-        its content address plus the declared kind, so an already-ingested
-        document is reported as a no-op and nothing is written twice.
-        """
-        sources: list[str] = [*file]
-        if directory is not None:
-            sources.insert(0, directory)
-        if not sources:
-            raise _bad(
-                tr("cli.app.ledger.evidence.batch_source_required"),
-            )
-
-        from ...application.ledger import run_evidence_batch
-
-        bucket_id = _tx_repo(_state()).bucket_id
-        text_mode = _format_of(ctx) is not OutputFormat.JSON
-        run = run_evidence_batch(
-            bucket_id=bucket_id,
-            sources=sources,
-            direction=kind,
-            # Progress is a TEXT-mode stream. In JSON the complete row set on
-            # `result` already carries every item, and echoing progress there
-            # would both break the single-document contract and duplicate the
-            # rows -- the second progress channel the design refuses.
-            on_item=(lambda item: emit_progress_line(_progress_line(item))) if text_mode else None,
-        )
-
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.batch",
-            result=_batch_payload(run, bucket_id=bucket_id, direction=kind),
-            lines=_batch_text_lines(run, bucket_id=bucket_id, direction=kind),
-            notices=_run_notices(run),
-        )
-        if run.any_failed:
-            raise typer.Exit(code=1)
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.batch",
+        result=_batch_payload(run, bucket_id=bucket_id, direction=kind),
+        lines=_batch_text_lines(run, bucket_id=bucket_id, direction=kind),
+        notices=_run_notices(run),
+    )
+    if run.any_failed:
+        raise typer.Exit(code=1)
 
 
 def _refusal_projection(verdict: PreconditionVerdict | None) -> dict[str, object]:

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Annotated
-
 import typer
 
 from ...application.registry import (
@@ -30,11 +28,8 @@ from ...application.registry import (
     verify_registry_citations,
     verify_registry_manual,
 )
-from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip
 from ...domain.manuals import ManualPart
-from ._app_execution_policies import REGISTRY_READ, declare_metadata_group
-from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
 from ._registry_corpus_payloads import (
     CitationListResult,
@@ -46,31 +41,10 @@ from ._registry_corpus_payloads import (
     ManualVerifyResult,
 )
 
-citations_app = typer.Typer(
-    name="citations",
-    help=tr("cli.registry.citations.app_help"),
-    no_args_is_help=True,
-    add_completion=False,
-)
 
-
-manuals_app = typer.Typer(
-    name="manuals",
-    help=tr("cli.registry.manuals.app_help"),
-    no_args_is_help=True,
-    add_completion=False,
-)
-declare_metadata_group(citations_app)
-declare_metadata_group(manuals_app)
-
-
-@citations_app.command("list", help=tr("cli.registry.citations.list_help"))
 def list_citations_cmd(
     ctx: typer.Context,
-    tag: Annotated[
-        str | None,
-        typer.Option("--tag", help=tr("cli.registry.citations.tag_help")),
-    ] = None,
+    tag: str | None = None,
 ) -> None:
     """List the legal authorities codified in the project's legal corpus."""
     report = list_registry_citations(RegistryCitationsListCommand(tag=tag))
@@ -78,17 +52,10 @@ def list_citations_cmd(
     _emit_envelope(ctx, command="registry.citations.list", result=typed, lines=_citation_list_lines(report))
 
 
-@citations_app.command("view", help=tr("cli.registry.citations.view_help"))
 def show_citation_cmd(
     ctx: typer.Context,
-    legal_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.registry.citations.legal_id_help")),
-    ],
-    articulo: Annotated[
-        str | None,
-        typer.Option("--articulo", help=tr("cli.registry.citations.articulo_help")),
-    ] = None,
+    legal_id: str,
+    articulo: str | None = None,
 ) -> None:
     """View one legal authority and, optionally, one cited article."""
     report = show_registry_citation(RegistryCitationShowCommand(legal_id=legal_id, articulo=articulo))
@@ -96,7 +63,6 @@ def show_citation_cmd(
     _emit_envelope(ctx, command="registry.citations.view", result=typed, lines=_citation_show_lines(report))
 
 
-@citations_app.command("verify", help=tr("cli.registry.citations.verify_help"))
 def verify_citations_cmd(ctx: typer.Context) -> None:
     """Verify the legal corpus against its own schema invariants."""
     report = verify_registry_citations()
@@ -106,17 +72,10 @@ def verify_citations_cmd(ctx: typer.Context) -> None:
         raise typer.Exit(code=1)
 
 
-@manuals_app.command("list", help=tr("cli.registry.manuals.list_help"))
 def list_manuals_cmd(
     ctx: typer.Context,
-    manual: Annotated[
-        RegistryManualId | None,
-        typer.Option("--manual", help=tr("cli.registry.manuals.manual_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.registry.manuals.year_help")),
-    ] = None,
+    manual: RegistryManualId | None = None,
+    year: int | None = None,
 ) -> None:
     """List AEAT Manual práctico records available on disk."""
     report = list_registry_manuals(RegistryManualsListCommand(manual=manual, year=year))
@@ -124,25 +83,12 @@ def list_manuals_cmd(
     _emit_envelope(ctx, command="registry.manuals.list", result=typed, lines=_manuals_list_lines(report))
 
 
-@manuals_app.command("view", help=tr("cli.registry.manuals.view_help"))
 def show_manual_cmd(
     ctx: typer.Context,
-    manual: Annotated[
-        RegistryManualId,
-        typer.Option("--manual", help=tr("cli.registry.manuals.manual_help")),
-    ],
-    year: Annotated[
-        int,
-        typer.Option("--year", help=tr("cli.registry.manuals.year_help")),
-    ],
-    part: Annotated[
-        ManualPart,
-        typer.Option("--part", help=tr("cli.registry.manuals.part_help")),
-    ] = ManualPart.SINGLE,
-    section: Annotated[
-        str | None,
-        typer.Option("--section", help=tr("cli.registry.manuals.section_help")),
-    ] = None,
+    manual: RegistryManualId,
+    year: int,
+    part: ManualPart = ManualPart.SINGLE,
+    section: str | None = None,
 ) -> None:
     """View one manual's metadata and, optionally, one section by id."""
     report = show_registry_manual(RegistryManualShowCommand(manual=manual, year=year, part=part, section=section))
@@ -150,25 +96,12 @@ def show_manual_cmd(
     _emit_envelope(ctx, command="registry.manuals.view", result=typed, lines=_manual_show_lines(report))
 
 
-@manuals_app.command("rules", help=tr("cli.registry.manuals.rules_help"))
 def list_manual_rules_cmd(
     ctx: typer.Context,
-    manual: Annotated[
-        RegistryManualId,
-        typer.Option("--manual", help=tr("cli.registry.manuals.manual_help")),
-    ],
-    year: Annotated[
-        int,
-        typer.Option("--year", help=tr("cli.registry.manuals.year_help")),
-    ],
-    part: Annotated[
-        ManualPart,
-        typer.Option("--part", help=tr("cli.registry.manuals.part_help")),
-    ] = ManualPart.SINGLE,
-    kind: Annotated[
-        str | None,
-        typer.Option("--kind", help=tr("cli.registry.manuals.kind_help")),
-    ] = None,
+    manual: RegistryManualId,
+    year: int,
+    part: ManualPart = ManualPart.SINGLE,
+    kind: str | None = None,
 ) -> None:
     """List AEAT rule decisions for one manual / year / part."""
     report = list_registry_manual_rules(RegistryManualRulesCommand(manual=manual, year=year, part=part, kind=kind))
@@ -176,21 +109,11 @@ def list_manual_rules_cmd(
     _emit_envelope(ctx, command="registry.manuals.rules", result=typed, lines=_manual_rules_lines(report))
 
 
-@manuals_app.command("verify", help=tr("cli.registry.manuals.verify_help"))
 def verify_manual_cmd(
     ctx: typer.Context,
-    manual: Annotated[
-        RegistryManualId,
-        typer.Option("--manual", help=tr("cli.registry.manuals.manual_help")),
-    ],
-    year: Annotated[
-        int,
-        typer.Option("--year", help=tr("cli.registry.manuals.year_help")),
-    ],
-    part: Annotated[
-        ManualPart,
-        typer.Option("--part", help=tr("cli.registry.manuals.part_help")),
-    ] = ManualPart.SINGLE,
+    manual: RegistryManualId,
+    year: int,
+    part: ManualPart = ManualPart.SINGLE,
 ) -> None:
     """Verify one manual part against its schema and cross-reference contracts."""
     report = verify_registry_manual(RegistryManualVerifyCommand(manual=manual, year=year, part=part))
@@ -326,16 +249,12 @@ def _manual_verification_lines(report: RegistryManualVerificationReport) -> list
     return lines
 
 
-for _callback in (
-    list_citations_cmd,
-    show_citation_cmd,
-    verify_citations_cmd,
-    list_manuals_cmd,
-    show_manual_cmd,
-    list_manual_rules_cmd,
-    verify_manual_cmd,
-):
-    command_execution_policy(REGISTRY_READ)(_callback)
-
-
-__all__ = ["citations_app", "manuals_app"]
+__all__ = [
+    "list_citations_cmd",
+    "list_manual_rules_cmd",
+    "list_manuals_cmd",
+    "show_citation_cmd",
+    "show_manual_cmd",
+    "verify_citations_cmd",
+    "verify_manual_cmd",
+]

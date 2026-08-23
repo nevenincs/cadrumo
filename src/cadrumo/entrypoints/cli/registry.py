@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
 
 import typer
 
@@ -18,25 +17,12 @@ from ...application.registry import (
 from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip
 from ...core.resources import bundled_path
-from ._app_execution_policies import REGISTRY_READ, declare_metadata_group
-from ._command_policy import command_execution_policy
-from ._common import MODELO_CODE_CHOICE, _emit_envelope, resolve_optional_root
-from ._registry_corpus import citations_app, manuals_app
+from ._common import _emit_envelope, resolve_optional_root
 from ._registry_diff_payloads import RegistryDiffRevisionsResult
 from ._registry_payloads import (
     RegistryInspectResult,
     RegistryVerifyFiledStateResult,
 )
-
-app = typer.Typer(
-    name="registry",
-    help=tr("cli.registry.app_help"),
-    no_args_is_help=True,
-    add_completion=False,
-)
-declare_metadata_group(app)
-app.add_typer(citations_app, name="citations")
-app.add_typer(manuals_app, name="manuals")
 
 
 def _metric_line(key: str, value: object) -> str:
@@ -46,29 +32,6 @@ def _metric_line(key: str, value: object) -> str:
 
 def _join(values: tuple[object, ...] | list[object] | set[object]) -> str:
     return ",".join(str(value) for value in values)
-
-
-_RegistryRootOpt = Annotated[
-    Path | None,
-    typer.Option(
-        "--registry-root",
-        file_okay=False,
-        dir_okay=True,
-        readable=True,
-        help=tr("cli.registry.inspect_registry_root_help"),
-    ),
-]
-_SourceRootOpt = Annotated[
-    Path | None,
-    typer.Option(
-        "--source-root",
-        exists=True,
-        file_okay=False,
-        dir_okay=True,
-        readable=True,
-        help=tr("cli.registry.verify_source_root_help"),
-    ),
-]
 
 
 def _registry_tree_metric_lines(report: RegistryTreeReport) -> tuple[str, ...]:
@@ -94,10 +57,9 @@ def _registry_tree_metric_lines(report: RegistryTreeReport) -> tuple[str, ...]:
     )
 
 
-@app.command("inspect", help=tr("cli.registry.inspect_help"))
 def inspect_registry_cmd(
     ctx: typer.Context,
-    registry_root: _RegistryRootOpt = None,
+    registry_root: Path | None = None,
 ) -> None:
     """Load the read-only registry tree and report inventory counts."""
     registry_root = resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat"))
@@ -110,11 +72,10 @@ def inspect_registry_cmd(
     )
 
 
-@app.command("verify", help=tr("cli.registry.verify_help"))
 def verify_registry_cmd(
     ctx: typer.Context,
-    registry_root: _RegistryRootOpt = None,
-    source_root: _SourceRootOpt = None,
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
 ) -> None:
     """Validate every registry modelo against shared legal/source catalogues."""
     registry_root = resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat"))
@@ -133,29 +94,13 @@ def verify_registry_cmd(
     )
 
 
-@app.command("verify-filed-state", help=tr("cli.registry.verify_filed_state_help"))
 def verify_filed_state_cmd(
     ctx: typer.Context,
-    observation_path: Annotated[
-        Path,
-        typer.Option(
-            "--observation",
-            help=tr("cli.registry.observation_help"),
-        ),
-    ],
-    source_observation_paths: Annotated[
-        list[Path] | None,
-        typer.Option(
-            "--source-observation",
-            help=tr("cli.registry.source_observation_help"),
-        ),
-    ] = None,
-    registry_root: _RegistryRootOpt = None,
-    source_root: _SourceRootOpt = None,
-    required_casilla_refs: Annotated[
-        list[str] | None,
-        typer.Option("--casilla", help=tr("cli.registry.casilla_help")),
-    ] = None,
+    observation_path: Path,
+    source_observation_paths: list[Path] | None = None,
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
+    required_casilla_refs: list[str] | None = None,
 ) -> None:
     """Verify local registry calculation output against captured filed state."""
     report = verify_filed_state(
@@ -194,23 +139,13 @@ def verify_filed_state_cmd(
     )
 
 
-@app.command("diff-revisions", help=tr("cli.registry.diff_revisions_help"))
 def diff_revisions_cmd(
     ctx: typer.Context,
-    modelo: Annotated[
-        str,
-        typer.Argument(click_type=MODELO_CODE_CHOICE, help=tr("cli.registry.diff_revisions_modelo_help")),
-    ],
-    from_year: Annotated[
-        int,
-        typer.Option("--from-year", help=tr("cli.registry.diff_revisions_from_year_help")),
-    ],
-    to_year: Annotated[
-        int,
-        typer.Option("--to-year", help=tr("cli.registry.diff_revisions_to_year_help")),
-    ],
-    registry_root: _RegistryRootOpt = None,
-    source_root: _SourceRootOpt = None,
+    modelo: str,
+    from_year: int,
+    to_year: int,
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
 ) -> None:
     """Diff the two registry revisions of one modelo that cover ``--from-year`` and ``--to-year``.
 
@@ -288,12 +223,8 @@ def _diff_revisions_lines(report: RegistryRevisionDiffReport) -> list[str]:
     return lines
 
 
-for _callback in (inspect_registry_cmd, verify_registry_cmd, verify_filed_state_cmd, diff_revisions_cmd):
-    command_execution_policy(REGISTRY_READ)(_callback)
-
-
 __all__ = [
-    "app",
+    "diff_revisions_cmd",
     "inspect_registry_cmd",
     "verify_filed_state_cmd",
     "verify_registry_cmd",

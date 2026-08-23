@@ -51,8 +51,6 @@ from ...domain.transactions import (
     TransactionValidationError,
     is_classified,
 )
-from ._bienes_inversion_cli import register_bienes_inversion_commands
-from ._command_policy import command_execution_policy
 from ._common import (
     _bad,
     _emit_envelope,
@@ -61,22 +59,7 @@ from ._common import (
     _state,
     _tx_repo,
 )
-from ._ledger_business_invoice_cli import (
-    invoice_app,
-    register_business_invoice_commands,
-)
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
-from ._ledger_counterparty_cli import register_counterparty_commands
-from ._ledger_evidence_cli import register_evidence_commands
-from ._ledger_execution_policies import (
-    LEDGER_COMPUTE_WRITE,
-    LEDGER_NETWORK_COMPUTE_WRITE,
-    LEDGER_NETWORK_WRITE,
-    LEDGER_WRITE,
-    declare_metadata_group,
-)
-from ._ledger_import_cli import register_import_commands
-from ._ledger_inventory_cli import inventory_app, register_inventory_commands
 from ._ledger_lifecycle_cli import (
     ledger_archive,
     ledger_attach,
@@ -87,7 +70,6 @@ from ._ledger_lifecycle_cli import (
     ledger_reset,
     ledger_split,
     ledger_stash,
-    register_lifecycle_commands,
 )
 from ._ledger_llm_cli import (
     dispatch_autosplit,
@@ -104,9 +86,6 @@ from ._ledger_m210_classify_cli import (
     M210PayerModeOpt,
     M210TipoRentaCodeOpt,
 )
-from ._ledger_ratios_cli import ratios_app, register_ratios_commands
-from ._ledger_read_cli import register_read_commands
-from ._ledger_rules_cli import register_rule_commands, rule_app
 from ._ledger_support import (
     _emit_update_result,
     _invoice_link_error_bad_parameter,
@@ -123,14 +102,10 @@ from ._ledger_support import (
     _validate_business_pct_range,
     _validate_category_id,
 )
-from ._prorrata_register_cli import register_prorrata_register_commands
 
 _log = get_logger(__name__)
 
 __all__ = [
-    "app",
-    "inventory_app",
-    "invoice_app",
     "ledger_archive",
     "ledger_attach",
     "ledger_doclink",
@@ -140,16 +115,7 @@ __all__ = [
     "ledger_reset",
     "ledger_split",
     "ledger_stash",
-    "ratios_app",
-    "rule_app",
 ]
-
-app = typer.Typer(
-    name="ledger",
-    help=tr("cli.ledger.app_help"),
-    no_args_is_help=True,
-)
-declare_metadata_group(app)
 
 
 def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
@@ -270,76 +236,38 @@ def _prorrata_sector_unmatched_notice(
     )
 
 
-@app.command("add", help=tr("cli.ledger.add.help"))
-@command_execution_policy(LEDGER_NETWORK_WRITE)
 def ledger_add(
     ctx: typer.Context,
-    booked_date: str = typer.Option(..., "--date", help=tr("cli.ledger.add.date_help")),
-    amount: str = typer.Option(..., "--amount", help=tr("cli.ledger.add.amount_help")),
-    direction: TransactionDirection = typer.Option(..., "--direction", help=tr("cli.ledger.add.direction_help")),
-    description: str = typer.Option(..., "--description", help=tr("cli.ledger.add.description_help")),
-    value_date: str | None = typer.Option(None, "--value-date", help=tr("cli.ledger.add.value_date_help")),
-    currency: str = typer.Option(DEFAULT_CURRENCY, "--currency", help=tr("cli.ledger.add.currency_help")),
-    counterparty: str | None = typer.Option(None, "--counterparty", help=tr("cli.ledger.add.counterparty_help")),
-    business_classification: BusinessClassification = typer.Option(
-        BusinessClassification.NOT_YET_PROCESSED,
-        "--classification",
-        help=tr("cli.ledger.add.classification_help"),
-    ),
-    business_pct: str | None = typer.Option(None, "--business-pct", help=tr("cli.ledger.add.business_pct_help")),
-    category_id: str | None = typer.Option(None, "--category-id", help=tr("cli.ledger.add.category_help")),
-    taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.ledger.add.taxable_base_help")),
-    iva_rate: str | None = typer.Option(None, "--iva-rate", help=tr("cli.ledger.add.iva_rate_help")),
-    iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.add.iva_amount_help")),
-    iva_category: _IvaCategoryOpt = None,
-    deduction_fact_kind: _DeductionFactKindOpt = None,
-    counterparty_country: _CounterpartyCountryOpt = None,
-    counterparty_identification_state: _CounterpartyIdentificationStateOpt = None,
-    recargo_amount: str | None = typer.Option(None, "--recargo-amount", help=tr("cli.ledger.add.recargo_amount_help")),
-    irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.add.irpf_category_help")),
-    usage_ratio_id: str | None = typer.Option(None, "--usage-ratio-id", help=tr("cli.ledger.add.usage_ratio_help")),
-    prorrata_reference: str | None = typer.Option(
-        None,
-        "--prorrata-reference",
-        help=tr("cli.ledger.add.prorrata_reference_help"),
-    ),
-    art_104_tres_exclusion: Art104TresExclusion | None = typer.Option(
-        None,
-        "--art-104-tres-exclusion",
-        help=tr("cli.ledger.add.art_104_tres_exclusion_help"),
-    ),
-    input_classification: InputClassification | None = typer.Option(
-        None,
-        "--input-classification",
-        help=tr("cli.ledger.add.input_classification_help"),
-    ),
-    prorrata_sector: str | None = typer.Option(
-        None,
-        "--sector",
-        help=tr("cli.ledger.add.prorrata_sector_help"),
-    ),
-    purchase_invoice_evidence_id: str | None = typer.Option(
-        None,
-        "--purchase-invoice-evidence-id",
-        help=tr("cli.ledger.add.purchase_invoice_evidence_help"),
-    ),
-    attachment_ids: list[str] = typer.Option(
-        [],
-        "--attachment-id",
-        help=tr("cli.ledger.add.attachment_help"),
-    ),
-    notes: str = typer.Option("", "--notes", help=tr("cli.ledger.add.notes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.add.actor_help")),
-    idempotency_key: str | None = typer.Option(
-        None,
-        "--idempotency-key",
-        help=tr("cli.ledger.add.idempotency_key_help"),
-    ),
-    source_jurisdiction: str | None = typer.Option(
-        None,
-        "--source-jurisdiction",
-        help=tr("cli.ledger.add.source_jurisdiction_help"),
-    ),
+    booked_date: str = ...,
+    amount: str = ...,
+    direction: TransactionDirection = ...,
+    description: str = ...,
+    value_date: str | None = None,
+    currency: str = DEFAULT_CURRENCY,
+    counterparty: str | None = None,
+    business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED,
+    business_pct: str | None = None,
+    category_id: str | None = None,
+    taxable_base: str | None = None,
+    iva_rate: str | None = None,
+    iva_amount: str | None = None,
+    iva_category: IvaCategory | None = None,
+    deduction_fact_kind: IvaDeductionFactKind | None = None,
+    counterparty_country: str | None = None,
+    counterparty_identification_state: EUMemberState | None = None,
+    recargo_amount: str | None = None,
+    irpf_category: str | None = None,
+    usage_ratio_id: str | None = None,
+    prorrata_reference: str | None = None,
+    art_104_tres_exclusion: Art104TresExclusion | None = None,
+    input_classification: InputClassification | None = None,
+    prorrata_sector: str | None = None,
+    purchase_invoice_evidence_id: str | None = None,
+    attachment_ids: tuple[str, ...] = (),
+    notes: str = "",
+    actor: str | None = None,
+    idempotency_key: str | None = None,
+    source_jurisdiction: str | None = None,
 ) -> None:
     """Create one manual ledger transaction through the bucket-scoped backend."""
     operator_assignable_on_add = (
@@ -482,29 +410,23 @@ def ledger_add(
     )
 
 
-@app.command("update", help=tr("cli.ledger.update.help"))
-@command_execution_policy(LEDGER_WRITE)
 def ledger_update(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.update.id_help")),
-    booked_date: str | None = typer.Option(None, "--date", help=tr("cli.ledger.update.date_help")),
-    value_date: str | None = typer.Option(None, "--value-date", help=tr("cli.ledger.update.value_date_help")),
-    amount: str | None = typer.Option(None, "--amount", help=tr("cli.ledger.update.amount_help")),
-    direction: TransactionDirection | None = typer.Option(
-        None,
-        "--direction",
-        help=tr("cli.ledger.update.direction_help"),
-    ),
-    currency: str | None = typer.Option(None, "--currency", help=tr("cli.ledger.update.currency_help")),
-    counterparty: str | None = typer.Option(None, "--counterparty", help=tr("cli.ledger.update.counterparty_help")),
-    description: str | None = typer.Option(None, "--description", help=tr("cli.ledger.update.description_help")),
-    taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.ledger.update.taxable_base_help")),
-    iva_rate: str | None = typer.Option(None, "--iva-rate", help=tr("cli.ledger.update.iva_rate_help")),
-    iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.update.iva_amount_help")),
-    irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.update.irpf_category_help")),
-    notes: str | None = typer.Option(None, "--notes", help=tr("cli.ledger.update.notes_help")),
-    group: str | None = typer.Option(None, "--group", help=tr("cli.ledger.update.group_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.update.actor_help")),
+    transaction_id: str = ...,
+    booked_date: str | None = None,
+    value_date: str | None = None,
+    amount: str | None = None,
+    direction: TransactionDirection | None = None,
+    currency: str | None = None,
+    counterparty: str | None = None,
+    description: str | None = None,
+    taxable_base: str | None = None,
+    iva_rate: str | None = None,
+    iva_amount: str | None = None,
+    irpf_category: str | None = None,
+    notes: str | None = None,
+    group: str | None = None,
+    actor: str | None = None,
 ) -> None:
     """Correct editable transaction facts through the bucket-scoped backend."""
     state = _state()
@@ -579,59 +501,37 @@ _FileOpt = Annotated[
 ]
 
 
-@app.command("classify", help=tr("cli.ledger.classify.help"))
-@command_execution_policy(LEDGER_NETWORK_COMPUTE_WRITE)
 def ledger_classify(
     ctx: typer.Context,
-    transaction_id: str | None = typer.Argument(None, help=tr("cli.ledger.classify.id_help")),
-    classification: BusinessClassification | None = typer.Option(
-        None,
-        "--classification",
-        help=tr("cli.ledger.classify.classification_help"),
-    ),
-    file: _FileOpt = None,
-    business_pct: str | None = typer.Option(
-        None,
-        "--business-pct",
-        help=tr("cli.ledger.classify.business_pct_help"),
-    ),
-    category_id: str | None = typer.Option(None, "--category-id", help=tr("cli.ledger.classify.category_help")),
-    taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.ledger.classify.taxable_base_help")),
-    iva_rate: str | None = typer.Option(None, "--iva-rate", help=tr("cli.ledger.classify.iva_rate_help")),
-    iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.classify.iva_amount_help")),
-    irpf_category: str | None = typer.Option(
-        None,
-        "--irpf-category",
-        help=tr("cli.ledger.classify.irpf_category_help"),
-    ),
+    transaction_id: str | None = None,
+    classification: BusinessClassification | None = None,
+    file: str | None = None,
+    business_pct: str | None = None,
+    category_id: str | None = None,
+    taxable_base: str | None = None,
+    iva_rate: str | None = None,
+    iva_amount: str | None = None,
+    irpf_category: str | None = None,
     m210_tipo_renta_code: M210TipoRentaCodeOpt = None,
     m210_gross_income_amount: M210GrossIncomeAmountOpt = None,
     m210_applicable_rate: M210ApplicableRateOpt = None,
     m210_payer_mode: M210PayerModeOpt = None,
     m210_payer_id: M210PayerIdOpt = None,
     m210_asset_or_right_id: M210AssetOrRightIdOpt = None,
-    iva_category: _IvaCategoryOpt = None,
-    deduction_fact_kind: _DeductionFactKindOpt = None,
-    counterparty_country: _CounterpartyCountryOpt = None,
-    counterparty_identification_state: _CounterpartyIdentificationStateOpt = None,
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.classify.actor_help")),
-    reaffirm: bool = typer.Option(False, "--reaffirm", help=tr("cli.ledger.classify.reaffirm_help")),
-    llm: bool = typer.Option(False, "--llm", help=tr("cli.ledger.classify.llm_help")),
-    apply: bool = typer.Option(False, "--apply", help=tr("cli.ledger.classify.apply_help")),
-    saturate: bool = typer.Option(False, "--saturate", help=tr("cli.ledger.classify.saturate_help")),
-    read_evidence: bool = typer.Option(False, "--read-evidence", help=tr("cli.ledger.classify.read_evidence_help")),
-    vision_model: str | None = typer.Option(
-        None,
-        "--vision-model",
-        help=tr("cli.ledger.classify.vision_model_help"),
-    ),
-    auto_split: bool = typer.Option(
-        False,
-        "--auto-split",
-        help=tr("cli.ledger.classify.auto_split_help"),
-    ),
-    reject: bool = typer.Option(False, "--reject", help=tr("cli.ledger.classify.reject_help")),
-    reason: str | None = typer.Option(None, "--reason", help=tr("cli.ledger.classify.reason_help")),
+    iva_category: IvaCategory | None = None,
+    deduction_fact_kind: IvaDeductionFactKind | None = None,
+    counterparty_country: str | None = None,
+    counterparty_identification_state: EUMemberState | None = None,
+    actor: str | None = None,
+    reaffirm: bool = False,
+    llm: bool = False,
+    apply: bool = False,
+    saturate: bool = False,
+    read_evidence: bool = False,
+    vision_model: str | None = None,
+    auto_split: bool = False,
+    reject: bool = False,
+    reason: str | None = None,
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--file)."""
     m210_options = M210LedgerClassifyOptions(
@@ -775,24 +675,14 @@ def ledger_classify(
     )
 
 
-@app.command("allocate", help=tr("cli.ledger.allocate.help"))
-@command_execution_policy(LEDGER_COMPUTE_WRITE)
 def ledger_allocate(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.allocate.id_help")),
-    business_pct: str = typer.Option(..., "--business-pct", help=tr("cli.ledger.allocate.business_pct_help")),
-    category_id: str | None = typer.Option(None, "--category-id", help=tr("cli.ledger.allocate.category_help")),
-    usage_ratio_id: str | None = typer.Option(
-        None,
-        "--usage-ratio-id",
-        help=tr("cli.ledger.allocate.usage_ratio_help"),
-    ),
-    prorrata_reference: str | None = typer.Option(
-        None,
-        "--prorrata-reference",
-        help=tr("cli.ledger.allocate.prorrata_reference_help"),
-    ),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.allocate.actor_help")),
+    transaction_id: str = ...,
+    business_pct: str = ...,
+    category_id: str | None = None,
+    usage_ratio_id: str | None = None,
+    prorrata_reference: str | None = None,
+    actor: str | None = None,
 ) -> None:
     """Record business/private proportionality through the ledger backend."""
     state = _state()
@@ -843,30 +733,11 @@ def ledger_allocate(
     )
 
 
-register_lifecycle_commands(app)
-
-
-@app.command(
-    "link",
-    help=tr("cli.ledger.link.help"),
-)
-@command_execution_policy(LEDGER_COMPUTE_WRITE)
 def ledger_link(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(
-        ...,
-        help=tr("cli.ledger.link.id_help"),
-    ),
-    invoice_id: str = typer.Option(
-        ...,
-        "--invoice-id",
-        help=tr("cli.ledger.link.invoice_id_help"),
-    ),
-    actor: str | None = typer.Option(
-        None,
-        "--by",
-        help=tr("cli.ledger.link.actor_help"),
-    ),
+    transaction_id: str = ...,
+    invoice_id: str = ...,
+    actor: str | None = None,
 ) -> None:
     """Bind a transaction to one reconciliation-catalogue invoice, atomically."""
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -928,31 +799,3 @@ def ledger_link(
         result=LedgerLinkResult.model_validate(payload),
         lines=lines,
     )
-
-
-register_read_commands(app, resolve_transaction_id=_resolve_read_id)
-
-
-register_ratios_commands(app)
-
-
-register_business_invoice_commands(app)
-
-
-register_inventory_commands(app)
-
-
-register_bienes_inversion_commands(app)
-
-
-register_prorrata_register_commands(app)
-
-
-register_evidence_commands(app)
-
-
-register_rule_commands(app)
-register_counterparty_commands(app)
-
-
-register_import_commands(app)

@@ -42,10 +42,8 @@ from ...domain.prorrata_register import (
     ProrrataRegisterValidationError,
     SectorDefinition,
 )
-from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope, parse_decimal_amount
 from ._common import active_bucket_id_or_refuse as _register_bucket_id
-from ._ledger_execution_policies import LEDGER_READ, LEDGER_WRITE, declare_metadata_group
 from ._prorrata_register_payloads import (
     ProrrataDeclareSectorResult,
     ProrrataElectEspecialResult,
@@ -140,11 +138,6 @@ _OptionalEvidenceReferenceOpt = Annotated[
 ]
 
 
-def register_prorrata_register_commands(app: typer.Typer) -> None:
-    """Mount the cross-period prorrata register command group on the ledger app."""
-    app.add_typer(prorrata_app, name="prorrata")
-
-
 prorrata_app = typer.Typer(
     name="prorrata",
     help=tr(
@@ -156,7 +149,6 @@ prorrata_app = typer.Typer(
     ),
     no_args_is_help=True,
 )
-declare_metadata_group(prorrata_app)
 
 
 def _entry_payload(entry: ProrrataRegisterEntry) -> ProrrataEntryPayload:
@@ -276,32 +268,14 @@ def _elect(
     )
 
 
-@prorrata_app.command(
-    "elect-especial",
-    help=tr(
-        "cli.app.ledger.prorrata.elect_especial_help",
-        default=(
-            "Elect prorrata especial for an ejercicio (LIVA art. 103.Dos.1): per-input deduction "
-            "routes by --input-classification on each ledger row."
-        ),
-    ),
-)
-@command_execution_policy(LEDGER_WRITE)
 def prorrata_elect_especial(
     ctx: typer.Context,
-    ejercicio: _EjercicioOpt,
-    percentage: str = typer.Option(
-        ...,
-        "--percentage",
-        help=tr(
-            "cli.app.ledger.prorrata.percentage_help",
-            default="Common-use deduction percentage 0-100 (LIVA art. 106.Uno regla 3.a / art. 104.Dos).",
-        ),
-    ),
-    evidence_reference: _OptionalEvidenceReferenceOpt = None,
-    provenance: _ProvenanceOpt = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
-    reference: _ReferenceOpt = None,
-    sector: _SectorOpt = None,
+    ejercicio: int,
+    percentage: str = ...,
+    evidence_reference: str | None = None,
+    provenance: ProrrataProvisionalProvenance = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+    reference: str | None = None,
+    sector: str | None = None,
 ) -> None:
     """Persist an ``ESPECIAL`` :class:`ProrrataRegisterEntry` for the ejercicio."""
     _elect(
@@ -325,31 +299,13 @@ def prorrata_elect_especial(
     )
 
 
-@prorrata_app.command(
-    "elect-general",
-    help=tr(
-        "cli.app.ledger.prorrata.elect_general_help",
-        default=(
-            "Elect prorrata general for an ejercicio (LIVA art. 104): one deduction percentage "
-            "applies to every deducible cuota."
-        ),
-    ),
-)
-@command_execution_policy(LEDGER_WRITE)
 def prorrata_elect_general(
     ctx: typer.Context,
-    ejercicio: _EjercicioOpt,
-    percentage: str = typer.Option(
-        ...,
-        "--percentage",
-        help=tr(
-            "cli.app.ledger.prorrata.general_percentage_help",
-            default="Provisional deduction percentage 0-100 (LIVA art. 104.Uno + 105.Uno).",
-        ),
-    ),
-    provenance: _ProvenanceOpt = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
-    reference: _ReferenceOpt = None,
-    sector: _SectorOpt = None,
+    ejercicio: int,
+    percentage: str = ...,
+    provenance: ProrrataProvisionalProvenance = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+    reference: str | None = None,
+    sector: str | None = None,
 ) -> None:
     """Persist a ``GENERAL`` :class:`ProrrataRegisterEntry` for the ejercicio.
 
@@ -371,29 +327,14 @@ def prorrata_elect_general(
     )
 
 
-@prorrata_app.command(
-    "revoke-especial",
-    help=tr(
-        "cli.app.ledger.prorrata.revoke_especial_help",
-        default=("Revoke prorrata especial for an ejercicio after a prior-year especial state (LIVA art. 103.Dos.1)."),
-    ),
-)
-@command_execution_policy(LEDGER_WRITE)
 def prorrata_revoke_especial(
     ctx: typer.Context,
-    ejercicio: _EjercicioOpt,
-    evidence_reference: _EvidenceReferenceOpt,
-    percentage: str = typer.Option(
-        ...,
-        "--percentage",
-        help=tr(
-            "cli.app.ledger.prorrata.general_percentage_help",
-            default="Provisional deduction percentage 0-100 (LIVA art. 104.Uno + 105.Uno).",
-        ),
-    ),
-    provenance: _ProvenanceOpt = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
-    reference: _ReferenceOpt = None,
-    sector: _SectorOpt = None,
+    ejercicio: int,
+    evidence_reference: str,
+    percentage: str = ...,
+    provenance: ProrrataProvisionalProvenance = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+    reference: str | None = None,
+    sector: str | None = None,
 ) -> None:
     """Persist a typed prorrata-especial revocation for the ejercicio."""
     _elect(
@@ -413,43 +354,11 @@ def prorrata_revoke_especial(
     )
 
 
-@prorrata_app.command(
-    "declare-sector",
-    help=tr(
-        "cli.app.ledger.prorrata.declare_sector_help",
-        default=(
-            "Declare one differentiated sector (LIVA arts. 9.1.c / 101): the operator's "
-            "art. 9.1.c partition, never inferred from the ledger."
-        ),
-    ),
-)
-@command_execution_policy(LEDGER_WRITE)
 def prorrata_declare_sector(
     ctx: typer.Context,
-    sector_id: str = typer.Option(
-        ...,
-        "--sector-id",
-        help=tr(
-            "cli.app.ledger.prorrata.sector_id_help",
-            default="Stable sector id the register entries and ledger rows reference.",
-        ),
-    ),
-    letra: SectorDiferenciadoLetra = typer.Option(
-        ...,
-        "--letra",
-        help=tr(
-            "cli.app.ledger.prorrata.letra_help",
-            default="LIVA art. 9.1.c letra (a/b/c/d) that makes this sector differentiated.",
-        ),
-    ),
-    activity_code: list[str] = typer.Option(
-        [],
-        "--activity-code",
-        help=tr(
-            "cli.app.ledger.prorrata.activity_code_help",
-            default="CNAE / IAE activity code grouped into this sector (repeatable, at least one).",
-        ),
-    ),
+    sector_id: str = ...,
+    letra: SectorDiferenciadoLetra = ...,
+    activity_code: tuple[str, ...] = (),
 ) -> None:
     """Persist one :class:`SectorDefinition` onto the register partition."""
     bucket_id = _register_bucket_id()
@@ -481,14 +390,6 @@ def prorrata_declare_sector(
     )
 
 
-@prorrata_app.command(
-    "list",
-    help=tr(
-        "cli.app.ledger.prorrata.list_help",
-        default="List every register entry and declared differentiated sector on the active profile.",
-    ),
-)
-@command_execution_policy(LEDGER_READ)
 def prorrata_list(ctx: typer.Context) -> None:
     """List the register via :class:`ProrrataRegisterService`."""
     bucket_id = _register_bucket_id()

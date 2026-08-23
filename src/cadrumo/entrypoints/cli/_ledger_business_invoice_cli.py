@@ -38,7 +38,6 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices import Invoice, InvoiceClass, InvoiceValidationError
 from ...domain.iva import InvoiceKind, IvaCategory
-from ._command_policy import command_execution_policy
 from ._common import (
     _bad,
     _emit_envelope,
@@ -59,20 +58,7 @@ from ._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceViewResult,
     CatalogueInvoiceWizardResult,
 )
-from ._ledger_execution_policies import (
-    LEDGER_DESTRUCTIVE,
-    LEDGER_NETWORK_WRITE,
-    LEDGER_READ,
-    LEDGER_WRITE,
-    declare_metadata_group,
-)
 from ._ledger_support import _ledger_cli_no_recovery
-
-
-def register_business_invoice_commands(app: typer.Typer) -> None:
-    """Mount the unified invoice command group on the ledger app."""
-    app.add_typer(invoice_app, name="invoice")
-
 
 _OPERATION_TYPE_TO_IVA_CATEGORY: dict[IntracomOperationType, IvaCategory] = {
     IntracomOperationType.E: IvaCategory.INTRA_COMMUNITY_SUPPLY,
@@ -95,14 +81,6 @@ def _catalogue_iva_category_for_operation_type(
     if operation_type is None:
         return None
     return _OPERATION_TYPE_TO_IVA_CATEGORY.get(operation_type)
-
-
-invoice_app = typer.Typer(
-    name="invoice",
-    help=tr("cli.app.ledger.invoice.group_help"),
-    no_args_is_help=True,
-)
-declare_metadata_group(invoice_app)
 
 
 # The invoice fields every operator surface renders, declared once. Both
@@ -382,32 +360,27 @@ _CatalogueRetentionAmountOpt = Annotated[
 ]
 
 
-@invoice_app.command(
-    "add",
-    help=tr("cli.app.ledger.invoice.add_help"),
-)
-@command_execution_policy(LEDGER_NETWORK_WRITE)
 def invoice_add(
     ctx: typer.Context,
-    kind: _CatalogueKindOpt,
-    counterparty_name: _CatalogueCounterpartyNameOpt,
-    invoice_number: _CatalogueInvoiceNumberOpt,
-    invoice_date: _CatalogueInvoiceDateOpt,
-    taxable_base: _CatalogueTaxableBaseOpt,
-    country_code: _CatalogueCountryCodeOpt,
-    iva_rate: _CatalogueIvaRateOpt = None,
-    currency: _CatalogueCurrencyOpt = DEFAULT_CURRENCY,
-    operation_type: _CatalogueOperationTypeOpt = None,
-    operation_date: _CatalogueOperationDateOpt = None,
-    retention_rate: _CatalogueRetentionRateOpt = None,
-    retention_amount: _CatalogueRetentionAmountOpt = None,
-    invoice_class: _CatalogueInvoiceClassOpt = None,
-    counterparty_nif: _CatalogueCounterpartyNifOpt = None,
-    series: _CatalogueSeriesOpt = None,
-    rectifies_invoice_number: _CatalogueRectifiesOpt = None,
-    recargo: _CatalogueRecargoOpt = None,
-    iva_category: _CatalogueIvaCategoryOpt = None,
-    notes: _CatalogueNotesOpt = "",
+    kind: InvoiceKind,
+    counterparty_name: str,
+    invoice_number: str,
+    invoice_date: str,
+    taxable_base: str,
+    country_code: str,
+    iva_rate: str | None = None,
+    currency: str = DEFAULT_CURRENCY,
+    operation_type: IntracomOperationType | None = None,
+    operation_date: str | None = None,
+    retention_rate: str | None = None,
+    retention_amount: str | None = None,
+    invoice_class: InvoiceClass | None = None,
+    counterparty_nif: str | None = None,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
+    recargo: str | None = None,
+    iva_category: IvaCategory | None = None,
+    notes: str = "",
 ) -> None:
     """Create a rich linkable invoice in the reconciliation catalogue.
 
@@ -473,32 +446,27 @@ def invoice_add(
     )
 
 
-@invoice_app.command(
-    "wizard",
-    help=tr("cli.app.ledger.invoice.wizard_help"),
-)
-@command_execution_policy(LEDGER_NETWORK_WRITE)
 def invoice_wizard(
     ctx: typer.Context,
-    kind: _CatalogueKindOpt,
-    counterparty_nif: _WizardCounterpartyNifOpt,
-    counterparty_name: _CatalogueCounterpartyNameOpt,
-    invoice_number: _CatalogueInvoiceNumberOpt,
-    invoice_date: _CatalogueInvoiceDateOpt,
-    taxable_base: _CatalogueTaxableBaseOpt,
-    country_code: _CatalogueCountryCodeOpt,
-    iva_rate: _CatalogueIvaRateOpt = None,
-    currency: _CatalogueCurrencyOpt = DEFAULT_CURRENCY,
-    operation_type: _CatalogueOperationTypeOpt = None,
-    operation_date: _CatalogueOperationDateOpt = None,
-    retention_rate: _CatalogueRetentionRateOpt = None,
-    retention_amount: _CatalogueRetentionAmountOpt = None,
-    invoice_class: _CatalogueInvoiceClassOpt = None,
-    series: _CatalogueSeriesOpt = None,
-    rectifies_invoice_number: _CatalogueRectifiesOpt = None,
-    recargo: _CatalogueRecargoOpt = None,
-    iva_category: _CatalogueIvaCategoryOpt = None,
-    notes: _CatalogueNotesOpt = "",
+    kind: InvoiceKind,
+    counterparty_nif: str,
+    counterparty_name: str,
+    invoice_number: str,
+    invoice_date: str,
+    taxable_base: str,
+    country_code: str,
+    iva_rate: str | None = None,
+    currency: str = DEFAULT_CURRENCY,
+    operation_type: IntracomOperationType | None = None,
+    operation_date: str | None = None,
+    retention_rate: str | None = None,
+    retention_amount: str | None = None,
+    invoice_class: InvoiceClass | None = None,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
+    recargo: str | None = None,
+    iva_category: IvaCategory | None = None,
+    notes: str = "",
 ) -> None:
     """Guided manual-entry invoice creation for when extraction is unavailable.
 
@@ -576,28 +544,11 @@ def invoice_wizard(
     )
 
 
-@invoice_app.command(
-    "import",
-    help=tr("cli.app.ledger.invoice.import_help"),
-)
-@command_execution_policy(LEDGER_NETWORK_WRITE)
 def invoice_import(
     ctx: typer.Context,
-    file: Path = typer.Option(
-        ...,
-        "--file",
-        help=tr("cli.app.ledger.invoice.import_file_help"),
-    ),
-    kind: InvoiceKind = typer.Option(
-        ...,
-        "--kind",
-        help=tr("cli.app.ledger.invoice.kind_help"),
-    ),
-    country: str | None = typer.Option(
-        None,
-        "--country",
-        help=tr("cli.app.ledger.invoice.import_country_help"),
-    ),
+    file: Path = ...,
+    kind: InvoiceKind = ...,
+    country: str | None = None,
 ) -> None:
     """Bulk-create reconciliation catalogue invoices from a CSV/XLSX file.
 
@@ -765,18 +716,9 @@ def _invoice_column_role_mapper() -> tuple[Callable[[Sequence[str]], Sequence[Fi
     return resolve, reasons
 
 
-@invoice_app.command(
-    "list",
-    help=tr("cli.app.ledger.invoice.list_help"),
-)
-@command_execution_policy(LEDGER_READ)
 def invoice_list(
     ctx: typer.Context,
-    kind: InvoiceKind | None = typer.Option(
-        None,
-        "--kind",
-        help=tr("cli.app.ledger.invoice.kind_help"),
-    ),
+    kind: InvoiceKind | None = None,
 ) -> None:
     """List the rich reconciliation catalogue invoices for the active bucket."""
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -805,17 +747,9 @@ def invoice_list(
     )
 
 
-@invoice_app.command(
-    "view",
-    help=tr("cli.app.ledger.invoice.view_help"),
-)
-@command_execution_policy(LEDGER_READ)
 def invoice_view(
     ctx: typer.Context,
-    invoice_id: str = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.invoice.invoice_id_help"),
-    ),
+    invoice_id: str = ...,
 ) -> None:
     """Show one rich catalogue invoice, resolving a full id or unambiguous prefix.
 
@@ -835,22 +769,10 @@ def invoice_view(
     )
 
 
-@invoice_app.command(
-    "remove",
-    help=tr("cli.app.ledger.invoice.remove_help"),
-)
-@command_execution_policy(LEDGER_DESTRUCTIVE)
 def invoice_remove(
     ctx: typer.Context,
-    invoice_id: str = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.invoice.invoice_id_help"),
-    ),
-    yes: bool = typer.Option(
-        False,
-        "--yes",
-        help=tr("cli.app.ledger.invoice.yes_help"),
-    ),
+    invoice_id: str = ...,
+    yes: bool = False,
 ) -> None:
     """Delete one rich catalogue invoice, resolving a full id or unambiguous prefix.
 
@@ -873,28 +795,20 @@ def invoice_remove(
     )
 
 
-@invoice_app.command(
-    "update",
-    help=tr("cli.app.ledger.invoice.update_help"),
-)
-@command_execution_policy(LEDGER_WRITE)
 def invoice_update(
     ctx: typer.Context,
-    invoice_id: str = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.invoice.invoice_id_help"),
-    ),
+    invoice_id: str = ...,
     counterparty_name: _CatalogueCounterpartyNameOpt | None = None,
     counterparty_country: _CatalogueCountryCodeOpt | None = None,
     notes: _CatalogueNotesOpt | None = None,
-    iva_category: _CatalogueIvaCategoryOpt = None,
-    operation_type: _CatalogueOperationTypeOpt = None,
-    operation_date: _CatalogueOperationDateOpt = None,
-    retention_rate: _CatalogueRetentionRateOpt = None,
-    retention_amount: _CatalogueRetentionAmountOpt = None,
-    invoice_class: _CatalogueInvoiceClassOpt = None,
-    series: _CatalogueSeriesOpt = None,
-    rectifies_invoice_number: _CatalogueRectifiesOpt = None,
+    iva_category: IvaCategory | None = None,
+    operation_type: IntracomOperationType | None = None,
+    operation_date: str | None = None,
+    retention_rate: str | None = None,
+    retention_amount: str | None = None,
+    invoice_class: InvoiceClass | None = None,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
 ) -> None:
     """Correct one persisted invoice without re-keying it.
 

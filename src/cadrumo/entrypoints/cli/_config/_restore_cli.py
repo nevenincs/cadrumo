@@ -43,12 +43,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import typer
-from pydantic import BaseModel, ConfigDict, SecretStr
+from pydantic import SecretStr
 
 from ....core.i18n import OutputLanguage, tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from .._machine_secret_contract import register_machine_secret_payload_model
+from ._secure_input import MachineSecretPayload, MachineSecretSelection
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfileCapsuleSource, ProfileRestoreOutcome
@@ -56,41 +58,43 @@ if TYPE_CHECKING:
 _RECOVERY_LIMIT_NOTICE_CODE = "config.profile.restore.password_unchanged"
 
 
-class _RestorePasswordSecrets(BaseModel):
-    """Strict machine-channel payload for the password door."""
+class _RestorePassphraseSecrets(MachineSecretPayload):
+    """Strict machine-channel payload for the passphrase door."""
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    password: SecretStr
+    passphrase: SecretStr
 
 
-class _RestoreRecoverySecrets(BaseModel):
+class _RestoreRecoverySecrets(MachineSecretPayload):
     """Strict machine-channel payload for the recovery-artifact door."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
 
     recovery_secret: SecretStr
 
 
-def _collect_password(*, secrets_stdin: bool, secrets_fd: int | None) -> str:
-    """Resolve the profile password from one channel, machine or interactive."""
-    from ._secure_input import prompt_secret_no_echo, read_secrets_fd, read_secrets_stdin
+register_machine_secret_payload_model("config.profile.restore", "passphrase", _RestorePassphraseSecrets)
+register_machine_secret_payload_model("config.profile.restore", "recovery", _RestoreRecoverySecrets)
 
-    if secrets_fd is not None:
-        return read_secrets_fd(_RestorePasswordSecrets, descriptor=secrets_fd).password.get_secret_value()
-    if secrets_stdin:
-        return read_secrets_stdin(_RestorePasswordSecrets).password.get_secret_value()
+
+def _collect_passphrase(*, selection: MachineSecretSelection | None) -> str:
+    """Resolve the profile passphrase from one explicit channel or a verified prompt."""
+    from ._secure_input import prompt_secret_no_echo, read_machine_secret_payload
+
+    if selection is not None:
+        return read_machine_secret_payload(
+            _RestorePassphraseSecrets,
+            selection=selection,
+        ).passphrase.get_secret_value()
     return prompt_secret_no_echo(tr("cli.config.custody.current_passphrase_prompt"))
 
 
-def _collect_recovery_secret(*, secrets_stdin: bool, secrets_fd: int | None) -> str:
-    """Resolve the 24-word recovery phrase from one channel."""
-    from ._secure_input import prompt_secret_no_echo, read_secrets_fd, read_secrets_stdin
+def _collect_recovery_secret(*, selection: MachineSecretSelection | None) -> str:
+    """Resolve the 24-word recovery phrase from one explicit channel or a verified prompt."""
+    from ._secure_input import prompt_secret_no_echo, read_machine_secret_payload
 
-    if secrets_fd is not None:
-        return read_secrets_fd(_RestoreRecoverySecrets, descriptor=secrets_fd).recovery_secret.get_secret_value()
-    if secrets_stdin:
-        return read_secrets_stdin(_RestoreRecoverySecrets).recovery_secret.get_secret_value()
+    if selection is not None:
+        return read_machine_secret_payload(
+            _RestoreRecoverySecrets,
+            selection=selection,
+        ).recovery_secret.get_secret_value()
     return prompt_secret_no_echo(tr("cli.config.profile.restore.recovery_secret_prompt"))
 
 
@@ -138,59 +142,64 @@ def profile_restore(
     secrets_fd: int | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
-        """Republish a capsule directory as a usable profile."""
-        _activate_subcommand_output_language(ctx, output_language)
-        from ....application.user_profile import (
-            restore_profile_capsule_with_password,
-            restore_profile_capsule_with_recovery_artifact,
+    """Republish a capsule directory as a usable profile."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile import (
+        restore_profile_capsule_with_password,
+        restore_profile_capsule_with_recovery_artifact,
+    )
+    from .._config_payloads import ConfigProfileRestoreResult
+    from ._secure_input import select_machine_secret_channel
+
+    # Refuse an ambiguous source before reading the capsule, prompting, proving
+    # custody, opening a publication transaction, or mutating storage.
+    selection = select_machine_secret_channel(
+        secrets_stdin=secrets_stdin,
+        secrets_fd=secrets_fd,
+    )
+
+    # Read the public capsule before consuming or prompting for its credential:
+    # a malformed source should not make an operator restage a secret.
+    capsule = _read_capsule_source(file)
+
+    notices: list[Notice] = []
+    if artifact is None:
+        outcome = restore_profile_capsule_with_password(
+            label=label,
+            capsule=capsule,
+            password=_collect_passphrase(selection=selection),
         )
-        from .._config_payloads import ConfigProfileRestoreResult
-        from ._secure_input import resolve_secrets_channel
-
-        resolve_secrets_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-
-        # Read before prompting: a source that will not parse should refuse
-        # before the operator is asked for a secret they then have to retype.
-        capsule = _read_capsule_source(file)
-
-        notices: list[Notice] = []
-        if artifact is None:
-            outcome = restore_profile_capsule_with_password(
-                label=label,
-                capsule=capsule,
-                password=_collect_password(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd),
-            )
-        else:
-            outcome = restore_profile_capsule_with_recovery_artifact(
-                label=label,
-                capsule=capsule,
-                artifact_source=artifact,
-                recovery_secret=_collect_recovery_secret(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd),
-            )
-            # The records are back; the credential is not. Saying so here is
-            # the difference between an operator who knows to rotate and one
-            # who finds out at the login prompt.
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.WARNING,
-                    code=_RECOVERY_LIMIT_NOTICE_CODE,
-                    message=tr("cli.config.profile.restore.password_unchanged"),
-                ),
-            )
-
-        _emit_envelope(
-            ctx,
-            command="config.profile.restore",
-            result=ConfigProfileRestoreResult(
-                profile_id=outcome.profile_id,
-                label=outcome.label,
-                authority=outcome.authority,
-                recovery_enrolled=outcome.recovery_enrolled,
-                password_unchanged=artifact is not None,
+    else:
+        outcome = restore_profile_capsule_with_recovery_artifact(
+            label=label,
+            capsule=capsule,
+            artifact_source=artifact,
+            recovery_secret=_collect_recovery_secret(selection=selection),
+        )
+        # The records are back; the credential is not. Saying so here is
+        # the difference between an operator who knows to rotate and one
+        # who finds out at the login prompt.
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code=_RECOVERY_LIMIT_NOTICE_CODE,
+                message=tr("cli.config.profile.restore.password_unchanged"),
             ),
-            lines=list(_restore_lines(outcome)),
-            notices=notices,
         )
+
+    _emit_envelope(
+        ctx,
+        command="config.profile.restore",
+        result=ConfigProfileRestoreResult(
+            profile_id=outcome.profile_id,
+            label=outcome.label,
+            authority=outcome.authority,
+            recovery_enrolled=outcome.recovery_enrolled,
+            password_unchanged=artifact is not None,
+        ),
+        lines=list(_restore_lines(outcome)),
+        notices=notices,
+    )
 
 
 __all__ = ["profile_restore"]

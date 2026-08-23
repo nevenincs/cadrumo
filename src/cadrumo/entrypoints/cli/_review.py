@@ -16,9 +16,7 @@ from ...core.decimal import coerce_decimal_strict
 from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ._app_execution_policies import ENCRYPTED_READ, declare_metadata_group
-from ._command_policy import command_execution_policy
-from ._common import _bad, _emit_envelope, activate_subcommand_output_language, case_insensitive_choice
+from ._common import _bad, _emit_envelope, activate_subcommand_output_language
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 
 
@@ -73,56 +71,25 @@ def _resolve_confidence_threshold(value: float | None) -> Decimal | None:
     return threshold
 
 
-app = typer.Typer(
-    name="review",
-    help=tr("cli.review.app_help"),
-    no_args_is_help=True,
-)
-declare_metadata_group(app)
+def parse_review_state(value: str) -> ReviewState:
+    """Parse a review-state token case-insensitively."""
+    normalized = value.casefold()
+    try:
+        return next(state for state in ReviewState if state.value.casefold() == normalized)
+    except StopIteration as error:
+        choices = ", ".join(state.value for state in ReviewState)
+        raise typer.BadParameter(f"expected one of: {choices}") from error
 
 
-@app.command("queue", help=tr("cli.review.queue.help"))
 def review_queue(
     ctx: typer.Context,
-    kinds: list[str] = typer.Option([], "--kind", help=tr("cli.review.queue.kind_help")),
-    source_kinds: list[str] = typer.Option([], "--source-kind", help=tr("cli.review.queue.source_kind_help")),
-    state: ReviewState = typer.Option(
-        ReviewState.PENDING,
-        "--state",
-        click_type=case_insensitive_choice(ReviewState),
-        help=tr("cli.review.queue.state_help"),
-    ),
-    modelo: str | None = typer.Option(None, "--modelo", help=tr("cli.review.queue.modelo_help")),
-    confidence_below: float | None = typer.Option(
-        None,
-        "--confidence-below",
-        help=tr(
-            "cli.review.queue.confidence_below_help",
-            default=(
-                "Restrict the queue to classified transactions whose "
-                "classification confidence is strictly below this threshold "
-                "(a value between 0 and 1). Lowest-confidence rows surface "
-                "first so they can be triaged."
-            ),
-        ),
-    ),
-    explain: bool = typer.Option(
-        False,
-        "--explain",
-        help=tr(
-            "cli.review.queue.explain_help",
-            default=(
-                "Include the legal_refs that ground each finding in the text "
-                "output. The JSON payload always carries them."
-            ),
-        ),
-    ),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    kinds: list[str],
+    source_kinds: list[str],
+    state: ReviewState,
+    modelo: str | None = None,
+    confidence_below: float | None = None,
+    explain: bool = False,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """List read-only review queue rows."""
     activate_subcommand_output_language(ctx, output_language)
@@ -148,27 +115,11 @@ def review_queue(
     )
 
 
-@app.command("view", help=tr("cli.review.show.help"))
 def review_show(
     ctx: typer.Context,
-    item_id: str = typer.Argument(..., help=tr("cli.review.show.id_help")),
-    explain: bool = typer.Option(
-        False,
-        "--explain",
-        help=tr(
-            "cli.review.show.explain_help",
-            default=(
-                "Include the legal_refs that ground this finding in the text "
-                "output. The JSON payload always carries them."
-            ),
-        ),
-    ),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    item_id: str,
+    explain: bool = False,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """View one read-only review queue item."""
     activate_subcommand_output_language(ctx, output_language)
@@ -222,5 +173,4 @@ def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[st
     return lines
 
 
-command_execution_policy(ENCRYPTED_READ)(review_queue)
-command_execution_policy(ENCRYPTED_READ)(review_show)
+__all__ = ["parse_review_state", "review_queue", "review_show"]

@@ -25,16 +25,8 @@ from ._bienes_inversion_payloads import (
     BienesInversionListResult,
     BienInversionRecordPayload,
 )
-from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope, parse_decimal_amount
 from ._common import active_bucket_id_or_refuse as _register_bucket_id
-from ._ledger_execution_policies import LEDGER_READ, LEDGER_WRITE, declare_metadata_group
-
-
-def register_bienes_inversion_commands(app: typer.Typer) -> None:
-    """Mount the bienes-de-inversión register command group on the ledger app."""
-    app.add_typer(bienes_inversion_app, name="bienes-inversion")
-
 
 bienes_inversion_app = typer.Typer(
     name="bienes-inversion",
@@ -44,7 +36,6 @@ bienes_inversion_app = typer.Typer(
     ),
     no_args_is_help=True,
 )
-declare_metadata_group(bienes_inversion_app)
 
 
 def _parse_kind(raw: BienInversionKind) -> BienInversionKind:
@@ -72,91 +63,20 @@ def _record_payload(record: BienInversionIvaRecord) -> BienInversionRecordPayloa
     return BienInversionRecordPayload.model_validate(data)
 
 
-@bienes_inversion_app.command(
-    "declare",
-    help=tr(
-        "cli.app.ledger.bienes_inversion.declare_help",
-        default="Declare one capital good tracked for IVA regularización.",
-    ),
-)
-@command_execution_policy(LEDGER_WRITE)
 def bienes_inversion_declare(
     ctx: typer.Context,
-    identifier: str = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.bienes_inversion.identifier_help", default="Stable register identifier."),
-    ),
-    description: str = typer.Option(
-        ...,
-        "--description",
-        help=tr("cli.app.ledger.bienes_inversion.description_help", default="Human description of the good."),
-    ),
-    acquisition_year: int = typer.Option(
-        ...,
-        "--acquisition-year",
-        help=tr("cli.app.ledger.bienes_inversion.acquisition_year_help", default="Year the good was acquired."),
-    ),
-    acquisition_ledger_id: str = typer.Option(
-        ...,
-        "--acquisition-ledger-id",
-    ),
-    cuota_soportada: str = typer.Option(
-        ...,
-        "--cuota-soportada",
-        help=tr(
-            "cli.app.ledger.bienes_inversion.cuota_soportada_help",
-            default="Total input IVA borne on acquisition (positive).",
-        ),
-    ),
-    prorrata_inicial_pct: str = typer.Option(
-        ...,
-        "--prorrata-inicial",
-        help=tr(
-            "cli.app.ledger.bienes_inversion.prorrata_inicial_help",
-            default="Definitive deduction percentage of the acquisition year (0-100).",
-        ),
-    ),
-    kind: BienInversionKind = typer.Option(
-        ...,
-        "--kind",
-        help=tr(
-            "cli.app.ledger.bienes_inversion.kind_help",
-            default="Regularisation window: mueble (4yr) or inmueble (9yr).",
-        ),
-    ),
-    art108_elegible: bool = typer.Option(
-        True,
-        "--art108-elegible/--no-art108-elegible",
-        help=tr(
-            "cli.app.ledger.bienes_inversion.art108_help",
-            default="Whether the good qualifies as a bien de inversión under LIVA art. 108.",
-        ),
-    ),
-    asset_record_ref: str | None = typer.Option(
-        None,
-        "--asset-ref",
-        help=tr(
-            "cli.app.ledger.bienes_inversion.asset_ref_help",
-            default="Optional cross-reference to an AssetRecord identifier.",
-        ),
-    ),
-    prorrata_sector_id: str | None = typer.Option(
-        None,
-        "--sector",
-    ),
-    disposal_year: int | None = typer.Option(
-        None,
-        "--disposal-year",
-        help=tr("cli.app.ledger.bienes_inversion.disposal_year_help", default="Optional art-110 disposal year."),
-    ),
-    disposal_regime: str | None = typer.Option(
-        None,
-        "--disposal-regime",
-        help=tr(
-            "cli.app.ledger.bienes_inversion.disposal_regime_help",
-            default="Disposal regime (sujeta_no_exenta or exenta_o_no_sujeta); required with --disposal-year.",
-        ),
-    ),
+    identifier: str = ...,
+    description: str = ...,
+    acquisition_year: int = ...,
+    acquisition_ledger_id: str = ...,
+    cuota_soportada: str = ...,
+    prorrata_inicial_pct: str = ...,
+    kind: BienInversionKind = ...,
+    art108_elegible: bool = True,
+    asset_record_ref: str | None = None,
+    prorrata_sector_id: str | None = None,
+    disposal_year: int | None = None,
+    disposal_regime: str | None = None,
 ) -> None:
     """Persist one :class:`BienInversionIvaRecord`."""
     bucket_id = _register_bucket_id()
@@ -206,14 +126,6 @@ def bienes_inversion_declare(
     )
 
 
-@bienes_inversion_app.command(
-    "list",
-    help=tr(
-        "cli.app.ledger.bienes_inversion.list_help",
-        default="List every tracked capital good on the active profile register.",
-    ),
-)
-@command_execution_policy(LEDGER_READ)
 def bienes_inversion_list(ctx: typer.Context) -> None:
     """List register records via :class:`BienesInversionRegisterService`."""
     bucket_id = _register_bucket_id()

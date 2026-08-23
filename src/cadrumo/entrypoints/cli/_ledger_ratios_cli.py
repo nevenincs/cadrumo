@@ -14,26 +14,12 @@ from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.buckets import BucketEventType
 from ...domain.categories import SpendingCategory
-from ._command_policy import command_execution_policy
 from ._common import _bad, _emit_envelope, parse_decimal_amount
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ._common import active_bucket_id_or_refuse as _ratios_bucket_id
-from ._ledger_execution_policies import LEDGER_COMPUTE_READ, LEDGER_READ, LEDGER_WRITE, declare_metadata_group
 from ._ledger_support import _ledger_cli_no_recovery
 
 _log = get_logger(__name__)
-
-ratios_app = typer.Typer(
-    name="ratios",
-    help=tr("cli.app.ledger.ratios.group_help"),
-    no_args_is_help=True,
-)
-declare_metadata_group(ratios_app)
-
-
-def register_ratios_commands(app: typer.Typer) -> None:
-    """Mount ratios commands on the ledger app."""
-    app.add_typer(ratios_app, name="ratios")
 
 
 def _ratios_bucket_and_profile() -> tuple[str, str | None]:
@@ -104,19 +90,9 @@ def _emit_ratios_censo_override_warning(
     )
 
 
-@ratios_app.command(
-    "list",
-    help=tr("cli.app.ledger.ratios.list_help"),
-)
-@command_execution_policy(LEDGER_READ)
 def ratios_list(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """List every per-category proportional-deduction override stored on the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -162,27 +138,11 @@ def ratios_list(
     )
 
 
-@ratios_app.command(
-    "set",
-    help=tr("cli.app.ledger.ratios.set_help"),
-)
-@command_execution_policy(LEDGER_WRITE)
 def ratios_set(
     ctx: typer.Context,
-    category: SpendingCategory = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.ratios.category_help"),
-    ),
-    ratio: str = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.ratios.ratio_help"),
-    ),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    category: SpendingCategory = ...,
+    ratio: str = ...,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Set or replace one per-category usage-ratio override on the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -222,23 +182,10 @@ def ratios_set(
     )
 
 
-@ratios_app.command(
-    "unset",
-    help=tr("cli.app.ledger.ratios.unset_help"),
-)
-@command_execution_policy(LEDGER_WRITE)
 def ratios_unset(
     ctx: typer.Context,
-    category: SpendingCategory = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.ratios.unset_category_help"),
-    ),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    category: SpendingCategory = ...,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Clear one per-category usage-ratio override from the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -272,19 +219,9 @@ def ratios_unset(
     )
 
 
-@ratios_app.command(
-    "eligible",
-    help=tr("cli.app.ledger.ratios.eligible_help"),
-)
-@command_execution_policy(LEDGER_COMPUTE_READ)
 def ratios_eligible(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """List every ``SpendingCategory`` that may carry a per-category proportional-deduction override."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -321,19 +258,9 @@ def ratios_eligible(
     )
 
 
-@ratios_app.command(
-    "validate",
-    help=tr("cli.app.ledger.ratios.validate_help"),
-)
-@command_execution_policy(LEDGER_COMPUTE_READ)
 def ratios_validate(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Validate per-category usage-ratio overrides against eligibility and bound rules without mutating state."""
     _activate_subcommand_output_language(ctx, output_language)

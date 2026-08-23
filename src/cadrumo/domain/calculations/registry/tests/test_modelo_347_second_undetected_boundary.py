@@ -1,9 +1,13 @@
-"""Modelo 347 spans a SECOND re-layout the boundary detector does not report.
+"""Modelo 347 has a SECOND re-layout the boundary detector does not report.
 
-The relayout gate reports one boundary for revision ``2011-2024`` -- 2009/2010 --
-and its own message warns that "splitting at only the ones one signal saw leaves
-the rest live". That warning applies here, because there is a second boundary it
-does not see.
+The relayout gate reported one boundary -- 2009/2010 -- and its own message warns
+that "splitting at only the ones one signal saw leaves the rest live". That
+warning applied here, because there is a second boundary it does not see.
+
+The span itself is now CLOSED: the revision was narrowed to 2011-2024, the years
+its cited design governs. What this module still pins is the reason it must stay
+closed -- the two layouts genuinely straddle -- and the detector blindness that
+let it go unreported, which no narrowing fixes.
 
 Between the 2010 and 2011 designs AEAT widened ``IMPORTE TOTAL ANUAL DE LAS
 OPERACIONES`` on the declarante record from 15 bytes to 16 and shifted
@@ -121,13 +125,26 @@ def test_the_displacement_is_a_one_byte_widening_not_a_new_field() -> None:
     )
 
 
-def test_the_revision_really_covers_both_designs_years() -> None:
-    """The consequence: this is a live span, not an abstract difference."""
+def test_the_revision_no_longer_reaches_back_across_this_boundary() -> None:
+    """The span this module documented is CLOSED, and must not re-open.
+
+    It used to hold: the revision cited only the 2011 design while claiming 2008
+    onward, so the 2010/2011 displacement above was live -- every pre-2011 filing
+    was written one byte off from ``IMPORTE TOTAL ANUAL`` onward. The revision now
+    claims 2011-2024, the years its cited design governs.
+
+    Asserted as the inequality rather than as a fixed date so it fails on any
+    widening back across the boundary, not merely on a change of literal. The
+    design facts above are untouched by this: the two layouts still straddle, and
+    that is why a revision must never span them again.
+    """
     modelos, catalogues = _committed_registry_tree()
     modelo = next(m for m in modelos if m.id == "347")
     revision = modelo.revisions["2011-2024"]
 
     cited = [r for r in revision.source_refs if catalogues.sources[r].kind == "record_design"]
     assert cited == [_2011], cited
-    assert revision.valid_from.year <= 2010, revision.valid_from
-    assert revision.valid_to is None or revision.valid_to.year >= 2011, revision.valid_to
+    assert revision.valid_from.year >= 2011, (
+        "the revision cites only the 2011 design, so reaching before 2011 would write "
+        f"those ejercicios at 2011 offsets again: {revision.valid_from}"
+    )

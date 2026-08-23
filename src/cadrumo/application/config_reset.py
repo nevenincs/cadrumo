@@ -820,6 +820,53 @@ def _custody_retention_override(
     )
 
 
+def _recognize_completed_erase(
+    repository: ConfigResetJournalRepository,
+    operation: ConfigResetOperation,
+    index: int,
+    target: ConfigResetTarget,
+) -> ConfigResetOperation:
+    """Advance a target whose erase already landed, instead of re-driving it.
+
+    The delete loop destroys the capsule and only then advances the phase and
+    saves. A crash in that window leaves a durable record saying DELETING while
+    the capsule is already gone, and the loop's only skip was for a target
+    already DELETED -- so a resume re-entered preparation, tried to load a
+    profile that no longer exists, and aborted. The reset was then unresumable
+    for good: the data erased, the operation unable to reach completion.
+
+    Absence alone does not authorise this. It is weighed against the deletion
+    marker, which this operation wrote immediately before the erase and which
+    names the operation and the bucket. Advancing on absence by itself would
+    silently absorb a capsule destroyed by something else, which is the one
+    thing the reset must never report as its own work -- and is what the
+    target-tampering case exists to catch. So a marker that does not attest
+    THIS operation erasing THIS bucket refuses instead.
+
+    The completion time is this resume's clock, not the erase's. The instant the
+    erase actually happened is recorded in the custody delete receipt, which
+    this operation cannot address because it does not record the transaction id
+    it started. Reporting the resume's clock is a known and bounded
+    imprecision; inventing an earlier one would be worse.
+    """
+    marker = target.deletion_marker
+    if marker is None or marker.operation_id != operation.operation_id or marker.bucket_id != target.bucket_id:
+        raise ConfigResetError(
+            translated_message="errors.error.error_config_boundary",
+            context={
+                "bucket_id": target.bucket_id,
+                "target_absent_without_attesting_marker": True,
+            },
+        )
+    operation = _replace_target(
+        operation,
+        index,
+        _update_target(target, phase=ConfigResetTargetPhase.DELETED, completed_at=now()),
+    )
+    repository.save(operation)
+    return operation
+
+
 def _delete_targets(
     repository: ConfigResetJournalRepository,
     operation: ConfigResetOperation,
@@ -850,17 +897,18 @@ def _delete_targets(
         # snapshot said, however long ago. `_retention_decision_from_record`
         # carries the growth guard, so an approved override drops when the
         # retained set has grown beyond what the operator was shown.
+        assessment = BucketMaintenanceService().assess_deletion(
+            AssessBucketDeletionCommand(bucket_id=target.bucket_id),
+        )
         target = _update_target(
             target,
-            retention=_retention_decision_from_record(
-                BucketMaintenanceService()
-                .assess_deletion(AssessBucketDeletionCommand(bucket_id=target.bucket_id))
-                .retention,
-                target.retention,
-            ),
+            retention=_retention_decision_from_record(assessment.retention, target.retention),
         )
         operation = _replace_target(operation, index, target)
         repository.save(operation)
+        if target.phase is ConfigResetTargetPhase.DELETING and not assessment.exists:
+            operation = _recognize_completed_erase(repository, operation, index, target)
+            continue
         _refuse_erase_inside_the_retention_floor(target)
         if target.phase is not ConfigResetTargetPhase.DELETING:
             target = _update_target(

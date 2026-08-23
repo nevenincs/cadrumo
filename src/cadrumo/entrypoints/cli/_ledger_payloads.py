@@ -181,7 +181,7 @@ class TransactionPayload(OutputSchema):
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
     purchase_invoice_evidence_id: str | None = None
-    attachment_ids: list[str] = []
+attachment_ids: list[str] = []
     notes: str = ""
     lifecycle_state: str = Field(min_length=1)
     classified_by: str = Field(min_length=1)

@@ -136,6 +136,7 @@ if TYPE_CHECKING:
         INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE,
         ConceptoIngreso,
     )
+    from ._config_support import LLMProvider
     from ._config_state_root import (
         FormerProductStateError,
         StateRootInputs,
@@ -639,6 +640,7 @@ __all__: list[str] = [
     "IvaCompensationStateProvenance",
     "IvaDeductionEvidenceAuthority",
     "IvaDeductionFactKind",
+    "LLMProvider",
     "LedgerSortField",
     "LedgerSortOrder",
     "LegalReviewStatus",
@@ -990,6 +992,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "LENGTH_ALONE_IS_STRONG": "._credentials",
     "LENGTH_FAIR_FLOOR": "._credentials",
     "LLM_EXTRA": "._optional_extras",
+    "LLMProvider": "._config_support",
     "LOCAL_TRANSPORT_LABEL": "._provenance_stamp",
     "LOCKFILE_UNLINK_RETRY_SECONDS": "._lockfile_unlink",
     "LedgerSortField": "._ledger_sort",

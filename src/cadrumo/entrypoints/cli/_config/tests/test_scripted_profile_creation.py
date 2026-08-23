@@ -19,7 +19,6 @@ from .....core.config import override_settings
 from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli
 from ..._verb_input_schema import build_verb_input_schemas
-from .._scripted_registration import resolve_creation_passphrase
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -203,14 +202,60 @@ def test_scripted_create_ignores_configured_passphrase_without_an_explicit_chann
     assert json.loads(listed.stdout)["result"]["profiles"] == []
 
 
-def test_creation_passphrase_accepts_the_canonical_descriptor_channel() -> None:
+def test_lazy_scripted_create_accepts_and_closes_the_canonical_descriptor_channel(tmp_path: Path) -> None:
     reader, writer = os.pipe()
     os.write(writer, _creation_payload().encode())
     os.close(writer)
 
-    assert resolve_creation_passphrase(secrets_fd=reader) == _PASSPHRASE
+    with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
+        created = invoke_cached_cli(
+            (
+                "--format",
+                "json",
+                "config",
+                "profile",
+                "create",
+                "Descriptor Operator",
+                "--quiet",
+                "--secrets-fd",
+                str(reader),
+            ),
+        )
+        listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
+
+    assert created.exit_code == 0, created.output
+    assert json.loads(created.stdout)["result"]["profile_name"] == "Descriptor Operator"
     with pytest.raises(OSError):
         os.fstat(reader)
+    assert [profile["name"] for profile in json.loads(listed.stdout)["result"]["profiles"]] == ["Descriptor Operator"]
+
+
+def test_lazy_scripted_create_refuses_two_channels_before_read_or_mutation(tmp_path: Path) -> None:
+    payload = _creation_payload().encode()
+    reader, writer = os.pipe()
+    os.write(writer, payload)
+    os.close(writer)
+
+    with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
+        refused = invoke_cached_cli(
+            (
+                "config",
+                "profile",
+                "create",
+                "Conflicted Operator",
+                "--quiet",
+                "--secrets-stdin",
+                "--secrets-fd",
+                str(reader),
+            ),
+            input=_creation_payload(),
+        )
+        listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
+
+    assert refused.exit_code != 0
+    assert os.read(reader, len(payload) + 1) == payload
+    os.close(reader)
+    assert json.loads(listed.stdout)["result"]["profiles"] == []
 
 
 def test_scripted_create_localizes_a_typed_password_refusal_without_leaking(tmp_path: Path) -> None:

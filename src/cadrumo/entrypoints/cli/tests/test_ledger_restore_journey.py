@@ -43,7 +43,7 @@ def _invoke(args: Sequence[str]) -> Result:
 
 
 def _add_rows() -> list[str]:
-    ids: list[str] = []
+ids: list[str] = []
     for booked_date, amount, description in _ROWS:
         added = _invoke(
             [
