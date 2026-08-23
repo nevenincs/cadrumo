@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from ...core import ProrrataEspecialTransitionKind
 from ...core.identity import BucketId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 
 
 class ProrrataEspecialTransitionPayload(OutputSchema):
@@ -66,22 +66,18 @@ class ProrrataElectResult(OutputSchema):
     count: int
 
 
-@register_schema("ledger.prorrata.elect_especial")
 class ProrrataElectEspecialResult(ProrrataElectResult):
     """JSON envelope for ``aeat app ledger prorrata elect-especial``."""
 
 
-@register_schema("ledger.prorrata.elect_general")
 class ProrrataElectGeneralResult(ProrrataElectResult):
     """JSON envelope for ``aeat app ledger prorrata elect-general``."""
 
 
-@register_schema("ledger.prorrata.revoke_especial")
 class ProrrataRevokeEspecialResult(ProrrataElectResult):
     """JSON envelope for ``aeat app ledger prorrata revoke-especial``."""
 
 
-@register_schema("ledger.prorrata.declare_sector")
 class ProrrataDeclareSectorResult(OutputSchema):
     """JSON envelope for ``aeat app ledger prorrata declare-sector``."""
 
@@ -90,7 +86,6 @@ class ProrrataDeclareSectorResult(OutputSchema):
     count: int
 
 
-@register_schema("ledger.prorrata.list")
 class ProrrataListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger prorrata list``."""
 

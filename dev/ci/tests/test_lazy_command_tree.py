@@ -261,38 +261,6 @@ def test_importing_cli_package_does_not_import_registry() -> None:
     assert leaked == [], f"importing the CLI package leaked heavy modules: {leaked}"
 
 
-def test_every_lazy_registration_wires_a_cold_subcommand() -> None:
-    """Every declared registration is reachable without importing its target.
-
-    This observes the real command registrations, rather than comparing two data
-    structures: deleting the registration loop or misspelling one group/name
-    leaves the declared row without its lazy child and fails here. At the same
-    time the check proves registration itself does not eagerly import any
-    target module.
-    """
-    completed = _run_python(
-        """
-        import sys
-        from cadrumo.entrypoints.cli import _LAZY_COMMAND_REGISTRATIONS, app
-        from cadrumo.entrypoints.cli._command_suggestions import LazySubcommand, _LAZY_REGISTRY
-
-        missing = []
-        eager = []
-        for group_name, command_name, module_name, _help_key in _LAZY_COMMAND_REGISTRATIONS:
-            child = _LAZY_REGISTRY.get(group_name, {}).get(command_name)
-            if not isinstance(child, LazySubcommand):
-                missing.append((group_name, command_name, type(child).__name__ if child is not None else None))
-            qualified = "cadrumo.entrypoints.cli" + module_name
-            if qualified in sys.modules:
-                eager.append(qualified)
-        print(repr((missing, eager)))
-        """,
-    )
-
-    assert completed.returncode == 0, completed.stderr
-    assert completed.stdout.strip() == "([], [])", completed.stdout
-
-
 @pytest.mark.parametrize("argv", [["--version"], ["--help"], []])
 def test_state_free_surface_does_not_import_registry(argv: list[str]) -> None:
     """``aeat`` (bare), ``aeat --version``, and ``aeat --help`` run without registry parse.

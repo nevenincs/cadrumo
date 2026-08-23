@@ -25,8 +25,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import RegisterScopingSignal
-from ....core.json_contract import SCHEMA_REGISTRY, SchemaEnvelope
+from ....core.json_contract import SchemaEnvelope
 from .._app_live_payloads import FiledHistoryOnboardingResult, FiledHistoryPairOutcomePayload
+from .._command_schema import command_schema_types
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -221,11 +222,8 @@ def test_stage_failures_make_a_partial_run_visible() -> None:
 # ---------------------------------------------------------------- conformance
 
 
-def test_the_schema_is_registered_and_specialises_the_shared_envelope() -> None:
-    from .._app_live import app as live_app
-
-    assert live_app is not None
-    assert SCHEMA_REGISTRY[_SCHEMA_KEY] is FiledHistoryOnboardingResult
+def test_the_schema_is_authored_and_specialises_the_shared_envelope() -> None:
+    assert command_schema_types()[_SCHEMA_KEY] is FiledHistoryOnboardingResult
     envelope_cls = cast(Any, SchemaEnvelope)[FiledHistoryOnboardingResult]
     assert envelope_cls.__pydantic_generic_metadata__["args"] == (FiledHistoryOnboardingResult,)
 

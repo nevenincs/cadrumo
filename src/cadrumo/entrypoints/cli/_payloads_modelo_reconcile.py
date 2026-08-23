@@ -2,7 +2,7 @@
 
 Every declared payload is a
 :class:`OutputSchema` subclass registered with
-:func:`register_schema` for the modelo
+CommandSpec schema authority for the modelo
 reconciliation and taxation-comparison JSON-contract surface. The application
 facade remains authoritative for
 :class:`ModeloReconciliationReport` and
@@ -28,7 +28,7 @@ from ...application.modelo import (
 )
 from ...core import Modelo
 from ...core.identity import BucketId, WorkUnitId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ._decimal_wire import DecimalWireText
 
 
@@ -82,7 +82,6 @@ class ModeloReconcileResult(OutputSchema):
     narrative: str = ""
 
 
-@register_schema("modelo.work.compare_taxation")
 class WorkCompareTaxationResult(OutputSchema):
     """Result payload for ``aeat app modelo work compare-taxation``.
 

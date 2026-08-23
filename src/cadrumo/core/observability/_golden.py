@@ -7,7 +7,7 @@ re-implements capture or compare.
 
 The captured payload is the verbatim emitted
 :class:`~core.json_contract.SchemaEnvelope` document. On load it is
-re-validated against ``SCHEMA_REGISTRY[command]`` by
+re-validated against its caller-supplied authored result schema by
 :func:`validate_captured_envelope` so the captured payload is a typed
 envelope around a registered :class:`OutputSchema`, never a
 ``dict[str, Any]`` bag. Comparison
@@ -39,7 +39,6 @@ from collections.abc import Mapping
 from typing import cast
 
 from ..json_contract import (
-    SCHEMA_REGISTRY,
     OutputSchema,
     RegisteredSchema,
     SchemaEnvelope,
@@ -213,23 +212,19 @@ def assert_golden_match(
 def validate_captured_envelope(
     document: Mapping[str, object],
     *,
-    registry: Mapping[str, RegisteredSchema] | None = None,
+    schema: RegisteredSchema,
 ) -> SchemaEnvelope[OutputSchema]:
     """Re-validate a captured envelope document through its registered schema.
 
-    Looks up ``document["command"]`` in ``registry`` (defaulting to the
-    process-global :data:`~core.json_contract.SCHEMA_REGISTRY`),
-    specialises :class:`~core.json_contract.SchemaEnvelope` over the
-    registered result schema, and strictly validates the document. The
+    Specialises :class:`~core.json_contract.SchemaEnvelope` over the
+    caller-supplied authored result schema and strictly validates the document. The
     return value is a typed envelope, never a ``dict[str, Any]`` bag —
     this is the typed boundary the substrate keeps captured payloads
     behind.
 
     Args:
         document: The emitted envelope document to re-validate.
-        registry: Optional command-to-schema registry override (used by
-            tests to avoid polluting the global registry). Defaults to
-            :data:`SCHEMA_REGISTRY`.
+        schema: The caller-owned strict result schema for the captured command.
 
     Returns:
         The strictly-validated :class:`SchemaEnvelope` whose result is the
@@ -240,17 +235,10 @@ def validate_captured_envelope(
             the command is unregistered, or the payload fails strict
             validation against the registered schema.
     """
-    resolved_registry = SCHEMA_REGISTRY if registry is None else registry
     command = document.get("command")
     if not isinstance(command, str) or not command:
         raise GoldenCaptureError(
             f"captured envelope has no usable 'command' field: {command!r}",
-        )
-    schema = resolved_registry.get(command)
-    if schema is None:
-        raise GoldenCaptureError(
-            f"captured envelope command {command!r} is not registered in the "
-            "JSON-contract schema registry; cannot type the payload",
         )
     # Parametrise the generic envelope over the runtime-resolved result
     # schema. ``__class_getitem__`` is the runtime hook behind ``[...]``;

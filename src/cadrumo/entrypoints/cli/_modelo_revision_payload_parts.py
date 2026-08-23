@@ -133,7 +133,7 @@ class CalculationRevisionProjectionFields(OutputSchema):
     ``... work wizard`` each emit the same calculation-revision snapshot
     fields, plus their own command-specific extras (``saved``/
     ``saved_confirmation``, Modelo 202 modality, the wizard's
-    ``prompted_casillas``, …). Not itself a ``register_schema`` target: each
+    ``prompted_casillas``, …). Not itself a CommandSpec schema authority target: each
     concrete result subclasses this mixin and registers its own command
     path, so the shared fields stay declared once while each command keeps
     its own strict, independently-registered schema.

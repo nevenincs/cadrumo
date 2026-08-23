@@ -1,0 +1,623 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "200"
+design_epoch = "2024"
+source_ref = "aeat-dr-200-2024"
+source_sha256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+
+[[records]]
+sheet = "DP200001"
+record_identity = "DP200001"
+export_record_id = "m200-page-001"
+record_type = "page-001"
+
+[[records]]
+sheet = "DP200001B"
+record_identity = "DP200001B"
+export_record_id = "m200-page-001b"
+record_type = "page-001b"
+
+[[records]]
+sheet = "DP200002"
+record_identity = "DP200002"
+export_record_id = "m200-page-002"
+record_type = "page-002"
+
+[[records]]
+sheet = "DP200002B"
+record_identity = "DP200002B"
+export_record_id = "m200-page-002b"
+record_type = "page-002b"
+
+[[records]]
+sheet = "DP200003"
+record_identity = "DP200003"
+export_record_id = "m200-page-003"
+record_type = "page-003"
+
+[[records]]
+sheet = "DP200004"
+record_identity = "DP200004"
+export_record_id = "m200-page-004"
+record_type = "page-004"
+
+[[records]]
+sheet = "DP200005"
+record_identity = "DP200005"
+export_record_id = "m200-page-005"
+record_type = "page-005"
+
+[[records]]
+sheet = "DP200006"
+record_identity = "DP200006"
+export_record_id = "m200-page-006"
+record_type = "page-006"
+
+[[records]]
+sheet = "DP200007"
+record_identity = "DP200007"
+export_record_id = "m200-page-007"
+record_type = "page-007"
+
+[[records]]
+sheet = "DP200008"
+record_identity = "DP200008"
+export_record_id = "m200-page-008"
+record_type = "page-008"
+
+[[records]]
+sheet = "DP200009"
+record_identity = "DP200009"
+export_record_id = "m200-page-009"
+record_type = "page-009"
+
+[[records]]
+sheet = "DP200010"
+record_identity = "DP200010"
+export_record_id = "m200-page-010"
+record_type = "page-010"
+
+[[records]]
+sheet = "DP200011"
+record_identity = "DP200011"
+export_record_id = "m200-page-011"
+record_type = "page-011"
+
+[[records]]
+sheet = "DP200012"
+record_identity = "DP200012"
+export_record_id = "m200-page-012"
+record_type = "page-012"
+
+[[records]]
+sheet = "DP200013"
+record_identity = "DP200013"
+export_record_id = "m200-page-013"
+record_type = "page-013"
+
+[[records]]
+sheet = "DP200014"
+record_identity = "DP200014"
+export_record_id = "m200-page-014"
+record_type = "page-014"
+
+[[records]]
+sheet = "DP200014B"
+record_identity = "DP200014B"
+export_record_id = "m200-page-014b"
+record_type = "page-014b"
+
+[[records]]
+sheet = "DP200015"
+record_identity = "DP200015"
+export_record_id = "m200-page-015"
+record_type = "page-015"
+
+[[records]]
+sheet = "DP200015B"
+record_identity = "DP200015B"
+export_record_id = "m200-page-015b"
+record_type = "page-015b"
+
+[[records]]
+sheet = "DP200016"
+record_identity = "DP200016"
+export_record_id = "m200-page-016"
+record_type = "page-016"
+
+[[records]]
+sheet = "DP200016B"
+record_identity = "DP200016B"
+export_record_id = "m200-page-016b"
+record_type = "page-016b"
+
+[[records]]
+sheet = "DP200017"
+record_identity = "DP200017"
+export_record_id = "m200-page-017"
+record_type = "page-017"
+
+[[records]]
+sheet = "DP200018"
+record_identity = "DP200018"
+export_record_id = "m200-page-018"
+record_type = "page-018"
+
+[[records]]
+sheet = "DP200018B"
+record_identity = "DP200018B"
+export_record_id = "m200-page-018b"
+record_type = "page-018b"
+
+[[records]]
+sheet = "DP200018C"
+record_identity = "DP200018C"
+export_record_id = "m200-page-018c"
+record_type = "page-018c"
+
+[[records]]
+sheet = "DP200019"
+record_identity = "DP200019"
+export_record_id = "m200-page-019"
+record_type = "page-019"
+
+[[records]]
+sheet = "DP200020"
+record_identity = "DP200020"
+export_record_id = "m200-page-020"
+record_type = "page-020"
+
+[[records]]
+sheet = "DP200020B"
+record_identity = "DP200020B"
+export_record_id = "m200-page-020b"
+record_type = "page-020b"
+
+[[records]]
+sheet = "DP200020C"
+record_identity = "DP200020C"
+export_record_id = "m200-page-020c"
+record_type = "page-020c"
+
+[[records]]
+sheet = "DP200020D"
+record_identity = "DP200020D"
+export_record_id = "m200-page-020d"
+record_type = "page-020d"
+
+[[records]]
+sheet = "DP200021"
+record_identity = "DP200021"
+export_record_id = "m200-page-021"
+record_type = "page-021"
+
+[[records]]
+sheet = "DP200022"
+record_identity = "DP200022"
+export_record_id = "m200-page-022"
+record_type = "page-022"
+
+[[records]]
+sheet = "DP200022B"
+record_identity = "DP200022B"
+export_record_id = "m200-page-022b"
+record_type = "page-022b"
+
+[[records]]
+sheet = "DP200023"
+record_identity = "DP200023"
+export_record_id = "m200-page-023"
+record_type = "page-023"
+
+[[records]]
+sheet = "DP200024"
+record_identity = "DP200024"
+export_record_id = "m200-page-024"
+record_type = "page-024"
+
+[[records]]
+sheet = "DP200024B"
+record_identity = "DP200024B"
+export_record_id = "m200-page-024b"
+record_type = "page-024b"
+
+[[records]]
+sheet = "DP200025"
+record_identity = "DP200025"
+export_record_id = "m200-page-025"
+record_type = "page-025"
+
+[[records]]
+sheet = "DP200026"
+record_identity = "DP200026"
+export_record_id = "m200-page-026"
+record_type = "page-026"
+
+[[records]]
+sheet = "DP200026B"
+record_identity = "DP200026B"
+export_record_id = "m200-page-026b"
+record_type = "page-026b"
+
+[[records]]
+sheet = "DP200026C"
+record_identity = "DP200026C"
+export_record_id = "m200-page-026c"
+record_type = "page-026c"
+
+[[records]]
+sheet = "DP200026D"
+record_identity = "DP200026D"
+export_record_id = "m200-page-026d"
+record_type = "page-026d"
+
+[[records]]
+sheet = "DP200026E"
+record_identity = "DP200026E"
+export_record_id = "m200-page-026e"
+record_type = "page-026e"
+
+[[records]]
+sheet = "DP200026F"
+record_identity = "DP200026F"
+export_record_id = "m200-page-026f"
+record_type = "page-026f"
+
+[[records]]
+sheet = "DP200026G"
+record_identity = "DP200026G"
+export_record_id = "m200-page-026g"
+record_type = "page-026g"
+
+[[records]]
+sheet = "DP200027"
+record_identity = "DP200027"
+export_record_id = "m200-page-027"
+record_type = "page-027"
+
+[[records]]
+sheet = "DP200027B"
+record_identity = "DP200027B"
+export_record_id = "m200-page-027b"
+record_type = "page-027b"
+
+[[records]]
+sheet = "DP200028"
+record_identity = "DP200028"
+export_record_id = "m200-page-028"
+record_type = "page-028"
+
+[[records]]
+sheet = "DP200029"
+record_identity = "DP200029"
+export_record_id = "m200-page-029"
+record_type = "page-029"
+
+[[records]]
+sheet = "DP200030"
+record_identity = "DP200030"
+export_record_id = "m200-page-030"
+record_type = "page-030"
+
+[[records]]
+sheet = "DP200031"
+record_identity = "DP200031"
+export_record_id = "m200-page-031"
+record_type = "page-031"
+
+[[records]]
+sheet = "DP200032"
+record_identity = "DP200032"
+export_record_id = "m200-page-032"
+record_type = "page-032"
+
+[[records]]
+sheet = "DP200033"
+record_identity = "DP200033"
+export_record_id = "m200-page-033"
+record_type = "page-033"
+
+[[records]]
+sheet = "DP200034"
+record_identity = "DP200034"
+export_record_id = "m200-page-034"
+record_type = "page-034"
+
+[[records]]
+sheet = "DP200035"
+record_identity = "DP200035"
+export_record_id = "m200-page-035"
+record_type = "page-035"
+
+[[records]]
+sheet = "DP200036"
+record_identity = "DP200036"
+export_record_id = "m200-page-036"
+record_type = "page-036"
+
+[[records]]
+sheet = "DP200037"
+record_identity = "DP200037"
+export_record_id = "m200-page-037"
+record_type = "page-037"
+
+[[records]]
+sheet = "DP200038"
+record_identity = "DP200038"
+export_record_id = "m200-page-038"
+record_type = "page-038"
+
+[[records]]
+sheet = "DP200039"
+record_identity = "DP200039"
+export_record_id = "m200-page-039"
+record_type = "page-039"
+
+[[records]]
+sheet = "DP200040"
+record_identity = "DP200040"
+export_record_id = "m200-page-040"
+record_type = "page-040"
+
+[[records]]
+sheet = "DP200041"
+record_identity = "DP200041"
+export_record_id = "m200-page-041"
+record_type = "page-041"
+
+[[records]]
+sheet = "DP200042"
+record_identity = "DP200042"
+export_record_id = "m200-page-042"
+record_type = "page-042"
+
+[[records]]
+sheet = "DP200043"
+record_identity = "DP200043"
+export_record_id = "m200-page-043"
+record_type = "page-043"
+
+[[records]]
+sheet = "DP200044"
+record_identity = "DP200044"
+export_record_id = "m200-page-044"
+record_type = "page-044"
+
+[[records]]
+sheet = "DP200045"
+record_identity = "DP200045"
+export_record_id = "m200-page-045"
+record_type = "page-045"
+
+[[records]]
+sheet = "DP200046"
+record_identity = "DP200046"
+export_record_id = "m200-page-046"
+record_type = "page-046"
+
+[[records]]
+sheet = "DP200047"
+record_identity = "DP200047"
+export_record_id = "m200-page-047"
+record_type = "page-047"
+
+[[records]]
+sheet = "DP200048"
+record_identity = "DP200048"
+export_record_id = "m200-page-048"
+record_type = "page-048"
+
+[[records]]
+sheet = "DP200049"
+record_identity = "DP200049"
+export_record_id = "m200-page-049"
+record_type = "page-049"
+
+[[records]]
+sheet = "DP200050"
+record_identity = "DP200050"
+export_record_id = "m200-page-050"
+record_type = "page-050"
+
+[[records]]
+sheet = "DP200051"
+record_identity = "DP200051"
+export_record_id = "m200-page-051"
+record_type = "page-051"
+
+[[records]]
+sheet = "DP200052"
+record_identity = "DP200052"
+export_record_id = "m200-page-052"
+record_type = "page-052"
+
+[[records]]
+sheet = "DP200053"
+record_identity = "DP200053"
+export_record_id = "m200-page-053"
+record_type = "page-053"
+
+[[records]]
+sheet = "DP200054"
+record_identity = "DP200054"
+export_record_id = "m200-page-054"
+record_type = "page-054"
+
+[[records]]
+sheet = "DP200DID"
+record_identity = "DP200DID"
+export_record_id = "m200-page-did"
+record_type = "page-did"
+
+[[variable_envelopes]]
+source_ref = "aeat-dr-200-2024"
+source_sha256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+record_identity = "DP200000"
+body_record_ids = [
+    "m200-page-001",
+    "m200-page-001b",
+    "m200-page-002",
+    "m200-page-002b",
+    "m200-page-003",
+    "m200-page-004",
+    "m200-page-005",
+    "m200-page-006",
+    "m200-page-007",
+    "m200-page-008",
+    "m200-page-009",
+    "m200-page-010",
+    "m200-page-011",
+    "m200-page-012",
+    "m200-page-013",
+    "m200-page-014",
+    "m200-page-014b",
+    "m200-page-015",
+    "m200-page-015b",
+    "m200-page-016",
+    "m200-page-016b",
+    "m200-page-017",
+    "m200-page-018",
+    "m200-page-018b",
+    "m200-page-018c",
+    "m200-page-019",
+    "m200-page-020",
+    "m200-page-020b",
+    "m200-page-020c",
+    "m200-page-020d",
+    "m200-page-021",
+    "m200-page-022",
+    "m200-page-022b",
+    "m200-page-023",
+    "m200-page-024",
+    "m200-page-024b",
+    "m200-page-025",
+    "m200-page-026",
+    "m200-page-026b",
+    "m200-page-026c",
+    "m200-page-026d",
+    "m200-page-026e",
+    "m200-page-026f",
+    "m200-page-026g",
+    "m200-page-027",
+    "m200-page-027b",
+    "m200-page-028",
+    "m200-page-029",
+    "m200-page-030",
+    "m200-page-031",
+    "m200-page-032",
+    "m200-page-033",
+    "m200-page-034",
+    "m200-page-035",
+    "m200-page-036",
+    "m200-page-037",
+    "m200-page-038",
+    "m200-page-039",
+    "m200-page-040",
+    "m200-page-041",
+    "m200-page-042",
+    "m200-page-043",
+    "m200-page-044",
+    "m200-page-045",
+    "m200-page-046",
+    "m200-page-047",
+    "m200-page-048",
+    "m200-page-049",
+    "m200-page-050",
+    "m200-page-051",
+    "m200-page-052",
+    "m200-page-053",
+    "m200-page-054",
+    "m200-page-did",
+]
+
+[[variable_envelopes.prefix_fields]]
+role = "composed_opening_tag"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DP200000"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "DP200000"
+
+[[variable_envelopes.prefix_fields]]
+role = "aux_opening_tag"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DP200000"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "DP200000"
+
+[[variable_envelopes.prefix_fields]]
+role = "pre_program_filler"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DP200000"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "DP200000"
+
+[[variable_envelopes.prefix_fields]]
+role = "program_identifier"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DP200000"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "DP200000"
+
+[[variable_envelopes.prefix_fields]]
+role = "between_identities_filler"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DP200000"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "DP200000"
+
+[[variable_envelopes.prefix_fields]]
+role = "developer_tax_id"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DP200000"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "DP200000"
+
+[[variable_envelopes.prefix_fields]]
+role = "post_developer_filler"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DP200000"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "DP200000"
+
+[[variable_envelopes.prefix_fields]]
+role = "aux_closing_tag"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DP200000"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "DP200000"
+
+[variable_envelopes.body_anchor]
+sheet = "DP200000"
+source_row = 14
+source_cell = "A14"
+ordinal = "12"
+record_identity = "DP200000"
+
+[variable_envelopes.closer_anchor]
+sheet = "DP200000"
+source_row = 15
+source_cell = "A15"
+ordinal = "13"
+record_identity = "DP200000"
+
+[variable_envelopes.total_anchor]
+source_row = 16
+source_cell = "A16"
+label = "total"
+length = "Variable"

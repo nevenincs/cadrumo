@@ -7,7 +7,7 @@ row carries both sides, because the operator is the one who adjudicates
 between them — the pull never decides.
 
 These strict :class:`OutputSchema` subclasses document only the transport
-shape registered with :func:`register_schema` and emitted through
+shape registered with CommandSpec schema authority and emitted through
 :class:`SchemaEnvelope`. The projection and the adopt/defer split live in
 :mod:`user_profile`; the commit lives behind the single cotejo apply
 authority.
@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from pydantic import model_validator
 
-from ....core.json_contract import OutputSchema, register_schema
+from ....core.json_contract import OutputSchema
 from ....domain.user_profile import UserProfileFact
 
 
@@ -42,7 +42,6 @@ class CensoFactPayload(OutputSchema):
         return self
 
 
-@register_schema("config.profile.censo.file")
 class CensoFileIngestResult(OutputSchema):
     """Result of ``config profile censo file``: previewed or enrolled facts."""
 
@@ -71,7 +70,6 @@ class CensoPullDivergencePayload(OutputSchema):
     aeat_value: str
 
 
-@register_schema("config.profile.censo.pull")
 class CensoPullResult(OutputSchema):
     """Result of ``config profile censo pull``: previewed or enrolled facts.
 

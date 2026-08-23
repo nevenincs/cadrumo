@@ -1,7 +1,7 @@
 """IVA wallet payload schemas split from the main modelo registry.
 
 These strict :class:`~core.json_contract.OutputSchema` subclasses are
-registered through :func:`~core.json_contract.register_schema` and
+registered through CommandSpec schema authority and
 re-exported by :mod:`~entrypoints.cli._modelo_payloads` so the IVA wallet CLI
 keeps one payload import surface. The application/calculations facade remains
 authoritative for wallet balance queries; the application/modelo facade remains

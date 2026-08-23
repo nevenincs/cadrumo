@@ -179,7 +179,7 @@ def resolve_mcp_action_capabilities(
                 result_schema=ResultSchemaInventoryRow(
                     subject_leaf_key=command_key,
                     schema_name=schema_ref_by_key[command_key].schema_name,
-                    provenance="MCP production result-schema registry projection",
+                    provenance="MCP production graph result-schema projection",
                 ),
                 input_schema=InputSchemaInventoryRow(
                     subject_leaf_key=command_key,

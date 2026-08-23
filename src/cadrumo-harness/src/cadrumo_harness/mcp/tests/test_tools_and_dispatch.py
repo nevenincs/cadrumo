@@ -60,7 +60,7 @@ def test_descriptors_are_well_formed() -> None:
         assert descriptor.name.startswith("cadrumo_")
         assert descriptor.description
         assert descriptor.input_schema["type"] == "object"
-        assert descriptor.output_schema  # the registered result model schema
+        assert descriptor.output_schema  # the graph-authored result model schema
         assert descriptor.annotations.title
 
 
@@ -209,7 +209,7 @@ def test_exposability_is_a_filter_and_not_a_registration_guard() -> None:
     ``is_exposable_command`` only removes the root landing keys, so it answers
     ``True`` for a key that is not registered at all. What actually keeps a
     retired verb off the surface is that descriptors are built from the
-    registered schema refs. Pinning this stops a later reader from adding a
+    graph-derived schema refs. Pinning this stops a later reader from adding a
     retirement to the exposability filter and believing that is the guard, and
     stops the opposite error of reading the permissive answer as a leak.
     """

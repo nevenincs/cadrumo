@@ -59,7 +59,6 @@ from typer.core import TyperGroup
 from typer.main import get_command as _typer_get_command
 
 from ...core.i18n import tr
-from ._command_policy import CommandExecutionPolicy, execution_policy_for
 
 #: Per-group synonym tables keyed by the group's command ``name``.
 #: Each inner mapping projects an unknown command token onto the
@@ -77,7 +76,6 @@ _COMMAND_SYNONYMS: dict[str, dict[str, str]] = {
     },
 }
 
-_LAZY_GROUP_KEY_ATTRIBUTE = "__cadrumo_lazy_group_key__"
 
 
 @dataclass(frozen=True, slots=True)
@@ -195,7 +193,6 @@ class LazySubcommand:
     """
 
     __slots__ = (
-        "_child_registry_key",
         "_command",
         "_decorate",
         "_deprecated",
@@ -214,7 +211,6 @@ class LazySubcommand:
         target: LazyNodeTarget,
         *,
         decorate: Callable[[typer.Typer], None] | None = None,
-        child_registry_key: str | None = None,
         optional_unavailable: OptionalUnavailableFactory | None = None,
         required_unavailable: RequiredUnavailableRefusal | None = None,
         help: str | None = None,
@@ -227,7 +223,6 @@ class LazySubcommand:
         self.name = name
         self._target = target
         self._decorate = decorate
-        self._child_registry_key = child_registry_key or name
         self._optional_unavailable = optional_unavailable
         self._required_unavailable = required_unavailable
         self._help = help
@@ -268,7 +263,6 @@ class LazySubcommand:
                 self._decorate(typer_instance)
             command = _typer_get_command(typer_instance)
             command.name = self.name
-            setattr(command, _LAZY_GROUP_KEY_ATTRIBUTE, self._child_registry_key)
             self._command = command
         return self._command
 
@@ -281,11 +275,6 @@ class LazySubcommand:
     def target(self) -> LazyNodeTarget:
         """Expose immutable target metadata without materializing the node."""
         return self._target
-
-    @property
-    def child_registry_key(self) -> str:
-        """Return the explicit registry key the materialized group receives."""
-        return self._child_registry_key
 
     @property
     def is_materialized(self) -> bool:
@@ -341,16 +330,14 @@ class LiveCommandNode:
     registered node because no runtime loader exists; it never aliases handler
     ownership to conceal that distinction.
 
-    ``execution_policy`` comes only from the node's registered callback.  It is
-    ``None`` for an unannotated callback or a non-executing group; the census
-    never invents a state-free default or joins a path-keyed policy table.
+    Policy is intentionally absent from this Click census. Executable policy
+    authority is read from the immutable CommandSpec graph by its consumers.
     """
 
     path: tuple[str, ...]
     kind: CommandNodeKind
     loader_owner: str | None
     handler_owner: str
-    execution_policy: CommandExecutionPolicy | None
 
 
 def _callable_owner(callback: object | None) -> str:
@@ -404,7 +391,6 @@ def walk_live_command_tree(app: typer.Typer) -> tuple[LiveCommandNode, ...]:
                 kind="root" if len(path) == 1 else "group" if is_group else "leaf",
                 loader_owner=loader_owner,
                 handler_owner=_callable_owner(getattr(command, "callback", None)),
-                execution_policy=execution_policy_for(getattr(command, "callback", None)),
             )
         )
         if not is_group:
@@ -412,7 +398,7 @@ def walk_live_command_tree(app: typer.Typer) -> tuple[LiveCommandNode, ...]:
 
         context = TyContext(command, info_name=path[-1])
         try:
-            lazy_table = _LAZY_REGISTRY.get(_lazy_registry_key(command), {})
+            lazy_table = command._lazy_table() if isinstance(command, CadrumoTyperGroup) else {}
             group = cast(Any, command)
             for child_name in group.list_commands(context):
                 lazy = lazy_table.get(child_name)
@@ -458,68 +444,6 @@ def resolve_command_path(
         command = child
         resolved.append(token)
     return cast(TyCommand, command)
-
-
-def execution_policy_for_cli_path(
-    app: typer.Typer,
-    cli_path: tuple[str, ...],
-) -> CommandExecutionPolicy:
-    """Resolve one CLI path and return its callback-attached execution policy.
-
-    Missing paths, traversal through a leaf, and unclassified callbacks fail
-    closed instead of manufacturing a safe default.
-    """
-    command = resolve_command_path(app, cli_path)
-    policy = execution_policy_for(getattr(command, "callback", None))
-    if policy is None:
-        raise LookupError(f"CLI path has no execution policy: {' '.join(cli_path)!r}")
-    return policy
-
-
-#: Lazy-subcommand registry keyed by the owning group's command
-#: ``name``. Typer materializes the Click
-#: :class:`CadrumoTyperGroup`
-#: instance lazily, inside ``get_command(app)``; the instance therefore
-#: cannot carry its lazy table at app-construction time. Keying by
-#: group name lets
-#: :func:`register_lazy_subcommand`
-#: populate the table
-#: at module-import time and lets every materialized group instance of
-#: that name read it back. CLI group names (``cadrumo``, ``app``, ``config``)
-#: are unique, so the keying is unambiguous.
-_LAZY_REGISTRY: dict[str, dict[str, LazySubcommand]] = {}
-
-
-def _lazy_registry_key(command: object) -> str:
-    """Return the explicit nested-loader key carried by ``command``."""
-    key = getattr(command, _LAZY_GROUP_KEY_ATTRIBUTE, None)
-    if isinstance(key, str) and key:
-        return key
-    name = getattr(command, "name", None)
-    return name if isinstance(name, str) else ""
-
-
-def register_lazy_subcommand(group_key: str, lazy: LazySubcommand) -> None:
-    """Register ``lazy`` under one explicit parent-group registry key.
-
-    The owning
-    :class:`CadrumoTyperGroup` imports
-    the command module only when the subcommand is first resolved through
-    ``get_command``.
-    """
-    if not group_key:
-        raise ValueError("a lazy parent group requires a registry key")
-    table = _LAZY_REGISTRY.setdefault(group_key, {})
-    existing = table.get(lazy.name)
-    if existing is not None and existing is not lazy:
-        raise ValueError(f"duplicate lazy CLI registration: {group_key!r} / {lazy.name!r}")
-    table[lazy.name] = lazy
-
-
-def lazy_subcommand_target(group_key: str, name: str) -> LazyNodeTarget | None:
-    """Inspect one immutable target without exposing registration lifecycle state."""
-    registration = _LAZY_REGISTRY.get(group_key, {}).get(name)
-    return None if registration is None else registration.target
 
 
 def materialise_lazy_subcommands(app: typer.Typer) -> None:
@@ -577,7 +501,7 @@ class CadrumoTyperGroup(TyperGroup):
       class are preserved; the synonym table only adds a hint when the
       base class produced none.
     * **Lazy subcommands.** Subcommands registered through
-      :func:`register_lazy_subcommand`
+      the node-local immutable lazy-child projection
       import their command module only when first resolved, keeping the
       construction of the ``cadrumo`` command app free of the registry parse.
     * **Remainder capture.** Click empties ``ctx.args`` and the
@@ -590,9 +514,11 @@ class CadrumoTyperGroup(TyperGroup):
       meaningless for in-process invocations).
     """
 
+    lazy_subcommands: tuple[LazySubcommand, ...] = ()
+
     def _lazy_table(self) -> dict[str, LazySubcommand]:
-        """Return the lazy-subcommand table for this group, if any."""
-        return _LAZY_REGISTRY.get(_lazy_registry_key(self), {})
+        """Project this node's immutable spec-derived lazy children by token."""
+        return {child.name: child for child in self.lazy_subcommands}
 
     @override
     # KWARGS-ANY-RATIONALE-CLICK-MAIN: click's ``BaseCommand.main`` contract is
@@ -773,10 +699,7 @@ __all__ = [
     "LazyOptionalDependencyProvider",
     "LazySubcommand",
     "LiveCommandNode",
-    "execution_policy_for_cli_path",
-    "lazy_subcommand_target",
     "materialise_lazy_subcommands",
-    "register_lazy_subcommand",
     "resolve_command_path",
     "walk_live_command_tree",
 ]

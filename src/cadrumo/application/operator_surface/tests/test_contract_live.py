@@ -135,7 +135,7 @@ def _live_reconciliation() -> OperatorSurfaceReconciliation:
             ResultSchemaInventoryRow(
                 subject_leaf_key=ref.command,
                 schema_name=ref.schema_name,
-                provenance="SCHEMA_REGISTRY through command_schema_refs",
+                provenance="COMMAND_GRAPH through command_schema_refs",
             )
             for ref in command_schema_refs()
             if ref.command in primary_path_by_key
@@ -278,7 +278,7 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
         ResultSchemaInventoryRow(
             subject_leaf_key=ref.command,
             schema_name=ref.schema_name,
-            provenance="SCHEMA_REGISTRY through command_schema_refs",
+            provenance="COMMAND_GRAPH through command_schema_refs",
         )
         for ref in schema_refs
     )

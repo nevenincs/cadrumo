@@ -1,8 +1,10 @@
-"""Focused contract tests for callback-attached command execution policy."""
+"""Focused contracts for immutable command execution-policy values."""
 
 from __future__ import annotations
 
+import ast
 from dataclasses import FrozenInstanceError
+from pathlib import Path
 from typing import cast
 
 import pytest
@@ -10,12 +12,34 @@ import pytest
 from .._command_policy import (
     CommandExecutionPolicy,
     CommandWriteRouteScope,
-    command_execution_policy,
-    execution_policy_for,
 )
 from .._command_schema import CommandCapability, CommandCapabilityClass, CommandSideEffectClass
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def test_callback_policy_attachment_authority_is_physically_absent() -> None:
+    cli_root = Path(__file__).parents[1]
+    policy_source = (cli_root / "_command_policy.py").read_text(encoding="utf-8")
+    suggestions_source = (cli_root / "_command_suggestions.py").read_text(encoding="utf-8")
+    forbidden = {"command_execution_policy", "execution_policy_for"}
+    violations: list[str] = []
+    for path in sorted(cli_root.rglob("*.py")):
+        if "tests" in path.parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name in forbidden:
+                violations.append(f"{path}:{node.lineno}: function {node.name}")
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                for alias in node.names:
+                    if alias.name in forbidden:
+                        violations.append(f"{path}:{node.lineno}: import {alias.name}")
+            if isinstance(node, ast.Constant) and node.value == "__cadrumo_command_execution_policy__":
+                violations.append(f"{path}:{node.lineno}: callback attribute")
+    assert violations == []
+    assert "execution_policy_for" not in suggestions_source
+    assert "callback-attached" not in policy_source
 
 
 def _classification(
@@ -97,37 +121,3 @@ def test_policy_rejects_runtime_type_coercion(overrides: dict[str, object], mess
     values.update(overrides)
     with pytest.raises(TypeError, match=message):
         CommandExecutionPolicy(**values)  # ty: ignore[invalid-argument-type]
-
-
-def test_decorator_preserves_identity_and_rejects_a_second_policy() -> None:
-    safe = CommandExecutionPolicy(
-        classification=_classification(capabilities=frozenset({"state-free"}), side_effects=frozenset({"none"})),
-        write_route="none",
-    )
-    mutating = CommandExecutionPolicy(
-        classification=_classification(
-            capabilities=frozenset({"profile-custody"}),
-            side_effects=frozenset({"local-state"}),
-        ),
-        write_route="bootstrap-root",
-    )
-
-    def callback() -> None:
-        pass
-
-    decorated = command_execution_policy(safe)(callback)
-    assert decorated is callback
-    assert execution_policy_for(callback) is safe
-    assert command_execution_policy(safe)(callback) is callback
-    with pytest.raises(ValueError, match="different execution policy"):
-        command_execution_policy(mutating)(callback)
-
-
-def test_absence_and_corrupt_metadata_do_not_become_safe_defaults() -> None:
-    def absent() -> None:
-        pass
-
-    assert execution_policy_for(absent) is None
-    setattr(absent, "__cadrumo_command_execution_policy__", "not-a-policy")  # noqa: B010
-    with pytest.raises(TypeError, match="invalid execution-policy metadata"):
-        execution_policy_for(absent)

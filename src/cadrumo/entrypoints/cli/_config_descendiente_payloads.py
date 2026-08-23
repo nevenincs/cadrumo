@@ -38,7 +38,7 @@ from typing import Annotated
 from pydantic import Field, StringConstraints, field_validator, model_validator
 
 from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...core.time import today_madrid
 from ...domain.contribuyente import DescendantRecordFields
 
@@ -176,7 +176,6 @@ class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
         return self
 
 
-@register_schema("config.profile.descendiente.add")
 class ConfigProfileDescendienteAddResult(OutputSchema):
     """JSON envelope for ``aeat config profile descendiente add``."""
 
@@ -185,7 +184,6 @@ class ConfigProfileDescendienteAddResult(OutputSchema):
     total: int = Field(ge=0)
 
 
-@register_schema("config.profile.descendiente.list")
 class ConfigProfileDescendienteListResult(OutputSchema):
     """JSON envelope for ``aeat config profile descendiente list``."""
 
@@ -194,7 +192,6 @@ class ConfigProfileDescendienteListResult(OutputSchema):
     descendientes: list[ProfileDescendientePayload] = []
 
 
-@register_schema("config.profile.descendiente.remove")
 class ConfigProfileDescendienteRemoveResult(OutputSchema):
     """JSON envelope for ``aeat config profile descendiente remove``."""
 

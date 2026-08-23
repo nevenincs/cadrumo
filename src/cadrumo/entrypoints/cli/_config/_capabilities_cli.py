@@ -18,7 +18,6 @@ from ....core import ServiceCapability, resolve_active_bucket_id
 from ....core.i18n import tr
 from .._common import bad, emit_envelope
 
-# Eager import so the @register_schema decorators run when this module is imported
 # on the CLI build path, keeping every capability leaf in the JSON-contract registry.
 from ._capabilities_payloads import CapabilitiesShowResult, CapabilitySetResult
 

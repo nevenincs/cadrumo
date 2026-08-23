@@ -47,7 +47,7 @@ from ...application.workflow import ProfileHealthStatus, ProfileSource
 from ...core import HEX_PATTERN_64, Period
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ProfileId
-from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
+from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import RevisionId
 from ...domain.user_profile import ProfileSetupState
@@ -168,7 +168,6 @@ class ConfigHelpSectionPayload(OutputSchema):
     entries: list[ConfigHelpEntryPayload] = Field(min_length=1)
 
 
-@register_schema("root.config")
 class ConfigRootResult(OutputSchema):
     """JSON envelope for bare ``aeat config`` and ``aeat config --help``.
 
@@ -250,7 +249,6 @@ class ConfigRepairCheckPayload(OutputSchema):
     findings: list[ConfigRepairFindingPayload]
 
 
-@register_schema("config.repair")
 class ConfigRepairResult(OutputSchema):
     """JSON envelope for the composite ``aeat config repair`` report.
 
@@ -270,7 +268,6 @@ class ConfigRepairResult(OutputSchema):
     checks: list[ConfigRepairCheckPayload]
 
 
-@register_schema("config.repair.logs")
 class RepairLogsResult(OutputSchema):
     """JSON envelope for ``aeat config repair logs``.
 
@@ -282,7 +279,6 @@ class RepairLogsResult(OutputSchema):
     lines: list[str]
 
 
-@register_schema("config.repair.quarantine")
 class RepairQuarantineResult(OutputSchema):
     """JSON envelope for ``aeat config repair quarantine``.
 
@@ -311,7 +307,6 @@ class RepairQuarantineResult(OutputSchema):
     # unreadable_total / readable_total from the report directly.
 
 
-@register_schema("config.repair.reset_progress")
 class RepairResetProgressResult(OutputSchema):
     """JSON envelope for ``aeat config repair reset-progress``.
 
@@ -333,7 +328,6 @@ class RepairResetProgressResult(OutputSchema):
     fingerprint: WorkflowFingerprintPayload | None = None
 
 
-@register_schema("config.repair.connectivity")
 class RepairConnectivityResult(OutputSchema):
     """Read-only connectivity probe result for ``aeat config repair connectivity``.
 
@@ -351,7 +345,6 @@ class RepairConnectivityResult(OutputSchema):
 # P06 — config and profile verb result schemas
 
 
-@register_schema("config.profile.list")
 class ConfigListResult(OutputSchema):
     """JSON envelope for ``aeat config profile list``.
 
@@ -370,7 +363,6 @@ class ConfigListResult(OutputSchema):
     profiles: list[ProfilePointerPayload]
 
 
-@register_schema("config.login")
 class ConfigLoginResult(OutputSchema):
     """JSON envelope for ``aeat config login``.
 
@@ -394,7 +386,6 @@ class ConfigLoginResult(OutputSchema):
     closed_previous_profile: str | None = None
 
 
-@register_schema("config.profile.archive.export")
 class ConfigProfileArchiveExportResult(OutputSchema):
     """JSON envelope for ``aeat config profile archive export``.
 
@@ -415,7 +406,6 @@ class ConfigProfileArchiveExportResult(OutputSchema):
     recovery_enrolled: bool
 
 
-@register_schema("config.profile.archive.inspect")
 class ConfigProfileArchiveInspectResult(OutputSchema):
     """JSON envelope for ``aeat config profile archive inspect``.
 
@@ -436,7 +426,6 @@ class ConfigProfileArchiveInspectResult(OutputSchema):
     manifest_digest: str
 
 
-@register_schema("config.profile.restore")
 class ConfigProfileRestoreResult(OutputSchema):
     """JSON envelope for ``aeat config profile restore``.
 
@@ -467,7 +456,6 @@ class ConfigProfileRestoreResult(OutputSchema):
     password_unchanged: bool
 
 
-@register_schema("config.passphrase.change")
 class ConfigPassphraseChangeResult(OutputSchema):
     """JSON envelope for ``aeat config passphrase change``.
 
@@ -493,7 +481,6 @@ class ConfigPassphraseChangeResult(OutputSchema):
     recovery_enrollment_retained: bool
 
 
-@register_schema("config.logout")
 class ConfigLogoutResult(OutputSchema):
     """JSON envelope for ``aeat config logout``.
 
@@ -507,7 +494,6 @@ class ConfigLogoutResult(OutputSchema):
     already_logged_out: bool
 
 
-@register_schema("config.profile.show")
 class ConfigProfileShowResult(OutputSchema):
     """JSON envelope for ``aeat config profile show``.
 
@@ -541,7 +527,6 @@ class ConfigProfileShowResult(OutputSchema):
     profile_record: str | None = None
 
 
-@register_schema("config.profile.validate")
 class ConfigProfileValidateResult(OutputSchema):
     """JSON envelope for ``aeat config profile validate``.
 
@@ -580,7 +565,6 @@ class ProfilePreflightMissingPayload(OutputSchema):
     modelos: list[str]
 
 
-@register_schema("config.profile.preflight")
 class ConfigProfilePreflightResult(OutputSchema):
     """JSON envelope for ``aeat config profile preflight``.
 
@@ -609,7 +593,6 @@ class ConfigProfilePreflightResult(OutputSchema):
         return self
 
 
-@register_schema("config.profile.status")
 class ConfigStatusResult(OutputSchema):
     """JSON envelope for ``aeat config profile status``.
 
@@ -770,21 +753,18 @@ class ConfigResetOperationPayload(OutputSchema):
         )
 
 
-@register_schema("config.reset.start")
 class ConfigResetStartResult(OutputSchema):
     """JSON envelope for starting one durable all-profile reset."""
 
     operation: ConfigResetOperationPayload
 
 
-@register_schema("config.reset.status")
 class ConfigResetStatusResult(OutputSchema):
     """JSON envelope for read-only durable reset status."""
 
     operation: ConfigResetOperationPayload | None
 
 
-@register_schema("config.reset.resume")
 class ConfigResetResumeResult(OutputSchema):
     """JSON envelope for resuming one exact durable reset journal."""
 
@@ -794,7 +774,6 @@ class ConfigResetResumeResult(OutputSchema):
 # P07 — auth and bucket verb result schemas
 
 
-@register_schema("config.auth.providers")
 class AuthProvidersResult(OutputSchema):
     """JSON envelope for ``aeat config auth providers``.
 
@@ -813,7 +792,6 @@ class AuthProvidersResult(OutputSchema):
     providers: list[AuthProviderListing]
 
 
-@register_schema("config.auth.configure")
 class AuthConfigurePayload(OutputSchema):
     """JSON envelope for ``aeat config auth configure``.
 
@@ -869,7 +847,6 @@ class AuthConfigurePayload(OutputSchema):
         )
 
 
-@register_schema("config.auth.status")
 class AuthStatusPayload(OutputSchema):
     """JSON envelope for ``aeat config auth status``.
 
@@ -921,7 +898,6 @@ class AuthStatusPayload(OutputSchema):
         )
 
 
-@register_schema("config.auth.test")
 class AuthTestPayload(AuthStatusPayload):
     """JSON envelope for ``aeat config auth test``.
 
@@ -969,7 +945,6 @@ class AuthTestPayload(AuthStatusPayload):
         )
 
 
-@register_schema("config.auth.login")
 class AuthLoginPayload(OutputSchema, AuthLoginResult):
     """JSON envelope for ``aeat config auth login``.
 
@@ -979,7 +954,6 @@ class AuthLoginPayload(OutputSchema, AuthLoginResult):
     """
 
 
-@register_schema("config.auth.logout")
 class AuthLogoutPayload(OutputSchema):
     """Secret-free JSON envelope for ``aeat config auth logout``."""
 
@@ -989,7 +963,6 @@ class AuthLogoutPayload(OutputSchema):
     cleared_session_state: bool
 
 
-@register_schema("config.auth.reset")
 class AuthResetPayload(OutputSchema):
     """Secret-free JSON envelope for ``aeat config auth reset``."""
 
@@ -1002,7 +975,6 @@ class AuthResetPayload(OutputSchema):
     removed_certificate_secrets: int
 
 
-@register_schema("config.auth.apoderado.check")
 class ApoderadoCheckResult(OutputSchema):
     """JSON envelope for ``aeat config auth apoderado check``.
 
@@ -1041,7 +1013,6 @@ class ConfigProfileExportReconcileFailurePayload(OutputSchema):
     reason: str = Field(min_length=1)
 
 
-@register_schema("config.profile.delete")
 class ConfigProfileDeleteResult(OutputSchema):
     """JSON envelope for ``aeat config profile delete``.
 
@@ -1079,7 +1050,6 @@ class ConfigProfileDeleteResult(OutputSchema):
     completed_at: str | None = None
 
 
-@register_schema("config.profile.rename")
 class ConfigProfileRenameResult(OutputSchema):
     """JSON envelope for ``aeat config profile rename``.
 
@@ -1092,7 +1062,6 @@ class ConfigProfileRenameResult(OutputSchema):
     display_name: str = Field(min_length=1, max_length=160)
 
 
-@register_schema("config.profile.export")
 class ConfigProfileExportResult(OutputSchema):
     """JSON envelope for ``aeat config profile export``.
 
@@ -1118,7 +1087,6 @@ class ConfigProfileExportResult(OutputSchema):
     reconcile_failures: list[ConfigProfileExportReconcileFailurePayload] = []
 
 
-@register_schema("config.profile.subject_access_request")
 class ConfigProfileSubjectAccessRequestResult(OutputSchema):
     """JSON envelope for ``aeat config profile subject-access-request``.
 
@@ -1148,7 +1116,6 @@ class ConfigProfileSubjectAccessRequestResult(OutputSchema):
     reconcile_failures: list[ConfigProfileExportReconcileFailurePayload] = []
 
 
-@register_schema("config.profile.import")
 class ConfigProfileImportResult(OutputSchema):
     """JSON envelope for ``aeat config profile import``.
 
@@ -1189,7 +1156,6 @@ class ActiveProfileHealthPayload(OutputSchema):
     precondition_action: ResolvedPreconditionAction | None = None
 
 
-@register_schema("config.repair.profile")
 class RepairProfileResult(OutputSchema):
     """JSON envelope for ``aeat config repair profile``.
 
@@ -1236,7 +1202,6 @@ class RepairIntegrityCheckPayload(OutputSchema):
     summary: str
 
 
-@register_schema("config.repair.integrity.objects")
 class RepairIntegrityObjectsResult(OutputSchema):
     """JSON envelope for ``aeat config repair integrity objects``.
 
@@ -1254,7 +1219,6 @@ class RepairIntegrityObjectsResult(OutputSchema):
     check: RepairIntegrityCheckPayload
 
 
-@register_schema("config.repair.integrity.registry")
 class RepairIntegrityRegistryResult(OutputSchema):
     """JSON envelope for ``aeat config repair integrity registry``.
 
@@ -1271,7 +1235,6 @@ class RepairIntegrityRegistryResult(OutputSchema):
 # Apoderado verb result schemas
 
 
-@register_schema("config.auth.apoderado.status")
 class ApoderadoStatusResult(OutputSchema):
     """JSON envelope for ``aeat config auth apoderado status``.
 
@@ -1289,7 +1252,6 @@ class ApoderadoStatusResult(OutputSchema):
     configured_at: datetime | None = None
 
 
-@register_schema("config.auth.apoderado.configure")
 class ApoderadoConfigureResult(OutputSchema):
     """JSON envelope for ``aeat config auth apoderado configure``.
 
@@ -1307,7 +1269,6 @@ class ApoderadoConfigureResult(OutputSchema):
     notes: str = Field(default="", max_length=500)
 
 
-@register_schema("config.auth.apoderado.clear")
 class ApoderadoClearResult(OutputSchema):
     """JSON envelope for ``aeat config auth apoderado clear``.
 
@@ -1342,7 +1303,6 @@ class ApoderadoScopePayload(OutputSchema):
         return value
 
 
-@register_schema("config.auth.apoderado.scopes.list")
 class ApoderadoScopesListResult(OutputSchema):
     """JSON envelope for ``aeat config auth apoderado scopes list``.
 
@@ -1373,7 +1333,6 @@ class CertificateSourcePayloadEntry(OutputSchema):
     registered_at: str = ""
 
 
-@register_schema("config.auth.certificate.register")
 class CertificateSourceMutationPayload(OutputSchema):
     """JSON envelope for ``certificate register`` / ``select`` / ``remove``.
 
@@ -1390,11 +1349,6 @@ class CertificateSourceMutationPayload(OutputSchema):
     removed: bool = False
 
 
-register_schema("config.auth.certificate.select")(CertificateSourceMutationPayload)
-register_schema("config.auth.certificate.remove")(CertificateSourceMutationPayload)
-
-
-@register_schema("config.auth.certificate.list")
 class CertificateSourceListPayload(OutputSchema):
     """JSON envelope for ``aeat config auth certificate list``.
 
@@ -1422,7 +1376,6 @@ class CertificateSourceCheckEntryPayload(OutputSchema):
     days_until_expiry: int | None = None
 
 
-@register_schema("config.auth.certificate.check")
 class CertificateSourceCheckPayload(OutputSchema):
     """JSON envelope for ``aeat config auth certificate check``.
 
@@ -1433,7 +1386,6 @@ class CertificateSourceCheckPayload(OutputSchema):
     has_warnings: bool = False
 
 
-@register_schema("config.auth.certificate.secret.set")
 class CertificateSourceSecretMutationPayload(OutputSchema):
     """JSON envelope for ``certificate secret set`` / ``certificate secret remove``.
 
@@ -1450,13 +1402,9 @@ class CertificateSourceSecretMutationPayload(OutputSchema):
     removed: bool = False
 
 
-register_schema("config.auth.certificate.secret.remove")(CertificateSourceSecretMutationPayload)
-
-
 # Auth diagnostics verb result schemas
 
 
-@register_schema("config.auth.diagnostics.list")
 class AuthDiagnosticsListResult(OutputSchema):
     """JSON envelope for ``aeat config auth diagnostics list``.
 
@@ -1471,7 +1419,6 @@ class AuthDiagnosticsListResult(OutputSchema):
     rows: list[AuthDiagnosticSummary] = []
 
 
-@register_schema("config.auth.diagnostics.show")
 class AuthDiagnosticsShowResult(OutputSchema, AuthDiagnosticDetail):
     """JSON envelope for ``aeat config auth diagnostics show``.
 
@@ -1482,7 +1429,6 @@ class AuthDiagnosticsShowResult(OutputSchema, AuthDiagnosticDetail):
     """
 
 
-@register_schema("config.auth.diagnostics.report")
 class AuthDiagnosticsReportResult(OutputSchema):
     """JSON envelope for ``aeat config auth diagnostics report``.
 

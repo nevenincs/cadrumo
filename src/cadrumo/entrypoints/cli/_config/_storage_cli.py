@@ -31,8 +31,6 @@ from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope, resolve_notice_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-
-# Eager import so the @register_schema decorators run on the CLI build path.
 from ._storage_payloads import (
     ConfigStorageCheckResult,
     ConfigStorageInitResult,

@@ -2,7 +2,7 @@
 
 Each class declared here is a strict
 :class:`~core.json_contract.OutputSchema` subclass and is decorated
-with :func:`~core.json_contract.register_schema` so the JSON-contract test suite can enumerate the
+with CommandSpec schema authority so the JSON-contract test suite can enumerate the
 ``registry.diff_revisions`` command surface.
 
 Field sets mirror :class:`~application.registry.RegistryRevisionDiffReport`
@@ -26,14 +26,14 @@ See Also:
         and legal refs are compared.
     :class:`~core.json_contract.OutputSchema`
         Strict base class for typed CLI JSON result payloads.
-    :func:`~core.json_contract.register_schema`
+    CommandSpec schema authority
         Schema registry hook used by the JSON-contract tests.
 """
 
 from __future__ import annotations
 
 from ...core import CasillaId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry import FormulaId, LegalRefId, ParameterId, RevisionId
 
 
@@ -82,7 +82,6 @@ class BindingDiffPayload(OutputSchema):
     source: str
 
 
-@register_schema("registry.diff_revisions")
 class RegistryDiffRevisionsResult(OutputSchema):
     """JSON envelope for ``aeat app registry diff-revisions``.
 

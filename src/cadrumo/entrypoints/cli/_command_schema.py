@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from functools import cache
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Literal, cast
 
 from ...core.i18n import output_language, tr
@@ -13,6 +15,7 @@ from ._machine_secret_contract import MACHINE_SECRET_COMMANDS
 
 if TYPE_CHECKING:
     from ...application.operator_surface import CommandSchemaRef
+    from ...core.json_contract import RegisteredSchema
     from ._command_policy import CommandExecutionPolicy
     from ._command_spec import CommandSpec, ParameterSpec
 
@@ -308,6 +311,35 @@ def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
     )
 
 
+@cache
+def command_schema_type(command: str) -> RegisteredSchema:
+    """Resolve the authored result-schema target for one command identity."""
+    from ._command_runtime import resolve_deferred_target
+    from ._command_specs import COMMAND_GRAPH
+
+    spec = COMMAND_GRAPH.by_schema_identity().get(command)
+    if spec is None or spec.result_schema.target is None:
+        raise LookupError(f"unknown command schema identity: {command}")
+    target = resolve_deferred_target(spec.result_schema.target)
+    if not isinstance(target, type):
+        raise TypeError(f"command schema target is not a type: {command}")
+    from ...core.json_contract import OutputRootSchema, OutputSchema
+
+    if not issubclass(target, OutputSchema | OutputRootSchema):
+        raise TypeError(f"command schema target is not an output schema: {command}")
+    return target
+
+
+@cache
+def command_schema_types() -> Mapping[str, RegisteredSchema]:
+    """Return the immutable graph-derived result-schema type projection."""
+    from ._command_specs import COMMAND_GRAPH
+
+    return MappingProxyType(
+        {identity: command_schema_type(identity) for identity in COMMAND_GRAPH.by_schema_identity()}
+    )
+
+
 __all__ = [
     "CommandCapabilityClass",
     "CommandParameterMetadata",
@@ -323,5 +355,7 @@ __all__ = [
     "command_registration_policy",
     "command_registration_projection",
     "command_schema_refs",
+    "command_schema_type",
+    "command_schema_types",
     "machine_secret_payload_metadata",
 ]

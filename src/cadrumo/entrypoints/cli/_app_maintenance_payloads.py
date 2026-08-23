@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for ``aeat app maintenance`` commands.
 
 Every declared payload is an :class:`OutputSchema` subclass registered with
-:func:`register_schema` and carried by :class:`SchemaEnvelope` through
+CommandSpec schema authority and carried by :class:`SchemaEnvelope` through
 :func:`_emit_envelope`. These schemas project
 :class:`~application.user_profile.ProfileBundleExportReconciliation` -- the
 outcome of one crash-recovery sweep over the portable profile-bundle export
@@ -26,7 +26,7 @@ from pydantic import Field
 
 from ...application.user_profile import ProfileBundleExportPurpose
 from ...core import Hex64Str
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 
 
 class ReconciledProfileExportPayload(OutputSchema):
@@ -51,7 +51,6 @@ class UnreconciledProfileExportPayload(OutputSchema):
     reason: str = Field(min_length=1)
 
 
-@register_schema("app.maintenance.reconcile")
 class ProfileBundleReconcileResult(OutputSchema):
     """Outcome of one portable profile-bundle export reconciliation sweep."""
 

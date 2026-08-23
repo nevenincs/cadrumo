@@ -33,15 +33,6 @@ plain strings on the Typer objects, so the output language MUST be pinned to
 the lazy-tree subprocess tests) or set the variable before importing
 :mod:`cadrumo.entrypoints.cli`.
 
-Fallback-surface guard
-----------------------
-The Cadrumo CLI's :func:`_optional_extra_surface` replaces a subtree with a
-stub that emits ``cli.root.unavailable_optional_extra_help`` when an optional
-extra is missing.  :func:`generate_cli_reference` walks the entire tree and
-asserts that no subtree carries that fallback help text, so a missing extra
-causes the generator to raise rather than silently emitting a degraded
-reference.  A missing *required* dependency raises during the walk itself.
-
 Accepted-surface contract
 -------------------------
 Only surfaces declared in
@@ -63,31 +54,23 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
-from cadrumo.entrypoints.schema_surface import (
-    GROUP_CALLBACK_SCHEMA_KEYS,
-    normalise_cli_path_to_schema_key,
-)
+from cadrumo.entrypoints.cli._command_specs import COMMAND_GRAPH
+from cadrumo.entrypoints.schema_surface import normalise_cli_path_to_schema_key
 
 from ._locale_chrome import docs_chrome
 
 if TYPE_CHECKING:
     import click
 
-#: Sentinel text that the CLI's optional-extra fallback emits (the leading
-#: clause of the rendered ``cli.root.unavailable_optional_extra_help`` string).
-#: The generator walks the materialised tree and raises when any command
-#: carries this marker so a missing optional extra surfaces as an error rather
-#: than a silently degraded reference page. The marker is the distinctive
-#: phrase rather than the bare word "unavailable" so it cannot collide with a
-#: legitimately sealed command whose help honestly says it is unavailable (e.g.
-#: the apoderado ``check`` live-read verb).
-_FALLBACK_MARKER: str = "unavailable: "
-
 #: Group-callback emit sites - keys registered under a group callback rather
 #: than a leaf command.  These are excluded from the per-command reference
 #: pages (they are group landing surfaces, not operator-invokable leaves) but
 #: are listed on the output-schema registry page (``schemas.rst``).
-_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = GROUP_CALLBACK_SCHEMA_KEYS
+_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
+    spec.result_schema.identity
+    for spec in COMMAND_GRAPH.specs
+    if spec.kind == "group" and spec.result_schema.identity is not None
+)
 
 #: Command-path normalisation rules that mirror the conformance-test normaliser
 #: in :mod:`cadrumo.entrypoints.cli.test_json_schema_conformance`.
@@ -195,65 +178,6 @@ def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
 # ---------------------------------------------------------------------------
 # Internal helpers - tree materialisation
 # ---------------------------------------------------------------------------
-
-
-def _force_lazy_imports(app: object) -> None:
-    """Materialise every lazily-registered subcommand reachable from ``app``.
-
-    Args:
-        app: The root :class:`typer.Typer` instance.
-    """
-    import typer
-
-    from cadrumo.entrypoints.cli._command_suggestions import _LAZY_REGISTRY
-
-    seen: set[int] = set()
-    # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-    # Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-    pending: list[typer.Typer] = [app]  # type: ignore[valid-type]
-    while pending:
-        node = pending.pop()
-        if id(node) in seen:
-            continue
-        seen.add(id(node))
-        group_name = node.info.name or ""
-        for lazy in _LAZY_REGISTRY.get(group_name, {}).values():
-            lazy.load()
-        for group in node.registered_groups:
-            if group.typer_instance is not None:
-                pending.append(group.typer_instance)
-
-
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _assert_no_fallback_surfaces(root: click.Command) -> None:  # type: ignore[name-defined]
-    """Walk the tree and raise if any subtree is an import-failure fallback.
-
-    The CLI's :func:`_optional_extra_surface` helper replaces a missing
-    optional extra's subtree with a stub whose help text opens with
-    ``"unavailable"``.  A degraded reference is worse than a failed build.
-
-    A missing *required* dependency needs no marker here: the CLI now raises
-    :exc:`CliCommandGroupUnavailableError` during command resolution, so the
-    tree walk fails outright instead of yielding a stub to detect.
-
-    Args:
-        root: The materialised root Click command (name must be set).
-
-    Raises:
-        RuntimeError: When any subtree carries the fallback marker text.
-    """
-    all_nodes = _collect_commands(root)
-    degraded = [" ".join(path) for path, cmd in all_nodes.items() if _FALLBACK_MARKER in (cmd.help or "").lower()]
-    if degraded:
-        paths = ", ".join(degraded)
-        # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
-        # subprocess invocation failure surfaced as RuntimeError for operator
-        # diagnostics; not on the operator-facing CadrumoError contract.
-        raise RuntimeError(
-            f"Import-failure fallback detected in CLI subtree(s): {paths}. "
-            "Ensure all optional dependencies are installed before generating the reference.",
-        )
 
 
 # ---------------------------------------------------------------------------
@@ -984,11 +908,9 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
     page says so.
     """
     import click
-    from typer.main import get_command as _typer_get_command
 
     from cadrumo.application.operator_surface import ACCEPTED_ROOTS
     from cadrumo.core.i18n._render import clear_output_language_cache
-    from cadrumo.core.json_contract import SCHEMA_REGISTRY
 
     # Function-local: dev.docs.build imports this module, so a module-level
     # import would close the cycle. The target is the owning module's public
@@ -999,51 +921,16 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
 
     clear_output_language_cache()
 
-    # Import every payload module so their @register_schema decorators populate
-    # SCHEMA_REGISTRY.  The CLI loads these lazily at dispatch time; the generator
-    # must trigger them explicitly before inspecting the registry.
-    from cadrumo.entrypoints.cli import (
-        _app_live_payloads,
-        _config_payloads,
-        _ledger_payloads,
-        _ledger_rule_payloads,
-        _modelo_payloads,
-        _modelo_payloads_m036,
-        _overview_payloads,
-        _payloads_modelo_reconcile,
-        _registry_corpus_payloads,
-        _registry_payloads,
-        _review_payloads,
-        _root_payloads,
-        app,
-    )
-    from cadrumo.entrypoints.cli._config import _google_payloads
+    from cadrumo.entrypoints.cli import full_command_tree
+    from cadrumo.entrypoints.cli._command_runtime import resolve_deferred_target
 
-    payload_schema_modules = (
-        _app_live_payloads,
-        _config_payloads,
-        _ledger_payloads,
-        _ledger_rule_payloads,
-        _modelo_payloads,
-        _modelo_payloads_m036,
-        _overview_payloads,
-        _payloads_modelo_reconcile,
-        _registry_corpus_payloads,
-        _registry_payloads,
-        _review_payloads,
-        _root_payloads,
-        _google_payloads,
-    )
-    if not all(getattr(module, "__name__", "") for module in payload_schema_modules):
-        raise RuntimeError("CLI payload schema modules failed to load")
+    schema_registry = {
+        identity: resolve_deferred_target(spec.result_schema.target)
+        for identity, spec in COMMAND_GRAPH.by_schema_identity().items()
+        if spec.result_schema.target is not None
+    }
 
-    # Materialise every lazy subtree before the tree walk.
-    _force_lazy_imports(app)
-
-    root_cmd = _typer_get_command(app)
-    root_cmd.name = app.info.name or "aeat"
-
-    _assert_no_fallback_surfaces(root_cmd)
+    root_cmd = full_command_tree()
 
     # Collect every command node keyed by its path tuple using _collect_commands,
     # which builds paths correctly with the root name as the first element.
@@ -1101,7 +988,7 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
         for group_name in group_names:
             group_path = (*family_path, group_name)
             group_cmd = all_nodes[group_path]
-            group_content = _render_verb_group_page(language, group_path, group_cmd, SCHEMA_REGISTRY)
+            group_content = _render_verb_group_page(language, group_path, group_cmd, schema_registry)
             rel_path = f"{_verb_group_page_stem(family, group_name)}.rst"
             rendered[rel_path] = group_content
             _write_text_if_changed(group_dir / f"{group_name}.rst", group_content)
@@ -1111,7 +998,7 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
             family,
             group_names,
             direct_leaf_paths,
-            SCHEMA_REGISTRY,
+            schema_registry,
             all_nodes,
         )
         rel_path = f"{_family_index_page_stem(family)}.rst"
@@ -1130,7 +1017,7 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
     rendered["cli/automation.rst"] = automation_content
     _write_text_if_changed(output_dir / "automation.rst", automation_content)
 
-    schemas_content = _render_schemas_page(language, SCHEMA_REGISTRY)
+    schemas_content = _render_schemas_page(language, schema_registry)
     rendered["cli/schemas.rst"] = schemas_content
     _write_text_if_changed(output_dir / "schemas.rst", schemas_content)
 
@@ -1207,22 +1094,12 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
     """
     code = textwrap.dedent(
         """
-        import click
-        from typer.main import get_command as _typer_get_command
-        from cadrumo.entrypoints.cli import app
-        from cadrumo.entrypoints.cli._command_suggestions import _LAZY_REGISTRY
-        from dev.docs.cli_reference import (
-            _force_lazy_imports,
-            _collect_leaf_paths,
-            _normalise_command_path,
-        )
+        from cadrumo.entrypoints.cli._command_specs import COMMAND_GRAPH
 
-        _force_lazy_imports(app)
-        root = _typer_get_command(app)
-        root.name = app.info.name or 'cadrumo'
-        leaves = _collect_leaf_paths(root)
-        for path in sorted(set(_normalise_command_path(p) for p in leaves)):
-            print(path)
+        for node in COMMAND_GRAPH.nodes():
+            if node.spec.kind == "leaf":
+                path = node.path[1:] if node.path[:1] == ("aeat",) else node.path
+                print(".".join(path))
         """,
     )
 

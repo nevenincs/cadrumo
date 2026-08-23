@@ -268,7 +268,7 @@ def test_capability_manifest_carries_the_live_families_lifecycle_and_schemas() -
     build rather than a fixture: every mounted family carries the
     ``operator_question`` the routing table paraphrases, the lifecycle ordering
     is present as data, and the per-command result schemas come from the live
-    CLI registry rather than the empty tuple the mutability projection passes.
+    CLI graph rather than the empty tuple the mutability projection passes.
     """
     manifest = build_capability_manifest()
     payload = manifest.model_dump(mode="json")

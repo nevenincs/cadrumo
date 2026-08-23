@@ -20,8 +20,6 @@ if TYPE_CHECKING:
     from ....application.provisioning import ContentionSnapshot, DependencyStatus, HardwareProfile
 from ....core.i18n import tr
 from .._common import _emit_envelope, resolve_cli_precondition_action
-
-# Eager import so the @register_schema decorator runs on the CLI build path.
 from ._check_payloads import CheckDependencyPayload, CheckPreflightPayload, ConfigCheckResult
 from ._status_rendering import precondition_action_lines
 

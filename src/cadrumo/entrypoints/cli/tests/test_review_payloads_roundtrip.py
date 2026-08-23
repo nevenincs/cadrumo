@@ -2,7 +2,7 @@
 
 ``review queue`` and ``review view`` used to emit
 ``model_dump(mode="json")`` on application-side records that were not
-``@register_schema``-decorated. The JSON-contract test suite could
+referenced by CommandSpec. The JSON-contract test suite could
 therefore not enumerate the surface; tooling parsing the JSON had no
 stability contract.
 

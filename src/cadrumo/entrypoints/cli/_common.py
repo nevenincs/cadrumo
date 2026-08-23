@@ -683,11 +683,11 @@ def _emit_envelope(
     Args:
         ctx: Typer context (used to discover the requested output format).
         command: Stable command path string (matches the
-            ``@register_schema(...)`` argument on the result model).
+            the CommandSpec result-schema identity argument on the result model).
         result: The strict-validated payload model to surface as
             ``envelope.result``. Must be a pydantic model registered
             under ``command`` in
-            :data:`SCHEMA_REGISTRY`; the CLI
+            the command-spec graph; the CLI
             conformance gate enforces this at test time.
         lines: Iterable of pre-formatted text lines (used unchanged
             for text mode).
@@ -880,8 +880,14 @@ def _current_operator_surface_schema_rows(
         ResultSchemaInventoryRow,
         get_operator_surface_contract,
     )
-    from ...entrypoints.schema_surface import ROOT_LANDING_SCHEMA_KEYS
     from ._command_schema import command_registration_policy
+    from ._command_specs import COMMAND_GRAPH
+
+    root_landing_schema_keys = frozenset(
+        identity
+        for identity, spec in COMMAND_GRAPH.by_schema_identity().items()
+        if spec.kind in {"root", "group"} and identity.startswith("root.")
+    )
 
     return _CurrentOperatorSurfaceSchemaInventory(
         command_keys=command_keys,
@@ -898,7 +904,7 @@ def _current_operator_surface_schema_rows(
             ResultSchemaInventoryRow(
                 subject_leaf_key=reference.command,
                 schema_name=reference.schema_name,
-                provenance="SCHEMA_REGISTRY through command_schema_refs",
+                provenance="CommandSpecGraph through command_schema_refs",
             )
             for reference in schema_references
         ),
@@ -924,15 +930,15 @@ def _current_operator_surface_schema_rows(
                 subject_leaf_key=command_key,
                 classification=(
                     "non_profile_bound"
-                    if command_key in ROOT_LANDING_SCHEMA_KEYS
+                    if command_key in root_landing_schema_keys
                     else (
                         "profile_bound_write"
                         if command_registration_policy(command_key).write_route == "profile-bound"
                         else "non_profile_bound"
                     )
                 ),
-                should_expose_via_mcp=command_key not in ROOT_LANDING_SCHEMA_KEYS,
-                provenance="callback-attached command policy plus root landing exposure contract",
+                should_expose_via_mcp=command_key not in root_landing_schema_keys,
+                provenance="CommandSpec policy plus root landing graph classification",
             )
             for command_key in sorted(command_keys)
         ),
@@ -973,25 +979,31 @@ def _current_operator_surface_exposures(
 def _current_operator_surface_exclusions() -> tuple[ExplicitExclusionInventoryRow, ...]:
     """Project the declared root-landing omissions into reconciliation evidence."""
     from ...application.operator_surface import ExplicitExclusionInventoryRow, ReconciliationSurface
-    from ...entrypoints.schema_surface import ROOT_LANDING_SCHEMA_KEYS
+    from ._command_specs import COMMAND_GRAPH
+
+    root_landing_schema_keys = frozenset(
+        identity
+        for identity, spec in COMMAND_GRAPH.by_schema_identity().items()
+        if spec.kind in {"root", "group"} and identity.startswith("root.")
+    )
 
     return tuple(
         exclusion
-        for command_key in sorted(ROOT_LANDING_SCHEMA_KEYS)
+        for command_key in sorted(root_landing_schema_keys)
         for exclusion in (
             ExplicitExclusionInventoryRow(
                 subject_leaf_key=command_key,
                 surface=ReconciliationSurface.MOUNTED_FAMILY,
                 reason="root landing callback has no mounted command family",
-                authority="ROOT_LANDING_SCHEMA_KEYS",
-                provenance="entrypoints.schema_surface",
+                authority="COMMAND_GRAPH",
+                provenance="CommandSpec root/group result identity",
             ),
             ExplicitExclusionInventoryRow(
                 subject_leaf_key=command_key,
                 surface=ReconciliationSurface.SURFACE_EXPOSURE,
                 reason="root landing callback is excluded from MCP tools",
-                authority="ROOT_LANDING_SCHEMA_KEYS",
-                provenance="entrypoints.schema_surface",
+                authority="COMMAND_GRAPH",
+                provenance="CommandSpec root/group result identity",
             ),
         )
     )

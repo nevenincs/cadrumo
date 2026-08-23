@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
-from cadrumo.entrypoints.cli._command_policy import CommandExecutionPolicy
+from cadrumo.entrypoints.cli import CommandExecutionPolicy
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

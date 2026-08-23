@@ -1,7 +1,7 @@
 """Auxiliary modelo payload schemas split from the main modelo registry.
 
 These strict :class:`OutputSchema` subclasses
-are registered through :func:`register_schema`
+are registered through CommandSpec schema authority
 and re-exported by :mod:`_modelo_payloads` so audit,
 work-history, workflow-run, list, and describe emitters keep one payload import
 surface. Validated results enter
@@ -30,7 +30,7 @@ from ...application.workflow import (
 from ...core import Hex64Str, Period
 from ...core.aggregation import RetencionClave
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
-from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
+from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
@@ -85,7 +85,6 @@ class EvidenceBundleCheckFindingPayload(OutputSchema):
     detail: str = ""
 
 
-@register_schema("modelo.audit.show")
 class ModeloAuditShowResult(OutputSchema):
     """Evidence bundle manifest render result (audit show)."""
 
@@ -103,7 +102,6 @@ class ModeloAuditShowResult(OutputSchema):
     notes: str = Field(default="", max_length=2000)
 
 
-@register_schema("modelo.audit.check")
 class ModeloAuditCheckResult(OutputSchema):
     """Evidence bundle integrity re-verification result (audit check)."""
 
@@ -114,7 +112,6 @@ class ModeloAuditCheckResult(OutputSchema):
     findings: list[EvidenceBundleCheckFindingPayload]
 
 
-@register_schema("modelo.audit.export")
 class ModeloAuditExportResult(OutputSchema):
     """Evidence bundle ZIP export result (audit export).
 
@@ -142,7 +139,6 @@ class WorkUnitHistoryEventPayload(OutputSchema):
     payload: dict[str, str]
 
 
-@register_schema("modelo.work.history")
 class WorkHistoryResult(OutputSchema):
     """Work-unit event history result."""
 
@@ -181,7 +177,6 @@ class WorkflowRunPayload(OutputSchema):
     action: ResolvedPreconditionAction | None = None
 
 
-@register_schema("modelo.work.runs")
 class WorkRunsResult(OutputSchema):
     """Workflow run listing returned by the ``modelo.work.runs`` leaf.
 

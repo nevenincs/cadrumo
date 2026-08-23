@@ -102,7 +102,7 @@ def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
     from .._transport import _cli_resolution_refusal_envelope, _timeout_refusal_envelope
 
     envelope = _timeout_refusal_envelope(command_key="app.live.expedientes.pull", tier=CallTier.LIVE, timeout_s=420.0)
-    validated = validate_registered_envelope_document(envelope)
+    validated = validate_registered_envelope_document(envelope, None)
     assert validated == envelope
     assert validated["schema_version"] == ENVELOPE_SCHEMA_VERSION
     assert validated["command"] == "app.live.expedientes.pull"
@@ -121,7 +121,7 @@ def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
         command_key="registry.inspect",
         error=FileNotFoundError("Installed Cadrumo CLI executable is missing"),
     )
-    validated_installation = validate_registered_envelope_document(installation)
+    validated_installation = validate_registered_envelope_document(installation, None)
     assert validated_installation == installation
     assert validated_installation["command"] == "registry.inspect"
     installation_error = _typed_error_envelope(validated_installation)

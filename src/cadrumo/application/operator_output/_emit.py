@@ -42,8 +42,7 @@ def emit_operator_json_success(
     place that decides whether it belongs on the envelope.
 
     Args:
-        command: Stable command-path string matching the ``@register_schema``
-            key for ``result``'s type.
+        command: Stable command-spec result identity for ``result``'s type.
         result: The strict-validated, registered
             :class:`~cadrumo.core.json_contract.OutputSchema` payload.
         notices: Caller-supplied notices, excluding the sandbox indicator.

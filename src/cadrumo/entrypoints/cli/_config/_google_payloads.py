@@ -2,7 +2,7 @@
 
 Each class declared here is a strict
 :class:`OutputSchema` subclass and is decorated
-with :func:`register_schema` so the
+with CommandSpec schema authority so the
 JSON-contract test suite can enumerate every google-config command surface this
 module covers. Validated results enter
 :class:`SchemaEnvelope` through
@@ -14,7 +14,7 @@ sequence fields use ``list`` rather than ``tuple`` because
 ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
 
 The payload classes document only the CLI transport shapes registered with
-:func:`register_schema`. OAuth state remains
+CommandSpec schema authority. OAuth state remains
 owned by :mod:`google`, Drive mirror state by
 :mod:`storage`, and calc-sheets semantics by
 :mod:`calc_sheets`.
@@ -36,11 +36,10 @@ from pydantic import Field
 
 from ....adapters.outbound.storage import ProviderKind
 from ....core import CasillaId
-from ....core.json_contract import OutputSchema, register_schema
+from ....core.json_contract import OutputSchema
 from ....domain.calculations.registry import FormulaId, LegalRefId, RelationId, SourceRefId
 
 
-@register_schema("config.google.register")
 class GoogleRegisterResult(OutputSchema):
     """JSON envelope for ``aeat config google register``.
 
@@ -57,7 +56,6 @@ class GoogleRegisterResult(OutputSchema):
     project_id: str
 
 
-@register_schema("config.google.login")
 class GoogleLoginResult(OutputSchema):
     """JSON envelope for ``aeat config google login``.
 
@@ -76,7 +74,6 @@ class GoogleLoginResult(OutputSchema):
     granted_scopes: list[str] = []
 
 
-@register_schema("config.google.status")
 class GoogleStatusResult(OutputSchema):
     """JSON envelope for ``aeat config google status``.
 
@@ -99,7 +96,6 @@ class GoogleStatusResult(OutputSchema):
     reauth_required: bool | None = None
 
 
-@register_schema("config.google.logout")
 class GoogleLogoutResult(OutputSchema):
     """JSON envelope for ``aeat config google logout``.
 
@@ -122,7 +118,6 @@ class GoogleLogoutResult(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
-@register_schema("config.google.sync.probe")
 class GoogleSyncProbeResult(OutputSchema):
     """JSON envelope for ``aeat config google sync probe``.
 
@@ -181,7 +176,6 @@ class GoogleSyncDegradedManifestPayload(OutputSchema):
     detail: str
 
 
-@register_schema("config.google.sync.push")
 class GoogleSyncPushResult(OutputSchema):
     """JSON envelope for ``aeat config google sync push``.
 
@@ -225,7 +219,6 @@ class GoogleSyncPushResult(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
-@register_schema("config.google.sync.calc.export")
 class GoogleSyncCalcExportResult(OutputSchema):
     """JSON envelope for ``aeat config google sync calc export``.
 
@@ -285,7 +278,6 @@ class GoogleSyncCalcVerifyDivergencePayload(OutputSchema):
     aeat: str | None = None
 
 
-@register_schema("config.google.sync.calc.verify")
 class GoogleSyncCalcVerifyResult(OutputSchema):
     """JSON envelope for ``aeat config google sync calc verify``.
 
@@ -371,7 +363,6 @@ class GoogleSyncCalcComputeCasillaPayload(OutputSchema):
     source_refs: list[SourceRefId] = Field(min_length=1)
 
 
-@register_schema("config.google.sync.calc.pull")
 class GoogleSyncCalcPullResult(OutputSchema):
     """JSON envelope for ``aeat config google sync calc pull``.
 
@@ -412,7 +403,6 @@ class GoogleSyncCalcPullResult(OutputSchema):
     row_set_edits: list[dict[str, object]] = []
 
 
-@register_schema("config.google.sync.calc.compute")
 class GoogleSyncCalcComputeResult(OutputSchema):
     """JSON envelope for ``aeat config google sync calc compute``.
 

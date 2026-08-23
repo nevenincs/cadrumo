@@ -30,7 +30,7 @@ from datetime import datetime
 from pydantic import Field
 
 from ...core.identity import BucketId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
@@ -61,7 +61,6 @@ class BucketHistoryEventPayload(OutputSchema):
     payload: dict[str, str] = {}
 
 
-@register_schema("config.bucket.history")
 class BucketHistoryResult(OutputSchema):
     """JSON envelope for ``aeat config profile history``.
 

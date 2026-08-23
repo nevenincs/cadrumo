@@ -2,7 +2,7 @@
 
 The root callbacks are not ordinary leaf commands, but they still emit
 :class:`SchemaEnvelope` documents through :func:`_emit_envelope`. Each class is
-a strict :class:`OutputSchema` subclass. :func:`register_schema` registers it
+a strict :class:`OutputSchema` subclass. CommandSpec schema authority registers it
 so the JSON-contract and CLI-reference conformance gates can enumerate these
 group-callback surfaces alongside normal command leaves.
 
@@ -31,7 +31,7 @@ from collections.abc import Callable, Mapping
 
 from pydantic import BaseModel, model_validator
 
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 
 
 def _help_document_branch() -> type[BaseModel]:
@@ -98,7 +98,6 @@ def _canonical_branch_payload(
     raise ValueError(f"root result must match one canonical branch: {expected}")
 
 
-@register_schema("root.status")
 class RootStatusResult(OutputSchema):
     """JSON envelope for the bare ``cadrumo`` (or ``aeat --help``) invocation.
 
@@ -132,7 +131,6 @@ class RootStatusResult(OutputSchema):
         )
 
 
-@register_schema("root.app")
 class AppRootResult(OutputSchema):
     """JSON envelope for the bare ``aeat app`` (or ``aeat app --help``) invocation.
 

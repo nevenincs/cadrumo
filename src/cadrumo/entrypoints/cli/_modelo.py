@@ -42,24 +42,12 @@ from ...domain.modelos import (
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
 )
-from ._common import activate_subcommand_output_language, active_bucket_id_or_refuse
-from ._modelo_aggregate_cli import register_aggregate_commands
-from ._modelo_audit_cli import audit_app as audit_app
-from ._modelo_audit_cli import register_audit_commands
-from ._modelo_behavior_support import (
-    bare_period_error as _bare_period_error,
-)
+from ._common import activate_subcommand_output_language
 from ._modelo_behavior_support import (
     require_active_profile as _require_active_profile,
 )
 from ._modelo_behavior_support import (
-    resolve_optional_cli_period as _resolve_optional_cli_period,
-)
-from ._modelo_behavior_support import (
     resolve_work_unit_for_cli as _resolve_work_unit_for_cli,
-)
-from ._modelo_behavior_support import (
-    resolve_year_period as _resolve_year_period,
 )
 from ._modelo_behavior_support import (
     work_address_for_cli as _work_address_for_cli,
@@ -68,46 +56,14 @@ from ._modelo_cli_support import (
     bad_parameter_from_error as _bad_parameter_from_error,
 )
 from ._modelo_cli_support import (
-    bad_parameter_from_localized_context as _bad_parameter_from_localized_context,
-)
-from ._modelo_cli_support import (
-    parse_binding_override as _parse_binding_override,
-)
-from ._modelo_cli_support import (
-    parse_casilla_override as _parse_casilla_override,
-)
-from ._modelo_cli_support import (
     parse_kv_spec as _parse_kv_spec,
 )
-from ._modelo_cli_support import (
-    resolve_default_actor as _resolve_default_actor,
-)
+from ._modelo_cli_support import resolve_default_actor as _resolve_default_actor
 from ._modelo_cli_support import (
     selector_bad_parameter as _selector_bad_parameter,
 )
 from ._modelo_cli_support import (
     validate_casilla_key as _validate_casilla_key,
-)
-from ._modelo_cli_support import (
-    validate_work_unit_id as _validate_work_unit_id,
-)
-from ._modelo_discovery_cli import register_discovery_commands
-from ._modelo_execution_policies import declare_metadata_group
-from ._modelo_export_cli import register_export_commands
-from ._modelo_iva_wallet_cli import register_iva_wallet_commands
-from ._modelo_m036_cli import register_m036_commands
-from ._modelo_m145_cli import register_m145_communication_commands
-from ._modelo_projection_cli import register_projection_commands
-from ._modelo_readiness_cli import register_readiness_commands
-from ._modelo_reconcile_cli import register_reconcile_commands
-from ._modelo_records_cli import (
-    filing_record_app as filing_record_app,
-)
-from ._modelo_records_cli import (
-    register_record_commands,
-)
-from ._modelo_records_cli import (
-    verification_report_app as verification_report_app,
 )
 from ._modelo_rendering import (
     filing_record_lines as _filing_record_lines,
@@ -121,35 +77,9 @@ from ._modelo_rendering import (
 from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
 )
-from ._modelo_review_package_cli import register_review_package_commands
 
 _log = get_logger(__name__)
 _HEX_DIGITS = frozenset("0123456789abcdef")
-
-
-app = typer.Typer(
-    name="modelo",
-    help=tr("cli.app.modelo.app_help"),
-    no_args_is_help=True,
-)
-declare_metadata_group(app)
-
-
-register_readiness_commands(app)
-
-
-register_discovery_commands(
-    app,
-    resolve_year_period=_resolve_year_period,
-    bare_period_error=_bare_period_error,
-    parse_binding_override=_parse_binding_override,
-    bad_parameter_from_error=_bad_parameter_from_error,
-)
-
-
-register_aggregate_commands(app, resolve_year_period=_resolve_year_period)
-
-
 
 
 _M200_M202_PAGOS_RELATION_IDS: frozenset[str] = frozenset(
@@ -524,15 +454,6 @@ def work_amend(
 
 
 
-register_record_commands(
-    app,
-    validate_work_unit_id=_validate_work_unit_id,
-    parse_amendment_casilla=_parse_amendment_casilla,
-    resolve_default_actor=_resolve_default_actor,
-    bad_parameter_from_error=_bad_parameter_from_error,
-)
-
-
 # ─────────────────────────────────────────────────────────────────────────
 # History verb
 # ─────────────────────────────────────────────────────────────────────────
@@ -606,66 +527,11 @@ def modelo_history(
     _emit_envelope(ctx, command="modelo.history", result=history_result, lines=lines)
 
 
-register_reconcile_commands(
-    app,
-    require_active_profile=_require_active_profile,
-    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
-    resolve_default_actor=_resolve_default_actor,
-    active_bucket_id=active_bucket_id_or_refuse,
-)
-
-
-register_audit_commands(app)
-
-
-register_review_package_commands(app)
-
-
-register_export_commands(
-    app,
-    bad_parameter_from_error=_bad_parameter_from_error,
-    selector_bad_parameter=_selector_bad_parameter,
-    resolve_default_actor=_resolve_default_actor,
-    resolve_optional_cli_period=_resolve_optional_cli_period,
-)
-
-
-register_projection_commands(
-    app,
-    require_active_profile=_require_active_profile,
-    parse_casilla_override=_parse_casilla_override,
-    parse_binding_override=_parse_binding_override,
-    bad_parameter_from_error=_bad_parameter_from_error,
-    bad_parameter_from_localized_context=_bad_parameter_from_localized_context,
-)
-
-
-register_iva_wallet_commands(app, active_bucket_id=active_bucket_id_or_refuse)
-
-
-
-
-register_m036_commands(
-    app,
-    require_active_profile=_require_active_profile,
-    active_bucket_id=active_bucket_id_or_refuse,
-)
-
-
-register_m145_communication_commands(
-    app,
-    require_active_profile=_require_active_profile,
-    active_bucket_id=active_bucket_id_or_refuse,
-    parse_casilla_override=_parse_casilla_override,
-    resolve_default_actor=_resolve_default_actor,
-)
-
-
 __all__ = [
     "_verification_report_lines",
     "_verification_report_payload",
-    "app",
-    "audit_app",
-    "filing_record_app",
-    "verification_report_app",
+    "modelo_history",
+    "work_amend",
+    "work_compare_taxation",
+    "work_history",
 ]

@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for ``aeat config google credential-source``.
 
 Each class declared here is a strict :class:`OutputSchema` subclass and is
-decorated with :func:`register_schema` so the JSON-contract test suite can
+decorated with CommandSpec schema authority so the JSON-contract test suite can
 enumerate the credential-source command surface. Validated results enter
 :class:`SchemaEnvelope` through :func:`_emit_envelope`.
 
@@ -16,7 +16,7 @@ from pydantic import model_validator
 
 from ....adapters.outbound.google import GoogleCredentialSourceSelection, GoogleImpersonationConfig
 from ....core import GoogleCredentialSourceKind
-from ....core.json_contract import OutputSchema, register_schema
+from ....core.json_contract import OutputSchema
 
 
 class GoogleCredentialSourcePayload(OutputSchema):
@@ -48,7 +48,6 @@ class GoogleCredentialSourcePayload(OutputSchema):
         return self
 
 
-@register_schema("config.google.credential_source.set")
 class GoogleCredentialSourceSetResult(GoogleCredentialSourcePayload):
     """JSON envelope for ``aeat config google credential-source set``.
 
@@ -65,7 +64,6 @@ class GoogleCredentialSourceSetResult(GoogleCredentialSourcePayload):
     operation: str = "config.google.credential_source.set"
 
 
-@register_schema("config.google.credential_source.show")
 class GoogleCredentialSourceShowResult(GoogleCredentialSourcePayload):
     """JSON envelope for ``aeat config google credential-source show``.
 

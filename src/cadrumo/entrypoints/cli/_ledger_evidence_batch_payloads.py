@@ -33,7 +33,7 @@ from decimal import Decimal
 from pydantic import Field
 
 from ...core.identity import BucketId
-from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
+from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 
 __all__ = [
     "EvidenceBatchItemPayload",
@@ -92,7 +92,6 @@ class EvidenceBatchPausePayload(OutputSchema):
     precondition_action: ResolvedPreconditionAction
 
 
-@register_schema("ledger.evidence.batch")
 class EvidenceBatchResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence batch``.
 

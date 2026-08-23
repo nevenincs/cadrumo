@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for the ``aeat config collab recipient`` CLI.
 
 Each class declared here is a strict :class:`~core.json_contract.OutputSchema`
-subclass and is decorated with :func:`~core.json_contract.register_schema` so
+subclass and is decorated with CommandSpec schema authority so
 the JSON-contract test suite can enumerate every collab-recipient command surface this
 module covers. Field sets mirror :class:`~application.modelo.RecipientFingerprintRecord`
 projected to plain JSON; the private key never appears anywhere in this module (the
@@ -13,7 +13,7 @@ See Also:
         Application record shape these output rows project.
     :class:`~core.json_contract.OutputSchema`
         Base class for typed CLI JSON result payloads.
-    :func:`~core.json_contract.register_schema`
+    CommandSpec schema authority
         Registry hook that publishes each command envelope schema.
     :mod:`~entrypoints.cli._config._collab`
         Command handlers that emit these payloads.
@@ -28,7 +28,7 @@ from datetime import datetime
 from pydantic import model_validator
 
 from ....application.modelo import RecipientFingerprintRecord
-from ....core.json_contract import OutputSchema, register_schema
+from ....core.json_contract import OutputSchema
 
 
 class RecipientFingerprintRowPayload(OutputSchema):
@@ -54,12 +54,10 @@ class RecipientFingerprintRowPayload(OutputSchema):
         return self
 
 
-@register_schema("config.collab.recipient.add")
 class ConfigCollabRecipientAddResult(RecipientFingerprintRowPayload):
     """JSON envelope for ``aeat config collab recipient add``."""
 
 
-@register_schema("config.collab.recipient.list")
 class ConfigCollabRecipientListResult(OutputSchema):
     """JSON envelope for ``aeat config collab recipient list``."""
 
@@ -67,7 +65,6 @@ class ConfigCollabRecipientListResult(OutputSchema):
     count: int
 
 
-@register_schema("config.collab.recipient.remove")
 class ConfigCollabRecipientRemoveResult(OutputSchema):
     """JSON envelope for ``aeat config collab recipient remove``."""
 

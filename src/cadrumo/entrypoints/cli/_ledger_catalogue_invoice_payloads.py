@@ -2,7 +2,7 @@
 
 Each payload is a strict
 :class:`OutputSchema` subclass registered with
-:func:`register_schema` on the shared
+CommandSpec schema authority on the shared
 :class:`SchemaEnvelope` surface through
 :func:`_emit_envelope`.
 
@@ -26,7 +26,7 @@ from pydantic import Field, model_validator
 
 from ...core import IntracomOperationType
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken, TransactionId, validate_spanish_tax_id
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.invoices import PaymentStatus, validate_country_code, validate_iva_number
 from ...domain.iva import InvoiceKind
 
@@ -95,7 +95,6 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
         return self
 
 
-@register_schema("ledger.invoice.add")
 class CatalogueInvoiceCreatePayload(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice add``.
 
@@ -104,7 +103,6 @@ class CatalogueInvoiceCreatePayload(CatalogueInvoiceRecordPayload):
     """
 
 
-@register_schema("ledger.invoice.wizard")
 class CatalogueInvoiceWizardResult(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice wizard``.
 
@@ -117,7 +115,6 @@ class CatalogueInvoiceWizardResult(CatalogueInvoiceRecordPayload):
     already_existed: bool = False
 
 
-@register_schema("ledger.invoice.view")
 class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice view``.
 
@@ -126,7 +123,6 @@ class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
     """
 
 
-@register_schema("ledger.invoice.update")
 class CatalogueInvoiceUpdatePayload(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice update``.
 
@@ -143,7 +139,6 @@ class CatalogueInvoiceUpdatePayload(CatalogueInvoiceRecordPayload):
     bucket_event_ids: list[str] = Field(default_factory=list)
 
 
-@register_schema("ledger.invoice.remove")
 class CatalogueInvoiceRemovePayload(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice remove``.
 
@@ -153,7 +148,6 @@ class CatalogueInvoiceRemovePayload(CatalogueInvoiceRecordPayload):
     """
 
 
-@register_schema("ledger.invoice.list")
 class CatalogueInvoiceListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger invoice list``.
 
@@ -177,7 +171,6 @@ class BulkInvoiceImportRowFailurePayload(OutputSchema):
     reason: str = Field(min_length=1)
 
 
-@register_schema("ledger.invoice.import")
 class CatalogueInvoiceImportResult(OutputSchema):
     """JSON envelope for ``aeat app ledger invoice import``.
 

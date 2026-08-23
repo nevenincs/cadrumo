@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from ....core.json_contract import OutputSchema, register_schema
+from ....core.json_contract import OutputSchema
 
 
-@register_schema("config.google.folder.set")
 class GoogleFolderSetResult(OutputSchema):
     """Persisted Drive-root selection returned by ``folder set``."""
 
@@ -14,7 +13,6 @@ class GoogleFolderSetResult(OutputSchema):
     root_folder_id: str
 
 
-@register_schema("config.google.folder.get")
 class GoogleFolderGetResult(OutputSchema):
     """Current optional Drive-root selection returned by ``folder get``."""
 

@@ -911,8 +911,8 @@ def resolve_manifest_action_profiles(
 class CommandSchemaRef(BaseModel):
     """One registered command-path to result-schema reference.
 
-    ``command`` is a stable :data:`~core.json_contract.SCHEMA_REGISTRY`
-    key (e.g. ``"modelo.calculate"``); ``schema_name`` is the registered
+    ``command`` is a stable command-spec result identity
+    (e.g. ``"modelo.calculate"``); ``schema_name`` is the authored
     :class:`~core.json_contract.OutputSchema` subclass name an operator (or
     a tool-exposure server) resolves to read the command's result shape.
     """

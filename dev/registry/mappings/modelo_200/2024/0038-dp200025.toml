@@ -1,0 +1,811 @@
+schema_version = 1
+fragment_id = "dp200025"
+modelo = "200"
+design_epoch = "2024"
+source_ref = "aeat-dr-200-2024"
+source_sha256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0001"
+kind = "literal"
+literal = "<T"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0002"
+kind = "literal"
+literal = "200"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0003"
+kind = "literal"
+literal = "25000"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0004"
+kind = "literal"
+literal = ">"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0005"
+kind = "header"
+producer_key = "amendment_evidence.is_complementaria"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0006"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 1, field = "nombre_o_razon_social" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0007"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 1, field = "domicilio_social" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0008"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 1, field = "clave_pais_territorio" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0009"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 1, field = "importe_renta" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0010"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 1, field = "administradores_linea_1" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0011"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 1, field = "administradores_linea_2" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0012"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 1, field = "administradores_linea_3" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0013"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 1, field = "administradores_linea_4" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0014"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 1, field = "administradores_linea_5" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0015"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 2, field = "nombre_o_razon_social" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0016"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 2, field = "domicilio_social" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0017"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 2, field = "clave_pais_territorio" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0018"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 2, field = "importe_renta" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0019"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 2, field = "administradores_linea_1" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0020"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 2, field = "administradores_linea_2" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0021"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 2, field = "administradores_linea_3" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0022"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 2, field = "administradores_linea_4" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0023"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 2, field = "administradores_linea_5" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0024"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 3, field = "nombre_o_razon_social" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0025"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 3, field = "domicilio_social" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0026"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 3, field = "clave_pais_territorio" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0027"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 3, field = "importe_renta" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0028"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 3, field = "administradores_linea_1" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0029"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 3, field = "administradores_linea_2" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0030"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 3, field = "administradores_linea_3" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0031"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 3, field = "administradores_linea_4" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0032"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 3, field = "administradores_linea_5" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0033"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 4, field = "nombre_o_razon_social" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0034"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 4, field = "domicilio_social" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0035"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 4, field = "clave_pais_territorio" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0036"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 4, field = "importe_renta" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0037"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 4, field = "administradores_linea_1" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0038"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 4, field = "administradores_linea_2" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0039"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 4, field = "administradores_linea_3" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 44
+source_cell = "A44"
+ordinal = "39"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0040"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 4, field = "administradores_linea_4" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 45
+source_cell = "A45"
+ordinal = "40"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0041"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 4, field = "administradores_linea_5" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 46
+source_cell = "A46"
+ordinal = "41"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0042"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 5, field = "nombre_o_razon_social" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 47
+source_cell = "A47"
+ordinal = "42"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0043"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 5, field = "domicilio_social" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0044"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 5, field = "clave_pais_territorio" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 49
+source_cell = "A49"
+ordinal = "44"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0045"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 5, field = "importe_renta" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 50
+source_cell = "A50"
+ordinal = "45"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0046"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 5, field = "administradores_linea_1" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 51
+source_cell = "A51"
+ordinal = "46"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0047"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 5, field = "administradores_linea_2" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 52
+source_cell = "A52"
+ordinal = "47"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0048"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 5, field = "administradores_linea_3" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 53
+source_cell = "A53"
+ordinal = "48"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0049"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 5, field = "administradores_linea_4" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 54
+source_cell = "A54"
+ordinal = "49"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0050"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 5, field = "administradores_linea_5" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 55
+source_cell = "A55"
+ordinal = "50"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0051"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 6, field = "nombre_o_razon_social" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 56
+source_cell = "A56"
+ordinal = "51"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0052"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 6, field = "domicilio_social" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 57
+source_cell = "A57"
+ordinal = "52"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0053"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 6, field = "clave_pais_territorio" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 58
+source_cell = "A58"
+ordinal = "53"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0054"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 6, field = "importe_renta" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 59
+source_cell = "A59"
+ordinal = "54"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0055"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 6, field = "administradores_linea_1" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 60
+source_cell = "A60"
+ordinal = "55"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0056"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 6, field = "administradores_linea_2" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 61
+source_cell = "A61"
+ordinal = "56"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0057"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 6, field = "administradores_linea_3" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 62
+source_cell = "A62"
+ordinal = "57"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0058"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 6, field = "administradores_linea_4" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0059"
+kind = "projection"
+projection_ref = { projection_kind = "m200_transparencia_fiscal_internacional", slot = 6, field = "administradores_linea_5" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 64
+source_cell = "A64"
+ordinal = "59"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0060"
+kind = "casilla"
+casilla_id = "00387"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 65
+source_cell = "A65"
+ordinal = "60"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0061"
+kind = "filler"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 66
+source_cell = "A66"
+ordinal = "61"
+record_identity = "DP200025"
+
+[[entries]]
+export_field_id = "m200-2024.dp200025.f0062"
+kind = "literal"
+literal = "</T20025000>"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+[entries.anchor]
+sheet = "DP200025"
+source_row = 67
+source_cell = "A67"
+ordinal = "62"
+record_identity = "DP200025"

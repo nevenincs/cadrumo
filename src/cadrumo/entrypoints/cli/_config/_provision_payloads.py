@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for the ``aeat config provision`` verbs.
 
 Each class is a strict :class:`~core.json_contract.OutputSchema` registered with
-:func:`~core.json_contract.register_schema`, so the JSON-contract gate enumerates
+CommandSpec schema authority, so the JSON-contract gate enumerates
 the surface. Diagnostics ride the shared envelope's typed ``notices`` channel;
 nothing here declares a bespoke ``advisory``, ``next`` or ``suggestion`` field,
 which the envelope contract forbids.
@@ -18,7 +18,7 @@ from collections.abc import Mapping
 from pydantic import Field
 
 from ....core import ContentionCause
-from ....core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
+from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
 
 ProvisioningFactPayload = Mapping[str, str | int | bool]
 """Locale-neutral scalar facts projected from a provisioning outcome."""
@@ -55,7 +55,6 @@ class ProvisionModelPayload(OutputSchema):
     precondition_action: ResolvedPreconditionAction | None = None
 
 
-@register_schema("config.provision.report")
 class ProvisionReportResult(OutputSchema):
     """JSON envelope for ``aeat config provision report``.
 
@@ -75,7 +74,6 @@ class ProvisionReportResult(OutputSchema):
     contention: ProvisionContentionPayload | None = None
 
 
-@register_schema("config.provision.pull")
 class ProvisionPullResult(OutputSchema):
     """JSON envelope for ``aeat config provision pull``.
 
@@ -93,7 +91,6 @@ class ProvisionPullResult(OutputSchema):
     precondition_action: ResolvedPreconditionAction | None = None
 
 
-@register_schema("config.provision.verify")
 class ProvisionVerifyResult(OutputSchema):
     """JSON envelope for ``aeat config provision verify``.
 

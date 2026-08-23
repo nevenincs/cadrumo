@@ -33,19 +33,11 @@ from ._command_suggestions import (
     CadrumoTyperGroup,
     LazyFactoryTarget,
     LazySubcommand,
-    register_lazy_subcommand,
 )
-
-_SPEC_REGISTRY_PREFIX = "command-spec:"
 
 
 class CommandSpecTyperGroup(CadrumoTyperGroup):
     """Runtime group whose lazy table is namespaced to CommandSpec authority."""
-
-
-def _registry_key(graph: CommandSpecGraph, key: str) -> str:
-    """Return process-local runtime state for one immutable authority graph."""
-    return f"{_SPEC_REGISTRY_PREFIX}{id(graph)}:{key}"
 
 
 @cache
@@ -53,7 +45,7 @@ def _group_class(graph: CommandSpecGraph, key: str) -> type[CommandSpecTyperGrou
     return type(
         f"CommandSpecTyperGroup_{key}",
         (CommandSpecTyperGroup,),
-        {"__cadrumo_lazy_group_key__": _registry_key(graph, key)},
+        {"lazy_subcommands": _lazy_children(graph, graph.by_key()[key])},
     )
 
 
@@ -168,12 +160,10 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
             option_kwargs["parser"] = parser
         if click_type is not None:
             option_kwargs["click_type"] = click_type
-        # Typer infers ordinary flags from the bool annotation. Passing its
-        # deprecated compatibility parameters for every option emits warnings;
-        # reserve them for the uncommon explicit-value cases that need them.
-        if spec.flag_value is not None:
-            option_kwargs["is_flag"] = spec.is_flag
-            option_kwargs["flag_value"] = spec.flag_value
+        # Typer derives flag semantics from the boolean annotation and paired
+        # declarations. Its legacy ``is_flag`` / ``flag_value`` parameters are
+        # deprecated and ignored, so projecting them would add warnings without
+        # preserving any contract fact.
         typer_default = option_factory(default, *spec.declarations, **option_kwargs)
         kind = inspect.Parameter.KEYWORD_ONLY
     return inspect.Parameter(
@@ -235,12 +225,10 @@ class _SpecNodeFactory:
         return _node_app(self._graph, self._key)
 
 
-def _register_children(graph: CommandSpecGraph, parent: CommandSpec) -> None:
+def _lazy_children(graph: CommandSpecGraph, parent: CommandSpec) -> tuple[LazySubcommand, ...]:
+    """Compile one node-local immutable child projection from CommandSpec."""
     children = tuple(spec for spec in graph.specs if spec.parent_key == parent.key)
-    registry_key = _registry_key(graph, parent.key)
-    for child in children:
-        register_lazy_subcommand(
-            registry_key,
+    return tuple(
             LazySubcommand(
                 child.token,
                 LazyFactoryTarget(
@@ -249,13 +237,13 @@ def _register_children(graph: CommandSpecGraph, parent: CommandSpec) -> None:
                     if child.handler is not None
                     else frozenset(),
                 ),
-                child_registry_key=_registry_key(graph, child.key),
                 help=tr(child.help_key.value),
                 short_help=None if child.short_help_key is None else tr(child.short_help_key.value),
                 hidden=child.invocation.hidden,
                 deprecated=_deprecated(child),
-            ),
-        )
+            )
+        for child in children
+    )
 
 
 def _node_app(graph: CommandSpecGraph, key: str) -> typer.Typer:
@@ -296,7 +284,6 @@ def _node_app(graph: CommandSpecGraph, key: str) -> typer.Typer:
 
         metadata_group_adapter.__name__ = f"group_{spec.key}"
         app.callback(invoke_without_command=False)(metadata_group_adapter)
-    _register_children(graph, spec)
     return app
 
 

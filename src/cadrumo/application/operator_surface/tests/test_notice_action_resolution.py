@@ -47,7 +47,7 @@ def _reconciliation(*, target_command_key: str, required_input_names: tuple[str,
                 result_schema=ResultSchemaInventoryRow(
                     subject_leaf_key=target_command_key,
                     schema_name="TargetPayload",
-                    provenance="SCHEMA_REGISTRY",
+                    provenance="COMMAND_GRAPH",
                 ),
                 input_schema=InputSchemaInventoryRow(
                     subject_leaf_key=target_command_key,
