@@ -37,6 +37,18 @@ def test_app_does_not_register_deadlines_subgroup() -> None:
     assert result.exit_code != 0, result.output
 
 
+def test_app_does_not_register_external_agent_client() -> None:
+    """The product CLI has no command for provisioning one of its clients.
+
+    Agent workspaces and client-specific materialisation belong to the separate
+    harness distribution.  Reintroducing an ``app agent`` leaf would invert
+    that dependency by making the base application aware of a consumer.
+    """
+
+    result = invoke_cached_cli(["app", "agent", "--help"])
+    assert result.exit_code != 0, result.output
+
+
 def test_modelo_audit_export_remains_distinct_from_modelo_export() -> None:
     """`aeat app modelo export` (fichero-BOE exporter) and
     `aeat app modelo audit export` (evidence-bundle exporter) are

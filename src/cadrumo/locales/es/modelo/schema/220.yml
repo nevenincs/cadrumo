@@ -1990,82 +1990,150 @@ modelo:
                 y de las inversiones. Pérdidas por la enajenación de participaciones
                 en sociedades puestas en equivalencia
             x-agp34c1g6h230chq60o36cpk:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Otros gastos técnicos (+ ó -).'
               label: Cuenta técnica del seguro de vida. Otros gastos técnicos (+ ó
                 -)
             x-agp34c1g6h230chq60o36cpl:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Otros gastos técnicos (+ ó -). Variación del deterioro por
+                insolvencias (+ ó -).'
               label: Cuenta técnica del seguro de vida. Otros gastos técnicos (+ ó
                 -). Variación del deterioro por insolvencias (+ ó -)
             x-agp34c1g6h230chq60o36cpm:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Otros gastos técnicos (+ ó -). Variación del deterioro del
+                inmovilizado (+ ó -).'
               label: Cuenta técnica del seguro de vida. Otros gastos técnicos (+ ó
                 -). Variación del deterioro del inmovilizado (+ ó -)
             x-agp34c1g6h230chq60o36cpn:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Otros gastos técnicos (+ ó -). Otros.'
               label: Cuenta técnica del seguro de vida. Otros gastos técnicos (+ ó
                 -). Otros
             x-agp34c1g6h230chq60o36cpo:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones
             x-agp34c1g6h230chq60o36cpp:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Gastos
+                de gestión del inmovilizado material y de las inversiones.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Gastos de gestión del inmovilizado material
                 y de las inversiones
             x-agp34c1g6h230chq60o36d1g:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Gastos
+                de gestión del inmovilizado material y de las inversiones. Gastos
+                del inmovilizado material y de las inversiones inmobiliarias.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Gastos de gestión del inmovilizado material
                 y de las inversiones. Gastos del inmovilizado material y de las inversiones
                 inmobiliarias
             x-agp34c1g6h230chq60o36d1h:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Gastos
+                de gestión del inmovilizado material y de las inversiones. Gastos
+                de inversiones y cuentas financieras.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Gastos de gestión del inmovilizado material
                 y de las inversiones. Gastos de inversiones y cuentas financieras
             x-agp34c1g6h230chq60o36d1i:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Correcciones
+                de valor del inmovilizado material y de las inversiones.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Correcciones de valor del inmovilizado material
                 y de las inversiones
             x-agp34c1g6h230chq60o36d1j:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Correcciones
+                de valor del inmovilizado material y de las inversiones. Amortización
+                del inmovilizado material y de las inversiones inmobiliarias.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Correcciones de valor del inmovilizado material
                 y de las inversiones. Amortización del inmovilizado material y de
                 las inversiones inmobiliarias
             x-agp34c1g6h230chq60o36d1k:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Correcciones
+                de valor del inmovilizado material y de las inversiones. Deterioro
+                del inmovilizado material y de las inversiones inmobiliarias.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Correcciones de valor del inmovilizado material
                 y de las inversiones. Deterioro del inmovilizado material y de las
                 inversiones inmobiliarias
             x-agp34c1g6h230chq60o36d1l:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Correcciones
+                de valor del inmovilizado material y de las inversiones. Deterioro
+                de inversiones financieras.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Correcciones de valor del inmovilizado material
                 y de las inversiones. Deterioro de inversiones financieras
             x-agp34c1g6h230chq60o36d1m:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Pérdidas
+                procedentes del inmovilizado material y de las inversiones.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Pérdidas procedentes del inmovilizado material
                 y de las inversiones
             x-agp34c1g6h230chq60o36d1n:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Pérdidas
+                procedentes del inmovilizado material y de las inversiones. Del inmovilizado
+                material y de las inversiones inmobiliarias.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Pérdidas procedentes del inmovilizado material
                 y de las inversiones. Del inmovilizado material y de las inversiones
                 inmobiliarias
             x-agp34c1g6h230chq60o36d1o:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Pérdidas
+                procedentes del inmovilizado material y de las inversiones. De las
+                inversiones financieras.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Pérdidas procedentes del inmovilizado material
                 y de las inversiones. De las inversiones financieras
             x-agp34c1g6h230chq60o36d1p:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos de inversiones afectas a seguros en los que el tomador
+                asume el riesgo de la inversión.'
               label: Cuenta técnica del seguro de vida. Gastos de inversiones afectas
                 a seguros en los que el tomador asume el riesgo de la inversión
             x-agp34c1g6h230chq60o36d9g:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Subtotal (Resultado de la cuenta técnica del seguro de vida).'
               label: Cuenta técnica del seguro de vida. Subtotal (Resultado de la
                 cuenta técnica del seguro de vida)
             x-agp34c1g6h230chq60o3cd9o:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Pérdidas
+                por la enajenación de participaciones en sociedades consolidadas.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Pérdidas por la enajenación de participaciones
                 en sociedades consolidadas
             x-agp34c1g6h230chq60o3ec9l:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Gastos
+                de entidades incluidas en la consolidación.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Gastos de entidades incluidas en la consolidación
             x-agp34c1g6h230chq60o3ec9m:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Gastos
+                de entidades incluidas en la consolidación. Participación en pérdidas
+                de entidades puestas en equivalencia.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Gastos de entidades incluidas en la consolidación.
                 Participación en pérdidas de entidades puestas en equivalencia
             x-agp34c1g6h230chq60o3ec9n:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
+                de vida. Gastos del inmovilizado material y de las inversiones. Gastos
+                de entidades incluidas en la consolidación. Pérdidas por enajenación
+                de participaciones en sociedades puestas en equivalencia.'
               label: Cuenta técnica del seguro de vida. Gastos del inmovilizado material
                 y de las inversiones. Gastos de entidades incluidas en la consolidación.
                 Pérdidas por enajenación de participaciones en sociedades puestas

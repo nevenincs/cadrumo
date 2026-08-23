@@ -316,7 +316,6 @@ class StorageCategory(StrEnum):
     LOG_FILE = "logs.file"
     LLM_USAGE = "llm-usage"
     LLM_RUN_TELEMETRY = "llm-run-telemetry"
-    MCP_TELEMETRY = "mcp-telemetry"
     RUNS = "runs"
 
     # ── Regenerable, evictable caches ───────────────────────────────────────

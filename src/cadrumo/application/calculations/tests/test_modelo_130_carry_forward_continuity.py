@@ -297,9 +297,9 @@ def _seed_prior_year_m100(
     annual filing being observed; seeding it here exercises the full continuity
     (prior-year Renta + prior-quarter 130 both feeding the current quarter).
     """
-    # The binding sums M100 casillas 0224/1479/1553/1577 and requires all four
-    # observed; the net income lands in 0224, the other rendimiento-source
-    # casillas are zero for a pure-actividad-económica filer.
+    # The binding sums whichever of M100 casillas 0224/1479/1553/1577 apply.
+    # This full-filing scenario records net income in 0224 and explicit zeros
+    # for its non-applicable rendimiento sources.
     obs_repo.save(
         obs_repo.prepare_observation_envelope(
             registry_grounded_modelo_observation(

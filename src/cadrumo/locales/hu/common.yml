@@ -107,6 +107,10 @@ aggregation:
       unsupported_period: Nem támogatott nyomtatvány-időszak a főkönyvi aggregáláshoz.
   oss_ioss:
     errors:
+      exterior_rate_kind_unsupported: Az egyablakos rendszer külső sémája csak a fogyasztás
+        szerinti tagállam általános vagy kedvezményes adómértékével nyújtott szolgáltatásokat
+        fogadja el. A megadott megfigyelés más adómérték-típust jelöl, amely ebben
+        a sémában nem összesíthető.
       invoice_line_currency_unconverted: Egy OSS/IOSS számlasor külföldi pénznemben
         van megadva, és nincs feloldott euró árfolyama, ezért nem deklarálható ezen
         a modelón.
@@ -180,11 +184,36 @@ aggregation:
         megadnia a számot, a legkorábbi és a legkésőbbi benyújtási dátumot.
       owned_sources_blank: A forrásháló saját forrásai nem tartalmazhatnak üres forrástípusokat.
       owned_sources_duplicate: A forrásháló saját forrásainak egyedinek kell lenniük.
+      provenance_binding_source_mismatch: A származási soron megadott forrástípus
+        nem egyezik azzal a kötési forrással, amelyhez tartozónak vallja magát. A
+        nyomon követhetőség csak akkor ellenőrizhető, ha mindkettő ugyanazt a forrást
+        nevezi meg.
+      provenance_binding_source_missing: A származási sor felismert kötési forrástípust
+        jelöl, de nem nevezi meg, melyik kötéshez tartozik. A deklarált kötés nélküli
+        felismerhető forrás nyomon követhetetlenné teszi az értéket.
+      provenance_contributor_missing_parent: A közreműködő származási sornak meg kell
+        jelölnie azt az elsődleges sort, amelyből származik. Enélkül a hozzájárulás
+        elszakad attól az értéktől, amelyet táplál.
+      provenance_contributor_parent_missing: Egy közreműködő sor olyan szülőhivatkozást
+        nevez meg, amely nem szerepel a deklarált elsődleges sorok között. A származási
+        lánc nem létező eredetre mutat.
+      provenance_primary_has_parent: 'Elsődleges származási sor nem jelölhet szülősort:
+        az elsődleges sor az az eredet, amelytől a többi függ.'
+      provenance_primary_ref_ambiguous: Két elsődleges származási sor ugyanazt a forráshivatkozást
+        viseli, így egy közreműködő sor nem tudja eldönteni, melyikből származik.
+      provenance_resolver_mismatch: Valamelyik származási sor más feloldót nevez meg,
+        mint amelyik a feloldást előállította. Minden sort ugyanahhoz a feloldóhoz
+        kell rendelni, amely az eredményt jegyzi.
       relation_provenance_incomplete: A kapcsolat eredetének tartalmaznia kell a forrás
         modellt, évet, időszakokat, mezőket, jogi hivatkozásokat és forráshivatkozásokat.
+      reserved_composite_resolver_id: A megadott feloldóazonosító az összetett feloldások
+        számára van fenntartva, és egyszerű feloldásban nem használható.
       row_binding_index_invalid: 'Belső hiba: a sor-binding sorindexének 1-nek vagy
         nagyobbnak kell lennie.'
       row_binding_value_invalid: 'Belső hiba: a sor-binding decimális értéke érvénytelen.'
+      row_source_identity_coordinate_mismatch: Minden sorazonosító-koordinátának a
+        soron ténylegesen jelen lévő kötési értékhez kell tartoznia. Olyan koordinátát
+        jelöltek meg, amelyet a sor nem hordoz.
       source_transaction_ids_blank: A forrásháló tranzakcióazonosítói nem tartalmazhatnak
         üres értékeket.
       source_transaction_ids_duplicate: A forrásháló tranzakcióazonosítóinak egyedinek

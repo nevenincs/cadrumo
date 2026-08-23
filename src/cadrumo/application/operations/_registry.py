@@ -59,10 +59,9 @@ class OperationReconciliationPolicy(StrEnum):
 
 
 class OperationFrontendProjection(StrEnum):
-    """Frontend-neutral identities of permitted operation projections."""
+    """Product-owned identities of permitted operation projections."""
 
     CLI = "cli"
-    MCP = "mcp"
     TUI = "tui"
 
 

@@ -109,6 +109,10 @@ aggregation:
       unsupported_period: Unsupported modelo period for ledger aggregation.
   oss_ioss:
     errors:
+      exterior_rate_kind_unsupported: The one-stop-shop external scheme only accepts
+        services at the standard or reduced rate of the member state of consumption.
+        The supplied observation declares another rate kind, which cannot be aggregated
+        under this scheme.
       invoice_line_currency_unconverted: An OSS/IOSS invoice line is denominated in
         a foreign currency with no resolved euro rate, so it cannot be declared on
         this modelo.
@@ -182,12 +186,37 @@ aggregation:
       owned_sources_blank: Source mesh owned sources must not contain blank source
         kinds.
       owned_sources_duplicate: Source mesh owned sources must be unique.
+      provenance_binding_source_mismatch: The source kind declared on the provenance
+        row does not match the binding source it claims to belong to. Both must name
+        the same source for the traceability to be checkable.
+      provenance_binding_source_missing: The provenance row declares a recognised
+        binding source kind but names no binding it belongs to. A recognisable source
+        with no declared binding leaves the value untraceable.
+      provenance_contributor_missing_parent: A contributor provenance row must declare
+        the primary row it derives from. Without it the contribution is detached from
+        the value it feeds.
+      provenance_contributor_parent_missing: A contributor row names a parent reference
+        that is not among the declared primary rows. The provenance chain points at
+        an origin that does not exist.
+      provenance_primary_has_parent: 'A primary provenance row may not declare a parent
+        row: the primary row is the origin the others depend on.'
+      provenance_primary_ref_ambiguous: Two primary provenance rows share the same
+        source reference, so a contributor row cannot determine which of them it derives
+        from.
+      provenance_resolver_mismatch: A provenance row names a resolver other than the
+        one that produced the resolution. Every row must be attributed to the same
+        resolver that signs the result.
       relation_provenance_incomplete: Relation provenance must include source modelo,
         filing year, periods, casillas, legal refs, and source refs.
+      reserved_composite_resolver_id: The given resolver identifier is reserved for
+        composite resolutions and may not be used on a simple resolution.
       row_binding_index_invalid: 'Internal error: the row-binding row index must be
         1 or greater.'
       row_binding_value_invalid: 'Internal error: the row-binding decimal value is
         not valid.'
+      row_source_identity_coordinate_mismatch: Every row source identity coordinate
+        must correspond to a binding value present on the row itself. A coordinate
+        was declared that the row does not carry.
       source_transaction_ids_blank: Source mesh transaction ids must not contain blanks.
       source_transaction_ids_duplicate: Source mesh transaction ids must be unique.
       unresolved_binding_ids_blank: 'Internal error: unresolved binding ids cannot

@@ -573,13 +573,14 @@ application:
   inventory:
     service:
       errors:
-        closing_authority_conflict: Ehhez a tevékenységhez és évhez már más zárókészlet-hatósági rekord tartozik.
         actividad_conflict: Már létezik készletnapló a(z) %{actividad_id} tevékenységhez
           és a(z) %{year} évhez. Futtassa a(z) `aeat app ledger inventory list` parancsot
           a meglévő naplók megtekintéséhez.
         actividad_not_found: Nincs készletnapló a(z) %{actividad_id} tevékenységhez
           és a(z) %{year} évhez. Futtassa a(z) `aeat app ledger inventory list` parancsot
           a meglévő naplók megtekintéséhez.
+        closing_authority_conflict: Ehhez a tevékenységhez és évhez már más zárókészlet-hatósági
+          rekord tartozik.
         duplicate_movement_id: A készletnapló már tartalmazza a(z) %{movement_id}
           mozgást. Futtassa a(z) `aeat app ledger inventory list` parancsot a rögzített
           mozgások megtekintéséhez.
@@ -728,6 +729,8 @@ application:
           szükséges.
     filed_observations:
       errors:
+        duplicate_casilla: A benyújtott megfigyelés ugyanazt a rovatot többször is
+          szerepelteti. Egy rögzített megfigyelésben minden rovat csak egyszer szerepelhet.
         iva_history_promotion_failed: A benyújtott 303-as modelo nem emelhető át az
           IVA-kompenzációs előzményekbe.
         iva_history_reload_missing: A biztonságos IVA-kompenzációs előzmény nem töltődött
@@ -997,6 +1000,27 @@ application:
       external_import_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
         bevallási év, %{period} időszak registry-pillanatképe nem oldható fel; az
         importált casilla-azonosítók nem érvényesíthetők.
+      external_import_source_actor_blank: Külsőleg benyújtott bevallás importálásakor
+        rögzíteni kell, ki nyújtotta be. A megadott benyújtó üres.
+      external_import_source_casilla_mismatch: Az eredeti szöveget hordozó rovatok
+        nem egyeznek meg azokkal a rovatokkal, amelyek értékét importálják. Mindkét
+        halmaznak pontosan ugyanazokat a rovatokat kell leírnia.
+      external_import_source_incomplete: 'A külsőleg benyújtott bevallás nem tartalmazza
+        e revízió minden kötelező numerikus rovatát. Hiányzik: {missing_casilla_ids}.'
+      external_import_source_lexical_blank: A(z) {casilla_id} rovat üres eredeti szöveggel
+        kerül importálásra. A benyújtott szöveget szó szerint meg kell őrizni.
+      external_import_source_lexical_non_numeric: A(z) {casilla_id} rovat eredeti
+        szövege nem olvasható összegként. Importálás előtt ellenőrizze a benyújtott
+        értéket.
+      external_import_source_lexical_value_mismatch: A(z) {casilla_id} rovat eredeti
+        szövegéből kiolvasott összeg nem egyezik az adott rovathoz importált értékkel.
+      external_import_source_period_mismatch: A megadott időszak más adóévhez tartozik,
+        mint a megjelölt bevallási év. Mindkettőnek ugyanarra az évre kell vonatkoznia.
+      external_import_source_revision_mismatch: A külsőleg benyújtott bevalláson megnevezett
+        revízió nem az, amelyet a meglévő munkaegység tart nyilván az adott modelóra
+        és időszakra.
+      external_import_source_work_unit_ambiguous: Az adott modelóra, adóévre és időszakra
+        több aktív munkaegység is létezik, így az import nem rendelhető egyikhez sem.
       external_import_tax_id_missing: A külső bevallásimport bizonyítéka %{evidence_reference_id}
         (%{evidence_kind}) megköveteli a bevalló adóazonosítóját, mielőtt igazoló
         artefakthoz köthető.
@@ -1070,8 +1094,9 @@ application:
         modellhez; előbb töltse ki ezeket a profiladatokat: %{missing}.'
       profile_readiness_profile_missing: Nincs perzisztált aktív profil ehhez a modell
         munkához; folytatás előtt hozza létre vagy javítsa a profilt.
-      profile_readiness_setup_incomplete: A profil beállítását még nem nyilvánították befejezettnek;
-        a modellekkel végzett munka előtt futtasd az `aeat config profile complete-setup` parancsot.
+      profile_readiness_setup_incomplete: A profil beállítását még nem nyilvánították
+        befejezettnek; a modellekkel végzett munka előtt futtasd az `aeat config profile
+        complete-setup` parancsot.
       profile_readiness_setup_incomplete_missing: 'A profil beállítása nincs befejezve;
         fejezd be a beállítási folyamatot, mielőtt modelókkal dolgoznál. Hiányzó mezők:
         %{missing}.'

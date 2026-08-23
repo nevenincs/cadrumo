@@ -1346,7 +1346,7 @@ async def capture_previous_filing_observations(
             observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
             observation = _with_derived_303_compensation_available_observation(observation)
             observed_casillas: set[CasillaId] = {casilla.casilla_id for casilla in observation.casillas}
-            missing = sorted(set(requirement.source_casilla_ids).difference(observed_casillas))
+            missing = sorted(set(requirement.enforced_source_casilla_ids).difference(observed_casillas))
             if missing:
                 raise SedeParseError(
                     f"previous-filing requirement {requirement.source_modelo!r}/"

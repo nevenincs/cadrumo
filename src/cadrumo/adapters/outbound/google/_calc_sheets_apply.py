@@ -99,7 +99,7 @@ def _vault_folder_name() -> str:
     """Read the Drive vault folder name at call time, never at import time.
 
     A module-scope ``Settings()`` resolves the storage root while the module
-    imports; the CLI ``config`` subtree (and therefore the MCP schema build)
+    imports; the CLI ``config`` subtree and external schema introspection
     imports this adapter, so an import-time refusal would kill the whole
     entrypoint instead of the one Drive operation that needs the setting.
     """

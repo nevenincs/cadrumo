@@ -8,209 +8,393 @@ modelo:
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:
+              help: 'A 036-es modelo adata, 2025. adóév: Tevekenyseg. A tevekenyseg
+                leirasa.'
               label: Tevekenyseg. A tevekenyseg leirasa
             x-c5hn8bj1cdq6itj9chgm8bb9c5iiqsr5cdhmirre5ljn4tbgds:
+              help: 'A 036-es modelo adata, 2025. adóév: Tevekenyseg. I.A.E. szakasz
+                es csoport vagy tetel.'
               label: Tevekenyseg. I.A.E. szakasz es csoport vagy tetel
             x-c5hn8bj1cdq6itj9chgm8bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Tevekenyseg. A tevekenyseg
+                tipusa.'
               label: Tevekenyseg. A tevekenyseg tipusa
             x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmm8qbiclhn8rpd64:
+              help: 'A 036-es modelo adata, 2025. adóév: Ingatlan-nyilvantartasi jelzok.
+                Az elso kozvetlenul erintett helyiseg jelzoje.'
               label: Ingatlan-nyilvantartasi jelzok. Az elso kozvetlenul erintett
                 helyiseg jelzoje
             x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmm8qbiclhn8rpd68:
+              help: 'A 036-es modelo adata, 2025. adóév: Ingatlan-nyilvantartasi jelzok.
+                A masodik kozvetlenul erintett helyiseg jelzoje.'
               label: Ingatlan-nyilvantartasi jelzok. A masodik kozvetlenul erintett
                 helyiseg jelzoje
             x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmmirj4d5p6aorkdsmj2:
+              help: 'A 036-es modelo adata, 2025. adóév: Ingatlan-nyilvantartasi jelzok.
+                Az elso kozvetve erintett helyiseg jelzoje.'
               label: Ingatlan-nyilvantartasi jelzok. Az elso kozvetve erintett helyiseg
                 jelzoje
             x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmmirj4d5p6aorkdsmj4:
+              help: 'A 036-es modelo adata, 2025. adóév: Ingatlan-nyilvantartasi jelzok.
+                A masodik kozvetve erintett helyiseg jelzoje.'
               label: Ingatlan-nyilvantartasi jelzok. A masodik kozvetve erintett helyiseg
                 jelzoje
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc5m78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Bejegyzes.'
               label: Kozvetlenul erintett helyiseg (elso). Bejegyzes
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc5m78o9dcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). A bejegyzes datuma.'
               label: Kozvetlenul erintett helyiseg (elso). A bejegyzes datuma
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc9gmko8:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Torles.'
               label: Kozvetlenul erintett helyiseg (elso). Torles
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc9gmko9dcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). A torles datuma.'
               label: Kozvetlenul erintett helyiseg (elso). A torles datuma
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0rrjehgmo:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Iranyitoszam.'
               label: Kozvetlenul erintett helyiseg (elso). Iranyitoszam
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0sjfepkmsor9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Tartomanykod.'
               label: Kozvetlenul erintett helyiseg (elso). Tartomanykod
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dctp62p3f5lgmcpb3ehgm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). A tevekenyseghez rendeles merteke.'
               label: Kozvetlenul erintett helyiseg (elso). A tevekenyseghez rendeles
                 merteke
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddlqmsqb3d5o6iro:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Telepules.'
               label: Kozvetlenul erintett helyiseg (elso). Telepules
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpnmqojickmncqb1:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Kozterulet neve.'
               label: Kozvetlenul erintett helyiseg (elso). Kozterulet neve
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbids:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Hazszam.'
               label: Kozvetlenul erintett helyiseg (elso). Hazszam
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). A bejegyzes hivatkozasi szama.'
               label: Kozvetlenul erintett helyiseg (elso). A bejegyzes hivatkozasi
                 szama
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1kn6ro:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Emelet.'
               label: Kozvetlenul erintett helyiseg (elso). Emelet
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1qmasjkc4:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Ajto.'
               label: Kozvetlenul erintett helyiseg (elso). Ajto
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Ingatlan-nyilvantartasi hivatkozas.'
               label: Kozvetlenul erintett helyiseg (elso). Ingatlan-nyilvantartasi
                 hivatkozas
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dedim6or9dtn2qpric5j6ior1:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Ingatlan-nyilvantartasi grafikus szakasz.'
               label: Kozvetlenul erintett helyiseg (elso). Ingatlan-nyilvantartasi
                 grafikus szakasz
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dedqn0pbicpkm6qb5:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Alapterulet negyzetmeterben.'
               label: Kozvetlenul erintett helyiseg (elso). Alapterulet negyzetmeterben
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). Valtozas.'
               label: Kozvetlenul erintett helyiseg (elso). Valtozas
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhdcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). A valtozas datuma.'
               label: Kozvetlenul erintett helyiseg (elso). A valtozas datuma
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (elso). A valtozas hivatkozasi szama.'
               label: Kozvetlenul erintett helyiseg (elso). A valtozas hivatkozasi
                 szama
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Bejegyzes.'
               label: Kozvetlenul erintett helyiseg (masodik). Bejegyzes
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o9dcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). A bejegyzes datuma.'
               label: Kozvetlenul erintett helyiseg (masodik). A bejegyzes datuma
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc9gmko8:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Torles.'
               label: Kozvetlenul erintett helyiseg (masodik). Torles
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc9gmko9dcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). A torles datuma.'
               label: Kozvetlenul erintett helyiseg (masodik). A torles datuma
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0rrjehgmo:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Iranyitoszam.'
               label: Kozvetlenul erintett helyiseg (masodik). Iranyitoszam
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0sjfepkmsor9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Tartomanykod.'
               label: Kozvetlenul erintett helyiseg (masodik). Tartomanykod
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdctp62p3f5lgmcpb3ehgm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). A tevekenyseghez rendeles merteke.'
               label: Kozvetlenul erintett helyiseg (masodik). A tevekenyseghez rendeles
                 merteke
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddlqmsqb3d5o6iro:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Telepules.'
               label: Kozvetlenul erintett helyiseg (masodik). Telepules
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpnmqojickmncqb1:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Kozterulet neve.'
               label: Kozvetlenul erintett helyiseg (masodik). Kozterulet neve
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbids:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Hazszam.'
               label: Kozvetlenul erintett helyiseg (masodik). Hazszam
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). A bejegyzes hivatkozasi szama.'
               label: Kozvetlenul erintett helyiseg (masodik). A bejegyzes hivatkozasi
                 szama
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1kn6ro:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Emelet.'
               label: Kozvetlenul erintett helyiseg (masodik). Emelet
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1qmasjkc4:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Ajto.'
               label: Kozvetlenul erintett helyiseg (masodik). Ajto
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Ingatlan-nyilvantartasi hivatkozas.'
               label: Kozvetlenul erintett helyiseg (masodik). Ingatlan-nyilvantartasi
                 hivatkozas
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdedim6or9dtn2qpric5j6ior1:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Ingatlan-nyilvantartasi grafikus szakasz.'
               label: Kozvetlenul erintett helyiseg (masodik). Ingatlan-nyilvantartasi
                 grafikus szakasz
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdedqn0pbicpkm6qb5:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Alapterulet negyzetmeterben.'
               label: Kozvetlenul erintett helyiseg (masodik). Alapterulet negyzetmeterben
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). Valtozas.'
               label: Kozvetlenul erintett helyiseg (masodik). Valtozas
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhdcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). A valtozas datuma.'
               label: Kozvetlenul erintett helyiseg (masodik). A valtozas datuma
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetlenul erintett helyiseg
+                (masodik). A valtozas hivatkozasi szama.'
               label: Kozvetlenul erintett helyiseg (masodik). A valtozas hivatkozasi
                 szama
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Bejegyzes.'
               label: Kozvetve erintett helyiseg (elso). Bejegyzes
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4mmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). A bejegyzes datuma.'
               label: Kozvetve erintett helyiseg (elso). A bejegyzes datuma
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm4obac4:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Torles.'
               label: Kozvetve erintett helyiseg (elso). Torles
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm4obac4mmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). A torles datuma.'
               label: Kozvetve erintett helyiseg (elso). A torles datuma
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbgdtpn8obc:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Iranyitoszam.'
               label: Kozvetve erintett helyiseg (elso). Iranyitoszam
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbge9nncqbecdkm2:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Tartomanykod.'
               label: Kozvetve erintett helyiseg (elso). Tartomanykod
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmesj1chniqob6clhn8ob3d5nms:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). A tevekenyseghez rendeles merteke.'
               label: Kozvetve erintett helyiseg (elso). A tevekenyseghez rendeles
                 merteke
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmqtbed5hmis39ds:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Telepules.'
               label: Kozvetve erintett helyiseg (elso). Telepules
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmsrrdc9p6abbmd5gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Kozterulet neve.'
               label: Kozvetve erintett helyiseg (elso). Kozterulet neve
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6u:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Hazszam.'
               label: Kozvetve erintett helyiseg (elso). Hazszam
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). A bejegyzes hivatkozasi szama.'
               label: Kozvetve erintett helyiseg (elso). A bejegyzes hivatkozasi szama
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0qbjds:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Emelet.'
               label: Kozvetve erintett helyiseg (elso). Emelet
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0tb5e9q62:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Ajto.'
               label: Kozvetve erintett helyiseg (elso). Ajto
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn4pb6clp6arj3d5giqor1ehgn6t3ic5m0:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Ingatlan-nyilvantartasi hivatkozas.'
               label: Kozvetve erintett helyiseg (elso). Ingatlan-nyilvantartasi hivatkozas
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn6pb3cdkmurhdctp62pj9cdgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Ingatlan-nyilvantartasi grafikus szakasz.'
               label: Kozvetve erintett helyiseg (elso). Ingatlan-nyilvantartasi grafikus
                 szakasz
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn6tbgclp6cqb3d5ig:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Alapterulet negyzetmeterben.'
               label: Kozvetve erintett helyiseg (elso). Alapterulet negyzetmeterben
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mnasrf5li6asrkd5n6u:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Hasznalat vagy rendeltetes.'
               label: Kozvetve erintett helyiseg (elso). Hasznalat vagy rendeltetes
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). Valtozas.'
               label: Kozvetve erintett helyiseg (elso). Valtozas
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). A valtozas datuma.'
               label: Kozvetve erintett helyiseg (elso). A valtozas datuma
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (elso). A valtozas hivatkozasi szama.'
               label: Kozvetve erintett helyiseg (elso). A valtozas hivatkozasi szama
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Bejegyzes.'
               label: Kozvetve erintett helyiseg (masodik). Bejegyzes
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4mmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). A bejegyzes datuma.'
               label: Kozvetve erintett helyiseg (masodik). A bejegyzes datuma
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm4obac4:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Torles.'
               label: Kozvetve erintett helyiseg (masodik). Torles
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm4obac4mmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). A torles datuma.'
               label: Kozvetve erintett helyiseg (masodik). A torles datuma
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbgdtpn8obc:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Iranyitoszam.'
               label: Kozvetve erintett helyiseg (masodik). Iranyitoszam
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbge9nncqbecdkm2:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Tartomanykod.'
               label: Kozvetve erintett helyiseg (masodik). Tartomanykod
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmesj1chniqob6clhn8ob3d5nms:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). A tevekenyseghez rendeles merteke.'
               label: Kozvetve erintett helyiseg (masodik). A tevekenyseghez rendeles
                 merteke
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmqtbed5hmis39ds:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Telepules.'
               label: Kozvetve erintett helyiseg (masodik). Telepules
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmsrrdc9p6abbmd5gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Kozterulet neve.'
               label: Kozvetve erintett helyiseg (masodik). Kozterulet neve
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6u:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Hazszam.'
               label: Kozvetve erintett helyiseg (masodik). Hazszam
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). A bejegyzes hivatkozasi szama.'
               label: Kozvetve erintett helyiseg (masodik). A bejegyzes hivatkozasi
                 szama
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0qbjds:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Emelet.'
               label: Kozvetve erintett helyiseg (masodik). Emelet
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0tb5e9q62:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Ajto.'
               label: Kozvetve erintett helyiseg (masodik). Ajto
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn4pb6clp6arj3d5giqor1ehgn6t3ic5m0:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Ingatlan-nyilvantartasi hivatkozas.'
               label: Kozvetve erintett helyiseg (masodik). Ingatlan-nyilvantartasi
                 hivatkozas
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn6pb3cdkmurhdctp62pj9cdgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Ingatlan-nyilvantartasi grafikus szakasz.'
               label: Kozvetve erintett helyiseg (masodik). Ingatlan-nyilvantartasi
                 grafikus szakasz
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn6tbgclp6cqb3d5ig:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Alapterulet negyzetmeterben.'
               label: Kozvetve erintett helyiseg (masodik). Alapterulet negyzetmeterben
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mnasrf5li6asrkd5n6u:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Hasznalat vagy rendeltetes.'
               label: Kozvetve erintett helyiseg (masodik). Hasznalat vagy rendeltetes
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). Valtozas.'
               label: Kozvetve erintett helyiseg (masodik). Valtozas
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). A valtozas datuma.'
               label: Kozvetve erintett helyiseg (masodik). A valtozas datuma
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
+              help: 'A 036-es modelo adata, 2025. adóév: Kozvetve erintett helyiseg
+                (masodik). A valtozas hivatkozasi szama.'
               label: Kozvetve erintett helyiseg (masodik). A valtozas hivatkozasi
                 szama
             x-c5hn8bjjd5n2qr3fcdgmobb1dhq62:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando helyisegen kivul
+                vegzett tevekenyseg. Bejegyzes.'
               label: Allando helyisegen kivul vegzett tevekenyseg. Bejegyzes
             x-c5hn8bjjd5n2qr3fcdgmobb1dhq62bb6clhmgo8:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando helyisegen kivul
+                vegzett tevekenyseg. A bejegyzes datuma.'
               label: Allando helyisegen kivul vegzett tevekenyseg. A bejegyzes datuma
             x-c5hn8bjjd5n2qr3fcdgmobb2c5l62:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando helyisegen kivul
+                vegzett tevekenyseg. Torles.'
               label: Allando helyisegen kivul vegzett tevekenyseg. Torles
             x-c5hn8bjjd5n2qr3fcdgmobb2c5l62bb6clhmgo8:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando helyisegen kivul
+                vegzett tevekenyseg. A torles datuma.'
               label: Allando helyisegen kivul vegzett tevekenyseg. A torles datuma
             x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando helyisegen kivul
+                vegzett tevekenyseg. Tartomanykod.'
               label: Allando helyisegen kivul vegzett tevekenyseg. Tartomanykod
             x-c5hn8bjjd5n2qr3fcdgmobbdeln6ior9e1kmu:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando helyisegen kivul
+                vegzett tevekenyseg. Telepules.'
               label: Allando helyisegen kivul vegzett tevekenyseg. Telepules
             x-c5hn8bjjd5n2qr3fcdgmobbeelmmasjf5lp6apj5e9imsor9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando helyisegen kivul
+                vegzett tevekenyseg. Hivatkozasi szam.'
               label: Allando helyisegen kivul vegzett tevekenyseg. Hivatkozasi szam
             x-chim6r1ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
@@ -354,1020 +538,1876 @@ modelo:
               help: null
               label: Jogszabályi hatály 2025. február 3-tól
             x-clo2sobmd5pmuspdc5im2t1dc5m78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                AEAT-ertesitesek bejegyzese.'
               label: Allando telephely. Ertesitesek. AEAT-ertesitesek bejegyzese
             x-clo2sobmd5pmuspdc5im2t1dc9gmko8:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                AEAT-ertesitesek torlese.'
               label: Allando telephely. Ertesitesek. AEAT-ertesitesek torlese
             x-clo2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                Regisztracio az AEAT mobilalkalmazasaban.'
               label: Allando telephely. Ertesitesek. Regisztracio az AEAT mobilalkalmazasaban
             x-clo2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                Kiiratkozas az AEAT mobilalkalmazasabol.'
               label: Allando telephely. Ertesitesek. Kiiratkozas az AEAT mobilalkalmazasabol
             x-clo2sobmd5pmuspdchjn8bb1dhq62:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                DGT-ertesitesek bejegyzese.'
               label: Allando telephely. Ertesitesek. DGT-ertesitesek bejegyzese
             x-clo2sobmd5pmuspdchjn8bb2c5l62:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                DGT-ertesitesek torlese.'
               label: Allando telephely. Ertesitesek. DGT-ertesitesek torlese
             x-clo2sobmd5pmuspdclmm2qbc:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                E-mail.'
               label: Allando telephely. Ertesitesek. E-mail
             x-clo2sobmd5pmuspdclmm2qbc5lgmot31:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                Az ertesitesi e-mail bejegyzese vagy modositasa.'
               label: Allando telephely. Ertesitesek. Az ertesitesi e-mail bejegyzese
                 vagy modositasa
             x-clo2sobmd5pmuspdclmm2qbc5lh62qj1:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                Az ertesitesi e-mail torlese.'
               label: Allando telephely. Ertesitesek. Az ertesitesi e-mail torlese
             x-clo2sobmd5pmuspddlnncqbc5lgmot31:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                A mobiltelefon bejegyzese vagy modositasa.'
               label: Allando telephely. Ertesitesek. A mobiltelefon bejegyzese vagy
                 modositasa
             x-clo2sobmd5pmuspddlnncqbc5lh62qj1:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                A mobiltelefon torlese.'
               label: Allando telephely. Ertesitesek. A mobiltelefon torlese
             x-clo2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                A mobiltelefon orszaghivo szama.'
               label: Allando telephely. Ertesitesek. A mobiltelefon orszaghivo szama
             x-clo2sobmd5pmuspdehim2bb1dhq62:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                TEA-ertesitesek bejegyzese.'
               label: Allando telephely. Ertesitesek. TEA-ertesitesek bejegyzese
             x-clo2sobmd5pmuspdehim2bb2c5l62:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                TEA-ertesitesek torlese.'
               label: Allando telephely. Ertesitesek. TEA-ertesitesek torlese
             x-clo2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
+                Mobiltelefon.'
               label: Allando telephely. Ertesitesek. Mobiltelefon
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Tomb.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Tomb
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Hazszam kiegeszitoje.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Hazszam kiegeszitoje
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. INE telepuleskod.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. INE telepuleskod
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Iranyitoszam.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Iranyitoszam
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Tartomanykod.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Tartomanykod
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. INE kozterulet-kod.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. INE kozterulet-kod
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Cim kiegeszitese.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Cim kiegeszitese
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Lepcsohaz.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Lepcsohaz
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Az adougyi lakcim ingatlan-nyilvantartasi jelzoje.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Az adougyi
                 lakcim ingatlan-nyilvantartasi jelzoje
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Helyseg vagy telepules.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Helyseg vagy
                 telepules
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Telepules neve.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Telepules neve
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Kozterulet neve.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Kozterulet
                 neve
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Hazszam.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Hazszam
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Emelet.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Emelet
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Lepcsohaz bejarata.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Lepcsohaz bejarata
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Ajto.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Ajto
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Ingatlan-nyilvantartasi hivatkozas.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Ingatlan-nyilvantartasi
                 hivatkozas
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Hazszam tipusa.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Hazszam tipusa
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Spanyolorszagi
+                adougyi lakcim. Kozterulet jellege.'
               label: Allando telephely. Spanyolorszagi adougyi lakcim. Kozterulet
                 jellege
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Minosege a postafiok tekinteteben.'
               label: Allando telephely. Ertesitesi cim. Minosege a postafiok tekinteteben
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. A postafiok iranyitoszama.'
               label: Allando telephely. Ertesitesi cim. A postafiok iranyitoszama
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. A postafiok tartomanykodja.'
               label: Allando telephely. Ertesitesi cim. A postafiok tartomanykodja
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Postafiok szama.'
               label: Allando telephely. Ertesitesi cim. Postafiok szama
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. A postafiok cimzettje, ha elter a bevallotol.'
               label: Allando telephely. Ertesitesi cim. A postafiok cimzettje, ha
                 elter a bevallotol
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. A postafiok telepulese vagy varosa.'
               label: Allando telephely. Ertesitesi cim. A postafiok telepulese vagy
                 varosa
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Az ertesitesi cim torlesenek jelzoje.'
               label: Allando telephely. Ertesitesi cim. Az ertesitesi cim torlesenek
                 jelzoje
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Tomb (1. cim).'
               label: Allando telephely. Ertesitesi cim. Tomb (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Minosege (1. cim).'
               label: Allando telephely. Ertesitesi cim. Minosege (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Hazszam kiegeszitoje (1. cim).'
               label: Allando telephely. Ertesitesi cim. Hazszam kiegeszitoje (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. INE telepuleskod (1. cim).'
               label: Allando telephely. Ertesitesi cim. INE telepuleskod (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Iranyitoszam (1. cim).'
               label: Allando telephely. Ertesitesi cim. Iranyitoszam (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Tartomanykod (1. cim).'
               label: Allando telephely. Ertesitesi cim. Tartomanykod (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. INE kozterulet-kod (1. cim).'
               label: Allando telephely. Ertesitesi cim. INE kozterulet-kod (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Cim kiegeszitese (1. cim).'
               label: Allando telephely. Ertesitesi cim. Cim kiegeszitese (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Cimzett, ha elter a bevallotol (1. cim).'
               label: Allando telephely. Ertesitesi cim. Cimzett, ha elter a bevallotol
                 (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Lepcsohaz (1. cim).'
               label: Allando telephely. Ertesitesi cim. Lepcsohaz (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Helyseg vagy telepules (1. cim).'
               label: Allando telephely. Ertesitesi cim. Helyseg vagy telepules (1.
                 cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Telepules neve (1. cim).'
               label: Allando telephely. Ertesitesi cim. Telepules neve (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Kozterulet neve (1. cim).'
               label: Allando telephely. Ertesitesi cim. Kozterulet neve (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Hazszam (1. cim).'
               label: Allando telephely. Ertesitesi cim. Hazszam (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Emelet (1. cim).'
               label: Allando telephely. Ertesitesi cim. Emelet (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Lepcsohaz bejarata (1. cim).'
               label: Allando telephely. Ertesitesi cim. Lepcsohaz bejarata (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Ajto (1. cim).'
               label: Allando telephely. Ertesitesi cim. Ajto (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Hazszam tipusa (1. cim).'
               label: Allando telephely. Ertesitesi cim. Hazszam tipusa (1. cim)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesi
+                cim. Kozterulet jellege (1. cim).'
               label: Allando telephely. Ertesitesi cim. Kozterulet jellege (1. cim)
             x-clo2sqb4cln78qb6d5hm2or9dtn2qobec5jn4obdc4:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                Emblema.'
               label: Allando telephely. Azonositas. Emblema
             x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                Internetes domain vagy cim.'
               label: Allando telephely. Azonositas. Internetes domain vagy cim
             x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                Internetes domain vagy cim (masodik).'
               label: Allando telephely. Azonositas. Internetes domain vagy cim (masodik)
             x-clo2sqb4cln78qb6d5hm2or9dtn2qpbj5lpnaorle9pm2r0:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                A kulfoldi illetosegu szervezet fioktelepe-e.'
               label: Allando telephely. Azonositas. A kulfoldi illetosegu szervezet
                 fioktelepe-e
             x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb3dtn76t39ehqm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                Az alapitas datuma.'
               label: Allando telephely. Azonositas. Az alapitas datuma
             x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb9dppm6sj9e1hmirre5lp6apr9edq74rpddlin4or1dpq6ir0:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                A cegjegyzekbe torteno bejegyzes datuma.'
               label: Allando telephely. Azonositas. A cegjegyzekbe torteno bejegyzes
                 datuma
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhdclpn8ob4dsmn4pbjd5i6arj3d5gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                Annak a kulfoldi illetosegu szemelynek vagy szervezetnek az illetosege
+                szerinti allam, amelytol fugg.'
               label: Allando telephely. Azonositas. Annak a kulfoldi illetosegu szemelynek
                 vagy szervezetnek az illetosege szerinti allam, amelytol fugg
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhddpkmc:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                Annak a kulfoldi illetosegu szemelynek vagy szervezetnek az adoazonosito
+                szama, amelytol fugg, ha van.'
               label: Allando telephely. Azonositas. Annak a kulfoldi illetosegu szemelynek
                 vagy szervezetnek az adoazonosito szama, amelytol fugg, ha van
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhde9gnkrre5lpmuor9c5m0:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                Annak a kulfoldi illetosegu szemelynek vagy szervezetnek a neve, amelytol
+                fugg.'
               label: Allando telephely. Azonositas. Annak a kulfoldi illetosegu szemelynek
                 vagy szervezetnek a neve, amelytol fugg
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9co:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                Adoazonosito szam (NIF).'
               label: Allando telephely. Azonositas. Adoazonosito szam (NIF)
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                Az illetoseg szerinti allam adoazonosito kodja vagy NVAT.'
               label: Allando telephely. Azonositas. Az illetoseg szerinti allam adoazonosito
                 kodja vagy NVAT
             x-clo2sqb4cln78qb6d5hm2or9dtn2qsj1f9nmsbbjdthmiobc:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                Cegnev.'
               label: Allando telephely. Azonositas. Cegnev
             x-clo2sqb4cln78qb6d5hm2or9dtn2qt39e1niqpbjehgm4r35cdkmqqb5dpq6u:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Azonositas.
+                Az allando telephely tipusa.'
               label: Allando telephely. Azonositas. Az allando telephely tipusa
             x-d5r62bj6c5hn8tbic5hmirre5lj62orkelp62bbgdtp2qp35edq6irj1ehgn4qbfec:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Szamlazas. A szamlakiallitasi
+                kotelezettseget a cimzettek vagy harmadik felek teljesitik.'
               label: AFA. Szamlazas. A szamlakiallitasi kotelezettseget a cimzettek
                 vagy harmadik felek teljesitik
             x-d5r62bj6c5hn8tbic5hmirre5lj62orkelp62bbgdtp2qp35edq6irj1ehgn4qbfecmmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Szamlazas. Szamlazas
+                cimzettek vagy harmadik felek altal. Datum.'
               label: AFA. Szamlazas. Szamlazas cimzettek vagy harmadik felek altal.
                 Datum
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdc5i6qrre5lo7aojcd5hm2bbge9in6tbgelin6t3f:
+              help: 'A 036-es modelo adata, 2025. adóév: Nagyvallalat es kozigazgatasi
+                szervek. Olyan kozigazgatasi szerv, amelynek utolso jovahagyott eves
+                koltsegvetese meghaladja a 6 millio eurot.'
               label: Nagyvallalat es kozigazgatasi szervek. Olyan kozigazgatasi szerv,
                 amelynek utolso jovahagyott eves koltsegvetese meghaladja a 6 millio
                 eurot
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdctp62rhdclmn0sj5edgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Nagyvallalat es kozigazgatasi
+                szervek. Nagyvallalati minosegu-e.'
               label: Nagyvallalat es kozigazgatasi szervek. Nagyvallalati minosegu-e
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqob4dlnmsbbgelh6oqb3c4mn0sj5edqn0tb5edq6u:
+              help: 'A 036-es modelo adata, 2025. adóév: Nagyvallalat es kozigazgatasi
+                szervek. A 6 millio eurot meghalado koltsegvetesu kozigazgatasi minoseg
+                datuma.'
               label: Nagyvallalat es kozigazgatasi szervek. A 6 millio eurot meghalado
                 koltsegvetesu kozigazgatasi minoseg datuma
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqpric5n2qpbde1p6asr1:
+              help: 'A 036-es modelo adata, 2025. adóév: Nagyvallalat es kozigazgatasi
+                szervek. A nagyvallalati minoseg datuma.'
               label: Nagyvallalat es kozigazgatasi szervek. A nagyvallalati minoseg
                 datuma
             x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Import. Kulon jogallasu
+                teruletek. Import AFA megfizetese. Valasztas vagy lemondas.'
               label: AFA. Import. Kulon jogallasu teruletek. Import AFA megfizetese.
                 Valasztas vagy lemondas
             x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurhdcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Import. Kulon jogallasu
+                teruletek. Import AFA megfizetese. Datum.'
               label: AFA. Import. Kulon jogallasu teruletek. Import AFA megfizetese.
                 Datum
             x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Import. Import AFA megfizetese.
+                Valasztas, lemondas, visszavonas vagy torles.'
               label: AFA. Import. Import AFA megfizetese. Valasztas, lemondas, visszavonas
                 vagy torles
             x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurhdcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Import. Import AFA megfizetese.
+                Datum.'
               label: AFA. Import. Import AFA megfizetese. Datum
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lhmurb9cln7krpdd1gm4qbkelgmo:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevekenyseg megkezdese.
+                Termekertekesites vagy szolgaltatasnyujtas szokasos megkezdese.'
               label: AFA. Tevekenyseg megkezdese. Termekertekesites vagy szolgaltatasnyujtas
                 szokasos megkezdese
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45limst3icljm2spde1nn6t35e9kmusg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevekenyseg megkezdese.
+                A beszerzest koveto termekertekesites vagy szolgaltatasnyujtas.'
               label: AFA. Tevekenyseg megkezdese. A beszerzest koveto termekertekesites
                 vagy szolgaltatasnyujtas
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45limst3icljm2spde1p6atj9c4mmubbjd5mnar3kc5n6ao8:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevekenyseg megkezdese.
+                A beszerzest megelozo vagy azzal egyidejuleg torteno termekertekesites
+                vagy szolgaltatasnyujtas.'
               label: AFA. Tevekenyseg megkezdese. A beszerzest megelozo vagy azzal
                 egyidejuleg torteno termekertekesites vagy szolgaltatasnyujtas
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mm6rrdd5imsujf5lk62oj9ehqm2r0:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevekenyseg megkezdese.
+                Az ertekesitesek szokasos megkezdesenek datuma.'
               label: AFA. Tevekenyseg megkezdese. Az ertekesitesek szokasos megkezdesenek
                 datuma
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mmarjke9imeobj5lo6usrkclp6irri:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevekenyseg megkezdese.
+                A kesobbi ertekesitesek datuma.'
               label: AFA. Tevekenyseg megkezdese. A kesobbi ertekesitesek datuma
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mmarjke9imeobj5lo74pbmd5giqrpdedkmqtbcehgmspb1:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevekenyseg megkezdese.
+                A megelozo vagy egyidejuleg torteno ertekesitesek datuma.'
               label: AFA. Tevekenyseg megkezdese. A megelozo vagy egyidejuleg torteno
                 ertekesitesek datuma
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mn6pb3ehnn4bb4d5j6asj5dphmiob4ds:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevekenyseg megkezdese.
+                Az elkulonult agazatot kepezo tevekenyseg megkezdesenek datuma.'
               label: AFA. Tevekenyseg megkezdese. Az elkulonult agazatot kepezo tevekenyseg
                 megkezdesenek datuma
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lpmaorkdtp2qp39cpin4pbecdkm2p3f:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevekenyseg megkezdese.
+                Elkulonult agazatot kepezo uj tevekenyseg megkezdese.'
               label: AFA. Tevekenyseg megkezdese. Elkulonult agazatot kepezo uj tevekenyseg
                 megkezdese
             x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior1:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Nyilvantartasi konyvek.
+                A nyilvantartasi konyvek vezetese az AEAT elektronikus felueleten.'
               label: AFA. Nyilvantartasi konyvek. A nyilvantartasi konyvek vezetese
                 az AEAT elektronikus felueleten
             x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior15lj6aor8c4:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Nyilvantartasi konyvek.
+                A nyilvantartasi konyvek elektronikus vezetese. Datum.'
               label: AFA. Nyilvantartasi konyvek. A nyilvantartasi konyvek elektronikus
                 vezetese. Datum
             x-d5r62bjfc9m6ipr1cdkmurj5ecmmasrkc5h6opb3d5i6ubb5domn8ob9:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Kotelezettsegek. Az
+                ado alkalmazasi teruleten letelepedett, vagy ott allando telephellyel
+                rendelkezik.'
               label: AFA. Kotelezettsegek. Az ado alkalmazasi teruleten letelepedett,
                 vagy ott allando telephellyel rendelkezik
             x-d5r62bjfc9m6ipr1cdkmurj5ecmn4pbmcln68pb4dtp2qp39edo6usr9ehkncrrj:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Kotelezettsegek. Mobiltelefonok,
+                jatekkonzolok, hordozhato szamitogepek es tablagepek viszontelado
+                minosege.'
               label: AFA. Kotelezettsegek. Mobiltelefonok, jatekkonzolok, hordozhato
                 szamitogepek es tablagepek viszontelado minosege
             x-d5r62bjfc9m6ipr1cdkmurj5ecmn6rrcdsmmus35e9gm6qbfdpin6bbjd5n2qoblehnmoqbhelkm8ob3d5nms:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Kotelezettsegek. Kizarolag
+                olyan nem adokoteles vagy mentes ugyleteket vegez, amelyek nem tesznek
+                szuksegesse idoszaki onadozast.'
               label: AFA. Kotelezettsegek. Kizarolag olyan nem adokoteles vagy mentes
                 ugyleteket vegez, amelyek nem tesznek szuksegesse idoszaki onadozast
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6abbge9nncqbjd5nmsobc:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. Ideiglenes levonasi szazalek javaslata.'
               label: AFA. Levonasi hanyad es elkulonult agazatok. Ideiglenes levonasi
                 szazalek javaslata
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj2:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. I. agazat. C.N.A.E. kod (elso).'
               label: AFA. Levonasi hanyad es elkulonult agazatok. I. agazat. C.N.A.E.
                 kod (elso)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj4:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. I. agazat. C.N.A.E. kod (masodik).'
               label: AFA. Levonasi hanyad es elkulonult agazatok. I. agazat. C.N.A.E.
                 kod (masodik)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj6:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. I. agazat. C.N.A.E. kod (harmadik).'
               label: AFA. Levonasi hanyad es elkulonult agazatok. I. agazat. C.N.A.E.
                 kod (harmadik)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mn0sjfe9p62t315lin6s35cdkm2r0:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. I. agazat. Kulonleges levonasi hanyad valasztasa.'
               label: AFA. Levonasi hanyad es elkulonult agazatok. I. agazat. Kulonleges
                 levonasi hanyad valasztasa
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj2:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. II. agazat. C.N.A.E. kod (elso).'
               label: AFA. Levonasi hanyad es elkulonult agazatok. II. agazat. C.N.A.E.
                 kod (elso)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj4:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. II. agazat. C.N.A.E. kod (masodik).'
               label: AFA. Levonasi hanyad es elkulonult agazatok. II. agazat. C.N.A.E.
                 kod (masodik)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj6:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. II. agazat. C.N.A.E. kod (harmadik).'
               label: AFA. Levonasi hanyad es elkulonult agazatok. II. agazat. C.N.A.E.
                 kod (harmadik)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mn0sjfe9p62t315lin6s35cdkm2r0:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. II. agazat. Kulonleges levonasi hanyad valasztasa.'
               label: AFA. Levonasi hanyad es elkulonult agazatok. II. agazat. Kulonleges
                 levonasi hanyad valasztasa
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj2:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. III. agazat. C.N.A.E. kod (elso).'
               label: AFA. Levonasi hanyad es elkulonult agazatok. III. agazat. C.N.A.E.
                 kod (elso)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj4:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. III. agazat. C.N.A.E. kod (masodik).'
               label: AFA. Levonasi hanyad es elkulonult agazatok. III. agazat. C.N.A.E.
                 kod (masodik)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj6:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. III. agazat. C.N.A.E. kod (harmadik).'
               label: AFA. Levonasi hanyad es elkulonult agazatok. III. agazat. C.N.A.E.
                 kod (harmadik)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmn0sjfe9p62t315lin6s35cdkm2r0:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. III. agazat. Kulonleges levonasi hanyad valasztasa.'
               label: AFA. Levonasi hanyad es elkulonult agazatok. III. agazat. Kulonleges
                 levonasi hanyad valasztasa
             x-d5r62bjge9nn4sj1ehgiqsr9domn6pb3ehnn4pbj5li6ipj5e9imsor9c5i6uso:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonasi hanyad es elkulonult
+                agazatok. Nincsenek elkulonult agazatai.'
               label: AFA. Levonasi hanyad es elkulonult agazatok. Nincsenek elkulonult
                 agazatai
             x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aso:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Utazasi irodak kulonleges rendszere, ugyletenkent.'
               label: AFA. Adozasi rendszerek. Utazasi irodak kulonleges rendszere,
                 ugyletenkent
             x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aspdcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Utazasi irodak. Datum.'
               label: AFA. Adozasi rendszerek. Utazasi irodak. Datum
             x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aspdd5gma:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Utazasi irodak. I.A.E. csoport vagy tetel, illetve tevekenysegi kod.'
               label: AFA. Adozasi rendszerek. Utazasi irodak. I.A.E. csoport vagy
                 tetel, illetve tevekenysegi kod
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Mezogazdasagi, allattenyesztesi es halaszati kulonleges rendszer.'
               label: AFA. Adozasi rendszerek. Mezogazdasagi, allattenyesztesi es halaszati
                 kulonleges rendszer
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Mezogazdasag, allattenyesztes es halaszat. Datum.'
               label: AFA. Adozasi rendszerek. Mezogazdasag, allattenyesztes es halaszat.
                 Datum
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmiob5:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Mezogazdasag, allattenyesztes es halaszat. I.A.E. csoport vagy tetel,
+                illetve tevekenysegi kod.'
               label: AFA. Adozasi rendszerek. Mezogazdasag, allattenyesztes es halaszat.
                 I.A.E. csoport vagy tetel, illetve tevekenysegi kod
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Hasznalt cikkek kulonleges rendszere, globalis arreskulonbozet.'
               label: AFA. Adozasi rendszerek. Hasznalt cikkek kulonleges rendszere,
                 globalis arreskulonbozet
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dgmmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Hasznalt cikkek globalis arreskulonbozet. Datum.'
               label: AFA. Adozasi rendszerek. Hasznalt cikkek globalis arreskulonbozet.
                 Datum
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dgmmiob5:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Hasznalt cikkek globalis arreskulonbozet. I.A.E. csoport vagy tetel,
+                illetve tevekenysegi kod.'
               label: AFA. Adozasi rendszerek. Hasznalt cikkek globalis arreskulonbozet.
                 I.A.E. csoport vagy tetel, illetve tevekenysegi kod
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn0:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Hasznalt cikkek kulonleges rendszere, ugyletenkent.'
               label: AFA. Adozasi rendszerek. Hasznalt cikkek kulonleges rendszere,
                 ugyletenkent
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn2qpj5cdk62:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Hasznalt cikkek ugyletenkent. Datum.'
               label: AFA. Adozasi rendszerek. Hasznalt cikkek ugyletenkent. Datum
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn2qqb1ck:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Hasznalt cikkek ugyletenkent. I.A.E. csoport vagy tetel, illetve tevekenysegi
+                kod.'
               label: AFA. Adozasi rendszerek. Hasznalt cikkek ugyletenkent. I.A.E.
                 csoport vagy tetel, illetve tevekenysegi kod
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9gg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Penzforgalmi elszamolas kulonleges rendszere.'
               label: AFA. Adozasi rendszerek. Penzforgalmi elszamolas kulonleges rendszere
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqpj5cdk62:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Penzforgalmi elszamolas. Datum.'
               label: AFA. Adozasi rendszerek. Penzforgalmi elszamolas. Datum
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqqb1ck:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Penzforgalmi elszamolas. I.A.E. csoport vagy tetel, illetve tevekenysegi
+                kod.'
               label: AFA. Adozasi rendszerek. Penzforgalmi elszamolas. I.A.E. csoport
                 vagy tetel, illetve tevekenysegi kod
             x-d5r62bjicljmirb5dpin6bb7cln6asj1dg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Altalanos rendszer.'
               label: AFA. Adozasi rendszerek. Altalanos rendszer
             x-d5r62bjicljmirb5dpin6bb7cln6asj1dgmmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Altalanos rendszer. Datum.'
               label: AFA. Adozasi rendszerek. Altalanos rendszer. Datum
             x-d5r62bjicljmirb5dpin6bb7cln6asj1dgmmiob5:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Altalanos rendszer. I.A.E. csoport vagy tetel, illetve tevekenysegi
+                kod.'
               label: AFA. Adozasi rendszerek. Altalanos rendszer. I.A.E. csoport vagy
                 tetel, illetve tevekenysegi kod
             x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn0:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Befektetesi arany kulonleges rendszere.'
               label: AFA. Adozasi rendszerek. Befektetesi arany kulonleges rendszere
             x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn2qpj5cdk62:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Befektetesi arany. Datum.'
               label: AFA. Adozasi rendszerek. Befektetesi arany. Datum
             x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn2qqb1ck:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Befektetesi arany. I.A.E. csoport vagy tetel, illetve tevekenysegi
+                kod.'
               label: AFA. Adozasi rendszerek. Befektetesi arany. I.A.E. csoport vagy
                 tetel, illetve tevekenysegi kod
             x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio8:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Egyenertekusegi felar kulonleges rendszere.'
               label: AFA. Adozasi rendszerek. Egyenertekusegi felar kulonleges rendszere
             x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio9dcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Egyenertekusegi felar. Datum.'
               label: AFA. Adozasi rendszerek. Egyenertekusegi felar. Datum
             x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio9dd5gma:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Egyenertekusegi felar. I.A.E. csoport vagy tetel, illetve tevekenysegi
+                kod.'
               label: AFA. Adozasi rendszerek. Egyenertekusegi felar. I.A.E. csoport
                 vagy tetel, illetve tevekenysegi kod
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4ds:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Egyszerusitett kulonleges rendszer.'
               label: AFA. Adozasi rendszerek. Egyszerusitett kulonleges rendszer
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Egyszerusitett rendszer. Datum.'
               label: AFA. Adozasi rendszerek. Egyszerusitett rendszer. Datum
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmiob5:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adozasi rendszerek.
+                Egyszerusitett rendszer. I.A.E. csoport vagy tetel, illetve tevekenysegi
+                kod.'
               label: AFA. Adozasi rendszerek. Egyszerusitett rendszer. I.A.E. csoport
                 vagy tetel, illetve tevekenysegi kod
             x-d5r62bjicljmisrke9nn6bb4clr6ur3lcdkmurhddlimssrlc5m0:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Nyilvantartasok. Kerelem
+                a havi visszateritesi nyilvantartasba valo felvetelre vagy torlesre.'
               label: AFA. Nyilvantartasok. Kerelem a havi visszateritesi nyilvantartasba
                 valo felvetelre vagy torlesre
             x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Nyilvantartasok. Kerelem
+                a kozossegi adoalanyok nyilvantartasaba valo felvetelre vagy torlesre.'
               label: AFA. Nyilvantartasok. Kerelem a kozossegi adoalanyok nyilvantartasaba
                 valo felvetelre vagy torlesre
             x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpiqpj5cdk62:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Nyilvantartasok. Kozossegi
+                adoalanyok nyilvantartasa. Datum.'
               label: AFA. Nyilvantartasok. Kozossegi adoalanyok nyilvantartasa. Datum
             x-d5r62bjiclr6arj4cli6usj5ecmm2r3kc4mm4obac4mmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Eszkoz-viszontelado.
+                Viszontelado bejegyzese vagy torlese. Datum.'
               label: AFA. Eszkoz-viszontelado. Viszontelado bejegyzese vagy torlese.
                 Datum
             x-dth6obj9e9n74bbddti62r39chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Kulfoldiek jovedelemadoja.
+                Allando telephely. Az allando telephely tipusa.'
               label: Kulfoldiek jovedelemadoja. Allando telephely. Az allando telephely
                 tipusa
             x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4:
+              help: 'A 036-es modelo adata, 2025. adóév: Kulfoldiek jovedelemadoja.
+                Allando telephely. Bevallasbenyujtasi kotelezettseg.'
               label: Kulfoldiek jovedelemadoja. Allando telephely. Bevallasbenyujtasi
                 kotelezettseg
             x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4bb6clhmgo8:
+              help: 'A 036-es modelo adata, 2025. adóév: Kulfoldiek jovedelemadoja.
+                Allando telephely. A bevallasbenyujtasi kotelezettseg datuma.'
               label: Kulfoldiek jovedelemadoja. Allando telephely. A bevallasbenyujtasi
                 kotelezettseg datuma
             x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qco:
+              help: 'A 036-es modelo adata, 2025. adóév: Kulfoldiek jovedelemadoja.
+                Allando telephely. A 40.3. cikk szerinti szamitasi rendszer valasztasa.'
               label: Kulfoldiek jovedelemadoja. Allando telephely. A 40.3. cikk szerinti
                 szamitasi rendszer valasztasa
             x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qcpdcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Kulfoldiek jovedelemadoja.
+                Allando telephely. A 40.3. cikk szerinti szamitasi rendszer valasztasanak
+                datuma.'
               label: Kulfoldiek jovedelemadoja. Allando telephely. A 40.3. cikk szerinti
                 szamitasi rendszer valasztasanak datuma
             x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kulfoldiek jovedelemadoja.
+                Allando telephely. Az altalanos rendszer valasztasa.'
               label: Kulfoldiek jovedelemadoja. Allando telephely. Az altalanos rendszer
                 valasztasa
             x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dgmmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Kulfoldiek jovedelemadoja.
+                Allando telephely. Az altalanos rendszer valasztasanak datuma.'
               label: Kulfoldiek jovedelemadoja. Allando telephely. Az altalanos rendszer
                 valasztasanak datuma
             x-dth6obj9e9o6cbb5chpiqc9dd5gma:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                I.A.E. szakasz es csoport vagy tetel, az egyszerusitett modszer szerint
+                bevallott 1. tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
                 tetel, az egyszerusitett modszer szerint bevallott 1. tevekenyseg
             x-dth6obj9e9o6cbb5chpiqc9dehkn0rpdc5hn8qbmd5i62p0:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                A tevekenyseg tipusa, az egyszerusitett modszer szerint bevallott
+                1. tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az egyszerusitett
                 modszer szerint bevallott 1. tevekenyseg
             x-dth6obj9e9o6cbb5chpiqchdd5gma:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                I.A.E. szakasz es csoport vagy tetel, az egyszerusitett modszer szerint
+                bevallott 2. tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
                 tetel, az egyszerusitett modszer szerint bevallott 2. tevekenyseg
             x-dth6obj9e9o6cbb5chpiqchdehkn0rpdc5hn8qbmd5i62p0:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                A tevekenyseg tipusa, az egyszerusitett modszer szerint bevallott
+                2. tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az egyszerusitett
                 modszer szerint bevallott 2. tevekenyseg
             x-dth6obj9e9o6cbb5chpiqcpdd5gma:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                I.A.E. szakasz es csoport vagy tetel, az egyszerusitett modszer szerint
+                bevallott 3. tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
                 tetel, az egyszerusitett modszer szerint bevallott 3. tevekenyseg
             x-dth6obj9e9o6cbb5chpiqcpdehkn0rpdc5hn8qbmd5i62p0:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                A tevekenyseg tipusa, az egyszerusitett modszer szerint bevallott
+                3. tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az egyszerusitett
                 modszer szerint bevallott 3. tevekenyseg
             x-dth6obj9e9o6cbb5chpiqd1dd5gma:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                I.A.E. szakasz es csoport vagy tetel, az egyszerusitett modszer szerint
+                bevallott 4. tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
                 tetel, az egyszerusitett modszer szerint bevallott 4. tevekenyseg
             x-dth6obj9e9o6cbb5chpiqd1dehkn0rpdc5hn8qbmd5i62p0:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                A tevekenyseg tipusa, az egyszerusitett modszer szerint bevallott
+                4. tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az egyszerusitett
                 modszer szerint bevallott 4. tevekenyseg
             x-dth6obj9e9o6cbb5dsmj2bb9c5ig:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                I.A.E. szakasz es csoport vagy tetel, az objektiv megallapitas szerint
+                bevallott 1. tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
                 tetel, az objektiv megallapitas szerint bevallott 1. tevekenyseg
             x-dth6obj9e9o6cbb5dsmj2bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                A tevekenyseg tipusa, az objektiv megallapitas szerint bevallott 1.
+                tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az objektiv
                 megallapitas szerint bevallott 1. tevekenyseg
             x-dth6obj9e9o6cbb5dsmj4bb9c5ig:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                I.A.E. szakasz es csoport vagy tetel, az objektiv megallapitas szerint
+                bevallott 2. tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
                 tetel, az objektiv megallapitas szerint bevallott 2. tevekenyseg
             x-dth6obj9e9o6cbb5dsmj4bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                A tevekenyseg tipusa, az objektiv megallapitas szerint bevallott 2.
+                tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az objektiv
                 megallapitas szerint bevallott 2. tevekenyseg
             x-dth6obj9e9o6cbb5dsmj6bb9c5ig:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                I.A.E. szakasz es csoport vagy tetel, az objektiv megallapitas szerint
+                bevallott 3. tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
                 tetel, az objektiv megallapitas szerint bevallott 3. tevekenyseg
             x-dth6obj9e9o6cbb5dsmj6bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                A tevekenyseg tipusa, az objektiv megallapitas szerint bevallott 3.
+                tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az objektiv
                 megallapitas szerint bevallott 3. tevekenyseg
             x-dth6obj9e9o6cbb5dsmj8bb9c5ig:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                I.A.E. szakasz es csoport vagy tetel, az objektiv megallapitas szerint
+                bevallott 4. tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). I.A.E. szakasz es csoport vagy
                 tetel, az objektiv megallapitas szerint bevallott 4. tevekenyseg
             x-dth6obj9e9o6cbb5dsmj8bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                A tevekenyseg tipusa, az objektiv megallapitas szerint bevallott 4.
+                tevekenyseg.'
               label: Szemelyi jovedelemado (IRPF). A tevekenyseg tipusa, az objektiv
                 megallapitas szerint bevallott 4. tevekenyseg
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r0:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                Normal kozvetlen megallapitasi modszer.'
               label: Szemelyi jovedelemado (IRPF). Normal kozvetlen megallapitasi
                 modszer
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r1dcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                Normal kozvetlen megallapitasi modszer. Datum.'
               label: Szemelyi jovedelemado (IRPF). Normal kozvetlen megallapitasi
                 modszer. Datum
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                Egyszerusitett kozvetlen megallapitasi modszer.'
               label: Szemelyi jovedelemado (IRPF). Egyszerusitett kozvetlen megallapitasi
                 modszer
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p315lj6aor8c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                Egyszerusitett kozvetlen megallapitasi modszer. Datum.'
               label: Szemelyi jovedelemado (IRPF). Egyszerusitett kozvetlen megallapitasi
                 modszer. Datum
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                Objektiv megallapitasi modszer.'
               label: Szemelyi jovedelemado (IRPF). Objektiv megallapitasi modszer
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62bb6clhmgo8:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                Objektiv megallapitasi modszer. Datum.'
               label: Szemelyi jovedelemado (IRPF). Objektiv megallapitasi modszer.
                 Datum
             x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i0:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                Gazdasagi tevekenysegbol eredo reszletfizetesi kotelezettseg.'
               label: Szemelyi jovedelemado (IRPF). Gazdasagi tevekenysegbol eredo
                 reszletfizetesi kotelezettseg
             x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i2qpj5cdk62:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                A gazdasagi tevekenysegbol eredo reszletfizetesi kotelezettseg datuma.'
               label: Szemelyi jovedelemado (IRPF). A gazdasagi tevekenysegbol eredo
                 reszletfizetesi kotelezettseg datuma
             x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nms:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                Reszletfizetesi kotelezettseg jovedelem-hozzarendelesi szervezet tagjakent.'
               label: Szemelyi jovedelemado (IRPF). Reszletfizetesi kotelezettseg jovedelem-hozzarendelesi
                 szervezet tagjakent
             x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nmsbb6clhmgo8:
+              help: 'A 036-es modelo adata, 2025. adóév: Szemelyi jovedelemado (IRPF).
+                A jovedelem-hozzarendelesi szervezet tagjakenti reszletfizetesi kotelezettseg
+                datuma.'
               label: Szemelyi jovedelemado (IRPF). A jovedelem-hozzarendelesi szervezet
                 tagjakenti reszletfizetesi kotelezettseg datuma
             x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn0:
+              help: 'A 036-es modelo adata, 2025. adóév: A 49/2002. torveny szerinti
+                kulonleges adorendszer. A kulonleges adorendszer valasztasanak gyakorlasa.'
               label: A 49/2002. torveny szerinti kulonleges adorendszer. A kulonleges
                 adorendszer valasztasanak gyakorlasa
             x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn2qpj5cdk62:
+              help: 'A 036-es modelo adata, 2025. adóév: A 49/2002. torveny szerinti
+                kulonleges adorendszer. A kulonleges adorendszer valasztasanak datuma.'
               label: A 49/2002. torveny szerinti kulonleges adorendszer. A kulonleges
                 adorendszer valasztasanak datuma
             x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5gg:
+              help: 'A 036-es modelo adata, 2025. adóév: A 49/2002. torveny szerinti
+                kulonleges adorendszer. A kulonleges adorendszerrol valo lemondas.'
               label: A 49/2002. torveny szerinti kulonleges adorendszer. A kulonleges
                 adorendszerrol valo lemondas
             x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5giqpj5cdk62:
+              help: 'A 036-es modelo adata, 2025. adóév: A 49/2002. torveny szerinti
+                kulonleges adorendszer. A kulonleges adorendszerrol valo lemondas
+                datuma.'
               label: A 49/2002. torveny szerinti kulonleges adorendszer. A kulonleges
                 adorendszerrol valo lemondas datuma
             x-dth6objjdthmipb4c5i6aspdcdkmasjickmmaqj5e9hmior9ds:
+              help: 'A 036-es modelo adata, 2025. adóév: Tarsasagi ado. Az uzleti
+                ev zarasanak napja es honapja.'
               label: Tarsasagi ado. Az uzleti ev zarasanak napja es honapja
             x-dth6objjdthmipb4c5i6aspdcln78qb4c5i2qpbocln78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Tarsasagi ado. Mentes szervezeti
+                minoseg.'
               label: Tarsasagi ado. Mentes szervezeti minoseg
             x-dth6objjdthmipb4c5i6aspdcls6arj3d5nms:
+              help: 'A 036-es modelo adata, 2025. adóév: Tarsasagi ado. Mentesseg.'
               label: Tarsasagi ado. Mentesseg
             x-dth6objjdthmipb4c5i6aspdcls6arj3d5nmsbb6clhmgo8:
+              help: 'A 036-es modelo adata, 2025. adóév: Tarsasagi ado. Mentesseg.
+                Datum.'
               label: Tarsasagi ado. Mentesseg. Datum
             x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62sg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tarsasagi ado. Bevallasbenyujtasi
+                kotelezettseg.'
               label: Tarsasagi ado. Bevallasbenyujtasi kotelezettseg
             x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62shdcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Tarsasagi ado. A bevallasbenyujtasi
+                kotelezettseg datuma.'
               label: Tarsasagi ado. A bevallasbenyujtasi kotelezettseg datuma
             x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j:
+              help: 'A 036-es modelo adata, 2025. adóév: Tarsasagi ado. A 40.3. cikk
+                szerinti szamitasi rendszer valasztasa.'
               label: Tarsasagi ado. A 40.3. cikk szerinti szamitasi rendszer valasztasa
             x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j5lj6aor8c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Tarsasagi ado. A 40.3. cikk
+                szerinti szamitasi rendszer valasztasanak datuma.'
               label: Tarsasagi ado. A 40.3. cikk szerinti szamitasi rendszer valasztasanak
                 datuma
             x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn0:
+              help: 'A 036-es modelo adata, 2025. adóév: Tarsasagi ado. Az adokonszolidacios
+                rendszer alkalmazasarol valo lemondas.'
               label: Tarsasagi ado. Az adokonszolidacios rendszer alkalmazasarol valo
                 lemondas
             x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn2qpj5cdk62:
+              help: 'A 036-es modelo adata, 2025. adóév: Tarsasagi ado. Az adokonszolidacios
+                rendszerrol valo lemondas datuma.'
               label: Tarsasagi ado. Az adokonszolidacios rendszerrol valo lemondas
                 datuma
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. AEAT-ertesitesek
+                bejegyzese.'
               label: Ertesitesek. AEAT-ertesitesek bejegyzese
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. AEAT-ertesitesek
+                torlese.'
               label: Ertesitesek. AEAT-ertesitesek torlese
             x-e1j2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. Regisztracio
+                az AEAT mobilalkalmazasaban.'
               label: Ertesitesek. Regisztracio az AEAT mobilalkalmazasaban
             x-e1j2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. Kiiratkozas
+                az AEAT mobilalkalmazasabol.'
               label: Ertesitesek. Kiiratkozas az AEAT mobilalkalmazasabol
             x-e1j2sobmd5pmuspdchjn8bb1dhq62:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. DGT-ertesitesek
+                bejegyzese.'
               label: Ertesitesek. DGT-ertesitesek bejegyzese
             x-e1j2sobmd5pmuspdchjn8bb2c5l62:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. DGT-ertesitesek
+                torlese.'
               label: Ertesitesek. DGT-ertesitesek torlese
             x-e1j2sobmd5pmuspdclmm2qbc:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. E-mail.'
               label: Ertesitesek. E-mail
             x-e1j2sobmd5pmuspdclmm2qbc5lgmot31:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. Az ertesitesi
+                e-mail bejegyzese vagy modositasa.'
               label: Ertesitesek. Az ertesitesi e-mail bejegyzese vagy modositasa
             x-e1j2sobmd5pmuspdclmm2qbc5lh62qj1:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. Az ertesitesi
+                e-mail torlese.'
               label: Ertesitesek. Az ertesitesi e-mail torlese
             x-e1j2sobmd5pmuspddlnncqbc5lgmot31:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. A mobiltelefon
+                bejegyzese vagy modositasa.'
               label: Ertesitesek. A mobiltelefon bejegyzese vagy modositasa
             x-e1j2sobmd5pmuspddlnncqbc5lh62qj1:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. A mobiltelefon
+                torlese.'
               label: Ertesitesek. A mobiltelefon torlese
             x-e1j2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. A mobiltelefon
+                orszaghivo szama.'
               label: Ertesitesek. A mobiltelefon orszaghivo szama
             x-e1j2sobmd5pmuspdehim2bb1dhq62:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. TEA-ertesitesek
+                bejegyzese.'
               label: Ertesitesek. TEA-ertesitesek bejegyzese
             x-e1j2sobmd5pmuspdehim2bb2c5l62:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. TEA-ertesitesek
+                torlese.'
               label: Ertesitesek. TEA-ertesitesek torlese
             x-e1j2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesek. Mobiltelefon.'
               label: Ertesitesek. Mobiltelefon
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Tomb.'
               label: Spanyolorszagi adougyi lakcim. Tomb
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Hazszam kiegeszitoje.'
               label: Spanyolorszagi adougyi lakcim. Hazszam kiegeszitoje
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                INE telepuleskod.'
               label: Spanyolorszagi adougyi lakcim. INE telepuleskod
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Iranyitoszam.'
               label: Spanyolorszagi adougyi lakcim. Iranyitoszam
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Tartomanykod.'
               label: Spanyolorszagi adougyi lakcim. Tartomanykod
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                INE kozterulet-kod.'
               label: Spanyolorszagi adougyi lakcim. INE kozterulet-kod
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Cim kiegeszitese.'
               label: Spanyolorszagi adougyi lakcim. Cim kiegeszitese
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Lepcsohaz.'
               label: Spanyolorszagi adougyi lakcim. Lepcsohaz
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Az adougyi lakcim ingatlan-nyilvantartasi jelzoje.'
               label: Spanyolorszagi adougyi lakcim. Az adougyi lakcim ingatlan-nyilvantartasi
                 jelzoje
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Helyseg vagy telepules.'
               label: Spanyolorszagi adougyi lakcim. Helyseg vagy telepules
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Telepules neve.'
               label: Spanyolorszagi adougyi lakcim. Telepules neve
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Kozterulet neve.'
               label: Spanyolorszagi adougyi lakcim. Kozterulet neve
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Hazszam.'
               label: Spanyolorszagi adougyi lakcim. Hazszam
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Emelet.'
               label: Spanyolorszagi adougyi lakcim. Emelet
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Lepcsohaz bejarata.'
               label: Spanyolorszagi adougyi lakcim. Lepcsohaz bejarata
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Ajto.'
               label: Spanyolorszagi adougyi lakcim. Ajto
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Ingatlan-nyilvantartasi hivatkozas.'
               label: Spanyolorszagi adougyi lakcim. Ingatlan-nyilvantartasi hivatkozas
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Hazszam tipusa.'
               label: Spanyolorszagi adougyi lakcim. Hazszam tipusa
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
+              help: 'A 036-es modelo adata, 2025. adóév: Spanyolorszagi adougyi lakcim.
+                Kozterulet jellege.'
               label: Spanyolorszagi adougyi lakcim. Kozterulet jellege
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lh6orrhelig:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Tomb.'
               label: Ugyintezesi cim. Tomb
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhm2r39cpkm6ob4dtp2qrjldlin4ro:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Hazszam
+                kiegeszitoje.'
               label: Ugyintezesi cim. Hazszam kiegeszitoje
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqrbldpkm6qbgd5niqqbeck:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. INE telepuleskod.'
               label: Ugyintezesi cim. INE telepuleskod
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3fedq62r0:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Iranyitoszam.'
               label: Ugyintezesi cim. Iranyitoszam
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3idtr6irj3d5gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Tartomanykod.'
               label: Ugyintezesi cim. Tartomanykod
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqtj9c4mmirj5:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. INE kozterulet-kod.'
               label: Ugyintezesi cim. INE kozterulet-kod
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmurbgdhimqpbeehniqp3fdlkm6qbcd5ng:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Cim kiegeszitese.'
               label: Ugyintezesi cim. Cim kiegeszitese
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lin6or1dhin4o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Lepcsohaz.'
               label: Ugyintezesi cim. Lepcsohaz
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lkmsp39cdgm8rri5lh62qj1:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Az ugyintezesi
+                cim torlesenek jelzoje.'
               label: Ugyintezesi cim. Az ugyintezesi cim torlesenek jelzoje
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lm6uor1dhkm8ob4:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Helyseg
+                vagy telepules.'
               label: Ugyintezesi cim. Helyseg vagy telepules
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lmnarj9cdkn0qbf:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Telepules
+                neve.'
               label: Ugyintezesi cim. Telepules neve
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln6urb2e9iiqtj9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Kozterulet
+                neve.'
               label: Ugyintezesi cim. Kozterulet neve
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln7arb5e9niqor1edgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Hazszam.'
               label: Ugyintezesi cim. Hazszam
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6oobeehgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Emelet.'
               label: Ugyintezesi cim. Emelet
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6usjkc5m0:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Lepcsohaz
+                bejarata.'
               label: Ugyintezesi cim. Lepcsohaz bejarata
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo7apbiehgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Ajto.'
               label: Ugyintezesi cim. Ajto
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5ln7arb5e9ng:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Hazszam
+                tipusa.'
               label: Ugyintezesi cim. Hazszam tipusa
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5lr6io8:
+              help: 'A 036-es modelo adata, 2025. adóév: Ugyintezesi cim. Kozterulet
+                jellege.'
               label: Ugyintezesi cim. Kozterulet jellege
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Minosege
+                a postafiok tekinteteben.'
               label: Ertesitesi cim. Minosege a postafiok tekinteteben
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. A postafiok
+                iranyitoszama.'
               label: Ertesitesi cim. A postafiok iranyitoszama
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. A postafiok
+                tartomanykodja.'
               label: Ertesitesi cim. A postafiok tartomanykodja
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Postafiok
+                szama.'
               label: Ertesitesi cim. Postafiok szama
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. A postafiok
+                cimzettje, ha elter a bevallotol.'
               label: Ertesitesi cim. A postafiok cimzettje, ha elter a bevallotol
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. A postafiok
+                telepulese vagy varosa.'
               label: Ertesitesi cim. A postafiok telepulese vagy varosa
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Az ertesitesi
+                cim torlese.'
               label: Ertesitesi cim. Az ertesitesi cim torlese
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Tomb (1.
+                cim).'
               label: Ertesitesi cim. Tomb (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Minosege
+                (1. cim).'
               label: Ertesitesi cim. Minosege (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Hazszam kiegeszitoje
+                (1. cim).'
               label: Ertesitesi cim. Hazszam kiegeszitoje (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. INE telepuleskod
+                (1. cim).'
               label: Ertesitesi cim. INE telepuleskod (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Iranyitoszam
+                (1. cim).'
               label: Ertesitesi cim. Iranyitoszam (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Tartomanykod
+                (1. cim).'
               label: Ertesitesi cim. Tartomanykod (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. INE kozterulet-kod
+                (1. cim).'
               label: Ertesitesi cim. INE kozterulet-kod (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Cim kiegeszitese
+                (1. cim).'
               label: Ertesitesi cim. Cim kiegeszitese (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Cimzett,
+                ha elter a bevallotol (1. cim).'
               label: Ertesitesi cim. Cimzett, ha elter a bevallotol (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Lepcsohaz
+                (1. cim).'
               label: Ertesitesi cim. Lepcsohaz (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Helyseg vagy
+                telepules (1. cim).'
               label: Ertesitesi cim. Helyseg vagy telepules (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Telepules
+                neve (1. cim).'
               label: Ertesitesi cim. Telepules neve (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Kozterulet
+                neve (1. cim).'
               label: Ertesitesi cim. Kozterulet neve (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Hazszam (1.
+                cim).'
               label: Ertesitesi cim. Hazszam (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Emelet (1.
+                cim).'
               label: Ertesitesi cim. Emelet (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Lepcsohaz
+                bejarata (1. cim).'
               label: Ertesitesi cim. Lepcsohaz bejarata (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Ajto (1.
+                cim).'
               label: Ertesitesi cim. Ajto (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Hazszam tipusa
+                (1. cim).'
               label: Ertesitesi cim. Hazszam tipusa (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Ertesitesi cim. Kozterulet
+                jellege (1. cim).'
               label: Ertesitesi cim. Kozterulet jellege (1. cim)
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0ob9ec:
+              help: 'A 036-es modelo adata, 2025. adóév: Az illetoseg szerinti allambeli
+                lakcim. Orszagkod.'
               label: Az illetoseg szerinti allambeli lakcim. Orszagkod
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0rrjehgmo:
+              help: 'A 036-es modelo adata, 2025. adóév: Az illetoseg szerinti allambeli
+                lakcim. Iranyitoszam.'
               label: Az illetoseg szerinti allambeli lakcim. Iranyitoszam
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              help: 'A 036-es modelo adata, 2025. adóév: Az illetoseg szerinti allambeli
+                lakcim. Cim kiegeszitese.'
               label: Az illetoseg szerinti allambeli lakcim. Cim kiegeszitese
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdchnmqqb3d5m6iro:
+              help: 'A 036-es modelo adata, 2025. adóév: Az illetoseg szerinti allambeli
+                lakcim. Lakcim.'
               label: Az illetoseg szerinti allambeli lakcim. Lakcim
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1gmiso:
+              help: 'A 036-es modelo adata, 2025. adóév: Az illetoseg szerinti allambeli
+                lakcim. Orszag.'
               label: Az illetoseg szerinti allambeli lakcim. Orszag
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1nm4r31cdkmurg:
+              help: 'A 036-es modelo adata, 2025. adóév: Az illetoseg szerinti allambeli
+                lakcim. Telepules vagy varos.'
               label: Az illetoseg szerinti allambeli lakcim. Telepules vagy varos
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1p6utj9dphmio9de9imeqbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Az illetoseg szerinti allambeli
+                lakcim. Tartomany, regio vagy allam.'
               label: Az illetoseg szerinti allambeli lakcim. Tartomany, regio vagy
                 allam
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm6tb1dpq6uso:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephelyek. Az allando
+                telephelyek szama.'
               label: Allando telephelyek. Az allando telephelyek szama
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd64:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephelyek. Az 1.
+                allando telephely megnevezese.'
               label: Allando telephelyek. Az 1. allando telephely megnevezese
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd68:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephelyek. A 2.
+                allando telephely megnevezese.'
               label: Allando telephelyek. A 2. allando telephely megnevezese
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd6c:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephelyek. A 3.
+                allando telephely megnevezese.'
               label: Allando telephelyek. A 3. allando telephely megnevezese
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmmus35e9giqpbjehgm4r35cdkmqqb5dpq6ubbgclp6qobecln78p8:
+              help: 'A 036-es modelo adata, 2025. adóév: Allando telephelyek. Allando
+                telephelyen keresztul mukodik-e Spanyolorszagban.'
               label: Allando telephelyek. Allando telephelyen keresztul mukodik-e
                 Spanyolorszagban
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj2:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. Elso vezeteknev.'
               label: Azonositas. Elso vezeteknev
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj4:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. Masodik vezeteknev.'
               label: Azonositas. Masodik vezeteknev
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qorfchkmerpde1gmispde9in6qb4cln66qb1:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. Az illetoseg
+                szerinti allam orszagkodja.'
               label: Azonositas. Az illetoseg szerinti allam orszagkodja
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. Internetes domain
+                vagy cim.'
               label: Azonositas. Internetes domain vagy cim
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. Internetes domain
+                vagy cim (masodik).'
               label: Azonositas. Internetes domain vagy cim (masodik)
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmm2r3kc4mm4obac4:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. Bejegyzes vagy
+                torles korlatolt felelossegu vallalkozokent.'
               label: Azonositas. Bejegyzes vagy torles korlatolt felelossegu vallalkozokent
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. A korlatolt felelossegu
+                vallalkozokent torteno bejegyzes vagy torles datuma.'
               label: Azonositas. A korlatolt felelossegu vallalkozokent torteno bejegyzes
                 vagy torles datuma
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. Az adougyi illetoseg
+                hatalybalepesenek datuma.'
               label: Azonositas. Az adougyi illetoseg hatalybalepesenek datuma
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj1cdkmurj1dhkm8ob4:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. A kulfoldi illetosegu
+                szemely allampolgarsaga.'
               label: Azonositas. A kulfoldi illetosegu szemely allampolgarsaga
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9co:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. Adoazonosito
+                szam (NIF vagy NIE).'
               label: Azonositas. Adoazonosito szam (NIF vagy NIE)
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. Az illetoseg
+                szerinti allam adoazonosito kodja vagy kozossegi adoszam.'
               label: Azonositas. Az illetoseg szerinti allam adoazonosito kodja vagy
                 kozossegi adoszam
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p8:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. Keresztnev.'
               label: Azonositas. Keresztnev
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p9dcdnmqpbicdkm2r0:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. Kereskedelmi
+                nev.'
               label: Azonositas. Kereskedelmi nev
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
+              help: 'A 036-es modelo adata, 2025. adóév: Azonositas. A termeszetes
+                szemely belfoldi vagy kulfoldi illetosegu-e.'
               label: Azonositas. A termeszetes szemely belfoldi vagy kulfoldi illetosegu-e
             x-e1l2sobmd5pmubb1clgn8bb1dhq62:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. AEAT-ertesitesek bejegyzese.'
               label: Jogi szemely vagy szervezet. Ertesitesek. AEAT-ertesitesek bejegyzese
             x-e1l2sobmd5pmubb1clgn8bb2c5l62:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. AEAT-ertesitesek torlese.'
               label: Jogi szemely vagy szervezet. Ertesitesek. AEAT-ertesitesek torlese
             x-e1l2sobmd5pmubb1e1o2qob5c5q2qobcehgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. Regisztracio az AEAT mobilalkalmazasaban.'
               label: Jogi szemely vagy szervezet. Ertesitesek. Regisztracio az AEAT
                 mobilalkalmazasaban
             x-e1l2sobmd5pmubb1e1o2qob5c5q2qoj1d9gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. Kiiratkozas az AEAT mobilalkalmazasabol.'
               label: Jogi szemely vagy szervezet. Ertesitesek. Kiiratkozas az AEAT
                 mobilalkalmazasabol
             x-e1l2sobmd5pmubb4ctq2qobcehgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. DGT-ertesitesek bejegyzese.'
               label: Jogi szemely vagy szervezet. Ertesitesek. DGT-ertesitesek bejegyzese
             x-e1l2sobmd5pmubb4ctq2qoj1d9gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. DGT-ertesitesek torlese.'
               label: Jogi szemely vagy szervezet. Ertesitesek. DGT-ertesitesek torlese
             x-e1l2sobmd5pmubb5dlgmir0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. E-mail.'
               label: Jogi szemely vagy szervezet. Ertesitesek. E-mail
             x-e1l2sobmd5pmubb5dlgmir1dc5m78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. Az ertesitesi e-mail bejegyzese vagy modositasa.'
               label: Jogi szemely vagy szervezet. Ertesitesek. Az ertesitesi e-mail
                 bejegyzese vagy modositasa
             x-e1l2sobmd5pmubb5dlgmir1dc9gmko8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. Az ertesitesi e-mail torlese.'
               label: Jogi szemely vagy szervezet. Ertesitesek. Az ertesitesi e-mail
                 torlese
             x-e1l2sobmd5pmubbddtr6ir1dc5m78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. A mobiltelefon bejegyzese vagy modositasa.'
               label: Jogi szemely vagy szervezet. Ertesitesek. A mobiltelefon bejegyzese
                 vagy modositasa
             x-e1l2sobmd5pmubbddtr6ir1dc9gmko8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. A mobiltelefon torlese.'
               label: Jogi szemely vagy szervezet. Ertesitesek. A mobiltelefon torlese
             x-e1l2sobmd5pmubbge9imcqbadsmn0ob9ecmmqrrmd5m0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. A mobiltelefon orszaghivo szama.'
               label: Jogi szemely vagy szervezet. Ertesitesek. A mobiltelefon orszaghivo
                 szama
             x-e1l2sobmd5pmubbkclgiqobcehgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. TEA-ertesitesek bejegyzese.'
               label: Jogi szemely vagy szervezet. Ertesitesek. TEA-ertesitesek bejegyzese
             x-e1l2sobmd5pmubbkclgiqoj1d9gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. TEA-ertesitesek torlese.'
               label: Jogi szemely vagy szervezet. Ertesitesek. TEA-ertesitesek torlese
             x-e1l2sobmd5pmubbkclm6apjfdpniqrbfepkmo:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesek. Mobiltelefon.'
               label: Jogi szemely vagy szervezet. Ertesitesek. Mobiltelefon
             x-e1l2sp35f1q2qorfchkmerpde1gmiso:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Az illetoseg szerinti allambeli cim. Orszagkod.'
               label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
                 cim. Orszagkod
             x-e1l2sp35f1q2qorfchkmerpde1nn6t31dg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Az illetoseg szerinti allambeli cim. Iranyitoszam.'
               label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
                 cim. Iranyitoszam
             x-e1l2sp35f1q2qorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Az illetoseg szerinti allambeli cim. Cim kiegeszitese.'
               label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
                 cim. Cim kiegeszitese
             x-e1l2sp35f1q2qp3fdlkm6qbcd5ng:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Az illetoseg szerinti allambeli cim. Cim.'
               label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
                 cim. Cim
             x-e1l2sp35f1q2qqbechkm6ob4dtp2qp3fdlkm6qbcd5niqpboehp62rjaclp6u:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Az illetoseg szerinti allambeli cim. Kulfoldi adougyi cim vagy szekhely
+                jelzoje.'
               label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
                 cim. Kulfoldi adougyi cim vagy szekhely jelzoje
             x-e1l2sp35f1q2qs31d5pg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Az illetoseg szerinti allambeli cim. Orszag.'
               label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
                 cim. Orszag
             x-e1l2sp35f1q2qs3fc9m62or9dtn0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Az illetoseg szerinti allambeli cim. Telepules vagy varos.'
               label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
                 cim. Telepules vagy varos
             x-e1l2sp35f1q2qs3idtr6irj3d5giqsj5ctkmurg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Az illetoseg szerinti allambeli cim. Tartomany, regio vagy allam.'
               label: Jogi szemely vagy szervezet. Az illetoseg szerinti allambeli
                 cim. Tartomany, regio vagy allam
             x-e1l2sp36d5pm6bb2dhnn2tb5:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Tomb.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Tomb
             x-e1l2sp36d5pm6bb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Hazszam kiegeszitoje.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Hazszam
                 kiegeszitoje
             x-e1l2sp36d5pm6bb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. INE telepuleskod.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. INE
                 telepuleskod
             x-e1l2sp36d5pm6bb3dti6iprf5lo6usrkc5m0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Iranyitoszam.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Iranyitoszam
             x-e1l2sp36d5pm6bb3dti6iprf5lo74rrmd5n66qb1:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Tartomanykod.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Tartomanykod
             x-e1l2sp36d5pm6bb3dti6iprf5lr6io9dd5n6a:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. INE kozterulet-kod.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. INE
                 kozterulet-kod
             x-e1l2sp36d5pm6bb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Cim kiegeszitese.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Cim
                 kiegeszitese
             x-e1l2sp36d5pm6bb5edhm2r35e9gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Lepcsohaz.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Lepcsohaz
             x-e1l2sp36d5pm6bb9dpi6ior1chnn4bbiclj6asj5dphmio9dcdgn8objehp62r0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Az adougyi cim ingatlan-nyilvantartasi
+                jelzoje.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Az adougyi
                 cim ingatlan-nyilvantartasi jelzoje
             x-e1l2sp36d5pm6bbcdthm2r39chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Helyseg vagy telepules.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Helyseg
                 vagy telepules
             x-e1l2sp36d5pm6bbdeln6ior9e1kmu:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Telepules neve.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Telepules
                 neve
             x-e1l2sp36d5pm6bbedtmm4sj55lr6io8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Kozterulet neve.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Kozterulet
                 neve
             x-e1l2sp36d5pm6bbeelmmasjf5lhm2sr1:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Hazszam.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Hazszam
             x-e1l2sp36d5pm6bbgdhgmst31:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Emelet.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Emelet
             x-e1l2sp36d5pm6bbgdtp78obc:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Lepcsohaz bejarata.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Lepcsohaz
                 bejarata
             x-e1l2sp36d5pm6bbgelin4t31:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Ajto.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Ajto
             x-e1l2sp36d5pm6bbiclj6asj5dphmio9dcdgn8objehp62r0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Ingatlan-nyilvantartasi hivatkozas.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Ingatlan-nyilvantartasi
                 hivatkozas
             x-e1l2sp36d5pm6bbkd5o6ubbeelmmasjf:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Hazszam tipusa.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Hazszam
                 tipusa
             x-e1l2sp36d5pm6bbkd5o6ubbmd5gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Spanyolorszagi adougyi cim. Kozterulet jellege.'
               label: Jogi szemely vagy szervezet. Spanyolorszagi adougyi cim. Kozterulet
                 jellege
             x-e1l2sp3edtq6ibb1e1gn4t31chniqor1dhkm8ob4:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Minosege a postafiok tekinteteben.'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Minosege a postafiok
                 tekinteteben
             x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1nn6t31dg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. A postafiok iranyitoszama.'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. A postafiok iranyitoszama
             x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1p6utj9dphmio8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. A postafiok tartomanykodja.'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. A postafiok tartomanykodja
             x-e1l2sp3edtq6ibb1e1gn4t31chniqorfe9p6arrj:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Postafiok szama.'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Postafiok szama
             x-e1l2sp3edtq6ibb1e1gn4t31chniqp35edq6irj1ehgn4qbf:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. A postafiok cimzettje, ha elter a bevallotol.'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. A postafiok cimzettje,
                 ha elter a bevallotol
             x-e1l2sp3edtq6ibb1e1gn4t31chniqs3fc9m62or9dtn0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. A postafiok telepulese vagy varosa.'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. A postafiok telepulese
                 vagy varosa
             x-e1l2sp3edtq6ibb2c5l62bb4dtmmior9dhkmu:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Az ertesitesi cim torlesenek jelzoje.'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Az ertesitesi cim
                 torlesenek jelzoje
             x-e1l2sp3edtq6ibb2dhnn2tb5:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Tomb (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Tomb (1. cim)
             x-e1l2sp3edtq6ibb3c5m6ip31cg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Minosege (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Minosege (1. cim)
             x-e1l2sp3edtq6ibb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Hazszam kiegeszitoje (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Hazszam kiegeszitoje
                 (1. cim)
             x-e1l2sp3edtq6ibb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. INE telepuleskod (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. INE telepuleskod
                 (1. cim)
             x-e1l2sp3edtq6ibb3dti6iprf5lo6usrkc5m0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Iranyitoszam (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Iranyitoszam (1.
                 cim)
             x-e1l2sp3edtq6ibb3dti6iprf5lo74rrmd5n66qb1:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Tartomanykod (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Tartomanykod (1.
                 cim)
             x-e1l2sp3edtq6ibb3dti6iprf5lr6io9dd5n6a:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. INE kozterulet-kod (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. INE kozterulet-kod
                 (1. cim)
             x-e1l2sp3edtq6ibb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Cim kiegeszitese (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Cim kiegeszitese
                 (1. cim)
             x-e1l2sp3edtq6ibb4clpn8qbec5q62sj9ds:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Cimzett, ha elter a bevallotol (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Cimzett, ha elter
                 a bevallotol (1. cim)
             x-e1l2sp3edtq6ibb5edhm2r35e9gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Lepcsohaz (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Lepcsohaz (1. cim)
             x-e1l2sp3edtq6ibbcdthm2r39chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Helyseg vagy telepules (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Helyseg vagy telepules
                 (1. cim)
             x-e1l2sp3edtq6ibbdeln6ior9e1kmu:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Telepules neve (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Telepules neve (1.
                 cim)
             x-e1l2sp3edtq6ibbedtmm4sj55lr6io8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Kozterulet neve (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Kozterulet neve
                 (1. cim)
             x-e1l2sp3edtq6ibbeelmmasjf5lhm2sr1:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Hazszam (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Hazszam (1. cim)
             x-e1l2sp3edtq6ibbgdhgmst31:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Emelet (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Emelet (1. cim)
             x-e1l2sp3edtq6ibbgdtp78obc:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Lepcsohaz bejarata (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Lepcsohaz bejarata
                 (1. cim)
             x-e1l2sp3edtq6ibbgelin4t31:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Ajto (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Ajto (1. cim)
             x-e1l2sp3edtq6ibbkd5o6ubbeelmmasjf:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Hazszam tipusa (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Hazszam tipusa (1.
                 cim)
             x-e1l2sp3edtq6ibbkd5o6ubbmd5gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Ertesitesi cim. Kozterulet jellege (1. cim).'
               label: Jogi szemely vagy szervezet. Ertesitesi cim. Kozterulet jellege
                 (1. cim)
             x-e1l2sp3jdthiqojcdtonap8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Tomb.'
               label: Jogi szemely vagy szervezet. Szekhely. Tomb
             x-e1l2sp3jdthiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Hazszam kiegeszitoje.'
               label: Jogi szemely vagy szervezet. Szekhely. Hazszam kiegeszitoje
             x-e1l2sp3jdthiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. INE telepuleskod.'
               label: Jogi szemely vagy szervezet. Szekhely. INE telepuleskod
             x-e1l2sp3jdthiqorfchkmerpde1nn6t31dg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Iranyitoszam.'
               label: Jogi szemely vagy szervezet. Szekhely. Iranyitoszam
             x-e1l2sp3jdthiqorfchkmerpde1p6utj9dphmio8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Tartomanykod.'
               label: Jogi szemely vagy szervezet. Szekhely. Tartomanykod
             x-e1l2sp3jdthiqorfchkmerpdepkm2bb9dpig:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. INE kozterulet-kod.'
               label: Jogi szemely vagy szervezet. Szekhely. INE kozterulet-kod
             x-e1l2sp3jdthiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Cim kiegeszitese.'
               label: Jogi szemely vagy szervezet. Szekhely. Cim kiegeszitese
             x-e1l2sp3jdthiqpbjcdgmopbic4:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Lepcsohaz.'
               label: Jogi szemely vagy szervezet. Szekhely. Lepcsohaz
             x-e1l2sp3jdthiqr3fcdgmoqb4c5i0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Helyseg vagy telepules.'
               label: Jogi szemely vagy szervezet. Szekhely. Helyseg vagy telepules
             x-e1l2sp3jdthiqrbldpkm6qbgd5ng:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Telepules neve.'
               label: Jogi szemely vagy szervezet. Szekhely. Telepules neve
             x-e1l2sp3jdthiqrjfdlh74p9depkm2:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Kozterulet neve.'
               label: Jogi szemely vagy szervezet. Szekhely. Kozterulet neve
             x-e1l2sp3jdthiqrjldlin4rpdcdgn6o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Hazszam.'
               label: Jogi szemely vagy szervezet. Szekhely. Hazszam
             x-e1l2sp3jdthiqs3cc5n78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Emelet.'
               label: Jogi szemely vagy szervezet. Szekhely. Emelet
             x-e1l2sp3jdthiqs3fe9q62r0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Lepcsohaz bejarata.'
               label: Jogi szemely vagy szervezet. Szekhely. Lepcsohaz bejarata
             x-e1l2sp3jdthiqs3lclp78o8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Ajto.'
               label: Jogi szemely vagy szervezet. Szekhely. Ajto
             x-e1l2sp3jdthiqt39e1niqrjldlin4ro:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Hazszam tipusa.'
               label: Jogi szemely vagy szervezet. Szekhely. Hazszam tipusa
             x-e1l2sp3jdthiqt39e1niqtj9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Szekhely. Kozterulet jellege.'
               label: Jogi szemely vagy szervezet. Szekhely. Kozterulet jellege
             x-e1l2spbgclp6qbb3elgmst3fec:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Allando telephelyek. Az allando telephelyek szama.'
               label: Jogi szemely vagy szervezet. Allando telephelyek. Az allando
                 telephelyek szama
             x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj2:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Allando telephelyek. Az 1. allando telephely megnevezese.'
               label: Jogi szemely vagy szervezet. Allando telephelyek. Az 1. allando
                 telephely megnevezese
             x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj4:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Allando telephelyek. A 2. allando telephely megnevezese.'
               label: Jogi szemely vagy szervezet. Allando telephelyek. A 2. allando
                 telephely megnevezese
             x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj6:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Allando telephelyek. A 3. allando telephely megnevezese.'
               label: Jogi szemely vagy szervezet. Allando telephelyek. A 3. allando
                 telephely megnevezese
             x-e1l2spbgclp6qbbed5j2qc8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Allando telephelyek. Az 1. allando telephely adoazonosito szama.'
               label: Jogi szemely vagy szervezet. Allando telephelyek. Az 1. allando
                 telephely adoazonosito szama
             x-e1l2spbgclp6qbbed5j2qcg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Allando telephelyek. A 2. allando telephely adoazonosito szama.'
               label: Jogi szemely vagy szervezet. Allando telephelyek. A 2. allando
                 telephely adoazonosito szama
             x-e1l2spbgclp6qbbed5j2qco:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Allando telephelyek. A 3. allando telephely adoazonosito szama.'
               label: Jogi szemely vagy szervezet. Allando telephelyek. A 3. allando
                 telephely adoazonosito szama
             x-e1l2spbgclp6qbbfe1in4o9dclpn8ob2dhim6qbdd5imst3f5lo6asjdc5n6arjkck:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Allando telephelyek. Allando telephelyen keresztul mukodik-e Spanyolorszagban.'
               label: Jogi szemely vagy szervezet. Allando telephelyek. Allando telephelyen
                 keresztul mukodik-e Spanyolorszagban
             x-e1l2sqb4cln78bb1dpgmesj1dlgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. Emblema.'
               label: Jogi szemely vagy szervezet. Azonositas. Emblema
             x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. Internetes domain vagy cim.'
               label: Jogi szemely vagy szervezet. Azonositas. Internetes domain vagy
                 cim
             x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk5lpmaorldpi62sj9ds:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. Internetes domain vagy cim (masodik).'
               label: Jogi szemely vagy szervezet. Azonositas. Internetes domain vagy
                 cim (masodik)
             x-e1l2sqb4cln78bb6clhmgo9dc5hnapbichniqtjfdhqmst31chin6:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. A megallapodas datuma.'
               label: Jogi szemely vagy szervezet. Azonositas. A megallapodas datuma
             x-e1l2sqb4cln78bb6clhmgo9dcdnmssrkd5q7aor9dtn0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. Az alapitas datuma.'
               label: Jogi szemely vagy szervezet. Azonositas. Az alapitas datuma
             x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. Az adougyi illetoseg hatalybalepesenek datuma.'
               label: Jogi szemely vagy szervezet. Azonositas. Az adougyi illetoseg
                 hatalybalepesenek datuma
             x-e1l2sqb4cln78bb6clhmgo9dd5n76orid5o66qbfdomn4pb7d5pn8sj1dg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. A nyilvantartasba vetel datuma.'
               label: Jogi szemely vagy szervezet. Azonositas. A nyilvantartasba vetel
                 datuma
             x-e1l2sqb4cln78bbed5j0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. Adoazonosito szam (NIF).'
               label: Jogi szemely vagy szervezet. Azonositas. Adoazonosito szam (NIF)
             x-e1l2sqb4cln78bbed5j2qpbjehgm8rpde9in6qb4cln66qb1:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. Az illetoseg szerinti allam adoazonosito kodja.'
               label: Jogi szemely vagy szervezet. Azonositas. Az illetoseg szerinti
                 allam adoazonosito kodja
             x-e1l2sqb4cln78bbed5j2qrrke9nn6bbgc5kn6pbj:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. Mas orszagokbeli adoazonosito szam.'
               label: Jogi szemely vagy szervezet. Azonositas. Mas orszagokbeli adoazonosito
                 szam
             x-e1l2sqb4cln78bbgc5kn6bb3dtn76t39ehqm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. Kulfoldi illetosegu vagy kulfoldon alapitott szervezet.'
               label: Jogi szemely vagy szervezet. Azonositas. Kulfoldi illetosegu
                 vagy kulfoldon alapitott szervezet
             x-e1l2sqb4cln78bbic5t6urhdednm6qb1dg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. Cegnev.'
               label: Jogi szemely vagy szervezet. Azonositas. Cegnev
             x-e1l2sqb4cln78bbiclpmip35dphmio9dd5n68qb3c5i6usg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Azonositas. Belfoldi illetosegu vagy Spanyolorszagban alapitott, illetve
+                kulfoldi illetosegu szervezet.'
               label: Jogi szemely vagy szervezet. Azonositas. Belfoldi illetosegu
                 vagy Spanyolorszagban alapitott, illetve kulfoldi illetosegu szervezet
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. Spanyolorszagban alapitott,
+                gazdasagi tevekenyseget folytato jovedelem-hozzarendelesi szervezet.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 Spanyolorszagban alapitott, gazdasagi tevekenyseget folytato jovedelem-hozzarendelesi
                 szervezet
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p1dcdm62sr5:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. A Spanyolorszagban alapitott,
+                gazdasagi tevekenyseget folytato jovedelem-hozzarendelesi szervezet
+                formaja.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 A Spanyolorszagban alapitott, gazdasagi tevekenyseget folytato jovedelem-hozzarendelesi
                 szervezet formaja
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. Spanyolorszagban alapitott,
+                gazdasagi tevekenyseget nem folytato jovedelem-hozzarendelesi szervezet.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 Spanyolorszagban alapitott, gazdasagi tevekenyseget nem folytato jovedelem-hozzarendelesi
                 szervezet
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p1dcdm62sr5:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. A Spanyolorszagban alapitott,
+                gazdasagi tevekenyseget nem folytato jovedelem-hozzarendelesi szervezet
+                formaja.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 A Spanyolorszagban alapitott, gazdasagi tevekenyseget nem folytato
                 jovedelem-hozzarendelesi szervezet formaja
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. Kulfoldon alapitott, Spanyolorszagban
+                jelenlettel biro jovedelem-hozzarendelesi szervezet.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 Kulfoldon alapitott, Spanyolorszagban jelenlettel biro jovedelem-hozzarendelesi
                 szervezet
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2bb3dhgn6p8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. A kulfoldon alapitott, Spanyolorszagban
+                jelenlettel biro jovedelem-hozzarendelesi szervezet formaja.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 A kulfoldon alapitott, Spanyolorszagban jelenlettel biro jovedelem-hozzarendelesi
                 szervezet formaja
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. Kulfoldon alapitott, Spanyolorszagban
+                jelenlettel nem biro jovedelem-hozzarendelesi szervezet.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 Kulfoldon alapitott, Spanyolorszagban jelenlettel nem biro jovedelem-hozzarendelesi
                 szervezet
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2bb3dhgn6p8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. A kulfoldon alapitott, Spanyolorszagban
+                jelenlettel nem biro jovedelem-hozzarendelesi szervezet formaja.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 A kulfoldon alapitott, Spanyolorszagban jelenlettel nem biro jovedelem-hozzarendelesi
                 szervezet formaja
             x-e1l2ss3aelp2qpbj5lo6asjjdtn62bbaelp6ip39cdgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. Jogi szemely.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 Jogi szemely
             x-e1l2ss3aelp2qpjfe9mm2bbaelp6ip39cdgg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. Jogi forma.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 Jogi forma
             x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. Egyeb szervezetek.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 Egyeb szervezetek
             x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6bb3dhgn6p8:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. Egyeb szervezetek. Szervezeti
+                forma.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 Egyeb szervezetek. Szervezeti forma
             x-e1l2ss3aelp2qt39cln6abbgclp76rrec5m6ip31cgmmktbid5i6ior1:
+              help: 'A 036-es modelo adata, 2025. adóév: Jogi szemely vagy szervezet.
+                Jogi szemelyiseg es szervezeti forma. Jogi szemelyiseggel rendelkezik.'
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 Jogi szemelyiseggel rendelkezik
             x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
@@ -1482,155 +2522,276 @@ modelo:
               help: null
               label: A kepviseleti jogcim kodja (masodik kepviselo, 3.2 blokk)
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmo:
+              help: 'A 036-es modelo adata, 2025. adóév: Adoraktari kitarolok nyilvantartasa.
+                Kerelem az alkohol es szarmazekos italok jovedeki adoja ala tartozo
+                termekekre.'
               label: Adoraktari kitarolok nyilvantartasa. Kerelem az alkohol es szarmazekos
                 italok jovedeki adoja ala tartozo termekekre
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmobb6clhmgo8:
+              help: 'A 036-es modelo adata, 2025. adóév: Adoraktari kitarolok nyilvantartasa.
+                Az alkoholra es szarmazekos italokra vonatkozo kerelem datuma.'
               label: Adoraktari kitarolok nyilvantartasa. Az alkoholra es szarmazekos
                 italokra vonatkozo kerelem datuma
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uso:
+              help: 'A 036-es modelo adata, 2025. adóév: Adoraktari kitarolok nyilvantartasa.
+                Kerelem a szenhidrogenek jovedeki adoja ala tartozo termekekre.'
               label: Adoraktari kitarolok nyilvantartasa. Kerelem a szenhidrogenek
                 jovedeki adoja ala tartozo termekekre
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uspdcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Adoraktari kitarolok nyilvantartasa.
+                A szenhidrogenekre vonatkozo kerelem datuma.'
               label: Adoraktari kitarolok nyilvantartasa. A szenhidrogenekre vonatkozo
                 kerelem datuma
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jovedeki adok. Koteles onadozast
+                benyujtani a villamosenergia-ado tekinteteben.'
               label: Jovedeki adok. Koteles onadozast benyujtani a villamosenergia-ado
                 tekinteteben
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cgmmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Jovedeki adok. Datum. Koteles
+                onadozast benyujtani a villamosenergia-ado tekinteteben.'
               label: Jovedeki adok. Datum. Koteles onadozast benyujtani a villamosenergia-ado
                 tekinteteben
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m0:
+              help: 'A 036-es modelo adata, 2025. adóév: Jovedeki adok. Kotelezettseg
+                a telephelyek bejegyzesere a kezelo hivatal teruleti nyilvantartasaba.'
               label: Jovedeki adok. Kotelezettseg a telephelyek bejegyzesere a kezelo
                 hivatal teruleti nyilvantartasaba
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m2qpj5cdk62:
+              help: 'A 036-es modelo adata, 2025. adóév: Jovedeki adok. Datum. Kotelezettseg
+                a telephelyek bejegyzesere a kezelo hivatal teruleti nyilvantartasaba.'
               label: Jovedeki adok. Datum. Kotelezettseg a telephelyek bejegyzesere
                 a kezelo hivatal teruleti nyilvantartasaba
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uso:
+              help: 'A 036-es modelo adata, 2025. adóév: Jovedeki adok. Kotelezettseg
+                a biztositasi dijak kulonadojanak bevallasara.'
               label: Jovedeki adok. Kotelezettseg a biztositasi dijak kulonadojanak
                 bevallasara
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uspdcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Jovedeki adok. Datum. Kotelezettseg
+                a biztositasi dijak kulonadojanak bevallasara.'
               label: Jovedeki adok. Datum. Kotelezettseg a biztositasi dijak kulonadojanak
                 bevallasara
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre:
+              help: 'A 036-es modelo adata, 2025. adóév: Jovedeki adok. Koteles benyujtani
+                a szenado eves osszefoglalo bevallasat.'
               label: Jovedeki adok. Koteles benyujtani a szenado eves osszefoglalo
                 bevallasat
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre5lj6aor8c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Jovedeki adok. Datum. Koteles
+                benyujtani a szenado eves osszefoglalo bevallasat.'
               label: Jovedeki adok. Datum. Koteles benyujtani a szenado eves osszefoglalo
                 bevallasat
             x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpddto66qbfdomn4pb7d5mmarhdctimspbic5m0:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Kozossegen beluli beszerzesek.
+                Az altalanos AFA-rendszer valasztasa, adokoteles vagy nem adokoteles.'
               label: AFA. Kozossegen beluli beszerzesek. Az altalanos AFA-rendszer
                 valasztasa, adokoteles vagy nem adokoteles
             x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpdelmm4sj1dgmj2c1g60o0:
+              help: 'A 036-es modelo adata, 2025. adóév: AFA. Kozossegen beluli beszerzesek.
+                Meghaladta a 10 000 euros kuszoberteket.'
               label: AFA. Kozossegen beluli beszerzesek. Meghaladta a 10 000 euros
                 kuszoberteket
             x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi:
+              help: 'A 036-es modelo adata, 2025. adóév: Kornyezetvedelmi adok. Bevallasbenyujtasi
+                kotelezettseg.'
               label: Kornyezetvedelmi adok. Bevallasbenyujtasi kotelezettseg
             x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi5lj6aor8c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Kornyezetvedelmi adok. A
+                bevallasbenyujtasi kotelezettseg datuma.'
               label: Kornyezetvedelmi adok. A bevallasbenyujtasi kotelezettseg datuma
             x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ec:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. Levonasi vagy szamlara torteno befizetesi kotelezettseg:
+                szakmai tevekenysegbol szarmazo jovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
                 torteno befizetesi kotelezettseg: szakmai tevekenysegbol szarmazo
                 jovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ecmmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. A kotelezettseg datuma: szakmai tevekenysegbol szarmazo
+                jovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
                 szakmai tevekenysegbol szarmazo jovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78ro:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. Levonasi vagy szamlara torteno befizetesi kotelezettseg:
+                berbeadasbol vagy albérletbol szarmazo jovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
                 torteno befizetesi kotelezettseg: berbeadasbol vagy albérletbol szarmazo
                 jovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78rpdcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. A kotelezettseg datuma: berbeadasbol vagy albérletbol
+                szarmazo jovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
                 berbeadasbol vagy albérletbol szarmazo jovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. Levonasi vagy szamlara torteno befizetesi kotelezettseg:
+                ellenszolgaltatasbol szarmazo tokejovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
                 torteno befizetesi kotelezettseg: ellenszolgaltatasbol szarmazo tokejovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdommcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. A kotelezettseg datuma: ellenszolgaltatasbol szarmazo
+                tokejovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
                 ellenszolgaltatasbol szarmazo tokejovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ec:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. Levonasi vagy szamlara torteno befizetesi kotelezettseg:
+                ugyletekbol szarmazo tokejovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
                 torteno befizetesi kotelezettseg: ugyletekbol szarmazo tokejovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ecmmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. A kotelezettseg datuma: ugyletekbol szarmazo tokejovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
                 ugyletekbol szarmazo tokejovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. Levonasi vagy szamlara torteno befizetesi kotelezettseg:
+                egyeb tokejovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
                 torteno befizetesi kotelezettseg: egyeb tokejovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj5lj6aor8c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. A kotelezettseg datuma: egyeb tokejovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
                 egyeb tokejovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. Levonasi vagy szamlara torteno befizetesi kotelezettseg:
+                atruhazasbol szarmazo tokejovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
                 torteno befizetesi kotelezettseg: atruhazasbol szarmazo tokejovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdommcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. A kotelezettseg datuma: atruhazasbol szarmazo tokejovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
                 atruhazasbol szarmazo tokejovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m0:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. Levonasi vagy szamlara torteno befizetesi kotelezettseg:
+                munkaviszonybol szarmazo jovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
                 torteno befizetesi kotelezettseg: munkaviszonybol szarmazo jovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m2qpj5cdk62:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. A kotelezettseg datuma: munkaviszonybol szarmazo jovedelem.'
               label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
                 munkaviszonybol szarmazo jovedelem'
             x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ec:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. Levonasi vagy szamlara torteno befizetesi kotelezettseg:
+                reszvenyek vagy reszesedesek atruhazasa vagy visszavaltasa.'
               label: 'Levonasok es szamlara torteno befizetesek. Levonasi vagy szamlara
                 torteno befizetesi kotelezettseg: reszvenyek vagy reszesedesek atruhazasa
                 vagy visszavaltasa'
             x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ecmmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Levonasok es szamlara torteno
+                befizetesek. A kotelezettseg datuma: reszvenyek vagy reszesedesek
+                atruhazasa vagy visszavaltasa.'
               label: 'Levonasok es szamlara torteno befizetesek. A kotelezettseg datuma:
                 reszvenyek vagy reszesedesek atruhazasa vagy visszavaltasa'
             x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p0:
+              help: 'A 036-es modelo adata, 2025. adóév: Egyes digitalis szolgaltatasok
+                adoja. Onadozas benyujtasara koteles.'
               label: Egyes digitalis szolgaltatasok adoja. Onadozas benyujtasara koteles
             x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p2qpj5cdk62:
+              help: 'A 036-es modelo adata, 2025. adóév: Egyes digitalis szolgaltatasok
+                adoja. Az onadozasi kotelezettseg datuma.'
               label: Egyes digitalis szolgaltatasok adoja. Az onadozasi kotelezettseg
                 datuma
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dchin6t39dpng:
+              help: 'A 036-es modelo adata, 2025. adóév: Tavkozlesi, musorszolgaltatasi
+                es elektronikus szolgaltatasok (70.Uno.4.a cikk). Rendeltetesi hely
+                szerinti adozas.'
               label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
                 (70.Uno.4.a cikk). Rendeltetesi hely szerinti adozas
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Tavkozlesi, musorszolgaltatasi
+                es elektronikus szolgaltatasok (70.Uno.4.a cikk). Datum.'
               label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
                 (70.Uno.4.a cikk). Datum
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1de9incrr3c5hmirre:
+              help: 'A 036-es modelo adata, 2025. adóév: Tavkozlesi, musorszolgaltatasi
+                es elektronikus szolgaltatasok (70.Uno.4.a cikk). Visszavonas.'
               label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
                 (70.Uno.4.a cikk). Visszavonas
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1delmm4sj1dgmj2c1g60o0:
+              help: 'A 036-es modelo adata, 2025. adóév: Tavkozlesi, musorszolgaltatasi
+                es elektronikus szolgaltatasok (70.Uno.4.a cikk). Meghaladta a 10
+                000 euros kuszoberteket.'
               label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
                 (70.Uno.4.a cikk). Meghaladta a 10 000 euros kuszoberteket
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dchin6t39dpng:
+              help: 'A 036-es modelo adata, 2025. adóév: Tavkozlesi, musorszolgaltatasi
+                es elektronikus szolgaltatasok (70.Uno.8 cikk). Rendeltetesi hely
+                szerinti adozas.'
               label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
                 (70.Uno.8 cikk). Rendeltetesi hely szerinti adozas
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Tavkozlesi, musorszolgaltatasi
+                es elektronikus szolgaltatasok (70.Uno.8 cikk). Datum.'
               label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
                 (70.Uno.8 cikk). Datum
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1de9incrr3c5hmirre:
+              help: 'A 036-es modelo adata, 2025. adóév: Tavkozlesi, musorszolgaltatasi
+                es elektronikus szolgaltatasok (70.Uno.8 cikk). Visszavonas.'
               label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
                 (70.Uno.8 cikk). Visszavonas
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
+              help: 'A 036-es modelo adata, 2025. adóév: Tavkozlesi, musorszolgaltatasi
+                es elektronikus szolgaltatasok (70.Uno.8 cikk). Meghaladta a 10 000
+                euros kuszoberteket.'
               label: Tavkozlesi, musorszolgaltatasi es elektronikus szolgaltatasok
                 (70.Uno.8 cikk). Meghaladta a 10 000 euros kuszoberteket
             x-ednm6bj3c5qn6o9dcpim6q31:
+              help: 'A 036-es modelo adata, 2025. adóév: Tagok, resztvevok vagy reszesedok.
+                A benyujtasi ok datuma.'
               label: Tagok, resztvevok vagy reszesedok. A benyujtasi ok datuma
             x-ednm6bj3c5qn6o9de1p6asr5dpq62or9dtn0:
+              help: 'A 036-es modelo adata, 2025. adóév: Tagok, resztvevok vagy reszesedok.
+                A benyujtas oka.'
               label: Tagok, resztvevok vagy reszesedok. A benyujtas oka
             x-ednm6bj3elnn8o9dc5q74qb2elhmirre:
+              help: 'A 036-es modelo adata, 2025. adóév: Tagok, resztvevok vagy reszesedok.
+                Hozzarendelesi hanyad vagy szazalek.'
               label: Tagok, resztvevok vagy reszesedok. Hozzarendelesi hanyad vagy
                 szazalek
             x-ednm6bj3elnn8o9de1gn4t39cdkn0ob3d5nms:
+              help: 'A 036-es modelo adata, 2025. adóév: Tagok, resztvevok vagy reszesedok.
+                Reszesedesi hanyad vagy szazalek.'
               label: Tagok, resztvevok vagy reszesedok. Reszesedesi hanyad vagy szazalek
             x-ednm6bj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              help: 'A 036-es modelo adata, 2025. adóév: Tagok, resztvevok vagy reszesedok.
+                IRPF, egyszerusitett kozvetlen megallapitas: lemondas vagy visszavonas.'
               label: 'Tagok, resztvevok vagy reszesedok. IRPF, egyszerusitett kozvetlen
                 megallapitas: lemondas vagy visszavonas'
             x-ednm6bj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              help: 'A 036-es modelo adata, 2025. adóév: Tagok, resztvevok vagy reszesedok.
+                IRPF, objektiv megallapitas: lemondas vagy visszavonas.'
               label: 'Tagok, resztvevok vagy reszesedok. IRPF, objektiv megallapitas:
                 lemondas vagy visszavonas'
             x-ednm6bj9epgiqsj5c5jn0:
+              help: 'A 036-es modelo adata, 2025. adóév: Tagok, resztvevok vagy reszesedok.
+                AFA, mezogazdasagi kulonleges rendszer: lemondas vagy visszavonas.'
               label: 'Tagok, resztvevok vagy reszesedok. AFA, mezogazdasagi kulonleges
                 rendszer: lemondas vagy visszavonas'
             x-ednm6bj9epgiqsj5ctkmqpbe5lpmirbgdhkmcqb3c5i6u:
+              help: 'A 036-es modelo adata, 2025. adóév: Tagok, resztvevok vagy reszesedok.
+                AFA, egyszerusitett rendszer: lemondas vagy visszavonas.'
               label: 'Tagok, resztvevok vagy reszesedok. AFA, egyszerusitett rendszer:
                 lemondas vagy visszavonas'
             x-ednm6bjed5j0:
+              help: 'A 036-es modelo adata, 2025. adóév: Tagok, resztvevok vagy reszesedok.
+                Adoazonosito szam (NIF).'
               label: Tagok, resztvevok vagy reszesedok. Adoazonosito szam (NIF)
             x-ednm6bjedtmm4sj55lp62ujfdomn6rr3d5gmo:
+              help: 'A 036-es modelo adata, 2025. adóév: Tagok, resztvevok vagy reszesedok.
+                Vezetek- es keresztnev vagy cegnev.'
               label: Tagok, resztvevok vagy reszesedok. Vezetek- es keresztnev vagy
                 cegnev
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
@@ -1730,152 +2891,264 @@ modelo:
               label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
                 oroklesi szazaleka (13f jogutod)
             x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                benyujtasi ok datuma, 14a tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. A benyujtasi ok datuma, 14a tenyleges
                 tulajdonos
             x-ehkn8bj15lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                benyujtas oka, 14a tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. A benyujtas oka, 14a tenyleges tulajdonos
             x-ehkn8bj15lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Szuletesi
+                datum, 14a tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Szuletesi datum, 14a tenyleges tulajdonos
             x-ehkn8bj15lkm8pbeehkmcqb3c5hmirre:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Adoazonosito
+                szam vagy kulfoldi azonosito kod, 14a tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Adoazonosito szam vagy kulfoldi azonosito
                 kod, 14a tenyleges tulajdonos
             x-ehkn8bj15ln62or9dtn62r39chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Allampolgarsag,
+                14a tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Allampolgarsag, 14a tenyleges tulajdonos
             x-ehkn8bj15ln6urb2e9ig:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Vezetek-
+                es keresztnev, 14a tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Vezetek- es keresztnev, 14a tenyleges
                 tulajdonos
             x-ehkn8bj15lo62qbj5lings35chkm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                azonosito okmany kiallito orszaga, 14a tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az azonosito okmany kiallito orszaga,
                 14a tenyleges tulajdonos
             x-ehkn8bj15lo62qbj5lp6asr9chimsor9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                illetoseg szerinti orszag, 14a tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az illetoseg szerinti orszag, 14a tenyleges
                 tulajdonos
             x-ehkn8bj15lq6is3f5li6uorldlimst3f:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                azonosito okmany tipusa, 14a tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az azonosito okmany tipusa, 14a tenyleges
                 tulajdonos
             x-ehkn8bj25lhm2tbjc4mmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                benyujtasi ok datuma, 14b tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. A benyujtasi ok datuma, 14b tenyleges
                 tulajdonos
             x-ehkn8bj25lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                benyujtas oka, 14b tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. A benyujtas oka, 14b tenyleges tulajdonos
             x-ehkn8bj25lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Szuletesi
+                datum, 14b tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Szuletesi datum, 14b tenyleges tulajdonos
             x-ehkn8bj25lkm8pbeehkmcqb3c5hmirre:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Adoazonosito
+                szam vagy kulfoldi azonosito kod, 14b tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Adoazonosito szam vagy kulfoldi azonosito
                 kod, 14b tenyleges tulajdonos
             x-ehkn8bj25ln62or9dtn62r39chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Allampolgarsag,
+                14b tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Allampolgarsag, 14b tenyleges tulajdonos
             x-ehkn8bj25ln6urb2e9ig:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Vezetek-
+                es keresztnev, 14b tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Vezetek- es keresztnev, 14b tenyleges
                 tulajdonos
             x-ehkn8bj25lo62qbj5lings35chkm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                azonosito okmany kiallito orszaga, 14b tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az azonosito okmany kiallito orszaga,
                 14b tenyleges tulajdonos
             x-ehkn8bj25lo62qbj5lp6asr9chimsor9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                illetoseg szerinti orszag, 14b tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az illetoseg szerinti orszag, 14b tenyleges
                 tulajdonos
             x-ehkn8bj25lq6is3f5li6uorldlimst3f:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                azonosito okmany tipusa, 14b tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az azonosito okmany tipusa, 14b tenyleges
                 tulajdonos
             x-ehkn8bj35lhm2tbjc4mmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                benyujtasi ok datuma, 14c tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. A benyujtasi ok datuma, 14c tenyleges
                 tulajdonos
             x-ehkn8bj35lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                benyujtas oka, 14c tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. A benyujtas oka, 14c tenyleges tulajdonos
             x-ehkn8bj35lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Szuletesi
+                datum, 14c tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Szuletesi datum, 14c tenyleges tulajdonos
             x-ehkn8bj35lkm8pbeehkmcqb3c5hmirre:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Adoazonosito
+                szam vagy kulfoldi azonosito kod, 14c tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Adoazonosito szam vagy kulfoldi azonosito
                 kod, 14c tenyleges tulajdonos
             x-ehkn8bj35ln62or9dtn62r39chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Allampolgarsag,
+                14c tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Allampolgarsag, 14c tenyleges tulajdonos
             x-ehkn8bj35ln6urb2e9ig:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Vezetek-
+                es keresztnev, 14c tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Vezetek- es keresztnev, 14c tenyleges
                 tulajdonos
             x-ehkn8bj35lo62qbj5lings35chkm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                azonosito okmany kiallito orszaga, 14c tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az azonosito okmany kiallito orszaga,
                 14c tenyleges tulajdonos
             x-ehkn8bj35lo62qbj5lp6asr9chimsor9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                illetoseg szerinti orszag, 14c tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az illetoseg szerinti orszag, 14c tenyleges
                 tulajdonos
             x-ehkn8bj35lq6is3f5li6uorldlimst3f:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                azonosito okmany tipusa, 14c tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az azonosito okmany tipusa, 14c tenyleges
                 tulajdonos
             x-ehkn8bj45lhm2tbjc4mmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                benyujtasi ok datuma, 14d tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. A benyujtasi ok datuma, 14d tenyleges
                 tulajdonos
             x-ehkn8bj45lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                benyujtas oka, 14d tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. A benyujtas oka, 14d tenyleges tulajdonos
             x-ehkn8bj45lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Szuletesi
+                datum, 14d tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Szuletesi datum, 14d tenyleges tulajdonos
             x-ehkn8bj45lkm8pbeehkmcqb3c5hmirre:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Adoazonosito
+                szam vagy kulfoldi azonosito kod, 14d tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Adoazonosito szam vagy kulfoldi azonosito
                 kod, 14d tenyleges tulajdonos
             x-ehkn8bj45ln62or9dtn62r39chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Allampolgarsag,
+                14d tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Allampolgarsag, 14d tenyleges tulajdonos
             x-ehkn8bj45ln6urb2e9ig:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Vezetek-
+                es keresztnev, 14d tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Vezetek- es keresztnev, 14d tenyleges
                 tulajdonos
             x-ehkn8bj45lo62qbj5lings35chkm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                azonosito okmany kiallito orszaga, 14d tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az azonosito okmany kiallito orszaga,
                 14d tenyleges tulajdonos
             x-ehkn8bj45lo62qbj5lp6asr9chimsor9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                illetoseg szerinti orszag, 14d tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az illetoseg szerinti orszag, 14d tenyleges
                 tulajdonos
             x-ehkn8bj45lq6is3f5li6uorldlimst3f:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                azonosito okmany tipusa, 14d tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az azonosito okmany tipusa, 14d tenyleges
                 tulajdonos
             x-ehkn8bj4clhmoobic5hmirre5ln6ubbmc5p6iob3d5nms:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Nyilatkozat
+                az adatok valtozatlansagarol.'
               label: Tenyleges tulajdonosok. Nyilatkozat az adatok valtozatlansagarol
             x-ehkn8bj55lhm2tbjc4mmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                benyujtasi ok datuma, 14e tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. A benyujtasi ok datuma, 14e tenyleges
                 tulajdonos
             x-ehkn8bj55lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                benyujtas oka, 14e tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. A benyujtas oka, 14e tenyleges tulajdonos
             x-ehkn8bj55lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Szuletesi
+                datum, 14e tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Szuletesi datum, 14e tenyleges tulajdonos
             x-ehkn8bj55lkm8pbeehkmcqb3c5hmirre:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Adoazonosito
+                szam vagy kulfoldi azonosito kod, 14e tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Adoazonosito szam vagy kulfoldi azonosito
                 kod, 14e tenyleges tulajdonos
             x-ehkn8bj55ln62or9dtn62r39chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Allampolgarsag,
+                14e tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Allampolgarsag, 14e tenyleges tulajdonos
             x-ehkn8bj55ln6urb2e9ig:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Vezetek-
+                es keresztnev, 14e tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Vezetek- es keresztnev, 14e tenyleges
                 tulajdonos
             x-ehkn8bj55lo62qbj5lings35chkm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                azonosito okmany kiallito orszaga, 14e tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az azonosito okmany kiallito orszaga,
                 14e tenyleges tulajdonos
             x-ehkn8bj55lo62qbj5lp6asr9chimsor9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                illetoseg szerinti orszag, 14e tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az illetoseg szerinti orszag, 14e tenyleges
                 tulajdonos
             x-ehkn8bj55lq6is3f5li6uorldlimst3f:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                azonosito okmany tipusa, 14e tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az azonosito okmany tipusa, 14e tenyleges
                 tulajdonos
             x-ehkn8bj65lhm2tbjc4mmcpb3d1gg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                benyujtasi ok datuma, 14f tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. A benyujtasi ok datuma, 14f tenyleges
                 tulajdonos
             x-ehkn8bj65lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                benyujtas oka, 14f tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. A benyujtas oka, 14f tenyleges tulajdonos
             x-ehkn8bj65lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Szuletesi
+                datum, 14f tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Szuletesi datum, 14f tenyleges tulajdonos
             x-ehkn8bj65lkm8pbeehkmcqb3c5hmirre:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Adoazonosito
+                szam vagy kulfoldi azonosito kod, 14f tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Adoazonosito szam vagy kulfoldi azonosito
                 kod, 14f tenyleges tulajdonos
             x-ehkn8bj65ln62or9dtn62r39chgm8:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Allampolgarsag,
+                14f tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Allampolgarsag, 14f tenyleges tulajdonos
             x-ehkn8bj65ln6urb2e9ig:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Vezetek-
+                es keresztnev, 14f tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Vezetek- es keresztnev, 14f tenyleges
                 tulajdonos
             x-ehkn8bj65lo62qbj5lings35chkm6qbfdo:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                azonosito okmany kiallito orszaga, 14f tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az azonosito okmany kiallito orszaga,
                 14f tenyleges tulajdonos
             x-ehkn8bj65lo62qbj5lp6asr9chimsor9c4:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                illetoseg szerinti orszag, 14f tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az illetoseg szerinti orszag, 14f tenyleges
                 tulajdonos
             x-ehkn8bj65lq6is3f5li6uorldlimst3f:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. Az
+                azonosito okmany tipusa, 14f tenyleges tulajdonos.'
               label: Tenyleges tulajdonosok. Az azonosito okmany tipusa, 14f tenyleges
                 tulajdonos
             x-ehkn8bjjd5n2qrr2dhkmeob3d5nmsbb9chimst39cpkm6obi:
+              help: 'A 036-es modelo adata, 2025. adóév: Tenyleges tulajdonosok. A
+                tenyleges tulajdonos azonositasara nem koteles szervezet.'
               label: Tenyleges tulajdonosok. A tenyleges tulajdonos azonositasara
                 nem koteles szervezet
           construct:

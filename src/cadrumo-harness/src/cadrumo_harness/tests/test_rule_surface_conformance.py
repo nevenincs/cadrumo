@@ -32,12 +32,12 @@ import pytest
 
 from cadrumo.application.operator_surface import (
     CommandSchemaRef,
-    build_operator_surface_manifest,
     get_operator_surface_contract,
 )
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice, SchemaEnvelope
 
 from .. import iter_operator_rules, iter_personas, iter_skill_documents
+from ..mcp._capability_manifest import build_operator_surface_manifest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

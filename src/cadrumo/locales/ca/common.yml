@@ -113,6 +113,10 @@ aggregation:
       unsupported_period: Període de model no admès per a l'agregació del llibre.
   oss_ioss:
     errors:
+      exterior_rate_kind_unsupported: El règim exterior de la finestreta única només
+        admet serveis al tipus general o reduït de l'Estat membre de consum. L'observació
+        aportada declara un altre tipus de gravamen, que no es pot agregar en aquest
+        règim.
       invoice_line_currency_unconverted: Una línia de factura OSS/IOSS està denominada
         en moneda estrangera sense tipus de canvi a euros resolt, per la qual cosa
         no es pot declarar en aquest model.
@@ -193,12 +197,37 @@ aggregation:
         tipus de font en blanc.
       owned_sources_duplicate: Les fonts propietat de la malla de fonts han de ser
         úniques.
+      provenance_binding_source_mismatch: El tipus d'origen declarat a la fila de
+        procedència no coincideix amb l'origen del vincle al qual diu pertànyer. Tots
+        dos han de nomenar el mateix origen perquè la traçabilitat sigui comprovable.
+      provenance_binding_source_missing: La fila de procedència declara un tipus d'origen
+        de vincle reconegut però no indica a quin vincle correspon. Un origen reconeixible
+        sense vincle declarat deixa el valor sense traçabilitat.
+      provenance_contributor_missing_parent: Una fila de procedència contribuent ha
+        de declarar la fila primària de la qual procedeix. Sense ella, l'aportació
+        queda deslligada del valor al qual contribueix.
+      provenance_contributor_parent_missing: Una fila contribuent assenyala com a
+        fila mare una referència que no figura entre les files primàries declarades.
+        La cadena de procedència apunta a un origen inexistent.
+      provenance_primary_has_parent: 'Una fila de procedència primària no pot declarar
+        una fila mare: la fila primària és l''origen del qual depenen les altres.'
+      provenance_primary_ref_ambiguous: Dues files de procedència primàries comparteixen
+        la mateixa referència d'origen, de manera que una fila contribuent no pot
+        determinar de quina procedeix.
+      provenance_resolver_mismatch: Alguna fila de procedència nomena un resolutor
+        diferent del que va produir la resolució. Totes les files s'han d'atribuir
+        al mateix resolutor que signa el resultat.
       relation_provenance_incomplete: La procedència de la relació ha d'incloure model
         d'origen, exercici, períodes, caselles, referències legals i referències d'origen.
+      reserved_composite_resolver_id: L'identificador de resolutor indicat està reservat
+        per a les resolucions compostes i no es pot fer servir en una resolució simple.
       row_binding_index_invalid: 'Error intern: l''índex de fila de la vinculació
         ha de ser 1 o superior.'
       row_binding_value_invalid: 'Error intern: el valor decimal de la vinculació
         de fila no és vàlid.'
+      row_source_identity_coordinate_mismatch: Tota coordenada d'identitat de fila
+        ha de correspondre a un valor de vincle present a la mateixa fila. S'ha declarat
+        una coordenada que la fila no aporta.
       source_transaction_ids_blank: Els identificadors de transacció de la malla de
         fonts no poden contenir blancs.
       source_transaction_ids_duplicate: Els identificadors de transacció de la malla

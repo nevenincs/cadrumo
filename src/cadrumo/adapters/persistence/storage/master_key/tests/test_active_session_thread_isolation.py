@@ -6,7 +6,7 @@ column-level encrypt path cannot be handed a session reference, so it reads
 one from a ``ContextVar``. If that lookup were process-wide rather than
 per-context, any thread in a long-lived process would decrypt with whichever
 profile's key happened to be bound last. Both long-lived hosts here run worker
-threads: the MCP transport and the TUI screens.
+threads: an embedding transport and the TUI screens.
 
 PEP 567 gives the isolation, so this file does not test ``contextvars``. It
 tests that this substrate has not opted out of it -- with a plain ``.set()``

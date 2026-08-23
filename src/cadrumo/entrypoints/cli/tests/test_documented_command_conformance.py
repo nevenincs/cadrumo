@@ -3,8 +3,8 @@
 ``aeat`` is the sole human CLI executable (the ``cadrumo`` package ships it as
 its one console entry point per ``aeat-naming``); every
 documented CLI invocation therefore begins with the ``aeat`` token, and this
-gate anchors on it. The package name ``cadrumo``, the ``cadrumo-mcp`` server
-executable, ``cadrumo-vault/`` storage, and ``src/cadrumo/`` paths are product
+gate anchors on it. The package name ``cadrumo``, ``cadrumo-vault/`` storage,
+and ``src/cadrumo/`` paths are product
 and package references, never ``aeat``-CLI invocations, so they are outside
 this gate's scope — treating them as CLI lines would only manufacture false
 positives from prose. (This anchor was previously swept to the bare
@@ -909,6 +909,29 @@ def test_documented_commands_conform(surface: Path) -> None:
     assert not violations, (
         f"{surface.relative_to(REPO_ROOT)} cites aeat commands that do not conform "
         f"to the live CLI:\n  " + "\n  ".join(violations)
+    )
+
+
+def test_product_docs_have_no_external_client_awareness() -> None:
+    """Product docs must never advertise or identify an external client.
+
+    External consumers do not belong to the base application's command model.
+    No user page or sequence contract may teach an ``app agent`` path or name a
+    client-specific distribution, executable, artifact, or guide.
+    """
+    forbidden = re.compile(
+        r"\bapp\s+agent\b|cadrumo-harness|cadrumo-mcp|connect-an-agent|\bmcpb\b|claude plugin",
+        re.IGNORECASE,
+    )
+    violations: list[str] = []
+    for surface in _command_surfaces():
+        text = surface.read_text(encoding="utf-8")
+        if match := forbidden.search(text):
+            line = text.count("\n", 0, match.start()) + 1
+            violations.append(f"{surface.relative_to(REPO_ROOT)}:{line}")
+    assert not violations, (
+        "the base application documentation must have no external-client "
+        "awareness; found forbidden marker(s): " + ", ".join(violations)
     )
 
 

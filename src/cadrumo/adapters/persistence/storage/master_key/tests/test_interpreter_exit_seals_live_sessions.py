@@ -5,7 +5,7 @@ at import, and that hook sweeps every live session through
 ``close_all_live_bucket_sessions``. It exists because the context-scoped close
 is not enough on its own: ``atexit`` hooks run on the MAIN thread, and by PEP
 567 semantics that thread observes no binding a worker made, so a session
-opened on an MCP transport or TUI worker thread would keep its unwrapped DEK in
+opened on an embedding transport or TUI worker thread would keep its unwrapped DEK in
 memory until the process died with it.
 
 That hook had no test. The thread-isolation module beside this one explains the

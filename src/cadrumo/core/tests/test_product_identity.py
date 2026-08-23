@@ -56,10 +56,6 @@ def test_product_identity_matches_the_accepted_external_tuple() -> None:
         distribution="cadrumo",
         cli_executable="aeat",
         repository="nevenincs/cadrumo",
-        mcp_server="cadrumo",
-        mcp_executable="cadrumo-mcp",
-        mcp_tool_prefix="cadrumo",
-        mcp_resource_scheme="cadrumo",
         plugin_identifier="cadrumo",
         environment_prefix="CADRUMO_",
         companion_distributions=("cadrumo-data-manuals", "cadrumo-data-official"),
@@ -103,9 +99,9 @@ def test_product_identity_normalizes_only_unambiguous_stale_command_prefixes() -
     """The shared normalizer preserves prose, machine identifiers, and authority names."""
     assert (
         normalise_product_identity_references(
-            "Cadrumo serves AEAT; run cadrumo app status, keep cadrumo-mcp and CADRUMO_TOKEN."
+            "Cadrumo serves AEAT; run cadrumo app status, keep cadrumo-helper and CADRUMO_TOKEN."
         )
-        == "Cadrumo serves AEAT; run aeat app status, keep cadrumo-mcp and CADRUMO_TOKEN."
+        == "Cadrumo serves AEAT; run aeat app status, keep cadrumo-helper and CADRUMO_TOKEN."
     )
 
 

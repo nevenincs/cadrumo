@@ -8,201 +8,384 @@ modelo:
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:
+              help: 'Modelo 036 entry, tax year 2025: Activity. Description of the
+                activity.'
               label: Activity. Description of the activity
             x-c5hn8bj1cdq6itj9chgm8bb9c5iiqsr5cdhmirre5ljn4tbgds:
+              help: 'Modelo 036 entry, tax year 2025: Activity. I.A.E. section and
+                group or heading.'
               label: Activity. I.A.E. section and group or heading
             x-c5hn8bj1cdq6itj9chgm8bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Activity. Type of activity.'
               label: Activity. Type of activity
             x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmm8qbiclhn8rpd64:
+              help: 'Modelo 036 entry, tax year 2025: Cadastral reference indicators.
+                Indicator for the first directly affected premises.'
               label: Cadastral reference indicators. Indicator for the first directly
                 affected premises
             x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmm8qbiclhn8rpd68:
+              help: 'Modelo 036 entry, tax year 2025: Cadastral reference indicators.
+                Indicator for the second directly affected premises.'
               label: Cadastral reference indicators. Indicator for the second directly
                 affected premises
             x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmmirj4d5p6aorkdsmj2:
+              help: 'Modelo 036 entry, tax year 2025: Cadastral reference indicators.
+                Indicator for the first indirectly affected premises.'
               label: Cadastral reference indicators. Indicator for the first indirectly
                 affected premises
             x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmmirj4d5p6aorkdsmj4:
+              help: 'Modelo 036 entry, tax year 2025: Cadastral reference indicators.
+                Indicator for the second indirectly affected premises.'
               label: Cadastral reference indicators. Indicator for the second indirectly
                 affected premises
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc5m78o8:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Registration.'
               label: Directly affected premises (first). Registration
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc5m78o9dcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Date of registration.'
               label: Directly affected premises (first). Date of registration
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc9gmko8:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Deregistration.'
               label: Directly affected premises (first). Deregistration
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc9gmko9dcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Date of deregistration.'
               label: Directly affected premises (first). Date of deregistration
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0rrjehgmo:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Postal code.'
               label: Directly affected premises (first). Postal code
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0sjfepkmsor9c4:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Province code.'
               label: Directly affected premises (first). Province code
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dctp62p3f5lgmcpb3ehgm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Degree of allocation to the activity.'
               label: Directly affected premises (first). Degree of allocation to the
                 activity
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddlqmsqb3d5o6iro:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Municipality.'
               label: Directly affected premises (first). Municipality
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpnmqojickmncqb1:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Street name.'
               label: Directly affected premises (first). Street name
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbids:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Number.'
               label: Directly affected premises (first). Number
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Registration reference number.'
               label: Directly affected premises (first). Registration reference number
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1kn6ro:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Floor.'
               label: Directly affected premises (first). Floor
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1qmasjkc4:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Door.'
               label: Directly affected premises (first). Door
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Cadastral reference.'
               label: Directly affected premises (first). Cadastral reference
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dedim6or9dtn2qpric5j6ior1:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Cadastral graphic section.'
               label: Directly affected premises (first). Cadastral graphic section
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dedqn0pbicpkm6qb5:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Floor area in square metres.'
               label: Directly affected premises (first). Floor area in square metres
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurg:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Change.'
               label: Directly affected premises (first). Change
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhdcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Date of change.'
               label: Directly affected premises (first). Date of change
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (first).
+                Reference number of the change.'
               label: Directly affected premises (first). Reference number of the change
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o8:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Registration.'
               label: Directly affected premises (second). Registration
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o9dcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Date of registration.'
               label: Directly affected premises (second). Date of registration
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc9gmko8:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Deregistration.'
               label: Directly affected premises (second). Deregistration
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc9gmko9dcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Date of deregistration.'
               label: Directly affected premises (second). Date of deregistration
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0rrjehgmo:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Postal code.'
               label: Directly affected premises (second). Postal code
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0sjfepkmsor9c4:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Province code.'
               label: Directly affected premises (second). Province code
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdctp62p3f5lgmcpb3ehgm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Degree of allocation to the activity.'
               label: Directly affected premises (second). Degree of allocation to
                 the activity
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddlqmsqb3d5o6iro:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Municipality.'
               label: Directly affected premises (second). Municipality
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpnmqojickmncqb1:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Street name.'
               label: Directly affected premises (second). Street name
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbids:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Number.'
               label: Directly affected premises (second). Number
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Registration reference number.'
               label: Directly affected premises (second). Registration reference number
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1kn6ro:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Floor.'
               label: Directly affected premises (second). Floor
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1qmasjkc4:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Door.'
               label: Directly affected premises (second). Door
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Cadastral reference.'
               label: Directly affected premises (second). Cadastral reference
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdedim6or9dtn2qpric5j6ior1:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Cadastral graphic section.'
               label: Directly affected premises (second). Cadastral graphic section
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdedqn0pbicpkm6qb5:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Floor area in square metres.'
               label: Directly affected premises (second). Floor area in square metres
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurg:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Change.'
               label: Directly affected premises (second). Change
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhdcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Date of change.'
               label: Directly affected premises (second). Date of change
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
+              help: 'Modelo 036 entry, tax year 2025: Directly affected premises (second).
+                Reference number of the change.'
               label: Directly affected premises (second). Reference number of the
                 change
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Registration.'
               label: Indirectly affected premises (first). Registration
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4mmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Date of registration.'
               label: Indirectly affected premises (first). Date of registration
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm4obac4:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Deregistration.'
               label: Indirectly affected premises (first). Deregistration
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm4obac4mmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Date of deregistration.'
               label: Indirectly affected premises (first). Date of deregistration
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbgdtpn8obc:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Postal code.'
               label: Indirectly affected premises (first). Postal code
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbge9nncqbecdkm2:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Province code.'
               label: Indirectly affected premises (first). Province code
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmesj1chniqob6clhn8ob3d5nms:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Degree of allocation to the activity.'
               label: Indirectly affected premises (first). Degree of allocation to
                 the activity
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmqtbed5hmis39ds:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Municipality.'
               label: Indirectly affected premises (first). Municipality
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmsrrdc9p6abbmd5gg:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Street name.'
               label: Indirectly affected premises (first). Street name
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6u:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Number.'
               label: Indirectly affected premises (first). Number
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Registration reference number.'
               label: Indirectly affected premises (first). Registration reference
                 number
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0qbjds:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Floor.'
               label: Indirectly affected premises (first). Floor
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0tb5e9q62:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Door.'
               label: Indirectly affected premises (first). Door
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn4pb6clp6arj3d5giqor1ehgn6t3ic5m0:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Cadastral reference.'
               label: Indirectly affected premises (first). Cadastral reference
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn6pb3cdkmurhdctp62pj9cdgg:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Cadastral graphic section.'
               label: Indirectly affected premises (first). Cadastral graphic section
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn6tbgclp6cqb3d5ig:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Floor area in square metres.'
               label: Indirectly affected premises (first). Floor area in square metres
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mnasrf5li6asrkd5n6u:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Use or purpose.'
               label: Indirectly affected premises (first). Use or purpose
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Change.'
               label: Indirectly affected premises (first). Change
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Date of change.'
               label: Indirectly affected premises (first). Date of change
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (first). Reference number of the change.'
               label: Indirectly affected premises (first). Reference number of the
                 change
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Registration.'
               label: Indirectly affected premises (second). Registration
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4mmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Date of registration.'
               label: Indirectly affected premises (second). Date of registration
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm4obac4:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Deregistration.'
               label: Indirectly affected premises (second). Deregistration
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm4obac4mmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Date of deregistration.'
               label: Indirectly affected premises (second). Date of deregistration
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbgdtpn8obc:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Postal code.'
               label: Indirectly affected premises (second). Postal code
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbge9nncqbecdkm2:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Province code.'
               label: Indirectly affected premises (second). Province code
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmesj1chniqob6clhn8ob3d5nms:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Degree of allocation to the activity.'
               label: Indirectly affected premises (second). Degree of allocation to
                 the activity
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmqtbed5hmis39ds:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Municipality.'
               label: Indirectly affected premises (second). Municipality
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmsrrdc9p6abbmd5gg:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Street name.'
               label: Indirectly affected premises (second). Street name
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6u:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Number.'
               label: Indirectly affected premises (second). Number
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Registration reference number.'
               label: Indirectly affected premises (second). Registration reference
                 number
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0qbjds:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Floor.'
               label: Indirectly affected premises (second). Floor
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0tb5e9q62:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Door.'
               label: Indirectly affected premises (second). Door
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn4pb6clp6arj3d5giqor1ehgn6t3ic5m0:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Cadastral reference.'
               label: Indirectly affected premises (second). Cadastral reference
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn6pb3cdkmurhdctp62pj9cdgg:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Cadastral graphic section.'
               label: Indirectly affected premises (second). Cadastral graphic section
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn6tbgclp6cqb3d5ig:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Floor area in square metres.'
               label: Indirectly affected premises (second). Floor area in square metres
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mnasrf5li6asrkd5n6u:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Use or purpose.'
               label: Indirectly affected premises (second). Use or purpose
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Change.'
               label: Indirectly affected premises (second). Change
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Date of change.'
               label: Indirectly affected premises (second). Date of change
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
+              help: 'Modelo 036 entry, tax year 2025: Indirectly affected premises
+                (second). Reference number of the change.'
               label: Indirectly affected premises (second). Reference number of the
                 change
             x-c5hn8bjjd5n2qr3fcdgmobb1dhq62:
+              help: 'Modelo 036 entry, tax year 2025: Activity carried on outside
+                fixed premises. Registration.'
               label: Activity carried on outside fixed premises. Registration
             x-c5hn8bjjd5n2qr3fcdgmobb1dhq62bb6clhmgo8:
+              help: 'Modelo 036 entry, tax year 2025: Activity carried on outside
+                fixed premises. Date of registration.'
               label: Activity carried on outside fixed premises. Date of registration
             x-c5hn8bjjd5n2qr3fcdgmobb2c5l62:
+              help: 'Modelo 036 entry, tax year 2025: Activity carried on outside
+                fixed premises. Deregistration.'
               label: Activity carried on outside fixed premises. Deregistration
             x-c5hn8bjjd5n2qr3fcdgmobb2c5l62bb6clhmgo8:
+              help: 'Modelo 036 entry, tax year 2025: Activity carried on outside
+                fixed premises. Date of deregistration.'
               label: Activity carried on outside fixed premises. Date of deregistration
             x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:
+              help: 'Modelo 036 entry, tax year 2025: Activity carried on outside
+                fixed premises. Province code.'
               label: Activity carried on outside fixed premises. Province code
             x-c5hn8bjjd5n2qr3fcdgmobbdeln6ior9e1kmu:
+              help: 'Modelo 036 entry, tax year 2025: Activity carried on outside
+                fixed premises. Municipality.'
               label: Activity carried on outside fixed premises. Municipality
             x-c5hn8bjjd5n2qr3fcdgmobbeelmmasjf5lp6apj5e9imsor9c4:
+              help: 'Modelo 036 entry, tax year 2025: Activity carried on outside
+                fixed premises. Reference number.'
               label: Activity carried on outside fixed premises. Reference number
             x-chim6r1ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
@@ -347,1036 +530,1885 @@ modelo:
               help: null
               label: Regulation in force from 3 February 2025
             x-clo2sobmd5pmuspdc5im2t1dc5m78o8:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Registration for AEAT alerts.'
               label: Permanent establishment. Alerts. Registration for AEAT alerts
             x-clo2sobmd5pmuspdc5im2t1dc9gmko8:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Deregistration from AEAT alerts.'
               label: Permanent establishment. Alerts. Deregistration from AEAT alerts
             x-clo2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Registration in the AEAT mobile application.'
               label: Permanent establishment. Alerts. Registration in the AEAT mobile
                 application
             x-clo2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Deregistration from the AEAT mobile application.'
               label: Permanent establishment. Alerts. Deregistration from the AEAT
                 mobile application
             x-clo2sobmd5pmuspdchjn8bb1dhq62:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Registration for DGT alerts.'
               label: Permanent establishment. Alerts. Registration for DGT alerts
             x-clo2sobmd5pmuspdchjn8bb2c5l62:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Deregistration from DGT alerts.'
               label: Permanent establishment. Alerts. Deregistration from DGT alerts
             x-clo2sobmd5pmuspdclmm2qbc:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                E-mail.'
               label: Permanent establishment. Alerts. E-mail
             x-clo2sobmd5pmuspdclmm2qbc5lgmot31:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Registration or change of the alert e-mail.'
               label: Permanent establishment. Alerts. Registration or change of the
                 alert e-mail
             x-clo2sobmd5pmuspdclmm2qbc5lh62qj1:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Deregistration of the alert e-mail.'
               label: Permanent establishment. Alerts. Deregistration of the alert
                 e-mail
             x-clo2sobmd5pmuspddlnncqbc5lgmot31:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Registration or change of the mobile telephone.'
               label: Permanent establishment. Alerts. Registration or change of the
                 mobile telephone
             x-clo2sobmd5pmuspddlnncqbc5lh62qj1:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Deregistration of the mobile telephone.'
               label: Permanent establishment. Alerts. Deregistration of the mobile
                 telephone
             x-clo2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Country dialling prefix of the mobile telephone.'
               label: Permanent establishment. Alerts. Country dialling prefix of the
                 mobile telephone
             x-clo2sobmd5pmuspdehim2bb1dhq62:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Registration for TEA alerts.'
               label: Permanent establishment. Alerts. Registration for TEA alerts
             x-clo2sobmd5pmuspdehim2bb2c5l62:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Deregistration from TEA alerts.'
               label: Permanent establishment. Alerts. Deregistration from TEA alerts
             x-clo2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
+                Mobile telephone.'
               label: Permanent establishment. Alerts. Mobile telephone
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Block.'
               label: Permanent establishment. Tax address in Spain. Block
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Number qualifier.'
               label: Permanent establishment. Tax address in Spain. Number qualifier
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. INE municipality code.'
               label: Permanent establishment. Tax address in Spain. INE municipality
                 code
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Postal code.'
               label: Permanent establishment. Tax address in Spain. Postal code
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Province code.'
               label: Permanent establishment. Tax address in Spain. Province code
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. INE street code.'
               label: Permanent establishment. Tax address in Spain. INE street code
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Address complement.'
               label: Permanent establishment. Tax address in Spain. Address complement
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Stairway.'
               label: Permanent establishment. Tax address in Spain. Stairway
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Cadastral reference indicator of the tax address.'
               label: Permanent establishment. Tax address in Spain. Cadastral reference
                 indicator of the tax address
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Locality or town.'
               label: Permanent establishment. Tax address in Spain. Locality or town
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Municipality name.'
               label: Permanent establishment. Tax address in Spain. Municipality name
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Street name.'
               label: Permanent establishment. Tax address in Spain. Street name
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. House number.'
               label: Permanent establishment. Tax address in Spain. House number
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Floor.'
               label: Permanent establishment. Tax address in Spain. Floor
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Entrance.'
               label: Permanent establishment. Tax address in Spain. Entrance
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Door.'
               label: Permanent establishment. Tax address in Spain. Door
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Cadastral reference.'
               label: Permanent establishment. Tax address in Spain. Cadastral reference
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Number type.'
               label: Permanent establishment. Tax address in Spain. Number type
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Tax
+                address in Spain. Street type.'
               label: Permanent establishment. Tax address in Spain. Street type
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Acting as, for the post office box.'
               label: Permanent establishment. Address for notifications. Acting as,
                 for the post office box
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Postal code of the post office box.'
               label: Permanent establishment. Address for notifications. Postal code
                 of the post office box
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Province code of the post office box.'
               label: Permanent establishment. Address for notifications. Province
                 code of the post office box
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Post office box number.'
               label: Permanent establishment. Address for notifications. Post office
                 box number
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Addressee of the post office box, if different
+                from the filer.'
               label: Permanent establishment. Address for notifications. Addressee
                 of the post office box, if different from the filer
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Town or city of the post office box.'
               label: Permanent establishment. Address for notifications. Town or city
                 of the post office box
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Deregistration indicator of the notification address.'
               label: Permanent establishment. Address for notifications. Deregistration
                 indicator of the notification address
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Block (address 1).'
               label: Permanent establishment. Address for notifications. Block (address
                 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Acting as (address 1).'
               label: Permanent establishment. Address for notifications. Acting as
                 (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Number qualifier (address 1).'
               label: Permanent establishment. Address for notifications. Number qualifier
                 (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. INE municipality code (address 1).'
               label: Permanent establishment. Address for notifications. INE municipality
                 code (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Postal code (address 1).'
               label: Permanent establishment. Address for notifications. Postal code
                 (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Province code (address 1).'
               label: Permanent establishment. Address for notifications. Province
                 code (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. INE street code (address 1).'
               label: Permanent establishment. Address for notifications. INE street
                 code (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Address complement (address 1).'
               label: Permanent establishment. Address for notifications. Address complement
                 (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Addressee, if different from the filer (address
+                1).'
               label: Permanent establishment. Address for notifications. Addressee,
                 if different from the filer (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Stairway (address 1).'
               label: Permanent establishment. Address for notifications. Stairway
                 (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Locality or town (address 1).'
               label: Permanent establishment. Address for notifications. Locality
                 or town (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Municipality name (address 1).'
               label: Permanent establishment. Address for notifications. Municipality
                 name (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Street name (address 1).'
               label: Permanent establishment. Address for notifications. Street name
                 (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. House number (address 1).'
               label: Permanent establishment. Address for notifications. House number
                 (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Floor (address 1).'
               label: Permanent establishment. Address for notifications. Floor (address
                 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Entrance (address 1).'
               label: Permanent establishment. Address for notifications. Entrance
                 (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Door (address 1).'
               label: Permanent establishment. Address for notifications. Door (address
                 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Number type (address 1).'
               label: Permanent establishment. Address for notifications. Number type
                 (address 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Address
+                for notifications. Street type (address 1).'
               label: Permanent establishment. Address for notifications. Street type
                 (address 1)
             x-clo2sqb4cln78qb6d5hm2or9dtn2qobec5jn4obdc4:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                Logotype name.'
               label: Permanent establishment. Identification. Logotype name
             x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                Internet domain or address.'
               label: Permanent establishment. Identification. Internet domain or address
             x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                Internet domain or address (second).'
               label: Permanent establishment. Identification. Internet domain or address
                 (second)
             x-clo2sqb4cln78qb6d5hm2or9dtn2qpbj5lpnaorle9pm2r0:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                Whether it is a branch of the non-resident entity.'
               label: Permanent establishment. Identification. Whether it is a branch
                 of the non-resident entity
             x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb3dtn76t39ehqm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                Date of incorporation.'
               label: Permanent establishment. Identification. Date of incorporation
             x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb9dppm6sj9e1hmirre5lp6apr9edq74rpddlin4or1dpq6ir0:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                Date of entry in the commercial register.'
               label: Permanent establishment. Identification. Date of entry in the
                 commercial register
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhdclpn8ob4dsmn4pbjd5i6arj3d5gg:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                State of residence of the non-resident person or entity it depends
+                on.'
               label: Permanent establishment. Identification. State of residence of
                 the non-resident person or entity it depends on
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhddpkmc:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                Tax identification number of the non-resident person or entity it
+                depends on, if any.'
               label: Permanent establishment. Identification. Tax identification number
                 of the non-resident person or entity it depends on, if any
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhde9gnkrre5lpmuor9c5m0:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                Legal name of the non-resident person or entity it depends on.'
               label: Permanent establishment. Identification. Legal name of the non-resident
                 person or entity it depends on
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9co:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                Tax identification number (NIF).'
               label: Permanent establishment. Identification. Tax identification number
                 (NIF)
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                Tax identification code of the State of residence or NVAT.'
               label: Permanent establishment. Identification. Tax identification code
                 of the State of residence or NVAT
             x-clo2sqb4cln78qb6d5hm2or9dtn2qsj1f9nmsbbjdthmiobc:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                Legal name.'
               label: Permanent establishment. Identification. Legal name
             x-clo2sqb4cln78qb6d5hm2or9dtn2qt39e1niqpbjehgm4r35cdkmqqb5dpq6u:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Identification.
+                Type of permanent establishment.'
               label: Permanent establishment. Identification. Type of permanent establishment
             x-d5r62bj6c5hn8tbic5hmirre5lj62orkelp62bbgdtp2qp35edq6irj1ehgn4qbfec:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Invoicing. The obligation
+                to issue invoices is met by the recipients or by third parties.'
               label: VAT. Invoicing. The obligation to issue invoices is met by the
                 recipients or by third parties
             x-d5r62bj6c5hn8tbic5hmirre5lj62orkelp62bbgdtp2qp35edq6irj1ehgn4qbfecmmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Invoicing. Invoicing by
+                recipients or third parties. Date.'
               label: VAT. Invoicing. Invoicing by recipients or third parties. Date
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdc5i6qrre5lo7aojcd5hm2bbge9in6tbgelin6t3f:
+              help: 'Modelo 036 entry, tax year 2025: Large enterprise and public
+                administrations. Is a public administration whose last approved annual
+                budget exceeds 6 million euros.'
               label: Large enterprise and public administrations. Is a public administration
                 whose last approved annual budget exceeds 6 million euros
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdctp62rhdclmn0sj5edgg:
+              help: 'Modelo 036 entry, tax year 2025: Large enterprise and public
+                administrations. Has large-enterprise status.'
               label: Large enterprise and public administrations. Has large-enterprise
                 status
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqob4dlnmsbbgelh6oqb3c4mn0sj5edqn0tb5edq6u:
+              help: 'Modelo 036 entry, tax year 2025: Large enterprise and public
+                administrations. Date of the public-administration status with a budget
+                over 6 million euros.'
               label: Large enterprise and public administrations. Date of the public-administration
                 status with a budget over 6 million euros
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqpric5n2qpbde1p6asr1:
+              help: 'Modelo 036 entry, tax year 2025: Large enterprise and public
+                administrations. Date of large-enterprise status.'
               label: Large enterprise and public administrations. Date of large-enterprise
                 status
             x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Imports. Chartered territories.
+                Payment of import VAT. Election or waiver.'
               label: VAT. Imports. Chartered territories. Payment of import VAT. Election
                 or waiver
             x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurhdcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Imports. Chartered territories.
+                Payment of import VAT. Date.'
               label: VAT. Imports. Chartered territories. Payment of import VAT. Date
             x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Imports. Payment of import
+                VAT. Election, waiver, revocation or removal.'
               label: VAT. Imports. Payment of import VAT. Election, waiver, revocation
                 or removal
             x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurhdcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Imports. Payment of import
+                VAT. Date.'
               label: VAT. Imports. Payment of import VAT. Date
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lhmurb9cln7krpdd1gm4qbkelgmo:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Start of activity. Habitual
+                commencement of supplies of goods or services.'
               label: VAT. Start of activity. Habitual commencement of supplies of
                 goods or services
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45limst3icljm2spde1nn6t35e9kmusg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Start of activity. Supplies
+                of goods or services subsequent to the acquisition.'
               label: VAT. Start of activity. Supplies of goods or services subsequent
                 to the acquisition
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45limst3icljm2spde1p6atj9c4mmubbjd5mnar3kc5n6ao8:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Start of activity. Supplies
+                of goods or services prior to or simultaneous with the acquisition.'
               label: VAT. Start of activity. Supplies of goods or services prior to
                 or simultaneous with the acquisition
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mm6rrdd5imsujf5lk62oj9ehqm2r0:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Start of activity. Date
+                of the habitual commencement of supplies.'
               label: VAT. Start of activity. Date of the habitual commencement of
                 supplies
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mmarjke9imeobj5lo6usrkclp6irri:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Start of activity. Date
+                of the subsequent supplies.'
               label: VAT. Start of activity. Date of the subsequent supplies
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mmarjke9imeobj5lo74pbmd5giqrpdedkmqtbcehgmspb1:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Start of activity. Date
+                of the prior or simultaneous supplies.'
               label: VAT. Start of activity. Date of the prior or simultaneous supplies
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mn6pb3ehnn4bb4d5j6asj5dphmiob4ds:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Start of activity. Date
+                of the start of the activity constituting a differentiated sector.'
               label: VAT. Start of activity. Date of the start of the activity constituting
                 a differentiated sector
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lpmaorkdtp2qp39cpin4pbecdkm2p3f:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Start of activity. Start
+                of a new activity constituting a differentiated sector.'
               label: VAT. Start of activity. Start of a new activity constituting
                 a differentiated sector
             x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior1:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Record books. Keeping the
+                record books through the AEAT electronic office.'
               label: VAT. Record books. Keeping the record books through the AEAT
                 electronic office
             x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior15lj6aor8c4:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Record books. Keeping the
+                record books through the electronic office. Date.'
               label: VAT. Record books. Keeping the record books through the electronic
                 office. Date
             x-d5r62bjfc9m6ipr1cdkmurj5ecmmasrkc5h6opb3d5i6ubb5domn8ob9:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Obligations. Is established
+                in the territory where the tax applies, or has a permanent establishment
+                there.'
               label: VAT. Obligations. Is established in the territory where the tax
                 applies, or has a permanent establishment there
             x-d5r62bjfc9m6ipr1cdkmurj5ecmn4pbmcln68pb4dtp2qp39edo6usr9ehkncrrj:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Obligations. Has reseller
+                status for mobile phones, consoles, laptops and tablets.'
               label: VAT. Obligations. Has reseller status for mobile phones, consoles,
                 laptops and tablets
             x-d5r62bjfc9m6ipr1cdkmurj5ecmn6rrcdsmmus35e9gm6qbfdpin6bbjd5n2qoblehnmoqbhelkm8ob3d5nms:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Obligations. Carries out
+                only non-taxable or exempt transactions that do not require a periodic
+                self-assessment.'
               label: VAT. Obligations. Carries out only non-taxable or exempt transactions
                 that do not require a periodic self-assessment
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6abbge9nncqbjd5nmsobc:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Proposes a provisional deduction percentage.'
               label: VAT. Deductible proportion and differentiated sectors. Proposes
                 a provisional deduction percentage
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj2:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Sector I. C.N.A.E. code (first).'
               label: VAT. Deductible proportion and differentiated sectors. Sector
                 I. C.N.A.E. code (first)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj4:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Sector I. C.N.A.E. code (second).'
               label: VAT. Deductible proportion and differentiated sectors. Sector
                 I. C.N.A.E. code (second)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj6:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Sector I. C.N.A.E. code (third).'
               label: VAT. Deductible proportion and differentiated sectors. Sector
                 I. C.N.A.E. code (third)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mn0sjfe9p62t315lin6s35cdkm2r0:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Sector I. Election for the special deductible
+                proportion.'
               label: VAT. Deductible proportion and differentiated sectors. Sector
                 I. Election for the special deductible proportion
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj2:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Sector II. C.N.A.E. code (first).'
               label: VAT. Deductible proportion and differentiated sectors. Sector
                 II. C.N.A.E. code (first)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj4:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Sector II. C.N.A.E. code (second).'
               label: VAT. Deductible proportion and differentiated sectors. Sector
                 II. C.N.A.E. code (second)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj6:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Sector II. C.N.A.E. code (third).'
               label: VAT. Deductible proportion and differentiated sectors. Sector
                 II. C.N.A.E. code (third)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mn0sjfe9p62t315lin6s35cdkm2r0:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Sector II. Election for the special deductible
+                proportion.'
               label: VAT. Deductible proportion and differentiated sectors. Sector
                 II. Election for the special deductible proportion
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj2:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Sector III. C.N.A.E. code (first).'
               label: VAT. Deductible proportion and differentiated sectors. Sector
                 III. C.N.A.E. code (first)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj4:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Sector III. C.N.A.E. code (second).'
               label: VAT. Deductible proportion and differentiated sectors. Sector
                 III. C.N.A.E. code (second)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj6:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Sector III. C.N.A.E. code (third).'
               label: VAT. Deductible proportion and differentiated sectors. Sector
                 III. C.N.A.E. code (third)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmn0sjfe9p62t315lin6s35cdkm2r0:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Sector III. Election for the special deductible
+                proportion.'
               label: VAT. Deductible proportion and differentiated sectors. Sector
                 III. Election for the special deductible proportion
             x-d5r62bjge9nn4sj1ehgiqsr9domn6pb3ehnn4pbj5li6ipj5e9imsor9c5i6uso:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Deductible proportion and
+                differentiated sectors. Has no differentiated sectors.'
               label: VAT. Deductible proportion and differentiated sectors. Has no
                 differentiated sectors
             x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aso:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Special travel
+                agents scheme, transaction by transaction.'
               label: VAT. Schemes. Special travel agents scheme, transaction by transaction
             x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aspdcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Travel agents.
+                Date.'
               label: VAT. Schemes. Travel agents. Date
             x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aspdd5gma:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Travel agents.
+                I.A.E. group or heading, or activity code.'
               label: VAT. Schemes. Travel agents. I.A.E. group or heading, or activity
                 code
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Special agriculture,
+                livestock and fisheries scheme.'
               label: VAT. Schemes. Special agriculture, livestock and fisheries scheme
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Agriculture, livestock
+                and fisheries. Date.'
               label: VAT. Schemes. Agriculture, livestock and fisheries. Date
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmiob5:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Agriculture, livestock
+                and fisheries. I.A.E. group or heading, or activity code.'
               label: VAT. Schemes. Agriculture, livestock and fisheries. I.A.E. group
                 or heading, or activity code
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Special second-hand
+                goods scheme, global profit margin.'
               label: VAT. Schemes. Special second-hand goods scheme, global profit
                 margin
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dgmmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Second-hand goods
+                global profit margin. Date.'
               label: VAT. Schemes. Second-hand goods global profit margin. Date
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dgmmiob5:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Second-hand goods
+                global profit margin. I.A.E. group or heading, or activity code.'
               label: VAT. Schemes. Second-hand goods global profit margin. I.A.E.
                 group or heading, or activity code
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn0:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Special second-hand
+                goods scheme, transaction by transaction.'
               label: VAT. Schemes. Special second-hand goods scheme, transaction by
                 transaction
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn2qpj5cdk62:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Second-hand goods
+                transaction by transaction. Date.'
               label: VAT. Schemes. Second-hand goods transaction by transaction. Date
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn2qqb1ck:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Second-hand goods
+                transaction by transaction. I.A.E. group or heading, or activity code.'
               label: VAT. Schemes. Second-hand goods transaction by transaction. I.A.E.
                 group or heading, or activity code
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9gg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Special cash accounting
+                scheme.'
               label: VAT. Schemes. Special cash accounting scheme
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqpj5cdk62:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Cash accounting.
+                Date.'
               label: VAT. Schemes. Cash accounting. Date
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqqb1ck:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Cash accounting.
+                I.A.E. group or heading, or activity code.'
               label: VAT. Schemes. Cash accounting. I.A.E. group or heading, or activity
                 code
             x-d5r62bjicljmirb5dpin6bb7cln6asj1dg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. General scheme.'
               label: VAT. Schemes. General scheme
             x-d5r62bjicljmirb5dpin6bb7cln6asj1dgmmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. General scheme.
+                Date.'
               label: VAT. Schemes. General scheme. Date
             x-d5r62bjicljmirb5dpin6bb7cln6asj1dgmmiob5:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. General scheme.
+                I.A.E. group or heading, or activity code.'
               label: VAT. Schemes. General scheme. I.A.E. group or heading, or activity
                 code
             x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn0:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Special investment
+                gold scheme.'
               label: VAT. Schemes. Special investment gold scheme
             x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn2qpj5cdk62:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Investment gold.
+                Date.'
               label: VAT. Schemes. Investment gold. Date
             x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn2qqb1ck:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Investment gold.
+                I.A.E. group or heading, or activity code.'
               label: VAT. Schemes. Investment gold. I.A.E. group or heading, or activity
                 code
             x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio8:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Special equivalence
+                surcharge scheme.'
               label: VAT. Schemes. Special equivalence surcharge scheme
             x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio9dcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Equivalence surcharge.
+                Date.'
               label: VAT. Schemes. Equivalence surcharge. Date
             x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio9dd5gma:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Equivalence surcharge.
+                I.A.E. group or heading, or activity code.'
               label: VAT. Schemes. Equivalence surcharge. I.A.E. group or heading,
                 or activity code
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4ds:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Special simplified
+                scheme.'
               label: VAT. Schemes. Special simplified scheme
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Simplified scheme.
+                Date.'
               label: VAT. Schemes. Simplified scheme. Date
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmiob5:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Schemes. Simplified scheme.
+                I.A.E. group or heading, or activity code.'
               label: VAT. Schemes. Simplified scheme. I.A.E. group or heading, or
                 activity code
             x-d5r62bjicljmisrke9nn6bb4clr6ur3lcdkmurhddlimssrlc5m0:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Registers. Applies for
+                registration in or removal from the monthly refund register.'
               label: VAT. Registers. Applies for registration in or removal from the
                 monthly refund register
             x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Registers. Applies for
+                registration in or removal from the intra-Community operators register.'
               label: VAT. Registers. Applies for registration in or removal from the
                 intra-Community operators register
             x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpiqpj5cdk62:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Registers. Intra-Community
+                operators register. Date.'
               label: VAT. Registers. Intra-Community operators register. Date
             x-d5r62bjiclr6arj4cli6usj5ecmm2r3kc4mm4obac4mmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Resellers of devices. Reseller
+                registration or removal. Date.'
               label: VAT. Resellers of devices. Reseller registration or removal.
                 Date
             x-dth6obj9e9n74bbddti62r39chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Non-resident income tax. Permanent
+                establishment. Type of permanent establishment.'
               label: Non-resident income tax. Permanent establishment. Type of permanent
                 establishment
             x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4:
+              help: 'Modelo 036 entry, tax year 2025: Non-resident income tax. Permanent
+                establishment. Obligation to file a return.'
               label: Non-resident income tax. Permanent establishment. Obligation
                 to file a return
             x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4bb6clhmgo8:
+              help: 'Modelo 036 entry, tax year 2025: Non-resident income tax. Permanent
+                establishment. Date of the obligation to file a return.'
               label: Non-resident income tax. Permanent establishment. Date of the
                 obligation to file a return
             x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qco:
+              help: 'Modelo 036 entry, tax year 2025: Non-resident income tax. Permanent
+                establishment. Election for the calculation system of art. 40.3.'
               label: Non-resident income tax. Permanent establishment. Election for
                 the calculation system of art. 40.3
             x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qcpdcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Non-resident income tax. Permanent
+                establishment. Date of the election for the calculation system of
+                art. 40.3.'
               label: Non-resident income tax. Permanent establishment. Date of the
                 election for the calculation system of art. 40.3
             x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dg:
+              help: 'Modelo 036 entry, tax year 2025: Non-resident income tax. Permanent
+                establishment. Election for the general regime.'
               label: Non-resident income tax. Permanent establishment. Election for
                 the general regime
             x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dgmmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Non-resident income tax. Permanent
+                establishment. Date of the election for the general regime.'
               label: Non-resident income tax. Permanent establishment. Date of the
                 election for the general regime
             x-dth6obj9e9o6cbb5chpiqc9dd5gma:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                I.A.E. section and group or heading, activity 1 declared under the
+                simplified method.'
               label: Personal income tax (IRPF). I.A.E. section and group or heading,
                 activity 1 declared under the simplified method
             x-dth6obj9e9o6cbb5chpiqc9dehkn0rpdc5hn8qbmd5i62p0:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Type of activity, activity 1 declared under the simplified method.'
               label: Personal income tax (IRPF). Type of activity, activity 1 declared
                 under the simplified method
             x-dth6obj9e9o6cbb5chpiqchdd5gma:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                I.A.E. section and group or heading, activity 2 declared under the
+                simplified method.'
               label: Personal income tax (IRPF). I.A.E. section and group or heading,
                 activity 2 declared under the simplified method
             x-dth6obj9e9o6cbb5chpiqchdehkn0rpdc5hn8qbmd5i62p0:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Type of activity, activity 2 declared under the simplified method.'
               label: Personal income tax (IRPF). Type of activity, activity 2 declared
                 under the simplified method
             x-dth6obj9e9o6cbb5chpiqcpdd5gma:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                I.A.E. section and group or heading, activity 3 declared under the
+                simplified method.'
               label: Personal income tax (IRPF). I.A.E. section and group or heading,
                 activity 3 declared under the simplified method
             x-dth6obj9e9o6cbb5chpiqcpdehkn0rpdc5hn8qbmd5i62p0:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Type of activity, activity 3 declared under the simplified method.'
               label: Personal income tax (IRPF). Type of activity, activity 3 declared
                 under the simplified method
             x-dth6obj9e9o6cbb5chpiqd1dd5gma:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                I.A.E. section and group or heading, activity 4 declared under the
+                simplified method.'
               label: Personal income tax (IRPF). I.A.E. section and group or heading,
                 activity 4 declared under the simplified method
             x-dth6obj9e9o6cbb5chpiqd1dehkn0rpdc5hn8qbmd5i62p0:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Type of activity, activity 4 declared under the simplified method.'
               label: Personal income tax (IRPF). Type of activity, activity 4 declared
                 under the simplified method
             x-dth6obj9e9o6cbb5dsmj2bb9c5ig:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                I.A.E. section and group or heading, activity 1 declared under the
+                objective assessment method.'
               label: Personal income tax (IRPF). I.A.E. section and group or heading,
                 activity 1 declared under the objective assessment method
             x-dth6obj9e9o6cbb5dsmj2bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Type of activity, activity 1 declared under the objective assessment
+                method.'
               label: Personal income tax (IRPF). Type of activity, activity 1 declared
                 under the objective assessment method
             x-dth6obj9e9o6cbb5dsmj4bb9c5ig:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                I.A.E. section and group or heading, activity 2 declared under the
+                objective assessment method.'
               label: Personal income tax (IRPF). I.A.E. section and group or heading,
                 activity 2 declared under the objective assessment method
             x-dth6obj9e9o6cbb5dsmj4bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Type of activity, activity 2 declared under the objective assessment
+                method.'
               label: Personal income tax (IRPF). Type of activity, activity 2 declared
                 under the objective assessment method
             x-dth6obj9e9o6cbb5dsmj6bb9c5ig:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                I.A.E. section and group or heading, activity 3 declared under the
+                objective assessment method.'
               label: Personal income tax (IRPF). I.A.E. section and group or heading,
                 activity 3 declared under the objective assessment method
             x-dth6obj9e9o6cbb5dsmj6bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Type of activity, activity 3 declared under the objective assessment
+                method.'
               label: Personal income tax (IRPF). Type of activity, activity 3 declared
                 under the objective assessment method
             x-dth6obj9e9o6cbb5dsmj8bb9c5ig:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                I.A.E. section and group or heading, activity 4 declared under the
+                objective assessment method.'
               label: Personal income tax (IRPF). I.A.E. section and group or heading,
                 activity 4 declared under the objective assessment method
             x-dth6obj9e9o6cbb5dsmj8bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Type of activity, activity 4 declared under the objective assessment
+                method.'
               label: Personal income tax (IRPF). Type of activity, activity 4 declared
                 under the objective assessment method
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r0:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Standard direct assessment method.'
               label: Personal income tax (IRPF). Standard direct assessment method
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r1dcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Standard direct assessment method. Date.'
               label: Personal income tax (IRPF). Standard direct assessment method.
                 Date
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Simplified direct assessment method.'
               label: Personal income tax (IRPF). Simplified direct assessment method
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p315lj6aor8c4:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Simplified direct assessment method. Date.'
               label: Personal income tax (IRPF). Simplified direct assessment method.
                 Date
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Objective assessment method.'
               label: Personal income tax (IRPF). Objective assessment method
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62bb6clhmgo8:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Objective assessment method. Date.'
               label: Personal income tax (IRPF). Objective assessment method. Date
             x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i0:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Obligation to make instalment payments from economic activities.'
               label: Personal income tax (IRPF). Obligation to make instalment payments
                 from economic activities
             x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i2qpj5cdk62:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Date of the instalment-payment obligation from economic activities.'
               label: Personal income tax (IRPF). Date of the instalment-payment obligation
                 from economic activities
             x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nms:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Obligation to make instalment payments as a member of an income-attribution
+                entity.'
               label: Personal income tax (IRPF). Obligation to make instalment payments
                 as a member of an income-attribution entity
             x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nmsbb6clhmgo8:
+              help: 'Modelo 036 entry, tax year 2025: Personal income tax (IRPF).
+                Date of the instalment-payment obligation as a member of an attribution
+                entity.'
               label: Personal income tax (IRPF). Date of the instalment-payment obligation
                 as a member of an attribution entity
             x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn0:
+              help: 'Modelo 036 entry, tax year 2025: Special tax regime under Law
+                49/2002. Exercises the election for the special tax regime.'
               label: Special tax regime under Law 49/2002. Exercises the election
                 for the special tax regime
             x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn2qpj5cdk62:
+              help: 'Modelo 036 entry, tax year 2025: Special tax regime under Law
+                49/2002. Date of the election for the special tax regime.'
               label: Special tax regime under Law 49/2002. Date of the election for
                 the special tax regime
             x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5gg:
+              help: 'Modelo 036 entry, tax year 2025: Special tax regime under Law
+                49/2002. Waiver of the special tax regime.'
               label: Special tax regime under Law 49/2002. Waiver of the special tax
                 regime
             x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5giqpj5cdk62:
+              help: 'Modelo 036 entry, tax year 2025: Special tax regime under Law
+                49/2002. Date of the waiver of the special tax regime.'
               label: Special tax regime under Law 49/2002. Date of the waiver of the
                 special tax regime
             x-dth6objjdthmipb4c5i6aspdcdkmasjickmmaqj5e9hmior9ds:
+              help: 'Modelo 036 entry, tax year 2025: Corporate income tax. Closing
+                date of the financial year, day and month.'
               label: Corporate income tax. Closing date of the financial year, day
                 and month
             x-dth6objjdthmipb4c5i6aspdcln78qb4c5i2qpbocln78o8:
+              help: 'Modelo 036 entry, tax year 2025: Corporate income tax. Status
+                as an exempt entity.'
               label: Corporate income tax. Status as an exempt entity
             x-dth6objjdthmipb4c5i6aspdcls6arj3d5nms:
+              help: 'Modelo 036 entry, tax year 2025: Corporate income tax. Exemption.'
               label: Corporate income tax. Exemption
             x-dth6objjdthmipb4c5i6aspdcls6arj3d5nmsbb6clhmgo8:
+              help: 'Modelo 036 entry, tax year 2025: Corporate income tax. Exemption.
+                Date.'
               label: Corporate income tax. Exemption. Date
             x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62sg:
+              help: 'Modelo 036 entry, tax year 2025: Corporate income tax. Obligation
+                to file a return.'
               label: Corporate income tax. Obligation to file a return
             x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62shdcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Corporate income tax. Date of
+                the obligation to file a return.'
               label: Corporate income tax. Date of the obligation to file a return
             x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j:
+              help: 'Modelo 036 entry, tax year 2025: Corporate income tax. Election
+                for the calculation system of art. 40.3.'
               label: Corporate income tax. Election for the calculation system of
                 art. 40.3
             x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j5lj6aor8c4:
+              help: 'Modelo 036 entry, tax year 2025: Corporate income tax. Date of
+                the election for the calculation system of art. 40.3.'
               label: Corporate income tax. Date of the election for the calculation
                 system of art. 40.3
             x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn0:
+              help: 'Modelo 036 entry, tax year 2025: Corporate income tax. Waiver
+                of the tax consolidation regime.'
               label: Corporate income tax. Waiver of the tax consolidation regime
             x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn2qpj5cdk62:
+              help: 'Modelo 036 entry, tax year 2025: Corporate income tax. Date of
+                the waiver of the tax consolidation regime.'
               label: Corporate income tax. Date of the waiver of the tax consolidation
                 regime
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Registration for AEAT
+                alerts.'
               label: Alerts. Registration for AEAT alerts
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Deregistration from
+                AEAT alerts.'
               label: Alerts. Deregistration from AEAT alerts
             x-e1j2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Registration in the
+                AEAT mobile application.'
               label: Alerts. Registration in the AEAT mobile application
             x-e1j2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Deregistration from
+                the AEAT mobile application.'
               label: Alerts. Deregistration from the AEAT mobile application
             x-e1j2sobmd5pmuspdchjn8bb1dhq62:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Registration for DGT
+                alerts.'
               label: Alerts. Registration for DGT alerts
             x-e1j2sobmd5pmuspdchjn8bb2c5l62:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Deregistration from
+                DGT alerts.'
               label: Alerts. Deregistration from DGT alerts
             x-e1j2sobmd5pmuspdclmm2qbc:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. E-mail.'
               label: Alerts. E-mail
             x-e1j2sobmd5pmuspdclmm2qbc5lgmot31:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Registration or change
+                of the alert e-mail.'
               label: Alerts. Registration or change of the alert e-mail
             x-e1j2sobmd5pmuspdclmm2qbc5lh62qj1:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Deregistration of the
+                alert e-mail.'
               label: Alerts. Deregistration of the alert e-mail
             x-e1j2sobmd5pmuspddlnncqbc5lgmot31:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Registration or change
+                of the mobile telephone.'
               label: Alerts. Registration or change of the mobile telephone
             x-e1j2sobmd5pmuspddlnncqbc5lh62qj1:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Deregistration of the
+                mobile telephone.'
               label: Alerts. Deregistration of the mobile telephone
             x-e1j2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Country dialling prefix
+                of the mobile telephone.'
               label: Alerts. Country dialling prefix of the mobile telephone
             x-e1j2sobmd5pmuspdehim2bb1dhq62:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Registration for TEA
+                alerts.'
               label: Alerts. Registration for TEA alerts
             x-e1j2sobmd5pmuspdehim2bb2c5l62:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Deregistration from
+                TEA alerts.'
               label: Alerts. Deregistration from TEA alerts
             x-e1j2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
+              help: 'Modelo 036 entry, tax year 2025: Alerts. Mobile telephone.'
               label: Alerts. Mobile telephone
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Block.'
               label: Tax address in Spain. Block
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Number
+                qualifier.'
               label: Tax address in Spain. Number qualifier
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. INE municipality
+                code.'
               label: Tax address in Spain. INE municipality code
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Postal
+                code.'
               label: Tax address in Spain. Postal code
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Province
+                code.'
               label: Tax address in Spain. Province code
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. INE street
+                code.'
               label: Tax address in Spain. INE street code
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Address
+                complement.'
               label: Tax address in Spain. Address complement
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Stairway.'
               label: Tax address in Spain. Stairway
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Cadastral
+                reference indicator of the tax address.'
               label: Tax address in Spain. Cadastral reference indicator of the tax
                 address
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Locality
+                or town.'
               label: Tax address in Spain. Locality or town
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Municipality
+                name.'
               label: Tax address in Spain. Municipality name
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Street
+                name.'
               label: Tax address in Spain. Street name
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. House
+                number.'
               label: Tax address in Spain. House number
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Floor.'
               label: Tax address in Spain. Floor
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Entrance.'
               label: Tax address in Spain. Entrance
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Door.'
               label: Tax address in Spain. Door
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Cadastral
+                reference.'
               label: Tax address in Spain. Cadastral reference
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Number
+                type.'
               label: Tax address in Spain. Number type
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
+              help: 'Modelo 036 entry, tax year 2025: Tax address in Spain. Street
+                type.'
               label: Tax address in Spain. Street type
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lh6orrhelig:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Block.'
               label: Administrative management address. Block
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhm2r39cpkm6ob4dtp2qrjldlin4ro:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Number qualifier.'
               label: Administrative management address. Number qualifier
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqrbldpkm6qbgd5niqqbeck:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                INE municipality code.'
               label: Administrative management address. INE municipality code
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3fedq62r0:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Postal code.'
               label: Administrative management address. Postal code
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3idtr6irj3d5gg:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Province code.'
               label: Administrative management address. Province code
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqtj9c4mmirj5:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                INE street code.'
               label: Administrative management address. INE street code
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmurbgdhimqpbeehniqp3fdlkm6qbcd5ng:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Address complement.'
               label: Administrative management address. Address complement
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lin6or1dhin4o8:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Stairway.'
               label: Administrative management address. Stairway
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lkmsp39cdgm8rri5lh62qj1:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Deregistration indicator of the administrative management address.'
               label: Administrative management address. Deregistration indicator of
                 the administrative management address
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lm6uor1dhkm8ob4:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Locality or town.'
               label: Administrative management address. Locality or town
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lmnarj9cdkn0qbf:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Municipality name.'
               label: Administrative management address. Municipality name
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln6urb2e9iiqtj9c4:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Street name.'
               label: Administrative management address. Street name
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln7arb5e9niqor1edgg:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                House number.'
               label: Administrative management address. House number
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6oobeehgg:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Floor.'
               label: Administrative management address. Floor
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6usjkc5m0:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Entrance.'
               label: Administrative management address. Entrance
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo7apbiehgg:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Door.'
               label: Administrative management address. Door
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5ln7arb5e9ng:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Number type.'
               label: Administrative management address. Number type
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5lr6io8:
+              help: 'Modelo 036 entry, tax year 2025: Administrative management address.
+                Street type.'
               label: Administrative management address. Street type
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Acting
+                as, for the post office box.'
               label: Address for notifications. Acting as, for the post office box
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Postal
+                code of the post office box.'
               label: Address for notifications. Postal code of the post office box
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Province
+                code of the post office box.'
               label: Address for notifications. Province code of the post office box
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Post
+                office box number.'
               label: Address for notifications. Post office box number
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Addressee
+                of the post office box, if different from the filer.'
               label: Address for notifications. Addressee of the post office box,
                 if different from the filer
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Town
+                or city of the post office box.'
               label: Address for notifications. Town or city of the post office box
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Deregistration
+                of the notification address.'
               label: Address for notifications. Deregistration of the notification
                 address
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Block
+                (address 1).'
               label: Address for notifications. Block (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Acting
+                as (address 1).'
               label: Address for notifications. Acting as (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Number
+                qualifier (address 1).'
               label: Address for notifications. Number qualifier (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. INE
+                municipality code (address 1).'
               label: Address for notifications. INE municipality code (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Postal
+                code (address 1).'
               label: Address for notifications. Postal code (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Province
+                code (address 1).'
               label: Address for notifications. Province code (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. INE
+                street code (address 1).'
               label: Address for notifications. INE street code (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Address
+                complement (address 1).'
               label: Address for notifications. Address complement (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Addressee,
+                if different from the filer (address 1).'
               label: Address for notifications. Addressee, if different from the filer
                 (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Stairway
+                (address 1).'
               label: Address for notifications. Stairway (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Locality
+                or town (address 1).'
               label: Address for notifications. Locality or town (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Municipality
+                name (address 1).'
               label: Address for notifications. Municipality name (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Street
+                name (address 1).'
               label: Address for notifications. Street name (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. House
+                number (address 1).'
               label: Address for notifications. House number (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Floor
+                (address 1).'
               label: Address for notifications. Floor (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Entrance
+                (address 1).'
               label: Address for notifications. Entrance (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Door
+                (address 1).'
               label: Address for notifications. Door (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Number
+                type (address 1).'
               label: Address for notifications. Number type (address 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
+              help: 'Modelo 036 entry, tax year 2025: Address for notifications. Street
+                type (address 1).'
               label: Address for notifications. Street type (address 1)
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0ob9ec:
+              help: 'Modelo 036 entry, tax year 2025: Address in the State of residence.
+                Country code.'
               label: Address in the State of residence. Country code
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0rrjehgmo:
+              help: 'Modelo 036 entry, tax year 2025: Address in the State of residence.
+                Postal code.'
               label: Address in the State of residence. Postal code
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              help: 'Modelo 036 entry, tax year 2025: Address in the State of residence.
+                Address complement.'
               label: Address in the State of residence. Address complement
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdchnmqqb3d5m6iro:
+              help: 'Modelo 036 entry, tax year 2025: Address in the State of residence.
+                Address.'
               label: Address in the State of residence. Address
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1gmiso:
+              help: 'Modelo 036 entry, tax year 2025: Address in the State of residence.
+                Country.'
               label: Address in the State of residence. Country
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1nm4r31cdkmurg:
+              help: 'Modelo 036 entry, tax year 2025: Address in the State of residence.
+                Town or city.'
               label: Address in the State of residence. Town or city
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1p6utj9dphmio9de9imeqbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Address in the State of residence.
+                Province, region or state.'
               label: Address in the State of residence. Province, region or state
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm6tb1dpq6uso:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishments. Number
+                of permanent establishments.'
               label: Permanent establishments. Number of permanent establishments
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd64:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishments. Name
+                of permanent establishment 1.'
               label: Permanent establishments. Name of permanent establishment 1
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd68:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishments. Name
+                of permanent establishment 2.'
               label: Permanent establishments. Name of permanent establishment 2
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd6c:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishments. Name
+                of permanent establishment 3.'
               label: Permanent establishments. Name of permanent establishment 3
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmmus35e9giqpbjehgm4r35cdkmqqb5dpq6ubbgclp6qobecln78p8:
+              help: 'Modelo 036 entry, tax year 2025: Permanent establishments. Operates
+                in Spain through a permanent establishment.'
               label: Permanent establishments. Operates in Spain through a permanent
                 establishment
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj2:
+              help: 'Modelo 036 entry, tax year 2025: Identification. First surname.'
               label: Identification. First surname
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj4:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Second surname.'
               label: Identification. Second surname
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qorfchkmerpde1gmispde9in6qb4cln66qb1:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Country code
+                of the State of residence.'
               label: Identification. Country code of the State of residence
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Internet domain
+                or address.'
               label: Identification. Internet domain or address
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Internet domain
+                or address (second).'
               label: Identification. Internet domain or address (second)
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmm2r3kc4mm4obac4:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Registration
+                or deregistration as a limited-liability entrepreneur.'
               label: Identification. Registration or deregistration as a limited-liability
                 entrepreneur
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Date of registration
+                or deregistration as a limited-liability entrepreneur.'
               label: Identification. Date of registration or deregistration as a limited-liability
                 entrepreneur
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Effective date
+                of tax residence.'
               label: Identification. Effective date of tax residence
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj1cdkmurj1dhkm8ob4:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Nationality
+                of the non-resident.'
               label: Identification. Nationality of the non-resident
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9co:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Tax identification
+                number (NIF or NIE).'
               label: Identification. Tax identification number (NIF or NIE)
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Tax identification
+                code of the State of residence or VAT number.'
               label: Identification. Tax identification code of the State of residence
                 or VAT number
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p8:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Forename.'
               label: Identification. Forename
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p9dcdnmqpbicdkm2r0:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Trade name.'
               label: Identification. Trade name
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
+              help: 'Modelo 036 entry, tax year 2025: Identification. Whether the
+                natural person is resident or non-resident in Spain.'
               label: Identification. Whether the natural person is resident or non-resident
                 in Spain
             x-e1l2sobmd5pmubb1clgn8bb1dhq62:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Registration for AEAT alerts.'
               label: Legal person or entity. Alerts. Registration for AEAT alerts
             x-e1l2sobmd5pmubb1clgn8bb2c5l62:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Deregistration from AEAT alerts.'
               label: Legal person or entity. Alerts. Deregistration from AEAT alerts
             x-e1l2sobmd5pmubb1e1o2qob5c5q2qobcehgg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Registration in the AEAT mobile application.'
               label: Legal person or entity. Alerts. Registration in the AEAT mobile
                 application
             x-e1l2sobmd5pmubb1e1o2qob5c5q2qoj1d9gg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Deregistration from the AEAT mobile application.'
               label: Legal person or entity. Alerts. Deregistration from the AEAT
                 mobile application
             x-e1l2sobmd5pmubb4ctq2qobcehgg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Registration for DGT alerts.'
               label: Legal person or entity. Alerts. Registration for DGT alerts
             x-e1l2sobmd5pmubb4ctq2qoj1d9gg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Deregistration from DGT alerts.'
               label: Legal person or entity. Alerts. Deregistration from DGT alerts
             x-e1l2sobmd5pmubb5dlgmir0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                E-mail.'
               label: Legal person or entity. Alerts. E-mail
             x-e1l2sobmd5pmubb5dlgmir1dc5m78o8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Registration or change of the alert e-mail.'
               label: Legal person or entity. Alerts. Registration or change of the
                 alert e-mail
             x-e1l2sobmd5pmubb5dlgmir1dc9gmko8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Deregistration of the alert e-mail.'
               label: Legal person or entity. Alerts. Deregistration of the alert e-mail
             x-e1l2sobmd5pmubbddtr6ir1dc5m78o8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Registration or change of the mobile telephone.'
               label: Legal person or entity. Alerts. Registration or change of the
                 mobile telephone
             x-e1l2sobmd5pmubbddtr6ir1dc9gmko8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Deregistration of the mobile telephone.'
               label: Legal person or entity. Alerts. Deregistration of the mobile
                 telephone
             x-e1l2sobmd5pmubbge9imcqbadsmn0ob9ecmmqrrmd5m0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Country dialling prefix of the mobile telephone.'
               label: Legal person or entity. Alerts. Country dialling prefix of the
                 mobile telephone
             x-e1l2sobmd5pmubbkclgiqobcehgg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Registration for TEA alerts.'
               label: Legal person or entity. Alerts. Registration for TEA alerts
             x-e1l2sobmd5pmubbkclgiqoj1d9gg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Deregistration from TEA alerts.'
               label: Legal person or entity. Alerts. Deregistration from TEA alerts
             x-e1l2sobmd5pmubbkclm6apjfdpniqrbfepkmo:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Alerts.
+                Mobile telephone.'
               label: Legal person or entity. Alerts. Mobile telephone
             x-e1l2sp35f1q2qorfchkmerpde1gmiso:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                in the State of residence. Country code.'
               label: Legal person or entity. Address in the State of residence. Country
                 code
             x-e1l2sp35f1q2qorfchkmerpde1nn6t31dg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                in the State of residence. Postal code.'
               label: Legal person or entity. Address in the State of residence. Postal
                 code
             x-e1l2sp35f1q2qorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                in the State of residence. Address complement.'
               label: Legal person or entity. Address in the State of residence. Address
                 complement
             x-e1l2sp35f1q2qp3fdlkm6qbcd5ng:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                in the State of residence. Address.'
               label: Legal person or entity. Address in the State of residence. Address
             x-e1l2sp35f1q2qqbechkm6ob4dtp2qp3fdlkm6qbcd5niqpboehp62rjaclp6u:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                in the State of residence. Indicator of a tax address or registered
+                office abroad.'
               label: Legal person or entity. Address in the State of residence. Indicator
                 of a tax address or registered office abroad
             x-e1l2sp35f1q2qs31d5pg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                in the State of residence. Country.'
               label: Legal person or entity. Address in the State of residence. Country
             x-e1l2sp35f1q2qs3fc9m62or9dtn0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                in the State of residence. Town or city.'
               label: Legal person or entity. Address in the State of residence. Town
                 or city
             x-e1l2sp35f1q2qs3idtr6irj3d5giqsj5ctkmurg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                in the State of residence. Province, region or state.'
               label: Legal person or entity. Address in the State of residence. Province,
                 region or state
             x-e1l2sp36d5pm6bb2dhnn2tb5:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Block.'
               label: Legal person or entity. Tax address in Spain. Block
             x-e1l2sp36d5pm6bb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Number qualifier.'
               label: Legal person or entity. Tax address in Spain. Number qualifier
             x-e1l2sp36d5pm6bb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. INE municipality code.'
               label: Legal person or entity. Tax address in Spain. INE municipality
                 code
             x-e1l2sp36d5pm6bb3dti6iprf5lo6usrkc5m0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Postal code.'
               label: Legal person or entity. Tax address in Spain. Postal code
             x-e1l2sp36d5pm6bb3dti6iprf5lo74rrmd5n66qb1:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Province code.'
               label: Legal person or entity. Tax address in Spain. Province code
             x-e1l2sp36d5pm6bb3dti6iprf5lr6io9dd5n6a:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. INE street code.'
               label: Legal person or entity. Tax address in Spain. INE street code
             x-e1l2sp36d5pm6bb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Address complement.'
               label: Legal person or entity. Tax address in Spain. Address complement
             x-e1l2sp36d5pm6bb5edhm2r35e9gg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Stairway.'
               label: Legal person or entity. Tax address in Spain. Stairway
             x-e1l2sp36d5pm6bb9dpi6ior1chnn4bbiclj6asj5dphmio9dcdgn8objehp62r0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Cadastral reference indicator of the tax address.'
               label: Legal person or entity. Tax address in Spain. Cadastral reference
                 indicator of the tax address
             x-e1l2sp36d5pm6bbcdthm2r39chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Locality or town.'
               label: Legal person or entity. Tax address in Spain. Locality or town
             x-e1l2sp36d5pm6bbdeln6ior9e1kmu:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Municipality name.'
               label: Legal person or entity. Tax address in Spain. Municipality name
             x-e1l2sp36d5pm6bbedtmm4sj55lr6io8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Street name.'
               label: Legal person or entity. Tax address in Spain. Street name
             x-e1l2sp36d5pm6bbeelmmasjf5lhm2sr1:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. House number.'
               label: Legal person or entity. Tax address in Spain. House number
             x-e1l2sp36d5pm6bbgdhgmst31:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Floor.'
               label: Legal person or entity. Tax address in Spain. Floor
             x-e1l2sp36d5pm6bbgdtp78obc:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Entrance.'
               label: Legal person or entity. Tax address in Spain. Entrance
             x-e1l2sp36d5pm6bbgelin4t31:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Door.'
               label: Legal person or entity. Tax address in Spain. Door
             x-e1l2sp36d5pm6bbiclj6asj5dphmio9dcdgn8objehp62r0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Cadastral reference.'
               label: Legal person or entity. Tax address in Spain. Cadastral reference
             x-e1l2sp36d5pm6bbkd5o6ubbeelmmasjf:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Number type.'
               label: Legal person or entity. Tax address in Spain. Number type
             x-e1l2sp36d5pm6bbkd5o6ubbmd5gg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Tax
+                address in Spain. Street type.'
               label: Legal person or entity. Tax address in Spain. Street type
             x-e1l2sp3edtq6ibb1e1gn4t31chniqor1dhkm8ob4:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Acting as, for the post office box.'
               label: Legal person or entity. Address for notifications. Acting as,
                 for the post office box
             x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1nn6t31dg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Postal code of the post office box.'
               label: Legal person or entity. Address for notifications. Postal code
                 of the post office box
             x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1p6utj9dphmio8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Province code of the post office box.'
               label: Legal person or entity. Address for notifications. Province code
                 of the post office box
             x-e1l2sp3edtq6ibb1e1gn4t31chniqorfe9p6arrj:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Post office box number.'
               label: Legal person or entity. Address for notifications. Post office
                 box number
             x-e1l2sp3edtq6ibb1e1gn4t31chniqp35edq6irj1ehgn4qbf:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Addressee of the post office box, if different
+                from the filer.'
               label: Legal person or entity. Address for notifications. Addressee
                 of the post office box, if different from the filer
             x-e1l2sp3edtq6ibb1e1gn4t31chniqs3fc9m62or9dtn0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Town or city of the post office box.'
               label: Legal person or entity. Address for notifications. Town or city
                 of the post office box
             x-e1l2sp3edtq6ibb2c5l62bb4dtmmior9dhkmu:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Deregistration indicator of the notification address.'
               label: Legal person or entity. Address for notifications. Deregistration
                 indicator of the notification address
             x-e1l2sp3edtq6ibb2dhnn2tb5:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Block (address 1).'
               label: Legal person or entity. Address for notifications. Block (address
                 1)
             x-e1l2sp3edtq6ibb3c5m6ip31cg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Acting as (address 1).'
               label: Legal person or entity. Address for notifications. Acting as
                 (address 1)
             x-e1l2sp3edtq6ibb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Number qualifier (address 1).'
               label: Legal person or entity. Address for notifications. Number qualifier
                 (address 1)
             x-e1l2sp3edtq6ibb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. INE municipality code (address 1).'
               label: Legal person or entity. Address for notifications. INE municipality
                 code (address 1)
             x-e1l2sp3edtq6ibb3dti6iprf5lo6usrkc5m0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Postal code (address 1).'
               label: Legal person or entity. Address for notifications. Postal code
                 (address 1)
             x-e1l2sp3edtq6ibb3dti6iprf5lo74rrmd5n66qb1:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Province code (address 1).'
               label: Legal person or entity. Address for notifications. Province code
                 (address 1)
             x-e1l2sp3edtq6ibb3dti6iprf5lr6io9dd5n6a:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. INE street code (address 1).'
               label: Legal person or entity. Address for notifications. INE street
                 code (address 1)
             x-e1l2sp3edtq6ibb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Address complement (address 1).'
               label: Legal person or entity. Address for notifications. Address complement
                 (address 1)
             x-e1l2sp3edtq6ibb4clpn8qbec5q62sj9ds:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Addressee, if different from the filer (address
+                1).'
               label: Legal person or entity. Address for notifications. Addressee,
                 if different from the filer (address 1)
             x-e1l2sp3edtq6ibb5edhm2r35e9gg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Stairway (address 1).'
               label: Legal person or entity. Address for notifications. Stairway (address
                 1)
             x-e1l2sp3edtq6ibbcdthm2r39chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Locality or town (address 1).'
               label: Legal person or entity. Address for notifications. Locality or
                 town (address 1)
             x-e1l2sp3edtq6ibbdeln6ior9e1kmu:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Municipality name (address 1).'
               label: Legal person or entity. Address for notifications. Municipality
                 name (address 1)
             x-e1l2sp3edtq6ibbedtmm4sj55lr6io8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Street name (address 1).'
               label: Legal person or entity. Address for notifications. Street name
                 (address 1)
             x-e1l2sp3edtq6ibbeelmmasjf5lhm2sr1:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. House number (address 1).'
               label: Legal person or entity. Address for notifications. House number
                 (address 1)
             x-e1l2sp3edtq6ibbgdhgmst31:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Floor (address 1).'
               label: Legal person or entity. Address for notifications. Floor (address
                 1)
             x-e1l2sp3edtq6ibbgdtp78obc:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Entrance (address 1).'
               label: Legal person or entity. Address for notifications. Entrance (address
                 1)
             x-e1l2sp3edtq6ibbgelin4t31:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Door (address 1).'
               label: Legal person or entity. Address for notifications. Door (address
                 1)
             x-e1l2sp3edtq6ibbkd5o6ubbeelmmasjf:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Number type (address 1).'
               label: Legal person or entity. Address for notifications. Number type
                 (address 1)
             x-e1l2sp3edtq6ibbkd5o6ubbmd5gg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Address
+                for notifications. Street type (address 1).'
               label: Legal person or entity. Address for notifications. Street type
                 (address 1)
             x-e1l2sp3jdthiqojcdtonap8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Block.'
               label: Legal person or entity. Registered office. Block
             x-e1l2sp3jdthiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Number qualifier.'
               label: Legal person or entity. Registered office. Number qualifier
             x-e1l2sp3jdthiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. INE municipality code.'
               label: Legal person or entity. Registered office. INE municipality code
             x-e1l2sp3jdthiqorfchkmerpde1nn6t31dg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Postal code.'
               label: Legal person or entity. Registered office. Postal code
             x-e1l2sp3jdthiqorfchkmerpde1p6utj9dphmio8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Province code.'
               label: Legal person or entity. Registered office. Province code
             x-e1l2sp3jdthiqorfchkmerpdepkm2bb9dpig:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. INE street code.'
               label: Legal person or entity. Registered office. INE street code
             x-e1l2sp3jdthiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Address complement.'
               label: Legal person or entity. Registered office. Address complement
             x-e1l2sp3jdthiqpbjcdgmopbic4:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Stairway.'
               label: Legal person or entity. Registered office. Stairway
             x-e1l2sp3jdthiqr3fcdgmoqb4c5i0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Locality or town.'
               label: Legal person or entity. Registered office. Locality or town
             x-e1l2sp3jdthiqrbldpkm6qbgd5ng:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Municipality name.'
               label: Legal person or entity. Registered office. Municipality name
             x-e1l2sp3jdthiqrjfdlh74p9depkm2:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Street name.'
               label: Legal person or entity. Registered office. Street name
             x-e1l2sp3jdthiqrjldlin4rpdcdgn6o8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. House number.'
               label: Legal person or entity. Registered office. House number
             x-e1l2sp3jdthiqs3cc5n78o8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Floor.'
               label: Legal person or entity. Registered office. Floor
             x-e1l2sp3jdthiqs3fe9q62r0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Entrance.'
               label: Legal person or entity. Registered office. Entrance
             x-e1l2sp3jdthiqs3lclp78o8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Door.'
               label: Legal person or entity. Registered office. Door
             x-e1l2sp3jdthiqt39e1niqrjldlin4ro:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Number type.'
               label: Legal person or entity. Registered office. Number type
             x-e1l2sp3jdthiqt39e1niqtj9c4:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Registered
+                office. Street type.'
               label: Legal person or entity. Registered office. Street type
             x-e1l2spbgclp6qbb3elgmst3fec:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Permanent
+                establishments. Number of permanent establishments.'
               label: Legal person or entity. Permanent establishments. Number of permanent
                 establishments
             x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj2:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Permanent
+                establishments. Name of permanent establishment 1.'
               label: Legal person or entity. Permanent establishments. Name of permanent
                 establishment 1
             x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj4:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Permanent
+                establishments. Name of permanent establishment 2.'
               label: Legal person or entity. Permanent establishments. Name of permanent
                 establishment 2
             x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj6:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Permanent
+                establishments. Name of permanent establishment 3.'
               label: Legal person or entity. Permanent establishments. Name of permanent
                 establishment 3
             x-e1l2spbgclp6qbbed5j2qc8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Permanent
+                establishments. Tax identification number of permanent establishment
+                1.'
               label: Legal person or entity. Permanent establishments. Tax identification
                 number of permanent establishment 1
             x-e1l2spbgclp6qbbed5j2qcg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Permanent
+                establishments. Tax identification number of permanent establishment
+                2.'
               label: Legal person or entity. Permanent establishments. Tax identification
                 number of permanent establishment 2
             x-e1l2spbgclp6qbbed5j2qco:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Permanent
+                establishments. Tax identification number of permanent establishment
+                3.'
               label: Legal person or entity. Permanent establishments. Tax identification
                 number of permanent establishment 3
             x-e1l2spbgclp6qbbfe1in4o9dclpn8ob2dhim6qbdd5imst3f5lo6asjdc5n6arjkck:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Permanent
+                establishments. Operates in Spain through a permanent establishment.'
               label: Legal person or entity. Permanent establishments. Operates in
                 Spain through a permanent establishment
             x-e1l2sqb4cln78bb1dpgmesj1dlgg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Logotype name.'
               label: Legal person or entity. Identification. Logotype name
             x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Internet domain or address.'
               label: Legal person or entity. Identification. Internet domain or address
             x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk5lpmaorldpi62sj9ds:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Internet domain or address (second).'
               label: Legal person or entity. Identification. Internet domain or address
                 (second)
             x-e1l2sqb4cln78bb6clhmgo9dc5hnapbichniqtjfdhqmst31chin6:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Date of the agreement of wills.'
               label: Legal person or entity. Identification. Date of the agreement
                 of wills
             x-e1l2sqb4cln78bb6clhmgo9dcdnmssrkd5q7aor9dtn0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Date of incorporation.'
               label: Legal person or entity. Identification. Date of incorporation
             x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Effective date of tax residence.'
               label: Legal person or entity. Identification. Effective date of tax
                 residence
             x-e1l2sqb4cln78bb6clhmgo9dd5n76orid5o66qbfdomn4pb7d5pn8sj1dg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Date of entry in the register.'
               label: Legal person or entity. Identification. Date of entry in the
                 register
             x-e1l2sqb4cln78bbed5j0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Tax identification number (NIF).'
               label: Legal person or entity. Identification. Tax identification number
                 (NIF)
             x-e1l2sqb4cln78bbed5j2qpbjehgm8rpde9in6qb4cln66qb1:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Tax identification code of the State of residence.'
               label: Legal person or entity. Identification. Tax identification code
                 of the State of residence
             x-e1l2sqb4cln78bbed5j2qrrke9nn6bbgc5kn6pbj:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Tax identification number in other countries.'
               label: Legal person or entity. Identification. Tax identification number
                 in other countries
             x-e1l2sqb4cln78bbgc5kn6bb3dtn76t39ehqm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Non-resident entity or one incorporated abroad.'
               label: Legal person or entity. Identification. Non-resident entity or
                 one incorporated abroad
             x-e1l2sqb4cln78bbic5t6urhdednm6qb1dg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Legal name.'
               label: Legal person or entity. Identification. Legal name
             x-e1l2sqb4cln78bbiclpmip35dphmio9dd5n68qb3c5i6usg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Identification.
+                Whether the entity is resident or incorporated in Spain, or non-resident.'
               label: Legal person or entity. Identification. Whether the entity is
                 resident or incorporated in Spain, or non-resident
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Income-attribution entity incorporated
+                in Spain with economic activity.'
               label: Legal person or entity. Legal personality and class of entity.
                 Income-attribution entity incorporated in Spain with economic activity
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p1dcdm62sr5:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Class of income-attribution entity
+                incorporated in Spain with economic activity.'
               label: Legal person or entity. Legal personality and class of entity.
                 Class of income-attribution entity incorporated in Spain with economic
                 activity
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p0:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Income-attribution entity incorporated
+                in Spain without economic activity.'
               label: Legal person or entity. Legal personality and class of entity.
                 Income-attribution entity incorporated in Spain without economic activity
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p1dcdm62sr5:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Class of income-attribution entity
+                incorporated in Spain without economic activity.'
               label: Legal person or entity. Legal personality and class of entity.
                 Class of income-attribution entity incorporated in Spain without economic
                 activity
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Income-attribution entity incorporated
+                abroad with a presence in Spain.'
               label: Legal person or entity. Legal personality and class of entity.
                 Income-attribution entity incorporated abroad with a presence in Spain
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2bb3dhgn6p8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Class of income-attribution entity
+                incorporated abroad with a presence in Spain.'
               label: Legal person or entity. Legal personality and class of entity.
                 Class of income-attribution entity incorporated abroad with a presence
                 in Spain
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Income-attribution entity incorporated
+                abroad without a presence in Spain.'
               label: Legal person or entity. Legal personality and class of entity.
                 Income-attribution entity incorporated abroad without a presence in
                 Spain
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2bb3dhgn6p8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Class of income-attribution entity
+                incorporated abroad without a presence in Spain.'
               label: Legal person or entity. Legal personality and class of entity.
                 Class of income-attribution entity incorporated abroad without a presence
                 in Spain
             x-e1l2ss3aelp2qpbj5lo6asjjdtn62bbaelp6ip39cdgg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Legal person.'
               label: Legal person or entity. Legal personality and class of entity.
                 Legal person
             x-e1l2ss3aelp2qpjfe9mm2bbaelp6ip39cdgg:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Legal form.'
               label: Legal person or entity. Legal personality and class of entity.
                 Legal form
             x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Other entities.'
               label: Legal person or entity. Legal personality and class of entity.
                 Other entities
             x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6bb3dhgn6p8:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Other entities. Class of entity.'
               label: Legal person or entity. Legal personality and class of entity.
                 Other entities. Class of entity
             x-e1l2ss3aelp2qt39cln6abbgclp76rrec5m6ip31cgmmktbid5i6ior1:
+              help: 'Modelo 036 entry, tax year 2025: Legal person or entity. Legal
+                personality and class of entity. Has legal personality.'
               label: Legal person or entity. Legal personality and class of entity.
                 Has legal personality
             x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
@@ -1498,154 +2530,276 @@ modelo:
               label: Code of the title of representation (second representative, block
                 3.2)
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmo:
+              help: 'Modelo 036 entry, tax year 2025: Register of extractors from
+                tax warehouses. Applies for registration or removal for products under
+                the excise duties on alcohol and derived beverages.'
               label: Register of extractors from tax warehouses. Applies for registration
                 or removal for products under the excise duties on alcohol and derived
                 beverages
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmobb6clhmgo8:
+              help: 'Modelo 036 entry, tax year 2025: Register of extractors from
+                tax warehouses. Date of the application for alcohol and derived beverages.'
               label: Register of extractors from tax warehouses. Date of the application
                 for alcohol and derived beverages
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uso:
+              help: 'Modelo 036 entry, tax year 2025: Register of extractors from
+                tax warehouses. Applies for registration or removal for products under
+                the excise duties on hydrocarbons.'
               label: Register of extractors from tax warehouses. Applies for registration
                 or removal for products under the excise duties on hydrocarbons
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uspdcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Register of extractors from
+                tax warehouses. Date of the application for hydrocarbons.'
               label: Register of extractors from tax warehouses. Date of the application
                 for hydrocarbons
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cg:
+              help: 'Modelo 036 entry, tax year 2025: Excise duties. Required to file
+                a self-assessment for the electricity tax.'
               label: Excise duties. Required to file a self-assessment for the electricity
                 tax
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cgmmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Excise duties. Date. Required
+                to file a self-assessment for the electricity tax.'
               label: Excise duties. Date. Required to file a self-assessment for the
                 electricity tax
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m0:
+              help: 'Modelo 036 entry, tax year 2025: Excise duties. Obligation to
+                register the establishments in the territorial register of the managing
+                office.'
               label: Excise duties. Obligation to register the establishments in the
                 territorial register of the managing office
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m2qpj5cdk62:
+              help: 'Modelo 036 entry, tax year 2025: Excise duties. Date. Obligation
+                to register the establishments in the territorial register of the
+                managing office.'
               label: Excise duties. Date. Obligation to register the establishments
                 in the territorial register of the managing office
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uso:
+              help: 'Modelo 036 entry, tax year 2025: Excise duties. Obligation to
+                file a return for the excise duty on insurance premiums.'
               label: Excise duties. Obligation to file a return for the excise duty
                 on insurance premiums
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uspdcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Excise duties. Date. Obligation
+                to file a return for the excise duty on insurance premiums.'
               label: Excise duties. Date. Obligation to file a return for the excise
                 duty on insurance premiums
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre:
+              help: 'Modelo 036 entry, tax year 2025: Excise duties. Required to file
+                the annual summary return for the excise duty on coal.'
               label: Excise duties. Required to file the annual summary return for
                 the excise duty on coal
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre5lj6aor8c4:
+              help: 'Modelo 036 entry, tax year 2025: Excise duties. Date. Required
+                to file the annual summary return for the excise duty on coal.'
               label: Excise duties. Date. Required to file the annual summary return
                 for the excise duty on coal
             x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpddto66qbfdomn4pb7d5mmarhdctimspbic5m0:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Intra-Community acquisitions.
+                Election for the general VAT regime, taxable or not taxable.'
               label: VAT. Intra-Community acquisitions. Election for the general VAT
                 regime, taxable or not taxable
             x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpdelmm4sj1dgmj2c1g60o0:
+              help: 'Modelo 036 entry, tax year 2025: VAT. Intra-Community acquisitions.
+                Has exceeded the 10,000 euro threshold.'
               label: VAT. Intra-Community acquisitions. Has exceeded the 10,000 euro
                 threshold
             x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi:
+              help: 'Modelo 036 entry, tax year 2025: Environmental taxes. Obligation
+                to file a return.'
               label: Environmental taxes. Obligation to file a return
             x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi5lj6aor8c4:
+              help: 'Modelo 036 entry, tax year 2025: Environmental taxes. Date of
+                the obligation to file a return.'
               label: Environmental taxes. Date of the obligation to file a return
             x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ec:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Obligation to withhold or make a payment on account on income
+                from professional activities.'
               label: Withholdings and payments on account. Obligation to withhold
                 or make a payment on account on income from professional activities
             x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ecmmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Date of the obligation on income from professional activities.'
               label: Withholdings and payments on account. Date of the obligation
                 on income from professional activities
             x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78ro:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Obligation to withhold or make a payment on account on income
+                from letting or subletting.'
               label: Withholdings and payments on account. Obligation to withhold
                 or make a payment on account on income from letting or subletting
             x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78rpdcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Date of the obligation on income from letting or subletting.'
               label: Withholdings and payments on account. Date of the obligation
                 on income from letting or subletting
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Obligation to withhold or make a payment on account on investment
+                income obtained as consideration.'
               label: Withholdings and payments on account. Obligation to withhold
                 or make a payment on account on investment income obtained as consideration
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdommcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Date of the obligation on investment income obtained as consideration.'
               label: Withholdings and payments on account. Date of the obligation
                 on investment income obtained as consideration
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ec:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Obligation to withhold or make a payment on account on investment
+                income arising from transactions.'
               label: Withholdings and payments on account. Obligation to withhold
                 or make a payment on account on investment income arising from transactions
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ecmmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Date of the obligation on investment income arising from
+                transactions.'
               label: Withholdings and payments on account. Date of the obligation
                 on investment income arising from transactions
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Obligation to withhold or make a payment on account on other
+                investment income.'
               label: Withholdings and payments on account. Obligation to withhold
                 or make a payment on account on other investment income
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj5lj6aor8c4:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Date of the obligation on other investment income.'
               label: Withholdings and payments on account. Date of the obligation
                 on other investment income
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Obligation to withhold or make a payment on account on investment
+                income derived from transfers.'
               label: Withholdings and payments on account. Obligation to withhold
                 or make a payment on account on investment income derived from transfers
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdommcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Date of the obligation on investment income derived from
+                transfers.'
               label: Withholdings and payments on account. Date of the obligation
                 on investment income derived from transfers
             x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m0:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Obligation to withhold or make a payment on account on income
+                from personal employment.'
               label: Withholdings and payments on account. Obligation to withhold
                 or make a payment on account on income from personal employment
             x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m2qpj5cdk62:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Date of the obligation on income from personal employment.'
               label: Withholdings and payments on account. Date of the obligation
                 on income from personal employment
             x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ec:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Obligation to withhold or make a payment on account on transfers
+                or redemptions of shares or holdings.'
               label: Withholdings and payments on account. Obligation to withhold
                 or make a payment on account on transfers or redemptions of shares
                 or holdings
             x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ecmmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Withholdings and payments on
+                account. Date of the obligation on transfers or redemptions of shares
+                or holdings.'
               label: Withholdings and payments on account. Date of the obligation
                 on transfers or redemptions of shares or holdings
             x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p0:
+              help: 'Modelo 036 entry, tax year 2025: Tax on certain digital services.
+                Required to file a self-assessment.'
               label: Tax on certain digital services. Required to file a self-assessment
             x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p2qpj5cdk62:
+              help: 'Modelo 036 entry, tax year 2025: Tax on certain digital services.
+                Date of the obligation to file a self-assessment.'
               label: Tax on certain digital services. Date of the obligation to file
                 a self-assessment
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dchin6t39dpng:
+              help: 'Modelo 036 entry, tax year 2025: Telecommunications, broadcasting
+                and electronic services (art. 70.Uno.4.a). Taxation at destination.'
               label: Telecommunications, broadcasting and electronic services (art.
                 70.Uno.4.a). Taxation at destination
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Telecommunications, broadcasting
+                and electronic services (art. 70.Uno.4.a). Date.'
               label: Telecommunications, broadcasting and electronic services (art.
                 70.Uno.4.a). Date
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1de9incrr3c5hmirre:
+              help: 'Modelo 036 entry, tax year 2025: Telecommunications, broadcasting
+                and electronic services (art. 70.Uno.4.a). Revocation.'
               label: Telecommunications, broadcasting and electronic services (art.
                 70.Uno.4.a). Revocation
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1delmm4sj1dgmj2c1g60o0:
+              help: 'Modelo 036 entry, tax year 2025: Telecommunications, broadcasting
+                and electronic services (art. 70.Uno.4.a). Has exceeded the 10,000
+                euro threshold.'
               label: Telecommunications, broadcasting and electronic services (art.
                 70.Uno.4.a). Has exceeded the 10,000 euro threshold
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dchin6t39dpng:
+              help: 'Modelo 036 entry, tax year 2025: Telecommunications, broadcasting
+                and electronic services (art. 70.Uno.8). Taxation at destination.'
               label: Telecommunications, broadcasting and electronic services (art.
                 70.Uno.8). Taxation at destination
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Telecommunications, broadcasting
+                and electronic services (art. 70.Uno.8). Date.'
               label: Telecommunications, broadcasting and electronic services (art.
                 70.Uno.8). Date
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1de9incrr3c5hmirre:
+              help: 'Modelo 036 entry, tax year 2025: Telecommunications, broadcasting
+                and electronic services (art. 70.Uno.8). Revocation.'
               label: Telecommunications, broadcasting and electronic services (art.
                 70.Uno.8). Revocation
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
+              help: 'Modelo 036 entry, tax year 2025: Telecommunications, broadcasting
+                and electronic services (art. 70.Uno.8). Has exceeded the 10,000 euro
+                threshold.'
               label: Telecommunications, broadcasting and electronic services (art.
                 70.Uno.8). Has exceeded the 10,000 euro threshold
             x-ednm6bj3c5qn6o9dcpim6q31:
+              help: 'Modelo 036 entry, tax year 2025: Partners, members or participants.
+                Date of the reason for filing.'
               label: Partners, members or participants. Date of the reason for filing
             x-ednm6bj3c5qn6o9de1p6asr5dpq62or9dtn0:
+              help: 'Modelo 036 entry, tax year 2025: Partners, members or participants.
+                Reason for filing.'
               label: Partners, members or participants. Reason for filing
             x-ednm6bj3elnn8o9dc5q74qb2elhmirre:
+              help: 'Modelo 036 entry, tax year 2025: Partners, members or participants.
+                Share or percentage of attribution.'
               label: Partners, members or participants. Share or percentage of attribution
             x-ednm6bj3elnn8o9de1gn4t39cdkn0ob3d5nms:
+              help: 'Modelo 036 entry, tax year 2025: Partners, members or participants.
+                Share or percentage of participation.'
               label: Partners, members or participants. Share or percentage of participation
             x-ednm6bj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              help: 'Modelo 036 entry, tax year 2025: Partners, members or participants.
+                Personal income tax, simplified direct assessment: waiver or revocation.'
               label: 'Partners, members or participants. Personal income tax, simplified
                 direct assessment: waiver or revocation'
             x-ednm6bj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              help: 'Modelo 036 entry, tax year 2025: Partners, members or participants.
+                Personal income tax, objective assessment: waiver or revocation.'
               label: 'Partners, members or participants. Personal income tax, objective
                 assessment: waiver or revocation'
             x-ednm6bj9epgiqsj5c5jn0:
+              help: 'Modelo 036 entry, tax year 2025: Partners, members or participants.
+                VAT, special agriculture, livestock and fisheries scheme: waiver or
+                revocation.'
               label: 'Partners, members or participants. VAT, special agriculture,
                 livestock and fisheries scheme: waiver or revocation'
             x-ednm6bj9epgiqsj5ctkmqpbe5lpmirbgdhkmcqb3c5i6u:
+              help: 'Modelo 036 entry, tax year 2025: Partners, members or participants.
+                VAT, simplified scheme: waiver or revocation.'
               label: 'Partners, members or participants. VAT, simplified scheme: waiver
                 or revocation'
             x-ednm6bjed5j0:
+              help: 'Modelo 036 entry, tax year 2025: Partners, members or participants.
+                Tax identification number (NIF).'
               label: Partners, members or participants. Tax identification number
                 (NIF)
             x-ednm6bjedtmm4sj55lp62ujfdomn6rr3d5gmo:
+              help: 'Modelo 036 entry, tax year 2025: Partners, members or participants.
+                Surnames and forename, or legal name.'
               label: Partners, members or participants. Surnames and forename, or
                 legal name
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
@@ -1745,140 +2899,252 @@ modelo:
               label: Percentage of liquidation, holding or inheritance of the successor
                 or beneficiary (successor 13f)
             x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Date of the
+                reason for filing, beneficial owner 14a.'
               label: Beneficial owners. Date of the reason for filing, beneficial
                 owner 14a
             x-ehkn8bj15lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Reason for
+                filing, beneficial owner 14a.'
               label: Beneficial owners. Reason for filing, beneficial owner 14a
             x-ehkn8bj15lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Date of birth,
+                beneficial owner 14a.'
               label: Beneficial owners. Date of birth, beneficial owner 14a
             x-ehkn8bj15lkm8pbeehkmcqb3c5hmirre:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Tax identification
+                number or foreign identification code, beneficial owner 14a.'
               label: Beneficial owners. Tax identification number or foreign identification
                 code, beneficial owner 14a
             x-ehkn8bj15ln62or9dtn62r39chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Nationality,
+                beneficial owner 14a.'
               label: Beneficial owners. Nationality, beneficial owner 14a
             x-ehkn8bj15ln6urb2e9ig:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Surnames
+                and forename, beneficial owner 14a.'
               label: Beneficial owners. Surnames and forename, beneficial owner 14a
             x-ehkn8bj15lo62qbj5lings35chkm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Country of
+                issue of the identification document, beneficial owner 14a.'
               label: Beneficial owners. Country of issue of the identification document,
                 beneficial owner 14a
             x-ehkn8bj15lo62qbj5lp6asr9chimsor9c4:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Country of
+                residence, beneficial owner 14a.'
               label: Beneficial owners. Country of residence, beneficial owner 14a
             x-ehkn8bj15lq6is3f5li6uorldlimst3f:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Type of identification
+                document, beneficial owner 14a.'
               label: Beneficial owners. Type of identification document, beneficial
                 owner 14a
             x-ehkn8bj25lhm2tbjc4mmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Date of the
+                reason for filing, beneficial owner 14b.'
               label: Beneficial owners. Date of the reason for filing, beneficial
                 owner 14b
             x-ehkn8bj25lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Reason for
+                filing, beneficial owner 14b.'
               label: Beneficial owners. Reason for filing, beneficial owner 14b
             x-ehkn8bj25lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Date of birth,
+                beneficial owner 14b.'
               label: Beneficial owners. Date of birth, beneficial owner 14b
             x-ehkn8bj25lkm8pbeehkmcqb3c5hmirre:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Tax identification
+                number or foreign identification code, beneficial owner 14b.'
               label: Beneficial owners. Tax identification number or foreign identification
                 code, beneficial owner 14b
             x-ehkn8bj25ln62or9dtn62r39chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Nationality,
+                beneficial owner 14b.'
               label: Beneficial owners. Nationality, beneficial owner 14b
             x-ehkn8bj25ln6urb2e9ig:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Surnames
+                and forename, beneficial owner 14b.'
               label: Beneficial owners. Surnames and forename, beneficial owner 14b
             x-ehkn8bj25lo62qbj5lings35chkm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Country of
+                issue of the identification document, beneficial owner 14b.'
               label: Beneficial owners. Country of issue of the identification document,
                 beneficial owner 14b
             x-ehkn8bj25lo62qbj5lp6asr9chimsor9c4:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Country of
+                residence, beneficial owner 14b.'
               label: Beneficial owners. Country of residence, beneficial owner 14b
             x-ehkn8bj25lq6is3f5li6uorldlimst3f:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Type of identification
+                document, beneficial owner 14b.'
               label: Beneficial owners. Type of identification document, beneficial
                 owner 14b
             x-ehkn8bj35lhm2tbjc4mmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Date of the
+                reason for filing, beneficial owner 14c.'
               label: Beneficial owners. Date of the reason for filing, beneficial
                 owner 14c
             x-ehkn8bj35lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Reason for
+                filing, beneficial owner 14c.'
               label: Beneficial owners. Reason for filing, beneficial owner 14c
             x-ehkn8bj35lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Date of birth,
+                beneficial owner 14c.'
               label: Beneficial owners. Date of birth, beneficial owner 14c
             x-ehkn8bj35lkm8pbeehkmcqb3c5hmirre:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Tax identification
+                number or foreign identification code, beneficial owner 14c.'
               label: Beneficial owners. Tax identification number or foreign identification
                 code, beneficial owner 14c
             x-ehkn8bj35ln62or9dtn62r39chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Nationality,
+                beneficial owner 14c.'
               label: Beneficial owners. Nationality, beneficial owner 14c
             x-ehkn8bj35ln6urb2e9ig:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Surnames
+                and forename, beneficial owner 14c.'
               label: Beneficial owners. Surnames and forename, beneficial owner 14c
             x-ehkn8bj35lo62qbj5lings35chkm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Country of
+                issue of the identification document, beneficial owner 14c.'
               label: Beneficial owners. Country of issue of the identification document,
                 beneficial owner 14c
             x-ehkn8bj35lo62qbj5lp6asr9chimsor9c4:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Country of
+                residence, beneficial owner 14c.'
               label: Beneficial owners. Country of residence, beneficial owner 14c
             x-ehkn8bj35lq6is3f5li6uorldlimst3f:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Type of identification
+                document, beneficial owner 14c.'
               label: Beneficial owners. Type of identification document, beneficial
                 owner 14c
             x-ehkn8bj45lhm2tbjc4mmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Date of the
+                reason for filing, beneficial owner 14d.'
               label: Beneficial owners. Date of the reason for filing, beneficial
                 owner 14d
             x-ehkn8bj45lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Reason for
+                filing, beneficial owner 14d.'
               label: Beneficial owners. Reason for filing, beneficial owner 14d
             x-ehkn8bj45lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Date of birth,
+                beneficial owner 14d.'
               label: Beneficial owners. Date of birth, beneficial owner 14d
             x-ehkn8bj45lkm8pbeehkmcqb3c5hmirre:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Tax identification
+                number or foreign identification code, beneficial owner 14d.'
               label: Beneficial owners. Tax identification number or foreign identification
                 code, beneficial owner 14d
             x-ehkn8bj45ln62or9dtn62r39chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Nationality,
+                beneficial owner 14d.'
               label: Beneficial owners. Nationality, beneficial owner 14d
             x-ehkn8bj45ln6urb2e9ig:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Surnames
+                and forename, beneficial owner 14d.'
               label: Beneficial owners. Surnames and forename, beneficial owner 14d
             x-ehkn8bj45lo62qbj5lings35chkm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Country of
+                issue of the identification document, beneficial owner 14d.'
               label: Beneficial owners. Country of issue of the identification document,
                 beneficial owner 14d
             x-ehkn8bj45lo62qbj5lp6asr9chimsor9c4:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Country of
+                residence, beneficial owner 14d.'
               label: Beneficial owners. Country of residence, beneficial owner 14d
             x-ehkn8bj45lq6is3f5li6uorldlimst3f:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Type of identification
+                document, beneficial owner 14d.'
               label: Beneficial owners. Type of identification document, beneficial
                 owner 14d
             x-ehkn8bj4clhmoobic5hmirre5ln6ubbmc5p6iob3d5nms:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Declaration
+                that the data has not changed.'
               label: Beneficial owners. Declaration that the data has not changed
             x-ehkn8bj55lhm2tbjc4mmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Date of the
+                reason for filing, beneficial owner 14e.'
               label: Beneficial owners. Date of the reason for filing, beneficial
                 owner 14e
             x-ehkn8bj55lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Reason for
+                filing, beneficial owner 14e.'
               label: Beneficial owners. Reason for filing, beneficial owner 14e
             x-ehkn8bj55lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Date of birth,
+                beneficial owner 14e.'
               label: Beneficial owners. Date of birth, beneficial owner 14e
             x-ehkn8bj55lkm8pbeehkmcqb3c5hmirre:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Tax identification
+                number or foreign identification code, beneficial owner 14e.'
               label: Beneficial owners. Tax identification number or foreign identification
                 code, beneficial owner 14e
             x-ehkn8bj55ln62or9dtn62r39chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Nationality,
+                beneficial owner 14e.'
               label: Beneficial owners. Nationality, beneficial owner 14e
             x-ehkn8bj55ln6urb2e9ig:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Surnames
+                and forename, beneficial owner 14e.'
               label: Beneficial owners. Surnames and forename, beneficial owner 14e
             x-ehkn8bj55lo62qbj5lings35chkm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Country of
+                issue of the identification document, beneficial owner 14e.'
               label: Beneficial owners. Country of issue of the identification document,
                 beneficial owner 14e
             x-ehkn8bj55lo62qbj5lp6asr9chimsor9c4:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Country of
+                residence, beneficial owner 14e.'
               label: Beneficial owners. Country of residence, beneficial owner 14e
             x-ehkn8bj55lq6is3f5li6uorldlimst3f:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Type of identification
+                document, beneficial owner 14e.'
               label: Beneficial owners. Type of identification document, beneficial
                 owner 14e
             x-ehkn8bj65lhm2tbjc4mmcpb3d1gg:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Date of the
+                reason for filing, beneficial owner 14f.'
               label: Beneficial owners. Date of the reason for filing, beneficial
                 owner 14f
             x-ehkn8bj65lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Reason for
+                filing, beneficial owner 14f.'
               label: Beneficial owners. Reason for filing, beneficial owner 14f
             x-ehkn8bj65lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Date of birth,
+                beneficial owner 14f.'
               label: Beneficial owners. Date of birth, beneficial owner 14f
             x-ehkn8bj65lkm8pbeehkmcqb3c5hmirre:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Tax identification
+                number or foreign identification code, beneficial owner 14f.'
               label: Beneficial owners. Tax identification number or foreign identification
                 code, beneficial owner 14f
             x-ehkn8bj65ln62or9dtn62r39chgm8:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Nationality,
+                beneficial owner 14f.'
               label: Beneficial owners. Nationality, beneficial owner 14f
             x-ehkn8bj65ln6urb2e9ig:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Surnames
+                and forename, beneficial owner 14f.'
               label: Beneficial owners. Surnames and forename, beneficial owner 14f
             x-ehkn8bj65lo62qbj5lings35chkm6qbfdo:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Country of
+                issue of the identification document, beneficial owner 14f.'
               label: Beneficial owners. Country of issue of the identification document,
                 beneficial owner 14f
             x-ehkn8bj65lo62qbj5lp6asr9chimsor9c4:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Country of
+                residence, beneficial owner 14f.'
               label: Beneficial owners. Country of residence, beneficial owner 14f
             x-ehkn8bj65lq6is3f5li6uorldlimst3f:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Type of identification
+                document, beneficial owner 14f.'
               label: Beneficial owners. Type of identification document, beneficial
                 owner 14f
             x-ehkn8bjjd5n2qrr2dhkmeob3d5nmsbb9chimst39cpkm6obi:
+              help: 'Modelo 036 entry, tax year 2025: Beneficial owners. Entity not
+                required to identify the beneficial owner.'
               label: Beneficial owners. Entity not required to identify the beneficial
                 owner
           construct:

@@ -7,9 +7,9 @@ import the filing-grade registry authority from
 :class:`registry.RegistrySnapshot`, and
 :func:`registry.calculate_registry_snapshot` live.
 
-Nothing is re-exported at this level by design. Exporting here would couple
-callers to the internal subpackage layout and undermine the hexagonal-layer
-discipline.
+Only the generic row-source identity value object is exported here because it
+crosses application source resolution and domain revision persistence without
+belonging to either adapter.
 
 See Also:
     :mod:`registry`
@@ -19,3 +19,7 @@ See Also:
         Application-side source stores and prefill helpers that prepare
         registry binding and relation inputs without becoming domain authority.
 """
+
+from ._row_source_identity import OpaqueSourceRowIdentity, RowBindingKey, RowSourceIdentity
+
+__all__ = ["OpaqueSourceRowIdentity", "RowBindingKey", "RowSourceIdentity"]

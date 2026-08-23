@@ -2029,78 +2029,145 @@ modelo:
                 befektetések ráfordításai. Tőkemódszerrel elszámolt társaságokban
                 lévő részesedések elidegenítéséből származó veszteségek
             x-agp34c1g6h230chq60o36cpk:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. Egyéb technikai ráfordítások (+ vagy -).'
               label: Életbiztosítási technikai számla. Egyéb technikai ráfordítások
                 (+ vagy -)
             x-agp34c1g6h230chq60o36cpl:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. Egyéb technikai ráfordítások (+ vagy -). A behajthatatlan
+                követelések értékvesztésének változása (+ vagy -).'
               label: Életbiztosítási technikai számla. Egyéb technikai ráfordítások
                 (+ vagy -). A behajthatatlan követelések értékvesztésének változása
                 (+ vagy -)
             x-agp34c1g6h230chq60o36cpm:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. Egyéb technikai ráfordítások (+ vagy -). A befektetett eszközök
+                értékvesztésének változása (+ vagy -).'
               label: Életbiztosítási technikai számla. Egyéb technikai ráfordítások
                 (+ vagy -). A befektetett eszközök értékvesztésének változása (+ vagy
                 -)
             x-agp34c1g6h230chq60o36cpn:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. Egyéb technikai ráfordítások (+ vagy -). Egyebek.'
               label: Életbiztosítási technikai számla. Egyéb technikai ráfordítások
                 (+ vagy -). Egyebek
             x-agp34c1g6h230chq60o36cpo:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai
             x-agp34c1g6h230chq60o36cpp:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközök és a befektetések kezelési költségei.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A tárgyi eszközök és a befektetések kezelési költségei
             x-agp34c1g6h230chq60o36d1g:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközök és a befektetések kezelési költségei. A tárgyi eszközök és
+                az ingatlanbefektetések ráfordításai.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A tárgyi eszközök és a befektetések kezelési költségei.
                 A tárgyi eszközök és az ingatlanbefektetések ráfordításai
             x-agp34c1g6h230chq60o36d1h:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközök és a befektetések kezelési költségei. Befektetések és pénzügyi
+                számlák ráfordításai.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A tárgyi eszközök és a befektetések kezelési költségei.
                 Befektetések és pénzügyi számlák ráfordításai
             x-agp34c1g6h230chq60o36d1i:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközök és a befektetések értékhelyesbítései.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései
             x-agp34c1g6h230chq60o36d1j:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközök és a befektetések értékhelyesbítései. A tárgyi eszközök és
+                az ingatlanbefektetések értékcsökkenése.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései.
                 A tárgyi eszközök és az ingatlanbefektetések értékcsökkenése
             x-agp34c1g6h230chq60o36d1k:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközök és a befektetések értékhelyesbítései. A tárgyi eszközök és
+                az ingatlanbefektetések értékvesztése.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései.
                 A tárgyi eszközök és az ingatlanbefektetések értékvesztése
             x-agp34c1g6h230chq60o36d1l:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközök és a befektetések értékhelyesbítései. Pénzügyi befektetések
+                értékvesztése.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A tárgyi eszközök és a befektetések értékhelyesbítései.
                 Pénzügyi befektetések értékvesztése
             x-agp34c1g6h230chq60o36d1m:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközökből és a befektetésekből származó veszteségek.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A tárgyi eszközökből és a befektetésekből származó veszteségek
             x-agp34c1g6h230chq60o36d1n:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközökből és a befektetésekből származó veszteségek. Tárgyi eszközökből
+                és ingatlanbefektetésekből.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A tárgyi eszközökből és a befektetésekből származó veszteségek.
                 Tárgyi eszközökből és ingatlanbefektetésekből
             x-agp34c1g6h230chq60o36d1o:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A tárgyi
+                eszközökből és a befektetésekből származó veszteségek. Pénzügyi befektetésekből.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A tárgyi eszközökből és a befektetésekből származó veszteségek.
                 Pénzügyi befektetésekből
             x-agp34c1g6h230chq60o36d1p:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. Olyan biztosításokat fedező befektetések ráfordításai, amelyeknél
+                a szerződő viseli a befektetési kockázatot.'
               label: Életbiztosítási technikai számla. Olyan biztosításokat fedező
                 befektetések ráfordításai, amelyeknél a szerződő viseli a befektetési
                 kockázatot
             x-agp34c1g6h230chq60o36d9g:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. Részösszeg (Az életbiztosítási technikai számla eredménye).'
               label: Életbiztosítási technikai számla. Részösszeg (Az életbiztosítási
                 technikai számla eredménye)
             x-agp34c1g6h230chq60o3cd9o:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. Konszolidált
+                társaságokban lévő részesedések elidegenítéséből származó veszteségek.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. Konszolidált társaságokban lévő részesedések elidegenítéséből
                 származó veszteségek
             x-agp34c1g6h230chq60o3ec9l:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A konszolidációba
+                bevont entitások ráfordításai.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A konszolidációba bevont entitások ráfordításai
             x-agp34c1g6h230chq60o3ec9m:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A konszolidációba
+                bevont entitások ráfordításai. Részesedés a tőkemódszerrel elszámolt
+                entitások veszteségeiből.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A konszolidációba bevont entitások ráfordításai. Részesedés
                 a tőkemódszerrel elszámolt entitások veszteségeiből
             x-agp34c1g6h230chq60o3ec9n:
+              help: 'A 220-es modelo adata, 2024. adóév: Életbiztosítási technikai
+                számla. A tárgyi eszközök és a befektetések ráfordításai. A konszolidációba
+                bevont entitások ráfordításai. Tőkemódszerrel elszámolt társaságokban
+                lévő részesedések elidegenítéséből származó veszteségek.'
               label: Életbiztosítási technikai számla. A tárgyi eszközök és a befektetések
                 ráfordításai. A konszolidációba bevont entitások ráfordításai. Tőkemódszerrel
                 elszámolt társaságokban lévő részesedések elidegenítéséből származó

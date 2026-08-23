@@ -93,6 +93,21 @@ _HARNESS = dedent(
                 exit_code = int(exc.code or 0)
         finally:
             resume_logging_configuration()
+        if payload.get("assert_stdin_unread"):
+            remaining = sys.stdin.buffer.read().decode("utf-8")
+            if remaining == payload["assert_unread_payload"]:
+                print("S14_STDIN_UNREAD", file=sys.stderr)
+            else:
+                print("S14_STDIN_CONSUMED", file=sys.stderr)
+                exit_code = exit_code or 96
+        for descriptor in payload.get("assert_unread_descriptors", []):
+            remaining = os.read(descriptor, 8192).decode("utf-8")
+            if remaining == payload["assert_unread_payload"]:
+                print("S14_DESCRIPTOR_UNREAD", file=sys.stderr)
+            else:
+                print("S14_DESCRIPTOR_CONSUMED", file=sys.stderr)
+                exit_code = exit_code or 96
+            os.close(descriptor)
         for descriptor in payload.get("assert_closed_descriptors", []):
             try:
                 os.fstat(descriptor)
@@ -144,7 +159,9 @@ _WINDOWS_HANDLE_HARNESS = dedent(
     descriptors = []
     for option in ("--profile-secrets-fd", "--secrets-fd"):
         if option in argv:
-            descriptors.append(int(argv[argv.index(option) + 1]))
+            descriptor = int(argv[argv.index(option) + 1])
+            if descriptor not in descriptors:
+                descriptors.append(descriptor)
     token = config_module._settings_override.set(settings)
     exit_code = 0
     try:
@@ -165,6 +182,23 @@ _WINDOWS_HANDLE_HARNESS = dedent(
                 exit_code = int(exc.code or 0)
         finally:
             resume_logging_configuration()
+        if payload.get("assert_stdin_unread"):
+            remaining = sys.stdin.buffer.read().decode("utf-8")
+            if remaining == payload["assert_unread_payload"]:
+                print("S14_STDIN_UNREAD", file=sys.stderr)
+            else:
+                print("S14_STDIN_CONSUMED", file=sys.stderr)
+                exit_code = exit_code or 96
+        if payload.get("assert_descriptors_unread"):
+            for descriptor in descriptors:
+                remaining = os.read(descriptor, 8192).decode("utf-8")
+                if remaining == payload["assert_unread_payload"]:
+                    print("S14_DESCRIPTOR_UNREAD", file=sys.stderr)
+                else:
+                    print("S14_DESCRIPTOR_CONSUMED", file=sys.stderr)
+                    exit_code = exit_code or 96
+                os.close(descriptor)
+            descriptors.clear()
         for descriptor in descriptors:
             try:
                 os.fstat(descriptor)
@@ -186,12 +220,12 @@ _WINDOWS_HANDLE_HARNESS = dedent(
 )
 
 
-def _settings(storage_root: Path) -> dict[str, object]:
+def _settings(storage_root: Path, *, output_language: str = "en") -> dict[str, object]:
     return {
         "cadrumo_local_storage_root": str(storage_root),
         "cadrumo_secret_store_dir": str(storage_root / "fallback-store"),
         "cadrumo_secret_store_backend": "auto",
-        "cadrumo_output_language": "en",
+        "cadrumo_output_language": output_language,
     }
 
 
@@ -207,6 +241,9 @@ def _run(
     hostile_env: dict[str, str] | None = None,
     preauthenticate_label: str | None = None,
     assert_dispatch_state_unchanged: bool = False,
+    output_language: str = "en",
+    assert_unread_indices: Sequence[int] = (),
+    assert_stdin_unread: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     """Run the real CLI, mapping payload pipes to argv ``{fd}`` tokens."""
     if inherited_payloads and os.name == "nt":
@@ -218,6 +255,9 @@ def _run(
             hostile_env=hostile_env,
             preauthenticate_label=preauthenticate_label,
             assert_dispatch_state_unchanged=assert_dispatch_state_unchanged,
+            output_language=output_language,
+            assert_descriptors_unread=bool(assert_unread_indices),
+            assert_stdin_unread=assert_stdin_unread,
         )
     readers: list[int] = []
     writers: list[int] = []
@@ -243,7 +283,7 @@ def _run(
             for value in args
         ]
         payload = {
-            "settings": _settings(storage_root),
+            "settings": _settings(storage_root, output_language=output_language),
             "assert_closed_descriptors": [
                 *(() if assert_closed_index is None else (readers[assert_closed_index],)),
                 *(readers[index] for index in assert_closed_indices),
@@ -252,6 +292,9 @@ def _run(
             "preauthenticate_label": preauthenticate_label,
             "preauthenticate_secret": _PROFILE_SECRET if preauthenticate_label is not None else None,
             "assert_dispatch_state_unchanged": assert_dispatch_state_unchanged,
+            "assert_unread_descriptors": [readers[index] for index in assert_unread_indices],
+            "assert_stdin_unread": assert_stdin_unread,
+            "assert_unread_payload": _REFUSAL_SECRET,
         }
         return subprocess.run(  # noqa: S603 - fixed interpreter plus test-owned argv
             [sys.executable, "-c", _HARNESS, json.dumps(payload), *rendered_args],
@@ -290,6 +333,9 @@ def _run_windows_handles(
     hostile_env: dict[str, str] | None,
     preauthenticate_label: str | None,
     assert_dispatch_state_unchanged: bool,
+    output_language: str,
+    assert_descriptors_unread: bool,
+    assert_stdin_unread: bool,
 ) -> subprocess.CompletedProcess[str]:
     """Run the shipped bootstrap with an explicit STARTUPINFOEX HANDLE allowlist."""
     if sys.platform != "win32":
@@ -341,12 +387,15 @@ def _run_windows_handles(
         startup = subprocess.STARTUPINFO()
         startup.lpAttributeList = {"handle_list": handles}
         payload = {
-            "settings": _settings(storage_root),
+            "settings": _settings(storage_root, output_language=output_language),
             "profile_handle": profile_handle,
             "secrets_handle": secrets_handle,
             "preauthenticate_label": preauthenticate_label,
             "preauthenticate_secret": _PROFILE_SECRET if preauthenticate_label is not None else None,
             "assert_dispatch_state_unchanged": assert_dispatch_state_unchanged,
+            "assert_descriptors_unread": assert_descriptors_unread,
+            "assert_stdin_unread": assert_stdin_unread,
+            "assert_unread_payload": _REFUSAL_SECRET,
         }
         return subprocess.run(  # noqa: S603 - fixed interpreter and production bootstrap
             [
@@ -806,9 +855,13 @@ def test_each_leaf_refuses_same_scope_channel_conflict_before_state_or_read(
         ["--format", "json", *command, "--secrets-stdin", "--secrets-fd", "{fd:0}"],
         stdin=_REFUSAL_SECRET,
         inherited_payloads=(_REFUSAL_SECRET,),
+        assert_unread_indices=(0,),
+        assert_stdin_unread=True,
     )
     combined = _assert_refused(result, root, before={})
     assert '"status":"error"' in combined
+    assert "S14_STDIN_UNREAD" in result.stderr
+    assert "S14_DESCRIPTOR_UNREAD" in result.stderr
 
 
 @pytest.mark.parametrize("collision", ("two-stdin", "same-fd"))
@@ -840,9 +893,20 @@ def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(tm
             *leaf,
         )
     )
-    result = _run(root, args, stdin=stdin, inherited_payloads=inherited)
+    result = _run(
+        root,
+        args,
+        stdin=stdin,
+        inherited_payloads=inherited,
+        assert_unread_indices=(0,) if inherited else (),
+        assert_stdin_unread=stdin is not None,
+    )
     combined = _assert_refused(result, root, before=before)
     assert '"status":"error"' in combined
+    if stdin is not None:
+        assert "S14_STDIN_UNREAD" in result.stderr
+    else:
+        assert "S14_DESCRIPTOR_UNREAD" in result.stderr
 
 
 @pytest.mark.parametrize("descriptor", (-1, 1, 2, 999_999))
@@ -1034,10 +1098,11 @@ def test_live_session_makes_root_source_unused_and_leaves_it_unread(
         inherited_payloads=(_REFUSAL_SECRET,),
         preauthenticate_label="live-session-operator",
         assert_dispatch_state_unchanged=True,
+        assert_unread_indices=(0,),
     )
     combined = _assert_refused(result, root)
     assert '"status":"error"' in combined
-    assert "S13_DESCRIPTOR_OPEN" in result.stderr
+    assert "S14_DESCRIPTOR_UNREAD" in result.stderr
     assert "S14_STATE_UNCHANGED" in result.stderr
 
 
@@ -1046,16 +1111,21 @@ def test_live_session_makes_root_source_unused_and_leaves_it_unread(
     (
         (("config", "profile", "history", "missing-profile"), {"profile_passphrase": _PROFILE_SECRET}),
         (("config", "profile", "history", ""), {"profile_passphrase": _PROFILE_SECRET}),
+        (("config", "profile", "history"), {"profile_passphrase": _PROFILE_SECRET}),
         (("config", "profile", "history", "wrong-secret-target"), {"profile_passphrase": ""}),
+        (
+            ("config", "profile", "history", "wrong-nonblank-secret-target"),
+            {"profile_passphrase": _REFUSAL_SECRET},
+        ),
     ),
-    ids=("wrong-target", "blank-target", "blank-secret"),
+    ids=("wrong-target", "blank-target", "no-target", "blank-secret", "wrong-secret"),
 )
 def test_root_wrong_blank_target_or_secret_refuses_without_secret_disclosure(
     tmp_path: Path, command: tuple[str, ...], payload: dict[str, str]
 ) -> None:
     root = tmp_path / "wrong-blank-root"
-    if command[-1] == "wrong-secret-target":
-        _register(root, label="wrong-secret-target")
+    if command[-1] in {"wrong-secret-target", "wrong-nonblank-secret-target"}:
+        _register(root, label=command[-1])
     before = _storage_snapshot(root)
     result = _run(
         root,
@@ -1092,10 +1162,11 @@ def test_root_source_is_inapplicable_to_self_authenticating_rotation_and_unread(
         ],
         stdin=leaf_payload,
         inherited_payloads=(_REFUSAL_SECRET,),
+        assert_unread_indices=(0,),
     )
     combined = _assert_refused(result, root, before=before)
     assert '"status":"error"' in combined
-    assert "S13_DESCRIPTOR_OPEN" in result.stderr
+    assert "S14_DESCRIPTOR_UNREAD" in result.stderr
 
 
 @pytest.mark.parametrize(
@@ -1136,8 +1207,6 @@ def test_four_locale_conflict_snapshots_are_localized_and_secret_free(
         [
             "--format",
             "json",
-            "--language",
-            locale,
             "config",
             "profile",
             "create",
@@ -1148,6 +1217,7 @@ def test_four_locale_conflict_snapshots_are_localized_and_secret_free(
             "999999",
         ],
         stdin=_REFUSAL_SECRET,
+        output_language=locale,
     )
     combined = _assert_refused(result, root, before={})
     assert expected in combined

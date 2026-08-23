@@ -38,7 +38,7 @@ Envelope-wrapped shape's footprint.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -72,11 +72,13 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         definition: SecureObjectNamespaceDefinition,
         model_type: type[DocumentT],
         empty_document: Callable[[], DocumentT],
+        serialization_context: Mapping[str, object] | None = None,
     ) -> None:
         self._objects = objects
         self._definition = definition
         self._model_type = model_type
         self._empty_document = empty_document
+        self._serialization_context = dict(serialization_context or {})
 
     @property
     def object_key(self) -> str:
@@ -196,7 +198,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             classification=self._definition.sensitivity,
             schema_version=self._definition.schema_version,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
+            payload=envelope.model_dump_json(context=self._serialization_context).encode(UTF_8_ENCODING),
             expected_revision_id=expected_revision_id,
         )
 

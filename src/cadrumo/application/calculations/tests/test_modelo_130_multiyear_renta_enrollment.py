@@ -213,10 +213,10 @@ def _calculate_quarter(
 def _seed_prior_year_m100(obs_repo: CalculationObservationRepository, *, filing_year: int) -> None:
     """Record renta year N's annual Renta (M100) net-income observation.
 
-    The :data:`_PREV_YEAR_BINDING` sums M100 casillas 0224/1479/1553/1577 of
-    the prior ejercicio and requires all four observed; the net income lands
-    in 0224, the other rendimiento-source casillas are zero for a
-    pure-actividad-económica filer.
+    The :data:`_PREV_YEAR_BINDING` sums whichever of M100 casillas
+    0224/1479/1553/1577 apply in the prior ejercicio. This full-filing scenario
+    records net income in 0224 and explicit zeros for its non-applicable
+    rendimiento sources; resolver completeness is tested separately.
     """
     obs_repo.save(
         obs_repo.prepare_observation_envelope(

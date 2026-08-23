@@ -16,7 +16,7 @@ than a bare substring match and never hard-fails. The index loads no model and
 reaches no network on any install.
 
 The index is SDK-independent and pure (it takes plain command documents), so it
-is unit-tested directly without the MCP transport.
+is unit-tested directly without any consuming transport.
 """
 
 from __future__ import annotations

@@ -106,6 +106,35 @@ def _source_observation(
     )
 
 
+def test_required_source_casillas_must_be_unique_and_canonical_candidates() -> None:
+    with pytest.raises(ValidationError, match="required_source_casilla_ids entries must be unique"):
+        PreviousModeloSelector(
+            source_modelo="100",
+            period="0A",
+            source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
+            required_source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_PAGO_FRACCIONADO_CASILLA),
+        )
+
+    outside = validated_casilla_id("99", surface="test required source presence")
+    with pytest.raises(ValidationError, match="must be a subset of source casillas"):
+        PreviousModeloSelector(
+            source_modelo="100",
+            period="0A",
+            source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
+            required_source_casilla_ids=(outside,),
+        )
+
+
+def test_omitted_required_source_policy_keeps_all_candidates_mandatory() -> None:
+    selector = PreviousModeloSelector(
+        source_modelo="100",
+        period="0A",
+        source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
+    )
+
+    assert selector.required_source_casilla_ids is None
+
+
 def _resolve_binding(
     binding: DataBindingDefinition,
     observations: tuple[RegistryModeloObservation, ...],

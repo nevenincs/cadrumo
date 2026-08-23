@@ -1,8 +1,6 @@
 """Default-off, consent-gated remote telemetry.
 
-Every existing telemetry primitive in this codebase (
-:class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`, the MCP
-``cadrumo_harness.mcp._telemetry.ToolCallTelemetryRecord``) is local-only by
+Every existing telemetry primitive in this codebase is local-only by
 construction: encrypted secure storage or a local JSONL file, never a network
 call. This package is the one deliberate, narrow exception -- a REMOTE
 telemetry tier an operator may opt into to help improve the project.

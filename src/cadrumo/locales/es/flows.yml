@@ -185,6 +185,7 @@ flows:
           donativo_donor: Donante
           foreign_asset: Activo extranjero
           gasto193_contributor: Gastos por contribuyente (modelo 193)
+          inventory: Existencias
           iva_compensation_annual_partition: Compensación anual de IVA
           iva_wallet_decision: Decisión de saldo de IVA
           ledger_impatriado_income_aggregation: Totales de ingresos de impatriados

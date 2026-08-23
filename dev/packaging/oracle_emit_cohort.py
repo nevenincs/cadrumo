@@ -7,14 +7,10 @@ row bound to that one cohort. Every OS leg of the packaging-smoke workflow runs
 this against the same downloaded ``cadrumo-release-cohort`` artifact, so all the
 Python rows bind one cohort id (no per-OS rebuild, which would diverge the id).
 
-It installs the cohort's three digest-pinned Python wheels plus the sibling
-``cadrumo-harness`` wheel into a fresh isolated virtualenv, resolves the
-installed ``aeat`` and ``cadrumo-mcp`` executables, runs the canonical
-installed CLI and MCP behaviour oracles against them, and emits the record
+It installs the cohort's three digest-pinned Python wheels into a fresh
+isolated virtualenv, resolves the installed ``aeat`` executable, runs the
+canonical installed CLI behaviour oracle against it, and emits the record
 through :func:`~dev.packaging.distribution_evidence_emit.emit_installed_oracle_evidence`.
-
-The independently versioned harness is an exact digest-pinned cohort member;
-no installed-runtime lane rebuilds or index-resolves it.
 """
 
 from __future__ import annotations
@@ -27,13 +23,7 @@ from typing import Final
 
 from dev._paths import UTF_8
 
-from ._acquire_common import (
-    HARNESS_DISTRIBUTION,
-    PYTHON_COHORT_WHEEL_NAMES,
-    AcquisitionError,
-    run_installed_behavior_oracles,
-    venv_executable,
-)
+from ._acquire_common import PYTHON_COHORT_WHEEL_NAMES, AcquisitionError, run_installed_cli_oracle, venv_executable
 from .cohort_manifest import load_release_cohort
 from .distribution_evidence_emit import emit_installed_oracle_evidence
 from .evidence import AcquisitionIdentity, DestinationIdentity
@@ -105,7 +95,6 @@ def run_oracle_emit_cohort(
     wheels = {name: python_cohort.sha256[name] for name in PYTHON_COHORT_WHEEL_NAMES}
     root_wheel = python_cohort.root_wheel
     manuals_wheel, official_wheel = python_cohort.companion_wheels
-    harness_wheel = python_cohort.harness_wheel
     install = subprocess.run(  # noqa: S603 - resolved uv executable and cohort file paths
         [
             str(uv),
@@ -114,7 +103,6 @@ def run_oracle_emit_cohort(
             "--python",
             str(venv_python),
             f"cadrumo @ {root_wheel.resolve().as_uri()}",
-            f"{HARNESS_DISTRIBUTION} @ {harness_wheel.resolve().as_uri()}",
             f"cadrumo-data-manuals @ {manuals_wheel.resolve().as_uri()}",
             f"cadrumo-data-official @ {official_wheel.resolve().as_uri()}",
         ],
@@ -127,15 +115,12 @@ def run_oracle_emit_cohort(
     )
     if install.returncode != 0:
         raise AcquisitionError(
-            f"could not install the immutable cohort ({sorted(wheels)}) plus the sibling "
-            f"{HARNESS_DISTRIBUTION} wheel: {install.stderr.strip()[:200]}"
+            f"could not install the immutable cohort ({sorted(wheels)}): {install.stderr.strip()[:200]}"
         )
 
     aeat = venv_executable(venv, "aeat")
-    mcp_server = venv_executable(venv, "cadrumo-mcp")
-    tax_evidence, mcp_evidence = run_installed_behavior_oracles(
+    tax_evidence = run_installed_cli_oracle(
         cli=aeat,
-        mcp_server=mcp_server,
         storage_root=work / "oracle-state",
         work_dir=work / "oracle-work",
         cohort=python_cohort,
@@ -147,7 +132,6 @@ def run_oracle_emit_cohort(
         row_id=row_id,
         cohort=cohort,
         tax_evidence=tax_evidence,
-        mcp_evidence=mcp_evidence,
         acquisition=AcquisitionIdentity(mechanism="immutable-release-cohort", source=str(release_cohort_dir)),
         destination=DestinationIdentity(
             kind="isolated-python-venv", locator=str(venv), version=cohort.manifest.version

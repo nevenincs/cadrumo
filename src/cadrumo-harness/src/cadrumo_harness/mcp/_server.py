@@ -1206,7 +1206,7 @@ def build_server(
         return CompleteResult(completion=Completion(values=list(values), total=len(values), has_more=False))
 
     return Server(
-        PRODUCT_IDENTITY.mcp_server,
+        "cadrumo",
         on_list_tools=_on_list_tools,
         on_call_tool=_on_call_tool,
         on_list_prompts=_on_list_prompts,

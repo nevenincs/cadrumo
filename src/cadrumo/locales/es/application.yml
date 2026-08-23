@@ -600,13 +600,14 @@ application:
   inventory:
     service:
       errors:
-        closing_authority_conflict: Ya existe un registro distinto de autoridad de cierre para esta actividad y año.
         actividad_conflict: Ya existe un libro de inventario para la actividad %{actividad_id}
           y el ejercicio %{year}. Ejecute `aeat app ledger inventory list` para ver
           los libros existentes.
         actividad_not_found: No existe ningún libro de inventario para la actividad
           %{actividad_id} y el ejercicio %{year}. Ejecute `aeat app ledger inventory
           list` para ver los libros existentes.
+        closing_authority_conflict: Ya existe un registro distinto de autoridad de
+          cierre para esta actividad y año.
         duplicate_movement_id: El libro de inventario ya contiene el movimiento %{movement_id}.
           Ejecute `aeat app ledger inventory list` para ver los movimientos registrados.
         invalid_valuation_method: 'El método de valoración de inventario no está admitido:
@@ -766,6 +767,9 @@ application:
           requiere un repositorio de persistencia de ejecuciones de sincronización.
     filed_observations:
       errors:
+        duplicate_casilla: La observación presentada repite una misma casilla más
+          de una vez. Cada casilla puede aparecer una sola vez en una observación
+          registrada.
         iva_history_promotion_failed: La declaración presentada del Modelo 303 no
           pudo incorporarse al histórico de compensación de IVA.
         iva_history_reload_missing: El histórico seguro de compensación de IVA no
@@ -1048,6 +1052,29 @@ application:
       external_import_registry_snapshot_unresolved: No se pudo resolver el snapshot
         de registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period};
         no se pueden validar los ids de casilla importados.
+      external_import_source_actor_blank: La importación de una autoliquidación externa
+        debe indicar quién la presentó. El actor declarado está vacío.
+      external_import_source_casilla_mismatch: Las casillas con texto original no
+        coinciden con las casillas cuyo valor se importa. Ambos conjuntos deben describir
+        exactamente las mismas casillas.
+      external_import_source_incomplete: 'La autoliquidación externa no aporta todas
+        las casillas numéricas obligatorias de esta revisión. Faltan: {missing_casilla_ids}.'
+      external_import_source_lexical_blank: La casilla {casilla_id} se importa con
+        un texto original vacío. El texto presentado debe conservarse literalmente.
+      external_import_source_lexical_non_numeric: El texto original de la casilla
+        {casilla_id} no puede leerse como un importe. Revise el valor presentado antes
+        de importarlo.
+      external_import_source_lexical_value_mismatch: El importe leído del texto original
+        de la casilla {casilla_id} no coincide con el valor importado para esa casilla.
+      external_import_source_period_mismatch: El período declarado pertenece a un
+        ejercicio distinto del ejercicio de presentación indicado. Ambos deben referirse
+        al mismo ejercicio.
+      external_import_source_revision_mismatch: La revisión indicada en la autoliquidación
+        externa no es la que la unidad de trabajo existente tiene asignada para ese
+        modelo y período.
+      external_import_source_work_unit_ambiguous: Existe más de una unidad de trabajo
+        activa para ese modelo, ejercicio y período, de modo que no puede determinarse
+        a cuál corresponde la importación.
       external_import_tax_id_missing: La evidencia de importación externa %{evidence_reference_id}
         (%{evidence_kind}) requiere el NIF del contribuyente antes de vincularse a
         un artefacto de justificante.
@@ -1127,8 +1154,9 @@ application:
         %{filing_year} %{period}; completa antes estos datos de perfil: %{missing}.'
       profile_readiness_profile_missing: No existe un perfil activo persistido para
         este trabajo de modelo; crea o repara el perfil antes de continuar.
-      profile_readiness_setup_incomplete: La configuración del perfil aún no se ha declarado completa;
-        ejecuta `aeat config profile complete-setup` antes de trabajar con modelos.
+      profile_readiness_setup_incomplete: La configuración del perfil aún no se ha
+        declarado completa; ejecuta `aeat config profile complete-setup` antes de
+        trabajar con modelos.
       profile_readiness_setup_incomplete_missing: 'La configuración del perfil está
         incompleta; termina el asistente de configuración antes de trabajar con modelos.
         Campos pendientes: %{missing}.'

@@ -89,7 +89,6 @@ DERIVED_OUTPUT_SUBPATHS: Final[dict[str, str]] = {
     "cadrumo_log_dir": "logs",
     "cadrumo_llm_usage_dir": "llm-usage",
     "cadrumo_llm_run_telemetry_dir": "llm-run-telemetry",
-    "cadrumo_mcp_telemetry_dir": "telemetry",
     "cadrumo_llm_cache_dir": "cache/llm-cache",
     "cadrumo_corpus_text_cache_dir": "cache/corpus-text",
     "cadrumo_corpus_search_cache_dir": "cache/corpus-search",

@@ -122,7 +122,6 @@ Getting started <how-to/index>
 Get Cadrumo <download>
 Install Cadrumo <workstation-setup>
 Quickstart <how-to/quickstart>
-Connect an agent (MCP) <how-to/connect-an-agent>
 First quarterly filing <how-to/first-quarterly-filing>
 The income-tax year <how-to/irpf-lifecycle>
 The IVA year <how-to/iva-lifecycle>

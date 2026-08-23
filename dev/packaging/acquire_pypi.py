@@ -1,12 +1,11 @@
 """Reacquire the Cadrumo Python cohort from PyPI and repeat installed tax work.
 
-This post-publication check installs the complete Python cohort (``cadrumo``,
-``cadrumo-harness``, and both mandatory data distributions) FROM a public
+This post-publication check installs the complete Python cohort (``cadrumo``
+and both mandatory data distributions) FROM a public
 package index (no local wheels), proves the
 cohort's installed wheel bytes match the promoted cohort digest byte-for-byte,
-and then repeats the grounded installed CLI and MCP tax-work oracles from that
-index-only environment. The harness remains independently versioned, but its
-exact wheel bytes and declared version are pinned by the cohort manifest.
+and then repeats the grounded installed CLI tax-work oracle from that
+index-only environment.
 It refuses instructively when the index does not yet serve the promoted
 version (implements post-release-distribution plan row P03.S14).
 """
@@ -23,11 +22,10 @@ from typing import Final
 from dev._paths import UTF_8
 
 from ._acquire_common import (
-    HARNESS_DISTRIBUTION,
     PYTHON_COHORT_WHEEL_NAMES,
     AcquisitionError,
     require_command_succeeded,
-    run_installed_behavior_oracles,
+    run_installed_cli_oracle,
     venv_executable,
     verify_python_cohort_download,
 )
@@ -80,7 +78,7 @@ def _download_cohort_wheels(
     """
     download_dir.mkdir(parents=True, exist_ok=True)
     for distribution in PYTHON_COHORT_WHEEL_NAMES:
-        version = cohort.harness_version if distribution == HARNESS_DISTRIBUTION else cohort.version
+        version = cohort.version
         completed = _run(
             [
                 str(venv_python),
@@ -179,7 +177,6 @@ def run_pypi_acquisition(
         endpoint=index_url,
     )
 
-    harness_pin = cohort.harness_version
     install = _run(
         [
             str(uv),
@@ -190,7 +187,6 @@ def run_pypi_acquisition(
             "--index-url",
             index_url,
             f"cadrumo=={cohort.version}",
-            f"{HARNESS_DISTRIBUTION}=={harness_pin}",
             f"cadrumo-data-manuals=={cohort.version}",
             f"cadrumo-data-official=={cohort.version}",
         ],
@@ -203,16 +199,12 @@ def run_pypi_acquisition(
         mechanism="uv pip install",
         endpoint=index_url,
         version=cohort.version,
-        next_step=(
-            f"publish cadrumo=={cohort.version} and {HARNESS_DISTRIBUTION}=={harness_pin} to {index_url} and rerun"
-        ),
+        next_step=f"publish cadrumo=={cohort.version} to {index_url} and rerun",
     )
 
     aeat = venv_executable(venv, "aeat")
-    mcp = venv_executable(venv, "cadrumo-mcp")
-    tax_evidence, mcp_evidence = run_installed_behavior_oracles(
+    tax_evidence = run_installed_cli_oracle(
         cli=aeat,
-        mcp_server=mcp,
         storage_root=run_root / "oracle-state",
         work_dir=run_root / "oracle-work",
         cohort=cohort,
@@ -231,7 +223,6 @@ def run_pypi_acquisition(
         },
         "verified_wheels": {name: str(path) for name, path in verified.items()},
         "installed_tax_oracle": tax_evidence.to_jsonable(),
-        "installed_mcp_oracle": mcp_evidence.to_jsonable(),
     }
     evidence_path = run_root / "acquire-pypi-evidence.json"
     evidence_path.write_text(
@@ -247,7 +238,6 @@ def run_pypi_acquisition(
             row_id=row_id,
             cohort=release_cohort,
             tax_evidence=tax_evidence,
-            mcp_evidence=mcp_evidence,
             acquisition=AcquisitionIdentity(mechanism="pip", source=index_url),
             destination=DestinationIdentity(
                 kind="pypi-index-install",

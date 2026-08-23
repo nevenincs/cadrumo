@@ -10,27 +10,17 @@ msgstr ""
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
-"Language: es\n"
 "Language-Team: es <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../reference/identity-and-naming.md:1
 msgid "Identity and naming"
 msgstr "Identidad y nomenclatura"
-
-#: ../../reference/identity-and-naming.md:3
-msgid ""
-"The Agencia Estatal de Administración Tributaria (AEAT) is the external "
-"tax authority. CLI means command-line interface. MCP means Model Context "
-"Protocol."
-msgstr ""
-"La Agencia Estatal de Administración Tributaria (AEAT) es la autoridad "
-"tributaria externa. CLI significa interfaz de línea de comandos. MCP "
-"significa Model Context Protocol."
 
 #: ../../reference/identity-and-naming.md:6
 msgid "Canonical product identity"
@@ -81,30 +71,6 @@ msgid "`nevenincs/cadrumo`"
 msgstr "`nevenincs/cadrumo`"
 
 #: ../../reference/identity-and-naming.md
-msgid "MCP server identity"
-msgstr "Identidad del servidor MCP"
-
-#: ../../reference/identity-and-naming.md
-msgid "MCP executable"
-msgstr "Ejecutable MCP"
-
-#: ../../reference/identity-and-naming.md
-msgid "`cadrumo-mcp`"
-msgstr "`cadrumo-mcp`"
-
-#: ../../reference/identity-and-naming.md
-msgid "MCP tool prefix"
-msgstr "Prefijo de herramientas MCP"
-
-#: ../../reference/identity-and-naming.md
-msgid "MCP resource scheme"
-msgstr "Esquema de recursos MCP"
-
-#: ../../reference/identity-and-naming.md
-msgid "Plugin identifier"
-msgstr "Identificador de plugin"
-
-#: ../../reference/identity-and-naming.md
 msgid "Product environment prefix"
 msgstr "Prefijo de entorno del producto"
 
@@ -130,8 +96,8 @@ msgstr "`cadrumo_data`"
 
 #: ../../reference/identity-and-naming.md:24
 msgid ""
-"These values identify one product. There is no alternate human CLI "
-"spelling or Python import alias."
+"These values identify one product. There is no alternate human CLI spelling "
+"or Python import alias."
 msgstr ""
 "Estos valores identifican un único producto. No existe una grafía "
 "alternativa de la CLI para personas ni un alias de importación de Python."
@@ -178,16 +144,16 @@ msgstr "`AEAT`"
 
 #: ../../reference/identity-and-naming.md
 msgid ""
-"AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, "
-"AEAT taxonomy"
+"AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, AEAT "
+"taxonomy"
 msgstr ""
 "portal de la AEAT, credenciales de la AEAT, fichero oficial de la AEAT, "
 "fuente legal de la AEAT, taxonomía de la AEAT"
 
 #: ../../reference/identity-and-naming.md:34
 msgid ""
-"AEAT is an external authority and counterparty, not the application name."
-" Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
+"AEAT is an external authority and counterparty, not the application name. "
+"Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
 "official period or classification tokens keep their AEAT meaning inside "
 "Cadrumo."
 msgstr ""

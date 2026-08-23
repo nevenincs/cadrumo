@@ -11,7 +11,7 @@ session - not the one bound in its own context - cannot reach the others, becaus
 by PEP 567 semantics a thread observes no binding another thread made.
 
 That blind spot is load-bearing exactly once: when the process is about to die
-abruptly. The MCP stdio server's lifetime watchdog reaps with :func:`os._exit`,
+abruptly. An embedding host's lifetime watchdog may reap with :func:`os._exit`,
 which bypasses :mod:`atexit`, and it runs on its own daemon thread - so the
 sessions it most needs to zeroise (bound inside in-flight warm workers) are
 precisely the ones its context cannot see. Interpreter shutdown has the same
@@ -85,7 +85,7 @@ def close_all_live_bucket_sessions() -> int:
 
     The cross-context counterpart to
     :func:`~._active_session.close_active_bucket_session`, for the two callers
-    that genuinely need it: the interpreter-exit hook, and the MCP watchdog's
+    that genuinely need it: the interpreter-exit hook and an embedding watchdog's
     pre-exit hook before an :func:`os._exit` that would otherwise skip both.
 
     Deliberately tolerant. It runs while the process is being torn down, so a

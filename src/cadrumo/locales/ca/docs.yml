@@ -8,6 +8,7 @@ docs:
       donativo_donor: des dels donants registrats
       foreign_asset: des dels seus béns a l'estranger
       gasto193_contributor: des de les despeses d'administració i dipòsit per contribuent
+      inventory: des del seu inventari d'existències
       iva_compensation_annual_partition: des de la compensació d'IVA de l'exercici
       iva_wallet_decision: des de la seva decisió de compensació d'IVA
       ledger_impatriado_income_aggregation: des dels seus ingressos del règim d'impatriats

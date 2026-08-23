@@ -180,6 +180,7 @@ flows:
           donativo_donor: Donation donor
           foreign_asset: Foreign asset
           gasto193_contributor: Expenses per contribuyente (modelo 193)
+          inventory: Inventory
           iva_compensation_annual_partition: Annual VAT compensation
           iva_wallet_decision: VAT wallet decision
           ledger_impatriado_income_aggregation: Inbound-expatriate income totals

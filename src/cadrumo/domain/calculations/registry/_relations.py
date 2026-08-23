@@ -19,9 +19,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Self
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period, RegistrySelectorPeriodCode
 from ....core.aggregation import RelationAggregationOp
@@ -74,6 +74,7 @@ class RegistryFoldRequirement(BaseModel):
     filing_periods: tuple[Period, ...] = ()
     periods: tuple[RegistrySelectorPeriodCode, ...] = Field(min_length=1)
     source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
+    required_source_casilla_ids: tuple[CasillaId, ...] | None = None
     binding_ids: tuple[BindingId, ...] = ()
     relation_ids: tuple[RelationId, ...] = ()
     target_bindings: tuple[BindingId, ...] = ()
@@ -97,9 +98,39 @@ class RegistryFoldRequirement(BaseModel):
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
-    _values_unique = field_validator("binding_ids", "source_casilla_ids", "legal_refs", "source_refs")(
+    _values_unique = field_validator(
+        "binding_ids",
+        "source_casilla_ids",
+        "legal_refs",
+        "source_refs",
+    )(
         unique_tuple("fold requirement tuple")
     )
+
+    @field_validator("required_source_casilla_ids")
+    @classmethod
+    def _required_source_casillas_unique(
+        cls,
+        value: tuple[CasillaId, ...] | None,
+    ) -> tuple[CasillaId, ...] | None:
+        if value is not None and len(set(value)) != len(value):
+            raise RegistryValidationError("fold requirement required source casilla entries must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _required_sources_are_candidates(self) -> Self:
+        if self.required_source_casilla_ids is not None and not set(self.required_source_casilla_ids) <= set(
+            self.source_casilla_ids
+        ):
+            raise RegistryValidationError("fold requirement required source casillas must be candidate source casillas")
+        return self
+
+    @property
+    def enforced_source_casilla_ids(self) -> tuple[CasillaId, ...]:
+        """Return the registry-declared mandatory subset, defaulting to every candidate."""
+        if self.required_source_casilla_ids is None:
+            return self.source_casilla_ids
+        return self.required_source_casilla_ids
 
 
 @dataclass(slots=True)

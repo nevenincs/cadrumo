@@ -8,196 +8,378 @@ modelo:
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:
+              help: 'Dada del model 036, exercici 2025: Activitat. Descripcio de l''activitat.'
               label: Activitat. Descripcio de l'activitat
             x-c5hn8bj1cdq6itj9chgm8bb9c5iiqsr5cdhmirre5ljn4tbgds:
+              help: 'Dada del model 036, exercici 2025: Activitat. Seccio de l''I.A.E.
+                i grup o epigraf.'
               label: Activitat. Seccio de l'I.A.E. i grup o epigraf
             x-c5hn8bj1cdq6itj9chgm8bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'Dada del model 036, exercici 2025: Activitat. Tipus d''activitat.'
               label: Activitat. Tipus d'activitat
             x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmm8qbiclhn8rpd64:
+              help: 'Dada del model 036, exercici 2025: Indicadors de referencia cadastral.
+                Indicador del primer local directament afecte.'
               label: Indicadors de referencia cadastral. Indicador del primer local
                 directament afecte
             x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmm8qbiclhn8rpd68:
+              help: 'Dada del model 036, exercici 2025: Indicadors de referencia cadastral.
+                Indicador del segon local directament afecte.'
               label: Indicadors de referencia cadastral. Indicador del segon local
                 directament afecte
             x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmmirj4d5p6aorkdsmj2:
+              help: 'Dada del model 036, exercici 2025: Indicadors de referencia cadastral.
+                Indicador del primer local indirectament afecte.'
               label: Indicadors de referencia cadastral. Indicador del primer local
                 indirectament afecte
             x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmmirj4d5p6aorkdsmj4:
+              help: 'Dada del model 036, exercici 2025: Indicadors de referencia cadastral.
+                Indicador del segon local indirectament afecte.'
               label: Indicadors de referencia cadastral. Indicador del segon local
                 indirectament afecte
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc5m78o8:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Alta.'
               label: Local directament afecte (primer). Alta
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc5m78o9dcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Data d''alta.'
               label: Local directament afecte (primer). Data d'alta
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc9gmko8:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Baixa.'
               label: Local directament afecte (primer). Baixa
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc9gmko9dcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Data de baixa.'
               label: Local directament afecte (primer). Data de baixa
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0rrjehgmo:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Codi postal.'
               label: Local directament afecte (primer). Codi postal
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0sjfepkmsor9c4:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Codi de provincia.'
               label: Local directament afecte (primer). Codi de provincia
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dctp62p3f5lgmcpb3ehgm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Grau d''afectacio.'
               label: Local directament afecte (primer). Grau d'afectacio
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddlqmsqb3d5o6iro:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Municipi.'
               label: Local directament afecte (primer). Municipi
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpnmqojickmncqb1:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Nom de la via publica.'
               label: Local directament afecte (primer). Nom de la via publica
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbids:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Numero.'
               label: Local directament afecte (primer). Numero
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Numero de referencia d''alta.'
               label: Local directament afecte (primer). Numero de referencia d'alta
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1kn6ro:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Pis.'
               label: Local directament afecte (primer). Pis
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1qmasjkc4:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Porta.'
               label: Local directament afecte (primer). Porta
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Referencia cadastral.'
               label: Local directament afecte (primer). Referencia cadastral
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dedim6or9dtn2qpric5j6ior1:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Seccio grafica cadastral.'
               label: Local directament afecte (primer). Seccio grafica cadastral
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dedqn0pbicpkm6qb5:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Superficie en metres quadrats.'
               label: Local directament afecte (primer). Superficie en metres quadrats
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurg:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Variacio.'
               label: Local directament afecte (primer). Variacio
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhdcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Data de variacio.'
               label: Local directament afecte (primer). Data de variacio
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
+                Numero de referencia de la variacio.'
               label: Local directament afecte (primer). Numero de referencia de la
                 variacio
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o8:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Alta.'
               label: Local directament afecte (segon). Alta
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o9dcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Data d''alta.'
               label: Local directament afecte (segon). Data d'alta
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc9gmko8:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Baixa.'
               label: Local directament afecte (segon). Baixa
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc9gmko9dcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Data de baixa.'
               label: Local directament afecte (segon). Data de baixa
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0rrjehgmo:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Codi postal.'
               label: Local directament afecte (segon). Codi postal
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0sjfepkmsor9c4:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Codi de provincia.'
               label: Local directament afecte (segon). Codi de provincia
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdctp62p3f5lgmcpb3ehgm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Grau d''afectacio.'
               label: Local directament afecte (segon). Grau d'afectacio
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddlqmsqb3d5o6iro:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Municipi.'
               label: Local directament afecte (segon). Municipi
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpnmqojickmncqb1:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Nom de la via publica.'
               label: Local directament afecte (segon). Nom de la via publica
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbids:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Numero.'
               label: Local directament afecte (segon). Numero
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Numero de referencia d''alta.'
               label: Local directament afecte (segon). Numero de referencia d'alta
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1kn6ro:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Pis.'
               label: Local directament afecte (segon). Pis
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1qmasjkc4:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Porta.'
               label: Local directament afecte (segon). Porta
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Referencia cadastral.'
               label: Local directament afecte (segon). Referencia cadastral
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdedim6or9dtn2qpric5j6ior1:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Seccio grafica cadastral.'
               label: Local directament afecte (segon). Seccio grafica cadastral
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdedqn0pbicpkm6qb5:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Superficie en metres quadrats.'
               label: Local directament afecte (segon). Superficie en metres quadrats
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurg:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Variacio.'
               label: Local directament afecte (segon). Variacio
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhdcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Data de variacio.'
               label: Local directament afecte (segon). Data de variacio
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
+              help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
+                Numero de referencia de la variacio.'
               label: Local directament afecte (segon). Numero de referencia de la
                 variacio
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Alta.'
               label: Local indirectament afecte (primer). Alta
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4mmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Data d''alta.'
               label: Local indirectament afecte (primer). Data d'alta
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm4obac4:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Baixa.'
               label: Local indirectament afecte (primer). Baixa
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm4obac4mmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Data de baixa.'
               label: Local indirectament afecte (primer). Data de baixa
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbgdtpn8obc:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Codi postal.'
               label: Local indirectament afecte (primer). Codi postal
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbge9nncqbecdkm2:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Codi de provincia.'
               label: Local indirectament afecte (primer). Codi de provincia
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmesj1chniqob6clhn8ob3d5nms:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Grau d''afectacio.'
               label: Local indirectament afecte (primer). Grau d'afectacio
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmqtbed5hmis39ds:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Municipi.'
               label: Local indirectament afecte (primer). Municipi
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmsrrdc9p6abbmd5gg:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Nom de la via publica.'
               label: Local indirectament afecte (primer). Nom de la via publica
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6u:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Numero.'
               label: Local indirectament afecte (primer). Numero
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Numero de referencia d''alta.'
               label: Local indirectament afecte (primer). Numero de referencia d'alta
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0qbjds:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Pis.'
               label: Local indirectament afecte (primer). Pis
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0tb5e9q62:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Porta.'
               label: Local indirectament afecte (primer). Porta
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn4pb6clp6arj3d5giqor1ehgn6t3ic5m0:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Referencia cadastral.'
               label: Local indirectament afecte (primer). Referencia cadastral
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn6pb3cdkmurhdctp62pj9cdgg:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Seccio grafica cadastral.'
               label: Local indirectament afecte (primer). Seccio grafica cadastral
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn6tbgclp6cqb3d5ig:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Superficie en metres quadrats.'
               label: Local indirectament afecte (primer). Superficie en metres quadrats
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mnasrf5li6asrkd5n6u:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Us o desti.'
               label: Local indirectament afecte (primer). Us o desti
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Variacio.'
               label: Local indirectament afecte (primer). Variacio
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Data de variacio.'
               label: Local indirectament afecte (primer). Data de variacio
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (primer). Numero de referencia de la variacio.'
               label: Local indirectament afecte (primer). Numero de referencia de
                 la variacio
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Alta.'
               label: Local indirectament afecte (segon). Alta
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4mmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Data d''alta.'
               label: Local indirectament afecte (segon). Data d'alta
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm4obac4:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Baixa.'
               label: Local indirectament afecte (segon). Baixa
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm4obac4mmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Data de baixa.'
               label: Local indirectament afecte (segon). Data de baixa
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbgdtpn8obc:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Codi postal.'
               label: Local indirectament afecte (segon). Codi postal
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbge9nncqbecdkm2:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Codi de provincia.'
               label: Local indirectament afecte (segon). Codi de provincia
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmesj1chniqob6clhn8ob3d5nms:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Grau d''afectacio.'
               label: Local indirectament afecte (segon). Grau d'afectacio
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmqtbed5hmis39ds:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Municipi.'
               label: Local indirectament afecte (segon). Municipi
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmsrrdc9p6abbmd5gg:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Nom de la via publica.'
               label: Local indirectament afecte (segon). Nom de la via publica
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6u:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Numero.'
               label: Local indirectament afecte (segon). Numero
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Numero de referencia d''alta.'
               label: Local indirectament afecte (segon). Numero de referencia d'alta
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0qbjds:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Pis.'
               label: Local indirectament afecte (segon). Pis
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0tb5e9q62:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Porta.'
               label: Local indirectament afecte (segon). Porta
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn4pb6clp6arj3d5giqor1ehgn6t3ic5m0:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Referencia cadastral.'
               label: Local indirectament afecte (segon). Referencia cadastral
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn6pb3cdkmurhdctp62pj9cdgg:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Seccio grafica cadastral.'
               label: Local indirectament afecte (segon). Seccio grafica cadastral
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn6tbgclp6cqb3d5ig:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Superficie en metres quadrats.'
               label: Local indirectament afecte (segon). Superficie en metres quadrats
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mnasrf5li6asrkd5n6u:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Us o desti.'
               label: Local indirectament afecte (segon). Us o desti
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Variacio.'
               label: Local indirectament afecte (segon). Variacio
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Data de variacio.'
               label: Local indirectament afecte (segon). Data de variacio
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
+              help: 'Dada del model 036, exercici 2025: Local indirectament afecte
+                (segon). Numero de referencia de la variacio.'
               label: Local indirectament afecte (segon). Numero de referencia de la
                 variacio
             x-c5hn8bjjd5n2qr3fcdgmobb1dhq62:
+              help: 'Dada del model 036, exercici 2025: Activitat fora de local determinat.
+                Alta.'
               label: Activitat fora de local determinat. Alta
             x-c5hn8bjjd5n2qr3fcdgmobb1dhq62bb6clhmgo8:
+              help: 'Dada del model 036, exercici 2025: Activitat fora de local determinat.
+                Data d''alta.'
               label: Activitat fora de local determinat. Data d'alta
             x-c5hn8bjjd5n2qr3fcdgmobb2c5l62:
+              help: 'Dada del model 036, exercici 2025: Activitat fora de local determinat.
+                Baixa.'
               label: Activitat fora de local determinat. Baixa
             x-c5hn8bjjd5n2qr3fcdgmobb2c5l62bb6clhmgo8:
+              help: 'Dada del model 036, exercici 2025: Activitat fora de local determinat.
+                Data de baixa.'
               label: Activitat fora de local determinat. Data de baixa
             x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:
+              help: 'Dada del model 036, exercici 2025: Activitat fora de local determinat.
+                Codi de provincia.'
               label: Activitat fora de local determinat. Codi de provincia
             x-c5hn8bjjd5n2qr3fcdgmobbdeln6ior9e1kmu:
+              help: 'Dada del model 036, exercici 2025: Activitat fora de local determinat.
+                Municipi.'
               label: Activitat fora de local determinat. Municipi
             x-c5hn8bjjd5n2qr3fcdgmobbeelmmasjf5lp6apj5e9imsor9c4:
+              help: 'Dada del model 036, exercici 2025: Activitat fora de local determinat.
+                Numero de referencia.'
               label: Activitat fora de local determinat. Numero de referencia
             x-chim6r1ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
               help: null
@@ -346,1053 +528,1896 @@ modelo:
               help: null
               label: Vigència normativa des del 3 de febrer de 2025
             x-clo2sobmd5pmuspdc5im2t1dc5m78o8:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Alta d''avisos de l''AEAT.'
               label: Establiment permanent. Avisos. Alta d'avisos de l'AEAT
             x-clo2sobmd5pmuspdc5im2t1dc9gmko8:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Baixa d''avisos de l''AEAT.'
               label: Establiment permanent. Avisos. Baixa d'avisos de l'AEAT
             x-clo2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Alta a l''aplicacio mobil de l''AEAT.'
               label: Establiment permanent. Avisos. Alta a l'aplicacio mobil de l'AEAT
             x-clo2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Baixa a l''aplicacio mobil de l''AEAT.'
               label: Establiment permanent. Avisos. Baixa a l'aplicacio mobil de l'AEAT
             x-clo2sobmd5pmuspdchjn8bb1dhq62:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Alta d''avisos de la DGT.'
               label: Establiment permanent. Avisos. Alta d'avisos de la DGT
             x-clo2sobmd5pmuspdchjn8bb2c5l62:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Baixa d''avisos de la DGT.'
               label: Establiment permanent. Avisos. Baixa d'avisos de la DGT
             x-clo2sobmd5pmuspdclmm2qbc:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Correu electronic.'
               label: Establiment permanent. Avisos. Correu electronic
             x-clo2sobmd5pmuspdclmm2qbc5lgmot31:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Alta o modificacio del correu electronic d''avisos.'
               label: Establiment permanent. Avisos. Alta o modificacio del correu
                 electronic d'avisos
             x-clo2sobmd5pmuspdclmm2qbc5lh62qj1:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Baixa del correu electronic d''avisos.'
               label: Establiment permanent. Avisos. Baixa del correu electronic d'avisos
             x-clo2sobmd5pmuspddlnncqbc5lgmot31:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Alta o modificacio del telefon mobil.'
               label: Establiment permanent. Avisos. Alta o modificacio del telefon
                 mobil
             x-clo2sobmd5pmuspddlnncqbc5lh62qj1:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Baixa del telefon mobil.'
               label: Establiment permanent. Avisos. Baixa del telefon mobil
             x-clo2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Prefix de pais del telefon mobil.'
               label: Establiment permanent. Avisos. Prefix de pais del telefon mobil
             x-clo2sobmd5pmuspdehim2bb1dhq62:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Alta d''avisos del TEA.'
               label: Establiment permanent. Avisos. Alta d'avisos del TEA
             x-clo2sobmd5pmuspdehim2bb2c5l62:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Baixa d''avisos del TEA.'
               label: Establiment permanent. Avisos. Baixa d'avisos del TEA
             x-clo2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
+                Telefon mobil.'
               label: Establiment permanent. Avisos. Telefon mobil
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Bloc.'
               label: Establiment permanent. Domicili fiscal a Espanya. Bloc
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Qualificador del numero.'
               label: Establiment permanent. Domicili fiscal a Espanya. Qualificador
                 del numero
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Codi de municipi INE.'
               label: Establiment permanent. Domicili fiscal a Espanya. Codi de municipi
                 INE
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Codi postal.'
               label: Establiment permanent. Domicili fiscal a Espanya. Codi postal
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Codi de provincia.'
               label: Establiment permanent. Domicili fiscal a Espanya. Codi de provincia
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Codi de via INE.'
               label: Establiment permanent. Domicili fiscal a Espanya. Codi de via
                 INE
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Complement de domicili.'
               label: Establiment permanent. Domicili fiscal a Espanya. Complement
                 de domicili
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Escala.'
               label: Establiment permanent. Domicili fiscal a Espanya. Escala
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Indicador de referencia cadastral del domicili fiscal.'
               label: Establiment permanent. Domicili fiscal a Espanya. Indicador de
                 referencia cadastral del domicili fiscal
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Localitat o poblacio.'
               label: Establiment permanent. Domicili fiscal a Espanya. Localitat o
                 poblacio
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Nom del municipi.'
               label: Establiment permanent. Domicili fiscal a Espanya. Nom del municipi
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Nom de la via publica.'
               label: Establiment permanent. Domicili fiscal a Espanya. Nom de la via
                 publica
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Numero de casa.'
               label: Establiment permanent. Domicili fiscal a Espanya. Numero de casa
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Planta.'
               label: Establiment permanent. Domicili fiscal a Espanya. Planta
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Portal.'
               label: Establiment permanent. Domicili fiscal a Espanya. Portal
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Porta.'
               label: Establiment permanent. Domicili fiscal a Espanya. Porta
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Referencia cadastral.'
               label: Establiment permanent. Domicili fiscal a Espanya. Referencia
                 cadastral
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Tipus de numero.'
               label: Establiment permanent. Domicili fiscal a Espanya. Tipus de numero
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                fiscal a Espanya. Tipus de via.'
               label: Establiment permanent. Domicili fiscal a Espanya. Tipus de via
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. En qualitat de, per a l''apartat de correus.'
               label: Establiment permanent. Domicili a efectes de notificacions. En
                 qualitat de, per a l'apartat de correus
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Codi postal de l''apartat de correus.'
               label: Establiment permanent. Domicili a efectes de notificacions. Codi
                 postal de l'apartat de correus
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Codi de provincia de l''apartat de correus.'
               label: Establiment permanent. Domicili a efectes de notificacions. Codi
                 de provincia de l'apartat de correus
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Numero d''apartat de correus.'
               label: Establiment permanent. Domicili a efectes de notificacions. Numero
                 d'apartat de correus
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Destinatari de l''apartat de correus,
+                si es diferent del declarant.'
               label: Establiment permanent. Domicili a efectes de notificacions. Destinatari
                 de l'apartat de correus, si es diferent del declarant
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Poblacio o ciutat de l''apartat de correus.'
               label: Establiment permanent. Domicili a efectes de notificacions. Poblacio
                 o ciutat de l'apartat de correus
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Indicador de baixa del domicili de notificacions.'
               label: Establiment permanent. Domicili a efectes de notificacions. Indicador
                 de baixa del domicili de notificacions
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Bloc (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Bloc
                 (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. En qualitat de (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. En
                 qualitat de (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Qualificador del numero (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Qualificador
                 del numero (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Codi de municipi INE (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Codi
                 de municipi INE (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Codi postal (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Codi
                 postal (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Codi de provincia (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Codi
                 de provincia (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Codi de via INE (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Codi
                 de via INE (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Complement de domicili (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Complement
                 de domicili (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Destinatari, si es diferent del declarant
+                (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Destinatari,
                 si es diferent del declarant (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Escala (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Escala
                 (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Localitat o poblacio (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Localitat
                 o poblacio (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Nom del municipi (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Nom
                 del municipi (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Nom de la via publica (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Nom
                 de la via publica (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Numero de casa (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Numero
                 de casa (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Planta (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Planta
                 (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Portal (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Portal
                 (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Porta (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Porta
                 (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Tipus de numero (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Tipus
                 de numero (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
+                a efectes de notificacions. Tipus de via (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Tipus
                 de via (domicili 1)
             x-clo2sqb4cln78qb6d5hm2or9dtn2qobec5jn4obdc4:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                Anagrama.'
               label: Establiment permanent. Identificacio. Anagrama
             x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                Domini o adreca d''internet.'
               label: Establiment permanent. Identificacio. Domini o adreca d'internet
             x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                Domini o adreca d''internet (segon).'
               label: Establiment permanent. Identificacio. Domini o adreca d'internet
                 (segon)
             x-clo2sqb4cln78qb6d5hm2or9dtn2qpbj5lpnaorle9pm2r0:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                Es una sucursal de l''entitat no resident.'
               label: Establiment permanent. Identificacio. Es una sucursal de l'entitat
                 no resident
             x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb3dtn76t39ehqm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                Data de constitucio.'
               label: Establiment permanent. Identificacio. Data de constitucio
             x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb9dppm6sj9e1hmirre5lp6apr9edq74rpddlin4or1dpq6ir0:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                Data d''inscripcio al registre mercantil.'
               label: Establiment permanent. Identificacio. Data d'inscripcio al registre
                 mercantil
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhdclpn8ob4dsmn4pbjd5i6arj3d5gg:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                Estat de residencia de la persona o entitat no resident de la qual
+                depen.'
               label: Establiment permanent. Identificacio. Estat de residencia de
                 la persona o entitat no resident de la qual depen
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhddpkmc:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                N.I.F. de la persona o entitat no resident de la qual depen, si en
+                disposa.'
               label: Establiment permanent. Identificacio. N.I.F. de la persona o
                 entitat no resident de la qual depen, si en disposa
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhde9gnkrre5lpmuor9c5m0:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                Rao o denominacio social de la persona o entitat no resident de la
+                qual depen.'
               label: Establiment permanent. Identificacio. Rao o denominacio social
                 de la persona o entitat no resident de la qual depen
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9co:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                N.I.F.'
               label: Establiment permanent. Identificacio. N.I.F.
             x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                Codi d''identificacio fiscal de l''Estat de residencia o NVAT.'
               label: Establiment permanent. Identificacio. Codi d'identificacio fiscal
                 de l'Estat de residencia o NVAT
             x-clo2sqb4cln78qb6d5hm2or9dtn2qsj1f9nmsbbjdthmiobc:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                Rao o denominacio social.'
               label: Establiment permanent. Identificacio. Rao o denominacio social
             x-clo2sqb4cln78qb6d5hm2or9dtn2qt39e1niqpbjehgm4r35cdkmqqb5dpq6u:
+              help: 'Dada del model 036, exercici 2025: Establiment permanent. Identificacio.
+                Tipus d''establiment permanent.'
               label: Establiment permanent. Identificacio. Tipus d'establiment permanent
             x-d5r62bj6c5hn8tbic5hmirre5lj62orkelp62bbgdtp2qp35edq6irj1ehgn4qbfec:
+              help: 'Dada del model 036, exercici 2025: IVA. Facturacio. L''obligacio
+                d''expedir factura es compleix pels destinataris o per tercers.'
               label: IVA. Facturacio. L'obligacio d'expedir factura es compleix pels
                 destinataris o per tercers
             x-d5r62bj6c5hn8tbic5hmirre5lj62orkelp62bbgdtp2qp35edq6irj1ehgn4qbfecmmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: IVA. Facturacio. Facturacio
+                per destinataris o tercers. Data.'
               label: IVA. Facturacio. Facturacio per destinataris o tercers. Data
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdc5i6qrre5lo7aojcd5hm2bbge9in6tbgelin6t3f:
+              help: 'Dada del model 036, exercici 2025: Gran empresa i administracions
+                publiques. Es administracio publica amb un darrer pressupost anual
+                aprovat superior a 6 milions d''euros.'
               label: Gran empresa i administracions publiques. Es administracio publica
                 amb un darrer pressupost anual aprovat superior a 6 milions d'euros
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdctp62rhdclmn0sj5edgg:
+              help: 'Dada del model 036, exercici 2025: Gran empresa i administracions
+                publiques. Te la condicio de gran empresa.'
               label: Gran empresa i administracions publiques. Te la condicio de gran
                 empresa
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqob4dlnmsbbgelh6oqb3c4mn0sj5edqn0tb5edq6u:
+              help: 'Dada del model 036, exercici 2025: Gran empresa i administracions
+                publiques. Data de la condicio d''administracio publica amb pressupost
+                superior a 6 milions d''euros.'
               label: Gran empresa i administracions publiques. Data de la condicio
                 d'administracio publica amb pressupost superior a 6 milions d'euros
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqpric5n2qpbde1p6asr1:
+              help: 'Dada del model 036, exercici 2025: Gran empresa i administracions
+                publiques. Data de la condicio de gran empresa.'
               label: Gran empresa i administracions publiques. Data de la condicio
                 de gran empresa
             x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurg:
+              help: 'Dada del model 036, exercici 2025: IVA. Importacio. Forals. Ingres
+                de l''IVA a la importacio. Opcio o renuncia.'
               label: IVA. Importacio. Forals. Ingres de l'IVA a la importacio. Opcio
                 o renuncia
             x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurhdcpim6q31:
+              help: 'Dada del model 036, exercici 2025: IVA. Importacio. Forals. Ingres
+                de l''IVA a la importacio. Data.'
               label: IVA. Importacio. Forals. Ingres de l'IVA a la importacio. Data
             x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurg:
+              help: 'Dada del model 036, exercici 2025: IVA. Importacio. Ingres de
+                l''IVA a la importacio. Opcio, renuncia, revocacio o baixa.'
               label: IVA. Importacio. Ingres de l'IVA a la importacio. Opcio, renuncia,
                 revocacio o baixa
             x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurhdcpim6q31:
+              help: 'Dada del model 036, exercici 2025: IVA. Importacio. Ingres de
+                l''IVA a la importacio. Data.'
               label: IVA. Importacio. Ingres de l'IVA a la importacio. Data
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lhmurb9cln7krpdd1gm4qbkelgmo:
+              help: 'Dada del model 036, exercici 2025: IVA. Inici d''activitat. Comencament
+                habitual de lliuraments de bens o prestacions de serveis.'
               label: IVA. Inici d'activitat. Comencament habitual de lliuraments de
                 bens o prestacions de serveis
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45limst3icljm2spde1nn6t35e9kmusg:
+              help: 'Dada del model 036, exercici 2025: IVA. Inici d''activitat. Lliuraments
+                de bens o prestacions de serveis posterior a l''adquisicio.'
               label: IVA. Inici d'activitat. Lliuraments de bens o prestacions de
                 serveis posterior a l'adquisicio
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45limst3icljm2spde1p6atj9c4mmubbjd5mnar3kc5n6ao8:
+              help: 'Dada del model 036, exercici 2025: IVA. Inici d''activitat. Lliuraments
+                de bens o prestacions de serveis previa o simultania a l''adquisicio.'
               label: IVA. Inici d'activitat. Lliuraments de bens o prestacions de
                 serveis previa o simultania a l'adquisicio
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mm6rrdd5imsujf5lk62oj9ehqm2r0:
+              help: 'Dada del model 036, exercici 2025: IVA. Inici d''activitat. Data
+                del comencament habitual de lliuraments o prestacions.'
               label: IVA. Inici d'activitat. Data del comencament habitual de lliuraments
                 o prestacions
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mmarjke9imeobj5lo6usrkclp6irri:
+              help: 'Dada del model 036, exercici 2025: IVA. Inici d''activitat. Data
+                dels lliuraments posteriors.'
               label: IVA. Inici d'activitat. Data dels lliuraments posteriors
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mmarjke9imeobj5lo74pbmd5giqrpdedkmqtbcehgmspb1:
+              help: 'Dada del model 036, exercici 2025: IVA. Inici d''activitat. Data
+                dels lliuraments previs o simultanis.'
               label: IVA. Inici d'activitat. Data dels lliuraments previs o simultanis
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mn6pb3ehnn4bb4d5j6asj5dphmiob4ds:
+              help: 'Dada del model 036, exercici 2025: IVA. Inici d''activitat. Data
+                de l''inici de l''activitat que constitueix sector diferenciat.'
               label: IVA. Inici d'activitat. Data de l'inici de l'activitat que constitueix
                 sector diferenciat
             x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lpmaorkdtp2qp39cpin4pbecdkm2p3f:
+              help: 'Dada del model 036, exercici 2025: IVA. Inici d''activitat. Inici
+                de nova activitat que constitueixi un sector diferenciat.'
               label: IVA. Inici d'activitat. Inici de nova activitat que constitueixi
                 un sector diferenciat
             x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior1:
+              help: 'Dada del model 036, exercici 2025: IVA. Llibres de registre.
+                Portada dels llibres de registre a traves de la seu electronica de
+                l''AEAT.'
               label: IVA. Llibres de registre. Portada dels llibres de registre a
                 traves de la seu electronica de l'AEAT
             x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior15lj6aor8c4:
+              help: 'Dada del model 036, exercici 2025: IVA. Llibres de registre.
+                Portada dels llibres de registre a traves de la seu electronica. Data.'
               label: IVA. Llibres de registre. Portada dels llibres de registre a
                 traves de la seu electronica. Data
             x-d5r62bjfc9m6ipr1cdkmurj5ecmmasrkc5h6opb3d5i6ubb5domn8ob9:
+              help: 'Dada del model 036, exercici 2025: IVA. Obligacions. Esta establert
+                al territori d''aplicacio de l''impost o hi te un establiment permanent.'
               label: IVA. Obligacions. Esta establert al territori d'aplicacio de
                 l'impost o hi te un establiment permanent
             x-d5r62bjfc9m6ipr1cdkmurj5ecmn4pbmcln68pb4dtp2qp39edo6usr9ehkncrrj:
+              help: 'Dada del model 036, exercici 2025: IVA. Obligacions. Te la condicio
+                de revenedor de telefons mobils, consoles, ordinadors portatils i
+                tauletes.'
               label: IVA. Obligacions. Te la condicio de revenedor de telefons mobils,
                 consoles, ordinadors portatils i tauletes
             x-d5r62bjfc9m6ipr1cdkmurj5ecmn6rrcdsmmus35e9gm6qbfdpin6bbjd5n2qoblehnmoqbhelkm8ob3d5nms:
+              help: 'Dada del model 036, exercici 2025: IVA. Obligacions. Realitza
+                exclusivament operacions no subjectes o exemptes que no obliguen a
+                presentar autoliquidacio periodica.'
               label: IVA. Obligacions. Realitza exclusivament operacions no subjectes
                 o exemptes que no obliguen a presentar autoliquidacio periodica
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6abbge9nncqbjd5nmsobc:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Proposa percentatge provisional de deduccio.'
               label: IVA. Prorrata i sectors diferenciats. Proposa percentatge provisional
                 de deduccio
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj2:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Sector I. Codi C.N.A.E. (primer).'
               label: IVA. Prorrata i sectors diferenciats. Sector I. Codi C.N.A.E.
                 (primer)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj4:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Sector I. Codi C.N.A.E. (segon).'
               label: IVA. Prorrata i sectors diferenciats. Sector I. Codi C.N.A.E.
                 (segon)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj6:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Sector I. Codi C.N.A.E. (tercer).'
               label: IVA. Prorrata i sectors diferenciats. Sector I. Codi C.N.A.E.
                 (tercer)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mn0sjfe9p62t315lin6s35cdkm2r0:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Sector I. Opcio per la prorrata especial.'
               label: IVA. Prorrata i sectors diferenciats. Sector I. Opcio per la
                 prorrata especial
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj2:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Sector II. Codi C.N.A.E. (primer).'
               label: IVA. Prorrata i sectors diferenciats. Sector II. Codi C.N.A.E.
                 (primer)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj4:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Sector II. Codi C.N.A.E. (segon).'
               label: IVA. Prorrata i sectors diferenciats. Sector II. Codi C.N.A.E.
                 (segon)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj6:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Sector II. Codi C.N.A.E. (tercer).'
               label: IVA. Prorrata i sectors diferenciats. Sector II. Codi C.N.A.E.
                 (tercer)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mn0sjfe9p62t315lin6s35cdkm2r0:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Sector II. Opcio per la prorrata especial.'
               label: IVA. Prorrata i sectors diferenciats. Sector II. Opcio per la
                 prorrata especial
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj2:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Sector III. Codi C.N.A.E. (primer).'
               label: IVA. Prorrata i sectors diferenciats. Sector III. Codi C.N.A.E.
                 (primer)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj4:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Sector III. Codi C.N.A.E. (segon).'
               label: IVA. Prorrata i sectors diferenciats. Sector III. Codi C.N.A.E.
                 (segon)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj6:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Sector III. Codi C.N.A.E. (tercer).'
               label: IVA. Prorrata i sectors diferenciats. Sector III. Codi C.N.A.E.
                 (tercer)
             x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmn0sjfe9p62t315lin6s35cdkm2r0:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                Sector III. Opcio per la prorrata especial.'
               label: IVA. Prorrata i sectors diferenciats. Sector III. Opcio per la
                 prorrata especial
             x-d5r62bjge9nn4sj1ehgiqsr9domn6pb3ehnn4pbj5li6ipj5e9imsor9c5i6uso:
+              help: 'Dada del model 036, exercici 2025: IVA. Prorrata i sectors diferenciats.
+                No te sectors diferenciats.'
               label: IVA. Prorrata i sectors diferenciats. No te sectors diferenciats
             x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aso:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim especial
+                d''agencies de viatges, operacio per operacio.'
               label: IVA. Regims. Regim especial d'agencies de viatges, operacio per
                 operacio
             x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aspdcpim6q31:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Agencies de viatges.
+                Data.'
               label: IVA. Regims. Agencies de viatges. Data
             x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aspdd5gma:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Agencies de viatges.
+                Grup o epigraf de l''I.A.E. o codi d''activitat.'
               label: IVA. Regims. Agencies de viatges. Grup o epigraf de l'I.A.E.
                 o codi d'activitat
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim especial
+                d''agricultura, ramaderia i pesca.'
               label: IVA. Regims. Regim especial d'agricultura, ramaderia i pesca
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Agricultura,
+                ramaderia i pesca. Data.'
               label: IVA. Regims. Agricultura, ramaderia i pesca. Data
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmiob5:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Agricultura,
+                ramaderia i pesca. Grup o epigraf de l''I.A.E. o codi d''activitat.'
               label: IVA. Regims. Agricultura, ramaderia i pesca. Grup o epigraf de
                 l'I.A.E. o codi d'activitat
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dg:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim especial
+                de bens usats, marge de benefici global.'
               label: IVA. Regims. Regim especial de bens usats, marge de benefici
                 global
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dgmmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Bens usats marge
+                de benefici global. Data.'
               label: IVA. Regims. Bens usats marge de benefici global. Data
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dgmmiob5:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Bens usats marge
+                de benefici global. Grup o epigraf de l''I.A.E. o codi d''activitat.'
               label: IVA. Regims. Bens usats marge de benefici global. Grup o epigraf
                 de l'I.A.E. o codi d'activitat
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn0:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim especial
+                de bens usats, operacio per operacio.'
               label: IVA. Regims. Regim especial de bens usats, operacio per operacio
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn2qpj5cdk62:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Bens usats operacio
+                per operacio. Data.'
               label: IVA. Regims. Bens usats operacio per operacio. Data
             x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn2qqb1ck:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Bens usats operacio
+                per operacio. Grup o epigraf de l''I.A.E. o codi d''activitat.'
               label: IVA. Regims. Bens usats operacio per operacio. Grup o epigraf
                 de l'I.A.E. o codi d'activitat
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9gg:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim especial
+                del criteri de caixa.'
               label: IVA. Regims. Regim especial del criteri de caixa
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqpj5cdk62:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Criteri de caixa.
+                Data.'
               label: IVA. Regims. Criteri de caixa. Data
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqqb1ck:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Criteri de caixa.
+                Grup o epigraf de l''I.A.E. o codi d''activitat.'
               label: IVA. Regims. Criteri de caixa. Grup o epigraf de l'I.A.E. o codi
                 d'activitat
             x-d5r62bjicljmirb5dpin6bb7cln6asj1dg:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim general.'
               label: IVA. Regims. Regim general
             x-d5r62bjicljmirb5dpin6bb7cln6asj1dgmmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim general.
+                Data.'
               label: IVA. Regims. Regim general. Data
             x-d5r62bjicljmirb5dpin6bb7cln6asj1dgmmiob5:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim general.
+                Grup o epigraf de l''I.A.E. o codi d''activitat.'
               label: IVA. Regims. Regim general. Grup o epigraf de l'I.A.E. o codi
                 d'activitat
             x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn0:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim especial
+                de l''or d''inversio.'
               label: IVA. Regims. Regim especial de l'or d'inversio
             x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn2qpj5cdk62:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Or d''inversio.
+                Data.'
               label: IVA. Regims. Or d'inversio. Data
             x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn2qqb1ck:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Or d''inversio.
+                Grup o epigraf de l''I.A.E. o codi d''activitat.'
               label: IVA. Regims. Or d'inversio. Grup o epigraf de l'I.A.E. o codi
                 d'activitat
             x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio8:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim especial
+                del recarrec d''equivalencia.'
               label: IVA. Regims. Regim especial del recarrec d'equivalencia
             x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio9dcpim6q31:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Recarrec d''equivalencia.
+                Data.'
               label: IVA. Regims. Recarrec d'equivalencia. Data
             x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio9dd5gma:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Recarrec d''equivalencia.
+                Grup o epigraf de l''I.A.E. o codi d''activitat.'
               label: IVA. Regims. Recarrec d'equivalencia. Grup o epigraf de l'I.A.E.
                 o codi d'activitat
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4ds:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim especial
+                simplificat.'
               label: IVA. Regims. Regim especial simplificat
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim simplificat.
+                Data.'
               label: IVA. Regims. Regim simplificat. Data
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmiob5:
+              help: 'Dada del model 036, exercici 2025: IVA. Regims. Regim simplificat.
+                Grup o epigraf de l''I.A.E. o codi d''activitat.'
               label: IVA. Regims. Regim simplificat. Grup o epigraf de l'I.A.E. o
                 codi d'activitat
             x-d5r62bjicljmisrke9nn6bb4clr6ur3lcdkmurhddlimssrlc5m0:
+              help: 'Dada del model 036, exercici 2025: IVA. Registres. Sol-licita
+                alta o baixa al registre de devolucio mensual.'
               label: IVA. Registres. Sol-licita alta o baixa al registre de devolucio
                 mensual
             x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpg:
+              help: 'Dada del model 036, exercici 2025: IVA. Registres. Sol-licita
+                alta o baixa al registre d''operadors intracomunitaris.'
               label: IVA. Registres. Sol-licita alta o baixa al registre d'operadors
                 intracomunitaris
             x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpiqpj5cdk62:
+              help: 'Dada del model 036, exercici 2025: IVA. Registres. Registre d''operadors
+                intracomunitaris. Data.'
               label: IVA. Registres. Registre d'operadors intracomunitaris. Data
             x-d5r62bjiclr6arj4cli6usj5ecmm2r3kc4mm4obac4mmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: IVA. Revenedors de dispositius.
+                Alta o baixa de revenedors. Data.'
               label: IVA. Revenedors de dispositius. Alta o baixa de revenedors. Data
             x-dth6obj9e9n74bbddti62r39chgm8:
+              help: 'Dada del model 036, exercici 2025: IRNR. Establiment permanent.
+                Modalitat d''establiment permanent.'
               label: IRNR. Establiment permanent. Modalitat d'establiment permanent
             x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4:
+              help: 'Dada del model 036, exercici 2025: IRNR. Establiment permanent.
+                Obligacio de presentar declaracio.'
               label: IRNR. Establiment permanent. Obligacio de presentar declaracio
             x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4bb6clhmgo8:
+              help: 'Dada del model 036, exercici 2025: IRNR. Establiment permanent.
+                Data de l''obligacio de presentar declaracio.'
               label: IRNR. Establiment permanent. Data de l'obligacio de presentar
                 declaracio
             x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qco:
+              help: 'Dada del model 036, exercici 2025: IRNR. Establiment permanent.
+                Opcio pel sistema de calcul de l''art. 40.3.'
               label: IRNR. Establiment permanent. Opcio pel sistema de calcul de l'art.
                 40.3
             x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qcpdcpim6q31:
+              help: 'Dada del model 036, exercici 2025: IRNR. Establiment permanent.
+                Data de l''opcio pel sistema de calcul de l''art. 40.3.'
               label: IRNR. Establiment permanent. Data de l'opcio pel sistema de calcul
                 de l'art. 40.3
             x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dg:
+              help: 'Dada del model 036, exercici 2025: IRNR. Establiment permanent.
+                Opcio pel regim general.'
               label: IRNR. Establiment permanent. Opcio pel regim general
             x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dgmmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: IRNR. Establiment permanent.
+                Data de l''opcio pel regim general.'
               label: IRNR. Establiment permanent. Data de l'opcio pel regim general
             x-dth6obj9e9o6cbb5chpiqc9dd5gma:
+              help: 'Dada del model 036, exercici 2025: IRPF. Seccio de l''I.A.E.
+                i grup o epigraf, activitat 1 declarada en modalitat simplificada.'
               label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 1 declarada
                 en modalitat simplificada
             x-dth6obj9e9o6cbb5chpiqc9dehkn0rpdc5hn8qbmd5i62p0:
+              help: 'Dada del model 036, exercici 2025: IRPF. Tipus d''activitat,
+                activitat 1 declarada en modalitat simplificada.'
               label: IRPF. Tipus d'activitat, activitat 1 declarada en modalitat simplificada
             x-dth6obj9e9o6cbb5chpiqchdd5gma:
+              help: 'Dada del model 036, exercici 2025: IRPF. Seccio de l''I.A.E.
+                i grup o epigraf, activitat 2 declarada en modalitat simplificada.'
               label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 2 declarada
                 en modalitat simplificada
             x-dth6obj9e9o6cbb5chpiqchdehkn0rpdc5hn8qbmd5i62p0:
+              help: 'Dada del model 036, exercici 2025: IRPF. Tipus d''activitat,
+                activitat 2 declarada en modalitat simplificada.'
               label: IRPF. Tipus d'activitat, activitat 2 declarada en modalitat simplificada
             x-dth6obj9e9o6cbb5chpiqcpdd5gma:
+              help: 'Dada del model 036, exercici 2025: IRPF. Seccio de l''I.A.E.
+                i grup o epigraf, activitat 3 declarada en modalitat simplificada.'
               label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 3 declarada
                 en modalitat simplificada
             x-dth6obj9e9o6cbb5chpiqcpdehkn0rpdc5hn8qbmd5i62p0:
+              help: 'Dada del model 036, exercici 2025: IRPF. Tipus d''activitat,
+                activitat 3 declarada en modalitat simplificada.'
               label: IRPF. Tipus d'activitat, activitat 3 declarada en modalitat simplificada
             x-dth6obj9e9o6cbb5chpiqd1dd5gma:
+              help: 'Dada del model 036, exercici 2025: IRPF. Seccio de l''I.A.E.
+                i grup o epigraf, activitat 4 declarada en modalitat simplificada.'
               label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 4 declarada
                 en modalitat simplificada
             x-dth6obj9e9o6cbb5chpiqd1dehkn0rpdc5hn8qbmd5i62p0:
+              help: 'Dada del model 036, exercici 2025: IRPF. Tipus d''activitat,
+                activitat 4 declarada en modalitat simplificada.'
               label: IRPF. Tipus d'activitat, activitat 4 declarada en modalitat simplificada
             x-dth6obj9e9o6cbb5dsmj2bb9c5ig:
+              help: 'Dada del model 036, exercici 2025: IRPF. Seccio de l''I.A.E.
+                i grup o epigraf, activitat 1 declarada en estimacio objectiva.'
               label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 1 declarada
                 en estimacio objectiva
             x-dth6obj9e9o6cbb5dsmj2bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'Dada del model 036, exercici 2025: IRPF. Tipus d''activitat,
+                activitat 1 declarada en estimacio objectiva.'
               label: IRPF. Tipus d'activitat, activitat 1 declarada en estimacio objectiva
             x-dth6obj9e9o6cbb5dsmj4bb9c5ig:
+              help: 'Dada del model 036, exercici 2025: IRPF. Seccio de l''I.A.E.
+                i grup o epigraf, activitat 2 declarada en estimacio objectiva.'
               label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 2 declarada
                 en estimacio objectiva
             x-dth6obj9e9o6cbb5dsmj4bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'Dada del model 036, exercici 2025: IRPF. Tipus d''activitat,
+                activitat 2 declarada en estimacio objectiva.'
               label: IRPF. Tipus d'activitat, activitat 2 declarada en estimacio objectiva
             x-dth6obj9e9o6cbb5dsmj6bb9c5ig:
+              help: 'Dada del model 036, exercici 2025: IRPF. Seccio de l''I.A.E.
+                i grup o epigraf, activitat 3 declarada en estimacio objectiva.'
               label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 3 declarada
                 en estimacio objectiva
             x-dth6obj9e9o6cbb5dsmj6bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'Dada del model 036, exercici 2025: IRPF. Tipus d''activitat,
+                activitat 3 declarada en estimacio objectiva.'
               label: IRPF. Tipus d'activitat, activitat 3 declarada en estimacio objectiva
             x-dth6obj9e9o6cbb5dsmj8bb9c5ig:
+              help: 'Dada del model 036, exercici 2025: IRPF. Seccio de l''I.A.E.
+                i grup o epigraf, activitat 4 declarada en estimacio objectiva.'
               label: IRPF. Seccio de l'I.A.E. i grup o epigraf, activitat 4 declarada
                 en estimacio objectiva
             x-dth6obj9e9o6cbb5dsmj8bbkd5o6ubb1cdq6itj9chgm8:
+              help: 'Dada del model 036, exercici 2025: IRPF. Tipus d''activitat,
+                activitat 4 declarada en estimacio objectiva.'
               label: IRPF. Tipus d'activitat, activitat 4 declarada en estimacio objectiva
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r0:
+              help: 'Dada del model 036, exercici 2025: IRPF. Estimacio directa normal.'
               label: IRPF. Estimacio directa normal
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r1dcpim6q31:
+              help: 'Dada del model 036, exercici 2025: IRPF. Estimacio directa normal.
+                Data.'
               label: IRPF. Estimacio directa normal. Data
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              help: 'Dada del model 036, exercici 2025: IRPF. Estimacio directa simplificada.'
               label: IRPF. Estimacio directa simplificada
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p315lj6aor8c4:
+              help: 'Dada del model 036, exercici 2025: IRPF. Estimacio directa simplificada.
+                Data.'
               label: IRPF. Estimacio directa simplificada. Data
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              help: 'Dada del model 036, exercici 2025: IRPF. Estimacio objectiva.'
               label: IRPF. Estimacio objectiva
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62bb6clhmgo8:
+              help: 'Dada del model 036, exercici 2025: IRPF. Estimacio objectiva.
+                Data.'
               label: IRPF. Estimacio objectiva. Data
             x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i0:
+              help: 'Dada del model 036, exercici 2025: IRPF. Obligacio de fer pagaments
+                fraccionats per activitats economiques.'
               label: IRPF. Obligacio de fer pagaments fraccionats per activitats economiques
             x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i2qpj5cdk62:
+              help: 'Dada del model 036, exercici 2025: IRPF. Data de l''obligacio
+                de pagaments fraccionats per activitats economiques.'
               label: IRPF. Data de l'obligacio de pagaments fraccionats per activitats
                 economiques
             x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nms:
+              help: 'Dada del model 036, exercici 2025: IRPF. Obligacio de pagaments
+                fraccionats com a membre d''una entitat en atribucio de rendes.'
               label: IRPF. Obligacio de pagaments fraccionats com a membre d'una entitat
                 en atribucio de rendes
             x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nmsbb6clhmgo8:
+              help: 'Dada del model 036, exercici 2025: IRPF. Data de l''obligacio
+                de pagaments fraccionats com a membre d''una entitat en atribucio.'
               label: IRPF. Data de l'obligacio de pagaments fraccionats com a membre
                 d'una entitat en atribucio
             x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn0:
+              help: 'Dada del model 036, exercici 2025: Regim fiscal especial de la
+                Llei 49/2002. Exerceix l''opcio pel regim fiscal especial.'
               label: Regim fiscal especial de la Llei 49/2002. Exerceix l'opcio pel
                 regim fiscal especial
             x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn2qpj5cdk62:
+              help: 'Dada del model 036, exercici 2025: Regim fiscal especial de la
+                Llei 49/2002. Data de l''exercici de l''opcio pel regim fiscal especial.'
               label: Regim fiscal especial de la Llei 49/2002. Data de l'exercici
                 de l'opcio pel regim fiscal especial
             x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5gg:
+              help: 'Dada del model 036, exercici 2025: Regim fiscal especial de la
+                Llei 49/2002. Renuncia a l''aplicacio del regim fiscal especial.'
               label: Regim fiscal especial de la Llei 49/2002. Renuncia a l'aplicacio
                 del regim fiscal especial
             x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5giqpj5cdk62:
+              help: 'Dada del model 036, exercici 2025: Regim fiscal especial de la
+                Llei 49/2002. Data de la renuncia al regim fiscal especial.'
               label: Regim fiscal especial de la Llei 49/2002. Data de la renuncia
                 al regim fiscal especial
             x-dth6objjdthmipb4c5i6aspdcdkmasjickmmaqj5e9hmior9ds:
+              help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Data
+                de tancament de l''exercici economic, dia i mes.'
               label: Impost sobre Societats. Data de tancament de l'exercici economic,
                 dia i mes
             x-dth6objjdthmipb4c5i6aspdcln78qb4c5i2qpbocln78o8:
+              help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Condicio
+                d''entitat exempta.'
               label: Impost sobre Societats. Condicio d'entitat exempta
             x-dth6objjdthmipb4c5i6aspdcls6arj3d5nms:
+              help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Exempcio.'
               label: Impost sobre Societats. Exempcio
             x-dth6objjdthmipb4c5i6aspdcls6arj3d5nmsbb6clhmgo8:
+              help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Exempcio.
+                Data.'
               label: Impost sobre Societats. Exempcio. Data
             x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62sg:
+              help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Obligacio
+                de presentar declaracio.'
               label: Impost sobre Societats. Obligacio de presentar declaracio
             x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62shdcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Data
+                de l''obligacio de presentar declaracio.'
               label: Impost sobre Societats. Data de l'obligacio de presentar declaracio
             x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j:
+              help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Opcio
+                pel sistema de calcul de l''art. 40.3.'
               label: Impost sobre Societats. Opcio pel sistema de calcul de l'art.
                 40.3
             x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j5lj6aor8c4:
+              help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Data
+                de l''opcio pel sistema de calcul de l''art. 40.3.'
               label: Impost sobre Societats. Data de l'opcio pel sistema de calcul
                 de l'art. 40.3
             x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn0:
+              help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Renuncia
+                a l''aplicacio del regim de consolidacio fiscal.'
               label: Impost sobre Societats. Renuncia a l'aplicacio del regim de consolidacio
                 fiscal
             x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn2qpj5cdk62:
+              help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Data
+                de la renuncia al regim de consolidacio fiscal.'
               label: Impost sobre Societats. Data de la renuncia al regim de consolidacio
                 fiscal
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
+              help: 'Dada del model 036, exercici 2025: Avisos. Alta d''avisos de
+                l''AEAT.'
               label: Avisos. Alta d'avisos de l'AEAT
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
+              help: 'Dada del model 036, exercici 2025: Avisos. Baixa d''avisos de
+                l''AEAT.'
               label: Avisos. Baixa d'avisos de l'AEAT
             x-e1j2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              help: 'Dada del model 036, exercici 2025: Avisos. Alta a l''aplicacio
+                mobil de l''AEAT.'
               label: Avisos. Alta a l'aplicacio mobil de l'AEAT
             x-e1j2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              help: 'Dada del model 036, exercici 2025: Avisos. Baixa a l''aplicacio
+                mobil de l''AEAT.'
               label: Avisos. Baixa a l'aplicacio mobil de l'AEAT
             x-e1j2sobmd5pmuspdchjn8bb1dhq62:
+              help: 'Dada del model 036, exercici 2025: Avisos. Alta d''avisos de
+                la DGT.'
               label: Avisos. Alta d'avisos de la DGT
             x-e1j2sobmd5pmuspdchjn8bb2c5l62:
+              help: 'Dada del model 036, exercici 2025: Avisos. Baixa d''avisos de
+                la DGT.'
               label: Avisos. Baixa d'avisos de la DGT
             x-e1j2sobmd5pmuspdclmm2qbc:
+              help: 'Dada del model 036, exercici 2025: Avisos. Correu electronic.'
               label: Avisos. Correu electronic
             x-e1j2sobmd5pmuspdclmm2qbc5lgmot31:
+              help: 'Dada del model 036, exercici 2025: Avisos. Alta o modificacio
+                del correu electronic d''avisos.'
               label: Avisos. Alta o modificacio del correu electronic d'avisos
             x-e1j2sobmd5pmuspdclmm2qbc5lh62qj1:
+              help: 'Dada del model 036, exercici 2025: Avisos. Baixa del correu electronic
+                d''avisos.'
               label: Avisos. Baixa del correu electronic d'avisos
             x-e1j2sobmd5pmuspddlnncqbc5lgmot31:
+              help: 'Dada del model 036, exercici 2025: Avisos. Alta o modificacio
+                del telefon mobil.'
               label: Avisos. Alta o modificacio del telefon mobil
             x-e1j2sobmd5pmuspddlnncqbc5lh62qj1:
+              help: 'Dada del model 036, exercici 2025: Avisos. Baixa del telefon
+                mobil.'
               label: Avisos. Baixa del telefon mobil
             x-e1j2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              help: 'Dada del model 036, exercici 2025: Avisos. Prefix de pais del
+                telefon mobil.'
               label: Avisos. Prefix de pais del telefon mobil
             x-e1j2sobmd5pmuspdehim2bb1dhq62:
+              help: 'Dada del model 036, exercici 2025: Avisos. Alta d''avisos del
+                TEA.'
               label: Avisos. Alta d'avisos del TEA
             x-e1j2sobmd5pmuspdehim2bb2c5l62:
+              help: 'Dada del model 036, exercici 2025: Avisos. Baixa d''avisos del
+                TEA.'
               label: Avisos. Baixa d'avisos del TEA
             x-e1j2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
+              help: 'Dada del model 036, exercici 2025: Avisos. Telefon mobil.'
               label: Avisos. Telefon mobil
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Bloc.'
               label: Domicili fiscal a Espanya. Bloc
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Qualificador del numero.'
               label: Domicili fiscal a Espanya. Qualificador del numero
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Codi de municipi INE.'
               label: Domicili fiscal a Espanya. Codi de municipi INE
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Codi postal.'
               label: Domicili fiscal a Espanya. Codi postal
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Codi de provincia.'
               label: Domicili fiscal a Espanya. Codi de provincia
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Codi de via INE.'
               label: Domicili fiscal a Espanya. Codi de via INE
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Complement de domicili.'
               label: Domicili fiscal a Espanya. Complement de domicili
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Escala.'
               label: Domicili fiscal a Espanya. Escala
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Indicador de referencia cadastral del domicili fiscal.'
               label: Domicili fiscal a Espanya. Indicador de referencia cadastral
                 del domicili fiscal
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Localitat o poblacio.'
               label: Domicili fiscal a Espanya. Localitat o poblacio
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Nom del municipi.'
               label: Domicili fiscal a Espanya. Nom del municipi
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Nom de la via publica.'
               label: Domicili fiscal a Espanya. Nom de la via publica
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Numero de casa.'
               label: Domicili fiscal a Espanya. Numero de casa
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Planta.'
               label: Domicili fiscal a Espanya. Planta
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Portal.'
               label: Domicili fiscal a Espanya. Portal
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Porta.'
               label: Domicili fiscal a Espanya. Porta
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Referencia cadastral.'
               label: Domicili fiscal a Espanya. Referencia cadastral
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Tipus de numero.'
               label: Domicili fiscal a Espanya. Tipus de numero
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
+              help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
+                Tipus de via.'
               label: Domicili fiscal a Espanya. Tipus de via
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lh6orrhelig:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Bloc.'
               label: Domicili de gestio administrativa. Bloc
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhm2r39cpkm6ob4dtp2qrjldlin4ro:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Qualificador del numero.'
               label: Domicili de gestio administrativa. Qualificador del numero
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqrbldpkm6qbgd5niqqbeck:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Codi de municipi INE.'
               label: Domicili de gestio administrativa. Codi de municipi INE
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3fedq62r0:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Codi postal.'
               label: Domicili de gestio administrativa. Codi postal
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3idtr6irj3d5gg:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Codi de provincia.'
               label: Domicili de gestio administrativa. Codi de provincia
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqtj9c4mmirj5:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Codi de via INE.'
               label: Domicili de gestio administrativa. Codi de via INE
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmurbgdhimqpbeehniqp3fdlkm6qbcd5ng:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Complement de domicili.'
               label: Domicili de gestio administrativa. Complement de domicili
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lin6or1dhin4o8:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Escala.'
               label: Domicili de gestio administrativa. Escala
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lkmsp39cdgm8rri5lh62qj1:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Indicador de baixa del domicili de gestio administrativa.'
               label: Domicili de gestio administrativa. Indicador de baixa del domicili
                 de gestio administrativa
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lm6uor1dhkm8ob4:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Localitat o poblacio.'
               label: Domicili de gestio administrativa. Localitat o poblacio
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lmnarj9cdkn0qbf:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Nom del municipi.'
               label: Domicili de gestio administrativa. Nom del municipi
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln6urb2e9iiqtj9c4:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Nom de la via publica.'
               label: Domicili de gestio administrativa. Nom de la via publica
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln7arb5e9niqor1edgg:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Numero de casa.'
               label: Domicili de gestio administrativa. Numero de casa
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6oobeehgg:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Planta.'
               label: Domicili de gestio administrativa. Planta
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6usjkc5m0:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Portal.'
               label: Domicili de gestio administrativa. Portal
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo7apbiehgg:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Porta.'
               label: Domicili de gestio administrativa. Porta
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5ln7arb5e9ng:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Tipus de numero.'
               label: Domicili de gestio administrativa. Tipus de numero
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5lr6io8:
+              help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
+                Tipus de via.'
               label: Domicili de gestio administrativa. Tipus de via
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                En qualitat de, per a l''apartat de correus.'
               label: Domicili a efectes de notificacions. En qualitat de, per a l'apartat
                 de correus
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Codi postal de l''apartat de correus.'
               label: Domicili a efectes de notificacions. Codi postal de l'apartat
                 de correus
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Codi de provincia de l''apartat de correus.'
               label: Domicili a efectes de notificacions. Codi de provincia de l'apartat
                 de correus
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Numero d''apartat de correus.'
               label: Domicili a efectes de notificacions. Numero d'apartat de correus
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Destinatari de l''apartat de correus, si es diferent del declarant.'
               label: Domicili a efectes de notificacions. Destinatari de l'apartat
                 de correus, si es diferent del declarant
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Poblacio o ciutat de l''apartat de correus.'
               label: Domicili a efectes de notificacions. Poblacio o ciutat de l'apartat
                 de correus
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Baixa del domicili de notificacions.'
               label: Domicili a efectes de notificacions. Baixa del domicili de notificacions
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Bloc (domicili 1).'
               label: Domicili a efectes de notificacions. Bloc (domicili 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                En qualitat de (domicili 1).'
               label: Domicili a efectes de notificacions. En qualitat de (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Qualificador del numero (domicili 1).'
               label: Domicili a efectes de notificacions. Qualificador del numero
                 (domicili 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Codi de municipi INE (domicili 1).'
               label: Domicili a efectes de notificacions. Codi de municipi INE (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Codi postal (domicili 1).'
               label: Domicili a efectes de notificacions. Codi postal (domicili 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Codi de provincia (domicili 1).'
               label: Domicili a efectes de notificacions. Codi de provincia (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Codi de via INE (domicili 1).'
               label: Domicili a efectes de notificacions. Codi de via INE (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Complement de domicili (domicili 1).'
               label: Domicili a efectes de notificacions. Complement de domicili (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Destinatari, si es diferent del declarant (domicili 1).'
               label: Domicili a efectes de notificacions. Destinatari, si es diferent
                 del declarant (domicili 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Escala (domicili 1).'
               label: Domicili a efectes de notificacions. Escala (domicili 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Localitat o poblacio (domicili 1).'
               label: Domicili a efectes de notificacions. Localitat o poblacio (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Nom del municipi (domicili 1).'
               label: Domicili a efectes de notificacions. Nom del municipi (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Nom de la via publica (domicili 1).'
               label: Domicili a efectes de notificacions. Nom de la via publica (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Numero de casa (domicili 1).'
               label: Domicili a efectes de notificacions. Numero de casa (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Planta (domicili 1).'
               label: Domicili a efectes de notificacions. Planta (domicili 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Portal (domicili 1).'
               label: Domicili a efectes de notificacions. Portal (domicili 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Porta (domicili 1).'
               label: Domicili a efectes de notificacions. Porta (domicili 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Tipus de numero (domicili 1).'
               label: Domicili a efectes de notificacions. Tipus de numero (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
+              help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
+                Tipus de via (domicili 1).'
               label: Domicili a efectes de notificacions. Tipus de via (domicili 1)
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0ob9ec:
+              help: 'Dada del model 036, exercici 2025: Domicili a l''Estat de residencia.
+                Codi de pais.'
               label: Domicili a l'Estat de residencia. Codi de pais
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0rrjehgmo:
+              help: 'Dada del model 036, exercici 2025: Domicili a l''Estat de residencia.
+                Codi postal.'
               label: Domicili a l'Estat de residencia. Codi postal
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
+              help: 'Dada del model 036, exercici 2025: Domicili a l''Estat de residencia.
+                Complement de domicili.'
               label: Domicili a l'Estat de residencia. Complement de domicili
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdchnmqqb3d5m6iro:
+              help: 'Dada del model 036, exercici 2025: Domicili a l''Estat de residencia.
+                Domicili.'
               label: Domicili a l'Estat de residencia. Domicili
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1gmiso:
+              help: 'Dada del model 036, exercici 2025: Domicili a l''Estat de residencia.
+                Pais.'
               label: Domicili a l'Estat de residencia. Pais
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1nm4r31cdkmurg:
+              help: 'Dada del model 036, exercici 2025: Domicili a l''Estat de residencia.
+                Poblacio o ciutat.'
               label: Domicili a l'Estat de residencia. Poblacio o ciutat
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1p6utj9dphmio9de9imeqbfdo:
+              help: 'Dada del model 036, exercici 2025: Domicili a l''Estat de residencia.
+                Provincia, regio o estat.'
               label: Domicili a l'Estat de residencia. Provincia, regio o estat
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm6tb1dpq6uso:
+              help: 'Dada del model 036, exercici 2025: Establiments permanents. Nombre
+                d''establiments permanents.'
               label: Establiments permanents. Nombre d'establiments permanents
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd64:
+              help: 'Dada del model 036, exercici 2025: Establiments permanents. Denominacio
+                de l''establiment permanent 1.'
               label: Establiments permanents. Denominacio de l'establiment permanent
                 1
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd68:
+              help: 'Dada del model 036, exercici 2025: Establiments permanents. Denominacio
+                de l''establiment permanent 2.'
               label: Establiments permanents. Denominacio de l'establiment permanent
                 2
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd6c:
+              help: 'Dada del model 036, exercici 2025: Establiments permanents. Denominacio
+                de l''establiment permanent 3.'
               label: Establiments permanents. Denominacio de l'establiment permanent
                 3
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmmus35e9giqpbjehgm4r35cdkmqqb5dpq6ubbgclp6qobecln78p8:
+              help: 'Dada del model 036, exercici 2025: Establiments permanents. Opera
+                a Espanya a traves d''establiment permanent.'
               label: Establiments permanents. Opera a Espanya a traves d'establiment
                 permanent
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj2:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Primer cognom.'
               label: Identificacio. Primer cognom
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj4:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Segon cognom.'
               label: Identificacio. Segon cognom
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qorfchkmerpde1gmispde9in6qb4cln66qb1:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Codi de pais
+                de l''Estat de residencia.'
               label: Identificacio. Codi de pais de l'Estat de residencia
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Domini o adreca
+                d''internet.'
               label: Identificacio. Domini o adreca d'internet
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Domini o adreca
+                d''internet (segon).'
               label: Identificacio. Domini o adreca d'internet (segon)
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmm2r3kc4mm4obac4:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Alta o baixa
+                com a Empresari de Responsabilitat Limitada.'
               label: Identificacio. Alta o baixa com a Empresari de Responsabilitat
                 Limitada
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Data d''alta
+                o baixa com a Empresari de Responsabilitat Limitada.'
               label: Identificacio. Data d'alta o baixa com a Empresari de Responsabilitat
                 Limitada
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Data d''efectes
+                de la residencia fiscal.'
               label: Identificacio. Data d'efectes de la residencia fiscal
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj1cdkmurj1dhkm8ob4:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Nacionalitat
+                del no resident.'
               label: Identificacio. Nacionalitat del no resident
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9co:
+              help: 'Dada del model 036, exercici 2025: Identificacio. N.I.F. o N.I.E.'
               label: Identificacio. N.I.F. o N.I.E.
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Codi d''identificacio
+                fiscal de l''Estat de residencia o NIF-IVA.'
               label: Identificacio. Codi d'identificacio fiscal de l'Estat de residencia
                 o NIF-IVA
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p8:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Nom.'
               label: Identificacio. Nom
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p9dcdnmqpbicdkm2r0:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Nom comercial.'
               label: Identificacio. Nom comercial
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
+              help: 'Dada del model 036, exercici 2025: Identificacio. Persona fisica
+                resident o no resident a Espanya.'
               label: Identificacio. Persona fisica resident o no resident a Espanya
             x-e1l2sobmd5pmubb1clgn8bb1dhq62:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Alta d''avisos de l''AEAT.'
               label: Persona juridica o entitat. Avisos. Alta d'avisos de l'AEAT
             x-e1l2sobmd5pmubb1clgn8bb2c5l62:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Baixa d''avisos de l''AEAT.'
               label: Persona juridica o entitat. Avisos. Baixa d'avisos de l'AEAT
             x-e1l2sobmd5pmubb1e1o2qob5c5q2qobcehgg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Alta a l''aplicacio mobil de l''AEAT.'
               label: Persona juridica o entitat. Avisos. Alta a l'aplicacio mobil
                 de l'AEAT
             x-e1l2sobmd5pmubb1e1o2qob5c5q2qoj1d9gg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Baixa a l''aplicacio mobil de l''AEAT.'
               label: Persona juridica o entitat. Avisos. Baixa a l'aplicacio mobil
                 de l'AEAT
             x-e1l2sobmd5pmubb4ctq2qobcehgg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Alta d''avisos de la DGT.'
               label: Persona juridica o entitat. Avisos. Alta d'avisos de la DGT
             x-e1l2sobmd5pmubb4ctq2qoj1d9gg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Baixa d''avisos de la DGT.'
               label: Persona juridica o entitat. Avisos. Baixa d'avisos de la DGT
             x-e1l2sobmd5pmubb5dlgmir0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Correu electronic.'
               label: Persona juridica o entitat. Avisos. Correu electronic
             x-e1l2sobmd5pmubb5dlgmir1dc5m78o8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Alta o modificacio del correu electronic d''avisos.'
               label: Persona juridica o entitat. Avisos. Alta o modificacio del correu
                 electronic d'avisos
             x-e1l2sobmd5pmubb5dlgmir1dc9gmko8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Baixa del correu electronic d''avisos.'
               label: Persona juridica o entitat. Avisos. Baixa del correu electronic
                 d'avisos
             x-e1l2sobmd5pmubbddtr6ir1dc5m78o8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Alta o modificacio del telefon mobil.'
               label: Persona juridica o entitat. Avisos. Alta o modificacio del telefon
                 mobil
             x-e1l2sobmd5pmubbddtr6ir1dc9gmko8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Baixa del telefon mobil.'
               label: Persona juridica o entitat. Avisos. Baixa del telefon mobil
             x-e1l2sobmd5pmubbge9imcqbadsmn0ob9ecmmqrrmd5m0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Prefix de pais del telefon mobil.'
               label: Persona juridica o entitat. Avisos. Prefix de pais del telefon
                 mobil
             x-e1l2sobmd5pmubbkclgiqobcehgg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Alta d''avisos del TEA.'
               label: Persona juridica o entitat. Avisos. Alta d'avisos del TEA
             x-e1l2sobmd5pmubbkclgiqoj1d9gg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Baixa d''avisos del TEA.'
               label: Persona juridica o entitat. Avisos. Baixa d'avisos del TEA
             x-e1l2sobmd5pmubbkclm6apjfdpniqrbfepkmo:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Avisos. Telefon mobil.'
               label: Persona juridica o entitat. Avisos. Telefon mobil
             x-e1l2sp35f1q2qorfchkmerpde1gmiso:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a l''Estat de residencia. Codi de pais.'
               label: Persona juridica o entitat. Domicili a l'Estat de residencia.
                 Codi de pais
             x-e1l2sp35f1q2qorfchkmerpde1nn6t31dg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a l''Estat de residencia. Codi postal.'
               label: Persona juridica o entitat. Domicili a l'Estat de residencia.
                 Codi postal
             x-e1l2sp35f1q2qorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a l''Estat de residencia. Complement de domicili.'
               label: Persona juridica o entitat. Domicili a l'Estat de residencia.
                 Complement de domicili
             x-e1l2sp35f1q2qp3fdlkm6qbcd5ng:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a l''Estat de residencia. Domicili.'
               label: Persona juridica o entitat. Domicili a l'Estat de residencia.
                 Domicili
             x-e1l2sp35f1q2qqbechkm6ob4dtp2qp3fdlkm6qbcd5niqpboehp62rjaclp6u:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a l''Estat de residencia. Indicador de domicili fiscal o
+                social a l''estranger.'
               label: Persona juridica o entitat. Domicili a l'Estat de residencia.
                 Indicador de domicili fiscal o social a l'estranger
             x-e1l2sp35f1q2qs31d5pg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a l''Estat de residencia. Pais.'
               label: Persona juridica o entitat. Domicili a l'Estat de residencia.
                 Pais
             x-e1l2sp35f1q2qs3fc9m62or9dtn0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a l''Estat de residencia. Poblacio o ciutat.'
               label: Persona juridica o entitat. Domicili a l'Estat de residencia.
                 Poblacio o ciutat
             x-e1l2sp35f1q2qs3idtr6irj3d5giqsj5ctkmurg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a l''Estat de residencia. Provincia, regio o estat.'
               label: Persona juridica o entitat. Domicili a l'Estat de residencia.
                 Provincia, regio o estat
             x-e1l2sp36d5pm6bb2dhnn2tb5:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Bloc.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Bloc
             x-e1l2sp36d5pm6bb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Qualificador del numero.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Qualificador
                 del numero
             x-e1l2sp36d5pm6bb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Codi de municipi INE.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Codi de
                 municipi INE
             x-e1l2sp36d5pm6bb3dti6iprf5lo6usrkc5m0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Codi postal.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Codi postal
             x-e1l2sp36d5pm6bb3dti6iprf5lo74rrmd5n66qb1:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Codi de provincia.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Codi de
                 provincia
             x-e1l2sp36d5pm6bb3dti6iprf5lr6io9dd5n6a:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Codi de via INE.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Codi de
                 via INE
             x-e1l2sp36d5pm6bb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Complement de domicili.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Complement
                 de domicili
             x-e1l2sp36d5pm6bb5edhm2r35e9gg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Escala.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Escala
             x-e1l2sp36d5pm6bb9dpi6ior1chnn4bbiclj6asj5dphmio9dcdgn8objehp62r0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Indicador de referencia cadastral del domicili
+                fiscal.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Indicador
                 de referencia cadastral del domicili fiscal
             x-e1l2sp36d5pm6bbcdthm2r39chgm8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Localitat o poblacio.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Localitat
                 o poblacio
             x-e1l2sp36d5pm6bbdeln6ior9e1kmu:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Nom del municipi.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Nom del
                 municipi
             x-e1l2sp36d5pm6bbedtmm4sj55lr6io8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Nom de la via publica.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Nom de
                 la via publica
             x-e1l2sp36d5pm6bbeelmmasjf5lhm2sr1:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Numero de casa.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Numero
                 de casa
             x-e1l2sp36d5pm6bbgdhgmst31:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Planta.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Planta
             x-e1l2sp36d5pm6bbgdtp78obc:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Portal.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Portal
             x-e1l2sp36d5pm6bbgelin4t31:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Porta.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Porta
             x-e1l2sp36d5pm6bbiclj6asj5dphmio9dcdgn8objehp62r0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Referencia cadastral.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Referencia
                 cadastral
             x-e1l2sp36d5pm6bbkd5o6ubbeelmmasjf:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Tipus de numero.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Tipus
                 de numero
             x-e1l2sp36d5pm6bbkd5o6ubbmd5gg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili fiscal a Espanya. Tipus de via.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Tipus
                 de via
             x-e1l2sp3edtq6ibb1e1gn4t31chniqor1dhkm8ob4:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. En qualitat de, per a l''apartat
+                de correus.'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 En qualitat de, per a l'apartat de correus
             x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1nn6t31dg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Codi postal de l''apartat de
+                correus.'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Codi postal de l'apartat de correus
             x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1p6utj9dphmio8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Codi de provincia de l''apartat
+                de correus.'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Codi de provincia de l'apartat de correus
             x-e1l2sp3edtq6ibb1e1gn4t31chniqorfe9p6arrj:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Numero d''apartat de correus.'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Numero d'apartat de correus
             x-e1l2sp3edtq6ibb1e1gn4t31chniqp35edq6irj1ehgn4qbf:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Destinatari de l''apartat de
+                correus, si es diferent del declarant.'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Destinatari de l'apartat de correus, si es diferent del declarant
             x-e1l2sp3edtq6ibb1e1gn4t31chniqs3fc9m62or9dtn0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Poblacio o ciutat de l''apartat
+                de correus.'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Poblacio o ciutat de l'apartat de correus
             x-e1l2sp3edtq6ibb2c5l62bb4dtmmior9dhkmu:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Indicador de baixa del domicili
+                de notificacions.'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Indicador de baixa del domicili de notificacions
             x-e1l2sp3edtq6ibb2dhnn2tb5:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Bloc (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Bloc (domicili 1)
             x-e1l2sp3edtq6ibb3c5m6ip31cg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. En qualitat de (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 En qualitat de (domicili 1)
             x-e1l2sp3edtq6ibb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Qualificador del numero (domicili
+                1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Qualificador del numero (domicili 1)
             x-e1l2sp3edtq6ibb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Codi de municipi INE (domicili
+                1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Codi de municipi INE (domicili 1)
             x-e1l2sp3edtq6ibb3dti6iprf5lo6usrkc5m0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Codi postal (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Codi postal (domicili 1)
             x-e1l2sp3edtq6ibb3dti6iprf5lo74rrmd5n66qb1:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Codi de provincia (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Codi de provincia (domicili 1)
             x-e1l2sp3edtq6ibb3dti6iprf5lr6io9dd5n6a:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Codi de via INE (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Codi de via INE (domicili 1)
             x-e1l2sp3edtq6ibb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Complement de domicili (domicili
+                1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Complement de domicili (domicili 1)
             x-e1l2sp3edtq6ibb4clpn8qbec5q62sj9ds:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Destinatari, si es diferent del
+                declarant (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Destinatari, si es diferent del declarant (domicili 1)
             x-e1l2sp3edtq6ibb5edhm2r35e9gg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Escala (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Escala (domicili 1)
             x-e1l2sp3edtq6ibbcdthm2r39chgm8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Localitat o poblacio (domicili
+                1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Localitat o poblacio (domicili 1)
             x-e1l2sp3edtq6ibbdeln6ior9e1kmu:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Nom del municipi (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Nom del municipi (domicili 1)
             x-e1l2sp3edtq6ibbedtmm4sj55lr6io8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Nom de la via publica (domicili
+                1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Nom de la via publica (domicili 1)
             x-e1l2sp3edtq6ibbeelmmasjf5lhm2sr1:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Numero de casa (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Numero de casa (domicili 1)
             x-e1l2sp3edtq6ibbgdhgmst31:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Planta (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Planta (domicili 1)
             x-e1l2sp3edtq6ibbgdtp78obc:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Portal (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Portal (domicili 1)
             x-e1l2sp3edtq6ibbgelin4t31:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Porta (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Porta (domicili 1)
             x-e1l2sp3edtq6ibbkd5o6ubbeelmmasjf:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Tipus de numero (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Tipus de numero (domicili 1)
             x-e1l2sp3edtq6ibbkd5o6ubbmd5gg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili a efectes de notificacions. Tipus de via (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
                 Tipus de via (domicili 1)
             x-e1l2sp3jdthiqojcdtonap8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Bloc.'
               label: Persona juridica o entitat. Domicili social. Bloc
             x-e1l2sp3jdthiqor1dhkmcqb3c5i6ushddpqmqpbids:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Qualificador del numero.'
               label: Persona juridica o entitat. Domicili social. Qualificador del
                 numero
             x-e1l2sp3jdthiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Codi de municipi INE.'
               label: Persona juridica o entitat. Domicili social. Codi de municipi
                 INE
             x-e1l2sp3jdthiqorfchkmerpde1nn6t31dg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Codi postal.'
               label: Persona juridica o entitat. Domicili social. Codi postal
             x-e1l2sp3jdthiqorfchkmerpde1p6utj9dphmio8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Codi de provincia.'
               label: Persona juridica o entitat. Domicili social. Codi de provincia
             x-e1l2sp3jdthiqorfchkmerpdepkm2bb9dpig:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Codi de via INE.'
               label: Persona juridica o entitat. Domicili social. Codi de via INE
             x-e1l2sp3jdthiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Complement de domicili.'
               label: Persona juridica o entitat. Domicili social. Complement de domicili
             x-e1l2sp3jdthiqpbjcdgmopbic4:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Escala.'
               label: Persona juridica o entitat. Domicili social. Escala
             x-e1l2sp3jdthiqr3fcdgmoqb4c5i0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Localitat o poblacio.'
               label: Persona juridica o entitat. Domicili social. Localitat o poblacio
             x-e1l2sp3jdthiqrbldpkm6qbgd5ng:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Nom del municipi.'
               label: Persona juridica o entitat. Domicili social. Nom del municipi
             x-e1l2sp3jdthiqrjfdlh74p9depkm2:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Nom de la via publica.'
               label: Persona juridica o entitat. Domicili social. Nom de la via publica
             x-e1l2sp3jdthiqrjldlin4rpdcdgn6o8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Numero de casa.'
               label: Persona juridica o entitat. Domicili social. Numero de casa
             x-e1l2sp3jdthiqs3cc5n78o8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Planta.'
               label: Persona juridica o entitat. Domicili social. Planta
             x-e1l2sp3jdthiqs3fe9q62r0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Portal.'
               label: Persona juridica o entitat. Domicili social. Portal
             x-e1l2sp3jdthiqs3lclp78o8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Porta.'
               label: Persona juridica o entitat. Domicili social. Porta
             x-e1l2sp3jdthiqt39e1niqrjldlin4ro:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Tipus de numero.'
               label: Persona juridica o entitat. Domicili social. Tipus de numero
             x-e1l2sp3jdthiqt39e1niqtj9c4:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Domicili social. Tipus de via.'
               label: Persona juridica o entitat. Domicili social. Tipus de via
             x-e1l2spbgclp6qbb3elgmst3fec:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Establiments permanents. Nombre d''establiments permanents.'
               label: Persona juridica o entitat. Establiments permanents. Nombre d'establiments
                 permanents
             x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj2:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Establiments permanents. Denominacio de l''establiment permanent 1.'
               label: Persona juridica o entitat. Establiments permanents. Denominacio
                 de l'establiment permanent 1
             x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj4:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Establiments permanents. Denominacio de l''establiment permanent 2.'
               label: Persona juridica o entitat. Establiments permanents. Denominacio
                 de l'establiment permanent 2
             x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj6:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Establiments permanents. Denominacio de l''establiment permanent 3.'
               label: Persona juridica o entitat. Establiments permanents. Denominacio
                 de l'establiment permanent 3
             x-e1l2spbgclp6qbbed5j2qc8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Establiments permanents. N.I.F. de l''establiment permanent 1.'
               label: Persona juridica o entitat. Establiments permanents. N.I.F. de
                 l'establiment permanent 1
             x-e1l2spbgclp6qbbed5j2qcg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Establiments permanents. N.I.F. de l''establiment permanent 2.'
               label: Persona juridica o entitat. Establiments permanents. N.I.F. de
                 l'establiment permanent 2
             x-e1l2spbgclp6qbbed5j2qco:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Establiments permanents. N.I.F. de l''establiment permanent 3.'
               label: Persona juridica o entitat. Establiments permanents. N.I.F. de
                 l'establiment permanent 3
             x-e1l2spbgclp6qbbfe1in4o9dclpn8ob2dhim6qbdd5imst3f5lo6asjdc5n6arjkck:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Establiments permanents. Opera a Espanya a traves d''establiment permanent.'
               label: Persona juridica o entitat. Establiments permanents. Opera a
                 Espanya a traves d'establiment permanent
             x-e1l2sqb4cln78bb1dpgmesj1dlgg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. Anagrama.'
               label: Persona juridica o entitat. Identificacio. Anagrama
             x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. Domini o adreca d''internet.'
               label: Persona juridica o entitat. Identificacio. Domini o adreca d'internet
             x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk5lpmaorldpi62sj9ds:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. Domini o adreca d''internet (segon).'
               label: Persona juridica o entitat. Identificacio. Domini o adreca d'internet
                 (segon)
             x-e1l2sqb4cln78bb6clhmgo9dc5hnapbichniqtjfdhqmst31chin6:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. Data de l''acord de voluntats.'
               label: Persona juridica o entitat. Identificacio. Data de l'acord de
                 voluntats
             x-e1l2sqb4cln78bb6clhmgo9dcdnmssrkd5q7aor9dtn0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. Data de constitucio.'
               label: Persona juridica o entitat. Identificacio. Data de constitucio
             x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. Data d''efectes de la residencia fiscal.'
               label: Persona juridica o entitat. Identificacio. Data d'efectes de
                 la residencia fiscal
             x-e1l2sqb4cln78bb6clhmgo9dd5n76orid5o66qbfdomn4pb7d5pn8sj1dg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. Data d''inscripcio registral.'
               label: Persona juridica o entitat. Identificacio. Data d'inscripcio
                 registral
             x-e1l2sqb4cln78bbed5j0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. N.I.F.'
               label: Persona juridica o entitat. Identificacio. N.I.F.
             x-e1l2sqb4cln78bbed5j2qpbjehgm8rpde9in6qb4cln66qb1:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. Codi d''identificacio fiscal de l''Estat de residencia.'
               label: Persona juridica o entitat. Identificacio. Codi d'identificacio
                 fiscal de l'Estat de residencia
             x-e1l2sqb4cln78bbed5j2qrrke9nn6bbgc5kn6pbj:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. N.I.F. d''altres paisos.'
               label: Persona juridica o entitat. Identificacio. N.I.F. d'altres paisos
             x-e1l2sqb4cln78bbgc5kn6bb3dtn76t39ehqm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. Entitat no resident o constituida a l''estranger.'
               label: Persona juridica o entitat. Identificacio. Entitat no resident
                 o constituida a l'estranger
             x-e1l2sqb4cln78bbic5t6urhdednm6qb1dg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. Rao o denominacio social.'
               label: Persona juridica o entitat. Identificacio. Rao o denominacio
                 social
             x-e1l2sqb4cln78bbiclpmip35dphmio9dd5n68qb3c5i6usg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Identificacio. Entitat resident o constituida a Espanya, o no resident.'
               label: Persona juridica o entitat. Identificacio. Entitat resident o
                 constituida a Espanya, o no resident
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Entitat en atribucio de
+                rendes constituida a Espanya amb activitat economica.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Entitat en atribucio de rendes constituida a Espanya amb activitat
                 economica
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p1dcdm62sr5:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Classe d''entitat en atribucio
+                de rendes constituida a Espanya amb activitat economica.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Classe d'entitat en atribucio de rendes constituida a Espanya amb
                 activitat economica
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p0:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Entitat en atribucio de
+                rendes constituida a Espanya sense activitat economica.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Entitat en atribucio de rendes constituida a Espanya sense activitat
                 economica
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p1dcdm62sr5:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Classe d''entitat en atribucio
+                de rendes constituida a Espanya sense activitat economica.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Classe d'entitat en atribucio de rendes constituida a Espanya sense
                 activitat economica
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Entitat en atribucio de
+                rendes constituida a l''estranger amb presencia a Espanya.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Entitat en atribucio de rendes constituida a l'estranger amb presencia
                 a Espanya
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2bb3dhgn6p8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Classe d''entitat en atribucio
+                de rendes constituida a l''estranger amb presencia a Espanya.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Classe d'entitat en atribucio de rendes constituida a l'estranger
                 amb presencia a Espanya
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Entitat en atribucio de
+                rendes constituida a l''estranger sense presencia a Espanya.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Entitat en atribucio de rendes constituida a l'estranger sense presencia
                 a Espanya
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2bb3dhgn6p8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Classe d''entitat en atribucio
+                de rendes constituida a l''estranger sense presencia a Espanya.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Classe d'entitat en atribucio de rendes constituida a l'estranger
                 sense presencia a Espanya
             x-e1l2ss3aelp2qpbj5lo6asjjdtn62bbaelp6ip39cdgg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Persona juridica.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Persona juridica
             x-e1l2ss3aelp2qpjfe9mm2bbaelp6ip39cdgg:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Forma juridica.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Forma juridica
             x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Altres entitats.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Altres entitats
             x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6bb3dhgn6p8:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Altres entitats. Classe
+                d''entitat.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Altres entitats. Classe d'entitat
             x-e1l2ss3aelp2qt39cln6abbgclp76rrec5m6ip31cgmmktbid5i6ior1:
+              help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
+                Personalitat juridica i classe d''entitat. Te personalitat juridica.'
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Te personalitat juridica
             x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
@@ -1506,152 +2531,278 @@ modelo:
               help: null
               label: Clau del titol de representacio (segon representant, bloc 3.2)
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmo:
+              help: 'Dada del model 036, exercici 2025: Registre d''extractors de
+                diposits fiscals. Sol-licita alta o baixa per a productes dels Impostos
+                sobre l''alcohol i begudes derivades.'
               label: Registre d'extractors de diposits fiscals. Sol-licita alta o
                 baixa per a productes dels Impostos sobre l'alcohol i begudes derivades
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmobb6clhmgo8:
+              help: 'Dada del model 036, exercici 2025: Registre d''extractors de
+                diposits fiscals. Data de la sol-licitud per a alcohol i begudes derivades.'
               label: Registre d'extractors de diposits fiscals. Data de la sol-licitud
                 per a alcohol i begudes derivades
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uso:
+              help: 'Dada del model 036, exercici 2025: Registre d''extractors de
+                diposits fiscals. Sol-licita alta o baixa per a productes dels Impostos
+                sobre Hidrocarburs.'
               label: Registre d'extractors de diposits fiscals. Sol-licita alta o
                 baixa per a productes dels Impostos sobre Hidrocarburs
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uspdcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Registre d''extractors de
+                diposits fiscals. Data de la sol-licitud per a hidrocarburs.'
               label: Registre d'extractors de diposits fiscals. Data de la sol-licitud
                 per a hidrocarburs
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cg:
+              help: 'Dada del model 036, exercici 2025: Impostos especials. Obligat
+                a presentar autoliquidacio per l''Impost sobre l''Electricitat.'
               label: Impostos especials. Obligat a presentar autoliquidacio per l'Impost
                 sobre l'Electricitat
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cgmmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Impostos especials. Data.
+                Obligat a presentar autoliquidacio per l''Impost sobre l''Electricitat.'
               label: Impostos especials. Data. Obligat a presentar autoliquidacio
                 per l'Impost sobre l'Electricitat
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m0:
+              help: 'Dada del model 036, exercici 2025: Impostos especials. Obligacio
+                d''inscriure els establiments al registre territorial de l''oficina
+                gestora.'
               label: Impostos especials. Obligacio d'inscriure els establiments al
                 registre territorial de l'oficina gestora
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m2qpj5cdk62:
+              help: 'Dada del model 036, exercici 2025: Impostos especials. Data.
+                Obligacio d''inscriure els establiments al registre territorial de
+                l''oficina gestora.'
               label: Impostos especials. Data. Obligacio d'inscriure els establiments
                 al registre territorial de l'oficina gestora
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uso:
+              help: 'Dada del model 036, exercici 2025: Impostos especials. Obligacio
+                de presentar declaracio per l''Impost Especial sobre Primes d''Assegurances.'
               label: Impostos especials. Obligacio de presentar declaracio per l'Impost
                 Especial sobre Primes d'Assegurances
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uspdcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Impostos especials. Data.
+                Obligacio de presentar declaracio per l''Impost Especial sobre Primes
+                d''Assegurances.'
               label: Impostos especials. Data. Obligacio de presentar declaracio per
                 l'Impost Especial sobre Primes d'Assegurances
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre:
+              help: 'Dada del model 036, exercici 2025: Impostos especials. Obligat
+                a presentar la declaracio resum anual de l''Impost Especial sobre
+                el Carbo.'
               label: Impostos especials. Obligat a presentar la declaracio resum anual
                 de l'Impost Especial sobre el Carbo
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre5lj6aor8c4:
+              help: 'Dada del model 036, exercici 2025: Impostos especials. Data.
+                Obligat a presentar la declaracio resum anual de l''Impost Especial
+                sobre el Carbo.'
               label: Impostos especials. Data. Obligat a presentar la declaracio resum
                 anual de l'Impost Especial sobre el Carbo
             x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpddto66qbfdomn4pb7d5mmarhdctimspbic5m0:
+              help: 'Dada del model 036, exercici 2025: IVA. Adquisicions intracomunitaries.
+                Opcio pel regim general de l''IVA, subjeccio o no subjeccio.'
               label: IVA. Adquisicions intracomunitaries. Opcio pel regim general
                 de l'IVA, subjeccio o no subjeccio
             x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpdelmm4sj1dgmj2c1g60o0:
+              help: 'Dada del model 036, exercici 2025: IVA. Adquisicions intracomunitaries.
+                Ha superat el llindar de 10.000 euros.'
               label: IVA. Adquisicions intracomunitaries. Ha superat el llindar de
                 10.000 euros
             x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi:
+              help: 'Dada del model 036, exercici 2025: Impostos mediambientals. Obligacio
+                de presentar declaracio.'
               label: Impostos mediambientals. Obligacio de presentar declaracio
             x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi5lj6aor8c4:
+              help: 'Dada del model 036, exercici 2025: Impostos mediambientals. Data
+                de l''obligacio de presentar declaracio.'
               label: Impostos mediambientals. Data de l'obligacio de presentar declaracio
             x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ec:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Obligacio de retenir o ingressar a compte sobre rendiments d''activitats
+                professionals.'
               label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
                 a compte sobre rendiments d'activitats professionals
             x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ecmmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Data de l''obligacio sobre rendiments d''activitats professionals.'
               label: Retencions i ingressos a compte. Data de l'obligacio sobre rendiments
                 d'activitats professionals
             x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78ro:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Obligacio de retenir o ingressar a compte sobre rendiments de l''arrendament
+                o subarrendament.'
               label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
                 a compte sobre rendiments de l'arrendament o subarrendament
             x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78rpdcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Data de l''obligacio sobre rendiments de l''arrendament o subarrendament.'
               label: Retencions i ingressos a compte. Data de l'obligacio sobre rendiments
                 de l'arrendament o subarrendament
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Obligacio de retenir o ingressar a compte sobre rendes de capital
+                mobiliari obtingudes per la contraprestacio.'
               label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
                 a compte sobre rendes de capital mobiliari obtingudes per la contraprestacio
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdommcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Data de l''obligacio sobre rendes de capital mobiliari obtingudes
+                per la contraprestacio.'
               label: Retencions i ingressos a compte. Data de l'obligacio sobre rendes
                 de capital mobiliari obtingudes per la contraprestacio
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ec:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Obligacio de retenir o ingressar a compte sobre rendes de capital
+                mobiliari procedents d''operacions.'
               label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
                 a compte sobre rendes de capital mobiliari procedents d'operacions
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ecmmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Data de l''obligacio sobre rendes de capital mobiliari procedents
+                d''operacions.'
               label: Retencions i ingressos a compte. Data de l'obligacio sobre rendes
                 de capital mobiliari procedents d'operacions
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Obligacio de retenir o ingressar a compte sobre altres rendes de capital
+                mobiliari.'
               label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
                 a compte sobre altres rendes de capital mobiliari
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj5lj6aor8c4:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Data de l''obligacio sobre altres rendes de capital mobiliari.'
               label: Retencions i ingressos a compte. Data de l'obligacio sobre altres
                 rendes de capital mobiliari
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Obligacio de retenir o ingressar a compte sobre rendes de capital
+                mobiliari derivades de la transmissio.'
               label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
                 a compte sobre rendes de capital mobiliari derivades de la transmissio
             x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdommcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Data de l''obligacio sobre rendes de capital mobiliari derivades de
+                la transmissio.'
               label: Retencions i ingressos a compte. Data de l'obligacio sobre rendes
                 de capital mobiliari derivades de la transmissio
             x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m0:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Obligacio de retenir o ingressar a compte sobre rendiments del treball
+                personal.'
               label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
                 a compte sobre rendiments del treball personal
             x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m2qpj5cdk62:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Data de l''obligacio sobre rendiments del treball personal.'
               label: Retencions i ingressos a compte. Data de l'obligacio sobre rendiments
                 del treball personal
             x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ec:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Obligacio de retenir o ingressar a compte sobre transmissions o reemborsaments
+                d''accions o participacions.'
               label: Retencions i ingressos a compte. Obligacio de retenir o ingressar
                 a compte sobre transmissions o reemborsaments d'accions o participacions
             x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ecmmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
+                Data de l''obligacio sobre transmissions o reemborsaments d''accions
+                o participacions.'
               label: Retencions i ingressos a compte. Data de l'obligacio sobre transmissions
                 o reemborsaments d'accions o participacions
             x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p0:
+              help: 'Dada del model 036, exercici 2025: Impost sobre determinats serveis
+                digitals. Obligat a presentar autoliquidacio.'
               label: Impost sobre determinats serveis digitals. Obligat a presentar
                 autoliquidacio
             x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p2qpj5cdk62:
+              help: 'Dada del model 036, exercici 2025: Impost sobre determinats serveis
+                digitals. Data de l''obligacio de presentar autoliquidacio.'
               label: Impost sobre determinats serveis digitals. Data de l'obligacio
                 de presentar autoliquidacio
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dchin6t39dpng:
+              help: 'Dada del model 036, exercici 2025: Serveis de telecomunicacions,
+                radiodifusio i via electronica (art. 70.Uno.4.a). Tributacio en desti.'
               label: Serveis de telecomunicacions, radiodifusio i via electronica
                 (art. 70.Uno.4.a). Tributacio en desti
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Serveis de telecomunicacions,
+                radiodifusio i via electronica (art. 70.Uno.4.a). Data.'
               label: Serveis de telecomunicacions, radiodifusio i via electronica
                 (art. 70.Uno.4.a). Data
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1de9incrr3c5hmirre:
+              help: 'Dada del model 036, exercici 2025: Serveis de telecomunicacions,
+                radiodifusio i via electronica (art. 70.Uno.4.a). Revocacio.'
               label: Serveis de telecomunicacions, radiodifusio i via electronica
                 (art. 70.Uno.4.a). Revocacio
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1delmm4sj1dgmj2c1g60o0:
+              help: 'Dada del model 036, exercici 2025: Serveis de telecomunicacions,
+                radiodifusio i via electronica (art. 70.Uno.4.a). Ha superat el llindar
+                de 10.000 euros.'
               label: Serveis de telecomunicacions, radiodifusio i via electronica
                 (art. 70.Uno.4.a). Ha superat el llindar de 10.000 euros
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dchin6t39dpng:
+              help: 'Dada del model 036, exercici 2025: Serveis de telecomunicacions,
+                radiodifusio i via electronica (art. 70.Uno.8). Tributacio en desti.'
               label: Serveis de telecomunicacions, radiodifusio i via electronica
                 (art. 70.Uno.8). Tributacio en desti
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Serveis de telecomunicacions,
+                radiodifusio i via electronica (art. 70.Uno.8). Data.'
               label: Serveis de telecomunicacions, radiodifusio i via electronica
                 (art. 70.Uno.8). Data
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1de9incrr3c5hmirre:
+              help: 'Dada del model 036, exercici 2025: Serveis de telecomunicacions,
+                radiodifusio i via electronica (art. 70.Uno.8). Revocacio.'
               label: Serveis de telecomunicacions, radiodifusio i via electronica
                 (art. 70.Uno.8). Revocacio
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
+              help: 'Dada del model 036, exercici 2025: Serveis de telecomunicacions,
+                radiodifusio i via electronica (art. 70.Uno.8). Ha superat el llindar
+                de 10.000 euros.'
               label: Serveis de telecomunicacions, radiodifusio i via electronica
                 (art. 70.Uno.8). Ha superat el llindar de 10.000 euros
             x-ednm6bj3c5qn6o9dcpim6q31:
+              help: 'Dada del model 036, exercici 2025: Socis, membres o particips.
+                Data de la causa de la presentacio.'
               label: Socis, membres o particips. Data de la causa de la presentacio
             x-ednm6bj3c5qn6o9de1p6asr5dpq62or9dtn0:
+              help: 'Dada del model 036, exercici 2025: Socis, membres o particips.
+                Causa de la presentacio.'
               label: Socis, membres o particips. Causa de la presentacio
             x-ednm6bj3elnn8o9dc5q74qb2elhmirre:
+              help: 'Dada del model 036, exercici 2025: Socis, membres o particips.
+                Quota o percentatge d''atribucio.'
               label: Socis, membres o particips. Quota o percentatge d'atribucio
             x-ednm6bj3elnn8o9de1gn4t39cdkn0ob3d5nms:
+              help: 'Dada del model 036, exercici 2025: Socis, membres o particips.
+                Quota o percentatge de participacio.'
               label: Socis, membres o particips. Quota o percentatge de participacio
             x-ednm6bj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              help: 'Dada del model 036, exercici 2025: Socis, membres o particips.
+                IRPF, estimacio directa simplificada: renuncia o revocacio.'
               label: 'Socis, membres o particips. IRPF, estimacio directa simplificada:
                 renuncia o revocacio'
             x-ednm6bj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              help: 'Dada del model 036, exercici 2025: Socis, membres o particips.
+                IRPF, estimacio objectiva: renuncia o revocacio.'
               label: 'Socis, membres o particips. IRPF, estimacio objectiva: renuncia
                 o revocacio'
             x-ednm6bj9epgiqsj5c5jn0:
+              help: 'Dada del model 036, exercici 2025: Socis, membres o particips.
+                IVA, regim especial d''agricultura, ramaderia i pesca: renuncia o
+                revocacio.'
               label: 'Socis, membres o particips. IVA, regim especial d''agricultura,
                 ramaderia i pesca: renuncia o revocacio'
             x-ednm6bj9epgiqsj5ctkmqpbe5lpmirbgdhkmcqb3c5i6u:
+              help: 'Dada del model 036, exercici 2025: Socis, membres o particips.
+                IVA, regim simplificat: renuncia o revocacio.'
               label: 'Socis, membres o particips. IVA, regim simplificat: renuncia
                 o revocacio'
             x-ednm6bjed5j0:
+              help: 'Dada del model 036, exercici 2025: Socis, membres o particips.
+                N.I.F.'
               label: Socis, membres o particips. N.I.F.
             x-ednm6bjedtmm4sj55lp62ujfdomn6rr3d5gmo:
+              help: 'Dada del model 036, exercici 2025: Socis, membres o particips.
+                Cognoms i nom, rao o denominacio social.'
               label: Socis, membres o particips. Cognoms i nom, rao o denominacio
                 social
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
@@ -1745,140 +2896,252 @@ modelo:
               label: Percentatge de liquidacio, participacio o herencia del successor
                 o beneficiari (successor 13f)
             x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Data de la
+                causa de la presentacio, titular real 14a.'
               label: Titulars reals. Data de la causa de la presentacio, titular real
                 14a
             x-ehkn8bj15lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Causa de la
+                presentacio, titular real 14a.'
               label: Titulars reals. Causa de la presentacio, titular real 14a
             x-ehkn8bj15lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Data de naixement,
+                titular real 14a.'
               label: Titulars reals. Data de naixement, titular real 14a
             x-ehkn8bj15lkm8pbeehkmcqb3c5hmirre:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. N.I.F. o codi
+                d''identificacio estranger, titular real 14a.'
               label: Titulars reals. N.I.F. o codi d'identificacio estranger, titular
                 real 14a
             x-ehkn8bj15ln62or9dtn62r39chgm8:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Nacionalitat,
+                titular real 14a.'
               label: Titulars reals. Nacionalitat, titular real 14a
             x-ehkn8bj15ln6urb2e9ig:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Cognoms i
+                nom, titular real 14a.'
               label: Titulars reals. Cognoms i nom, titular real 14a
             x-ehkn8bj15lo62qbj5lings35chkm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Pais d''expedicio
+                del document d''identificacio, titular real 14a.'
               label: Titulars reals. Pais d'expedicio del document d'identificacio,
                 titular real 14a
             x-ehkn8bj15lo62qbj5lp6asr9chimsor9c4:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Pais de residencia,
+                titular real 14a.'
               label: Titulars reals. Pais de residencia, titular real 14a
             x-ehkn8bj15lq6is3f5li6uorldlimst3f:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Tipus de document
+                identificatiu, titular real 14a.'
               label: Titulars reals. Tipus de document identificatiu, titular real
                 14a
             x-ehkn8bj25lhm2tbjc4mmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Data de la
+                causa de la presentacio, titular real 14b.'
               label: Titulars reals. Data de la causa de la presentacio, titular real
                 14b
             x-ehkn8bj25lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Causa de la
+                presentacio, titular real 14b.'
               label: Titulars reals. Causa de la presentacio, titular real 14b
             x-ehkn8bj25lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Data de naixement,
+                titular real 14b.'
               label: Titulars reals. Data de naixement, titular real 14b
             x-ehkn8bj25lkm8pbeehkmcqb3c5hmirre:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. N.I.F. o codi
+                d''identificacio estranger, titular real 14b.'
               label: Titulars reals. N.I.F. o codi d'identificacio estranger, titular
                 real 14b
             x-ehkn8bj25ln62or9dtn62r39chgm8:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Nacionalitat,
+                titular real 14b.'
               label: Titulars reals. Nacionalitat, titular real 14b
             x-ehkn8bj25ln6urb2e9ig:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Cognoms i
+                nom, titular real 14b.'
               label: Titulars reals. Cognoms i nom, titular real 14b
             x-ehkn8bj25lo62qbj5lings35chkm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Pais d''expedicio
+                del document d''identificacio, titular real 14b.'
               label: Titulars reals. Pais d'expedicio del document d'identificacio,
                 titular real 14b
             x-ehkn8bj25lo62qbj5lp6asr9chimsor9c4:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Pais de residencia,
+                titular real 14b.'
               label: Titulars reals. Pais de residencia, titular real 14b
             x-ehkn8bj25lq6is3f5li6uorldlimst3f:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Tipus de document
+                identificatiu, titular real 14b.'
               label: Titulars reals. Tipus de document identificatiu, titular real
                 14b
             x-ehkn8bj35lhm2tbjc4mmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Data de la
+                causa de la presentacio, titular real 14c.'
               label: Titulars reals. Data de la causa de la presentacio, titular real
                 14c
             x-ehkn8bj35lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Causa de la
+                presentacio, titular real 14c.'
               label: Titulars reals. Causa de la presentacio, titular real 14c
             x-ehkn8bj35lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Data de naixement,
+                titular real 14c.'
               label: Titulars reals. Data de naixement, titular real 14c
             x-ehkn8bj35lkm8pbeehkmcqb3c5hmirre:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. N.I.F. o codi
+                d''identificacio estranger, titular real 14c.'
               label: Titulars reals. N.I.F. o codi d'identificacio estranger, titular
                 real 14c
             x-ehkn8bj35ln62or9dtn62r39chgm8:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Nacionalitat,
+                titular real 14c.'
               label: Titulars reals. Nacionalitat, titular real 14c
             x-ehkn8bj35ln6urb2e9ig:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Cognoms i
+                nom, titular real 14c.'
               label: Titulars reals. Cognoms i nom, titular real 14c
             x-ehkn8bj35lo62qbj5lings35chkm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Pais d''expedicio
+                del document d''identificacio, titular real 14c.'
               label: Titulars reals. Pais d'expedicio del document d'identificacio,
                 titular real 14c
             x-ehkn8bj35lo62qbj5lp6asr9chimsor9c4:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Pais de residencia,
+                titular real 14c.'
               label: Titulars reals. Pais de residencia, titular real 14c
             x-ehkn8bj35lq6is3f5li6uorldlimst3f:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Tipus de document
+                identificatiu, titular real 14c.'
               label: Titulars reals. Tipus de document identificatiu, titular real
                 14c
             x-ehkn8bj45lhm2tbjc4mmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Data de la
+                causa de la presentacio, titular real 14d.'
               label: Titulars reals. Data de la causa de la presentacio, titular real
                 14d
             x-ehkn8bj45lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Causa de la
+                presentacio, titular real 14d.'
               label: Titulars reals. Causa de la presentacio, titular real 14d
             x-ehkn8bj45lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Data de naixement,
+                titular real 14d.'
               label: Titulars reals. Data de naixement, titular real 14d
             x-ehkn8bj45lkm8pbeehkmcqb3c5hmirre:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. N.I.F. o codi
+                d''identificacio estranger, titular real 14d.'
               label: Titulars reals. N.I.F. o codi d'identificacio estranger, titular
                 real 14d
             x-ehkn8bj45ln62or9dtn62r39chgm8:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Nacionalitat,
+                titular real 14d.'
               label: Titulars reals. Nacionalitat, titular real 14d
             x-ehkn8bj45ln6urb2e9ig:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Cognoms i
+                nom, titular real 14d.'
               label: Titulars reals. Cognoms i nom, titular real 14d
             x-ehkn8bj45lo62qbj5lings35chkm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Pais d''expedicio
+                del document d''identificacio, titular real 14d.'
               label: Titulars reals. Pais d'expedicio del document d'identificacio,
                 titular real 14d
             x-ehkn8bj45lo62qbj5lp6asr9chimsor9c4:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Pais de residencia,
+                titular real 14d.'
               label: Titulars reals. Pais de residencia, titular real 14d
             x-ehkn8bj45lq6is3f5li6uorldlimst3f:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Tipus de document
+                identificatiu, titular real 14d.'
               label: Titulars reals. Tipus de document identificatiu, titular real
                 14d
             x-ehkn8bj4clhmoobic5hmirre5ln6ubbmc5p6iob3d5nms:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Declaracio
+                de no variacio de dades.'
               label: Titulars reals. Declaracio de no variacio de dades
             x-ehkn8bj55lhm2tbjc4mmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Data de la
+                causa de la presentacio, titular real 14e.'
               label: Titulars reals. Data de la causa de la presentacio, titular real
                 14e
             x-ehkn8bj55lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Causa de la
+                presentacio, titular real 14e.'
               label: Titulars reals. Causa de la presentacio, titular real 14e
             x-ehkn8bj55lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Data de naixement,
+                titular real 14e.'
               label: Titulars reals. Data de naixement, titular real 14e
             x-ehkn8bj55lkm8pbeehkmcqb3c5hmirre:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. N.I.F. o codi
+                d''identificacio estranger, titular real 14e.'
               label: Titulars reals. N.I.F. o codi d'identificacio estranger, titular
                 real 14e
             x-ehkn8bj55ln62or9dtn62r39chgm8:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Nacionalitat,
+                titular real 14e.'
               label: Titulars reals. Nacionalitat, titular real 14e
             x-ehkn8bj55ln6urb2e9ig:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Cognoms i
+                nom, titular real 14e.'
               label: Titulars reals. Cognoms i nom, titular real 14e
             x-ehkn8bj55lo62qbj5lings35chkm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Pais d''expedicio
+                del document d''identificacio, titular real 14e.'
               label: Titulars reals. Pais d'expedicio del document d'identificacio,
                 titular real 14e
             x-ehkn8bj55lo62qbj5lp6asr9chimsor9c4:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Pais de residencia,
+                titular real 14e.'
               label: Titulars reals. Pais de residencia, titular real 14e
             x-ehkn8bj55lq6is3f5li6uorldlimst3f:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Tipus de document
+                identificatiu, titular real 14e.'
               label: Titulars reals. Tipus de document identificatiu, titular real
                 14e
             x-ehkn8bj65lhm2tbjc4mmcpb3d1gg:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Data de la
+                causa de la presentacio, titular real 14f.'
               label: Titulars reals. Data de la causa de la presentacio, titular real
                 14f
             x-ehkn8bj65lhm2tbjc4mn0sj5edimst31cdkmurg:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Causa de la
+                presentacio, titular real 14f.'
               label: Titulars reals. Causa de la presentacio, titular real 14f
             x-ehkn8bj65lj6aor8c4mmsob3d5mmipbeehng:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Data de naixement,
+                titular real 14f.'
               label: Titulars reals. Data de naixement, titular real 14f
             x-ehkn8bj65lkm8pbeehkmcqb3c5hmirre:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. N.I.F. o codi
+                d''identificacio estranger, titular real 14f.'
               label: Titulars reals. N.I.F. o codi d'identificacio estranger, titular
                 real 14f
             x-ehkn8bj65ln62or9dtn62r39chgm8:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Nacionalitat,
+                titular real 14f.'
               label: Titulars reals. Nacionalitat, titular real 14f
             x-ehkn8bj65ln6urb2e9ig:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Cognoms i
+                nom, titular real 14f.'
               label: Titulars reals. Cognoms i nom, titular real 14f
             x-ehkn8bj65lo62qbj5lings35chkm6qbfdo:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Pais d''expedicio
+                del document d''identificacio, titular real 14f.'
               label: Titulars reals. Pais d'expedicio del document d'identificacio,
                 titular real 14f
             x-ehkn8bj65lo62qbj5lp6asr9chimsor9c4:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Pais de residencia,
+                titular real 14f.'
               label: Titulars reals. Pais de residencia, titular real 14f
             x-ehkn8bj65lq6is3f5li6uorldlimst3f:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Tipus de document
+                identificatiu, titular real 14f.'
               label: Titulars reals. Tipus de document identificatiu, titular real
                 14f
             x-ehkn8bjjd5n2qrr2dhkmeob3d5nmsbb9chimst39cpkm6obi:
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Entitat sense
+                obligacio d''identificar el titular real.'
               label: Titulars reals. Entitat sense obligacio d'identificar el titular
                 real
           construct:

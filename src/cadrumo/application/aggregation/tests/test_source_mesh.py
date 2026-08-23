@@ -18,6 +18,7 @@ from .. import (
     CompositeSourceResolverId,
     collect_unhandled_source_diagnostics,
     merge_source_resolutions,
+    merge_source_resolutions_by_precedence,
     storage_degradation_resolution,
 )
 from .._errors import AggregationValidationError
@@ -116,7 +117,7 @@ def _row_identity(
     )
 
 
-def test_row_source_identity_is_bijective_sorted_and_json_replayable() -> None:
+def test_row_source_identity_is_sorted_and_excluded_from_generic_serialization() -> None:
     second = ("inventory-operation-z", 2)
     first = ("inventory-operation-a", 1)
     resolution = CalculationSourceResolution(
@@ -129,10 +130,9 @@ def test_row_source_identity_is_bijective_sorted_and_json_replayable() -> None:
         },
     )
 
-    dumped = resolution.model_dump(mode="json")["row_source_identities"]
-    assert [(row["binding_id"], row["row_index"]) for row in dumped] == [first, second]
-    replayed = CalculationSourceResolution.model_validate_json(resolution.model_dump_json())
-    assert replayed == resolution
+    assert tuple(resolution.row_source_identities) == (first, second)
+    assert "row_source_identities" not in resolution.model_dump(mode="json")
+    assert "opaque-activity" not in resolution.model_dump_json()
 
 
 @pytest.mark.parametrize(
@@ -140,13 +140,6 @@ def test_row_source_identity_is_bijective_sorted_and_json_replayable() -> None:
     [
         ({("inventory-operation-a", 1): Decimal("1.00")}, {("inventory-operation-a", 2): _row_identity()}),
         ({("inventory-operation-a", 1): Decimal("1.00")}, {("inventory-operation-b", 1): _row_identity()}),
-        (
-            {
-                ("inventory-operation-a", 1): Decimal("1.00"),
-                ("inventory-operation-a", 2): Decimal("2.00"),
-            },
-            {("inventory-operation-a", 1): _row_identity()},
-        ),
     ],
 )
 def test_row_source_identity_refuses_missing_or_orphan_coordinates(
@@ -159,6 +152,19 @@ def test_row_source_identity_refuses_missing_or_orphan_coordinates(
             row_binding_values=values,
             row_source_identities=identities,
         )
+
+
+def test_identity_bearing_rows_can_coexist_with_unmigrated_m720_rows() -> None:
+    inventory_key = ("inventory-operation-a", 1)
+    m720_key = ("modelo-720-asset-row-class", 1)
+    resolution = CalculationSourceResolution(
+        resolver_id="mixed-row-sources",
+        row_binding_values={m720_key: "B", inventory_key: Decimal("1.00")},
+        row_source_identities={inventory_key: _row_identity()},
+    )
+
+    assert tuple(resolution.row_binding_values) == (inventory_key, m720_key)
+    assert tuple(resolution.row_source_identities) == (inventory_key,)
 
 
 @pytest.mark.parametrize("row_index", [0, -1])
@@ -188,6 +194,29 @@ def test_row_source_identity_raw_value_is_absent_from_repr() -> None:
 
     assert canary not in repr(identity)
     assert canary not in repr(resolution)
+    assert canary not in str(identity)
+    assert canary not in str(resolution)
+    assert canary not in repr(resolution.model_dump(mode="json"))
+    assert canary not in resolution.model_dump_json()
+
+
+def test_invalid_row_source_identity_does_not_echo_raw_input() -> None:
+    canary = " opaque-activity-validation-canary "
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceResolution(
+            resolver_id="inventory",
+            row_binding_values={("inventory-operation-a", 1): Decimal("1.00")},
+            row_source_identities={
+                ("inventory-operation-a", 1): {
+                    "source_kind": BindingSourceKind.INVENTORY,
+                    "source_row_identity": canary,
+                    "fingerprint": "a" * 64,
+                },
+            },
+        )
+
+    assert canary not in str(exc_info.value)
+    assert canary not in repr(exc_info.value)
 
 
 def test_source_resolution_rejects_serialized_row_binding_index_below_one() -> None:
@@ -678,6 +707,58 @@ def test_source_resolution_merge_rejects_duplicate_row_binding_ownership() -> No
     assert context["row_index"] == 1
     assert context["first_resolver"] == "foreign-assets"
     assert context["second_resolver"] == "manual-bridge"
+
+
+@pytest.mark.parametrize(
+    ("right_value", "right_identity", "right_fingerprint"),
+    [
+        (Decimal("1.00"), "opaque-activity-alpha", "a" * 64),
+        (Decimal("9.00"), "opaque-activity-alpha", "a" * 64),
+        (Decimal("1.00"), "opaque-activity-substituted", "a" * 64),
+        (Decimal("1.00"), "opaque-activity-alpha", "b" * 64),
+    ],
+)
+def test_source_resolution_merge_refuses_every_second_row_identity_claim_atomically(
+    right_value: Decimal,
+    right_identity: str,
+    right_fingerprint: str,
+) -> None:
+    key = ("inventory-operation-a", 1)
+    left = CalculationSourceResolution(
+        resolver_id="inventory-left",
+        row_binding_values={key: Decimal("1.00")},
+        row_source_identities={key: _row_identity()},
+    )
+    right = CalculationSourceResolution(
+        resolver_id="inventory-right",
+        row_binding_values={key: right_value},
+        row_source_identities={
+            key: _row_identity(right_identity, fingerprint=right_fingerprint),
+        },
+    )
+
+    with pytest.raises(AggregationValidationError) as exc_info:
+        merge_source_resolutions((left, right))
+
+    rendered = f"{exc_info.value!r} {exc_info.value} {exc_info.value.context!r}"
+    assert str(exc_info.value) == "aggregation.source_mesh.errors.duplicate_row_binding_owner"
+    assert "opaque-activity" not in rendered
+
+
+def test_precedence_merge_cannot_strip_an_existing_row_source_identity() -> None:
+    key = ("inventory-operation-a", 1)
+    source = CalculationSourceResolution(
+        resolver_id="inventory",
+        row_binding_values={key: Decimal("1.00")},
+        row_source_identities={key: _row_identity()},
+    )
+    caller = CalculationSourceResolution(
+        resolver_id="caller",
+        row_binding_values={key: Decimal("1.00")},
+    )
+
+    with pytest.raises(AggregationValidationError, match="duplicate_row_binding_owner"):
+        merge_source_resolutions_by_precedence((source, caller))
 
 
 def test_source_resolution_merge_rejects_duplicate_binding_across_value_channels() -> None:

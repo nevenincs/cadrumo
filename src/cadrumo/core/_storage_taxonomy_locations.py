@@ -164,15 +164,6 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
-        StorageCategory.MCP_TELEMETRY,
-        "telemetry",
-        consumer_module="cadrumo_harness/mcp/_telemetry.py",
-        settings_field="cadrumo_mcp_telemetry_dir",
-        lifecycle=StorageLifecycle.RETENTION,
-        grouping=StorageGrouping.LOGS,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
         # Observability's own output. Fingerprinting it would make every run's
         # digest depend on the traces the immediately preceding run left, so a
         # hermetic replay would refuse on essentially every attempt.

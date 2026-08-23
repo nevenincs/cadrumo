@@ -602,13 +602,14 @@ application:
   inventory:
     service:
       errors:
-        closing_authority_conflict: Ja existeix un registre diferent d'autoritat de tancament per a aquesta activitat i any.
         actividad_conflict: Ja existeix un llibre d'inventari per a l'activitat %{actividad_id}
           i l'exercici %{year}. Executeu `aeat app ledger inventory list` per veure
           els llibres existents.
         actividad_not_found: No existeix cap llibre d'inventari per a l'activitat
           %{actividad_id} i l'exercici %{year}. Executeu `aeat app ledger inventory
           list` per veure els llibres existents.
+        closing_authority_conflict: Ja existeix un registre diferent d'autoritat de
+          tancament per a aquesta activitat i any.
         duplicate_movement_id: El llibre d'inventari ja conté el moviment %{movement_id}.
           Executeu `aeat app ledger inventory list` per veure els moviments registrats.
         invalid_valuation_method: 'El mètode de valoració d inventari no està admès:
@@ -766,6 +767,9 @@ application:
           requereix un repositori de persistència d'execucions de sincronització.
     filed_observations:
       errors:
+        duplicate_casilla: L'observació presentada repeteix una mateixa casella més
+          d'una vegada. Cada casella pot aparèixer una sola vegada en una observació
+          registrada.
         iva_history_promotion_failed: La declaració presentada del Model 303 no s'ha
           pogut incorporar a l'històric de compensació d'IVA.
         iva_history_reload_missing: L'històric segur de compensació d'IVA no s'ha
@@ -1047,6 +1051,29 @@ application:
       external_import_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània
         del registre per al model %{modelo}, exercici %{filing_year}, període %{period};
         no es poden validar els ids de casella importats.
+      external_import_source_actor_blank: La importació d'una autoliquidació externa
+        ha d'indicar qui la va presentar. L'actor declarat és buit.
+      external_import_source_casilla_mismatch: Les caselles amb text original no coincideixen
+        amb les caselles el valor de les quals s'importa. Tots dos conjunts han de
+        descriure exactament les mateixes caselles.
+      external_import_source_incomplete: 'L''autoliquidació externa no aporta totes
+        les caselles numèriques obligatòries d''aquesta revisió. Falten: {missing_casilla_ids}.'
+      external_import_source_lexical_blank: La casella {casilla_id} s'importa amb
+        un text original buit. El text presentat s'ha de conservar literalment.
+      external_import_source_lexical_non_numeric: El text original de la casella {casilla_id}
+        no es pot llegir com un import. Reviseu el valor presentat abans d'importar-lo.
+      external_import_source_lexical_value_mismatch: L'import llegit del text original
+        de la casella {casilla_id} no coincideix amb el valor importat per a aquesta
+        casella.
+      external_import_source_period_mismatch: El període declarat pertany a un exercici
+        diferent de l'exercici de presentació indicat. Tots dos s'han de referir al
+        mateix exercici.
+      external_import_source_revision_mismatch: La revisió indicada a l'autoliquidació
+        externa no és la que la unitat de treball existent té assignada per a aquest
+        model i període.
+      external_import_source_work_unit_ambiguous: Hi ha més d'una unitat de treball
+        activa per a aquest model, exercici i període, de manera que no es pot determinar
+        a quina correspon la importació.
       external_import_tax_id_missing: L'evidència d'importació externa %{evidence_reference_id}
         (%{evidence_kind}) requereix el NIF del contribuent abans de vincular-se a
         un artefacte de justificant.
@@ -1129,8 +1156,9 @@ application:
         %{period}; completa abans aquestes dades de perfil: %{missing}.'
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
-      profile_readiness_setup_incomplete: La configuració del perfil encara no s'ha declarat completa;
-        executa `aeat config profile complete-setup` abans de treballar amb models.
+      profile_readiness_setup_incomplete: La configuració del perfil encara no s'ha
+        declarat completa; executa `aeat config profile complete-setup` abans de treballar
+        amb models.
       profile_readiness_setup_incomplete_missing: 'La configuració del perfil està
         incompleta; acaba l''assistent de configuració abans de treballar amb models.
         Camps pendents: %{missing}.'

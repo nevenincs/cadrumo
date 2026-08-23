@@ -31,12 +31,9 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.application.command_search import CommandDoc, CommandIndex, build_command_index
-from cadrumo.application.operator_surface import (
-    OperatorSurfaceManifest,
-    build_operator_surface_manifest,
-)
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 
+from ._capability_manifest import OperatorSurfaceManifest, build_operator_surface_manifest
 from ._hitl import ConfirmationPolicy, confirmation_for_policy
 from ._persona_scope import AgentPersona, handoff_denial_message, is_handoff_denied, is_tool_in_persona_scope
 from ._tools import McpToolDescriptor

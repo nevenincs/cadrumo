@@ -546,13 +546,14 @@ application:
   inventory:
     service:
       errors:
-        closing_authority_conflict: A different closing-authority record already exists for this activity and year.
         actividad_conflict: An inventory ledger already exists for activity %{actividad_id}
           and year %{year}. Run `aeat app ledger inventory list` to see the existing
           ledgers.
         actividad_not_found: No inventory ledger exists for activity %{actividad_id}
           and year %{year}. Run `aeat app ledger inventory list` to see the existing
           ledgers.
+        closing_authority_conflict: A different closing-authority record already exists
+          for this activity and year.
         duplicate_movement_id: The inventory ledger already contains movement %{movement_id}.
           Run `aeat app ledger inventory list` to see the recorded movements.
         invalid_valuation_method: 'The inventory valuation method is not supported:
@@ -696,6 +697,8 @@ application:
           persistence repository.
     filed_observations:
       errors:
+        duplicate_casilla: The filed observation repeats the same casilla more than
+          once. Each casilla may appear only once in a recorded observation.
         iva_history_promotion_failed: The filed Modelo 303 declaration could not be
           promoted into IVA compensation history.
         iva_history_reload_missing: The secure IVA compensation history did not reload
@@ -957,6 +960,27 @@ application:
       external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved; imported
         casilla ids cannot be validated.
+      external_import_source_actor_blank: Importing an externally filed return must
+        record who filed it. The declared actor is blank.
+      external_import_source_casilla_mismatch: The casillas carrying source text do
+        not match the casillas whose values are imported. Both sets must describe
+        exactly the same casillas.
+      external_import_source_incomplete: 'The externally filed return does not supply
+        every required numeric casilla of this revision. Missing: {missing_casilla_ids}.'
+      external_import_source_lexical_blank: Casilla {casilla_id} is imported with
+        blank source text. The filed text must be preserved verbatim.
+      external_import_source_lexical_non_numeric: The source text of casilla {casilla_id}
+        cannot be read as an amount. Check the filed value before importing it.
+      external_import_source_lexical_value_mismatch: The amount read from the source
+        text of casilla {casilla_id} does not match the value imported for that casilla.
+      external_import_source_period_mismatch: The declared period belongs to a different
+        filing year than the one given. Both must refer to the same year.
+      external_import_source_revision_mismatch: The revision named on the externally
+        filed return is not the one the existing work unit holds for that modelo and
+        period.
+      external_import_source_work_unit_ambiguous: More than one active work unit exists
+        for that modelo, filing year and period, so the import cannot be matched to
+        one of them.
       external_import_tax_id_missing: External-filing import evidence %{evidence_reference_id}
         (%{evidence_kind}) requires the filing taxpayer tax id before it can be bound
         to a justificante artifact.
@@ -1030,8 +1054,8 @@ application:
         %{period}; complete these profile facts first: %{missing}.'
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
-      profile_readiness_setup_incomplete: Profile setup has not yet been declared complete;
-        run `aeat config profile complete-setup` before working on modelos.
+      profile_readiness_setup_incomplete: Profile setup has not yet been declared
+        complete; run `aeat config profile complete-setup` before working on modelos.
       profile_readiness_setup_incomplete_missing: 'Profile setup is incomplete; finish
         the setup flow before working on modelos. Outstanding fields: %{missing}.'
       recipient_decryption_failed: The recipient-encrypted package could not be decrypted;

@@ -9,10 +9,13 @@ values, and the produced record is validated by the tamper-evident
 
 from __future__ import annotations
 
+import functools
 import hashlib
+import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
@@ -25,6 +28,7 @@ from .._command import CommandResult, run_command
 from .._hashing import sha256_path
 from .._installed_wheel_binding import (
     assert_archive_members_match_extraction,
+    assert_installed_console_entry_point,
     installed_distribution_payload_sha256,
     installed_wheel_payload_sha256,
 )
@@ -114,6 +118,15 @@ def _tax_evidence(
 def _mcp_evidence(cohort: LoadedReleaseCohort, *, client: bool = False) -> InstalledMcpEvidence:
     """Build installed-MCP oracle evidence with a real cadrumo-mcp exe stand-in."""
     server = Path(shutil.which("cadrumo-mcp") or "").resolve(strict=True)
+    project_root: Path | None = None
+    if client:
+        project_root = cohort.directory / "client-extraction"
+        project_root.mkdir()
+        with zipfile.ZipFile(cohort.artifact("mcpb")) as archive:
+            archive.extractall(project_root)
+        shutil.copytree(_client_venv_template(server.parents[1]), project_root / ".venv", copy_function=os.link)
+        scripts = project_root / ".venv" / ("Scripts" if os.name == "nt" else "bin")
+        server = (scripts / ("cadrumo-mcp.exe" if os.name == "nt" else "cadrumo-mcp")).resolve(strict=True)
     cli = server.with_name("aeat.exe" if server.suffix.lower() == ".exe" else "aeat")
     invoked_cli_sha256 = hashlib.sha256(str(cli).encode("utf-8")).hexdigest()
     records = {record.name: record for record in cohort.manifest.artifacts}
@@ -153,12 +166,20 @@ def _mcp_evidence(cohort: LoadedReleaseCohort, *, client: bool = False) -> Insta
         cohort_harness_wheel_sha256=records["cadrumo-harness-wheel"].sha256,
         server_executable_sha256=sha256_path(server),
         runtime_server_executable=str(server),
-        runtime_project_root=str(Path(__file__).resolve().parents[3]) if client else None,
+        runtime_project_root=str(project_root) if project_root is not None else None,
         installed_cli_payload_sha256=installed_distribution_payload_sha256(cli, "cadrumo"),
         installed_harness_payload_sha256=installed_distribution_payload_sha256(server, "cadrumo-harness"),
         checkout_imports_removed=True,
         ambient_product_executables_removed=True,
     )
+
+
+@functools.lru_cache(maxsize=1)
+def _client_venv_template(source: Path) -> Path:
+    """Copy the current real venv once; per-test client roots use hard links."""
+    template = Path(tempfile.mkdtemp(prefix="cadrumo-client-venv-")) / ".venv"
+    shutil.copytree(source, template)
+    return template
 
 
 def _acquisition() -> AcquisitionIdentity:
@@ -193,6 +214,48 @@ def test_mcpb_member_binding_rejects_empty_and_tampered_extractions(tmp_path: Pa
     target.write_bytes(b"foreign\n")
     with pytest.raises(RuntimeError, match="digest drifted"):
         assert_archive_members_match_extraction(bundle, extracted)
+    target.write_bytes(b"sealed\n")
+    (extracted / "foreign.txt").write_text("unsealed\n", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="unsealed extra"):
+        assert_archive_members_match_extraction(bundle, extracted)
+
+
+def test_foreign_launcher_cannot_borrow_an_exact_installed_payload(tmp_path: Path) -> None:
+    """A copied launcher cannot attest merely because a sealed payload is alongside it."""
+    server = Path(shutil.which("cadrumo-mcp") or "").resolve(strict=True)
+    suffix = server.suffix
+    foreign = server.with_name(f"{tmp_path.name}-foreign-cadrumo-mcp{suffix}")
+    shutil.copy2(server, foreign)
+    try:
+        with pytest.raises(RuntimeError, match="not the confined environment launcher"):
+            assert_installed_console_entry_point(
+                foreign,
+                distribution="cadrumo-harness",
+                entry_point="cadrumo-mcp",
+                expected_value="cadrumo_harness.mcp:main",
+            )
+    finally:
+        foreign.unlink()
+
+
+def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
+    """Replacing the canonical launcher cannot borrow its adjacent sealed payload."""
+    server = Path(shutil.which("cadrumo-mcp") or "").resolve(strict=True)
+    if server.suffix.lower() != ".exe":
+        pytest.skip("Windows launcher-stub replacement plant")
+    copied_venv = tmp_path / ".venv"
+    shutil.copytree(_client_venv_template(server.parents[1]), copied_venv, copy_function=os.link)
+    scripts = copied_venv / "Scripts"
+    copied_server = scripts / "cadrumo-mcp.exe"
+    copied_server.unlink()
+    shutil.copy2(scripts / "aeat.exe", copied_server)
+    with pytest.raises(RuntimeError, match="launcher semantics drifted"):
+        assert_installed_console_entry_point(
+            copied_server,
+            distribution="cadrumo-harness",
+            entry_point="cadrumo-mcp",
+            expected_value="cadrumo_harness.mcp:main",
+        )
 
 
 def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
@@ -253,7 +316,9 @@ def test_client_capture_with_foreign_bundle_root_is_refused(tmp_path: Path) -> N
     from ..distribution_evidence_emit import EvidenceCohortBindingError
 
     cohort = _release_cohort(tmp_path / "cohort")
-    forged = replace(_mcp_evidence(cohort, client=True), runtime_project_root=str(tmp_path / "cohort"))
+    foreign_root = tmp_path / "foreign-root"
+    foreign_root.mkdir()
+    forged = replace(_mcp_evidence(cohort, client=True), runtime_project_root=str(foreign_root))
     with pytest.raises(EvidenceCohortBindingError, match="escapes the extracted MCPB root"):
         build_client_evidence(
             row_id="claude-desktop-mcpb",

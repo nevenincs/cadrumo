@@ -104,7 +104,7 @@ def case_insensitive_choice(enum_class: type[StrEnum]) -> typer_click_types.Para
 
     Passing the result as ``click_type`` keeps the parameter's enum annotation
     authoritative: the handler still receives a real member, not the raw token,
-    and the MCP input-schema builder still reads the closed value set off the
+    and external input-schema builders still read the closed value set off the
     wrapped choice. Only the accepted spelling widens.
     """
     # CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
@@ -788,7 +788,7 @@ def resolve_notice_action(
 
     This is the sole entrypoint bridge for successful ``Notice.action`` values.
     It derives the current result-schema, Click/S05 input, mounted-family,
-    profile-policy, and MCP projections, then delegates all action validation
+    profile-policy, and external projections, then delegates all action validation
     to the application-owned resolver.  Producers therefore supply only their
     stable action identity and provenance-bearing concrete values; they cannot
     hand-assemble a wire action or silently omit a live required input.
@@ -841,7 +841,7 @@ def resolve_lifecycle_continuation_notice(continuation: ModeloWorkLifecycleConti
 
 @dataclass(frozen=True, slots=True)
 class _CurrentOperatorSurfaceSchemaInventory:
-    """The non-MCP projections collected from the live CLI command surface."""
+    """Protocol-neutral projections collected from the live CLI command surface."""
 
     command_keys: tuple[str, ...]
     live_leaves: tuple[LiveLeafInventoryRow, ...]
@@ -983,7 +983,7 @@ def _current_operator_surface_schema_rows(
                         else "non_profile_bound"
                     )
                 ),
-                should_expose_via_mcp=command_key not in root_landing_schema_keys,
+                should_expose_externally=command_key not in root_landing_schema_keys,
                 provenance="CommandSpec policy plus root landing graph classification",
             )
             for command_key in sorted(command_keys)
@@ -1047,7 +1047,7 @@ def _current_operator_surface_exclusions() -> tuple[ExplicitExclusionInventoryRo
             ExplicitExclusionInventoryRow(
                 subject_leaf_key=command_key,
                 surface=ReconciliationSurface.SURFACE_EXPOSURE,
-                reason="root landing callback is excluded from MCP tools",
+                reason="root landing callback is excluded from external command surfaces",
                 authority="COMMAND_GRAPH",
                 provenance="CommandSpec root/group result identity",
             ),

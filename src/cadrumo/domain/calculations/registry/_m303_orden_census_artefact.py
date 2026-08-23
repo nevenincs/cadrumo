@@ -5,9 +5,8 @@ HTML, and the five supported ejercicios cost about 1.6 seconds of every warm
 authority load. Nothing about that parse varies per process: the sources are
 digest-pinned and the extractor is versioned, so the result is a pure function of
 bytes the release already carries. This module is where that result is written
-once by the build and read back by every runtime, which is the same inversion
-`2026-07-17-mcp-call-latency-adr` D1 made for registry validation -- the build is
-the gate, the runtime asserts identity.
+once by the build and read back by every runtime: the build is the gate and the
+runtime asserts identity.
 
 **What is shipped is the CENSUS, not a digest.** The committed manifest carries
 only per-source invariants (counts, a module distribution, a few scalars); the

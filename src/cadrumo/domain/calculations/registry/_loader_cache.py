@@ -65,7 +65,7 @@ _REGISTRY_DISK_CACHE_RELATIVE_PATH = storage_location(StorageCategory.REGISTRY_D
 # ``src/cadrumo/_data/registry/aeat`` source directory, which can be edited
 # live during a session. A TTL that
 # never re-checks would silently serve stale registry TOML to a long-running
-# process (an MCP server, a REPL, a background watch loop) after such an
+# process (an embedding host, a REPL, a background watch loop) after such an
 # edit lands. 10 seconds is long enough to fold the several fingerprint
 # recomputations one calculate call triggers (authority + snapshot + any
 # nested revision lookups, all milliseconds apart) into a single directory
