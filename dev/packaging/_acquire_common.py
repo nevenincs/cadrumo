@@ -37,7 +37,6 @@ from .evidence import CommandTranscript
 from .python_cohort import PythonCohort
 
 if TYPE_CHECKING:
-    from .installed_mcp_oracle import InstalledMcpEvidence
     from .installed_tax_oracle import InstalledTaxEvidence
 
 _UTF_8: Final[str] = UTF_8
@@ -45,16 +44,11 @@ _UTF_8: Final[str] = UTF_8
 # The distributions the promoted Python cohort carries as installable wheels,
 # each keyed by the exact ``python-cohort.json`` digest name. A public
 # reacquisition proves this closed set, and only this set, byte-for-byte. The
-# independently versioned harness remains an exact digest-pinned member.
 PYTHON_COHORT_WHEEL_NAMES: Final[tuple[str, ...]] = (
     "cadrumo",
-    "cadrumo-harness",
     "cadrumo-data-manuals",
     "cadrumo-data-official",
 )
-
-#: The sibling agent-harness distribution name.
-HARNESS_DISTRIBUTION: Final[str] = "cadrumo-harness"
 
 # The grounded Modelo 200 cuota íntegra the installed behaviour oracles must
 # reproduce; a divergent value means the acquired bytes are not the promoted
@@ -231,9 +225,7 @@ def match_downloaded_cohort_wheels(
     """
     resolved: dict[str, Path] = {}
     for distribution in PYTHON_COHORT_WHEEL_NAMES:
-        distribution_version = (
-            cohort.harness_version if distribution == HARNESS_DISTRIBUTION else cohort.version
-        )
+        distribution_version = cohort.version
         prefix = _wheel_distribution_prefix(distribution, distribution_version)
         matches = [path for path in scan_directory(download_dir, pattern="*.whl") if path.name.startswith(prefix)]
         if not matches:
@@ -470,44 +462,39 @@ def capture_owned_server_launch(
     )
 
 
-def run_installed_behavior_oracles(
+def run_installed_cli_oracle(
     *,
     cli: Path,
-    mcp_server: Path,
     storage_root: Path,
     work_dir: Path,
     cohort: PythonCohort,
     timeout_seconds: float = 180.0,
-) -> tuple[InstalledTaxEvidence, InstalledMcpEvidence]:
-    """Repeat installed CLI and MCP tax work through the canonical oracles.
+) -> InstalledTaxEvidence:
+    """Repeat grounded tax work through the canonical installed CLI oracle.
 
     Reuses :func:`dev.packaging.installed_tax_oracle.run_installed_tax_oracle`
-    and :func:`dev.packaging.installed_mcp_oracle.run_installed_mcp_oracle`
-    rather than re-deriving tax truth, then asserts both reproduce the grounded
-    target value. The oracle imports are deferred so the pure digest helpers in
-    this module stay importable without the ``mcp`` dependency.
+    rather than re-deriving tax truth, then assert it reproduces the grounded
+    target value.
 
     Args:
         cli: The acquired ``aeat`` executable to drive.
-        mcp_server: The acquired ``cadrumo-mcp`` executable to drive.
-        storage_root: A fresh isolated storage root (both oracles get subdirs).
+        storage_root: A fresh isolated storage root.
         work_dir: An execution cwd outside any source checkout.
         cohort: The exact immutable Python cohort whose installed bytes are exercised.
         timeout_seconds: Per-command timeout for the oracle subprocesses.
 
     Returns:
-        The retained tax and MCP evidence records.
+        The retained tax evidence record.
 
     Raises:
-        AcquisitionError: If either oracle fails to reproduce the target value.
+        AcquisitionError: If the oracle fails to reproduce the target value.
     """
-    from .installed_mcp_oracle import run_installed_mcp_oracle
     from .installed_tax_oracle import run_installed_tax_oracle
 
     tax_evidence = run_installed_tax_oracle(
         cli,
-        storage_root=storage_root / "tax-state",
-        work_dir=work_dir / "tax-work",
+        storage_root=storage_root,
+        work_dir=work_dir,
         cohort_source_commit=cohort.source_commit,
         cohort_manifest_sha256=sha256_path(cohort.manifest),
         cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
@@ -518,27 +505,11 @@ def run_installed_behavior_oracles(
             f"installed CLI oracle target value drifted: expected {EXPECTED_ORACLE_TARGET_VALUE}, "
             f"got {tax_evidence.target_value!r}",
         )
-    mcp_evidence = run_installed_mcp_oracle(
-        mcp_server,
-        storage_root=storage_root / "mcp-state",
-        work_dir=work_dir / "mcp-work",
-        cohort_source_commit=cohort.source_commit,
-        cohort_manifest_sha256=sha256_path(cohort.manifest),
-        cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
-        cohort_harness_wheel_sha256=cohort.sha256["cadrumo-harness"],
-        timeout_seconds=timeout_seconds,
-    )
-    if mcp_evidence.target_value != EXPECTED_ORACLE_TARGET_VALUE:
-        raise AcquisitionError(
-            f"installed MCP oracle target value drifted: expected {EXPECTED_ORACLE_TARGET_VALUE}, "
-            f"got {mcp_evidence.target_value!r}",
-        )
-    return tax_evidence, mcp_evidence
+    return tax_evidence
 
 
 __all__ = [
     "EXPECTED_ORACLE_TARGET_VALUE",
-    "HARNESS_DISTRIBUTION",
     "PYTHON_COHORT_WHEEL_NAMES",
     "AcquisitionError",
     "capture_owned_server_launch",
@@ -546,7 +517,7 @@ __all__ = [
     "refuse_digest_mismatch",
     "refuse_unavailable",
     "require_command_succeeded",
-    "run_installed_behavior_oracles",
+    "run_installed_cli_oracle",
     "sha256_bytes",
     "venv_bin_dir",
     "venv_executable",

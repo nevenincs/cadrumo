@@ -125,7 +125,7 @@ jobs:
         run: uv run --no-sync python -m dev.packaging.evidence
 
       # TEST/DEBUG ASSET ONLY. The per-OS smoke cohort feeds the acquisition
-      # test lanes (scoop/homebrew/claude); it NEVER enters the publication
+      # test lanes (Scoop and Homebrew); it NEVER enters the publication
       # chain. publish-release.yml ships the SEALED cadrumo-release-cohort only.
       # Enforced by test_no_workflow_consumes_per_os_cohort_for_publication.
       - name: Archive the tested Cadrumo Python cohort
@@ -352,8 +352,8 @@ jobs:
           if-no-files-found: ignore
           overwrite: true
 
-  # Build the ONE immutable full cross-channel cohort (python + Claude plugin/
-  # marketplace + Scoop + Homebrew + MCPB) once, from a clean HEAD clone, and
+  # Build the ONE immutable base-product cohort (Python + Scoop + Homebrew)
+  # once, from a clean HEAD clone, and
   # upload it as cadrumo-release-cohort. The per-OS oracle+emit legs below all
   # `needs:` this single job so every python-<os> row binds the identical cohort
   # id (a per-OS rebuild would diverge the id). Pure-Python generators - no node.

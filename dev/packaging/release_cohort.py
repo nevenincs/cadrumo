@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import inspect
 import json
 import os
 import platform
@@ -14,8 +13,8 @@ import tempfile
 import uuid
 import zipfile
 from datetime import UTC, datetime
-from pathlib import Path, PurePosixPath
-from typing import Any, Final, cast
+from pathlib import Path
+from typing import Final
 
 from dev._paths import UTF_8
 
@@ -130,61 +129,13 @@ def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort
     return load_python_cohort(destination)
 
 
-def _materialise_claude_artifacts(
-    *,
-    cohort: PythonCohort,
-    output: Path,
-    work_root: Path,
-) -> tuple[Path, Path]:
-    from cadrumo_harness import materialise_marketplace
-
-    claude_dir = output / "claude"
-    marketplace_tree = work_root / "marketplace"
-    # PythonCohort satisfies the runtime protocol exactly. The public materialiser
-    # annotates its mutable ``dict`` digest field as a read-only Mapping protocol,
-    # which static structural typing cannot prove for a frozen dataclass.
-    plugin_cohort = cast("Any", cohort)
-    marketplace_manifest = materialise_marketplace(
-        marketplace_tree,
-        cohort=plugin_cohort,
-    )
-    plugin_source = PurePosixPath(marketplace_manifest.plugin_source.removeprefix("./"))
-    plugin_tree = marketplace_tree / plugin_source
-    if not plugin_tree.is_dir():
-        raise SystemExit(
-            f"marketplace did not materialise its declared plugin source: {plugin_source}",
-        )
-    plugin = deterministic_zip_tree(
-        plugin_tree,
-        claude_dir / f"cadrumo-plugin-{cohort.version}.zip",
-    )
-    marketplace = deterministic_zip_tree(
-        marketplace_tree,
-        claude_dir / f"cadrumo-marketplace-{cohort.version}.zip",
-    )
-    return plugin, marketplace
-
-
-def _require_cohort_aware_marketplace_materialiser() -> None:
-    """Refuse before building if the clean source cannot embed cohort wheels."""
-    from cadrumo_harness import materialise_marketplace
-
-    if "cohort" not in inspect.signature(materialise_marketplace).parameters:
-        raise SystemExit(
-            "clean source marketplace materialiser cannot embed the immutable Python cohort: "
-            "cadrumo_harness.materialise_marketplace accepts no 'cohort' argument, so the built "
-            "plugin would ship without pinned wheels. Give it a 'cohort' parameter that it "
-            "forwards to materialise_plugin, then re-run release assembly.",
-        )
-
-
 def _generate_channel_artifacts(
     *,
     clean_root: Path,
     cohort: PythonCohort,
     output: Path,
     env: dict[str, str],
-) -> tuple[Path, Path, Path]:
+) -> tuple[Path, Path]:
     release_base_url = f"{_RELEASE_BASE}/v{cohort.version}"
     scoop = output / "scoop" / "cadrumo.json"
     _run(
@@ -222,23 +173,9 @@ def _generate_channel_artifacts(
         cwd=clean_root,
         env=env,
     )
-    mcpb_dir = output / "mcpb"
-    _run(
-        [
-            sys.executable,
-            str(clean_root / "packaging" / "mcpb" / "build.py"),
-            "--cohort-dir",
-            str(cohort.directory),
-            "--dist-dir",
-            str(mcpb_dir),
-        ],
-        cwd=clean_root,
-        env=env,
-    )
     return (
         scoop.resolve(strict=True),
         (homebrew_dir / "Formula" / "cadrumo.rb").resolve(strict=True),
-        (mcpb_dir / f"cadrumo-{cohort.version}.mcpb").resolve(strict=True),
     )
 
 
@@ -317,7 +254,6 @@ def build_from_clean_source(
 
     source_epoch = _git(root, "show", "-s", "--format=%ct", commit)
     builder = _build_identity(root)
-    _require_cohort_aware_marketplace_materialiser()
     build_constraints = (root / _BUILD_CONSTRAINTS).resolve(strict=True)
     os.environ["SOURCE_DATE_EPOCH"] = source_epoch
     os.environ["PYTHONHASHSEED"] = "0"
@@ -329,16 +265,9 @@ def build_from_clean_source(
     env["PYTHONPATH"] = os.pathsep.join((str(root / "src"), str(root)))
 
     python_work = root / "var" / f"release-python-{uuid.uuid4().hex}"
-    work_root = root / "var" / f"release-claude-{uuid.uuid4().hex}"
     python_cohort = build_python_cohort(root, python_work)
     cohort = _copy_python_cohort(python_cohort, output / "python")
-    work_root.mkdir(parents=True)
-    plugin, marketplace = _materialise_claude_artifacts(
-        cohort=cohort,
-        output=output,
-        work_root=work_root,
-    )
-    scoop, homebrew, mcpb = _generate_channel_artifacts(
+    scoop, homebrew = _generate_channel_artifacts(
         clean_root=root,
         cohort=cohort,
         output=output,
@@ -359,12 +288,15 @@ def build_from_clean_source(
         artifacts=(
             ("cadrumo-wheel", ArtifactKind.PYTHON_WHEEL, cohort.root_wheel),
             ("cadrumo-sdist", ArtifactKind.PYTHON_SDIST, cohort.root_sdist),
-            ("cadrumo-harness-wheel", ArtifactKind.PYTHON_WHEEL, cohort.harness_wheel),
-            ("cadrumo-harness-sdist", ArtifactKind.PYTHON_SDIST, cohort.harness_sdist),
             (
                 "cadrumo-source-archive",
                 ArtifactKind.PYTHON_SOURCE_ARCHIVE,
                 cohort.source_archive,
+            ),
+            (
+                "cadrumo-runtime-wheelhouse",
+                ArtifactKind.PYTHON_WHEELHOUSE,
+                cohort.runtime_wheelhouse,
             ),
             (
                 "cadrumo-data-manuals-wheel",
@@ -391,11 +323,8 @@ def build_from_clean_source(
                 ArtifactKind.PYTHON_MANIFEST,
                 cohort.manifest,
             ),
-            ("claude-plugin", ArtifactKind.CLAUDE_PLUGIN, plugin),
-            ("claude-marketplace", ArtifactKind.CLAUDE_MARKETPLACE, marketplace),
             ("scoop-manifest", ArtifactKind.SCOOP_MANIFEST, scoop),
             ("homebrew-formula", ArtifactKind.HOMEBREW_FORMULA, homebrew),
-            ("mcpb", ArtifactKind.MCPB, mcpb),
         ),
     )
     write_manifest(output, manifest)

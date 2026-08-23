@@ -44,6 +44,7 @@ from ._command import CommandResult
 from ._hashing import sha256_path
 from ._installed_wheel_binding import (
     assert_archive_members_match_extraction,
+    assert_installed_console_entry_point,
     installed_distribution_payload_sha256,
     installed_wheel_payload_sha256,
     sealed_wheel_payload_sha256,
@@ -255,10 +256,29 @@ def _assert_mcp_oracle_bound_to_cohort(
         if not runtime_server.is_relative_to(project_root):
             raise EvidenceCohortBindingError("client MCP runtime server escapes the extracted MCPB root")
         try:
-            assert_archive_members_match_extraction(cohort.artifact("mcpb"), project_root)
+            assert_archive_members_match_extraction(
+                cohort.artifact("mcpb"),
+                project_root,
+                allowed_generated_roots=frozenset({".venv"}),
+            )
         except RuntimeError as exc:
             raise EvidenceCohortBindingError(str(exc)) from exc
     sibling_cli = runtime_server.with_name("aeat.exe" if runtime_server.suffix.lower() == ".exe" else "aeat")
+    try:
+        assert_installed_console_entry_point(
+            sibling_cli,
+            distribution="cadrumo",
+            entry_point="aeat",
+            expected_value="cadrumo.entrypoints._cli_main:main",
+        )
+        assert_installed_console_entry_point(
+            runtime_server,
+            distribution="cadrumo-harness",
+            entry_point="cadrumo-mcp",
+            expected_value="cadrumo_harness.mcp:main",
+        )
+    except RuntimeError as exc:
+        raise EvidenceCohortBindingError(str(exc)) from exc
     if sha256_path(runtime_server) != mcp_evidence.server_executable_sha256:
         raise EvidenceCohortBindingError("installed MCP runtime executable digest drifted after capture")
     expected_cli = sealed_wheel_payload_sha256(cohort.artifact("cadrumo-wheel"))

@@ -26,6 +26,7 @@ from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
 from ._hashing import sha256_path
 from ._proof_ledger import record_proof
+from .runtime_wheelhouse import build_runtime_wheelhouse, load_runtime_wheelhouse
 
 _UTF_8: Final[str] = UTF_8
 _MANIFEST_NAME: Final[str] = "python-cohort.json"
@@ -96,7 +97,6 @@ _DISTRIBUTIONS: Final[tuple[str, ...]] = (
     "cadrumo-data-manuals",
     "cadrumo-data-official",
 )
-_HARNESS_DISTRIBUTION: Final[str] = "cadrumo-harness"
 _COMMAND_SPEC_ATTESTATION_SCHEMA: Final[str] = "cadrumo.command-spec-cohort.v1"
 _ATTESTATION_DIGEST_FIELDS: Final[tuple[str, ...]] = (
     "root_wheel_sha256",
@@ -316,7 +316,7 @@ _INSTALLED_PROBE: Final[str] = """
 import json
 from importlib.metadata import distribution
 
-names = ("cadrumo", "cadrumo-harness", "cadrumo-data-manuals", "cadrumo-data-official")
+names = ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official")
 items = {name: distribution(name) for name in names}
 print(json.dumps({
     "versions": {name: item.version for name, item in items.items()},
@@ -331,18 +331,17 @@ print(json.dumps({
 
 @dataclass(frozen=True)
 class PythonCohort:
-    """One command, harness, and mandatory data artifact cohort."""
+    """The base command and its mandatory data-distribution artifacts."""
 
     directory: Path
     manifest: Path
     source_commit: str
     version: str
-    harness_version: str
     root_wheel: Path
     root_sdist: Path
     source_archive: Path
-    harness_wheel: Path
-    harness_sdist: Path
+    runtime_wheelhouse: Path
+    runtime_wheelhouse_manifest: dict[str, Any]
     manuals_wheel: Path
     manuals_sdist: Path
     official_wheel: Path
@@ -358,7 +357,7 @@ class PythonCohort:
     @property
     def product_wheels(self) -> tuple[Path, Path, Path, Path]:
         """Return every exact installable product wheel in stable order."""
-        return (self.root_wheel, self.harness_wheel, self.manuals_wheel, self.official_wheel)
+        return (self.root_wheel, self.manuals_wheel, self.official_wheel)
 
 
 def _run(argv: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -684,26 +683,6 @@ def _validate_sdist_contract(
             )
 
 
-def _validate_harness_contract(wheel: Path, sdist: Path, *, root_version: str) -> str:
-    """Validate the independently versioned harness pair and its root compatibility."""
-    wheel_name, wheel_version, requirements = _wheel_identity(wheel)
-    sdist_name, sdist_version, _ = _sdist_identity(sdist)
-    if (
-        wheel_name != _HARNESS_DISTRIBUTION
-        or sdist_name != _HARNESS_DISTRIBUTION
-        or wheel_version != sdist_version
-    ):
-        raise SystemExit("cadrumo-harness wheel/sdist identity or version drifted")
-    root_requirements = tuple(
-        requirement
-        for requirement in map(Requirement, requirements)
-        if normalise_distribution_name(requirement.name) == "cadrumo"
-    )
-    if len(root_requirements) != 1 or root_version not in root_requirements[0].specifier:
-        raise SystemExit(f"cadrumo-harness does not accept the cohort cadrumo version {root_version}")
-    return wheel_version
-
-
 def _safe_recreate(directory: Path, *, repo_root: Path) -> None:
     resolved_repo = repo_root.resolve(strict=True)
     resolved_var = (resolved_repo / "var").resolve()
@@ -803,18 +782,9 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
             ],
             cwd=build_root,
         )
-        _run(
-            [
-                uv,
-                "build",
-                "--wheel",
-                "--sdist",
-                "--project",
-                str(build_root / "src" / "cadrumo-harness"),
-                "--out-dir",
-                str(output),
-            ],
-            cwd=build_root,
+        build_runtime_wheelhouse(
+            build_root,
+            output / "cadrumo-runtime-wheelhouse-py313.zip",
         )
         shutil.move(archive, retained_source_archive)
         _run(
@@ -845,8 +815,11 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
 
     root_wheel = _single(output, "cadrumo-*.whl", label="cadrumo wheel")
     root_sdist = _single(output, "cadrumo-*.tar.gz", label="cadrumo sdist")
-    harness_wheel = _single(output, "cadrumo_harness-*.whl", label="cadrumo harness wheel")
-    harness_sdist = _single(output, "cadrumo_harness-*.tar.gz", label="cadrumo harness sdist")
+    runtime_wheelhouse = _single(
+        output,
+        "cadrumo-runtime-wheelhouse-*.zip",
+        label="runtime dependency wheelhouse",
+    )
     manuals_wheel = _single(
         output,
         "cadrumo_data_manuals-*.whl",
@@ -878,13 +851,11 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         official_sdist,
         expected_version=version,
     )
-    harness_version = _validate_harness_contract(harness_wheel, harness_sdist, root_version=version)
     artifacts = {
         "cadrumo": root_wheel.name,
         "cadrumo-sdist": root_sdist.name,
         "source-archive": retained_source_archive.name,
-        "cadrumo-harness": harness_wheel.name,
-        "cadrumo-harness-sdist": harness_sdist.name,
+        "runtime-wheelhouse": runtime_wheelhouse.name,
         "cadrumo-data-manuals": manuals_wheel.name,
         "cadrumo-data-manuals-sdist": manuals_sdist.name,
         "cadrumo-data-official": official_wheel.name,
@@ -907,7 +878,6 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
                 "sha256": sha256,
                 "source_commit": source_commit,
                 "version": version,
-                "harness_version": harness_version,
                 "command_spec_attestation": command_spec_attestation,
             },
             indent=2,
@@ -931,7 +901,6 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     sha256 = document.get("sha256")
     source_commit = document.get("source_commit")
     version = document.get("version")
-    harness_version = document.get("harness_version")
     command_spec_attestation_value = document.get("command_spec_attestation")
     if (
         not isinstance(artifacts, dict)
@@ -940,16 +909,13 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         or re.fullmatch(r"[0-9a-f]{40}", source_commit) is None
         or not isinstance(version, str)
         or not version
-        or not isinstance(harness_version, str)
-        or not harness_version
     ):
         raise SystemExit(f"Python cohort manifest has an invalid schema: {document!r}")
     expected_keys = {
         "cadrumo",
         "cadrumo-sdist",
         "source-archive",
-        "cadrumo-harness",
-        "cadrumo-harness-sdist",
+        "runtime-wheelhouse",
         "cadrumo-data-manuals",
         "cadrumo-data-manuals-sdist",
         "cadrumo-data-official",
@@ -1015,6 +981,16 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     if forbidden_members:
         raise SystemExit(f"Python cohort contains forbidden command authority artifacts: {forbidden_members!r}")
 
+    with zipfile.ZipFile(resolved["source-archive"]) as source_bundle:
+        try:
+            sealed_lock_sha256 = hashlib.sha256(source_bundle.read("uv.lock")).hexdigest()
+        except KeyError as exc:
+            raise SystemExit("Python cohort source archive omits uv.lock") from exc
+    runtime_wheelhouse = load_runtime_wheelhouse(
+        resolved["runtime-wheelhouse"],
+        expected_lock_sha256=sealed_lock_sha256,
+    )
+
     observed_version = _validate_wheel_contract(
         resolved["cadrumo"],
         resolved["cadrumo-data-manuals"],
@@ -1030,26 +1006,16 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         resolved["cadrumo-data-official-sdist"],
         expected_version=version,
     )
-    observed_harness_version = _validate_harness_contract(
-        resolved["cadrumo-harness"],
-        resolved["cadrumo-harness-sdist"],
-        root_version=version,
-    )
-    if observed_harness_version != harness_version:
-        raise SystemExit(
-            f"cohort harness version {harness_version!r} != wheel version {observed_harness_version!r}",
-        )
     return PythonCohort(
         directory=cohort_dir,
         manifest=manifest,
         source_commit=source_commit,
         version=version,
-        harness_version=harness_version,
         root_wheel=resolved["cadrumo"],
         root_sdist=resolved["cadrumo-sdist"],
         source_archive=resolved["source-archive"],
-        harness_wheel=resolved["cadrumo-harness"],
-        harness_sdist=resolved["cadrumo-harness-sdist"],
+        runtime_wheelhouse=resolved["runtime-wheelhouse"],
+        runtime_wheelhouse_manifest=runtime_wheelhouse.manifest,
         manuals_wheel=resolved["cadrumo-data-manuals"],
         manuals_sdist=resolved["cadrumo-data-manuals-sdist"],
         official_wheel=resolved["cadrumo-data-official"],
@@ -1087,7 +1053,6 @@ def install_targets(
     """Return explicit local targets that prevent companion index resolution."""
     return (
         root_install_target(root_artifact, extras=extras),
-        digest_install_target("cadrumo-harness", cohort.harness_wheel),
         digest_install_target("cadrumo-data-manuals", cohort.manuals_wheel),
         digest_install_target("cadrumo-data-official", cohort.official_wheel),
     )
@@ -1111,7 +1076,6 @@ def _verify_direct_urls(
         raise SystemExit("installed cohort probe returned no direct URLs")
     expected_artifacts = {
         "cadrumo": root_artifact.resolve(),
-        "cadrumo-harness": cohort.harness_wheel,
         "cadrumo-data-manuals": cohort.manuals_wheel,
         "cadrumo-data-official": cohort.official_wheel,
     }
@@ -1163,10 +1127,7 @@ def assert_installed_cohort(
     if not isinstance(document, dict):
         raise SystemExit("installed cohort probe did not return a JSON object")
     versions = document.get("versions")
-    expected_versions = {
-        **{name: cohort.version for name in _DISTRIBUTIONS},
-        _HARNESS_DISTRIBUTION: cohort.harness_version,
-    }
+    expected_versions = {name: cohort.version for name in _DISTRIBUTIONS}
     if versions != expected_versions:
         raise SystemExit(f"installed cohort versions drifted: {versions!r}")
     requirements = set(document.get("root_requirements") or ())

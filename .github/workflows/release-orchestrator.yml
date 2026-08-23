@@ -81,51 +81,9 @@ jobs:
           fi
           echo "rehearsal: dry_run=${DRY_RUN}"
 
-  precondition:
-    name: Cadrumo / refuse a claimed channel we cannot evidence
-    needs: preflight
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 10
-    outputs:
-      # The operator-minted evidence-release TAG this check verified. It is
-      # emitted from the job that VERIFIED it, so the sealed candidate records
-      # exactly what was checked. It must never be sourced from an acquisition
-      # lane: the lane's run id proves the install mechanism works, this tag
-      # names the release holding the four real-client rows that prove a human
-      # actually ran it.
-      claude_evidence_release: ${{ steps.host-extension.outputs.claude_evidence_release }}
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-        with:
-          persist-credentials: false
-
-      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
-        with:
-          version: "0.11.29"
-          enable-cache: true
-
-      - name: Require operator-minted evidence for every claimed host-extension channel
-        id: host-extension
-        run: |
-          # BEFORE the bump, deliberately. The four claude-* rows assert that a
-          # REAL client installed real bytes; the emit honesty guard refuses
-          # SDK-driven runs, and defeating it would make the evidence a lie
-          # about what was installed. So they stay a human act and this stage
-          # only REFUSES on their absence - it never tries to produce them.
-          #
-          # Placed ahead of the bump so a claimed-but-unevidenced channel stops
-          # the chain while nothing is spent. Refusing after the bump would burn
-          # a version to discover a precondition that was knowable at entry.
-          #
-          # Under today's descriptor no host-extension channel is claimed, so
-          # this passes trivially. It exists so that flipping one to `available`
-          # cannot silently publish it unevidenced.
-          uv run --frozen python -m dev.packaging.publication_inputs \
-            --check-host-extension-precondition
-
   bump:
     name: Cadrumo / compute and land the version bump
-    needs: [preflight, precondition]
+    needs: preflight
     # Skipped entirely on a resume: the version the earlier chain landed is
     # already on main, and bumping again would burn a second version to
     # recover from a failure that had nothing to do with the first.
@@ -278,7 +236,6 @@ jobs:
       # descriptor claims python alone; it arms the moment a channel is claimed.
       scoop_run_id: ${{ steps.lanes.outputs.scoop_run_id }}
       homebrew_run_id: ${{ steps.lanes.outputs.homebrew_run_id }}
-      claude_plugin_run_id: ${{ steps.lanes.outputs.claude_plugin_run_id }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -323,7 +280,7 @@ jobs:
 
   seal:
     name: Cadrumo / seal the release candidate and publish
-    needs: [preflight, precondition, campaign, acquire]
+    needs: [preflight, campaign, acquire]
     runs-on: [self-hosted, Linux, X64]
     # Includes the publication authority's own Gate 2/Gate 3 and destination
     # work. The orchestrator must observe its terminal conclusion before it can
@@ -350,18 +307,10 @@ jobs:
           PACKAGING_RUN_ID: ${{ needs.campaign.outputs.packaging_run_id }}
           DRY_RUN: ${{ needs.preflight.outputs.dry_run }}
           # The acquisition proofs this release produced. `seal_candidate` reads
-          # these three names; leaving them unset recorded a candidate with no
+          # these names; leaving them unset recorded a candidate with no
           # acquisition sources at all.
           SCOOP_RUN_ID: ${{ needs.acquire.outputs.scoop_run_id }}
           HOMEBREW_RUN_ID: ${{ needs.acquire.outputs.homebrew_run_id }}
-          # The evidence-release TAG, from the job that verified it - NOT the
-          # packaging-claude lane's run id. The publication authority consumes
-          # this with `gh release download "$CLAUDE_EVIDENCE_RELEASE"`, so a run
-          # id here fails at the final leg, and silently replaces the
-          # operator-minted evidence with a machine-produced value. The lane run
-          # id is a separate acquisition proof and is carried under its own name
-          # above.
-          CLAUDE_EVIDENCE_RELEASE: ${{ needs.precondition.outputs.claude_evidence_release }}
         run: |
           # The soak wait is retired by operator ruling: no multi-day hold
           # between a green chain and publication. This job still writes the
@@ -379,7 +328,6 @@ jobs:
           PACKAGING_RUN_ID: ${{ needs.campaign.outputs.packaging_run_id }}
           SCOOP_RUN_ID: ${{ needs.acquire.outputs.scoop_run_id }}
           HOMEBREW_RUN_ID: ${{ needs.acquire.outputs.homebrew_run_id }}
-          CLAUDE_EVIDENCE_RELEASE: ${{ needs.precondition.outputs.claude_evidence_release }}
           HEAD_SHA: ${{ needs.campaign.outputs.head_sha }}
           DRY_RUN: ${{ needs.preflight.outputs.dry_run }}
         run: |
@@ -401,7 +349,6 @@ jobs:
           args=(--input "packaging_run_id=${PACKAGING_RUN_ID}" --input "dry_run=${DRY_RUN}")
           [ -n "${SCOOP_RUN_ID}" ] && args+=(--input "scoop_run_id=${SCOOP_RUN_ID}")
           [ -n "${HOMEBREW_RUN_ID}" ] && args+=(--input "homebrew_run_id=${HOMEBREW_RUN_ID}")
-          [ -n "${CLAUDE_EVIDENCE_RELEASE}" ] && args+=(--input "claude_evidence_release=${CLAUDE_EVIDENCE_RELEASE}")
           # Resolve this dispatch by immutable commit identity and wait for the
           # publication workflow itself to succeed. A rejected dispatch or a
           # failed/cancelled publication exits non-zero here, before the draft

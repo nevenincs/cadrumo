@@ -64,11 +64,6 @@ on:
         required: false
         default: ""
         type: string
-      claude_evidence_release:
-        description: Release tag holding the four claude-* rows (required once a host-extension channel is claimed)
-        required: false
-        default: ""
-        type: string
       dry_run:
         description: Validate everything, publish nothing (runs Gate 1+2 fully, skips Gate 3)
         required: false
@@ -100,14 +95,12 @@ jobs:
     outputs:
       source_commit: ${{ steps.source-run.outputs.source_commit }}
       version: ${{ steps.validate.outputs.version }}
-      harness_version: ${{ steps.validate.outputs.harness_version }}
     env:
       RELEASE_COHORT_DIR: var/promotion/release-cohort
       EVIDENCE_DOWNLOAD: var/promotion/evidence
       PACKAGING_RUN_ID: ${{ inputs.packaging_run_id }}
       SCOOP_RUN_ID: ${{ inputs.scoop_run_id }}
       HOMEBREW_RUN_ID: ${{ inputs.homebrew_run_id }}
-      CLAUDE_EVIDENCE_RELEASE: ${{ inputs.claude_evidence_release }}
     steps:
       - name: Require one successful packaging-smoke authority run
         id: source-run
@@ -191,8 +184,7 @@ jobs:
           # is the binding the old release-asset manifest had to reconstruct.
           # verify therefore pins run identity against the Actions API and then
           # pulls that run's artifacts. Aggregate all eleven rows: 3 python
-          # (smoke run), 1 scoop, 3 homebrew, and the operator's 4 claude-*
-          # rows from the pre-uploaded evidence release (no backing run).
+          # (smoke run), 1 scoop, and 3 homebrew rows.
           mkdir -p "$EVIDENCE_DOWNLOAD/rows" "$EVIDENCE_DOWNLOAD/rows-raw"
           verify() {  # run-id, workflow-path, dest
             identity="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$1" \
@@ -217,12 +209,6 @@ jobs:
           if [ -n "$HOMEBREW_RUN_ID" ]; then
             verify "$HOMEBREW_RUN_ID" \
               ".github/workflows/packaging-homebrew.yml" "$EVIDENCE_DOWNLOAD/rows-raw/homebrew"
-          fi
-          if [ -n "$CLAUDE_EVIDENCE_RELEASE" ]; then
-            # The operator's own locally-minted evidence release: no backing
-            # run, so it stays a release download.
-            gh release download "$CLAUDE_EVIDENCE_RELEASE" --pattern 'claude-*.json' \
-              --dir "$EVIDENCE_DOWNLOAD/rows-raw/claude"
           fi
           mkdir -p "$RELEASE_COHORT_DIR"
           # gh run download nests each artifact under its own directory name.
@@ -310,12 +296,10 @@ jobs:
       EVIDENCE_FINAL_DIR: var/promotion/evidence-final
       DOWNLOAD_LATEST_DIR: var/promotion/download-latest
       VERSION: ${{ needs.validate.outputs.version }}
-      HARNESS_VERSION: ${{ needs.validate.outputs.harness_version }}
       SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
       PACKAGING_RUN_ID: ${{ inputs.packaging_run_id }}
       SCOOP_RUN_ID: ${{ inputs.scoop_run_id }}
       HOMEBREW_RUN_ID: ${{ inputs.homebrew_run_id }}
-      CLAUDE_EVIDENCE_RELEASE: ${{ inputs.claude_evidence_release }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -373,10 +357,6 @@ jobs:
           if [ -n "$HOMEBREW_RUN_ID" ]; then
             verify_rows "$HOMEBREW_RUN_ID" \
               ".github/workflows/packaging-homebrew.yml" homebrew
-          fi
-          if [ -n "$CLAUDE_EVIDENCE_RELEASE" ]; then
-            gh release download "$CLAUDE_EVIDENCE_RELEASE" --pattern 'claude-*.json' \
-              --dir "$EVIDENCE_FINAL_DIR/attach"
           fi
 
       # Fail-closed publication tripwire (reconciled D9): rows are scrubbed at
@@ -602,79 +582,6 @@ jobs:
             exit 1
           fi
 
-      # The Claude plugin marketplace is a supported avenue (readiness row set,
-      # docs download page), so a release MUST populate it - not only attach the
-      # zip to the GitHub release. Publish the in-cohort marketplace tree (which
-      # embeds the exact digest-pinned cohort) to the public marketplace repo,
-      # refusing instructively when it is not yet configured, mirroring the Scoop
-      # and Homebrew steps.
-      - name: Push the Claude plugin marketplace to the public marketplace repo
-        env:
-          MARKETPLACE_TOKEN: ${{ secrets.CLAUDE_MARKETPLACE_TOKEN }}
-          MARKETPLACE_REPO: ${{ vars.CLAUDE_MARKETPLACE_REPO }}
-        run: |
-          if [[ -z "$MARKETPLACE_TOKEN" || -z "$MARKETPLACE_REPO" ]]; then
-            echo "REFUSED: Claude marketplace not configured. Set the CLAUDE_MARKETPLACE_REPO variable" >&2
-            echo "and the CLAUDE_MARKETPLACE_TOKEN secret to publish the plugin marketplace." >&2
-            exit 1
-          fi
-          bundle="$(find "$RELEASE_COHORT_DIR/claude" -name 'cadrumo-marketplace-*.zip' -print -quit)"
-          if [[ -z "$bundle" ]]; then
-            echo "no marketplace bundle found in the release cohort" >&2
-            exit 1
-          fi
-          # Token rides an -c http.extraheader (never the clone URL) so it is not
-          # persisted into the runner's .git/config remote.
-          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$MARKETPLACE_TOKEN" | base64 | tr -d '\n')"
-          staged="$(mktemp -d)"
-          unzip -q "$bundle" -d "$staged"
-          # The marketplace is account-scoped and serves sibling products, so two
-          # products can release into it concurrently: a sibling push landing
-          # between this job's clone and its push makes this push a
-          # non-fast-forward. GitHub concurrency groups are per-repository and so
-          # cannot serialise across product repos, hence a re-clone-and-reapply
-          # retry. This is safe to repeat because the publish step is a pure
-          # function of the marketplace tree and the cohort.
-          published=""
-          for attempt in 1 2 3; do
-            work="$(mktemp -d)"
-            git -c http.extraheader="$auth" clone "https://github.com/${MARKETPLACE_REPO}.git" "$work"
-            # Fail-closed supersession check, re-run on EVERY release and not
-            # only the one that retires a name. Supersession that is merely
-            # performed can be undone by a replay, a stale manifest, or a
-            # stranger claiming the abandoned name; supersession that is
-            # verified stays true. It refuses while a retired entry, an
-            # unreferenced retired tree, or metadata still naming the old
-            # identity survives.
-            uv run --frozen python -m dev.packaging.marketplace_publish \
-              --marketplace "$work" --cohort "$staged" --verify-supersession
-            # Replaces ONLY the plugin subtrees this cohort declares and merges
-            # its entries by plugin name, refusing a name a sibling published.
-            # The earlier wholesale tree replacement deleted every sibling.
-            uv run --frozen python -m dev.packaging.marketplace_publish \
-              --marketplace "$work" --cohort "$staged"
-            git -C "$work" add -A
-            if git -C "$work" diff --cached --quiet; then
-              echo "marketplace already at cadrumo $VERSION; nothing to push"
-              published="yes"
-            else
-              git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
-                commit -m "cadrumo $VERSION"
-              if git -C "$work" -c http.extraheader="$auth" push; then
-                published="yes"
-              else
-                echo "marketplace push rejected on attempt ${attempt}; a sibling product likely pushed first" >&2
-              fi
-            fi
-            rm -rf "$work"
-            [[ -n "$published" ]] && break
-          done
-          rm -rf "$staged"
-          if [[ -z "$published" ]]; then
-            echo "REFUSED: marketplace push lost three consecutive races; re-run this publication." >&2
-            exit 1
-          fi
-
       # LAST, and deliberately so. Every write above this point is reversible:
       # a release and its assets can be deleted, a tag can be removed, and the
       # channel pushes are ordinary git commits that can be reverted. This one
@@ -703,8 +610,6 @@ jobs:
             --check-url https://pypi.org/simple/ \
             "$RELEASE_COHORT_DIR"/python/cadrumo-"$VERSION"-py3-none-any.whl \
             "$RELEASE_COHORT_DIR"/python/cadrumo-"$VERSION".tar.gz \
-            "$RELEASE_COHORT_DIR"/python/cadrumo_harness-"$HARNESS_VERSION"-py3-none-any.whl \
-            "$RELEASE_COHORT_DIR"/python/cadrumo_harness-"$HARNESS_VERSION".tar.gz \
             "$RELEASE_COHORT_DIR"/python/cadrumo_data_manuals-"$VERSION"-py3-none-any.whl \
             "$RELEASE_COHORT_DIR"/python/cadrumo_data_manuals-"$VERSION".tar.gz \
             "$RELEASE_COHORT_DIR"/python/cadrumo_data_official-"$VERSION"-py3-none-any.whl \

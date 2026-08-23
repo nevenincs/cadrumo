@@ -22,13 +22,14 @@ if not __package__:
 
 from ._command import CommandResult, run_command  # noqa: E402
 from ._hashing import sha256_path  # noqa: E402
+from .cohort_manifest import load_release_cohort  # noqa: E402
 from .constraint_effect import assert_installed_matches_constraints  # noqa: E402
 from .installed_mcp_oracle import run_installed_mcp_oracle  # noqa: E402
 from .python_cohort import load_python_cohort  # noqa: E402
+from .runtime_wheelhouse import load_runtime_wheelhouse  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 MCPB_CLI_VERSION: Final[str] = "2.1.2"
-_BUILDER = _REPO_ROOT / "packaging" / "mcpb" / "build.py"
 
 
 def _run(argv: list[str], *, cwd: Path, env: dict[str, str], log: Path, timeout: float) -> CommandResult:
@@ -163,14 +164,15 @@ def resolve_mcpb_value(
 
 def run_mcpb_smoke(
     *,
-    cohort_dir: Path,
+    release_cohort_dir: Path,
     evidence_dir: Path,
     uv_executable: Path,
     npx_executable: Path,
     timeout_seconds: float,
 ) -> Path:
     """Exercise the exact MCPB launch contract through a real MCP tax oracle."""
-    cohort = load_python_cohort(cohort_dir)
+    release = load_release_cohort(release_cohort_dir)
+    cohort = load_python_cohort(release.artifact("python-cohort-manifest").parent)
     uv = uv_executable.expanduser().resolve(strict=True)
     npx = npx_executable.expanduser().resolve(strict=True)
     evidence_root = evidence_dir.resolve()
@@ -179,7 +181,6 @@ def run_mcpb_smoke(
     run_root.mkdir()
     logs = run_root / "logs"
     logs.mkdir()
-    dist = run_root / "dist"
     # The extraction dir DELIBERATELY contains a space: every real client
     # install lives under a spaced path ("...\\Claude Extensions\\..."), and
     # an unquoted-argv launch defect (os.execv word-splitting on Windows)
@@ -188,25 +189,22 @@ def run_mcpb_smoke(
     extracted.mkdir()
     environment = os.environ.copy()
     environment.pop("UV_PROJECT_ENVIRONMENT", None)
-
-    _run(
-        [
-            sys.executable,
-            str(_BUILDER),
-            "--cohort-dir",
-            str(cohort.directory),
-            "--dist-dir",
-            str(dist),
-        ],
-        cwd=_REPO_ROOT,
-        env=environment,
-        log=logs / "build.log",
-        timeout=timeout_seconds,
+    poison = run_root / "poison-ambient-editable"
+    (poison / "cadrumo_harness").mkdir(parents=True)
+    (poison / "cadrumo_harness" / "__init__.py").write_text(
+        "raise RuntimeError('ambient editable Cadrumo harness was imported')\n",
+        encoding=_UTF_8,
     )
-    bundle = dist / f"cadrumo-{cohort.version}.mcpb"
-    if not bundle.is_file():
-        raise SystemExit(f"MCPB builder produced no expected bundle: {bundle}")
+    environment["PYTHONPATH"] = str(poison)
+    environment["UV_CACHE_DIR"] = str(run_root / "empty-uv-cache")
+    environment["UV_OFFLINE"] = "1"
+    environment["UV_NO_INDEX"] = "1"
+
+    bundle = release.artifact("mcpb")
     with zipfile.ZipFile(bundle) as archive:
+        names = archive.namelist()
+        if len(names) != len(set(names)):
+            raise SystemExit("sealed MCPB contains duplicate archive members")
         expected_wheels = {
             cohort.root_wheel.name: cohort.root_wheel,
             cohort.harness_wheel.name: cohort.harness_wheel,
@@ -217,7 +215,21 @@ def run_mcpb_smoke(
             member = f"artifacts/{filename}"
             if archive.read(member) != source.read_bytes():
                 raise SystemExit(f"MCPB changed canonical cohort bytes for {member}")
-        archive.extractall(extracted)
+        wheelhouse = load_runtime_wheelhouse(cohort.runtime_wheelhouse)
+        with zipfile.ZipFile(cohort.runtime_wheelhouse) as source_wheelhouse:
+            for filename in wheelhouse.manifest["wheels"]:
+                expected = source_wheelhouse.read(f"wheels/{filename}")
+                if archive.read(f"artifacts/wheelhouse/{filename}") != expected:
+                    raise SystemExit(f"MCPB changed sealed runtime wheel bytes: {filename}")
+        for name in names:
+            member = Path(*name.split("/"))
+            if member.is_absolute() or ".." in member.parts:
+                raise SystemExit(f"sealed MCPB contains an unsafe member: {name!r}")
+            if name.endswith("/"):
+                continue
+            target = extracted / member
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(archive.read(name))
     _run(
         [
             *_npx_argv(npx),
@@ -236,6 +248,7 @@ def run_mcpb_smoke(
     expected_args = ["run", "--no-project", "--directory", "${__dirname}", "src/server.py"]
     expected_sha256 = {
         "cadrumo": cohort.sha256["cadrumo"],
+        "cadrumo-harness": cohort.sha256["cadrumo-harness"],
         "cadrumo-data-manuals": cohort.sha256["cadrumo-data-manuals"],
         "cadrumo-data-official": cohort.sha256["cadrumo-data-official"],
     }
@@ -252,6 +265,8 @@ def run_mcpb_smoke(
             "CADRUMO_MCP_REQUIRED_VERSION": cohort.version,
             "CADRUMO_MCP_PERSONA": "${user_config.persona}",
             "CADRUMO_MCP_SURFACE": "${user_config.surface}",
+            "PYTHONNOUSERSITE": "1",
+            "PYTHONPATH": "",
         },
     }:
         raise SystemExit(f"built MCPB launch contract drifted: {server!r}")
@@ -394,6 +409,7 @@ def run_mcpb_smoke(
                     "source_commit": cohort.source_commit,
                     "version": cohort.version,
                     "sha256": cohort.sha256,
+                    "release_cohort_sha256": sha256_path(release.manifest_path),
                 },
                 "manifest": manifest,
                 "resolved_launch": {
@@ -430,7 +446,7 @@ def run_mcpb_smoke(
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--cohort-dir", type=Path, required=True)
+    parser.add_argument("--release-cohort-dir", type=Path, required=True)
     parser.add_argument("--evidence-dir", type=Path, required=True)
     parser.add_argument("--uv", type=Path, default=Path(shutil.which("uv") or "uv"))
     parser.add_argument("--npx", type=Path, default=Path(shutil.which("npx") or "npx"))
@@ -442,7 +458,7 @@ def main() -> int:
     """Run the real MCPB artifact smoke."""
     args = _parser().parse_args()
     evidence = run_mcpb_smoke(
-        cohort_dir=args.cohort_dir,
+        release_cohort_dir=args.release_cohort_dir,
         evidence_dir=args.evidence_dir,
         uv_executable=args.uv,
         npx_executable=args.npx,

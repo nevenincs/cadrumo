@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import io
 import json
 import tarfile
@@ -16,11 +17,54 @@ def add_test_source_archive(
     directory: Path, artifacts: dict[str, str], digests: dict[str, str]
 ) -> Path:
     """Add the mandatory retained Git-archive stand-in to a test cohort."""
+    lock = b"version = 1\nrevision = 1\nrequires-python = '>=3.13'\n"
     path = directory / f"cadrumo-source-{'a' * 40}.zip"
     with zipfile.ZipFile(path, "w") as archive:
         archive.writestr("pyproject.toml", "[project]\nname='cadrumo'\n")
+        archive.writestr("uv.lock", lock)
     artifacts["source-archive"] = path.name
     digests["source-archive"] = sha256_path(path)
+    return path
+
+
+def add_test_runtime_wheelhouse(
+    directory: Path,
+    artifacts: dict[str, str],
+    digests: dict[str, str],
+) -> Path:
+    """Add one closed four-platform wheelhouse bound to the test source lock."""
+    filename = "cadrumo_test_dependency-1.0.0-py3-none-any.whl"
+    payload = b"sealed-test-runtime-wheel"
+    lock = b"version = 1\nrevision = 1\nrequires-python = '>=3.13'\n"
+    rows = {"cadrumo-test-dependency": filename}
+    manifest = {
+        "lock_sha256": hashlib.sha256(lock).hexdigest(),
+        "platforms": {
+            target: rows
+            for target in (
+                "linux-aarch64",
+                "linux-x86-64",
+                "macos-arm64",
+                "windows-x86-64",
+            )
+        },
+        "python": "3.13",
+        "schema": "cadrumo.runtime-wheelhouse.v1",
+        "wheels": {
+            filename: {
+                "distribution": "cadrumo-test-dependency",
+                "sha256": hashlib.sha256(payload).hexdigest(),
+                "size": len(payload),
+                "version": "1.0.0",
+            }
+        },
+    }
+    path = directory / "cadrumo-runtime-wheelhouse-py313.zip"
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("runtime-wheelhouse.json", json.dumps(manifest, sort_keys=True))
+        archive.writestr(f"wheels/{filename}", payload)
+    artifacts["runtime-wheelhouse"] = path.name
+    digests["runtime-wheelhouse"] = sha256_path(path)
     return path
 
 
@@ -67,7 +111,7 @@ def make_minimal_test_python_cohort(
     version: str,
     source_commit: str = "a" * 40,
 ) -> dict[str, str]:
-    """Write six minimal valid archives plus their strict cohort manifest."""
+    """Write the complete minimal sealed Python cohort and strict manifest."""
     directory.mkdir(parents=True, exist_ok=True)
     artifacts: dict[str, str] = {}
     digests: dict[str, str] = {}
@@ -97,6 +141,7 @@ def make_minimal_test_python_cohort(
         artifacts[sdist_key] = sdist_name
         digests[sdist_key] = sha256_path(directory / sdist_name)
     add_test_source_archive(directory, artifacts, digests)
+    add_test_runtime_wheelhouse(directory, artifacts, digests)
     manifest = {
         "artifacts": artifacts,
         "sha256": digests,

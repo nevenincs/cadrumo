@@ -2,8 +2,8 @@
 
 Scans ``README.md`` and every user-facing Markdown page under ``docs/`` for
 acquisition channel claims — pip/PyPI install commands, ``uvx``, Scoop
-install/bucket references, Homebrew install/tap references, Claude plugin
-marketplace URLs, and MCPB download references.  For every claim found the
+install/bucket references, and Homebrew install/tap references. For every
+claim found the
 gate requires a passing :class:`~dev.packaging.evidence.DistributionEvidence`
 record in ``var/distribution-install-readiness/`` for each distribution row
 the channel maps to in :data:`~dev.release.readiness.ALL_DISTRIBUTION_ROWS`.
@@ -106,16 +106,6 @@ _CLAIM_PATTERNS: Final[tuple[tuple[str, re.Pattern[str], tuple[str, ...]], ...]]
             "homebrew-linux-x86-64",
             "homebrew-macos-arm64",
         ),
-    ),
-    (
-        "Claude plugin marketplace install",
-        re.compile(r"marketplace\.anthropic\.com[^\s\"']*cadrumo", re.IGNORECASE),
-        ("claude-code-plugin", "claude-cowork-plugin", "claude-desktop-plugin"),
-    ),
-    (
-        "MCPB cadrumo package install",
-        re.compile(r"cadrumo[^\s\"']*\.mcpb\b", re.IGNORECASE),
-        ("claude-desktop-mcpb",),
     ),
 )
 
@@ -284,16 +274,6 @@ _PATTERN_CONTROL: Final[tuple[tuple[str, tuple[str, ...], tuple[str, ...]], ...]
             "do not brew tap nevenincs/tap yet",
         ),
     ),
-    (
-        "Claude plugin marketplace install",
-        ("https://marketplace.anthropic.com/plugins/cadrumo",),
-        ("https://marketplace.anthropic.com/plugins/something-else",),
-    ),
-    (
-        "MCPB cadrumo package install",
-        ("cadrumo-0.2.1.mcpb", "Download cadrumo.mcpb from the release page."),
-        ("some-other-tool.mcpb",),
-    ),
 )
 
 
@@ -366,8 +346,8 @@ def test_no_unevidenced_channel_claims() -> None:
     """Every acquisition channel claimed in docs must have passing distribution evidence.
 
     Scans ``README.md`` and docs Markdown pages for channel-identifying
-    patterns (pip/PyPI install commands, uvx, scoop install/bucket, brew
-    install/tap, Claude plugin marketplace, MCPB download).  For every claim
+    patterns (pip/PyPI install commands, uvx, scoop install/bucket, and brew
+    install/tap). For every claim
     found the test requires a passing
     :class:`~dev.packaging.evidence.DistributionEvidence` record in
     ``var/distribution-install-readiness/`` for each row the channel maps to.

@@ -38,7 +38,6 @@ def _evidence_document(evidence_file: Path, cohort: PythonCohort) -> dict[str, A
         raise SystemExit("installed cohort evidence must be a JSON object")
     expected_hashes = {
         "cadrumo": cohort.sha256["cadrumo"],
-        "cadrumo-harness": cohort.sha256["cadrumo-harness"],
         "cadrumo-data-manuals": cohort.sha256["cadrumo-data-manuals"],
         "cadrumo-data-official": cohort.sha256["cadrumo-data-official"],
     }
@@ -76,25 +75,14 @@ def validate_promotion(
     *,
     expected_source_commit: str,
 ) -> PythonCohort:
-    """Require exact cohort digests plus complete CLI and MCP installed evidence."""
+    """Require exact cohort digests plus complete installed CLI evidence."""
     cohort = load_python_cohort(cohort_dir)
     if cohort.source_commit != expected_source_commit:
         raise SystemExit(
             f"cohort source {cohort.source_commit} != packaging run source {expected_source_commit}",
         )
     evidence = _evidence_document(evidence_file, cohort)
-    cli = _assert_oracle(evidence.get("cli_oracle"), transport="CLI")
-    mcp = _assert_oracle(evidence.get("mcp_oracle"), transport="MCP")
-    if cli.get("legal_refs") != mcp.get("legal_refs"):
-        raise SystemExit("CLI and MCP legal grounding differs")
-    if cli.get("source_refs") != mcp.get("source_refs"):
-        raise SystemExit("CLI and MCP source grounding differs")
-    invoked_cli = mcp.get("invoked_cli_sha256")
-    invoked_by_command = mcp.get("invoked_cli_sha256_by_command")
-    if not isinstance(invoked_cli, str) or len(invoked_cli) != 64:
-        raise SystemExit("MCP evidence lacks the child executable attestation")
-    if not isinstance(invoked_by_command, dict) or set(invoked_by_command.values()) != {invoked_cli}:
-        raise SystemExit("MCP child executable attestations are incomplete or divergent")
+    _assert_oracle(evidence.get("cli_oracle"), transport="CLI")
     return cohort
 
 
@@ -102,13 +90,10 @@ def _write_outputs(path: Path, cohort: PythonCohort) -> None:
     rows = {
         "manuals_sdist": cohort.manuals_sdist,
         "manuals_wheel": cohort.manuals_wheel,
-        "harness_sdist": cohort.harness_sdist,
-        "harness_wheel": cohort.harness_wheel,
         "official_sdist": cohort.official_sdist,
         "official_wheel": cohort.official_wheel,
         "root_sdist": cohort.root_sdist,
         "root_wheel": cohort.root_wheel,
-        "harness_version": cohort.harness_version,
         "source_commit": cohort.source_commit,
         "version": cohort.version,
     }
@@ -129,10 +114,7 @@ def assert_pypi_destinations_absent(cohort: PythonCohort) -> None:
     be asked in isolation, so there is exactly one.
     """
     try:
-        owning = (
-            *pypi_projects_owning(cohort.version, projects=_PYPI_PROJECTS),
-            *pypi_projects_owning(cohort.harness_version, projects=("cadrumo-harness",)),
-        )
+        owning = pypi_projects_owning(cohort.version, projects=_PYPI_PROJECTS)
     except VersionIdentityError as exc:
         raise SystemExit(str(exc)) from exc
     if owning:
