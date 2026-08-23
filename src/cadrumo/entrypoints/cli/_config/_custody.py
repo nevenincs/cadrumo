@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import typer
-from pydantic import BaseModel, ConfigDict, SecretStr
+from pydantic import SecretStr
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
@@ -18,17 +17,23 @@ if TYPE_CHECKING:
     from ....application.user_profile import ProfileLoginOutcome
 
 
-class _LoginSecrets(BaseModel):
-    """Strict ``--secrets-stdin`` payload for ``config login``.
+from .._machine_secret_contract import register_machine_secret_payload_model
+from ._secure_input import MachineSecretPayload, MachineSecretSelection
+
+
+class _LoginSecrets(MachineSecretPayload):
+    """Strict machine-channel payload for ``config login``.
 
     One bounded JSON object carrying only the profile passphrase as a
-    :class:`~pydantic.SecretStr`; ``extra="forbid"`` refuses an unexpected
-    field. The passphrase is never accepted as an ``argv`` value.
+    :class:`~pydantic.SecretStr`. The canonical payload base refuses an
+    unexpected field and freezes the validated value. The passphrase is never
+    accepted as an ``argv`` value.
     """
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
     passphrase: SecretStr
+
+
+register_machine_secret_payload_model("config.login", "passphrase", _LoginSecrets)
 
 
 def _settings_has_explicit_output_language() -> bool:
@@ -181,17 +186,16 @@ def _login_through_the_prompt(
     ctx: typer.Context,
     *,
     name: str | None,
-    secrets_stdin: bool,
-    secrets_fd: int | None,
+    machine_secret: MachineSecretSelection | None,
 ) -> ProfileLoginOutcome:
-    """Log in through the line prompt, a machine secret channel, or the env secret.
+    """Log in through one explicit machine channel or a verified line prompt.
 
-    The path every scripted, piped, CI, and JSON caller takes: a named
-    target, a bounded ``--secrets-stdin`` payload, a one-shot
-    ``--secrets-fd`` descriptor, a configured
-    ``CADRUMO_SECRET_PASSPHRASE``, or a line prompt on a real console that
-    cannot go full-screen — and the same refusal when none of those
-    supplied a passphrase.
+    Scripted, piped, CI, and JSON callers supply a bounded
+    ``--secrets-stdin`` payload or one-shot ``--secrets-fd`` descriptor. A
+    real console that cannot go full-screen receives the hardened no-echo
+    prompt. With neither route, this CLI boundary refuses before authentication
+    instead of delegating secret discovery to environment, settings, keyring,
+    or the storage substrate.
 
     The descriptor is drained before the login call rather than inside the
     callback, so an unreadable or already-consumed descriptor refuses
@@ -199,78 +203,40 @@ def _login_through_the_prompt(
     value they read; neither re-reads if the login layer invokes the
     callback more than once.
 
-    That line prompt is explicitly supplied rather than left to default.
-    Passing no callback hands the read to the storage substrate's own
-    resolver, which ends at a bare :func:`getpass.getpass`: an untranslated
-    English prompt that silently degrades to an *echoing* read whenever it
-    cannot control the terminal. ``login`` was the only custody path in
-    this package still reaching it; every other secret is read through
-    ``prompt_secret_no_echo``, which promotes that degradation to a
-    refusal.
-
-    The callback is supplied ONLY when it would change which channel is
-    used — a real console, with no configured passphrase to consume first.
-    A headless host keeps the substrate's env-var precedence, and a
-    console-less one keeps the substrate's own refusal and exit code
-    rather than acquiring this package's; neither behaviour moves.
+    The callback always closes over a value acquired by this entrypoint, so
+    application and storage code cannot silently redeclare transport policy.
     """
     from ....adapters.persistence.storage.custody import ProfileCustodyPasswordError
     from ....application.user_profile import ProfileAuthenticationRefusedError, login_profile
-    from ....core.config import load_settings
-    from .. import _headless_secret_channel_active
     from .._errors import CliRefusedBoundaryError
     from ._secure_input import (
         prompt_secret_no_echo,
-        read_secrets_fd,
-        read_secrets_stdin,
+        read_machine_secret_payload,
         terminal_can_prompt_for_secrets,
     )
 
-    # Naming both machine channels is already refused upstream, so this reads
-    # at most one of them; the ordering expresses no precedence.
-    secrets: _LoginSecrets | None = None
-    if secrets_fd is not None:
-        secrets = read_secrets_fd(_LoginSecrets, descriptor=secrets_fd)
-    elif secrets_stdin:
-        secrets = read_secrets_stdin(_LoginSecrets)
-
-    passphrase_callback: Callable[[], str] | None = None
-    if secrets is not None:
+    if machine_secret is not None:
+        secrets = read_machine_secret_payload(_LoginSecrets, selection=machine_secret)
         secret = secrets.passphrase.get_secret_value()
 
         def passphrase_callback() -> str:
             """Resolve the passphrase already read from the bounded machine channel."""
             return secret
 
-    elif not _headless_secret_channel_active() and terminal_can_prompt_for_secrets():
+    elif terminal_can_prompt_for_secrets():
 
         def passphrase_callback() -> str:
             """Read the profile passphrase on the hardened no-echo channel."""
             return prompt_secret_no_echo(tr("cli.config.login.passphrase_prompt"))
 
+    else:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.login.passphrase_channel_absent",
+        )
+
     try:
         return login_profile(name=name, passphrase_callback=passphrase_callback)
-    except (ProfileAuthenticationRefusedError, ProfileCustodyPasswordError) as exc:
-        # Distinguish "no password was offered" from "the password was wrong".
-        # Custody refuses both through one error, and its absent-channel
-        # wording is necessarily terse: it cannot name --secrets-stdin,
-        # --secrets-fd or the environment variable, because those belong to
-        # this entrypoint. Only here is it knowable that NO channel existed --
-        # no callback was built and no passphrase is configured -- and only
-        # then is the instructive refusal the right answer. A wrong password
-        # offered through a real channel falls through unchanged: telling that
-        # operator to supply a channel they already supplied would be worse
-        # than the terse refusal. The check cannot move earlier either, because
-        # login legitimately proceeds with no callback at all -- a configured
-        # passphrase and a resumed session are both unlocked inside it.
-        if (
-            isinstance(exc, ProfileCustodyPasswordError)
-            and passphrase_callback is None
-            and load_settings().cadrumo_secret_passphrase is None
-        ):
-            raise CliRefusedBoundaryError(
-                translated_message="cli.config.login.passphrase_channel_absent",
-            ) from None
+    except (ProfileAuthenticationRefusedError, ProfileCustodyPasswordError):
         # The target could not be unlocked (a wrong passphrase, a corrupt
         # bucket DEK); render the refusal in the target's own output
         # language rather than the previous selection's. Both a UUID and a
@@ -294,17 +260,19 @@ def config_login(
     """Authenticate one profile and mint its resumable session."""
     _activate_subcommand_output_language(ctx, output_language)
     from ._login_frontend import login_screen_is_available
-    from ._secure_input import resolve_secrets_channel
+    from ._secure_input import select_machine_secret_channel
 
-    resolve_secrets_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+    machine_secret = select_machine_secret_channel(
+        secrets_stdin=secrets_stdin,
+        secrets_fd=secrets_fd,
+    )
     if login_screen_is_available(ctx, secrets_stdin=secrets_stdin, secrets_fd=secrets_fd):
         outcome = _login_through_the_screen(name=name)
     else:
         outcome = _login_through_the_prompt(
             ctx,
             name=name,
-            secrets_stdin=secrets_stdin,
-            secrets_fd=secrets_fd,
+            machine_secret=machine_secret,
         )
 
     from .._config_payloads import ConfigLoginResult
