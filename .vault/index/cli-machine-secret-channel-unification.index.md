@@ -6,16 +6,18 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:920dc36e57bfa622fe2f9906331d6cce7ad912d978b6c74a3ad3696b17189178'
+body_hash: 'sha256:4e83e127440be9c80780850b1d2a5c151da6e2101cde6eec40f703c0ed55740d'
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-W01-P01-S01]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W01-P01-S02]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W01-P02-S03]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W01-P02-S04]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-W02-P03-S07]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-foundation-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-global-machine-secret-contract-research]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-plan]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-s05-conformance-audit]]'
 ---
 
 # `cli-machine-secret-channel-unification` feature index
@@ -31,6 +33,7 @@ Auto-generated index of all documents tagged with `#cli-machine-secret-channel-u
 ### audit
 
 - `2026-08-23-cli-machine-secret-channel-unification-foundation-review-audit` - `cli-machine-secret-channel-unification` audit: `canonical machine-secret foundation review`
+- `2026-08-23-cli-machine-secret-channel-unification-s05-conformance-audit` - `cli-machine-secret-channel-unification` audit: `s05 conformance`
 
 ### exec
 
@@ -38,6 +41,7 @@ Auto-generated index of all documents tagged with `#cli-machine-secret-channel-u
 - `2026-08-23-cli-machine-secret-channel-unification-W01-P01-S02` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and prove aliases, defaults, order, help, strict parsing, size bounds, descriptor refusal and closure, one-shot reads, and secret-free errors for the canonical capability
 - `2026-08-23-cli-machine-secret-channel-unification-W01-P02-S03` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and define the exact five-command machine-secret inventory, command-model registration, safe field and type schemas, conditional restore variants, and conformance API
 - `2026-08-23-cli-machine-secret-channel-unification-W01-P02-S04` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and project value-free machine-secret payload variants into verb input and command schemas
+- `2026-08-23-cli-machine-secret-channel-unification-W02-P03-S07` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and migrate profile creation to both canonical channels, remove manual injection and CLI environment fallback, and preserve confirmation, policy, lazy materialization, and mutation order
 
 ### plan
 

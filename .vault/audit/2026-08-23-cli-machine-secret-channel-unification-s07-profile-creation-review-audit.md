@@ -1,0 +1,63 @@
+---
+tags:
+  - '#audit'
+  - '#cli-machine-secret-channel-unification'
+date: '2026-08-23'
+modified: '2026-08-23'
+body_schema: 'body-v1'
+body_hash: 'sha256:4dd423446881613795c3146a74a21f2722743eeb08387c26a90dbe246e1e7670'
+related:
+  - "[[2026-08-23-cli-machine-secret-channel-unification-adr]]"
+  - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
+  - "[[2026-08-23-cli-machine-secret-channel-unification-W02-P03-S07]]"
+---
+
+# `cli-machine-secret-channel-unification` audit: `S07 profile creation machine-secret migration`
+
+## Scope
+
+Reviewed landed commit `14916cfb7cd` against the accepted machine-secret ADR,
+research, plan Step S07, and its execution record. The code scope was
+`_scripted_registration.py`, the `_WIZARD_CREATE_PARAMETERS` delta in
+`_profile_command_specs.py`, and the focused profile-creation tests. The review
+also reran focused integration tests on current HEAD and checked the generated
+registration-metadata projection consumed by verb-input schemas.
+
+## Findings
+
+### stale-registration-metadata | high | Profile-create descriptor discovery is absent and the landed focused test is red
+
+The commit adds `secrets_fd` to `_WIZARD_CREATE_PARAMETERS` and proves the live
+help contains it, but it does not regenerate
+`command_registration_metadata.v1.json`. The generated
+`config.profile.create` rows still end after `secrets_stdin`, so
+`build_verb_input_schemas()` omits the descriptor even though the live Click
+surface accepts it. On current HEAD,
+`test_lazy_create_help_declares_exactly_one_canonical_machine_secret_option_pair`
+fails at its descriptor-schema assertion: 14 focused integration tests pass and
+this one fails. This regresses the already-completed metadata authority and
+violates the accepted requirement that both flags project identically into
+machine discovery. Because agents constructing invocations from the canonical
+schema cannot discover the newly supported channel, S07 is not a green or
+machine-operable increment as landed.
+
+### incomplete-create-boundary-proof | medium | Descriptor and conflict tests stop below the real lazy CLI boundary
+
+The descriptor test calls `resolve_creation_passphrase()` directly and proves
+pipe reading and local closure, while the help test proves declaration only.
+There is no focused invocation of `config profile create --secrets-fd`, and no
+profile-create invocation naming both channels to prove conflict refusal before
+stdin or descriptor consumption and before registration. The shared selector's
+foundation tests establish its local behavior and inspection confirms creation
+calls it before `register_profile_with_credentials`, so this is a missing
+integration proof rather than evidence of a second production defect.
+
+## Recommendations
+
+- Regenerate and commit the canonical registration metadata with the source
+  declaration so profile-create exposes `secrets_fd` in every language row,
+  then rerun the focused schema-parity and exact-inventory tests.
+- Add focused real-command coverage for successful inherited-descriptor profile
+  creation and for the two-channel conflict, asserting the staged sources remain
+  unread and no profile is created. Keep the broader subprocess matrix in its
+  planned later Step, but do not leave S07's own lazy-routing claim unproved.

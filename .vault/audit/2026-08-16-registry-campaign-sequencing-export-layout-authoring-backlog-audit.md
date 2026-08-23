@@ -19238,3 +19238,72 @@ designs" -- which the split disproved -- to what the pairing actually was.
 
 Modelo 200 and 347 splits, 347 still needing three revisions. Backlog otherwise
 unchanged.
+
+## Tick: modelo 347 narrowed to the years its design governs
+
+The 347 span is closed. `2008-2024` is now `2011-2024`, and the relayout gate
+names only modelo 200.
+
+### Why this is a NARROWING and not the three-way split
+
+The plan was `2008-2009` + `2010` + `2011-2024`, and the first two were not
+authored. The reason is a refusal already written into this repo rather than a
+budget call.
+
+`test_modelo_347_designs_are_boundary_compatible.py` proves the 2008, 2010 and
+2011 layouts NEST -- no field of either partially overlaps a field of the other
+-- and says explicitly that it asserts this and NOT a field-to-field map,
+"which would be a similarity judgement and is exactly what the grounding rule
+forbids as a route to box identity". Deriving the earlier maps the way modelo
+322's was derived is precisely that forbidden move.
+
+Measured rather than assumed before accepting the refusal: a (length,
+normalized-description) alignment pairs 45 of the 2010 design's 57 fields but
+only 31 of the 2008 design's 69 -- its `Registro De Declarado` aligns 1 of 20.
+So the derivation is not merely disallowed here, it does not work.
+
+### What was fixed instead, and why it is an improvement
+
+The revision cited `aeat-dr-347-2011`, published for ejercicio 2011 onward,
+while claiming 2008. Filings for 2008-2010 were therefore written at 2011
+offsets -- and the second, undetected boundary makes that concrete: AEAT widened
+`IMPORTE TOTAL ANUAL DE LAS OPERACIONES` by one byte between 2010 and 2011 and
+shifted everything after it, so those years were off by one from that field on.
+
+Narrowing removes a capability that produced WRONG BYTES. The 2008 and 2010
+designs stay bundled and unserved, which is the honest state and is now
+asserted rather than implied.
+
+### Verified, in the direction that catches a silenced gate
+
+* the relayout gate no longer names 347. Modelo 200 still reports, so the
+  detector did not go quiet.
+* `test_the_pre_2011_ejercicios_resolve_to_no_revision` asserts 2008, 2009 and
+  2010 REFUSE, rather than those years being dropped from a parametrisation. A
+  year silently resolving to a neighbouring revision is the exact failure the
+  narrowing exists to prevent.
+* `test_modelo_347_second_undetected_boundary` had one test asserting the
+  revision covers both designs' years. Inverted rather than deleted: it now
+  asserts `valid_from >= 2011`, stated as an inequality so it fails on any
+  widening back across the boundary. Its other assertions -- that the layouts
+  straddle, that the displacement is a one-byte widening, that the third record
+  is untouched -- are facts about the designs and are unchanged.
+* the export tree was REPUBLISHED through
+  `publish_validated_generated_export_tree` so its provenance carries the new
+  revision id rather than a sed-patched one.
+* coverage gate: 347's line fell from four years to one -- ejercicio 2024
+  presented in calendar 2025, which is the deadline-window-reach case, not a
+  design gap.
+* registry package: 9 failed, 5348 passed -- the standing declared inventories,
+  unchanged. Authority loads CLEAN.
+
+Sixteen references to the old revision id were swept across eight files,
+including a production docstring in `domain/modelos/_row_models.py` and a
+comment in modelo 604's revision.toml. The split-progress note records this as a
+narrowing explicitly, so the row cannot later be read as a completed partition.
+
+### Still open
+
+Modelo 200's split -- now the only entry on the spanning set. Modelo 347's
+2008-2009 and 2010 revisions remain unauthored, and need a field-to-field
+reading of AEAT's prose rather than a derivation.

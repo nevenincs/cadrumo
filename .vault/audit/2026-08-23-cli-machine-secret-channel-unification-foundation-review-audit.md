@@ -10,8 +10,6 @@ related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
 ---
 
-
-
 # `cli-machine-secret-channel-unification` audit: `canonical machine-secret foundation review`
 
 ## Scope
@@ -72,4 +70,3 @@ module passes 24 tests at remediation HEAD.
 - Retain the delegating conflict wrapper and the two legacy readers until the
   planned command migrations are complete; current exact-symbol evidence shows
   live unmigrated consumers, so deleting them in S01 would not be atomic.
-
