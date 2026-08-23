@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:8c24d3766b385418a462b42ae85dea9e060707786f21fa116a904e837001c164'
+body_hash: 'sha256:e53805ddd2a1102da9aba79ca9ada54bb42daa61e535e82bac6676e1350495a0'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7286,3 +7286,39 @@ Lane state at commit: integration 361 green. Unit shows two CLI-surface failures
 this change -- the working tree was clean when this began and now carries peer edits to
 `cli/__init__.py`, `_command_suggestions.py` and `_common.py`, the same lazy-kernel area, made
 while these runs were in progress.
+
+### The double-import spelling is now refused, and its benign twin is not
+
+Last iteration fixed a `from ..__init__ import app` that re-executed a package body. Nothing in
+the tree refused that spelling, so it could return. Worse, the one gate that knows the form --
+`dev/tests/test_facade_export_gate.py` -- deliberately NORMALISES it, treating it as addressing
+the package so its missing-module scan does not false-positive. That normalisation is right for
+that gate and it means the spelling passes review looking sanctioned. Its docstring says the
+form "addresses the package", which is true of static analysis and false of the interpreter.
+
+`dev/quality/tests/test_no_dunder_init_module_imports.py` now refuses it outright, across `src`
+and `dev`. The spelling is never necessary -- `from .. import app` binds the same object from
+the one canonical module -- so the gate forbids the form rather than trying to judge which
+package bodies survive running twice.
+
+*The scope is deliberately narrow, and the twin is the reason.* The sibling spelling
+`from .. import __init__ as pkg` looks identical to a reader and is a completely different
+expression. Measured: it creates NO second `sys.modules` entry and imports nothing, because
+every module object already carries an `__init__` METHOD, so the name binds a
+`method-wrapper`. `application/filing/tests/test_producer_snapshot.py` carries exactly that,
+binding `filing` to a method-wrapper it then never uses -- dead and misleading, since a reader
+assumes the package is bound and a later `filing.build_...` would raise. It is another
+campaign's file and it breaks nothing, so it is reported here and not touched, and the gate
+does not flag it: widening a gate to a second concern is how a sharp rule becomes vague.
+
+Proven in both directions from outside the repo. Against a scratchpad tree holding the exact
+shipped spelling the scanner returns `src/pkg/offender.py:1`; against the real tree it parses
+5,843 modules and returns nothing -- green because the tree is clean, not because the scan is
+blind. That distinction is asserted in the gate itself, which refuses to pass if it reached
+fewer than a thousand modules; the first break attempt tripped exactly that guard, which is how
+it was observed working.
+
+Landed in `dev/quality/tests`, which the per-push dev lane runs. That package is independently
+red on two known parked items -- the doc-privacy offenders across four other campaigns, and the
+fixture-census manifest drift blocked on the registry duplicates -- and this gate passes inside
+it, so nothing red was enrolled.
