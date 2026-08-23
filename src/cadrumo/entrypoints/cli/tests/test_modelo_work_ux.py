@@ -66,7 +66,7 @@ def test_work_history_records_creation_event(_isolated_cli_backend: Path) -> Non
     assert event["payload"]["revision_id"] == "2019-y-siguientes"
     notice = next(item for item in _notices(history.output) if item["code"] == "modelo.work.history.next_action")
     assert "aeat " not in notice["message"].lower()
-    assert notice["action"]["action_id"] == "operator.modelo.work.status"
+    assert notice["action"]["action"]["action_id"] == "operator.modelo.work.status"
 
 
 def test_first_work_calculate_binding_error_guides_the_operator(_isolated_cli_backend: Path) -> None:
@@ -128,7 +128,7 @@ def test_work_status_resolves_a_visible_filing_target(_isolated_cli_backend: Pat
     assert "filed_calculation_revision_id" in payload
     notice = next(item for item in _notices(result.output) if item["code"] == "modelo.work.status.next_action")
     assert "aeat " not in notice["message"].lower()
-    assert notice["action"]["action_id"] == "operator.modelo.work.calculate"
+    assert notice["action"]["action"]["action_id"] == "operator.modelo.work.calculate"
 
 
 def test_displayed_short_work_unit_id_drives_status_and_calculate(_isolated_cli_backend: Path) -> None:

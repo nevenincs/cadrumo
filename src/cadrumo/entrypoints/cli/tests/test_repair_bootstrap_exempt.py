@@ -103,7 +103,7 @@ def test_bare_repair_runs_clean_without_session_on_fresh_root(_fresh_storage_roo
     # replaced it.
     assert "next_action" not in profile_check
     assert profile_check["precondition_action"]["failed_condition_id"] == "profile.active.available"
-    assert profile_check["precondition_action"]["action"]["action_id"] == "operator.profile.create"
+    assert profile_check["precondition_action"]["action"]["action"]["action_id"] == "operator.profile.create"
     assert profile_check["precondition_action"]["missing_argument_names"] == ["profile_name"]
     assert "aeat " not in json.dumps(profile_check).lower()
 

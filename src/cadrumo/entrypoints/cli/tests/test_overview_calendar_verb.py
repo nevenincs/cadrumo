@@ -473,7 +473,7 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
     warning = next(item for item in warnings if item["code"] == "filing.justificante_unverified")
     assert warning["affected_modelos"] == ["303"]
     fix_action = warning["fix_action"]
-    assert fix_action["action"]["action_id"] == "operator.live.filed.pull"
+    assert fix_action["action"]["action"]["action_id"] == "operator.live.filed.pull"
     assert fix_action["action"]["cli_path"] == ["app", "live", "filed", "pull"]
     assert {binding["argument_name"]: binding["value"] for binding in fix_action["argument_bindings"]} == {
         "modelos": "303",
@@ -553,7 +553,7 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
     warning = next(item for item in result["warnings"] if item["code"] == "filing.aeat_evidence_conflict")
     assert warning["affected_modelos"] == ["303"]
     fix_action = warning["fix_action"]
-    assert fix_action["action"]["action_id"] == "operator.live.filed.pull"
+    assert fix_action["action"]["action"]["action_id"] == "operator.live.filed.pull"
     assert fix_action["action"]["cli_path"] == ["app", "live", "filed", "pull"]
     assert {binding["argument_name"]: binding["value"] for binding in fix_action["argument_bindings"]} == {
         "modelos": "303",
@@ -717,7 +717,7 @@ def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante
     warning = next(item for item in result["warnings"] if item["code"] == "filing.justificante_unverified")
     assert warning["affected_modelos"] == ["303"]
     fix_action = warning["fix_action"]
-    assert fix_action["action"]["action_id"] == "operator.live.filed.pull"
+    assert fix_action["action"]["action"]["action_id"] == "operator.live.filed.pull"
     assert fix_action["action"]["cli_path"] == ["app", "live", "filed", "pull"]
     assert {binding["argument_name"]: binding["value"] for binding in fix_action["argument_bindings"]} == {
         "modelos": "303",
