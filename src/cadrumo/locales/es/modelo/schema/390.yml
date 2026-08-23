@@ -1451,6 +1451,29 @@ modelo:
           Valor Añadido.
         title: IVA. Declaración-resumen anual
       revision:
+        '2021':
+          casilla:
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                21% - Cuota
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              label: Saldo a compensar generado en el ejercicio
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              label: Cuotas a compensar del último período de liquidación
+            x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              label: Total cuota IVA deducible del ejercicio
+            x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              label: Total cuota IVA devengada del ejercicio
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              label: Cuota IVA repercutido al tipo general (21%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              label: Cuota IVA repercutido al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              label: Cuota IVA repercutido al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              label: Resultado del regimen general (cuota devengada - cuota deducible)
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              label: Cuota IVA soportado en operaciones interiores corrientes
         '2022':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

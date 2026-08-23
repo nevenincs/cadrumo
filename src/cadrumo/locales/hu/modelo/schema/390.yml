@@ -1445,6 +1445,29 @@ modelo:
         official_name: null
         title: null
       revision:
+        '2021':
+          casilla:
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 21%
+                kulccsal - ÁFA összeg
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              label: Az évben keletkezett beszámítási egyenleg
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              label: Az utolsó elszámolási időszakból beszámítandó összegek
+            x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              label: Az év összes levonható ÁFA összege
+            x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              label: Az év összes keletkezett ÁFA összege
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              label: Felszámított ÁFA összeg általános kulccsal (21%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
+            x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              label: Általános rendszer eredménye
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              label: Levonható ÁFA összeg belföldi folyó ügyletek után
         '2022':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
