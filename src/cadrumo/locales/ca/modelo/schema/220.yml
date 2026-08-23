@@ -463,6 +463,75 @@ modelo:
             x-agp34c1g74o30c1q60pj8c1g:
               label: Resultat de l'autoliquidacio. Abonament de deduccions per produccions
                 cinematografiques estrangeres (art. 39.3 LIS), Estat
+            x-agp34c1h60o30c1q60o3adpl:
+              label: 'Detall per entitat: transparencia fiscal internacional i doble
+                imposicio interna. Transparencia fiscal internacional (art. 100.10
+                LIS). Total'
+            x-agp34c1h60o30c1q60o3adpn:
+              label: 'Detall per entitat: transparencia fiscal internacional i doble
+                imposicio interna. D.I. Interna societaria al 5/10% (cooperatives).
+                Total'
+            x-agp34c1h60o30c1qegp34c1h60o30c1e64r2qchk:
+              label: 'Detall per entitat: transparencia fiscal internacional i doble
+                imposicio interna. N.I.F. de l''entitat'
+            x-agp34c1h60o30c1qegp34c1h60o30c1e68qiqd1h:
+              label: 'Detall per entitat: transparencia fiscal internacional i doble
+                imposicio interna. Transparencia fiscal internacional (art. 100.10
+                LIS)'
+            x-agp34c1h60o30c1qegp34c1h60o30c1e6gp2qd9o:
+              label: 'Detall per entitat: transparencia fiscal internacional i doble
+                imposicio interna. D.I. Interna intersocietaria al 5/10% (cooperatives)'
+            x-agp34c1h64o30c1q60o3adhj:
+              label: 'Detall per entitat: bonificacions. Bonificacio de rendiments
+                per venda de bens corporis produits a les Canaries (art. 26 Llei 19/1994).
+                Total'
+            x-agp34c1h64o30c1q60o3adhm:
+              label: 'Detall per entitat: bonificacions. Bonificacions societats cooperatives
+                (Llei 20/1990). Total'
+            x-agp34c1h64o30c1q60o3adhn:
+              label: 'Detall per entitat: bonificacions. Bonificacions per rendes
+                obtingudes a Ceuta i Melilla (art. 33 LIS). Total'
+            x-agp34c1h64o30c1q60o3adho:
+              label: 'Detall per entitat: bonificacions. Bonificacions per prestacio
+                de serveis (art. 34 LIS). Total'
+            x-agp34c1h64o30c1q60o3adhp:
+              label: 'Detall per entitat: bonificacions. Altres bonificacions. Total'
+            x-agp34c1h64o30c1q60o3adpm:
+              label: 'Detall per entitat: bonificacions. Bonificacions entitats dedicades
+                a l''arrendament d''habitatges (Cap. III Tit. VII LIS). Total'
+            x-agp34c1h64o30c1q60o3ae1h:
+              label: 'Detall per entitat: bonificacions. Bonificacions empreses navilieres
+                a les Canaries (art. 76 Llei 19/1994). Total'
+            x-agp34c1h64o30c1q60oj6dpl:
+              label: 'Detall per entitat: bonificacions. Bonificacio de rendiments
+                per venda de bens corporis produits a les Illes Balears (DA 70.Cinc
+                Llei 31/2022). Total'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e64oj0b9h68r0:
+              label: 'Detall per entitat: bonificacions. Bonificacions entitats dedicades
+                a l''arrendament d''habitatges (Cap. III Tit. VII LIS)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e64p3eb9h6gpg:
+              label: 'Detall per entitat: bonificacions. Altres bonificacions'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e64q38b9h6oo0:
+              label: 'Detall per entitat: bonificacions. Bonificacions empreses navilieres
+                a les Canaries (art. 76 Llei 19/1994)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e64r2qchk:
+              label: 'Detall per entitat: bonificacions. N.I.F. de l''entitat'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e68qiqd1h:
+              label: 'Detall per entitat: bonificacions. Bonificacions per rendes
+                obtingudes a Ceuta i Melilla (art. 33 LIS)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e6gp2qd9o:
+              label: 'Detall per entitat: bonificacions. Bonificacions per prestacio
+                de serveis (art. 34 LIS)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e6ksiqdpl:
+              label: 'Detall per entitat: bonificacions. Bonificacio de rendiments
+                per venda de bens corporis produits a les Canaries (art. 26 Llei 19/1994)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e6sr2qe9i:
+              label: 'Detall per entitat: bonificacions. Bonificacio de rendiments
+                per venda de bens corporis produits a les Illes Balears (DA 70.Cinc
+                Llei 31/2022)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e74piqc9g74:
+              label: 'Detall per entitat: bonificacions. Bonificacions societats cooperatives
+                (Llei 20/1990)'
             x-agp34c1h68o30c1q60o30c1h:
               label: Deduccions per doble imposicio internacional, RDLEG 4/2004. exercici
                 de generacio 2009. deduccio pendent el 2024 (registre T22012000)

@@ -476,6 +476,76 @@ modelo:
             x-agp34c1g74o30c1q60pj8c1g:
               label: Self-assessment result. Payment of deductions for foreign film
                 productions (art. 39.3 LIS), State
+            x-agp34c1h60o30c1q60o3adpl:
+              label: 'Per-entity detail: international fiscal transparency and internal
+                double taxation. International fiscal transparency (art. 100.10 LIS).
+                Total'
+            x-agp34c1h60o30c1q60o3adpn:
+              label: 'Per-entity detail: international fiscal transparency and internal
+                double taxation. Internal company double taxation relief at 5/10%
+                (cooperatives). Total'
+            x-agp34c1h60o30c1qegp34c1h60o30c1e64r2qchk:
+              label: 'Per-entity detail: international fiscal transparency and internal
+                double taxation. Tax identification number of the entity'
+            x-agp34c1h60o30c1qegp34c1h60o30c1e68qiqd1h:
+              label: 'Per-entity detail: international fiscal transparency and internal
+                double taxation. International fiscal transparency (art. 100.10 LIS)'
+            x-agp34c1h60o30c1qegp34c1h60o30c1e6gp2qd9o:
+              label: 'Per-entity detail: international fiscal transparency and internal
+                double taxation. Internal inter-company double taxation relief at
+                5/10% (cooperatives)'
+            x-agp34c1h64o30c1q60o3adhj:
+              label: 'Per-entity detail: tax rebates. Rebate on income from the sale
+                of tangible goods produced in the Canary Islands (art. 26 Act 19/1994).
+                Total'
+            x-agp34c1h64o30c1q60o3adhm:
+              label: 'Per-entity detail: tax rebates. Rebates for cooperative societies
+                (Act 20/1990). Total'
+            x-agp34c1h64o30c1q60o3adhn:
+              label: 'Per-entity detail: tax rebates. Rebates for income obtained
+                in Ceuta and Melilla (art. 33 LIS). Total'
+            x-agp34c1h64o30c1q60o3adho:
+              label: 'Per-entity detail: tax rebates. Rebates for the provision of
+                services (art. 34 LIS). Total'
+            x-agp34c1h64o30c1q60o3adhp:
+              label: 'Per-entity detail: tax rebates. Other rebates. Total'
+            x-agp34c1h64o30c1q60o3adpm:
+              label: 'Per-entity detail: tax rebates. Rebates for entities engaged
+                in the letting of dwellings (Ch. III Title VII LIS). Total'
+            x-agp34c1h64o30c1q60o3ae1h:
+              label: 'Per-entity detail: tax rebates. Rebates for shipping companies
+                in the Canary Islands (art. 76 Act 19/1994). Total'
+            x-agp34c1h64o30c1q60oj6dpl:
+              label: 'Per-entity detail: tax rebates. Rebate on income from the sale
+                of tangible goods produced in the Balearic Islands (70th additional
+                provision, point five, Act 31/2022). Total'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e64oj0b9h68r0:
+              label: 'Per-entity detail: tax rebates. Rebates for entities engaged
+                in the letting of dwellings (Ch. III Title VII LIS)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e64p3eb9h6gpg:
+              label: 'Per-entity detail: tax rebates. Other rebates'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e64q38b9h6oo0:
+              label: 'Per-entity detail: tax rebates. Rebates for shipping companies
+                in the Canary Islands (art. 76 Act 19/1994)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e64r2qchk:
+              label: 'Per-entity detail: tax rebates. Tax identification number of
+                the entity'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e68qiqd1h:
+              label: 'Per-entity detail: tax rebates. Rebates for income obtained
+                in Ceuta and Melilla (art. 33 LIS)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e6gp2qd9o:
+              label: 'Per-entity detail: tax rebates. Rebates for the provision of
+                services (art. 34 LIS)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e6ksiqdpl:
+              label: 'Per-entity detail: tax rebates. Rebate on income from the sale
+                of tangible goods produced in the Canary Islands (art. 26 Act 19/1994)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e6sr2qe9i:
+              label: 'Per-entity detail: tax rebates. Rebate on income from the sale
+                of tangible goods produced in the Balearic Islands (70th additional
+                provision, point five, Act 31/2022)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e74piqc9g74:
+              label: 'Per-entity detail: tax rebates. Rebates for cooperative societies
+                (Act 20/1990)'
             x-agp34c1h68o30c1q60o30c1h:
               label: Deductions for international double taxation, RDLEG 4/2004. year
                 of generation 2009. deduction outstanding in 2024 (record T22012000)

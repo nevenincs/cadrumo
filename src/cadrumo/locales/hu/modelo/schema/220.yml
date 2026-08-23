@@ -470,6 +470,78 @@ modelo:
             x-agp34c1g74o30c1q60pj8c1g:
               label: 'Az onadozas eredmenye. Kifizetes: kulfoldi filmgyartasi levonasok
                 (LIS 39.3. cikk), Allam'
+            x-agp34c1h60o30c1q60o3adpl:
+              label: 'Entitasonkenti reszletezes: nemzetkozi adotranszparencia es
+                belso kettos adoztatas. Nemzetkozi adotranszparencia (LIS 100.10.
+                cikk). Osszesen'
+            x-agp34c1h60o30c1q60o3adpn:
+              label: 'Entitasonkenti reszletezes: nemzetkozi adotranszparencia es
+                belso kettos adoztatas. Belso tarsasagi kettos adoztatas 5/10%-on
+                (szovetkezetek). Osszesen'
+            x-agp34c1h60o30c1qegp34c1h60o30c1e64r2qchk:
+              label: 'Entitasonkenti reszletezes: nemzetkozi adotranszparencia es
+                belso kettos adoztatas. Az entitas adoazonositoja'
+            x-agp34c1h60o30c1qegp34c1h60o30c1e68qiqd1h:
+              label: 'Entitasonkenti reszletezes: nemzetkozi adotranszparencia es
+                belso kettos adoztatas. Nemzetkozi adotranszparencia (LIS 100.10.
+                cikk)'
+            x-agp34c1h60o30c1qegp34c1h60o30c1e6gp2qd9o:
+              label: 'Entitasonkenti reszletezes: nemzetkozi adotranszparencia es
+                belso kettos adoztatas. Belso tarsasagkozi kettos adoztatas 5/10%-on
+                (szovetkezetek)'
+            x-agp34c1h64o30c1q60o3adhj:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. A Kanari-szigeteken
+                eloallitott targyi javak ertekesitesebol szarmazo jovedelem kedvezmenye
+                (19/1994. torveny 26. cikk). Osszesen'
+            x-agp34c1h64o30c1q60o3adhm:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Szovetkezeti tarsasagok
+                kedvezmenyei (20/1990. torveny). Osszesen'
+            x-agp34c1h64o30c1q60o3adhn:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Ceutaban es Melillaban
+                szerzett jovedelem utani kedvezmenyek (LIS 33. cikk). Osszesen'
+            x-agp34c1h64o30c1q60o3adho:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Szolgaltatasnyujtas
+                utani kedvezmenyek (LIS 34. cikk). Osszesen'
+            x-agp34c1h64o30c1q60o3adhp:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Egyeb kedvezmenyek.
+                Osszesen'
+            x-agp34c1h64o30c1q60o3adpm:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Lakasberbeadassal
+                foglalkozo entitasok kedvezmenyei (LIS VII. cim III. fejezet). Osszesen'
+            x-agp34c1h64o30c1q60o3ae1h:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Kanari-szigeteki
+                hajozasi tarsasagok kedvezmenyei (19/1994. torveny 76. cikk). Osszesen'
+            x-agp34c1h64o30c1q60oj6dpl:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. A Baleari-szigeteken
+                eloallitott targyi javak ertekesitesebol szarmazo jovedelem kedvezmenye
+                (31/2022. torveny 70. kiegeszito rendelkezes, otodik pont). Osszesen'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e64oj0b9h68r0:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Lakasberbeadassal
+                foglalkozo entitasok kedvezmenyei (LIS VII. cim III. fejezet)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e64p3eb9h6gpg:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Egyeb kedvezmenyek'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e64q38b9h6oo0:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Kanari-szigeteki
+                hajozasi tarsasagok kedvezmenyei (19/1994. torveny 76. cikk)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e64r2qchk:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Az entitas adoazonositoja'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e68qiqd1h:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Ceutaban es Melillaban
+                szerzett jovedelem utani kedvezmenyek (LIS 33. cikk)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e6gp2qd9o:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Szolgaltatasnyujtas
+                utani kedvezmenyek (LIS 34. cikk)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e6ksiqdpl:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. A Kanari-szigeteken
+                eloallitott targyi javak ertekesitesebol szarmazo jovedelem kedvezmenye
+                (19/1994. torveny 26. cikk)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e6sr2qe9i:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. A Baleari-szigeteken
+                eloallitott targyi javak ertekesitesebol szarmazo jovedelem kedvezmenye
+                (31/2022. torveny 70. kiegeszito rendelkezes, otodik pont)'
+            x-agp34c1h64o30c1qegp34c1h64o30c1e74piqc9g74:
+              label: 'Entitasonkenti reszletezes: adokedvezmenyek. Szovetkezeti tarsasagok
+                kedvezmenyei (20/1990. torveny)'
             x-agp34c1h68o30c1q60o30c1h:
               label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
                 keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
