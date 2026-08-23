@@ -45,6 +45,7 @@ def _ledger(*, actividad_id: str = _ACTIVIDAD, year: int = _YEAR, opening: str) 
         year=year,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal(opening),
+        closing_authority_record=None,
     )
 
 

@@ -52,6 +52,23 @@ has no declared deadline window is compared on the ejercicio number alone, so a 
 arrears-filed year with a missing deadline-window declaration could still false-positive --
 that gap is a deadline-window coverage question, not one this check resolves.
 
+THE DIVERGENCE SET SPLITS IN TWO, AND ONLY ONE HALF IS A REGISTRY DEFECT. Measured
+across the current set: half the lines name a revision whose claimed EJERCICIOS fall
+wholly inside its design's window and whose PRESENTATION year alone falls outside --
+modelo 303's ``2022`` claims ejercicio 2022, presents in 2023, and cites
+``aeat-dr-303-2022`` whose catalogue window closes 2022-12-31. That shape is
+systematic rather than per-revision: for an arrears-filed return, a design window
+recorded on the EJERCICIO axis can never intersect the presentation year, so the
+comparison is between a window meaning one thing and a date meaning another. Whether
+a design's ``applies_from``/``applies_to`` record the ejercicio it governs or the
+calendar span its norm is in force is the open question, and it is not settled here.
+
+The other half is a genuine gap: the revision claims ejercicios its cited design does
+not cover on ANY reading -- modelo 126's ``2019-y-siguientes`` claims ejercicio 2019
+while citing ``aeat-dr-126-2020``, and modelo 126 bundles no earlier design at all.
+Those need AEAT's published design for the missing year bundled; they cannot be
+resolved by re-reading the axis.
+
 An open-ended ``applies_to`` and an open-ended ``year_to`` are both bounded by the newest
 corpus year rather than by a literal ceiling, so neither goes stale as a constant.
 

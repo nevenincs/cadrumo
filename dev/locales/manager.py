@@ -8,7 +8,7 @@ shared by the manager and parity tests.
 
 import json
 import re
-from collections.abc import Hashable, Iterable
+from collections.abc import Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
@@ -23,6 +23,14 @@ from cadrumo.core.logging import get_logger
 
 from ._errors import LocaleError
 from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
+from ._revision_drift import RevisionMoveCandidate, classify_revision_moves
+from ._subtree_move import (
+    LocaleMoveConflict,
+    LocaleSubtreeMovePlan,
+    LocaleSubtreeMoveResult,
+    normalise_key_prefix,
+    plan_locale_subtree_move,
+)
 from ._write_guard import CatalogueWriteGuard, catalogue_write_guard
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
@@ -99,13 +107,24 @@ class LocalePlaceholderMismatch:
 
 @dataclass(frozen=True)
 class LocaleFileAudit:
-    """Structured audit findings owned by one locale catalogue."""
+    """Structured audit findings owned by one locale catalogue.
+
+    ``revision_moves`` is a READING of the two key-set findings, never a
+    replacement for them: a rename leaves its keys in ``codebase_missing`` and
+    ``codebase_extra`` so this catalogue stays un-``ok`` until the move is
+    performed. The two ``move_accounted_*`` sets name the keys that reading
+    explains, so a report can print each of them once as a relocation instead
+    of twice as unrelated work.
+    """
 
     locale_file: str
     codebase_missing: tuple[str, ...]
     codebase_extra: tuple[str, ...]
     inter_locale_missing: tuple[str, ...]
     scalar_violations: tuple[LocaleScalarViolation, ...]
+    revision_moves: tuple[RevisionMoveCandidate, ...] = ()
+    move_accounted_missing: frozenset[str] = frozenset()
+    move_accounted_extra: frozenset[str] = frozenset()
 
     @property
     def ok(self) -> bool:
@@ -784,6 +803,170 @@ class LocaleManager:
             _rewrite_locale_mapping(guard, target, data)
         return target
 
+    def move_locale_subtree(
+        self,
+        source_prefix: str,
+        destination_prefixes: Sequence[str],
+        *,
+        keep_source: bool = False,
+        drop_undistributed: bool = False,
+        on_conflict: LocaleMoveConflict = LocaleMoveConflict.REFUSE,
+        dry_run: bool = False,
+        permitted_destination_keys: Mapping[str, frozenset[str]] | None = None,
+    ) -> LocaleSubtreeMoveResult:
+        """Relocate a dotted key subtree in every catalogue, preserving values.
+
+        The whole operation -- every locale, every shard, the destination
+        writes and the source releases -- lands inside ONE write guard, so a
+        move cannot leave the four catalogues disagreeing about where a key
+        lives. That is the property that makes this different from a scripted
+        sequence of ``set`` and ``remove`` calls, each of which is atomic
+        alone and collectively is not.
+
+        Args:
+            source_prefix: The namespace whose leaves are relocated.
+            destination_prefixes: One namespace for a rename, several for a
+                split.
+            keep_source: Copy rather than move, leaving the source in place.
+            drop_undistributed: Release a source leaf no destination accepted.
+            on_conflict: What to do where a destination already holds a
+                different value.
+            dry_run: Plan and report without writing.
+            permitted_destination_keys: Per-destination allowlist routing each
+                leaf to the destination that declares it.
+
+        Returns:
+            The plan that was decided and the catalogue files it rewrote.
+
+        Raises:
+            LocaleError: The prefixes are malformed, the source holds no
+                leaves, a destination conflict was refused, or a source leaf
+                would be released without any destination having accepted it.
+        """
+        source = normalise_key_prefix(source_prefix)
+        targets: dict[str, Path] = {}
+        leaves_by_locale: dict[str, Mapping[str, str | None]] = {}
+        for locale in sorted(self._discover_locales()):
+            catalogue = locale_catalogue_source(self.locales_dir, locale)
+            if catalogue is None:
+                continue
+            targets[locale] = catalogue
+            leaves_by_locale[locale] = _flatten_leaf_values(self.load_locale(catalogue))
+
+        plan = plan_locale_subtree_move(
+            leaves_by_locale,
+            source,
+            destination_prefixes,
+            keep_source=keep_source,
+            drop_undistributed=drop_undistributed,
+            on_conflict=on_conflict,
+            permitted_destination_keys=permitted_destination_keys,
+        )
+        _refuse_unsound_move(plan)
+        if dry_run:
+            return LocaleSubtreeMoveResult(plan=plan, dry_run=True, written_paths=())
+
+        written: list[str] = []
+        with catalogue_write_guard(self.locales_dir) as guard:
+            for locale, target in targets.items():
+                written.extend(
+                    str(path)
+                    for path in self._apply_leaf_edits(
+                        guard,
+                        target,
+                        plan.edits_for(locale),
+                        plan.removals_for(locale),
+                    )
+                )
+        return LocaleSubtreeMoveResult(plan=plan, dry_run=False, written_paths=tuple(written))
+
+    def _apply_leaf_edits(
+        self,
+        guard: CatalogueWriteGuard,
+        target: Path,
+        edits: Mapping[str, str | None],
+        removals: Sequence[str],
+    ) -> tuple[Path, ...]:
+        """Write and release leaves in one catalogue, one rewrite per shard.
+
+        Destination writes and source releases are applied to the same parsed
+        mapping before it is serialised, because a rename lands both on the
+        same shard: applying them as two rewrites would make the second refuse
+        on the digest the first invalidated.
+        """
+        if not edits and not removals:
+            return ()
+        if target.is_dir():
+            from cadrumo.core.i18n._routing import route_key_to_shard
+
+            by_shard: dict[Path, tuple[dict[str, str | None], list[str]]] = {}
+            for key, value in edits.items():
+                shard_edits, _shard_removals = by_shard.setdefault(route_key_to_shard(key), ({}, []))
+                shard_edits[key] = value
+            for key in removals:
+                _shard_edits, shard_removals = by_shard.setdefault(route_key_to_shard(key), ({}, []))
+                shard_removals.append(key)
+
+            written: list[Path] = []
+            for rel_shard, (shard_edits, shard_removals) in sorted(by_shard.items()):
+                shard_path = target / rel_shard
+                if shard_path.is_file():
+                    data = _parse_locale(guard.read_text(shard_path))
+                else:
+                    guard.observe(shard_path)
+                    data = {}
+                _apply_mapping_edits(data, shard_edits, shard_removals)
+                _rewrite_locale_mapping(guard, shard_path, data)
+                written.append(shard_path)
+            return tuple(written)
+
+        data = _parse_locale(guard.read_text(target))
+        _apply_mapping_edits(data, edits, removals)
+        _rewrite_locale_mapping(guard, target, data)
+        return (target,)
+
+
+def _refuse_unsound_move(plan: LocaleSubtreeMovePlan) -> None:
+    """Refuse a planned move that would lose a value or clobber one."""
+    if not plan.entries and not plan.removals:
+        raise LocaleError(f"No locale keys found under {plan.source_prefix!r}")
+    if plan.conflicts:
+        sample = ", ".join(sorted({entry.destination_key for entry in plan.conflicts})[:5])
+        raise LocaleError(
+            f"{len(plan.conflicts)} destination key(s) already carry a different value: {sample}. "
+            "Re-run with --on-conflict skip to keep the destination values, "
+            "or --on-conflict overwrite to replace them.",
+        )
+    if plan.undistributed and not plan.keep_source and not plan.drop_undistributed:
+        sample = ", ".join(sorted({key for _locale, key in plan.undistributed})[:5])
+        raise LocaleError(
+            f"{len(plan.undistributed)} source key(s) match no destination: {sample}. "
+            "Re-run with --copy to keep the source subtree, "
+            "or --drop-undistributed to release them.",
+        )
+
+
+def _apply_mapping_edits(
+    data: dict[str, LocaleNode],
+    edits: Mapping[str, str | None],
+    removals: Sequence[str],
+) -> None:
+    """Set every edit and delete every removal inside one parsed catalogue mapping."""
+    for dotted_key, value in sorted(edits.items()):
+        _set_nested_leaf(data, dotted_key, value)
+    for dotted_key in sorted(removals):
+        parts = dotted_key.split(".")
+        cursor: LocaleNode = data
+        for part in parts:
+            if not isinstance(cursor, dict) or part not in cursor:
+                break
+            cursor = cursor[part]
+        else:
+            if not isinstance(cursor, dict):
+                parent = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
+                del parent[parts[-1]]
+                _prune_empty_namespaces(data, parts[:-1])
+
 
 def _audit_locale_file(
     locale_file: str,
@@ -794,20 +977,26 @@ def _audit_locale_file(
     all_locale_keys: set[str],
     namespace_prefixes: tuple[str, ...],
 ) -> LocaleFileAudit:
-    """Compute one catalogue's key-set and scalar findings."""
+    """Compute one catalogue's key-set, scalar, and revision-move findings."""
     violations = tuple(
         LocaleScalarViolation(locale_file, key, type(value).__name__)
         for key, value in sorted(leaves.items())
         if not isinstance(value, str) and not (value is None and key.startswith("modelo.schema."))
     )
+    codebase_missing = tuple(sorted(codebase_keys - keys))
+    codebase_extra = tuple(
+        sorted(key for key in keys - codebase_keys if not _covered_by_namespace(key, namespace_prefixes))
+    )
+    moves = classify_revision_moves(locale_file, codebase_missing, codebase_extra)
     return LocaleFileAudit(
         locale_file=locale_file,
-        codebase_missing=tuple(sorted(codebase_keys - keys)),
-        codebase_extra=tuple(
-            sorted(key for key in keys - codebase_keys if not _covered_by_namespace(key, namespace_prefixes))
-        ),
+        codebase_missing=codebase_missing,
+        codebase_extra=codebase_extra,
         inter_locale_missing=tuple(sorted(all_locale_keys - keys)),
         scalar_violations=violations,
+        revision_moves=moves.candidates,
+        move_accounted_missing=moves.accounted_missing,
+        move_accounted_extra=moves.accounted_extra,
     )
 
 

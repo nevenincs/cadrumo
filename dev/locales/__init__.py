@@ -43,12 +43,30 @@ from ._errors import LocaleError, LocaleWriteConflictError
 from ._fstring_registry import get_registered_keys
 from ._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
+from ._revision_drift import (
+    RevisionMoveCandidate,
+    RevisionMoveReport,
+    RevisionParityFindings,
+    casilla_revision_pairs,
+    classify_revision_moves,
+    classify_revision_parity,
+    revision_pairs,
+)
 from ._status import (
     RESERVED_INTERPOLATION_TOKENS,
     CatalogueLeafState,
     CatalogueStatusRecord,
     catalogue_status,
     classify_catalogue_leaf,
+)
+from ._subtree_move import (
+    LocaleMoveConflict,
+    LocaleMoveDisposition,
+    LocaleMoveEntry,
+    LocaleSubtreeMovePlan,
+    LocaleSubtreeMoveResult,
+    normalise_key_prefix,
+    plan_locale_subtree_move,
 )
 from ._write_guard import CatalogueWriteGuard, catalogue_write_guard
 from .manager import LocaleManager, LocaleNode, StrictUniqueKeyLoader
@@ -68,16 +86,30 @@ __all__ = [
     "ColandingResult",
     "LocaleError",
     "LocaleManager",
+    "LocaleMoveConflict",
+    "LocaleMoveDisposition",
+    "LocaleMoveEntry",
     "LocaleNode",
+    "LocaleSubtreeMovePlan",
+    "LocaleSubtreeMoveResult",
     "LocaleWriteConflictError",
+    "RevisionMoveCandidate",
+    "RevisionMoveReport",
+    "RevisionParityFindings",
     "StrictUniqueKeyLoader",
+    "casilla_revision_pairs",
     "catalogue_status",
     "catalogue_write_guard",
     "check_colanding",
     "classify_catalogue_leaf",
+    "classify_revision_moves",
+    "classify_revision_parity",
     "declares_locale_keys",
     "get_registered_keys",
+    "normalise_key_prefix",
+    "plan_locale_subtree_move",
     "resolve_change",
+    "revision_pairs",
     "scan_modelo_schema_keys",
     "scan_namespace_markers",
     "scan_namespace_markers_in_text",

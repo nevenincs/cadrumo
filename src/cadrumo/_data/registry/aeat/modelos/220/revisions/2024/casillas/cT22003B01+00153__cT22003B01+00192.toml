@@ -30,8 +30,7 @@
 # design says so nowhere but by position, so they are left sharing a label.
 #
 # IT CLOSES THE CREDITO PASIVO on [00192] TOTAL PASIVO. The credito patrimonio
-# neto, T22003C01, is still unauthored, so this sector's accounting identity is
-# NOT yet expressible.
+# neto, T22003C01, completes the sector.
 #
 # AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
 # intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is

@@ -1791,6 +1791,62 @@ def test_a_boundary_only_the_description_pass_sees_is_reported_and_marked_for_re
         )
 
 
+def _era_ordered_registered_designs(modelo_id: str) -> tuple[Path, ...]:
+    """One path per REGISTERED design of a modelo, ordered by the era it declares.
+
+    Deliberately not ``_design_sources``, which answers a different question. That
+    walk returns every design FILE, so a design AEAT ships as both ``.xls`` and
+    ``.xlsx`` appears twice, and it sorts by filename -- AEAT numbers newest-first
+    -- so consecutive entries run backwards through time. Pairing it produces two
+    kinds of nonsense: a design compared against its own format twin, and a later
+    design read as the earlier one.
+
+    Keyed on the SOURCE ID, which is one per design regardless of how many
+    renderings the corpus holds, and ordered on ``applies_from``, which the
+    catalogue states rather than a filename implies.
+    """
+    entries = []
+    for source in _authority().catalogues.sources.values():
+        if getattr(source, "kind", None) != "record_design" or source.applies_from is None:
+            continue
+        posix = Path(str(source.corpus_path)).as_posix()
+        marker = "disenos_registro/modelo_"
+        if marker not in posix:
+            continue
+        if posix.split(marker, 1)[1].split("/", 1)[0] != modelo_id:
+            continue
+        path = bundled_path() / source.corpus_path
+        if path.is_file() and path.suffix.lower() in _DESIGN_SUFFIXES:
+            entries.append((source.applies_from, source.id, path))
+    return tuple(path for _, _, path in sorted(entries))
+
+
+def _membership_only_design_pairs() -> tuple[tuple[str, Path, Path], ...]:
+    """Consecutive registered designs whose ONLY difference is which boxes exist."""
+    found: list[tuple[str, Path, Path]] = []
+    for modelo in _authority().modelos:
+        for earlier, later in pairwise(_era_ordered_registered_designs(str(modelo.id))):
+            before_boxes, after_boxes = _parse_design(earlier), _parse_design(later)
+            if not before_boxes or not after_boxes:
+                continue
+            shared = set(before_boxes) & set(after_boxes)
+            if any(before_boxes[box] != after_boxes[box] for box in shared):
+                continue
+            if set(before_boxes) == set(after_boxes):
+                continue
+            before_lengths, after_lengths = _page_lengths(earlier), _page_lengths(later)
+            if before_lengths and after_lengths and before_lengths != after_lengths:
+                continue
+            before_occupancy, after_occupancy = _occupancy(earlier), _occupancy(later)
+            if any(
+                before_occupancy[slot] != after_occupancy[slot]
+                for slot in set(before_occupancy) & set(after_occupancy)
+            ):
+                continue
+            found.append((str(modelo.id), earlier, later))
+    return tuple(found)
+
+
 def test_a_box_added_or_removed_without_movement_reaches_the_verdict() -> None:
     """A boundary only the box-SET comparison can see must reach the failure text.
 
@@ -1811,41 +1867,32 @@ def test_a_box_added_or_removed_without_movement_reaches_the_verdict() -> None:
     shape that has already caught this module's author twice: under mutation such a test
     reds on its own vacuity guard, which proves the function changed and nothing about
     whether the signal works.
+        WHY THE PAIRS COME FROM THE CATALOGUE AND NOT FROM REVISIONS. This walked the
+    designs each REVISION claims, which made its liveness depend on how revisions
+    happen to be carved. As the campaign split the spanning revisions, that
+    population fell to two across the whole tree, and the assertion below began
+    failing for want of an example rather than for want of the signal. The
+    property being proved is about the COMPARATOR, so it is now measured over
+    consecutive registered designs, a population that does not move when a
+    revision is renamed.
+
+    BOX KEYS ARE COMPARED RAW, deliberately. Stripping leading zeros looks like an
+    obvious normalisation and is wrong here: 26 bundled designs declare ``001``
+    and ``1`` as DISTINCT boxes, so collapsing them would merge real boxes and
+    hide the very membership changes this signal exists to see.
     """
-    membership_only: list[tuple[str, str, tuple[int, int]]] = []
-    for modelo, revision_id, revision in _exporting_revisions():
-        for earlier, later in pairwise(_designs_claimed_by(modelo.id, revision)):
-            before_boxes, after_boxes = _parse_design(earlier), _parse_design(later)
-            shared = set(before_boxes) & set(after_boxes)
-            if any(before_boxes[box] != after_boxes[box] for box in shared):
-                continue
-            if set(before_boxes) == set(after_boxes):
-                continue
-            before_lengths, after_lengths = _page_lengths(earlier), _page_lengths(later)
-            if before_lengths and after_lengths and before_lengths != after_lengths:
-                continue
-            before_occupancy, after_occupancy = _occupancy(earlier), _occupancy(later)
-            if any(
-                before_occupancy[slot] != after_occupancy[slot] for slot in set(before_occupancy) & set(after_occupancy)
-            ):
-                continue
-            membership_only.append((modelo.id, revision_id, _boundary_label(earlier, later)))
+    membership_only = _membership_only_design_pairs()
 
     assert membership_only, (
-        "no bundled design pair differs ONLY in which boxes it declares, so this assertion would be "
-        "vacuous -- the corpus that made the membership signal necessary has changed"
+        "no registered design pair differs ONLY in which boxes it declares, so this assertion "
+        "would be vacuous -- the corpus that made the membership signal necessary has changed"
     )
-    for modelo_id, revision_id, key in membership_only:
-        modelo, revision = next(
-            (candidate, current)
-            for candidate, current_id, current in _exporting_revisions()
-            if candidate.id == modelo_id and current_id == revision_id
-        )
-        assert key in _boundaries_for(modelo.id, revision), (
-            f"modelo {modelo_id} revision {revision_id!r} boundary {key} differs only in which boxes "
-            "the two designs declare -- no box moved, no page length changed, no slot changed "
-            "occupancy -- and the verdict does not name it, so the box comparison is reading "
-            "displacement only and a box added or removed is invisible to every signal"
+    for modelo_id, earlier, later in membership_only:
+        evidence = _compare_design_pair(earlier, later)
+        assert any("box SET changed" in item for item in evidence), (
+            f"modelo {modelo_id}: {earlier.name} and {later.name} differ only in which boxes they "
+            "declare -- no box moved, no page length changed, no slot changed occupancy -- and the "
+            "comparison names no membership signal, so a box added or removed is invisible"
         )
 
 
@@ -2312,6 +2359,27 @@ def test_a_design_title_never_contradicts_a_trustworthy_filename_year() -> None:
     )
 
 
+#: Designs whose era IS stated but with an OPEN BOUND, which this module refuses to
+#: enumerate for the same reason it refuses ``y siguientes``: turning "everything
+#: before 2001" or "from 2018 4T onward" into a year list invents years AEAT did not
+#: write. Distinct from :data:`_NON_EJERCICIO_COVERAGE_AXIS`, whose designs are scoped
+#: on a different axis entirely -- these two ARE ejercicio-scoped, just unbounded on
+#: one side, and conflating the two would misdescribe both.
+#:
+#: Each reason quotes AEAT's OWN published title, read from the per-modelo corpus
+#: manifest rather than inferred from the stored filename.
+_OPEN_BOUNDED_ERA_DESIGNS: dict[tuple[str, str], str] = {
+    (
+        "111",
+        "04-111-ejercicios-anteriores-al-2001-65-kb-pdf.pdf",
+    ): "AEAT titles it '111 - Ejercicios anteriores al 2001': open below, with no earliest ejercicio stated",
+    (
+        "763",
+        "01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx",
+    ): "AEAT titles it '763 - Desde 2018 4T y siguientes': open above, and period-qualified",
+}
+
+
 #: Designs whose coverage IS stated, on an axis that is not an ejercicio. Each entry
 #: names the axis the file itself uses, so the reason is checkable against the
 #: filename rather than merely asserted. Keyed by ``(modelo, filename)`` -- never by
@@ -2379,6 +2447,8 @@ def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured()
                 continue
             if (modelo_id, path.name) in _NON_EJERCICIO_COVERAGE_AXIS:
                 continue  # coverage stated on a declared non-ejercicio axis
+            if (modelo_id, path.name) in _OPEN_BOUNDED_ERA_DESIGNS:
+                continue  # era stated, but open on one side and so not enumerable
             unattributed.append(f"modelo {modelo_id} design {path.name!r}")
     assert attributed, "no bundled design could be attributed to any year at all; attribution has broken"
     assert not unattributed, (
@@ -2467,12 +2537,17 @@ def _distinct_orden_documents(modelo: ModeloDefinition) -> set[str]:
 
 
 def _signal_label(evidence_item: str) -> str:
-    """Classify one evidence string by which of the six signals produced it.
+    """Classify one evidence string by which of the seven signals produced it.
 
     LIGHTWEIGHT SUBSTRING CLASSIFICATION, matching this module's own established
     convention -- the ``_DESCRIPTION_ONLY`` marking already classifies evidence
     the same way -- rather than a structural refactor of every signal function's
-    return shape to carry a label. Six signals, six distinguishable phrasings.
+    return shape to carry a label. Seven signals, seven distinguishable phrasings.
+
+    The seventh, ``straddle``, is why this function raises rather than returning
+    'unknown': it was added to :func:`_compare_design_pair` without being added
+    here, and the loud failure is what surfaced the omission instead of letting a
+    live signal classify as nothing.
 
     Raises rather than falling through to "unknown", deliberately: a seventh
     signal added later without updating this function must fail LOUDLY here,
@@ -2491,8 +2566,10 @@ def _signal_label(evidence_item: str) -> str:
         return "position-SET"
     if "unnumbered slot(s) re-described" in evidence_item:
         return "description-flip"
+    if "straddle the other design's boundaries" in evidence_item:
+        return "straddle"
     raise AssertionError(
-        f"evidence string matches none of the six known signal phrasings -- either a new signal "
+        f"evidence string matches none of the seven known signal phrasings -- either a new signal "
         f"was added without updating _signal_label, or an existing one's wording changed under it: "
         f"{evidence_item!r}"
     )
@@ -3090,3 +3167,42 @@ def test_every_non_ejercicio_declaration_is_still_earned() -> None:
 
     unreasoned = sorted(k for k, why in _NON_EJERCICIO_COVERAGE_AXIS.items() if len(why.strip()) < 30)
     assert not unreasoned, f"every entry must state the axis the file itself uses: {unreasoned}"
+
+
+def test_every_open_bounded_era_declaration_is_still_earned() -> None:
+    """Each open-bounded design must still exist AND still yield no year list.
+
+    The same two staleness directions the non-ejercicio audit checks, for the same
+    reason: an entry naming a design the corpus no longer holds excuses nothing, and
+    an entry whose design BECAME enumerable is suppressing a design this module can
+    now measure. Kept separate from that audit rather than folded into it, because
+    the two declarations answer different questions and a single audit would let an
+    entry drift between them unnoticed.
+    """
+    design_root = bundled_path(*_DESIGN_ROOT_PARTS)
+    on_disk: dict[tuple[str, str], Path] = {}
+    for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):
+        modelo_id = directory.name.removeprefix("modelo_")
+        for path in _design_sources(modelo_id):
+            on_disk[(modelo_id, path.name)] = path
+
+    assert _OPEN_BOUNDED_ERA_DESIGNS, "the declaration is empty; this audit would be vacuous"
+
+    overlap = sorted(set(_OPEN_BOUNDED_ERA_DESIGNS) & set(_NON_EJERCICIO_COVERAGE_AXIS))
+    assert not overlap, (
+        f"these designs are declared under BOTH classifications, so one of them is wrong: {overlap}"
+    )
+
+    missing = sorted(key for key in _OPEN_BOUNDED_ERA_DESIGNS if key not in on_disk)
+    assert not missing, (
+        "these designs are declared as open-bounded but are no longer bundled under that name, "
+        f"so the declaration excuses nothing: {missing}"
+    )
+
+    now_attributable = sorted(
+        key for key in _OPEN_BOUNDED_ERA_DESIGNS if _design_coverage_years(on_disk[key])
+    )
+    assert not now_attributable, (
+        "these designs now yield ejercicio coverage, so the declaration is suppressing a design "
+        f"the module can measure -- remove the entry: {now_attributable}"
+    )

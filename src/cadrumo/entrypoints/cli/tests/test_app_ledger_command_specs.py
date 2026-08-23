@@ -52,6 +52,7 @@ _EXPECTED_SUFFIXES = {
     ("history",),
     ("import",),
     ("inventory",),
+    ("inventory", "closing-authority-record"),
     ("inventory", "create"),
     ("inventory", "list"),
     ("inventory", "movement"),
@@ -122,7 +123,7 @@ _OWNED_HANDLER_MODULES = (
 )
 
 
-def test_ledger_command_specs_are_the_exact_live_87_node_set() -> None:
+def test_ledger_command_specs_are_the_exact_live_88_node_set() -> None:
     by_key = {spec.key: spec for spec in LEDGER_COMMAND_SPECS}
 
     def suffix(key: str) -> tuple[str, ...]:
@@ -132,16 +133,16 @@ def test_ledger_command_specs_are_the_exact_live_87_node_set() -> None:
         assert spec.parent_key is not None
         return (*suffix(spec.parent_key), spec.token)
 
-    assert len(LEDGER_COMMAND_SPECS) == 87
+    assert len(LEDGER_COMMAND_SPECS) == 88
     assert {suffix(spec.key) for spec in LEDGER_COMMAND_SPECS} == _EXPECTED_SUFFIXES
     assert sum(spec.kind == "group" for spec in LEDGER_COMMAND_SPECS) == 14
-    assert sum(spec.kind == "leaf" for spec in LEDGER_COMMAND_SPECS) == 73
-    assert sum(spec.handler is not None for spec in LEDGER_COMMAND_SPECS) == 74
+    assert sum(spec.kind == "leaf" for spec in LEDGER_COMMAND_SPECS) == 74
+    assert sum(spec.handler is not None for spec in LEDGER_COMMAND_SPECS) == 75
 
 
 def test_every_ledger_executable_uses_a_resolvable_public_behavior_target() -> None:
     executable = tuple(spec for spec in LEDGER_COMMAND_SPECS if spec.handler is not None)
-    assert len(executable) == 74
+    assert len(executable) == 75
     for spec in executable:
         assert spec.handler is not None
         assert spec.handler.target is not None

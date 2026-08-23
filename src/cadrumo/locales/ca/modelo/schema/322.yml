@@ -659,718 +659,6 @@ modelo:
               help: Casella 99 del model 322, exercici 2008.
               label: Operacions realitzades en l'exercici. Lliuraments de béns d'inversió
                 [99]
-        2008-2023:
-          casilla:
-            '01':
-              help: Casella 01 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
-                [01]
-            '02':
-              help: Casella 02 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [02]
-            '03':
-              help: Casella 03 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [03]
-            '04':
-              help: Casella 04 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
-                [04]
-            '05':
-              help: Casella 05 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [05]
-            '06':
-              help: Casella 06 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [06]
-            '07':
-              help: Casella 07 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
-                [07]
-            08:
-              help: Casella 08 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [08]
-            09:
-              help: Casella 09 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [09]
-            '10':
-              help: Casella 10 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Modificació de bases i quotes d'operacions
-                intragrup [10]
-            '107':
-              help: Casella 107 del model 322, exercici 2008.
-              label: Informació de la tributació per territori (només per a subjectes
-                passius que tributen a diverses Administracions) - Territori comú
-                [107]
-            '11':
-              help: Casella 11 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Modificació de bases i quotes d'operacions
-                intragrup [11]
-            '12':
-              help: Casella 12 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
-                [12]
-            '120':
-              help: Casella 120 del model 322, exercici 2008.
-              label: Operacions no subjectes per regles de localització (excepte les
-                incloses en la casella 123) [120]
-            '122':
-              help: Casella 122 del model 322, exercici 2008.
-              label: Operacions subjectes amb inversió del subjecte passiu [122]
-            '123':
-              help: Casella 123 del model 322, exercici 2008.
-              label: Operacions no subjectes per regles de localització acollides
-                als règims especials de finestreta única [123]
-            '124':
-              help: Casella 124 del model 322, exercici 2008.
-              label: Operacions subjectes i acollides als règims especials de finestreta
-                única [124]
-            '125':
-              help: Casella 125 del model 322, exercici 2008.
-              label: Operacions subjectes amb inversió del subjecte passiu [125]
-            '126':
-              help: Casella 126 del model 322, exercici 2008.
-              label: Operacions no subjectes per regles de localització acollides
-                als règims especials de finestreta única [126]
-            '127':
-              help: Casella 127 del model 322, exercici 2008.
-              label: Operacions subjectes i acollides als règims especials de finestreta
-                única [127]
-            '128':
-              help: Casella 128 del model 322, exercici 2008.
-              label: Operacions intragrup valorades conforme al que disposen els arts.
-                78 y 79 LIVA [128]
-            '13':
-              help: Casella 13 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
-                Tipus % [13]
-            '14':
-              help: Casella 14 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
-                Quota [14]
-            '15':
-              help: Casella 15 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
-                [15]
-            '150':
-              help: Casella 150 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
-                [150]
-            '151':
-              help: Casella 151 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
-                Tipus % [151]
-            '152':
-              help: Casella 152 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
-                Quota [152]
-            '153':
-              help: Casella 153 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
-                [153]
-            '154':
-              help: Casella 154 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
-                Tipus % [154]
-            '155':
-              help: Casella 155 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
-                Quota [155]
-            '156':
-              help: Casella 156 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
-                [156]
-            '157':
-              help: Casella 157 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [157]
-            '158':
-              help: Casella 158 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [158]
-            '159':
-              help: Casella 159 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
-                [159]
-            '16':
-              help: Casella 16 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
-                Tipus % [16]
-            '160':
-              help: Casella 160 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [160]
-            '161':
-              help: Casella 161 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [161]
-            '162':
-              help: Casella 162 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
-                [162]
-            '163':
-              help: Casella 163 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [163]
-            '164':
-              help: Casella 164 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [164]
-            '17':
-              help: Casella 17 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
-                Quota [17]
-            '171':
-              help: Dada declarada al model 322, autoliquidacio mensual individual
-                del grup d'entitats.
-              label: Liquidació. IVA meritat. Operacions intragrup. Base imposable
-            '18':
-              help: Casella 18 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general
-                [18]
-            '19':
-              help: Casella 19 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
-                Tipus % [19]
-            '20':
-              help: Casella 20 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
-                Quota [20]
-            '21':
-              help: Casella 21 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Adquisicions intracomunitàries de béns
-                i serveis. Base imposable [21]
-            '22':
-              help: Casella 22 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Adquisicions intracomunitàries de béns
-                i serveis. Quota [22]
-            '23':
-              help: Casella 23 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Altres operacions amb inversió del subjecte
-                passiu (excepte adq. intracom.) [23]
-            '24':
-              help: Casella 24 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Altres operacions amb inversió del subjecte
-                passiu (excepte adq. intracom.). Quota [24]
-            '25':
-              help: Casella 25 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Modificació de bases i quotes en règim
-                general. Base imposable [25]
-            '26':
-              help: Casella 26 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Modificació de bases i quotes en règim
-                general. Quota [26]
-            '27':
-              help: Casella 27 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
-                [27]
-            '28':
-              help: Casella 28 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [28]
-            '29':
-              help: Casella 29 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [29]
-            '30':
-              help: Casella 30 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
-                [30]
-            '31':
-              help: Casella 31 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [31]
-            '32':
-              help: Casella 32 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [32]
-            '33':
-              help: Casella 33 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
-                [33]
-            '34':
-              help: Casella 34 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [34]
-            '35':
-              help: Casella 35 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [35]
-            '36':
-              help: Casella 36 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Modificació de bases i quotes del recàrrec
-                d'equivalència. Base imposable [36]
-            '37':
-              help: Casella 37 del model 322, exercici 2008.
-              label: Liquidació. IVA MERITAT. Modificació de bases i quotes del recàrrec
-                d'equivalència. Quota [37]
-            '38':
-              help: Casella 38 del model 322, exercici 2008.
-              label: Total quota meritada ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
-                [38]
-            '39':
-              help: Casella 39 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Per quotes suportades en operacions
-                intragrup corrents. Base imposable [39]
-            '40':
-              help: Casella 40 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Per quotes suportades en operacions
-                intragrup corrents. Quota [40]
-            '41':
-              help: Casella 41 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Per quotes suportades en operacions
-                intragrup amb béns d'inversió. Base imposable [41]
-            '42':
-              help: Casella 42 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Per quotes suportades en operacions
-                intragrup amb béns d'inversió. Quota [42]
-            '43':
-              help: Casella 43 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Rectificació de deduccions per operacions
-                intragrup. Base imposable [43]
-            '44':
-              help: Casella 44 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Rectificació de deduccions per operacions
-                intragrup. Quota [44]
-            '45':
-              help: Casella 45 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Per quotes suportades en altres operacions
-                interiors corrents. Base imposable [45]
-            '46':
-              help: Casella 46 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Per quotes suportades en altres operacions
-                interiors corrents. Quota [46]
-            '47':
-              help: Casella 47 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Per quotes suportades en altres operacions
-                interiors amb béns d'inversió. Base imposable [47]
-            '48':
-              help: Casella 48 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Per quotes suportades en altres operacions
-                interiors amb béns d'inversió. Quota [48]
-            '49':
-              help: Casella 49 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Per quotes suportades en les importacions
-                de béns corrents. Base imposable [49]
-            '50':
-              help: Casella 50 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Per quotes suportades en les importacions
-                de béns corrents. Quota [50]
-            '500':
-              help: Casella 500 del model 322, exercici 2008.
-              label: Prorrata - 1 - Codi CNAE [500]
-            '501':
-              help: Casella 501 del model 322, exercici 2008.
-              label: Prorrata - 1 - Import d'operacions [501]
-            '502':
-              help: Casella 502 del model 322, exercici 2008.
-              label: Prorrata - 1 - Import d'operacions amb dret a deducció [502]
-            '503':
-              help: Casella 503 del model 322, exercici 2008.
-              label: Prorrata - 1 - Tipus de prorrata [503]
-            '504':
-              help: Casella 504 del model 322, exercici 2008.
-              label: Prorrata - 1 - % de prorrata [504]
-            '505':
-              help: Casella 505 del model 322, exercici 2008.
-              label: Prorrata - 2 - Codi CNAE [505]
-            '506':
-              help: Casella 506 del model 322, exercici 2008.
-              label: Prorrata - 2 - Import d'operacions [506]
-            '507':
-              help: Casella 507 del model 322, exercici 2008.
-              label: Prorrata - 2 - Import d'operacions amb dret a deducció [507]
-            '508':
-              help: Casella 508 del model 322, exercici 2008.
-              label: Prorrata - 2 - Tipus de prorrata [508]
-            '509':
-              help: Casella 509 del model 322, exercici 2008.
-              label: Prorrata - 2 - % de prorrata [509]
-            '51':
-              help: Casella 51 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Per quotes suportades en les importacions
-                de béns d'inversió. Base imposable [51]
-            '510':
-              help: Casella 510 del model 322, exercici 2008.
-              label: Prorrata - 3 - Codi CNAE [510]
-            '511':
-              help: Casella 511 del model 322, exercici 2008.
-              label: Prorrata - 3 - Import d'operacions [511]
-            '512':
-              help: Casella 512 del model 322, exercici 2008.
-              label: Prorrata - 3 - Import d'operacions amb dret a deducció [512]
-            '513':
-              help: Casella 513 del model 322, exercici 2008.
-              label: Prorrata - 3 - Tipus de prorrata [513]
-            '514':
-              help: Casella 514 del model 322, exercici 2008.
-              label: Prorrata - 3 - % de prorrata [514]
-            '515':
-              help: Casella 515 del model 322, exercici 2008.
-              label: Prorrata - 4 - Codi CNAE [515]
-            '516':
-              help: Casella 516 del model 322, exercici 2008.
-              label: Prorrata - 4 - Import d'operacions [516]
-            '517':
-              help: Casella 517 del model 322, exercici 2008.
-              label: Prorrata - 4 - Import d'operacions amb dret a deducció [517]
-            '518':
-              help: Casella 518 del model 322, exercici 2008.
-              label: Prorrata - 4 - Tipus de prorrata [518]
-            '519':
-              help: Casella 519 del model 322, exercici 2008.
-              label: Prorrata - 4 - % de prorrata [519]
-            '52':
-              help: Casella 52 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Per quotes suportades en les importacions
-                de béns d'inversió. Quota [52]
-            '520':
-              help: Casella 520 del model 322, exercici 2008.
-              label: Prorrata - 5 - Codi CNAE [520]
-            '521':
-              help: Casella 521 del model 322, exercici 2008.
-              label: Prorrata - 5 - Import d'operacions [521]
-            '522':
-              help: Casella 522 del model 322, exercici 2008.
-              label: Prorrata - 5 - Import d'operacions amb dret a deducció [522]
-            '523':
-              help: Casella 523 del model 322, exercici 2008.
-              label: Prorrata - 5 - Tipus de prorrata [523]
-            '524':
-              help: Casella 524 del model 322, exercici 2008.
-              label: Prorrata - 5 - % de prorrata [524]
-            '53':
-              help: Casella 53 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. En adquisicions intracomunitàries de
-                béns i serveis corrents. Base imposable [53]
-            '54':
-              help: Casella 54 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. En adquisicions intracomunitàries de
-                béns i serveis corrents. Quota [54]
-            '55':
-              help: Casella 55 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. En adquisicions intracomunitàries de
-                béns d'inversió. Base imposable [55]
-            '56':
-              help: Casella 56 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. En adquisicions intracomunitàries de
-                béns d'inversió. Quota [56]
-            '57':
-              help: Casella 57 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Rectificació de deduccions en la resta
-                d'operacions (no intragrup). Base imposable [57]
-            '58':
-              help: Casella 58 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Rectificació de deduccions en la resta
-                d'operacions (no intragrup). Quota [58]
-            '59':
-              help: Casella 59 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Compensació règim especial A.G. y P.
-                Quota [59]
-            '60':
-              help: Casella 60 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Regularització de béns d'inversió.
-                Quota [60]
-            '61':
-              help: Casella 61 del model 322, exercici 2008.
-              label: Liquidació. IVA deduïble. Regularització per aplicació del percentatge
-                definitiu de prorrata. Quota [61]
-            '62':
-              help: Casella 62 del model 322, exercici 2008.
-              label: Total a deduir ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
-                [62]
-            '63':
-              help: Casella 63 del model 322, exercici 2008.
-              label: Liquidació (continuació). Diferència ([38] - [62]) . [63]
-            '64':
-              help: Casella 64 del model 322, exercici 2008.
-              label: Liquidació (continuació). Atribuïble a l'Administració de l'Estat
-                (%) [64]
-            '65':
-              help: Casella 65 del model 322, exercici 2008.
-              label: Liquidació (continuació). Atribuïble a l'Administració de l'Estat
-                [65]
-            '66':
-              help: Casella 66 del model 322, exercici 2008.
-              label: Liquidació (continuació). Quotes a compensar de períodes anteriors
-                a la incorporació al grup [66]
-            '67':
-              help: Casella 67 del model 322, exercici 2008.
-              label: Liquidació (continuació). Exclusivament per a subjectes passius
-                que tributen conjuntament a l'Administració de l'Estat i a les Hisendes
-                Forals. Resultat de la regularització anual [67]
-            '68':
-              help: Casella 68 del model 322, exercici 2008.
-              label: Liquidació (continuació). Resultat ([65] - [66] + [67]) [68]
-            '69':
-              help: Dada declarada al model 322, autoliquidacio mensual individual
-                del grup d'entitats.
-              label: 'A deduir (exclusivament en cas d''autoliquidació complementària):
-                resultat de les autoliquidacions anteriors presentades pel mateix
-                concepte, exercici i període'
-            '70':
-              help: Casella 70 del model 322, exercici 2008.
-              label: Resultat de l'autoliquidació ([68] - [69]) [70]
-            '700':
-              help: Casella 700 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. IVA deduïble en operacions interiors. Béns i serveis corrents.
-                Base imposable [700]
-            '701':
-              help: Casella 701 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. IVA deduïble en operacions interiors. Béns i serveis corrents.
-                Quota deduïble [701]
-            '702':
-              help: Casella 702 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. IVA deduïble en operacions interiors. Béns d'inversió. Base
-                imposable [702]
-            '703':
-              help: Casella 703 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. IVA deduïble en operacions interiors. Béns d'inversió. Quota
-                deduïble [703]
-            '704':
-              help: Casella 704 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. IVA deduïble en importacions. Béns corrents. Base imposable
-                [704]
-            '705':
-              help: Casella 705 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. IVA deduïble en importacions. Béns corrents. Quota deduïble
-                [705]
-            '706':
-              help: Casella 706 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. IVA deduïble en importacions. Béns d'inversió. Base imposable
-                [706]
-            '707':
-              help: Casella 707 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. IVA deduïble en importacions. Béns d'inversió. Quota deduïble
-                [707]
-            '708':
-              help: Casella 708 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
-                corrents. Base imposable [708]
-            '709':
-              help: Casella 709 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
-                corrents. Quota deduïble [709]
-            '71':
-              help: Casella 71 del model 322, exercici 2008.
-              label: Informació addicional. Lliuraments intracomunitaris de béns i
-                serveis [71]
-            '710':
-              help: Casella 710 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. IVA deduïble en adquisicions intracomunitàries. Béns d'inversió.
-                Base imposable [710]
-            '711':
-              help: Casella 711 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
-                corrents. Quota deduïble [711]
-            '712':
-              help: Casella 712 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. Compensacions en règim especial de l'agricultura, ramaderia
-                i pesca. Base imposable [712]
-            '713':
-              help: Casella 713 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. Compensacions en règim especial de l'agricultura, ramaderia
-                i pesca. Quota deduïble [713]
-            '714':
-              help: Casella 714 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. Rectificació de deduccions. Base imposable [714]
-            '715':
-              help: Casella 715 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. Rectificació de deduccions. Quota deduïble [715]
-            '716':
-              help: Casella 716 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 1. Regularització de béns d'inversió. Quota deduïble [716]
-            '717':
-              help: Casella 717 del model 322, exercici 2008.
-              label: 'Activitats amb règims de deducció diferenciats. IVA deduïble:
-                Grup 1. Suma de deduccions (701 + 703 + 705 + 707 + 709 + 711 + 713
-                + 715 + 716). Quota deduïble [717]'
-            '718':
-              help: Casella 718 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. IVA deduïble en operacions interiors. Béns i serveis corrents.
-                Base imposable [718]
-            '719':
-              help: Casella 719 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. IVA deduïble en operacions interiors. Béns i serveis corrents.
-                Quota deduïble [719]
-            '72':
-              help: Casella 72 del model 322, exercici 2008.
-              label: Informació addicional. Exportacions i operacions assimilades
-                [72]
-            '720':
-              help: Casella 720 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. IVA deduïble en operacions interiors. Béns d'inversió. Base
-                imposable [720]
-            '721':
-              help: Casella 721 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. IVA deduïble en operacions interiors. Béns d'inversió. Quota
-                deduïble [721]
-            '722':
-              help: Casella 722 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. IVA deduïble en importacions. Béns corrents. Base imposable
-                [722]
-            '723':
-              help: Casella 723 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. IVA deduïble en importacions. Béns corrents. Quota deduïble
-                [723]
-            '724':
-              help: Casella 724 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. IVA deduïble en importacions. Béns d'inversió. Base imposable
-                [724]
-            '725':
-              help: Casella 725 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. IVA deduïble en importacions. Béns d'inversió. Quota deduïble
-                [725]
-            '726':
-              help: Casella 726 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
-                corrents. Base imposable [726]
-            '727':
-              help: Casella 727 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
-                corrents. Quota deduïble [727]
-            '728':
-              help: Casella 728 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns d'inversió.
-                Base imposable [728]
-            '729':
-              help: Casella 729 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. IVA deduïble en adquisicions intracomunitàries. Béns i serveis
-                corrents. Quota deduïble [729]
-            '730':
-              help: Casella 730 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. Compensacions en règim especial de l'agricultura, ramaderia
-                i pesca. Base imposable [730]
-            '731':
-              help: Casella 731 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. Compensacions en règim especial de l'agricultura, ramaderia
-                i pesca. Quota deduïble [731]
-            '732':
-              help: Casella 732 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. Rectificació de deduccions. Base imposable [732]
-            '733':
-              help: Casella 733 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. Rectificació de deduccions. Quota deduïble [733]
-            '734':
-              help: Casella 734 del model 322, exercici 2008.
-              label: Activitats amb règims de deducció diferenciats. IVA deduïble.
-                Grup 2. Regularització de béns d'inversió. Quota deduïble [734]
-            '735':
-              help: Casella 735 del model 322, exercici 2008.
-              label: 'Activitats amb règims de deducció diferenciats. IVA deduïble:
-                Grup 2. Suma de deduccions (719 + 721 + 723 + 725 + 727 + 729 + 731
-                + 733 + 734). Quota deduïble [735]'
-            '74':
-              help: Dada declarada al model 322, autoliquidacio mensual individual
-                del grup d'entitats.
-              label: Adquisicions de béns i serveis afectades pel règim especial del
-                criteri de caixa. Base imposable
-            '75':
-              help: Dada declarada al model 322, autoliquidacio mensual individual
-                del grup d'entitats.
-              label: Adquisicions de béns i serveis afectades pel règim especial del
-                criteri de caixa. Quota suportada
-            '76':
-              help: Casella 76 del model 322, exercici 2008.
-              label: Regularització de quotes art. 80.Cinco.5ª LIVA [76]
-            '77':
-              help: Casella 77 del model 322, exercici 2008.
-              label: IVA a la importació liquidat per la Duana pendent d'ingrés [77]
-            '79':
-              help: Casella 79 del model 322, exercici 2008.
-              label: Operacions realitzades en l'exercici. Lliuraments de béns immobles
-                i operacions financeres no habituals [79]
-            '80':
-              help: Casella 80 del model 322, exercici 2008.
-              label: Operacions realitzades en l'exercici. Operacions en règim general
-                [80]
-            '81':
-              help: Dada declarada al model 322, autoliquidacio mensual individual
-                del grup d'entitats.
-              label: Operacions acollides al règim especial del criteri de caixa meritades
-                segons la regla general de l'art. 75 LIVA
-            '83':
-              help: Casella 83 del model 322, exercici 2008.
-              label: Operacions realitzades en l'exercici. Operacions exemptes sense
-                dret a deducció [83]
-            '84':
-              help: Casella 84 del model 322, exercici 2008.
-              label: Operacions no subjectes per regles de localització (excepte les
-                incloses en la casella 126) [84]
-            '86':
-              help: Casella 86 del model 322, exercici 2008.
-              label: Operacions realitzades en l'exercici. Operacions en règim simplificat
-                [86]
-            '88':
-              help: Casella 88 del model 322, exercici 2008.
-              label: Operacions realitzades en l'exercici. Total volum d'operacions
-                (art. 121 Llei IVA) (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127
-                + 128 + 86 + 95 + 96 + 97 + 98 - 79 - 99) [88]
-            '89':
-              help: Casella 89 del model 322, exercici 2008.
-              label: Informació de la tributació per territori (només per a subjectes
-                passius que tributen a diverses Administracions) - Àlaba [89]
-            '90':
-              help: Casella 90 del model 322, exercici 2008.
-              label: Informació de la tributació per territori (només per a subjectes
-                passius que tributen a diverses Administracions) - Guipúscoa [90]
-            '91':
-              help: Casella 91 del model 322, exercici 2008.
-              label: Informació de la tributació per territori (només per a subjectes
-                passius que tributen a diverses Administracions) - Biscaia [91]
-            '92':
-              help: Casella 92 del model 322, exercici 2008.
-              label: Informació de la tributació per territori (només per a subjectes
-                passius que tributen a diverses Administracions) - Navarra [92]
-            '93':
-              help: Casella 93 del model 322, exercici 2008.
-              label: Operacions realitzades en l'exercici. Lliuraments intracomunitaris
-                de béns i serveis [93]
-            '94':
-              help: Casella 94 del model 322, exercici 2008.
-              label: Operacions realitzades en l'exercici. Exportacions i altres operacions
-                exemptes amb dret a deducció [94]
-            '95':
-              help: Casella 95 del model 322, exercici 2008.
-              label: Operacions realitzades en l'exercici. Operacions en règim especial
-                de l'agricultura, ramaderia i pesca [95]
-            '96':
-              help: Casella 96 del model 322, exercici 2008.
-              label: Operacions realitzades en l'exercici. Operacions realitzades
-                per subjectes passius acollits al règim especial del recàrrec d'equivalència
-                [96]
-            '97':
-              help: Casella 97 del model 322, exercici 2008.
-              label: Operacions realitzades en l'exercici. Operacions en Règim especial
-                de béns usats, objectes d'art, antiguitats i objectes de col·lecció
-                [97]
-            '98':
-              help: Casella 98 del model 322, exercici 2008.
-              label: Operacions realitzades en l'exercici. Operacions en règim especial
-                d'Agències de Viatges [98]
-            '99':
-              help: Casella 99 del model 322, exercici 2008.
-              label: Operacions realitzades en l'exercici. Lliuraments de béns d'inversió
-                [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
               help: Es completa exclusivament en l'ultim periode de la declaracio.
               label: Codi d'activitat - Altres 1a
@@ -2201,6 +1489,128 @@ modelo:
               help: Casella 99 del model 322, exercici 2008.
               label: Operacions realitzades en l'exercici. Lliuraments de béns d'inversió
                 [99]
+            x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Codi d'activitat - Altres 1a
+            x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Epígraf IAE - Altres 1a
+            x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Codi d'activitat - Altres 2a
+            x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Epígraf IAE - Altres 2a
+            x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Codi d'activitat - Altres 3a
+            x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Epígraf IAE - Altres 3a
+            x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Codi d'activitat - Altres 4a
+            x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Epígraf IAE - Altres 4a
+            x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Codi d'activitat - Altres 5a
+            x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Epígraf IAE - Altres 5a
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Codi d'activitat - Principal
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
+              help: Es completa exclusivament en l'ultim periode de la declaracio.
+              label: Epígraf IAE - Principal
+            x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. És destinatari d'operacions a les quals s'apliqui
+                el règim especial del criteri de caixa?
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Casella ejercicio del model 322, exercici 2008.
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. NIF de l'entitat dominant
+            x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. Està exonerat de la declaració-resum anual de
+                l'IVA, model 390?
+            x-chim6r1ectp7as3f5ln7arb5e9ng:
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. Núm. de grup
+            x-chim6r1ectp7as3f5lp6ur0:
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. Dominant / dependent
+            x-chim6r1ee1in4qbfchng:
+              help: Casella periodo del model 322, exercici 2008.
+              label: Període (anual, 0A)
+            x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: 'Identificació. Aplicació de la prorrata especial (art. 103.Dos.1r
+                LIVA): opció per l''aplicació o revocació de l''opció'
+            x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. Està inscrit en el Registre de devolució mensual
+                (art. 30 RIVA)?
+            x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: 'Identificació. Tipus de règim especial aplicable: art. 163 sexies.Cinc
+                LIVA'
+            x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Subjecte passiu que tributa exclusivament a una Administració
+                tributària foral, amb IVA a la importació liquidat per la Duana pendent
+                d'ingrés
+            x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
+              help: Dada declarada al model 322, autoliquidacio mensual individual
+                del grup d'entitats.
+              label: Identificació. Hi ha volum d'operacions (art. 121 LIVA)?
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: Casella iva.autorepercutido.intracomunitaria del model 322, exercici
+                2008.
+              label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: Casella iva.cuota-deducible-total del model 322, exercici 2008.
+              label: Total quota d'IVA deduïble
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: Casella iva.cuota-devengada-total del model 322, exercici 2008.
+              label: Total quota d'IVA meritada
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: Quota total d'IVA repercutit calculada al tipus general del 21%.
+              label: Quota IVA repercutit al tipus general (21%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: Casella iva.repercutido.reducido del model 322, exercici 2008.
+              label: Quota d'IVA repercutit al tipus reduït (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: Casella iva.repercutido.super-reducido del model 322, exercici
+                2008.
+              label: Quota d'IVA repercutit al tipus superreduït (4%)
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: Casella iva.resultado-regimen-general del model 322, exercici
+                2008.
+              label: Resultat del règim general
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: Casella iva.soportado.interiores del model 322, exercici 2008.
+              label: Quota IVA suportat en operacions interiors corrents
+          construct:
+            modelo-322-iva-grupo-individual:
+              field:
+                title: Model 322 IVA grup d'entitats, model individual
+          field:
+            label: Model 322, exercicis 2008 a 2025
         2024-2025:
           casilla:
             '01':

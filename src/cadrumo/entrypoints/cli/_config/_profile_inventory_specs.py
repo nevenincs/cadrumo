@@ -64,6 +64,7 @@ PROFILE_INVENTORY_COMMAND_SPECS = (
             target=DeferredTarget("cadrumo.entrypoints.cli._config_payloads", "ConfigStatusResult"),
             identity="config.profile.status",
         ),
+        allow_unregistered_profile_diagnostic=True,
     ),
 )
 

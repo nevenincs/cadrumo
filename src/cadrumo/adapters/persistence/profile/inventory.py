@@ -25,6 +25,7 @@ from pathlib import Path
 from ....core.errors import CadrumoError
 from ....core.logging import get_logger
 from ....domain.contribuyente.inventory import (
+    InventoryClosingAuthorityRecord,
     InventoryLedger,
     InventoryLedgerDocument,
     InventoryLedgerError,
@@ -42,6 +43,10 @@ from ._secure_model_document import (
 _log = get_logger(__name__)
 
 INVENTORY_LEDGER_FILENAME = "inventory-ledger.secure-object"
+
+
+class InventoryClosingAuthorityConflictError(RuntimeError):
+    """A different immutable closing-authority record already exists."""
 
 
 def load_inventory() -> tuple[InventoryLedger, ...]:
@@ -329,11 +334,46 @@ class InventoryLedgerRepository:
         document = self._storage.mutate(_append)
         return next(item for item in document.ledgers if item.actividad_id == actividad_id and item.year == year)
 
+    def record_closing_authority(
+        self,
+        actividad_id: str,
+        authority_record: InventoryClosingAuthorityRecord,
+        *,
+        year: int,
+    ) -> InventoryLedger:
+        """Atomically replace the target ledger's complete closing-authority record."""
+
+        def _replace(current: InventoryLedgerDocument) -> InventoryLedgerDocument:
+            ledgers = list(current.ledgers)
+            for index, ledger in enumerate(ledgers):
+                if ledger.actividad_id == actividad_id and ledger.year == year:
+                    existing_record = ledger.closing_authority_record
+                    if existing_record is not None:
+                        if existing_record.fingerprint == authority_record.fingerprint:
+                            return current
+                        raise InventoryClosingAuthorityConflictError(
+                            "inventory closing authority already exists with different provenance",
+                        )
+                    updated = ledger.model_copy(update={"closing_authority_record": authority_record})
+                    # Rehydrate instead of trusting ``model_copy`` so every nested
+                    # fingerprint and canonical resolver invariant runs before write.
+                    ledgers[index] = InventoryLedger.model_validate(updated.model_dump())
+                    return InventoryLedgerDocument(ledgers=tuple(ledgers))
+            raise InventoryLedgerError(
+                f"inventory ledger not found for {actividad_id!r} in {year}",
+                context={"actividad_id": actividad_id, "year": year},
+                translated_message="adapters.persistence.profile.inventory.errors.inventory_ledger_not_found",
+            )
+
+        document = self._storage.mutate(_replace)
+        return next(item for item in document.ledgers if item.actividad_id == actividad_id and item.year == year)
+
     def _save_unlocked(self, document: InventoryLedgerDocument) -> None:
         self._storage.save(document)
 
 
 __all__ = [
+    "InventoryClosingAuthorityConflictError",
     "InventoryLedgerRepository",
     "create_inventory_ledger",
     "load_inventory",

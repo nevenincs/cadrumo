@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 import shutil
 import subprocess
+import sys
 import tarfile
 import zipfile
 from dataclasses import dataclass
@@ -92,6 +95,92 @@ _DISTRIBUTIONS: Final[tuple[str, ...]] = (
     "cadrumo-data-manuals",
     "cadrumo-data-official",
 )
+_COMMAND_SPEC_ATTESTATION_SCHEMA: Final[str] = "cadrumo.command-spec-cohort.v1"
+_ATTESTATION_DIGEST_FIELDS: Final[tuple[str, ...]] = (
+    "identities_sha256",
+    "locales_sha256",
+    "policies_sha256",
+    "schemas_sha256",
+    "import_budgets_sha256",
+)
+_COMMAND_SPEC_PROBE: Final[str] = r"""
+import dataclasses
+import importlib
+import json
+import os
+import site
+import sys
+
+sys.path.append(os.environ["AEAT_DEPENDENCY_SITE"])
+site.addsitedir(os.environ["AEAT_INSTALL_SITE"])
+
+from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_entry
+from cadrumo.entrypoints.cli._command_spec import DeferredTarget, TranslationKey
+from cadrumo.entrypoints.cli.command_api import command_spec_nodes
+
+def walk(value, kind):
+    if isinstance(value, kind):
+        return (value,)
+    if dataclasses.is_dataclass(value) and not isinstance(value, type):
+        return tuple(item for field in dataclasses.fields(value) for item in walk(getattr(value, field.name), kind))
+    if isinstance(value, tuple):
+        return tuple(item for value_item in value for item in walk(value_item, kind))
+    return ()
+
+nodes = command_spec_nodes()
+identities = sorted((node.spec.key, node.path, node.spec.kind) for node in nodes)
+locales = sorted(
+    (node.spec.key, key.value, locale)
+    for node in nodes
+    for key in walk(node.spec, TranslationKey)
+    for locale in SUPPORTED_OUTPUT_LANGUAGES
+    if lookup_translation_entry(key.value, locale=locale)[0]
+)
+expected_locale_rows = sum(len(walk(node.spec, TranslationKey)) for node in nodes) * len(SUPPORTED_OUTPUT_LANGUAGES)
+if len(locales) != expected_locale_rows:
+    raise AssertionError("installed CommandSpec locale projection is incomplete")
+policies = sorted(
+    (
+        node.spec.key,
+        sorted(node.spec.policy.capabilities),
+        sorted(node.spec.policy.side_effects),
+        node.spec.policy.performance,
+        node.spec.policy.write_route,
+        node.spec.policy.destructive,
+        node.spec.policy.handoff,
+        node.spec.policy.live_write,
+    )
+    for node in nodes
+)
+schemas = sorted(
+    (
+        node.spec.key,
+        node.spec.result_schema.state.value,
+        node.spec.result_schema.identity,
+        None if node.spec.result_schema.target is None else node.spec.result_schema.target.identity,
+    )
+    for node in nodes
+)
+handler_modules = {
+    target.module
+    for node in nodes
+    for target in walk(node.spec, DeferredTarget)
+    if node.spec.handler is not None and target is node.spec.handler.target
+}
+import_budgets = {
+    "graph_projection_first_party_modules": sorted(
+        name for name in sys.modules if name == "cadrumo" or name.startswith("cadrumo.")
+    ),
+    "handler_modules_loaded": sorted(handler_modules.intersection(sys.modules)),
+}
+print(json.dumps({
+    "identities": identities,
+    "locales": locales,
+    "policies": policies,
+    "schemas": schemas,
+    "import_budgets": import_budgets,
+}, sort_keys=True))
+"""
 _INSTALLED_PROBE: Final[str] = """
 import json
 from importlib.metadata import distribution
@@ -124,6 +213,7 @@ class PythonCohort:
     official_wheel: Path
     official_sdist: Path
     sha256: dict[str, str]
+    command_spec_attestation: dict[str, object] | None = None
 
     @property
     def companion_wheels(self) -> tuple[Path, Path]:
@@ -147,6 +237,86 @@ def _run(argv: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
             f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}",
         )
     return completed
+
+
+def _projection_digest(value: object) -> str:
+    payload = json.dumps(value, sort_keys=True, separators=(",", ":")).encode(_UTF_8)
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _validate_command_spec_attestation(value: object) -> dict[str, object]:
+    if not isinstance(value, dict):
+        raise SystemExit("Python cohort CommandSpec attestation must be a JSON object")
+    expected = {"schema", "node_count", "forbidden_artifacts_absent", *_ATTESTATION_DIGEST_FIELDS}
+    if set(value) != expected:
+        raise SystemExit(f"Python cohort CommandSpec attestation keys drifted: {set(value)!r}")
+    if value.get("schema") != _COMMAND_SPEC_ATTESTATION_SCHEMA:
+        raise SystemExit("Python cohort CommandSpec attestation schema drifted")
+    if not isinstance(value.get("node_count"), int) or int(value["node_count"]) <= 0:
+        raise SystemExit("Python cohort CommandSpec attestation node count is invalid")
+    if value.get("forbidden_artifacts_absent") is not True:
+        raise SystemExit("Python cohort carries a forbidden command authority artifact")
+    for field in _ATTESTATION_DIGEST_FIELDS:
+        digest = value.get(field)
+        if (
+            not isinstance(digest, str)
+            or len(digest) != 64
+            or any(character not in "0123456789abcdef" for character in digest)
+        ):
+            raise SystemExit(f"Python cohort CommandSpec attestation digest is invalid: {field}")
+    return {str(key): item for key, item in value.items()}
+
+
+def _attest_installed_command_specs(root_wheel: Path, *, work_root: Path, uv: str) -> dict[str, object]:
+    install_root = work_root / ".command-spec-installed"
+    if install_root.exists():
+        shutil.rmtree(install_root)
+    install_root.mkdir()
+    try:
+        _run([uv, "pip", "install", "--target", str(install_root), "--no-deps", str(root_wheel)], cwd=work_root)
+        dependency_site = next(
+            path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir()
+        )
+        environment = os.environ.copy()
+        environment["PYTHONPATH"] = ""
+        environment["AEAT_DEPENDENCY_SITE"] = str(dependency_site)
+        environment["AEAT_INSTALL_SITE"] = str(install_root)
+        completed = subprocess.run(  # noqa: S603 - fixed installed-artifact attestation probe.
+            [sys.executable, "-S", "-c", _COMMAND_SPEC_PROBE],
+            cwd=work_root,
+            env=environment,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding=_UTF_8,
+            errors="strict",
+        )
+        if completed.returncode != 0:
+            raise SystemExit(f"installed CommandSpec attestation failed:\n{completed.stderr}")
+        projection = json.loads(completed.stdout)
+        if not isinstance(projection, dict):
+            raise SystemExit("installed CommandSpec projection must be a JSON object")
+        with zipfile.ZipFile(root_wheel) as archive:
+            names = set(archive.namelist())
+        forbidden = {
+            "app_lazy_manifest.v1.json",
+            "command_registration_metadata.v1.json",
+            "generate_app_lazy_manifest.py",
+            "generate_command_registration_metadata.py",
+        }
+        attestation: dict[str, object] = {
+            "schema": _COMMAND_SPEC_ATTESTATION_SCHEMA,
+            "node_count": len(projection["identities"]),
+            "forbidden_artifacts_absent": not ({Path(name).name for name in names} & forbidden),
+            **{
+                f"{field}_sha256": _projection_digest(projection[field])
+                for field in ("identities", "locales", "policies", "schemas", "import_budgets")
+            },
+        }
+        return _validate_command_spec_attestation(attestation)
+    finally:
+        if install_root.exists():
+            shutil.rmtree(install_root)
 
 
 def _single(directory: Path, pattern: str, *, label: str) -> Path:
@@ -455,6 +625,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         "cadrumo-data-official-sdist": official_sdist.name,
     }
     sha256 = {name: sha256_path(output / filename) for name, filename in artifacts.items()}
+    command_spec_attestation = _attest_installed_command_specs(root_wheel, work_root=output.parent, uv=uv)
     manifest = output / _MANIFEST_NAME
     manifest.write_text(
         json.dumps(
@@ -463,6 +634,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
                 "sha256": sha256,
                 "source_commit": source_commit,
                 "version": version,
+                "command_spec_attestation": command_spec_attestation,
             },
             indent=2,
             sort_keys=True,
@@ -485,6 +657,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     sha256 = document.get("sha256")
     source_commit = document.get("source_commit")
     version = document.get("version")
+    command_spec_attestation = _validate_command_spec_attestation(document.get("command_spec_attestation"))
     if (
         not isinstance(artifacts, dict)
         or not isinstance(sha256, dict)
@@ -569,6 +742,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         official_wheel=resolved["cadrumo-data-official"],
         official_sdist=resolved["cadrumo-data-official-sdist"],
         sha256={str(name): str(digest) for name, digest in sha256.items()},
+        command_spec_attestation=command_spec_attestation,
     )
 
 

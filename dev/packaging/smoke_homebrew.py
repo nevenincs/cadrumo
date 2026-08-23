@@ -27,6 +27,7 @@ if not __package__:
 
 from ._command import CommandResult, run_command  # noqa: E402
 from ._hashing import sha256_path  # noqa: E402
+from .python_cohort import load_python_cohort  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 _FORMULA_NAME: Final[str] = "cadrumo"
@@ -221,6 +222,7 @@ def run_homebrew_smoke(
     """
     formula_source = formula_path.resolve(strict=True)
     cohort = cohort_dir.resolve(strict=True)
+    load_python_cohort(cohort)
     brew = brew_path.expanduser().absolute()
     if not brew.is_file():
         raise SystemExit(f"Homebrew executable is not a file: {brew}")

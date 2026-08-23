@@ -12,7 +12,14 @@ from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
 from ._colanding import LAST_CHANGE, STAGED_CHANGE, ColandingResult, check_colanding
 from ._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
+from ._registry_scanner import scan_modelo_schema_keys
 from ._status import CatalogueStatusRecord, catalogue_status
+from ._subtree_move import (
+    LocaleMoveConflict,
+    LocaleMoveDisposition,
+    LocaleSubtreeMoveResult,
+    normalise_key_prefix,
+)
 from .manager import (
     LocaleAuditResult,
     LocaleError,
@@ -20,6 +27,11 @@ from .manager import (
     LocaleManager,
     LocalePlaceholderMismatch,
 )
+
+_REVISION_PREFIX_TEMPLATE = "modelo.schema.{modelo}.revision.{revision}"
+
+#: Leaf writes echoed in full before a move report falls back to a count.
+_MOVE_SAMPLE_SIZE = 5
 
 app = typer.Typer(name="locales", help="Audit and scaffold locale catalogues", no_args_is_help=True)
 
@@ -47,19 +59,30 @@ def _echo_audit(result: LocaleAuditResult) -> None:
 
 
 def _echo_file_audit(file_result: LocaleFileAudit) -> None:
-    """Echo one catalogue's key-set and scalar findings."""
+    """Echo one catalogue's key-set, revision-move, and scalar findings.
+
+    A revision rename shows up as one key missing and another extra, hundreds
+    of report lines apart. Reporting those as a MOVE first, and omitting them
+    from the two per-key lists, is what separates "translate this" from
+    "relocate this" -- three revision splits went unnoticed because the report
+    could only say the first.
+    """
     if file_result.ok:
         typer.echo(f"{file_result.locale_file}: ok")
         return
     if file_result.codebase_missing or file_result.codebase_extra:
         typer.echo(
             f"{file_result.locale_file}: missing={len(file_result.codebase_missing)} "
-            f"extra={len(file_result.codebase_extra)}",
+            f"extra={len(file_result.codebase_extra)} moves={len(file_result.revision_moves)}",
         )
+    for candidate in file_result.revision_moves:
+        typer.echo(f"  {candidate.render()}")
     for key in file_result.codebase_missing:
-        typer.echo(f"  missing {key}")
+        if key not in file_result.move_accounted_missing:
+            typer.echo(f"  missing {key}")
     for key in file_result.codebase_extra:
-        typer.echo(f"  extra {key}")
+        if key not in file_result.move_accounted_extra:
+            typer.echo(f"  extra {key}")
     for key in file_result.inter_locale_missing:
         typer.echo(f"inter-locale missing file={file_result.locale_file} key={key}")
     for violation in file_result.scalar_violations:
@@ -174,6 +197,142 @@ def set_batch(
     except LocaleError as exc:
         raise typer.BadParameter(str(exc), param_hint="manifest") from exc
     typer.echo(f"updated {len(updated)} locale catalogues: {', '.join(updated)}")
+
+
+@app.command("move")
+def move_subtree(
+    source: Annotated[
+        str,
+        typer.Argument(help="Dotted key prefix to relocate (e.g. modelo.schema.347.revision.2008-2024)."),
+    ],
+    destinations: Annotated[
+        list[str],
+        typer.Argument(help="One destination prefix for a rename, several for a split."),
+    ],
+    copy: Annotated[
+        bool,
+        typer.Option("--copy", help="Leave the source subtree in place instead of releasing it."),
+    ] = False,
+    drop_undistributed: Annotated[
+        bool,
+        typer.Option("--drop-undistributed", help="Release source leaves no destination accepted."),
+    ] = False,
+    on_conflict: Annotated[
+        LocaleMoveConflict,
+        typer.Option("--on-conflict", help="What to do where a destination already holds a different value."),
+    ] = LocaleMoveConflict.REFUSE,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Plan and report the move without writing any catalogue."),
+    ] = False,
+) -> None:
+    """Relocate a dotted key subtree across every catalogue, preserving values."""
+    try:
+        result = _default_manager().move_locale_subtree(
+            source,
+            destinations,
+            keep_source=copy,
+            drop_undistributed=drop_undistributed,
+            on_conflict=on_conflict,
+            dry_run=dry_run,
+        )
+    except LocaleError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    _echo_move(result)
+
+
+@app.command("move-revision")
+def move_revision(
+    modelo: Annotated[
+        str,
+        typer.Argument(help="Modelo identifier whose revision keys move (e.g. 347)."),
+    ],
+    source_revision: Annotated[
+        str,
+        typer.Argument(help="Revision id the catalogues currently carry."),
+    ],
+    destination_revisions: Annotated[
+        list[str],
+        typer.Argument(help="Revision id the registry now declares; two for a split."),
+    ],
+    copy: Annotated[
+        bool,
+        typer.Option("--copy", help="Leave the source revision's keys in place instead of releasing them."),
+    ] = False,
+    drop_undistributed: Annotated[
+        bool,
+        typer.Option(
+            "--drop-undistributed",
+            help="Release source keys no destination revision declares.",
+        ),
+    ] = False,
+    on_conflict: Annotated[
+        LocaleMoveConflict,
+        typer.Option("--on-conflict", help="What to do where a destination already holds a different value."),
+    ] = LocaleMoveConflict.REFUSE,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Plan and report the move without writing any catalogue."),
+    ] = False,
+) -> None:
+    """Carry a Modelo revision's catalogue keys to the revision ids the registry declares.
+
+    Registry-aware where the generic ``move`` verb is not: each leaf lands only
+    where the destination revision actually declares it. That is what makes a
+    SPLIT expressible -- one old revision feeding two new ones, each taking the
+    casillas it declares rather than both taking a copy of everything.
+    """
+    registry_keys = scan_modelo_schema_keys()
+    source_prefix = _REVISION_PREFIX_TEMPLATE.format(modelo=modelo, revision=source_revision)
+    permitted: dict[str, frozenset[str]] = {}
+    for revision in destination_revisions:
+        prefix = _REVISION_PREFIX_TEMPLATE.format(modelo=modelo, revision=revision)
+        declared = frozenset(key for key in registry_keys if key.startswith(f"{prefix}."))
+        if not declared:
+            raise typer.BadParameter(
+                f"The registry declares no keys under {prefix!r}: a revision the registry does not "
+                "carry is not a destination. Check the revision id against the registry tree.",
+                param_hint="destination_revisions",
+            )
+        permitted[normalise_key_prefix(prefix)] = declared
+
+    try:
+        result = _default_manager().move_locale_subtree(
+            source_prefix,
+            tuple(permitted),
+            keep_source=copy,
+            drop_undistributed=drop_undistributed,
+            on_conflict=on_conflict,
+            dry_run=dry_run,
+            permitted_destination_keys=permitted,
+        )
+    except LocaleError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    _echo_move(result)
+
+
+def _echo_move(result: LocaleSubtreeMoveResult) -> None:
+    """Echo one subtree move as a greppable summary plus a bounded sample."""
+    plan = result.plan
+    counts = {disposition: 0 for disposition in LocaleMoveDisposition}
+    for entry in plan.entries:
+        counts[entry.disposition] += 1
+    typer.echo(
+        f"move source={plan.source_prefix} destinations={','.join(plan.destination_prefixes)} "
+        f"copy={plan.keep_source} written={counts[LocaleMoveDisposition.WRITE]} "
+        f"overwritten={counts[LocaleMoveDisposition.OVERWRITTEN]} "
+        f"identical={counts[LocaleMoveDisposition.IDENTICAL]} "
+        f"skipped={counts[LocaleMoveDisposition.SKIPPED]} "
+        f"released={len(plan.removals)} undistributed={len(plan.undistributed)}",
+    )
+    for entry in plan.writes[:_MOVE_SAMPLE_SIZE]:
+        typer.echo(f"  {entry.locale}: {entry.source_key} -> {entry.destination_key}")
+    if len(plan.writes) > _MOVE_SAMPLE_SIZE:
+        typer.echo(f"  ... {len(plan.writes) - _MOVE_SAMPLE_SIZE} further leaf write(s)")
+    if result.dry_run:
+        typer.echo("dry run: no catalogue was written")
+        return
+    typer.echo(f"rewrote {len(result.written_paths)} catalogue shard(s)")
 
 
 @app.command("allow-identical")

@@ -155,6 +155,16 @@ def _make_cohort_dir(
         "sha256": sha256,
         "source_commit": commit,
         "version": version,
+        "command_spec_attestation": {
+            "schema": "cadrumo.command-spec-cohort.v1",
+            "node_count": 1,
+            "forbidden_artifacts_absent": True,
+            "identities_sha256": "a" * 64,
+            "locales_sha256": "b" * 64,
+            "policies_sha256": "c" * 64,
+            "schemas_sha256": "d" * 64,
+            "import_budgets_sha256": "e" * 64,
+        },
     }
     (cohort_dir / "python-cohort.json").write_text(
         json.dumps(manifest_data, indent=2, sort_keys=True) + "\n",

@@ -8,8 +8,11 @@ from ._command_spec import (
     ExecutionPolicySpec,
     InvocationSpec,
     LazyBinding,
+    MachineSecretFieldSpec,
     OptionSpec,
     ParameterDefault,
+    ProfileSecretChannelKind,
+    ProfileSecretSpec,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
@@ -18,6 +21,7 @@ from ._command_spec import (
 
 _STRING = ValueContract(DeferredTarget("builtins", "str"))
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
+_INT = ValueContract(DeferredTarget("builtins", "int"))
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
 _OUTPUT_FORMAT = ValueContract(DeferredTarget("cadrumo.core", "OutputFormat"))
 _STATE_FREE = ExecutionPolicySpec(
@@ -63,6 +67,23 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 value=_STRING,
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.root.profile_help"),
+            ),
+            OptionSpec(
+                name="profile_secrets_stdin",
+                declarations=("--profile-secrets-stdin",),
+                value=_BOOL,
+                default=ParameterDefault.value(False),
+                help_key=TranslationKey("cli.config.custody.secrets_stdin_help"),
+                is_flag=True,
+                profile_secret_channel=ProfileSecretChannelKind.STDIN,
+            ),
+            OptionSpec(
+                name="profile_secrets_fd",
+                declarations=("--profile-secrets-fd",),
+                value=_INT,
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.config.custody.secrets_fd_help"),
+                profile_secret_channel=ProfileSecretChannelKind.FILE_DESCRIPTOR,
             ),
             OptionSpec(
                 name="version",
@@ -129,6 +150,13 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._root_payloads", "RootStatusResult"),
             identity="root.status",
+        ),
+        profile_secret=ProfileSecretSpec(
+            fields=(MachineSecretFieldSpec("profile_passphrase"),),
+            model=DeferredTarget(
+                "cadrumo.entrypoints.cli._profile_authentication_contract",
+                "ProfileAuthenticationSecrets",
+            ),
         ),
     ),
     CommandSpec(

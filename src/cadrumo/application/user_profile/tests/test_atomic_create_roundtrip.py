@@ -16,13 +16,14 @@ because both route through the same atomic provisioner.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
+from ....core.config import load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from ....tests.cli_runner import invoke_cached_cli
@@ -49,11 +50,31 @@ def _cli_storage(tmp_path: Path) -> Iterator[Path]:
         yield storage_root
 
 
-def _invoke(args: list[str]):
+def _invoke(args: list[str], *, stdin_payload: str | None = None):
     """Invoke the CLI, disposing the engine first so each verb is a cold start."""
 
     dispose_engine()
-    return invoke_cached_cli(args)
+    return invoke_cached_cli(args, input=stdin_payload)
+
+
+def _login(name: str):
+    """Unlock ``name`` over the only channel `config login` still accepts.
+
+    The passphrase is no longer resolvable from settings. The machine-secret
+    ADR rejects the environment fallback outright -- "CLI entrypoints never
+    resolve caller-supplied scalar secrets from environment, settings,
+    keyrings, or an implicit adapter fallback" -- so the isolated backend
+    configuring `cadrumo_secret_passphrase` no longer unlocks anything, and
+    this must hand the secret over the bounded strict-JSON channel instead.
+    The value is the one that backend seeded the custody envelope with, or the
+    envelope would not open.
+    """
+    return _invoke(
+        ["--format", "json", "config", "login", name, "--secrets-stdin"],
+        stdin_payload=json.dumps(
+            {"passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()},
+        ),
+    )
 
 
 def _create(name: str, tax_id: str = "12345678Z") -> None:
@@ -93,7 +114,7 @@ def test_atomic_create_roundtrip_identity_is_consistent_across_verbs(_cli_storag
     # display_name is the operator label — the positional create arg.
     assert _json(show_first)["display_name"] == "alice"
 
-    unlock = _invoke(["--format", "json", "config", "login", "alice"])
+    unlock = _login("alice")
     assert unlock.exit_code == 0, unlock.output
     assert _json(unlock)["active_profile"] == "alice"
 
@@ -140,12 +161,12 @@ def test_atomic_create_roundtrip_two_profiles_resolve_independently(_cli_storage
     assert listing.exit_code == 0, listing.output
     assert sorted(row["name"] for row in _json(listing)["profiles"]) == ["alice", "bob"]
 
-    unlock_alice = _invoke(["--format", "json", "config", "login", "alice"])
+    unlock_alice = _login("alice")
     assert unlock_alice.exit_code == 0, unlock_alice.output
     show_alice = _invoke(["--format", "json", "config", "profile", "show"])
     assert _json(show_alice)["display_name"] == "alice"
 
-    unlock_bob = _invoke(["--format", "json", "config", "login", "bob"])
+    unlock_bob = _login("bob")
     assert unlock_bob.exit_code == 0, unlock_bob.output
     show_bob = _invoke(["--format", "json", "config", "profile", "show"])
     assert _json(show_bob)["display_name"] == "bob"

@@ -2,18 +2,40 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE, StorageRuntimeReadinessCode
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....domain.buckets import BucketEventType
-from ....domain.contribuyente.inventory import InventoryLedgerError, MovementKind, ValuationMethod
+from ....domain.contribuyente.inventory import (
+    InventoryAcquisitionCompleteness,
+    InventoryAcquisitionCost,
+    InventoryAcquisitionEvidence,
+    InventoryAcquisitionEvidenceKind,
+    InventoryClosingAuthority,
+    InventoryClosingAuthorityDecision,
+    InventoryClosingAuthorityRecord,
+    InventoryClosingDecisionEvidence,
+    InventoryClosingDecisionEvidenceRole,
+    InventoryClosingValuationBasis,
+    InventoryLedgerError,
+    MovementKind,
+    PhysicalClosingEvidence,
+    PhysicalClosingEvidenceRole,
+    PhysicalClosingObservation,
+    PriorAuthoritativeClosingLink,
+    PriorClosingContinuityEvidence,
+    ValuationMethod,
+    fingerprint_prior_authoritative_closing,
+)
+from ....domain.filing_evidence import FilingEvidenceReference
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     InventoryActividadConflictError,
@@ -42,6 +64,112 @@ def _make_svc(profile: TestRuntimeProfile) -> InventoryService:
 
 def _event_repo(profile: TestRuntimeProfile) -> BucketEventHistoryRepository:
     return BucketEventHistoryRepository(objects=profile.repository)
+
+
+def _acquisition(value: str) -> InventoryAcquisitionCost:
+    invoice = FilingEvidenceReference(reference="invoice-evidence")
+    cost_review = FilingEvidenceReference(reference="cost-review-evidence")
+    iva_review = FilingEvidenceReference(reference="iva-review-evidence")
+    return InventoryAcquisitionCost(
+        consideration_excluding_iva=Decimal(value),
+        consideration_iva_amount=Decimal("0.00"),
+        consideration_deductible_iva_ratio=Decimal("1"),
+        attributable_cost_components=(),
+        evidence=(
+            InventoryAcquisitionEvidence(reference=invoice, evidence_kind=InventoryAcquisitionEvidenceKind.PURCHASE_INVOICE, content_digest="a" * 64),
+            InventoryAcquisitionEvidence(reference=cost_review, evidence_kind=InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW, content_digest="b" * 64),
+            InventoryAcquisitionEvidence(reference=iva_review, evidence_kind=InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW, content_digest="c" * 64),
+        ),
+        completeness=InventoryAcquisitionCompleteness(
+            consideration_evidence=invoice,
+            attributable_cost_review_evidence=cost_review,
+            iva_recoverability_review_evidence=iva_review,
+        ),
+        directly_attributable_cost_total=Decimal("0.00"),
+        nonrecoverable_iva_included=Decimal("0.00"),
+        recoverable_iva_excluded=Decimal("0.00"),
+        total_acquisition_cost=Decimal(value),
+    )
+
+
+def _authority_record(*, reason: str = "Reviewed movement-derived closing.") -> InventoryClosingAuthorityRecord:
+    continuity_evidence = (
+        PriorClosingContinuityEvidence(
+            reference=FilingEvidenceReference(reference="prior-closing-evidence"),
+            content_digest="f" * 64,
+        ),
+    )
+    return InventoryClosingAuthorityRecord(
+        decision=InventoryClosingAuthorityDecision(
+            decision_id="decision-2025",
+            actividad_id="A1",
+            filing_year=2025,
+            authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
+            reason=reason,
+            actor="inventory-reviewer",
+            source_command="inventory.closing.authority.decide",
+            decided_at=datetime(2026, 1, 2, tzinfo=UTC),
+            evidence=(
+                InventoryClosingDecisionEvidence(
+                    reference=FilingEvidenceReference(reference="decision-evidence"),
+                    role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION,
+                    content_digest="e" * 64,
+                ),
+            ),
+        ),
+        prior_closing_link=PriorAuthoritativeClosingLink(
+            actividad_id="A1",
+            current_filing_year=2025,
+            prior_filing_year=2024,
+            prior_authoritative_closing_value=Decimal("100.00"),
+            current_opening_value=Decimal("100.00"),
+            prior_authoritative_source_fingerprint="c" * 64,
+            prior_authoritative_closing_fingerprint=fingerprint_prior_authoritative_closing(
+                actividad_id="A1",
+                filing_year=2024,
+                authoritative_closing_value=Decimal("100.00"),
+                authoritative_source_fingerprint="c" * 64,
+                evidence=continuity_evidence,
+            ),
+            evidence=continuity_evidence,
+        ),
+    )
+
+
+def _physical_authority_record() -> InventoryClosingAuthorityRecord:
+    base = _authority_record()
+    observation = PhysicalClosingObservation(
+        observation_id="physical-2025",
+        observed_on=date(2026, 1, 1),
+        as_of_date=date(2025, 12, 31),
+        actividad_id="A1",
+        filing_year=2025,
+        closing_value=Decimal("101.00"),
+        valuation_basis=InventoryClosingValuationBasis.FIFO_ACQUISITION_PRICE,
+        evidence=(
+            PhysicalClosingEvidence(
+                reference=FilingEvidenceReference(reference="physical-count-evidence"),
+                role=PhysicalClosingEvidenceRole.PHYSICAL_COUNT,
+                content_digest="a" * 64,
+            ),
+            PhysicalClosingEvidence(
+                reference=FilingEvidenceReference(reference="physical-value-evidence"),
+                role=PhysicalClosingEvidenceRole.ACQUISITION_PRICE_VALUATION,
+                content_digest="b" * 64,
+            ),
+        ),
+    )
+    return InventoryClosingAuthorityRecord(
+        decision=base.decision.model_copy(
+            update={
+                "authority": InventoryClosingAuthority.PHYSICAL_OBSERVATION,
+                "physical_observation_id": observation.observation_id,
+                "physical_observation_fingerprint": observation.fingerprint,
+            },
+        ),
+        physical_observation=observation,
+        prior_closing_link=base.prior_closing_link,
+    )
 
 
 class TestCreate:
@@ -118,7 +246,7 @@ class TestShow:
                 movement_date=date(2025, 3, 15),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("10"),
-                unit_cost=Decimal("50.00"),
+                acquisition_cost=_acquisition("500.00"),
             ),
         )
         ledger = svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
@@ -146,7 +274,7 @@ class TestMovementAdd:
                 movement_date=date(2025, 3, 1),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("5"),
-                unit_cost=Decimal("100.00"),
+                acquisition_cost=_acquisition("500.00"),
             ),
         )
         result = svc.movement_add(
@@ -174,7 +302,7 @@ class TestMovementAdd:
             movement_date=date(2025, 3, 1),
             kind=MovementKind.PURCHASE,
             quantity=Decimal("1"),
-            unit_cost=Decimal("100.00"),
+            acquisition_cost=_acquisition("100.00"),
         )
         svc.movement_add(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, movement=cmd)
         with pytest.raises(InventoryServiceInputError) as exc_info:
@@ -189,7 +317,7 @@ class TestMovementAdd:
             movement_date=date(2025, 3, 1),
             kind=MovementKind.PURCHASE,
             quantity=Decimal("1"),
-            unit_cost=Decimal("100.00"),
+            acquisition_cost=_acquisition("100.00"),
         )
         with pytest.raises(InventoryActividadNotFoundError):
             svc.movement_add(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, movement=cmd)
@@ -212,7 +340,7 @@ class TestMovementAdd:
                 movement_date=date(2025, 3, 1),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("1"),
-                unit_cost=Decimal("10.00"),
+                acquisition_cost=_acquisition("10.00"),
             ),
         )
         with pytest.raises(InventoryLedgerError, match="consume more stock"):
@@ -248,13 +376,13 @@ class TestValuationPreview:
                 movement_date=date(2025, 1, 10),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("10"),
-                unit_cost=Decimal("50.00"),
+                acquisition_cost=_acquisition("500.00"),
             ),
         )
         result = svc.valuation_preview(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
         preview = result.preview
         assert preview.valuation_method is ValuationMethod.FIFO
-        assert preview.closing_stock == Decimal("500.00")
+        assert preview.derived_closing_value == Decimal("500.00")
         assert preview.cogs == Decimal("0.00")
 
 
@@ -274,6 +402,96 @@ class TestRemove:
             svc.remove(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
         assert exc_info.value.translated_message == "application.inventory.service.errors.actividad_not_found"
         assert exc_info.value.context == {"actividad_id": "A1", "year": "2025"}
+
+
+class TestClosingAuthorityRecord:
+    def test_record_persists_and_exact_replay_is_idempotent(self, secure_engine: TestRuntimeProfile) -> None:
+        svc = _make_svc(secure_engine)
+        svc.create(
+            bucket_id=secure_engine.bucket_id,
+            actividad_id="A1",
+            year=2025,
+            valuation_method="fifo",
+            opening_stock=Decimal("100.00"),
+        )
+        record = _authority_record()
+        first = svc.closing_authority_record(
+            bucket_id=secure_engine.bucket_id,
+            actividad_id="A1",
+            year=2025,
+            authority_record=record,
+        )
+        replay = svc.closing_authority_record(
+            bucket_id=secure_engine.bucket_id,
+            actividad_id="A1",
+            year=2025,
+            authority_record=record,
+        )
+
+        assert first.ledger.closing_authority_record == record
+        assert replay.ledger.closing_authority_record == record
+        assert svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025).closing_authority_record == record
+        stored = InventoryLedgerRepository(objects=secure_engine.repository).load()
+        assert stored.schema_version == "3"
+        assert stored.ledgers[0].closing_authority_record == record
+
+    def test_record_refuses_divergent_replay_without_overwrite(self, secure_engine: TestRuntimeProfile) -> None:
+        svc = _make_svc(secure_engine)
+        svc.create(
+            bucket_id=secure_engine.bucket_id,
+            actividad_id="A1",
+            year=2025,
+            valuation_method="fifo",
+            opening_stock=Decimal("100.00"),
+        )
+        original = _authority_record()
+        svc.closing_authority_record(
+            bucket_id=secure_engine.bucket_id,
+            actividad_id="A1",
+            year=2025,
+            authority_record=original,
+        )
+
+        with pytest.raises(InventoryServiceInputError, match="closing_authority"):
+            svc.closing_authority_record(
+                bucket_id=secure_engine.bucket_id,
+                actividad_id="A1",
+                year=2025,
+                authority_record=_authority_record(reason="A different reviewed decision."),
+            )
+        link = original.prior_closing_link
+        changed_source = "d" * 64
+        changed_link = link.model_copy(
+            update={
+                "prior_authoritative_source_fingerprint": changed_source,
+                "prior_authoritative_closing_fingerprint": fingerprint_prior_authoritative_closing(
+                    actividad_id=link.actividad_id,
+                    filing_year=link.prior_filing_year,
+                    authoritative_closing_value=link.prior_authoritative_closing_value,
+                    authoritative_source_fingerprint=changed_source,
+                    evidence=link.evidence,
+                ),
+            },
+        )
+        with pytest.raises(InventoryServiceInputError, match="closing_authority"):
+            svc.closing_authority_record(
+                bucket_id=secure_engine.bucket_id,
+                actividad_id="A1",
+                year=2025,
+                authority_record=InventoryClosingAuthorityRecord(
+                    decision=original.decision,
+                    physical_observation=None,
+                    prior_closing_link=changed_link,
+                ),
+            )
+        with pytest.raises(InventoryServiceInputError, match="closing_authority"):
+            svc.closing_authority_record(
+                bucket_id=secure_engine.bucket_id,
+                actividad_id="A1",
+                year=2025,
+                authority_record=_physical_authority_record(),
+            )
+        assert svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025).closing_authority_record == original
 
 
 class TestInventoryEventEmission:
@@ -301,7 +519,7 @@ class TestInventoryEventEmission:
                 movement_date=date(2025, 3, 1),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("5"),
-                unit_cost=Decimal("100.00"),
+                acquisition_cost=_acquisition("500.00"),
             ),
         )
         assert len(result.bucket_event_ids) == 1

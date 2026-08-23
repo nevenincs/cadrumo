@@ -16,14 +16,16 @@ from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
+from ...adapters.persistence.profile.inventory import (
+    InventoryClosingAuthorityConflictError,
+    InventoryLedgerRepository,
+)
 from ...adapters.persistence.storage import secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
-from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ...core.time import now as _now_utc
 from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
@@ -32,6 +34,8 @@ from ...domain.buckets import (
     emit_bucket_event,
 )
 from ...domain.contribuyente.inventory import (
+    InventoryAcquisitionCost,
+    InventoryClosingAuthorityRecord,
     InventoryLedger,
     InventoryLedgerDocument,
     InventoryLedgerError,
@@ -81,7 +85,18 @@ class InventoryMovementCommand(BaseModel):
     quantity: Decimal
     unit_cost: Decimal | None = Field(default=None)
     taxable_base: Decimal | None = Field(default=None)
-    iva_rate: Decimal = DEFAULT_IVA_GENERAL_RATE_PCT
+    acquisition_cost: InventoryAcquisitionCost | None = None
+
+    @model_validator(mode="after")
+    def _purchase_has_one_cost_authority(self) -> InventoryMovementCommand:
+        if self.kind is MovementKind.PURCHASE:
+            if self.acquisition_cost is None:
+                raise ValueError("purchase movements require acquisition_cost")
+            if self.unit_cost is not None or self.taxable_base is not None:
+                raise ValueError("purchase movements refuse legacy unit_cost and taxable_base authorities")
+        elif self.acquisition_cost is not None:
+            raise ValueError("acquisition_cost is permitted only for purchase movements")
+        return self
 
 
 class InventoryValuationPreview(BaseModel):
@@ -92,7 +107,7 @@ class InventoryValuationPreview(BaseModel):
     actividad_id: str = Field(min_length=1)
     year: int = Field(ge=1900)
     valuation_method: ValuationMethod
-    closing_stock: Decimal = Field(ge=Decimal("0"))
+    derived_closing_value: Decimal = Field(ge=Decimal("0"))
     cogs: Decimal = Field(ge=Decimal("0"))
 
 
@@ -231,6 +246,7 @@ class InventoryService:
             year=year,
             valuation_method=method,
             opening_stock=opening_stock,
+            closing_authority_record=None,
         )
         # Delegated to the repository's guarded verb rather than repeating its
         # read, duplicate-check and write here. The document is a singleton row,
@@ -318,15 +334,22 @@ class InventoryService:
                 translated_message="application.inventory.service.errors.duplicate_movement_id",
                 context={"movement_id": movement.movement_id},
             )
-        record = MovementRecord(
-            movement_id=movement.movement_id,
-            movement_date=movement.movement_date,
-            kind=movement.kind,
-            quantity=movement.quantity,
-            unit_cost=movement.unit_cost,
-            taxable_base=movement.taxable_base,
-            iva_rate=movement.iva_rate,
-        )
+        if movement.acquisition_cost is not None:
+            record = MovementRecord.from_purchase_acquisition(
+                movement_id=movement.movement_id,
+                movement_date=movement.movement_date,
+                quantity=movement.quantity,
+                acquisition_cost=movement.acquisition_cost,
+            )
+        else:
+            record = MovementRecord(
+                movement_id=movement.movement_id,
+                movement_date=movement.movement_date,
+                kind=movement.kind,
+                quantity=movement.quantity,
+                unit_cost=movement.unit_cost,
+                taxable_base=movement.taxable_base,
+            )
         updated = ledger.model_copy(
             update={"period_movements": (*ledger.period_movements, record)},
         )
@@ -371,7 +394,7 @@ class InventoryService:
             actividad_id=ledger.actividad_id,
             year=ledger.year,
             valuation_method=ledger.valuation_method,
-            closing_stock=result.closing_value,
+            derived_closing_value=result.closing_value,
             cogs=result.cogs_value,
         )
         now = _now_utc()
@@ -386,6 +409,37 @@ class InventoryService:
             payload={"valuation_method": ledger.valuation_method.value},
         )
         return InventoryValuationPreviewResult(preview=preview, bucket_event_ids=(event_id,))
+
+    def closing_authority_record(
+        self,
+        *,
+        bucket_id: str,
+        actividad_id: str,
+        year: int,
+        authority_record: InventoryClosingAuthorityRecord,
+    ) -> InventoryLedgerResult:
+        """Atomically validate and persist one complete closing-authority bundle."""
+        repository = self._repository_for(bucket_id)
+        try:
+            ledger = repository.record_closing_authority(
+                actividad_id,
+                authority_record,
+                year=year,
+            )
+        except InventoryClosingAuthorityConflictError as exc:
+            raise InventoryServiceInputError(
+                translated_message="application.inventory.service.errors.closing_authority_conflict",
+                context={"actividad_id": actividad_id, "year": str(year)},
+            ) from exc
+        except InventoryLedgerError as exc:
+            raise InventoryActividadNotFoundError(
+                translated_message="application.inventory.service.errors.actividad_not_found",
+                context={"actividad_id": actividad_id, "year": str(year)},
+            ) from exc
+        # No event is emitted here: inventory and bucket events have distinct
+        # repositories with no shared transaction. The encrypted ledger write is
+        # atomic and replay-safe; claiming a cross-repository commit would not be.
+        return InventoryLedgerResult(ledger=ledger)
 
     def remove(
         self,

@@ -22,6 +22,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 from dev.packaging._distribution_names import normalise_distribution_name  # noqa: E402
 from dev.packaging._hashing import sha256_path  # noqa: E402
+from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
 from dev.packaging.uv_constraints import export_runtime_constraints  # noqa: E402
 
 _DISTRIBUTIONS = (
@@ -131,6 +132,7 @@ def generate_manifest(
     release_base_url: str,
 ) -> dict[str, object]:
     """Return one Scoop manifest bound to exact cohort filenames and hashes."""
+    load_python_cohort(cohort_dir)
     artifacts = tuple(
         _wheel_artifact(cohort_dir, distribution, wheel_glob) for distribution, wheel_glob in _DISTRIBUTIONS
     )

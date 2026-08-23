@@ -573,6 +573,7 @@ application:
   inventory:
     service:
       errors:
+        closing_authority_conflict: Ehhez a tevékenységhez és évhez már más zárókészlet-hatósági rekord tartozik.
         actividad_conflict: Már létezik készletnapló a(z) %{actividad_id} tevékenységhez
           és a(z) %{year} évhez. Futtassa a(z) `aeat app ledger inventory list` parancsot
           a meglévő naplók megtekintéséhez.

@@ -10,10 +10,16 @@ from __future__ import annotations
 import json
 
 import typer
+from pydantic import ValidationError
 
 from ...application.inventory import InventoryMovementCommand, InventoryService
-from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
-from ...domain.contribuyente.inventory import MovementKind
+from ...core.i18n import tr
+from ...domain.contribuyente.inventory import (
+    InventoryAcquisitionCost,
+    InventoryClosingAuthorityRecord,
+    InventoryLedger,
+    MovementKind,
+)
 from ._common import (
     _emit_envelope,
     _parse_iso_date,
@@ -23,7 +29,13 @@ from ._common import (
 from ._common import (
     active_bucket_id_or_refuse as _inventory_bucket_id,
 )
+from ._config._secure_input import (
+    MachineSecretPayload,
+    read_machine_secret_payload,
+    select_machine_secret_channel,
+)
 from ._ledger_payloads import (
+    InventoryClosingAuthorityRecordResult,
     InventoryCreateResult,
     InventoryListResult,
     InventoryMovementAddResult,
@@ -31,8 +43,67 @@ from ._ledger_payloads import (
 )
 
 
+class _InventoryClosingAuthorityInput(MachineSecretPayload):
+    """Strict bounded structured input; values never appear in argv or output."""
+
+    decision: dict[str, object]
+    physical_observation: dict[str, object] | None
+    prior_closing_link: dict[str, object]
+
+
 def _inventory_service() -> InventoryService:
     return InventoryService()
+
+
+def _safe_inventory_ledger_payload(ledger: InventoryLedger) -> dict[str, object]:
+    """Project a ledger without evidence references or content digests."""
+    payload: dict[str, object] = json.loads(ledger.model_dump_json())
+    authority = payload.pop("closing_authority_record", None)
+    if isinstance(authority, dict) and ledger.closing_authority_record is not None:
+        record = ledger.closing_authority_record
+        payload["closing_authority_fingerprints"] = {
+            "record": record.fingerprint,
+            "decision": record.decision.fingerprint,
+            "physical_observation": (
+                record.physical_observation.fingerprint if record.physical_observation is not None else None
+            ),
+            "prior_closing_link": record.prior_closing_link.fingerprint,
+        }
+    movements = payload["period_movements"]
+    assert isinstance(movements, list)
+    for movement in movements:
+        assert isinstance(movement, dict)
+        acquisition = movement.get("acquisition_cost")
+        if not isinstance(acquisition, dict):
+            continue
+        evidence = acquisition.get("evidence")
+        components = acquisition.get("attributable_cost_components")
+        movement["acquisition_cost"] = {
+            "consideration_excluding_iva": acquisition["consideration_excluding_iva"],
+            "directly_attributable_cost_total": acquisition["directly_attributable_cost_total"],
+            "nonrecoverable_iva_included": acquisition["nonrecoverable_iva_included"],
+            "recoverable_iva_excluded": acquisition["recoverable_iva_excluded"],
+            "total_acquisition_cost": acquisition["total_acquisition_cost"],
+            "component_count": len(components) if isinstance(components, list) else 0,
+            "evidence_count": len(evidence) if isinstance(evidence, list) else 0,
+            "complete": True,
+        }
+    return payload
+
+
+def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCost | None:
+    """Read one acquisition-cost object from the non-argv stdin channel."""
+    if not from_stdin:
+        return None
+    value = typer.get_text_stream("stdin").read()
+    try:
+        return InventoryAcquisitionCost.model_validate_json(value)
+    except ValidationError as exc:
+        details = "; ".join(f"{'.'.join(str(item) for item in error['loc'])}: {error['msg']}" for error in exc.errors())
+        raise typer.BadParameter(
+            tr("cli.app.ledger.inventory.acquisition_cost_invalid", details=details),
+            param_hint="--acquisition-cost-stdin",
+        ) from exc
 
 
 def inventory_list(ctx: typer.Context) -> None:
@@ -75,7 +146,7 @@ def inventory_create(
         opening_stock=parse_decimal_amount(opening_stock, label="opening-stock"),
     )
     ledger = result.ledger
-    payload = json.loads(ledger.model_dump_json())
+    payload = _safe_inventory_ledger_payload(ledger)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     _emit_envelope(
         ctx,
@@ -102,7 +173,7 @@ def inventory_movement_add(
     quantity: str,
     unit_cost: str | None = None,
     taxable_base: str | None = None,
-    iva_rate: str = str(DEFAULT_IVA_GENERAL_RATE_PCT),
+    acquisition_cost_stdin: bool = False,
 ) -> None:
     """Append an :class:`InventoryMovementCommand` to an actividad ledger."""
     bucket_id = _inventory_bucket_id()
@@ -113,7 +184,7 @@ def inventory_movement_add(
         quantity=parse_decimal_amount(quantity, label="quantity"),
         unit_cost=parse_optional_decimal_amount(unit_cost, label="unit-cost"),
         taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
-        iva_rate=parse_decimal_amount(iva_rate, label="iva-rate"),
+        acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
     )
     result = _inventory_service().movement_add(
         bucket_id=bucket_id,
@@ -122,12 +193,12 @@ def inventory_movement_add(
         movement=command,
     )
     ledger = result.ledger
-    payload = ledger.model_dump(mode="json")
+    payload = _safe_inventory_ledger_payload(ledger)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     _emit_envelope(
         ctx,
         command="ledger.inventory.movement.add",
-        result=InventoryMovementAddResult.model_validate(payload),
+        result=InventoryMovementAddResult.model_validate_json(json.dumps(payload)),
         lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{ledger.actividad_id}",
@@ -156,8 +227,62 @@ def inventory_valuation_preview(
             f"actividad_id\t{preview.actividad_id}",
             f"year\t{preview.year}",
             f"valuation_method\t{preview.valuation_method.value}",
-            f"closing_stock\t{preview.closing_stock}",
+            f"derived_closing_value\t{preview.derived_closing_value}",
             f"cogs\t{preview.cogs}",
             f"bucket_event_ids\t{','.join(result.bucket_event_ids)}",
+        ),
+    )
+
+
+def inventory_closing_authority_record(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    authority_stdin: bool = False,
+    authority_fd: int | None = None,
+) -> None:
+    """Record one complete authority bundle through a bounded non-argv channel."""
+    selection = select_machine_secret_channel(secrets_stdin=authority_stdin, secrets_fd=authority_fd)
+    if selection is None:
+        raise typer.BadParameter(
+            tr("cli.app.ledger.inventory.authority_channel_required"),
+            param_hint="--authority-stdin/--authority-fd",
+        )
+    incoming = read_machine_secret_payload(_InventoryClosingAuthorityInput, selection=selection)
+    try:
+        record = InventoryClosingAuthorityRecord.model_validate_json(
+            incoming.model_dump_json(),
+        )
+        result = _inventory_service().closing_authority_record(
+            bucket_id=_inventory_bucket_id(),
+            actividad_id=actividad_id,
+            year=year,
+            authority_record=record,
+        )
+    except ValidationError as exc:
+        raise typer.BadParameter(
+            tr("cli.app.ledger.inventory.authority_invalid"),
+            param_hint="--authority-stdin/--authority-fd",
+        ) from exc
+    persisted = result.ledger.closing_authority_record
+    assert persisted is not None
+    payload = InventoryClosingAuthorityRecordResult(
+        actividad_id=actividad_id,
+        year=year,
+        authority_record_fingerprint=persisted.fingerprint,
+        decision_fingerprint=persisted.decision.fingerprint,
+        physical_observation_fingerprint=(
+            persisted.physical_observation.fingerprint if persisted.physical_observation is not None else None
+        ),
+        prior_closing_link_fingerprint=persisted.prior_closing_link.fingerprint,
+    )
+    _emit_envelope(
+        ctx,
+        command="ledger.inventory.closing-authority.record",
+        result=payload,
+        lines=(
+            f"actividad_id\t{actividad_id}",
+            f"year\t{year}",
+            f"authority_record_fingerprint\t{persisted.fingerprint}",
         ),
     )
