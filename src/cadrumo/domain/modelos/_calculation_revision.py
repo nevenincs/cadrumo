@@ -71,7 +71,7 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.time import validate_utc_aware
 from .._identifiers import canonical_decimal_string as _canonical_decimal
-from ..calculations import RowBindingKey, RowSourceIdentity
+from ..calculations import DirectRowMaterializationProvenance, RowBindingKey, RowCasillaKey, RowSourceIdentity
 from ..calculations.registry import (
     BindingId,
     CasillaObservation,
@@ -239,6 +239,30 @@ def _canonical_row_source_identities(
     ]
 
 
+def _canonical_row_casilla_values(value: Mapping[RowCasillaKey, Decimal]) -> list[dict[str, object]]:
+    return [
+        {"casilla_id": casilla_id, "row_index": row_index, "value": _canonical_decimal(amount)}
+        for (casilla_id, row_index), amount in sorted(value.items())
+    ]
+
+
+def _canonical_row_casilla_provenance(
+    value: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
+) -> list[dict[str, object]]:
+    return [
+        {
+            "casilla_id": casilla_id,
+            "row_index": row_index,
+            "source_binding_id": provenance.source_binding_id,
+            "source_row_index": provenance.source_row_index,
+            "source_identity": provenance.source_identity.model_dump(mode="json"),
+            "materialization_rule_id": provenance.materialization_rule_id,
+            "materialization_rule_version": provenance.materialization_rule_version,
+        }
+        for (casilla_id, row_index), provenance in sorted(value.items())
+    ]
+
+
 def _base_revision_id_payload(
     *,
     work_unit_id: str,
@@ -374,6 +398,8 @@ class CalculationRevisionIdentityInputs(TypedDict):
     binding_overrides: Mapping[BindingId, str]
     row_binding_values: Mapping[BindingId, Mapping[str, str]] | None
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity]
+    row_casilla_values: Mapping[RowCasillaKey, Decimal]
+    row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance]
     casilla_values: Mapping[CasillaId, Decimal]
     relation_overrides: Mapping[RelationId, str] | None
     source_transaction_ids: Sequence[str]
@@ -396,6 +422,8 @@ def calculation_revision_identity_inputs(
     binding_overrides: Mapping[BindingId, str],
     row_binding_values: Mapping[BindingId, Mapping[str, str]] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
+    row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
+    row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
     casilla_values: Mapping[CasillaId, Decimal],
     relation_overrides: Mapping[RelationId, str] | None = None,
     source_transaction_ids: Sequence[str] = (),
@@ -423,6 +451,8 @@ def calculation_revision_identity_inputs(
         "binding_overrides": binding_overrides,
         "row_binding_values": row_binding_values,
         "row_source_identities": row_source_identities or {},
+        "row_casilla_values": row_casilla_values or {},
+        "row_casilla_provenance": row_casilla_provenance or {},
         "casilla_values": casilla_values,
         "relation_overrides": relation_overrides,
         "source_transaction_ids": source_transaction_ids,
@@ -446,6 +476,8 @@ def derive_calculation_revision_id(
     binding_overrides: Mapping[BindingId, str],
     row_binding_values: Mapping[BindingId, Mapping[str, str]] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
+    row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
+    row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
     casilla_values: Mapping[CasillaId, Decimal],
     relation_overrides: Mapping[RelationId, str] | None = None,
     source_transaction_ids: Sequence[str] = (),
@@ -468,6 +500,8 @@ def derive_calculation_revision_id(
             binding_overrides=binding_overrides,
             row_binding_values=row_binding_values,
             row_source_identities=row_source_identities,
+            row_casilla_values=row_casilla_values,
+            row_casilla_provenance=row_casilla_provenance,
             casilla_values=casilla_values,
             relation_overrides=relation_overrides,
             source_transaction_ids=source_transaction_ids,
@@ -516,6 +550,8 @@ def _derive_calculation_revision_id_from_identity_inputs(
     binding_overrides = identity_inputs["binding_overrides"]
     row_binding_values = identity_inputs["row_binding_values"]
     row_source_identities = identity_inputs["row_source_identities"]
+    row_casilla_values = identity_inputs["row_casilla_values"]
+    row_casilla_provenance = identity_inputs["row_casilla_provenance"]
     casilla_values = identity_inputs["casilla_values"]
     relation_overrides = identity_inputs["relation_overrides"]
     source_transaction_ids = identity_inputs["source_transaction_ids"]
@@ -560,6 +596,12 @@ def _derive_calculation_revision_id_from_identity_inputs(
     canonical_row_identities = _canonical_row_source_identities(row_source_identities)
     if canonical_row_identities:
         payload["row_source_identities"] = canonical_row_identities
+    canonical_row_casilla_values = _canonical_row_casilla_values(row_casilla_values)
+    if canonical_row_casilla_values:
+        payload["row_casilla_values"] = canonical_row_casilla_values
+    canonical_row_casilla_provenance = _canonical_row_casilla_provenance(row_casilla_provenance)
+    if canonical_row_casilla_provenance:
+        payload["row_casilla_provenance"] = canonical_row_casilla_provenance
     payload.update(
         _borrador_revision_id_payload(borrador_snapshot_id, bindings_sourced_from_borrador),
     )
@@ -971,6 +1013,11 @@ class CalculationRevision(BaseModel):
         default_factory=dict,
         repr=False,
     )
+    row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=dict, repr=False)
+    row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] = Field(
+        default_factory=dict,
+        repr=False,
+    )
     relation_overrides: Mapping[RelationId, str] = Field(default_factory=dict)
     source_transaction_ids: tuple[CalculationRevisionId, ...] = Field(default_factory=tuple)
     m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
@@ -1079,9 +1126,11 @@ class CalculationRevision(BaseModel):
         if (
             isinstance(validation_context, Mapping)
             and validation_context.get("secure_calculation_revision") is True
-            and "row_source_identities" not in self.model_fields_set
+            and not {"row_source_identities", "row_casilla_values", "row_casilla_provenance"}.issubset(
+                self.model_fields_set
+            )
         ):
-            raise ModeloValidationError("secure calculation revision is missing row source identities")
+            raise ModeloValidationError("secure calculation revision is missing required row materialization fields")
         primary_refs = tuple(
             row.source_ref
             for row in self.source_provenance
@@ -1107,6 +1156,28 @@ class CalculationRevision(BaseModel):
         }
         if not set(self.row_source_identities).issubset(row_value_keys):
             raise ModeloValidationError("row source identity coordinate has no row binding value")
+        if set(self.row_casilla_values) != set(self.row_casilla_provenance):
+            raise ModeloValidationError("row casilla values and provenance must have exactly matching coordinates")
+        source_coordinates: set[RowBindingKey] = set()
+        for key, provenance in self.row_casilla_provenance.items():
+            source_key = (provenance.source_binding_id, provenance.source_row_index)
+            if source_key in source_coordinates:
+                raise ModeloValidationError("one source row cannot materialize more than one row casilla")
+            source_coordinates.add(source_key)
+            source_identity = self.row_source_identities.get(source_key)
+            if source_identity is None:
+                raise ModeloValidationError("row casilla provenance source coordinate has no row source identity")
+            if source_identity != provenance.source_identity:
+                raise ModeloValidationError("row casilla provenance source identity does not match its source row")
+            source_value = self.row_binding_values.get(provenance.source_binding_id, {}).get(
+                str(provenance.source_row_index)
+            )
+            try:
+                source_decimal = Decimal(source_value) if source_value is not None else None
+            except Exception as exc:
+                raise ModeloValidationError("row casilla provenance source value is not decimal") from exc
+            if source_decimal != self.row_casilla_values[key]:
+                raise ModeloValidationError("row casilla value does not match its source row value")
         _validate_observation_projection(self)
         if self.updated_at < self.created_at:
             raise ModeloValidationError(
@@ -1183,7 +1254,17 @@ class CalculationRevision(BaseModel):
 
     @field_validator("row_source_identities", mode="before")
     @classmethod
-    def _normalise_row_source_identities(cls, value: object) -> Mapping[RowBindingKey, RowSourceIdentity]:
+    def _normalise_row_source_identities(
+        cls, value: object, info: ValidationInfo
+    ) -> Mapping[RowBindingKey, RowSourceIdentity]:
+        # Secure persistence has one canonical, duplicate-detectable list form.
+        # Ordinary in-process construction retains the ergonomic mapping form.
+        if (
+            isinstance(info.context, Mapping)
+            and info.context.get("secure_calculation_revision") is True
+            and not isinstance(value, list)
+        ):
+            raise ModeloValidationError("secure row source identities must use list wire form")
         typed: dict[RowBindingKey, RowSourceIdentity]
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowBindingKey, RowSourceIdentity]).validate_python(value)
@@ -1208,8 +1289,66 @@ class CalculationRevision(BaseModel):
             raise ModeloValidationError("row source identity contains a non-positive row index")
         return dict(sorted(typed.items()))
 
+    @field_validator("row_casilla_values", mode="before")
+    @classmethod
+    def _normalise_row_casilla_values(cls, value: object, info: ValidationInfo) -> Mapping[RowCasillaKey, Decimal]:
+        if (
+            isinstance(info.context, Mapping)
+            and info.context.get("secure_calculation_revision") is True
+            and not isinstance(value, list)
+        ):
+            raise ModeloValidationError("secure row casilla values must use list wire form")
+        if isinstance(value, Mapping):
+            typed = TypeAdapter(dict[RowCasillaKey, Decimal]).validate_python(value)
+        elif isinstance(value, list):
+            typed = {}
+            for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value):
+                key = TypeAdapter(RowCasillaKey).validate_python((raw.get("casilla_id"), raw.get("row_index")))
+                if key in typed:
+                    raise ModeloValidationError("row casilla values contain a duplicate coordinate")
+                typed[key] = TypeAdapter(Decimal).validate_python(raw.get("value"))
+        else:
+            raise ModeloValidationError("row casilla values must be a coordinate mapping")
+        if any(row_index < 1 for _casilla_id, row_index in typed):
+            raise ModeloValidationError("row casilla value contains a non-positive row index")
+        return dict(sorted(typed.items()))
+
+    @field_validator("row_casilla_provenance", mode="before")
+    @classmethod
+    def _normalise_row_casilla_provenance(
+        cls, value: object, info: ValidationInfo
+    ) -> Mapping[RowCasillaKey, DirectRowMaterializationProvenance]:
+        if (
+            isinstance(info.context, Mapping)
+            and info.context.get("secure_calculation_revision") is True
+            and not isinstance(value, list)
+        ):
+            raise ModeloValidationError("secure row casilla provenance must use list wire form")
+        if isinstance(value, Mapping):
+            typed = TypeAdapter(dict[RowCasillaKey, DirectRowMaterializationProvenance]).validate_python(value)
+        elif isinstance(value, list):
+            typed = {}
+            for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value):
+                key = TypeAdapter(RowCasillaKey).validate_python((raw.get("casilla_id"), raw.get("row_index")))
+                if key in typed:
+                    raise ModeloValidationError("row casilla provenance contains a duplicate coordinate")
+                typed[key] = DirectRowMaterializationProvenance.model_validate(
+                    {
+                        "source_binding_id": raw.get("source_binding_id"),
+                        "source_row_index": raw.get("source_row_index"),
+                        "source_identity": raw.get("source_identity"),
+                        "materialization_rule_id": raw.get("materialization_rule_id"),
+                        "materialization_rule_version": raw.get("materialization_rule_version"),
+                    }
+                )
+        else:
+            raise ModeloValidationError("row casilla provenance must be a coordinate mapping")
+        if any(row_index < 1 for _casilla_id, row_index in typed):
+            raise ModeloValidationError("row casilla provenance contains a non-positive row index")
+        return dict(sorted(typed.items()))
+
     @model_serializer(mode="wrap")
-    def _redact_or_persist_row_source_identities(
+    def _redact_or_persist_row_materialization(
         self,
         handler: SerializerFunctionWrapHandler,
         info: SerializationInfo,
@@ -1220,8 +1359,12 @@ class CalculationRevision(BaseModel):
         context = getattr(info, "context", None)
         if not isinstance(context, Mapping) or context.get("secure_calculation_revision") is not True:
             payload.pop("row_source_identities", None)
+            payload.pop("row_casilla_values", None)
+            payload.pop("row_casilla_provenance", None)
             return payload
         payload["row_source_identities"] = _canonical_row_source_identities(self.row_source_identities)
+        payload["row_casilla_values"] = _canonical_row_casilla_values(self.row_casilla_values)
+        payload["row_casilla_provenance"] = _canonical_row_casilla_provenance(self.row_casilla_provenance)
         return payload
 
 
@@ -1240,6 +1383,8 @@ def calculation_revision_identity_inputs_from_revision(
         binding_overrides=revision.binding_overrides,
         row_binding_values=revision.row_binding_values,
         row_source_identities=revision.row_source_identities,
+        row_casilla_values=revision.row_casilla_values,
+        row_casilla_provenance=revision.row_casilla_provenance,
         relation_overrides=revision.relation_overrides,
         casilla_values=revision.casilla_values,
         source_transaction_ids=revision.source_transaction_ids,

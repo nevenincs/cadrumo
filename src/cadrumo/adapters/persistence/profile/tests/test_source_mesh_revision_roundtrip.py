@@ -37,7 +37,7 @@ from sqlalchemy import select
 
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from .....domain.calculations import RowSourceIdentity
+from .....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
 from .....domain.calculations.registry import CasillaObservation
 from .....domain.modelos import (
     CalculationRevision,
@@ -65,6 +65,7 @@ _SOURCE_REFS = ("boe-modelo-303-2025-form",)
 
 
 _CASILLA: CasillaId = validated_casilla_id("00501")
+_ROW_CASILLA: CasillaId = validated_casilla_id("00181")
 
 __all__ = ["secure_objects"]
 
@@ -114,6 +115,7 @@ def _revision(
     source_provenance: tuple[CalculationSourceRef, ...],
     *,
     row_identity: RowSourceIdentity | None = None,
+    with_row_materialization: bool = False,
 ) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
@@ -126,12 +128,28 @@ def _revision(
     row_identities: dict[tuple[str, int], RowSourceIdentity] = (
         {("inventory-operation-0181", 1): row_identity} if row_identity is not None else {}
     )
+    row_casilla_values = {(_ROW_CASILLA, 1): Decimal("120.00")} if with_row_materialization else {}
+    row_casilla_provenance = (
+        {
+            (_ROW_CASILLA, 1): DirectRowMaterializationProvenance(
+                source_binding_id="inventory-operation-0181",
+                source_row_index=1,
+                source_identity=row_identity,
+                materialization_rule_id="inventory-operation-0181",
+                materialization_rule_version="2022",
+            )
+        }
+        if with_row_materialization and row_identity is not None
+        else {}
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_CASILLA: "140000.00"},
         binding_overrides={},
         row_binding_values=row_values,
         row_source_identities=row_identities,
+        row_casilla_values=row_casilla_values,
+        row_casilla_provenance=row_casilla_provenance,
         casilla_values={_CASILLA: Decimal("140000.00")},
         source_transaction_ids=(_TX_ID,),
         source_provenance=source_provenance,
@@ -144,6 +162,8 @@ def _revision(
         input_values_by_casilla_id={_CASILLA: "140000.00"},
         row_binding_values=row_values,
         row_source_identities=row_identities,
+        row_casilla_values=row_casilla_values,
+        row_casilla_provenance=row_casilla_provenance,
         source_transaction_ids=(_TX_ID,),
         casilla_values={_CASILLA: Decimal("140000.00")},
         observations=(
@@ -159,6 +179,24 @@ def _revision(
         updated_at=_NOW,
         filing_instance_evidence=None,
     )
+
+
+def test_row_casilla_materialization_roundtrips_only_through_encrypted_revision(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    identity = RowSourceIdentity(
+        source_kind=BindingSourceKind.INVENTORY,
+        source_row_identity="opaque-row-casilla-canary",
+        fingerprint="4" * 64,
+    )
+    original = _revision(_source_provenance(), row_identity=identity, with_row_materialization=True)
+    assert "row_casilla_values" not in original.model_dump()
+    assert "row_casilla_provenance" not in original.model_dump_json()
+
+    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
+
+    assert repository.load().get(original.calculation_revision_id) == original
 
 
 def test_row_source_identity_roundtrips_only_through_encrypted_revision(
@@ -214,6 +252,48 @@ def _orphan_row_identity(document: dict[str, Any]) -> None:
 def _duplicate_row_identity(document: dict[str, Any]) -> None:
     revision = next(iter(document["payload"]["revisions"].values()))
     revision["row_source_identities"].append(dict(revision["row_source_identities"][0]))
+
+
+def _drop_row_casilla_values(document: dict[str, Any]) -> None:
+    del next(iter(document["payload"]["revisions"].values()))["row_casilla_values"]
+
+
+def _drop_row_casilla_provenance(document: dict[str, Any]) -> None:
+    del next(iter(document["payload"]["revisions"].values()))["row_casilla_provenance"]
+
+
+def _duplicate_row_casilla_provenance(document: dict[str, Any]) -> None:
+    revision = next(iter(document["payload"]["revisions"].values()))
+    revision["row_casilla_provenance"].append(dict(revision["row_casilla_provenance"][0]))
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [_drop_row_casilla_values, _drop_row_casilla_provenance, _duplicate_row_casilla_provenance],
+)
+def test_row_casilla_secure_contract_refuses_missing_or_duplicate_coordinates(
+    secure_objects: SecureObjectRepository,
+    mutate: Callable[[dict[str, Any]], None],
+) -> None:
+    original = _revision(
+        _source_provenance(),
+        row_identity=RowSourceIdentity(
+            source_kind=BindingSourceKind.INVENTORY,
+            source_row_identity="opaque-row-casilla-corruption-canary",
+            fingerprint="5" * 64,
+        ),
+        with_row_materialization=True,
+    )
+    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
+    mutate_encrypted_secure_object_json(
+        secure_objects._engine,
+        row_statement=_calculation_row_statement(),
+        mutate=mutate,
+    )
+
+    with pytest.raises(CalculationRevisionPersistenceError):
+        repository.load()
 
 
 @pytest.mark.parametrize("mutate", [_drop_row_identities, _orphan_row_identity, _duplicate_row_identity])

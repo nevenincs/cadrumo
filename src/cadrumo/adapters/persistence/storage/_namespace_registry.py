@@ -31,6 +31,7 @@ from .errors import NamespaceRegistryError
 SECURE_OBJECT_SCHEMA_VERSION_V1 = 1
 SECURE_OBJECT_SCHEMA_VERSION_V2 = 2
 SECURE_OBJECT_SCHEMA_VERSION_V3 = 3
+SECURE_OBJECT_SCHEMA_VERSION_V4 = 4
 _WORKFLOW_RUN_SCHEMA_VERSION_V3 = 3
 SECURE_OBJECT_CATALOGUE_KEY = "catalogue"
 SECURE_OBJECT_DEFAULT_KEY = "default"
@@ -1140,7 +1141,7 @@ MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinitio
     namespace="cadrumo.domain.modelos.calculation_revisions",
     owner="cadrumo.domain.modelos",
     sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V3,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V4,
     object_key_grammar="catalogue",
     default_object_key=SECURE_OBJECT_CATALOGUE_KEY,
     scope=StorageNamespaceScope.PROFILE_LOCAL,
@@ -1296,6 +1297,7 @@ __all__ = [
     "SECURE_OBJECT_CATALOGUE_KEY",
     "SECURE_OBJECT_DEFAULT_KEY",
     "SECURE_OBJECT_SCHEMA_VERSION_V1",
+    "SECURE_OBJECT_SCHEMA_VERSION_V4",
     "SECURE_OBJECT_WORKFLOW_STATE_KEY",
     "STORAGE_NAMESPACE_REGISTRY",
     "STORAGE_PATH_DEFINITIONS",

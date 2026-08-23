@@ -62,7 +62,12 @@ from ...domain.buckets import (
 )
 from ...domain.buckets import build_bucket_event as _build_domain_bucket_event
 from ...domain.buckets import emit_bucket_event as _emit_domain_bucket_event
-from ...domain.calculations import RowBindingKey, RowSourceIdentity
+from ...domain.calculations import (
+    DirectRowMaterializationProvenance,
+    RowBindingKey,
+    RowCasillaKey,
+    RowSourceIdentity,
+)
 from ...domain.calculations.registry import (
     BindingId,
     CasillaObservation,
@@ -251,6 +256,8 @@ def persist_calculation_revision(
     binding_overrides: dict[BindingId, str],
     row_binding_values: dict[BindingId, dict[str, str]],
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity],
+    row_casilla_values: Mapping[RowCasillaKey, Decimal],
+    row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
     relation_overrides: dict[RelationId, str],
     casilla_values: dict[CasillaId, Decimal],
     source_transaction_ids: tuple[str, ...],
@@ -309,12 +316,16 @@ def persist_calculation_revision(
         evidence=filing_instance_evidence,
         operation="calculation revision creation",
     )
+    if any(item.materialization_rule_version != work_unit.revision_id for item in row_casilla_provenance.values()):
+        raise ValueError("row casilla materialization rule version must equal the parent work-unit revision")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
         row_binding_values=row_binding_values,
         row_source_identities=row_source_identities,
+        row_casilla_values=row_casilla_values,
+        row_casilla_provenance=row_casilla_provenance,
         relation_overrides=relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
@@ -364,6 +375,8 @@ def persist_calculation_revision(
         binding_overrides=binding_overrides,
         row_binding_values=row_binding_values,
         row_source_identities=row_source_identities,
+        row_casilla_values=row_casilla_values,
+        row_casilla_provenance=row_casilla_provenance,
         relation_overrides=relation_overrides,
         source_transaction_ids=source_transaction_ids,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
@@ -406,6 +419,7 @@ def persist_calculation_revision(
             "period": work_unit.period.registry_token,
             "input_casilla_count": str(len(input_values_by_casilla_id)),
             "row_binding_count": str(sum(len(rows) for rows in row_binding_values.values())),
+            "row_casilla_count": str(len(row_casilla_values)),
             "casilla_count": str(len(casilla_values)),
             "formula_count": str(formula_count),
             "source_transaction_count": str(len(source_transaction_ids)),

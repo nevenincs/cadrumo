@@ -196,7 +196,7 @@ def _classify(path: Path) -> _Outcome:
         modelo=modelo,
         design=path.name,
         kind="partial",
-        shape=_partial_read_shape(path),
+        shape=_partial_read_shape(path, extraction),
         detail=", ".join(f"{item.name!r} ({item.reason})" for item in extraction.skipped),
     )
 
@@ -206,7 +206,7 @@ def _classify(path: Path) -> _Outcome:
 _POSITION_RULER = re.compile(r"^\s*\d+(\s+\d+){6,}\s*$")
 
 
-def _partial_read_shape(path: Path) -> str:
+def _partial_read_shape(path: Path, extraction: object) -> str:
     """Return whether a partly-read design is a field TABLE or a form DIAGRAM.
 
     The two need opposite work and the worklist could not tell them apart. A
@@ -216,14 +216,35 @@ def _partial_read_shape(path: Path) -> str:
     free-floating labels -- with no ordinal/offset/length rows anywhere, so no
     parser change can read it and the fix is acquiring the tabular diseño.
 
-    Measured, not guessed: modelo 180's 2000 orden design yields 43 lines, ZERO
-    parseable rows and 8 rulers; modelo 200's 2010 edition yields 5,949 lines
-    and 2,654 parseable rows. Sending anyone to "fix the parser" for the former
-    would spend a tick proving it cannot be done -- which is how modelo 038's
-    identically-shaped design was found, the expensive way.
+    MEASURED WITH WHICH READER, THOUGH. This routine once answered from its own
+    line scan, and that scan is not the extractor. It reported modelo 180's 2000
+    orden design as ZERO parseable rows and 8 rulers -- a DIAGRAM, fix by acquiring
+    the tabular diseño -- while the real extractor produced seventeen fields
+    covering 205 of that record's 260 positions. The worklist therefore sent the
+    reader on a corpus errand and hid a genuine fifty-five-position parser gap
+    behind it. The lesson is the sibling one this module already carries, in the
+    other direction: a check that re-derives its subject's output with a weaker
+    reader does not describe the subject, it describes the replica.
+
+    So coverage is taken from the extractor's own arithmetic, which it states in
+    each skip reason, and the line scan is consulted only when that arithmetic
+    shows nothing was read at all. Modelo 038's design remains the genuine DIAGRAM
+    case: it is where this distinction was first paid for, the expensive way.
     """
     if path.suffix.lower() != ".pdf":
         return "TABLE"
+
+    # The extractor's OWN coverage arithmetic decides this, because a second,
+    # simpler row scan is not the same reader. Modelo 180's 2000 orden design was
+    # labelled "DIAGRAM (8 position ruler(s), 0 parseable field rows)" by the line
+    # scan below while the real extractor produced seventeen fields covering 205 of
+    # its 260 positions -- so the worklist sent the reader to acquire a tabular
+    # diseño for a document the parser already reads four fifths of, and hid a real
+    # fifty-five-position parser gap behind a corpus errand.
+    covered = _covered_positions_from_skip_reasons(extraction)
+    if covered:
+        return f"TABLE ({covered} position(s) already read; the rest is a parser gap)"
+
     lines = _collapse_stuttered_row_prefix(
         _join_wrapped_row_descriptions(_extract_pdf_text_lines(path.read_bytes(), source_label=path.name)),
     )
@@ -231,7 +252,39 @@ def _partial_read_shape(path: Path) -> str:
     if rows:
         return "TABLE"
     rulers = sum(1 for line in lines if _POSITION_RULER.match(line))
-    return f"DIAGRAM ({rulers} position ruler(s), 0 parseable field rows)"
+    return f"DIAGRAM ({rulers} position ruler(s), no field row recognised by either reader)"
+
+
+#: ``declares N total positions but 196-250, 300 were not read at all`` -- the
+#: extractor's own statement of what it did and did not cover on one sheet.
+_SKIP_COVERAGE = re.compile(r"declares (\d+) total positions but ([\d,\s-]+?) were not read")
+
+
+def _covered_positions_from_skip_reasons(extraction: object) -> int:
+    """Return how many positions the extractor DID read across its skipped sheets.
+
+    Read from the skip reasons because a skipped sheet does not carry its parsed
+    fields, and the reason is the extractor's own arithmetic rather than a
+    re-derivation. A sheet whose holes span its entire declared extent contributes
+    nothing, which is exactly the diagram case; any other sheet proves rows parsed.
+    """
+    covered = 0
+    for sheet in getattr(extraction, "skipped", ()) or ():
+        match = _SKIP_COVERAGE.search(getattr(sheet, "reason", "") or "")
+        if match is None:
+            continue
+        total = int(match.group(1))
+        holes = 0
+        for run in match.group(2).split(","):
+            run = run.strip()
+            if not run:
+                continue
+            first, _, last = run.partition("-")
+            if not first.isdigit():
+                continue
+            holes += (int(last) - int(first) + 1) if last.isdigit() else 1
+        covered += max(total - holes, 0)
+    return covered
 
 
 def _outcomes() -> tuple[_Outcome, ...]:

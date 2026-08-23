@@ -71,8 +71,7 @@ def test_no_page_prints_a_translation_key_instead_of_its_text(rendered_pages: di
             leaked[name] = found[:4]
 
     assert not leaked, (
-        "these generated pages print translation keys where the operator should read the text "
-        f"they name: {leaked}"
+        f"these generated pages print translation keys where the operator should read the text they name: {leaked}"
     )
 
 
@@ -92,9 +91,7 @@ def test_family_pages_carry_more_than_their_link_skeleton(rendered_pages: dict[s
         prose = [
             line
             for line in lines
-            if line.strip()
-            and not line.lstrip().startswith("*")
-            and not set(line.strip()) <= {"=", "-", "~", "^"}
+            if line.strip() and not line.lstrip().startswith("*") and not set(line.strip()) <= {"=", "-", "~", "^"}
         ]
         # The title line itself is prose by this measure, so a bare stub still yields
         # one entry; more than one means the page says something beyond its own name.
@@ -110,8 +107,6 @@ def test_family_pages_carry_more_than_their_link_skeleton(rendered_pages: dict[s
 def test_every_family_page_offers_a_way_back_to_the_index(rendered_pages: dict[str, str]) -> None:
     """A landing page that cannot be left is a dead end in a navigable reference."""
     orphans = [
-        name
-        for name in sorted(rendered_pages)
-        if _FAMILY_PAGE.match(name) and "/cli/index" not in rendered_pages[name]
+        name for name in sorted(rendered_pages) if _FAMILY_PAGE.match(name) and "/cli/index" not in rendered_pages[name]
     ]
     assert not orphans, f"these family pages never link back to the CLI reference index: {orphans}"

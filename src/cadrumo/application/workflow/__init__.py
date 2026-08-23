@@ -116,7 +116,6 @@ _LAZY_EXPORTS: dict[str, str] = {
         (
             "ActiveProfileRecordResolution",
             "DeclaracionPointer",
-            "ProfileBucketPointer",
             "WorkflowState",
             "active_transaction_catalogue_repository",
             "declaration_key",
@@ -126,10 +125,11 @@ _LAZY_EXPORTS: dict[str, str] = {
         ),
         "._state_models",
     ),
+    "ProfileBucketPointer": "._profile_bucket_models",
+    "WorkflowEvent": ".._workflow_review_models",
     **dict.fromkeys(
         (
             "SiteHealthAlert",
-            "WorkflowAbortReason",
             "WorkflowAlreadyFiledDetails",
             "WorkflowAuthCheckDetails",
             "WorkflowDeadlineContextDetails",
@@ -138,7 +138,6 @@ _LAZY_EXPORTS: dict[str, str] = {
             "WorkflowDraftBuiltDetails",
             "WorkflowDraftMismatchDetails",
             "WorkflowDraftNotReadyDetails",
-            "WorkflowEvent",
             "WorkflowFailureDetails",
             "WorkflowInboxBlockedDetails",
             "WorkflowInboxSkippedDetails",
@@ -155,11 +154,11 @@ _LAZY_EXPORTS: dict[str, str] = {
         ),
         "._run_models",
     ),
+    "WorkflowAbortReason": "._workflow_abort",
     **dict.fromkeys(
         (
             "WorkflowRunRepository",
             "WorkflowStateRepository",
-            "WorkflowStateResetFingerprint",
             "current_operation_instant",
             "fingerprint_workflow_state",
             "list_runs",
@@ -170,6 +169,7 @@ _LAZY_EXPORTS: dict[str, str] = {
         ),
         "._persistence",
     ),
+    "WorkflowStateResetFingerprint": "._events",
     **dict.fromkeys(
         ("list_profile_buckets", "read_profile_bucket", "read_profile_bucket_by_id", "resolve_profile_bucket"),
         "._profile_bucket_scan",
@@ -191,14 +191,15 @@ _LAZY_EXPORTS: dict[str, str] = {
             "CertificateBundleProtocol",
             "DeadlineEngineProtocol",
             "ModeloDraftBuilderProtocol",
-            "ModeloInputs",
-            "ModeloInputScalar",
             "ModeloInputsProviderProtocol",
-            "ModeloInputValue",
             "RegistryModeloDraftProtocol",
             "SubmissionEngineProtocol",
         ),
         "._protocols",
+    ),
+    **dict.fromkeys(
+        ("ModeloInputs", "ModeloInputScalar", "ModeloInputValue"),
+        "cadrumo.domain.filing._protocols",
     ),
     **dict.fromkeys(
         (
