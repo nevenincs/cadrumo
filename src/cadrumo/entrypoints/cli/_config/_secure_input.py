@@ -23,7 +23,7 @@ already owning stdin, has nowhere to put the passphrase but the environment,
 and an environment variable is inherited by every child process, survives for
 the whole process lifetime, and is readable from a crash dump or a CI log. A
 descriptor is none of those: it is passed to one process, read once, and closed.
-:func:`read_secrets_fd` enforces the "once" half by closing the descriptor as
+:func:`_read_secrets_fd` enforces the "once" half by closing the descriptor as
 soon as it has been read, including on every refusal path. A second read of a
 still-closed number then fails at the operating system and refuses as
 unreadable, rather than returning the empty payload that would otherwise be
@@ -168,7 +168,7 @@ def _validate_secrets_payload[SecretsModelT: BaseModel](
         ) from exc
 
 
-def read_secrets_stdin[SecretsModelT: BaseModel](model: type[SecretsModelT]) -> SecretsModelT:
+def _read_secrets_stdin[SecretsModelT: BaseModel](model: type[SecretsModelT]) -> SecretsModelT:
     """Read one bounded strict-JSON object from stdin and validate it against ``model``.
 
     The payload must be a single JSON object carrying exactly the fields ``model``
@@ -222,7 +222,7 @@ def _read_descriptor_to_bound(descriptor: int, *, maximum_bytes: int) -> bytes:
     return b"".join(chunks)
 
 
-def read_secrets_fd[SecretsModelT: BaseModel](model: type[SecretsModelT], *, descriptor: int) -> SecretsModelT:
+def _read_secrets_fd[SecretsModelT: BaseModel](model: type[SecretsModelT], *, descriptor: int) -> SecretsModelT:
     """Read one bounded strict-JSON secrets object from ``descriptor``, exactly once.
 
     The one-shot contract is the reason this exists as its own channel rather
@@ -312,24 +312,11 @@ def read_machine_secret_payload[SecretsModelT: MachineSecretPayload](
     if not issubclass(model, MachineSecretPayload):
         raise TypeError("canonical machine-secret payloads must inherit MachineSecretPayload")
     if selection.channel is MachineSecretChannel.STDIN:
-        return read_secrets_stdin(model)
+        return _read_secrets_stdin(model)
     descriptor = selection.descriptor
     if descriptor is None:  # Defensive against construction outside the typed boundary.
         raise ValueError("fd machine-secret selection requires a descriptor")
-    return read_secrets_fd(model, descriptor=descriptor)
-
-
-def resolve_secrets_channel(*, secrets_stdin: bool, secrets_fd: int | None) -> None:
-    """Compatibility wrapper for callers not yet migrated to typed selection.
-
-    The command migrations remove this wrapper atomically once every consumer
-    uses :func:`select_machine_secret_channel`. Until then it delegates conflict
-    validation to the canonical selector and deliberately performs no read.
-    """
-    select_machine_secret_channel(
-        secrets_stdin=secrets_stdin,
-        secrets_fd=secrets_fd,
-    )
+    return _read_secrets_fd(model, descriptor=descriptor)
 
 
 def _stdin_is_a_real_console() -> bool:
@@ -508,9 +495,6 @@ __all__ = [
     "MachineSecretSelection",
     "prompt_secret_no_echo",
     "read_machine_secret_payload",
-    "read_secrets_fd",
-    "read_secrets_stdin",
-    "resolve_secrets_channel",
     "select_machine_secret_channel",
     "terminal_can_prompt_for_secrets",
     "write_to_controlling_terminal",

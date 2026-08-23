@@ -21,7 +21,6 @@ from .._secure_input import (
     MachineSecretSelection,
     _validate_secrets_payload,
     read_machine_secret_payload,
-    read_secrets_fd,
     select_machine_secret_channel,
 )
 
@@ -189,13 +188,19 @@ def test_parser_refuses_missing_and_extra_fields_without_values(raw: bytes) -> N
 def _run_stdin_reader(payload: bytes) -> subprocess.CompletedProcess[bytes]:
     code = """
 from pydantic import SecretStr
-from cadrumo.entrypoints.cli._config._secure_input import MachineSecretPayload, read_secrets_stdin
+from cadrumo.entrypoints.cli._config._secure_input import (
+    MachineSecretPayload,
+    read_machine_secret_payload,
+    select_machine_secret_channel,
+)
 from cadrumo.entrypoints.cli._errors import CliRefusedBoundaryError
 class Payload(MachineSecretPayload):
     passphrase: SecretStr
     passphrase_confirmation: SecretStr
 try:
-    read_secrets_stdin(Payload)
+    selection = select_machine_secret_channel(secrets_stdin=True, secrets_fd=None)
+    assert selection is not None
+    read_machine_secret_payload(Payload, selection=selection)
 except CliRefusedBoundaryError as exc:
     print(exc.translated_message)
 else:
@@ -228,7 +233,7 @@ def test_stdin_reader_refuses_payload_above_the_bound_without_leaking_it() -> No
 
 def test_fd_reader_accepts_fd_zero_and_closes_it() -> None:
     with _stdin_from(_payload()):
-        parsed = read_secrets_fd(_ProbeSecrets, descriptor=0)
+        parsed = _read_selected_fd(0)
         assert parsed.passphrase.get_secret_value() == _SUPPLIED_VALUE
         _assert_closed(0)
 
@@ -236,7 +241,7 @@ def test_fd_reader_accepts_fd_zero_and_closes_it() -> None:
 @pytest.mark.parametrize("descriptor", [-1, 1, 2])
 def test_fd_reader_refuses_negative_and_output_descriptors_without_closing_outputs(descriptor: int) -> None:
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        read_secrets_fd(_ProbeSecrets, descriptor=descriptor)
+        _read_selected_fd(descriptor)
     assert caught.value.translated_message == "cli.config.custody.errors.secrets_fd_reserved_stream"
     if descriptor >= 0:
         os.fstat(descriptor)
@@ -246,19 +251,19 @@ def test_fd_reader_refuses_an_unreadable_descriptor() -> None:
     reader = _pipe_with(_payload())
     os.close(reader)
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        read_secrets_fd(_ProbeSecrets, descriptor=reader)
+        _read_selected_fd(reader)
     assert caught.value.translated_message == "cli.config.custody.errors.secrets_fd_unreadable"
     assert caught.value.context == {"descriptor": str(reader)}
 
 
 def test_fd_reader_closes_after_success_and_second_read_refuses() -> None:
     descriptor = _pipe_with(_payload())
-    parsed = read_secrets_fd(_ProbeSecrets, descriptor=descriptor)
+    parsed = _read_selected_fd(descriptor)
     assert parsed.passphrase.get_secret_value() == _SUPPLIED_VALUE
     _assert_closed(descriptor)
 
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        read_secrets_fd(_ProbeSecrets, descriptor=descriptor)
+        _read_selected_fd(descriptor)
     assert caught.value.translated_message == "cli.config.custody.errors.secrets_fd_unreadable"
 
 
@@ -266,7 +271,7 @@ def test_fd_reader_closes_after_success_and_second_read_refuses() -> None:
 def test_fd_reader_closes_after_every_payload_refusal(raw: bytes) -> None:
     descriptor = _file_with(raw)
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        read_secrets_fd(_ProbeSecrets, descriptor=descriptor)
+        _read_selected_fd(descriptor)
     _assert_closed(descriptor)
     assert _SUPPLIED_VALUE not in str(caught.value)
     assert _SUPPLIED_VALUE not in repr(caught.value.context)
@@ -279,6 +284,13 @@ def test_selected_reader_materialises_exactly_the_selected_descriptor() -> None:
     parsed = read_machine_secret_payload(_ProbeSecrets, selection=selection)
     assert parsed.passphrase.get_secret_value() == _SUPPLIED_VALUE
     _assert_closed(descriptor)
+
+
+def _read_selected_fd(descriptor: int) -> _ProbeSecrets:
+    """Drive descriptor behavior through the sole canonical public reader."""
+    selection = select_machine_secret_channel(secrets_stdin=False, secrets_fd=descriptor)
+    assert selection is not None
+    return read_machine_secret_payload(_ProbeSecrets, selection=selection)
 
 
 def test_selected_reader_rejects_a_model_outside_the_strict_frozen_base_before_reading() -> None:

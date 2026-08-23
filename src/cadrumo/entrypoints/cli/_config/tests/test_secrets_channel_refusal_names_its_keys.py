@@ -39,7 +39,7 @@ class _ProbeSecrets(BaseModel):
 def _refusal_for(payload: str) -> CliRefusedBoundaryError:
     """Put ``payload`` through the real validator and return its refusal.
 
-    Addressed at the validation seam rather than at ``read_secrets_stdin``,
+    Addressed at the validation seam rather than at the selected stdin reader,
     which reaches ``sys.stdin.buffer`` directly and could only be driven by
     substituting that stream -- monkeypatch machinery this project forbids in a
     deterministic test. Nothing is lost by entering one call lower: the stdin

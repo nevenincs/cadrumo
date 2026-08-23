@@ -625,15 +625,6 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
     spine and carries the next-verb ``suggestion``) rather than riding the
     non-blocking ``notices`` channel.
 
-    One sanctioned escape hatch survives: a configured
-    ``CADRUMO_SECRET_PASSPHRASE`` is the headless/CI channel and keeps
-    working process-scoped, needing neither a pointer nor a persisted
-    session — exactly today's file-backend behavior. That is not a bypass:
-    the passphrase IS the authentication factor, supplied non-
-    interactively instead of at a prompt. An operator who has not supplied
-    it — every interactive operator, and every keyring-backend host — meets
-    the gate and must log in.
-
     An interactive operator logs in HERE, on the screen this callback
     offers, rather than being sent away to run ``login`` and then retype
     the invocation that was already parsed. Both shapes ask for the same
@@ -644,29 +635,11 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
     """
     from ...adapters.persistence.storage.errors import KeyringUnavailableError
     from ...application.profile_preconditions import profile_session_failure_verdict
-    from ...application.user_profile import bind_resumed_profile_session, login_profile
+    from ...application.user_profile import bind_resumed_profile_session
     from ._errors import CliRefusedBoundaryError
 
     refusal = bind_resumed_profile_session(bucket_id=bucket_id)
     if refusal is None:
-        return
-    if _headless_secret_channel_active():
-        # This is an explicit current-profile password authentication, not a
-        # provider or shared-master-key fallback for the session cache.
-        #
-        # Checked BEFORE the keyring branch below, and the order is the whole
-        # point. A host with no usable OS keychain cannot PERSIST a session, so
-        # every invocation there is its own process with no session to resume:
-        # `config login` succeeds and then says so ("la sesion no se puede
-        # guardar; este inicio de sesion solo vale para el comando actual").
-        # With the keyring refusal first, that host could never reach this
-        # branch, so the project's declared non-interactive channel authenticated
-        # nothing and no profile-scoped verb could run at all -- which is how a
-        # headless run of the calculate-to-export path was blocked outright.
-        # Reaching it first revives nothing: this is the operator's own current-
-        # profile password, the same factor a prompt would collect, not a
-        # provider or shared-master-key route and not a discarded receipt.
-        login_profile(name=bucket_id)
         return
     if refusal is _ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
         # A real process-scoped login is possible only when the explicit
@@ -763,21 +736,6 @@ def resume_profile_session_for_target(ctx: typer.Context, *, bucket_id: str) -> 
 def bind_profile_target_to_invocation(ctx: typer.Context, *, bucket_id: str) -> None:
     """Bind an authenticated command-selected profile to this invocation."""
     _bind_authenticated_profile_to_invocation(ctx, bucket_id=bucket_id)
-
-
-def _headless_secret_channel_active() -> bool:
-    """Return whether the sanctioned headless secret channel is configured.
-
-    ``CADRUMO_SECRET_PASSPHRASE`` is the project's declared non-interactive
-    secret channel (secrets, never selection — selection stays with
-    ``--profile`` or the pointer). An environment that carries it has
-    already supplied the authentication factor, so the file backend
-    unlocks process-scoped exactly as it does today; an environment that
-    does not meets the login gate.
-    """
-    from ...core.config import load_settings
-
-    return load_settings().cadrumo_secret_passphrase is not None
 
 
 def _is_unregistered_profile_status_probe(verb_path: str | None, active_bucket_id: str) -> bool:

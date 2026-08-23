@@ -1,7 +1,7 @@
 """Capability-selecting presenter for ``aeat config login``.
 
 ``login`` serves two callers through one verb. A script, an agent, or a
-CI job pipes the secret in, configures the headless secret channel, or
+CI job supplies an explicit machine-secret channel or
 reads the JSON envelope, and wants no screen at all. An operator at a
 terminal wants to be shown which profiles exist, pick one, and type its
 password — the same page they met when the profile was created.
@@ -23,8 +23,8 @@ terminal. Every other custody secret in this package is read through
 ``prompt_secret_no_echo``, which promotes that failure to a refusal.
 
 Every arm that genuinely cannot show a screen still falls through to the
-existing path untouched: the same ``--secrets-stdin`` channel, the same
-headless secret, the same non-interactive refusal.
+existing path untouched: the same explicit machine channels and the same
+non-interactive refusal.
 
 This seam also owns the translation between the application's refusal
 exceptions and the text the screen shows, which is what keeps the adapter
@@ -55,7 +55,6 @@ if TYPE_CHECKING:
 def login_tui_is_the_right_frontend(
     *,
     machine_secret_supplied: bool,
-    headless_secret: bool,
     json_format: bool,
     full_screen: bool,
     profile_count: int,
@@ -74,8 +73,6 @@ def login_tui_is_the_right_frontend(
       descriptor; there is nothing left to type. The two are one condition
       here because the screen's question is "has the factor been supplied",
       not "through which pipe".
-    - ``headless_secret`` — ``CADRUMO_SECRET_PASSPHRASE`` is the sanctioned
-      non-interactive channel and supplies the factor without any prompt.
     - ``json_format`` — a machine is reading; a screen would write over
       the envelope it is waiting for.
     - ``full_screen`` — a piped, dumb-terminal, or CI host has no screen
@@ -89,21 +86,19 @@ def login_tui_is_the_right_frontend(
     password — the whole reason the page exists — still to be typed. See
     :func:`preselected_profile_id`.
     """
-    return not (machine_secret_supplied or headless_secret or json_format or not full_screen or profile_count == 0)
+    return not (machine_secret_supplied or json_format or not full_screen or profile_count == 0)
 
 
 def login_screen_is_available(ctx: typer.Context, *, secrets_stdin: bool, secrets_fd: int | None = None) -> bool:
     """Resolve the routing predicate against this host and this storage root.
 
     Kept separate from the predicate it feeds so the rule stays pure and
-    only the gathering of its inputs touches the environment.
+    only the gathering of its inputs touches host and profile state.
     """
-    from .. import _headless_secret_channel_active
     from ._manager_frontend import host_can_run_full_screen
 
     return login_tui_is_the_right_frontend(
         machine_secret_supplied=secrets_stdin or secrets_fd is not None,
-        headless_secret=_headless_secret_channel_active(),
         json_format=_format_of(ctx) == "json",
         full_screen=host_can_run_full_screen(),
         profile_count=len(_login_choices()),
