@@ -17,6 +17,7 @@ from ._producer_snapshot import (
     M303FilingFacts,
     M303InsolvencyFilingSubtype,
     Modelo111ProfileFacts,
+    Modelo202ProducerProfile,
     Modelo222ProfileFacts,
     Modelo353ProfileFacts,
     RefundAccountSelection,
@@ -156,6 +157,24 @@ def filing_producer_ownership() -> dict[FilingProducerKey, str]:
         FilingProducerKey.M353_REGIMEN_ESPECIAL_INSCRITO_REDEME,
         FilingProducerKey.M353_SIN_ACTIVIDAD,
         FilingProducerKey.M353_GRUPO_NORMATIVA_FORAL,
+        FilingProducerKey.M202_CNAE_ACTIVIDAD_PRINCIPAL,
+        FilingProducerKey.M202_REGIMEN_LEY_49_2002_SIN_FINES_LUCRATIVOS,
+        FilingProducerKey.M202_REGIMEN_LEY_11_2009_SOCIMI,
+        FilingProducerKey.M202_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE,
+        FilingProducerKey.M202_REGIMEN_ARTICULO_101_LIS_REDUCIDA_DIMENSION,
+        FilingProducerKey.M202_REGIMEN_ENTIDAD_CAPITAL_RIESGO,
+        FilingProducerKey.M202_CIFRA_NEGOCIOS_DOCE_MESES_UMBRAL,
+        FilingProducerKey.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL,
+        FilingProducerKey.M202_COOPERATIVA_O_MULTIPLES_TIPOS,
+        FilingProducerKey.M202_COOPERATIVA_FISCALMENTE_PROTEGIDA,
+        FilingProducerKey.M202_MULTIPLES_TIPOS_IMPOSITIVOS,
+        FilingProducerKey.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES,
+        FilingProducerKey.M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO,
+        FilingProducerKey.M202_MARCA_INSTRUMENTAL,
+        FilingProducerKey.M202_DISCRIMINANTE_DECLARACION_NEGATIVA,
+        FilingProducerKey.M202_NORMATIVA_TERRITORIO_FORAL,
+        FilingProducerKey.M202_COMUNICACION_DATOS_ADICIONALES,
+        FilingProducerKey.M202_NUMERO_REFERENCIA_SOCIEDADES,
     }
     owners = {key: "shared_snapshot" for key in shared}
     for key in FilingProducerKey:
@@ -237,6 +256,40 @@ def m353_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingP
     return {
         key: (getattr(profile, field) if profile is not None else None) for key, field in _M353_FIELD_BY_KEY.items()
     }
+
+
+
+_M202_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M202_CNAE_ACTIVIDAD_PRINCIPAL: "principal_cnae",
+    FilingProducerKey.M202_REGIMEN_LEY_49_2002_SIN_FINES_LUCRATIVOS: "regimen_ley_49_2002_sin_fines_lucrativos",
+    FilingProducerKey.M202_REGIMEN_LEY_11_2009_SOCIMI: "regimen_ley_11_2009_socimi",
+    FilingProducerKey.M202_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE: "regimen_entidades_navieras_tonelaje",
+    FilingProducerKey.M202_REGIMEN_ARTICULO_101_LIS_REDUCIDA_DIMENSION: "regimen_articulo_101_lis_reducida_dimension",
+    FilingProducerKey.M202_REGIMEN_ENTIDAD_CAPITAL_RIESGO: "regimen_entidad_capital_riesgo",
+    FilingProducerKey.M202_CIFRA_NEGOCIOS_DOCE_MESES_UMBRAL: "cifra_negocios_doce_meses_umbral",
+    FilingProducerKey.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL: "cifra_negocios_periodo_anterior_bajo_umbral",
+    FilingProducerKey.M202_COOPERATIVA_O_MULTIPLES_TIPOS: "cooperativa_o_multiples_tipos",
+    FilingProducerKey.M202_COOPERATIVA_FISCALMENTE_PROTEGIDA: "cooperativa_fiscalmente_protegida",
+    FilingProducerKey.M202_MULTIPLES_TIPOS_IMPOSITIVOS: "multiples_tipos_impositivos",
+    FilingProducerKey.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES: "tipo_gravamen_impuesto_sociedades",
+    FilingProducerKey.M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO: "importe_neto_cifra_negocios_tramo",
+    FilingProducerKey.M202_MARCA_INSTRUMENTAL: "marca_instrumental",
+    FilingProducerKey.M202_DISCRIMINANTE_DECLARACION_NEGATIVA: "discriminante_declaracion_negativa",
+    FilingProducerKey.M202_NORMATIVA_TERRITORIO_FORAL: "normativa_territorio_foral",
+    FilingProducerKey.M202_COMUNICACION_DATOS_ADICIONALES: "comunicacion_datos_adicionales",
+    FilingProducerKey.M202_NUMERO_REFERENCIA_SOCIEDADES: "numero_referencia_sociedades",
+}
+
+
+def m202_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
+    """Resolve the régimen marks and principal CNAE modelo 202's layout cites.
+
+    A profile of the wrong type yields every key as ``None`` rather than raising: this
+    runs for every modelo, and only modelo 202's own snapshot validator may decide that a
+    202 filing without these facts is invalid.
+    """
+    profile = model_profile if isinstance(model_profile, Modelo202ProducerProfile) else None
+    return {key: (getattr(profile, field) if profile is not None else None) for key, field in _M202_FIELD_BY_KEY.items()}
 
 
 def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
@@ -343,6 +396,7 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
             },
         )
     values.update(m222_producer_values(snapshot.model_profile))
+    values.update(m202_producer_values(snapshot.model_profile))
     values.update(m353_producer_values(snapshot.model_profile))
     shared_owned = {key for key, owner in filing_producer_ownership().items() if owner == "shared_snapshot"}
     if set(values) != shared_owned:

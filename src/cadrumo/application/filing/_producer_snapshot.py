@@ -296,12 +296,46 @@ M202_UNSUPPORTED_PRODUCER_IDS: tuple[M202UnsupportedProducerId, ...] = tuple(M20
 
 
 class Modelo202ProducerProfile(BaseModel):
-    """M202 producer view referencing the canonical taxpayer profile owner."""
+    """M202 producer view referencing the canonical taxpayer profile owner.
+
+    The régimen marks and the principal CNAE below are what modelo 202's export layout
+    cites as header producers. Before they existed the eighteen ``m202.*`` keys were
+    declared in the vocabulary and resolved by nothing, so each one rendered blank on a
+    filed pago fraccionado.
+
+    ``principal_cnae`` is DECLARED, never inferred from ``activities``:
+    :class:`Modelo202ActivityFacts` is documented as "one repeatable M202 activity fact,
+    without claiming primacy", so picking the first or the largest would invent a primacy
+    the substrate deliberately does not carry. AEAT asks which activity is principal, so
+    the operator answers it.
+
+    Every mark is optional and absent stays absent -- AEAT leaves a régimen mark blank when
+    the régimen does not apply, and a mark that does not apply is genuinely absent rather
+    than unknown.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_profile: TaxpayerProfile
     activities: tuple[Modelo202ActivityFacts, ...]
+    principal_cnae: _CnaeCode | None = None
+    regimen_ley_49_2002_sin_fines_lucrativos: str | None = None
+    regimen_ley_11_2009_socimi: str | None = None
+    regimen_entidades_navieras_tonelaje: str | None = None
+    regimen_articulo_101_lis_reducida_dimension: str | None = None
+    regimen_entidad_capital_riesgo: str | None = None
+    cifra_negocios_doce_meses_umbral: str | None = None
+    cifra_negocios_periodo_anterior_bajo_umbral: str | None = None
+    cooperativa_o_multiples_tipos: str | None = None
+    cooperativa_fiscalmente_protegida: str | None = None
+    multiples_tipos_impositivos: str | None = None
+    tipo_gravamen_impuesto_sociedades: str | None = None
+    importe_neto_cifra_negocios_tramo: str | None = None
+    marca_instrumental: str | None = None
+    discriminante_declaracion_negativa: str | None = None
+    normativa_territorio_foral: str | None = None
+    comunicacion_datos_adicionales: str | None = None
+    numero_referencia_sociedades: str | None = None
 
     @property
     def unsupported_producer_ids(self) -> tuple[M202UnsupportedProducerId, ...]:
