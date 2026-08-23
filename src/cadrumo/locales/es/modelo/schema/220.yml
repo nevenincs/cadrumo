@@ -4047,6 +4047,86 @@ modelo:
             x-agp34c1h6oo30c9q60pj6e1g:
               label: Reparto entre Administraciones forales. Compensación por conversión
                 de activos por impuesto diferido. Navarra
+            x-agp34c2495230c1q60o3adhi:
+              label: Documento de ingreso o devolucion. Liquidacion. Cuota integra
+                del grupo
+            x-agp34c2495230c1q60o3cchh:
+              label: 'Documento de ingreso o devolucion. Liquidacion. Resultado: Estado'
+            x-agp34c2495230c1q60p3gc1g:
+              label: 'Documento de ingreso o devolucion. Liquidacion. Opcion de fraccionamiento
+                art. 19.1 LIS. Liquido a ingresar incluido el 1er fraccionamiento
+                del art. 19.1 LIS: Estado'
+            x-agp34c2495230c1q60p3gc1m:
+              label: 'Documento de ingreso o devolucion. Abono/Compensacion. Resultado
+                de conversion de AID tras regularizacion: abono'
+            x-agp34c2495230c1q60p3gc1p:
+              label: 'Documento de ingreso o devolucion. Abono/Compensacion. Resultado
+                de conversion de AID tras regularizacion: compensacion'
+            x-agp34c2495230c1q60p3gc9i:
+              label: 'Documento de ingreso o devolucion. Abono/Compensacion. Resultado
+                de conversion de AID tras regularizacion: a ingresar'
+            x-agp34c2495230c1q84:
+              label: Documento de ingreso o devolucion. Abono/Compensacion. Abono
+                por conversion de activos por impuesto diferido (art. 130 LIS)
+            x-agp34c2495230c1q8c:
+              label: Documento de ingreso o devolucion. Abono/Compensacion. Compensacion
+                por conversion de activos por impuesto diferido (art. 130 LIS)
+            x-agp34c2495230c1q8g:
+              label: Documento de ingreso o devolucion. Devolucion. Importe a devolver
+            x-agp34c2495230c1q94:
+              label: Documento de ingreso o devolucion. Ingreso. Importe a ingresar
+            x-agp34c2495230c1qegp34c34d5i30c1e64o3ib9h68s0:
+              label: Documento de ingreso o devolucion. Identificacion. Nombre
+            x-agp34c2495230c1qegp34c34d5i30c1e64r0:
+              label: Documento de ingreso o devolucion. Cuenta corriente tributaria
+            x-agp34c2495230c1qegp34c34d5i30c1e64riqchg:
+              label: Documento de ingreso o devolucion. Devengo. Ejercicio
+            x-agp34c2495230c1qegp34c34d5i30c1e64s30:
+              label: Documento de ingreso o devolucion. Devolucion. Modalidad de devolucion
+            x-agp34c2495230c1qegp34c34d5i30c1e64sjg:
+              label: Documento de ingreso o devolucion. Devolucion. Marca SEPA
+            x-agp34c2495230c1qegp34c34d5i30c1e64sjib9i6cp0:
+              label: Documento de ingreso o devolucion. Devolucion. Codigo IBAN -
+                bloque
+            x-agp34c2495230c1qegp34c34d5i30c1e68og:
+              label: Documento de ingreso o devolucion. Devengo. Tipo de ejercicio
+            x-agp34c2495230c1qegp34c34d5i30c1e68p2qchj:
+              label: Documento de ingreso o devolucion. Devengo. Periodo impositivo
+            x-agp34c2495230c1qegp34c34d5i30c1e68pj6b9i6gpg:
+              label: Documento de ingreso o devolucion. Devolucion. Codigo SWIFT-BIC
+                (solo resto de paises / no SEPA)
+            x-agp34c2495230c1qegp34c34d5i30c1e68q2qcph:
+              label: Documento de ingreso o devolucion. Devengo. Periodo impositivo,
+                fecha de inicio (AAAAMMDD)
+            x-agp34c2495230c1qegp34c34d5i30c1e68q38b9j64pg:
+              label: 'Documento de ingreso o devolucion. Devolucion. Resto de paises:
+                banco'
+            x-agp34c2495230c1qegp34c34d5i30c1e6coj8b9j6gs0:
+              label: 'Documento de ingreso o devolucion. Devolucion. Resto de paises:
+                direccion del banco'
+            x-agp34c2495230c1qegp34c34d5i30c1e6cp2qcpp:
+              label: Documento de ingreso o devolucion. Devengo. Periodo impositivo,
+                fecha fin (AAAAMMDD)
+            x-agp34c2495230c1qegp34c34d5i30c1e6cq3ib9j6ss0:
+              label: 'Documento de ingreso o devolucion. Devolucion. Resto de paises:
+                ciudad'
+            x-agp34c2495230c1qegp34c34d5i30c1e6crjib9k64s0:
+              label: 'Documento de ingreso o devolucion. Devolucion. Resto de paises:
+                pais'
+            x-agp34c2495230c1qegp34c34d5i30c1e6go2qd1o:
+              label: Documento de ingreso o devolucion. Identificacion. N.I.F.
+            x-agp34c2495230c1qegp34c34d5i30c1e6gojib9k68o0:
+              label: 'Documento de ingreso o devolucion. Devolucion. Resto de paises:
+                codigo de pais'
+            x-agp34c2495230c1qegp34c34d5i30c1e6gp32:
+              label: Documento de ingreso o devolucion. Ingreso. Modalidad de ingreso
+            x-agp34c2495230c1qegp34c34d5i30c1e6gpjib9k6sp0:
+              label: Documento de ingreso o devolucion. Ingreso. Codigo IBAN - bloque
+            x-agp34c2495230c1qegp34c34d5i30c1e6gsiqc9g70:
+              label: Documento de ingreso o devolucion. Identificacion. Apellidos
+                o razon social
+            x-agp34c2495230c1qegp34c34d5i30c1e6kqjg:
+              label: Documento de ingreso o devolucion. Cuota cero
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
               label: Actividades del grupo. Epigrafe CNAE de la actividad 1
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:

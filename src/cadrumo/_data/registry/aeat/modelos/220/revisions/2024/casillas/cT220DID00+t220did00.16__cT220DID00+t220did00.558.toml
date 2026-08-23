@@ -1,0 +1,429 @@
+# Modelo 220 RECORD T220DID00 -- the DOCUMENTO DE INGRESO O DEVOLUCION: the payment
+# slip of the consolidated declaration. Devengo and identificacion of the grupo, the three
+# liquidacion figures it carries forward, the devolucion block with its account details,
+# the ingreso block, the abono/compensacion of activos por impuesto diferido (art. 130
+# LIS), and the cuota cero mark.
+#
+# 31 casillas describe all 41 design fields: 31 authored and
+# 10 excluded, and the difference of those sets against the design is empty --
+# asserted in the generator, not claimed here.
+#
+# THE APARTADO IS DERIVED FROM ITS NAME, NOT ITS NUMBER. AEAT numbers the apartados (1)
+# to (7) inside the field descriptions, and the numbering DISAGREES with itself:
+#   apartado name Devolucion appears as 4, 5
+#   apartado number 5 appears as Devolucion, Ingreso
+# Routing on the digit would have filed a devolucion field under ingreso. The generator
+# asserts name-to-number consistency and reports every disagreement rather than picking
+# one silently.
+#
+# FOUR BOXES CARRY A LETTER, NOT A FIVE-DIGIT NUMBER -- [D] importe a devolver, [I]
+# importe a ingresar, [A] abono and [C] compensacion por conversion de activos por
+# impuesto diferido. Each of the four appears EXACTLY ONCE across all 137 sheets of the
+# design, in this record only, which is the shape of a per-record box identifier rather
+# than a column marker. They are taken as AEAT's own number, the way modelo 604's
+# alphabetic casillas already are. That is a judgement and it is recorded as one.
+#
+# THIS RECORD ECHOES BOXES DECLARED ELSEWHERE. Box 00562 (cuota integra del grupo) is
+# already declared as T22009000:00562, and the design prints it in SEVEN records in all;
+# 00621, 02800, 02806, 02809 and 02812 belong to T22009001, which is not yet authored.
+# The (segmento, number) convention gives each record its own casilla, so ONE AEAT box
+# becomes several casillas across the modelo. A layout must bind these to the SAME value
+# rather than collect them twice, and nothing here enforces that yet.
+#
+# THE {DID_...} TOKENS IN THE DESCRIPTIONS ARE THE DESIGN'S OWN VARIABLE NAMES, not part
+# of any label; they are kept in the verbatim comments below and stripped from the labels.
+#
+# AEAT PRINTS "Estado. Estado" on box 02800 -- the same jurisdiction twice in one
+# description. Collapsed to one in the label, kept doubled in the comment. This is NOT the
+# ambiguity that holds back T22009001: there two DIFFERENT boxes carry the identical
+# description, so which is the foral column cannot be told; here one box says one thing
+# twice.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T220DID00 tiles
+# 1..720 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @559+150 RESERVADO PARA LA ADMINISTRACION; @709+12
+# Fin de Registro.
+#
+# NOT CLAIMED: no semantic_role is set on any casilla here, consistent with every other
+# modelo 220 casilla. The registry already carries a role vocabulary these bank fields
+# belong to -- devolucion_iban and devolucion_bic, used by modelo 308 -- and applying it
+# should be one modelo-wide pass, not a role invented for one record.
+#
+# NOT CLAIMED: the liquidacion figures are DECLARED here, not carried. Nothing computes
+# the devolucion or ingreso amount from them, and no formula, construct or binding is
+# attached to any casilla in this record.
+
+# @16+1 An. Cuenta corriente tributaria
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.16"
+number = "t220did00.16"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "opciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @17+4 Num. Devengo(2) - Ejercicio.{DID_ejer}
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.17-20"
+number = "t220did00.17-20"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devengo"]
+data_type = "year"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @21+1 Num. Devengo (2). Tipo de ejercicio. {DID_tipo_ejer}
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.21"
+number = "t220did00.21"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devengo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @22+2 An. Devengo(2). Período Impositivo {DID_periodo}
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.22-23"
+number = "t220did00.22-23"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devengo"]
+data_type = "period_code"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @24+8 Num. Devengo (2).Período Impositivo fecha de inicio {DID_fi_periodo} (AAAAMMDD)
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.24-31"
+number = "t220did00.24-31"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devengo"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @32+8 Num. Devengo (2). Período Impositivo fecha fin {DID_ff_periodo} (AAAAMMDD)
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.32-39"
+number = "t220did00.32-39"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devengo"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @40+9 An. Identificación (1) - NIF. {DID_id_NIF}
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.40-48"
+number = "t220did00.40-48"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "identificacion"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @49+60 An. Identificación (1) - Apellidos o Razón Social. {DID_id_apellidos}
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.49-108"
+number = "t220did00.49-108"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "identificacion"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @109+20 An. Identificación (1) - Nombre {DID_id_nombre}
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.109-128"
+number = "t220did00.109-128"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "identificacion"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @129+17 Num. Liquidación (3) - Cuota íntegra del grupo [00562]. {DID_liq_CI}
+[[revisions."2024".casillas]]
+id = "T220DID00:00562"
+number = "00562"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @146+17 N. Liquidación (3)- Resultado: Estado [00621]
+[[revisions."2024".casillas]]
+id = "T220DID00:00621"
+number = "00621"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @163+17 N. Liquidación (3)- Opción de fraccionamiento art. 19.1 LIS. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS: Estado. Estado [02800]
+[[revisions."2024".casillas]]
+id = "T220DID00:02800"
+number = "02800"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @180+1 An. Devolución (4) - Modalidad de devolución {DID_modalidad_devolucion}
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.180"
+number = "t220did00.180"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devolucion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @181+17 Num. Devolución (4) - Importe a devolver. {DID_dev_importe} [D]
+[[revisions."2024".casillas]]
+id = "T220DID00:D"
+number = "D"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devolucion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @198+1 Num. Devolución(4) - Marca SEPA
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.198"
+number = "t220did00.198"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devolucion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @199+34 An. Devolución (4) - Código IBAN - Bloque. {DID_dev_iban}
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.199-232"
+number = "t220did00.199-232"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devolucion"]
+data_type = "iban"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @233+11 An. Devolución (4) - Código SWIFT-BIC. {DID_dev_swift_bic} (sólo Resto de paises/no SEPA)
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.233-243"
+number = "t220did00.233-243"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devolucion"]
+data_type = "bic"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @244+70 An. Devolución (4) - Resto países- Banco/Name of the bank
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.244-313"
+number = "t220did00.244-313"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devolucion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @314+35 An. Devolución (4) - Resto países - Dirección del banco/Address of the bank
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.314-348"
+number = "t220did00.314-348"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devolucion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @349+30 An. Devolución (4) - Resto países - Ciudad/City
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.349-378"
+number = "t220did00.349-378"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devolucion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @379+40 An. Devolución (4) - Resto países - País/Country
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.379-418"
+number = "t220did00.379-418"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devolucion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @419+2 An. Devolución (5) - Resto países - Código País/Country Code
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.419-420"
+number = "t220did00.419-420"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devolucion"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @421+1 An. Ingreso (5) - Modalidad de ingreso. {DID_modalidad_ingreso}
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.421"
+number = "t220did00.421"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "ingreso"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @422+17 Num. Ingreso (5) - Importe a ingresar. {DID_ing_efectivo} [I]
+[[revisions."2024".casillas]]
+id = "T220DID00:I"
+number = "I"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "ingreso"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @439+34 An. Ingreso (5) - Código IBAN - Bloque. {DID_ing_iban}
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.439-472"
+number = "t220did00.439-472"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "ingreso"]
+data_type = "iban"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @473+17 N. Abono/Compensación(6). Abono por conversión de activos por impuesto diferido (Art. 130 L.I.S.) [A]
+[[revisions."2024".casillas]]
+id = "T220DID00:A"
+number = "A"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "abono_compensacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @490+17 N. Abono/Compensación(6). Compensación por conversión de activos por impuesto diferido (Art. 130 L.I.S.) [C]
+[[revisions."2024".casillas]]
+id = "T220DID00:C"
+number = "C"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "abono_compensacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @507+17 N. Abono/Compensación(6). Resultado de conversión de AID tras regularización: Abono [02806]
+[[revisions."2024".casillas]]
+id = "T220DID00:02806"
+number = "02806"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "abono_compensacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @524+17 N. Abono/Compensación(6). Resultado de conversión de AID tras regularización: Compensación [02809]
+[[revisions."2024".casillas]]
+id = "T220DID00:02809"
+number = "02809"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "abono_compensacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @541+17 N. Abono/Compensación(6). Resultado de conversión de AID tras regularización: A ingresar [02812]
+[[revisions."2024".casillas]]
+id = "T220DID00:02812"
+number = "02812"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "abono_compensacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @558+1 An. Cuota Cero (7). {DID_cuota_cero}
+[[revisions."2024".casillas]]
+id = "T220DID00:t220did00.558"
+number = "t220did00.558"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "cuota_cero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

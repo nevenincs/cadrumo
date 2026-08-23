@@ -4048,6 +4048,82 @@ modelo:
             x-agp34c1h6oo30c9q60pj6e1g:
               label: Allocation between chartered tax administrations. Offset for
                 conversion of deferred tax assets. Navarre
+            x-agp34c2495230c1q60o3adhi:
+              label: Payment or refund document. Settlement. Gross tax liability of
+                the group
+            x-agp34c2495230c1q60o3cchh:
+              label: 'Payment or refund document. Settlement. Result: State'
+            x-agp34c2495230c1q60p3gc1g:
+              label: 'Payment or refund document. Settlement. Instalment option under
+                art. 19.1 LIS. Net amount payable including the first art. 19.1 LIS
+                instalment: State'
+            x-agp34c2495230c1q60p3gc1m:
+              label: 'Payment or refund document. Credit/Offset. Result of the deferred
+                tax asset conversion after adjustment: credit'
+            x-agp34c2495230c1q60p3gc1p:
+              label: 'Payment or refund document. Credit/Offset. Result of the deferred
+                tax asset conversion after adjustment: offset'
+            x-agp34c2495230c1q60p3gc9i:
+              label: 'Payment or refund document. Credit/Offset. Result of the deferred
+                tax asset conversion after adjustment: payable'
+            x-agp34c2495230c1q84:
+              label: Payment or refund document. Credit/Offset. Credit from the conversion
+                of deferred tax assets (art. 130 LIS)
+            x-agp34c2495230c1q8c:
+              label: Payment or refund document. Credit/Offset. Offset from the conversion
+                of deferred tax assets (art. 130 LIS)
+            x-agp34c2495230c1q8g:
+              label: Payment or refund document. Refund. Amount to be refunded
+            x-agp34c2495230c1q94:
+              label: Payment or refund document. Payment. Amount payable
+            x-agp34c2495230c1qegp34c34d5i30c1e64o3ib9h68s0:
+              label: Payment or refund document. Identification. Given name
+            x-agp34c2495230c1qegp34c34d5i30c1e64r0:
+              label: Payment or refund document. Tax current account
+            x-agp34c2495230c1qegp34c34d5i30c1e64riqchg:
+              label: Payment or refund document. Accrual. Tax year
+            x-agp34c2495230c1qegp34c34d5i30c1e64s30:
+              label: Payment or refund document. Refund. Refund method
+            x-agp34c2495230c1qegp34c34d5i30c1e64sjg:
+              label: Payment or refund document. Refund. SEPA marker
+            x-agp34c2495230c1qegp34c34d5i30c1e64sjib9i6cp0:
+              label: Payment or refund document. Refund. IBAN code - block
+            x-agp34c2495230c1qegp34c34d5i30c1e68og:
+              label: Payment or refund document. Accrual. Type of tax year
+            x-agp34c2495230c1qegp34c34d5i30c1e68p2qchj:
+              label: Payment or refund document. Accrual. Tax period
+            x-agp34c2495230c1qegp34c34d5i30c1e68pj6b9i6gpg:
+              label: Payment or refund document. Refund. SWIFT-BIC code (rest of the
+                world / non-SEPA only)
+            x-agp34c2495230c1qegp34c34d5i30c1e68q2qcph:
+              label: Payment or refund document. Accrual. Tax period, start date (YYYYMMDD)
+            x-agp34c2495230c1qegp34c34d5i30c1e68q38b9j64pg:
+              label: 'Payment or refund document. Refund. Rest of the world: name
+                of the bank'
+            x-agp34c2495230c1qegp34c34d5i30c1e6coj8b9j6gs0:
+              label: 'Payment or refund document. Refund. Rest of the world: address
+                of the bank'
+            x-agp34c2495230c1qegp34c34d5i30c1e6cp2qcpp:
+              label: Payment or refund document. Accrual. Tax period, end date (YYYYMMDD)
+            x-agp34c2495230c1qegp34c34d5i30c1e6cq3ib9j6ss0:
+              label: 'Payment or refund document. Refund. Rest of the world: city'
+            x-agp34c2495230c1qegp34c34d5i30c1e6crjib9k64s0:
+              label: 'Payment or refund document. Refund. Rest of the world: country'
+            x-agp34c2495230c1qegp34c34d5i30c1e6go2qd1o:
+              label: Payment or refund document. Identification. Tax identification
+                number
+            x-agp34c2495230c1qegp34c34d5i30c1e6gojib9k68o0:
+              label: 'Payment or refund document. Refund. Rest of the world: country
+                code'
+            x-agp34c2495230c1qegp34c34d5i30c1e6gp32:
+              label: Payment or refund document. Payment. Payment method
+            x-agp34c2495230c1qegp34c34d5i30c1e6gpjib9k6sp0:
+              label: Payment or refund document. Payment. IBAN code - block
+            x-agp34c2495230c1qegp34c34d5i30c1e6gsiqc9g70:
+              label: Payment or refund document. Identification. Surnames or company
+                name
+            x-agp34c2495230c1qegp34c34d5i30c1e6kqjg:
+              label: Payment or refund document. Zero tax due
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
               label: Group activities. CNAE code of activity 1
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:

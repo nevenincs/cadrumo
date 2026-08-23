@@ -3907,6 +3907,96 @@ modelo:
             x-agp34c1h6oo30c9q60pj6e1g:
               label: Felosztas a kulon jogallasu adohatosagok kozott. Halasztott adokovetelesek
                 atvaltasabol szarmazo beszamitas. Navarra
+            x-agp34c2495230c1q60o3adhi:
+              label: Befizetesi vagy visszateritesi dokumentum. Elszamolas. A csoport
+                brutto adokotelezettsege
+            x-agp34c2495230c1q60o3cchh:
+              label: 'Befizetesi vagy visszateritesi dokumentum. Elszamolas. Eredmeny:
+                allami resz'
+            x-agp34c2495230c1q60p3gc1g:
+              label: 'Befizetesi vagy visszateritesi dokumentum. Elszamolas. Reszletfizetesi
+                opcio a LIS 19.1. cikke szerint. Fizetendo netto osszeg az elso reszlettel
+                egyutt: allami resz'
+            x-agp34c2495230c1q60p3gc1m:
+              label: 'Befizetesi vagy visszateritesi dokumentum. Jovairas/Beszamitas.
+                A halasztott adokoveteles atvaltasanak eredmenye rendezes utan: jovairas'
+            x-agp34c2495230c1q60p3gc1p:
+              label: 'Befizetesi vagy visszateritesi dokumentum. Jovairas/Beszamitas.
+                A halasztott adokoveteles atvaltasanak eredmenye rendezes utan: beszamitas'
+            x-agp34c2495230c1q60p3gc9i:
+              label: 'Befizetesi vagy visszateritesi dokumentum. Jovairas/Beszamitas.
+                A halasztott adokoveteles atvaltasanak eredmenye rendezes utan: fizetendo'
+            x-agp34c2495230c1q84:
+              label: Befizetesi vagy visszateritesi dokumentum. Jovairas/Beszamitas.
+                Halasztott adokoveteles atvaltasabol szarmazo jovairas (LIS 130. cikk)
+            x-agp34c2495230c1q8c:
+              label: Befizetesi vagy visszateritesi dokumentum. Jovairas/Beszamitas.
+                Halasztott adokoveteles atvaltasabol szarmazo beszamitas (LIS 130.
+                cikk)
+            x-agp34c2495230c1q8g:
+              label: Befizetesi vagy visszateritesi dokumentum. Visszaterites. Visszateritendo
+                osszeg
+            x-agp34c2495230c1q94:
+              label: Befizetesi vagy visszateritesi dokumentum. Befizetes. Fizetendo
+                osszeg
+            x-agp34c2495230c1qegp34c34d5i30c1e64o3ib9h68s0:
+              label: Befizetesi vagy visszateritesi dokumentum. Azonositas. Utonev
+            x-agp34c2495230c1qegp34c34d5i30c1e64r0:
+              label: Befizetesi vagy visszateritesi dokumentum. Adoszamla
+            x-agp34c2495230c1qegp34c34d5i30c1e64riqchg:
+              label: Befizetesi vagy visszateritesi dokumentum. Esedekesseg. Adoev
+            x-agp34c2495230c1qegp34c34d5i30c1e64s30:
+              label: Befizetesi vagy visszateritesi dokumentum. Visszaterites. Visszateritesi
+                mod
+            x-agp34c2495230c1qegp34c34d5i30c1e64sjg:
+              label: Befizetesi vagy visszateritesi dokumentum. Visszaterites. SEPA
+                jelolo
+            x-agp34c2495230c1qegp34c34d5i30c1e64sjib9i6cp0:
+              label: Befizetesi vagy visszateritesi dokumentum. Visszaterites. IBAN
+                kod - blokk
+            x-agp34c2495230c1qegp34c34d5i30c1e68og:
+              label: Befizetesi vagy visszateritesi dokumentum. Esedekesseg. Adoev
+                tipusa
+            x-agp34c2495230c1qegp34c34d5i30c1e68p2qchj:
+              label: Befizetesi vagy visszateritesi dokumentum. Esedekesseg. Adozasi
+                idoszak
+            x-agp34c2495230c1qegp34c34d5i30c1e68pj6b9i6gpg:
+              label: Befizetesi vagy visszateritesi dokumentum. Visszaterites. SWIFT-BIC
+                kod (csak tobbi orszag / nem SEPA)
+            x-agp34c2495230c1qegp34c34d5i30c1e68q2qcph:
+              label: Befizetesi vagy visszateritesi dokumentum. Esedekesseg. Adozasi
+                idoszak kezdo datuma (EEEEHHNN)
+            x-agp34c2495230c1qegp34c34d5i30c1e68q38b9j64pg:
+              label: 'Befizetesi vagy visszateritesi dokumentum. Visszaterites. Tobbi
+                orszag: a bank neve'
+            x-agp34c2495230c1qegp34c34d5i30c1e6coj8b9j6gs0:
+              label: 'Befizetesi vagy visszateritesi dokumentum. Visszaterites. Tobbi
+                orszag: a bank cime'
+            x-agp34c2495230c1qegp34c34d5i30c1e6cp2qcpp:
+              label: Befizetesi vagy visszateritesi dokumentum. Esedekesseg. Adozasi
+                idoszak zaro datuma (EEEEHHNN)
+            x-agp34c2495230c1qegp34c34d5i30c1e6cq3ib9j6ss0:
+              label: 'Befizetesi vagy visszateritesi dokumentum. Visszaterites. Tobbi
+                orszag: varos'
+            x-agp34c2495230c1qegp34c34d5i30c1e6crjib9k64s0:
+              label: 'Befizetesi vagy visszateritesi dokumentum. Visszaterites. Tobbi
+                orszag: orszag'
+            x-agp34c2495230c1qegp34c34d5i30c1e6go2qd1o:
+              label: Befizetesi vagy visszateritesi dokumentum. Azonositas. Adoazonosito
+            x-agp34c2495230c1qegp34c34d5i30c1e6gojib9k68o0:
+              label: 'Befizetesi vagy visszateritesi dokumentum. Visszaterites. Tobbi
+                orszag: orszagkod'
+            x-agp34c2495230c1qegp34c34d5i30c1e6gp32:
+              label: Befizetesi vagy visszateritesi dokumentum. Befizetes. Befizetesi
+                mod
+            x-agp34c2495230c1qegp34c34d5i30c1e6gpjib9k6sp0:
+              label: Befizetesi vagy visszateritesi dokumentum. Befizetes. IBAN kod
+                - blokk
+            x-agp34c2495230c1qegp34c34d5i30c1e6gsiqc9g70:
+              label: Befizetesi vagy visszateritesi dokumentum. Azonositas. Vezeteknev
+                vagy cegnev
+            x-agp34c2495230c1qegp34c34d5i30c1e6kqjg:
+              label: Befizetesi vagy visszateritesi dokumentum. Nulla adoosszeg
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
               label: A csoport tevekenysegei. A(z) 1. tevekenyseg CNAE-kodja
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:

@@ -3943,6 +3943,84 @@ modelo:
             x-agp34c1h6oo30c9q60pj6e1g:
               label: Repartiment entre Administracions forals. Compensacio per conversio
                 d'actius per impost diferit. Navarra
+            x-agp34c2495230c1q60o3adhi:
+              label: Document d'ingres o devolucio. Liquidacio. Quota integra del
+                grup
+            x-agp34c2495230c1q60o3cchh:
+              label: 'Document d''ingres o devolucio. Liquidacio. Resultat: Estat'
+            x-agp34c2495230c1q60p3gc1g:
+              label: 'Document d''ingres o devolucio. Liquidacio. Opcio de fraccionament
+                art. 19.1 LIS. Liquid a ingressar inclos el 1r fraccionament de l''art.
+                19.1 LIS: Estat'
+            x-agp34c2495230c1q60p3gc1m:
+              label: 'Document d''ingres o devolucio. Abonament/Compensacio. Resultat
+                de conversio d''AID despres de regularitzacio: abonament'
+            x-agp34c2495230c1q60p3gc1p:
+              label: 'Document d''ingres o devolucio. Abonament/Compensacio. Resultat
+                de conversio d''AID despres de regularitzacio: compensacio'
+            x-agp34c2495230c1q60p3gc9i:
+              label: 'Document d''ingres o devolucio. Abonament/Compensacio. Resultat
+                de conversio d''AID despres de regularitzacio: a ingressar'
+            x-agp34c2495230c1q84:
+              label: Document d'ingres o devolucio. Abonament/Compensacio. Abonament
+                per conversio d'actius per impost diferit (art. 130 LIS)
+            x-agp34c2495230c1q8c:
+              label: Document d'ingres o devolucio. Abonament/Compensacio. Compensacio
+                per conversio d'actius per impost diferit (art. 130 LIS)
+            x-agp34c2495230c1q8g:
+              label: Document d'ingres o devolucio. Devolucio. Import a retornar
+            x-agp34c2495230c1q94:
+              label: Document d'ingres o devolucio. Ingres. Import a ingressar
+            x-agp34c2495230c1qegp34c34d5i30c1e64o3ib9h68s0:
+              label: Document d'ingres o devolucio. Identificacio. Nom
+            x-agp34c2495230c1qegp34c34d5i30c1e64r0:
+              label: Document d'ingres o devolucio. Compte corrent tributari
+            x-agp34c2495230c1qegp34c34d5i30c1e64riqchg:
+              label: Document d'ingres o devolucio. Meritacio. Exercici
+            x-agp34c2495230c1qegp34c34d5i30c1e64s30:
+              label: Document d'ingres o devolucio. Devolucio. Modalitat de devolucio
+            x-agp34c2495230c1qegp34c34d5i30c1e64sjg:
+              label: Document d'ingres o devolucio. Devolucio. Marca SEPA
+            x-agp34c2495230c1qegp34c34d5i30c1e64sjib9i6cp0:
+              label: Document d'ingres o devolucio. Devolucio. Codi IBAN - bloc
+            x-agp34c2495230c1qegp34c34d5i30c1e68og:
+              label: Document d'ingres o devolucio. Meritacio. Tipus d'exercici
+            x-agp34c2495230c1qegp34c34d5i30c1e68p2qchj:
+              label: Document d'ingres o devolucio. Meritacio. Periode impositiu
+            x-agp34c2495230c1qegp34c34d5i30c1e68pj6b9i6gpg:
+              label: Document d'ingres o devolucio. Devolucio. Codi SWIFT-BIC (nomes
+                resta de paisos / no SEPA)
+            x-agp34c2495230c1qegp34c34d5i30c1e68q2qcph:
+              label: Document d'ingres o devolucio. Meritacio. Periode impositiu,
+                data d'inici (AAAAMMDD)
+            x-agp34c2495230c1qegp34c34d5i30c1e68q38b9j64pg:
+              label: 'Document d''ingres o devolucio. Devolucio. Resta de paisos:
+                banc'
+            x-agp34c2495230c1qegp34c34d5i30c1e6coj8b9j6gs0:
+              label: 'Document d''ingres o devolucio. Devolucio. Resta de paisos:
+                adreca del banc'
+            x-agp34c2495230c1qegp34c34d5i30c1e6cp2qcpp:
+              label: Document d'ingres o devolucio. Meritacio. Periode impositiu,
+                data de fi (AAAAMMDD)
+            x-agp34c2495230c1qegp34c34d5i30c1e6cq3ib9j6ss0:
+              label: 'Document d''ingres o devolucio. Devolucio. Resta de paisos:
+                ciutat'
+            x-agp34c2495230c1qegp34c34d5i30c1e6crjib9k64s0:
+              label: 'Document d''ingres o devolucio. Devolucio. Resta de paisos:
+                pais'
+            x-agp34c2495230c1qegp34c34d5i30c1e6go2qd1o:
+              label: Document d'ingres o devolucio. Identificacio. N.I.F.
+            x-agp34c2495230c1qegp34c34d5i30c1e6gojib9k68o0:
+              label: 'Document d''ingres o devolucio. Devolucio. Resta de paisos:
+                codi de pais'
+            x-agp34c2495230c1qegp34c34d5i30c1e6gp32:
+              label: Document d'ingres o devolucio. Ingres. Modalitat d'ingres
+            x-agp34c2495230c1qegp34c34d5i30c1e6gpjib9k6sp0:
+              label: Document d'ingres o devolucio. Ingres. Codi IBAN - bloc
+            x-agp34c2495230c1qegp34c34d5i30c1e6gsiqc9g70:
+              label: Document d'ingres o devolucio. Identificacio. Cognoms o rao social
+            x-agp34c2495230c1qegp34c34d5i30c1e6kqjg:
+              label: Document d'ingres o devolucio. Quota zero
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
               label: Activitats del grup. Epigraf CNAE de l'activitat 1
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:
