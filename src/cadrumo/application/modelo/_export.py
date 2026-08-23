@@ -176,6 +176,7 @@ from ._revision_persistence import (
     require_filing_instance_evidence_for_work_unit,
 )
 from ._revision_replay_inputs import revision_filing_replay_inputs
+from ._row_source_identity_replay import attach_revision_row_source_identities
 from ._verification_actions import (
     cross_period_expected_member_sets_from_profile,
     require_cross_period_clean_state,
@@ -628,6 +629,7 @@ def _approve_export_draft(
             inputs=inputs,
             schema_provider=schema_provider,
         )
+        draft = attach_revision_row_source_identities(draft=draft, revision=revision)
         approved = approve_draft(
             draft,
             bucket_id=work_unit.bucket_id,

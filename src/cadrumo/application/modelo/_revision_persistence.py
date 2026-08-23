@@ -62,6 +62,7 @@ from ...domain.buckets import (
 )
 from ...domain.buckets import build_bucket_event as _build_domain_bucket_event
 from ...domain.buckets import emit_bucket_event as _emit_domain_bucket_event
+from ...domain.calculations import RowBindingKey, RowSourceIdentity
 from ...domain.calculations.registry import (
     BindingId,
     CasillaObservation,
@@ -249,6 +250,7 @@ def persist_calculation_revision(
     input_values_by_casilla_id: dict[CasillaId, str],
     binding_overrides: dict[BindingId, str],
     row_binding_values: dict[BindingId, dict[str, str]],
+    row_source_identities: Mapping[RowBindingKey, RowSourceIdentity],
     relation_overrides: dict[RelationId, str],
     casilla_values: dict[CasillaId, Decimal],
     source_transaction_ids: tuple[str, ...],
@@ -312,6 +314,7 @@ def persist_calculation_revision(
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
         row_binding_values=row_binding_values,
+        row_source_identities=row_source_identities,
         relation_overrides=relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
@@ -360,6 +363,7 @@ def persist_calculation_revision(
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
         row_binding_values=row_binding_values,
+        row_source_identities=row_source_identities,
         relation_overrides=relation_overrides,
         source_transaction_ids=source_transaction_ids,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,

@@ -73,6 +73,7 @@ from ..workflow import (
 )
 from ._action_errors import ModeloWorkflowGateError
 from ._revision_replay_inputs import revision_filing_replay_inputs
+from ._row_source_identity_replay import attach_revision_row_source_identities
 
 
 @lru_cache(maxsize=512)
@@ -192,6 +193,7 @@ class _RevisionDraftBuilder:
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
         )
+        draft = attach_revision_row_source_identities(draft=draft, revision=self._revision)
         if draft.status is not ModeloDraftStatus.LISTO_PARA_PRESENTAR:
             return draft
         return approve_draft(

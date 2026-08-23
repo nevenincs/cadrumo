@@ -38,6 +38,7 @@ from ...domain.modelos import (
     ModeloVerificationFinding,
     VerificationCompletenessStatus,
 )
+from ._row_source_identity_replay import ModeloRowSourceFingerprint
 
 
 class ModeloWorkOriginAnomaly(StrEnum):
@@ -193,6 +194,7 @@ class ModeloWorkReview(BaseModel):
     casillas: tuple[ModeloWorkReviewCasilla, ...]
     findings: tuple[ModeloVerificationFinding, ...]
     blockers: tuple[BlockerRef, ...]
+    row_source_fingerprints: tuple[ModeloRowSourceFingerprint, ...] = ()
 
 
 __all__ = [

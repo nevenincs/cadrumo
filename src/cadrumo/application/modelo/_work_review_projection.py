@@ -59,6 +59,7 @@ from ._action_errors import (
     WorkUnitNotFoundError,
     WorkUnitRevisionDivergenceError,
 )
+from ._row_source_identity_replay import revision_row_source_fingerprints_for_review
 from ._work_review import (
     BlockerRef,
     ModeloWorkBindingOrigin,
@@ -556,6 +557,7 @@ def build_modelo_work_review(
         casillas=rows,
         findings=findings,
         blockers=blockers,
+        row_source_fingerprints=revision_row_source_fingerprints_for_review(revision),
     )
 
 

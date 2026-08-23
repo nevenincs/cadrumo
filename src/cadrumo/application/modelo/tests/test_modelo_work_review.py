@@ -7,7 +7,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import ModeloWorkProgressState, Period
+from ....core import BindingSourceKind, ModeloWorkProgressState, Period
+from ....domain.calculations import RowSourceIdentity
 from ....domain.calculations.registry import CasillaObservation, InputKind, bundled_authority, revision_date_binding_ids
 from ....domain.filing import ModeloValueKind
 from ....domain.modelos import (
@@ -21,6 +22,7 @@ from ....domain.modelos import (
     VerificationReport,
     WorkUnit,
     derive_calculation_revision_id,
+    derive_calculation_revision_id_from_revision,
     derive_verification_report_id,
     derive_work_unit_id,
     upsert_calculation_revision,
@@ -403,6 +405,67 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
     assert verification.completeness_status is VerificationCompletenessStatus.COMPLETE
     assert verified_review.progress.state is ModeloWorkProgressState.COMPLETE
     assert verified_review.progress.materialised_count == verified_review.progress.target_count
+
+
+def test_real_review_projects_only_fingerprint_for_persisted_row_identity(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, bucket_event_repo = repos
+    work_unit = _persist_work_unit(repos)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values=DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        bucket_event_repository=bucket_event_repo,
+    )
+    raw_identity = "opaque-review-row-canary"
+    fingerprint = "d" * 64
+    amended = revision.model_copy(
+        update={
+            "row_binding_values": {"review-row-binding": {"1": "100"}},
+            "row_source_identities": {
+                ("review-row-binding", 1): RowSourceIdentity(
+                    source_kind=BindingSourceKind.INVENTORY,
+                    source_row_identity=raw_identity,
+                    fingerprint=fingerprint,
+                ),
+            },
+        },
+    )
+    amended = amended.model_copy(
+        update={"calculation_revision_id": derive_calculation_revision_id_from_revision(amended)},
+    )
+    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), amended))
+    stored_work = work_repo.load().get(work_unit.work_unit_id)
+    assert stored_work is not None
+    work_repo.save(
+        upsert_work_unit(
+            work_repo.load(),
+            stored_work.model_copy(update={"current_calculation_revision_id": amended.calculation_revision_id}),
+        ),
+    )
+
+    review = build_modelo_work_review(
+        work_unit.bucket_id,
+        work_unit.modelo,
+        work_unit.filing_year,
+        work_unit.period,
+        authority=bundled_authority(),
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+    )
+
+    assert [item.model_dump(mode="json") for item in review.row_source_fingerprints] == [
+        {
+            "binding_id": "review-row-binding",
+            "row_index": 1,
+            "source_kind": "inventory",
+            "fingerprint": fingerprint,
+        },
+    ]
+    rendered = f"{review!r} {review.model_dump()!r} {review.model_dump_json()}"
+    assert raw_identity not in rendered
 
 
 def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(repos: Repos) -> None:

@@ -31,7 +31,7 @@ from ....application.user_profile import (
     register_profile_with_credentials,
 )
 from ....core.config import override_settings
-from ....tests._inventory import SRC_CADRUMO
+from ....tests import SRC_CADRUMO
 from ....tests.secure_sql import reap_profile_session_keys
 from ....tests.subprocess_cli import subprocess_cli_env
 

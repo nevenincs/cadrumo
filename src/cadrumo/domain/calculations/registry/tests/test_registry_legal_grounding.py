@@ -372,8 +372,8 @@ def test_legal_entry_document_id_agrees_with_its_own_permalink(
     the law -- while their own ``permalink`` named ``BOE-A-1992-28740``, the
     canonical identifier every other entry for the same law uses. The entry
     therefore answered "which document is this?" two different ways depending on
-    which field you read, and the agent-facing citation-resolve surface returns
-    the field that was wrong.
+    which field you read, and the citation-resolution projection returns the
+    field that was wrong.
 
     Nothing downstream broke, because the projection that groups citations keys
     off the reference id rather than the document id -- correct today, but only
