@@ -9,8 +9,12 @@ from typing import cast
 
 import pytest
 
-from cadrumo.entrypoints.cli import command_schema_refs, is_exposable_command
-from cadrumo.entrypoints.cli import command_schema_type, command_schema_types
+from cadrumo.entrypoints.cli import (
+    command_schema_refs,
+    command_schema_type,
+    command_schema_types,
+    is_exposable_command,
+)
 
 from .._tools import build_tool_descriptors
 

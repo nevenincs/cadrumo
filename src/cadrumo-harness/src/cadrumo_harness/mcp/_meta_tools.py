@@ -101,16 +101,6 @@ class MetaExecuteResult(BaseModel):
 #: query ("file my quarterly IVA", "do my taxes") reach the composite ``quickfile``
 #: chain that literal-verb tokens miss. English plus the Spanish outcome nouns the
 #: CLI help uses (``presentar``, ``declaración``, ``trimestral``, ``autoliquidación``).
-_COMMAND_ALIASES: dict[str, str] = {
-    "quickfile": (
-        "file my taxes do my taxes file my return file quarterly taxes "
-        "submit quarterly IVA tax return declaration "
-        "presentar la declaración trimestral autoliquidación de impuestos "
-        "one command full filing chain"
-    ),
-}
-
-
 def _command_doc(descriptor: McpToolDescriptor) -> CommandDoc:
     """Build the weighted searchable document for one command.
 
@@ -125,12 +115,14 @@ def _command_doc(descriptor: McpToolDescriptor) -> CommandDoc:
     """
     key_tokens = descriptor.command_key.replace(".", " ").replace("_", " ")
     key_and_name = f"{descriptor.command_key} {key_tokens} {descriptor.name}"
+    from cadrumo.entrypoints.cli import command_search_terms
+
     return CommandDoc(
         command_key=descriptor.command_key,
         tool_name=descriptor.name,
         key_and_name=key_and_name,
         description=descriptor.description,
-        aliases=_COMMAND_ALIASES.get(descriptor.command_key, ""),
+        aliases=" ".join(command_search_terms(descriptor.command_key)),
         help=descriptor.verb_schema.help,
     )
 
@@ -338,7 +330,7 @@ def build_capability_manifest() -> OperatorSurfaceManifest:
     Returns:
         The validated :class:`~application.operator_surface.OperatorSurfaceManifest`.
     """
-    from cadrumo.entrypoints.cli import command_schema_refs
+    from cadrumo.entrypoints.cli.command_api import command_schema_refs
 
     return build_operator_surface_manifest(
         envelope_schema_version=ENVELOPE_SCHEMA_VERSION,

@@ -203,19 +203,11 @@ def test_retired_command_keys_are_neither_described_nor_dispatchable() -> None:
         )
 
 
-def test_exposability_is_a_filter_and_not_a_registration_guard() -> None:
-    """Records what stops a retired key, because it is not the exposability check.
-
-    ``is_exposable_command`` only removes the root landing keys, so it answers
-    ``True`` for a key that is not registered at all. What actually keeps a
-    retired verb off the surface is that descriptors are built from the
-    graph-derived schema refs. Pinning this stops a later reader from adding a
-    retirement to the exposability filter and believing that is the guard, and
-    stops the opposite error of reading the permissive answer as a leak.
-    """
+def test_retired_commands_are_not_exposable_or_registered() -> None:
+    """A retired key is absent from both the exposability policy and descriptors."""
     exposed = {descriptor.command_key for descriptor in build_tool_descriptors()}
     for retired in _RETIRED_COMMAND_KEYS:
-        assert is_exposable_command(retired) is True
+        assert is_exposable_command(retired) is False
         assert retired not in exposed
 
 
@@ -361,8 +353,8 @@ def test_invoice_operation_type_renders_as_a_json_enum_on_every_writing_verb() -
 @pytest.mark.parametrize(
     ("command_key", "parameter_name", "enum_import"),
     [
-        ("diagnostics.telemetry.status", "tier", "core.telemetry:TelemetryTier"),
-        ("diagnostics.telemetry.flush", "tier", "core.telemetry:TelemetryTier"),
+        ("app.diagnostics.telemetry.status", "tier", "core.telemetry:TelemetryTier"),
+        ("app.diagnostics.telemetry.flush", "tier", "core.telemetry:TelemetryTier"),
         # "registry.audit_oracles" carries no CLI, application, or MCP
         # declaration anywhere in production -- `OracleEnvironment` gates only
         # the internal domain oracle-binding audit
@@ -375,7 +367,7 @@ def test_invoice_operation_type_renders_as_a_json_enum_on_every_writing_verb() -
             "evidence_kind",
             "domain.modelos:ExternalEvidenceKind",
         ),
-        ("review.queue", "state", "application.review:ReviewState"),
+        ("app.review.queue", "state", "application.review:ReviewState"),
         (
             "app.live.borrador.100.list",
             "state",

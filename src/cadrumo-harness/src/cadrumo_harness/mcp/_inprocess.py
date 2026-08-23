@@ -43,7 +43,7 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core import PRODUCT_IDENTITY
 from cadrumo.core.json_contract import OutputSchemaError, validate_registered_envelope_document
-from cadrumo.entrypoints.cli import VerbInputSchema, cli_argv_for
+from cadrumo.entrypoints.cli.command_api import VerbInputSchema, cli_argv_for
 
 from ._call_runtime import CallTier
 
@@ -225,7 +225,7 @@ def parse_cli_envelope(run: CompletedCliRun) -> tuple[dict[str, object], bool]:
     except json.JSONDecodeError:
         return {"status": "error", "raw": raw}, True
     try:
-        from cadrumo.entrypoints.cli import command_schema_type
+        from cadrumo.entrypoints.cli.command_api import command_schema_type
 
         command = envelope.get("command") if isinstance(envelope, dict) else None
         schema = (

@@ -121,7 +121,7 @@ def test_direct_verb_tool_leaves_the_loop_serving_requests_mid_call() -> None:
 #: A read-only session-opening verb used to prove the warm runtime opens, uses,
 #: and relocks a real bucket session per call. It reads encrypted review state, so
 #: a successful call proves a genuine session was opened.
-_SESSION_READ_KEY = "review.queue"
+_SESSION_READ_KEY = "app.review.queue"
 
 
 async def _warm_call_with_concurrent_list(tool_name: str, arguments: dict[str, object]) -> tuple[bool, bool]:
