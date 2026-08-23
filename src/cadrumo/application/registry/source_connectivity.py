@@ -9,9 +9,11 @@ declarations.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 from ...core import CasillaId
 from ...domain.calculations.registry import (
+    InputKind,
     InputKindValue,
     LegalRefId,
     ModeloId,
@@ -20,7 +22,13 @@ from ...domain.calculations.registry import (
     SourceRefId,
 )
 
-__all__ = ["RegistryDestinationRecord", "derive_registry_destination_records"]
+__all__ = [
+    "ManualCasillaRequirement",
+    "RegistryDestinationRecord",
+    "derive_registry_destination_records",
+]
+
+type ManualCasillaRequirement = Literal["required", "optional"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +49,7 @@ class RegistryDestinationRecord:
     segmento: str | None
     input_kind: InputKindValue
     required: bool
+    manual_requirement: ManualCasillaRequirement | None
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
 
@@ -64,6 +73,11 @@ def derive_registry_destination_records(snapshot: RegistrySnapshot) -> tuple[Reg
             segmento=casilla.segmento,
             input_kind=casilla.input_kind,
             required=casilla.required,
+            manual_requirement=(
+                "required" if casilla.required else "optional"
+            )
+            if casilla.input_kind is InputKind.MANUAL
+            else None,
             legal_refs=tuple(casilla.legal_refs),
             source_refs=tuple(casilla.source_refs),
         )

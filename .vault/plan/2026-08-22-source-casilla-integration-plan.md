@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:7578d29a6400c89cefad6764ba7e4976753c760461f3344d72c3145b133ea429'
+body_hash: 'sha256:80131af1ac1212710dc2469765b7e681f27a253cc5691ae03b9f6d7312bd260b'
 ---
 
 # `source-casilla-integration` plan
@@ -66,7 +66,7 @@ Define the typed candidate identity, evidence, ownership, disposition, expiry, a
 Produce deterministic records for every validated manual casilla, binding, relation, formula, and source disposition.
 
 - [x] `W01.P02.S06` - derive registry destination records from validated revision snapshots; `src/cadrumo/application/registry/source_connectivity.py`.
-- [ ] `W01.P02.S07` - classify manual casillas without inferring substitutability from labels or numeric identifiers; `src/cadrumo/application/registry/source_connectivity.py`.
+- [x] `W01.P02.S07` - classify manual casillas without inferring substitutability from labels or numeric identifiers; `src/cadrumo/application/registry/source_connectivity.py`.
 - [ ] `W01.P02.S08` - project declared bindings, typed selectors, aggregation operations, and target casillas; `src/cadrumo/application/registry/source_connectivity.py`.
 - [ ] `W01.P02.S09` - project relations, formula dependencies, and existing source dispositions; `src/cadrumo/application/registry/source_connectivity.py`.
 - [ ] `W01.P02.S10` - verify all loaded modelo revisions produce deterministic registry-side census records; `src/cadrumo/application/registry/tests/test_source_connectivity_inventory.py`.

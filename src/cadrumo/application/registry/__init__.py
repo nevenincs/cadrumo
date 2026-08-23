@@ -167,7 +167,11 @@ from ._source_connectivity_authority import (
     RepositoryRootEvidenceDigestVerifier,
     build_calculation_route_source_ownership_catalogue,
 )
-from .source_connectivity import RegistryDestinationRecord, derive_registry_destination_records
+from .source_connectivity import (
+    ManualCasillaRequirement,
+    RegistryDestinationRecord,
+    derive_registry_destination_records,
+)
 
 _import_module("cadrumo.domain.renta")
 
@@ -565,6 +569,7 @@ __all__ = [
     "FormulaDiff",
     "LatestRevisionSupportProbe",
     "LiveSourceConnectivityProofAuthority",
+    "ManualCasillaRequirement",
     "ParameterDiff",
     "RegistryApplicationError",
     "RegistryApplicationInputError",
