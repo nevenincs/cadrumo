@@ -7,6 +7,100 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g6d0j0c1q60o32c1h:
+              label: Konszolidalt merleg. Eszkozok. Befektetett eszkozok
+            x-agp34c1g6d0j0c1q60o32c1i:
+              label: Konszolidalt merleg. Eszkozok. Immaterialis javak
+            x-agp34c1g6d0j0c1q60o32c1m:
+              label: Konszolidalt merleg. Eszkozok. Immaterialis javak. Konszolidacios
+                uzleti vagy cegertek
+            x-agp34c1g6d0j0c1q60o32c9g:
+              label: Konszolidalt merleg. Eszkozok. Immaterialis javak. Egyeb immaterialis
+                javak
+            x-agp34c1g6d0j0c1q60o32c9h:
+              label: Konszolidalt merleg. Eszkozok. Targyi eszkozok
+            x-agp34c1g6d0j0c1q60o32c9i:
+              label: Konszolidalt merleg. Eszkozok. Targyi eszkozok. Foldteruletek
+                es epuletek
+            x-agp34c1g6d0j0c1q60o32c9j:
+              label: Konszolidalt merleg. Eszkozok. Targyi eszkozok. Muszaki berendezesek
+                es egyeb targyi eszkozok
+            x-agp34c1g6d0j0c1q60o32c9k:
+              label: Konszolidalt merleg. Eszkozok. Targyi eszkozok. Beruhazasok es
+                eloelegek
+            x-agp34c1g6d0j0c1q60o32c9l:
+              label: Konszolidalt merleg. Eszkozok. Befektetesi celu ingatlanok
+            x-agp34c1g6d0j0c1q60o32c9o:
+              label: Konszolidalt merleg. Eszkozok. Hosszu tavu befektetesek csoporttagokban
+                es tarsult vallalkozasokban
+            x-agp34c1g6d0j0c1q60o32c9p:
+              label: Konszolidalt merleg. Eszkozok. Hosszu tavu befektetesek csoporttagokban
+                es tarsult vallalkozasokban. Tokeinstrumentumok
+            x-agp34c1g6d0j0c1q60o32chl:
+              label: Konszolidalt merleg. Eszkozok. Hosszu tavu befektetesek csoporttagokban
+                es tarsult vallalkozasokban. Tobbi
+            x-agp34c1g6d0j0c1q60o32chm:
+              label: Konszolidalt merleg. Eszkozok. Hosszu tavu penzugyi befektetesek
+            x-agp34c1g6d0j0c1q60o32chn:
+              label: Konszolidalt merleg. Eszkozok. Hosszu tavu penzugyi befektetesek.
+                Tokeinstrumentumok
+            x-agp34c1g6d0j0c1q60o32cpj:
+              label: Konszolidalt merleg. Eszkozok. Hosszu tavu penzugyi befektetesek.
+                Tobbi
+            x-agp34c1g6d0j0c1q60o32cpk:
+              label: Konszolidalt merleg. Eszkozok. Halasztott adokovetelesek
+            x-agp34c1g6d0j0c1q60o32cpl:
+              label: Konszolidalt merleg. Eszkozok. Befektetett vevokovetelesek
+            x-agp34c1g6d0j0c1q60o32cpm:
+              label: Konszolidalt merleg. Eszkozok. Forgoeszkozok
+            x-agp34c1g6d0j0c1q60o32cpn:
+              label: Konszolidalt merleg. Eszkozok. Ertekesitesre tartott befektetett
+                eszkozok
+            x-agp34c1g6d0j0c1q60o32cpo:
+              label: Konszolidalt merleg. Eszkozok. Keszletek
+            x-agp34c1g6d0j0c1q60o32d1p:
+              label: Konszolidalt merleg. Eszkozok. Vevokovetelesek es egyeb kovetelesek
+            x-agp34c1g6d0j0c1q60o32d9g:
+              label: Konszolidalt merleg. Eszkozok. Vevokovetelesek es egyeb kovetelesek.
+                Vevok arbevetelbol es szolgaltatasnyujtasbol
+            x-agp34c1g6d0j0c1q60o32d9m:
+              label: Konszolidalt merleg. Eszkozok. Vevokovetelesek es egyeb kovetelesek.
+                Tenyleges adokovetelesek
+            x-agp34c1g6d0j0c1q60o32d9p:
+              label: Konszolidalt merleg. Eszkozok. Vevokovetelesek es egyeb kovetelesek.
+                Egyeb kovetelesek
+            x-agp34c1g6d0j0c1q60o32dhg:
+              label: Konszolidalt merleg. Eszkozok. Rovid tavu befektetesek csoporttagokban
+                es tarsult vallalkozasokban
+            x-agp34c1g6d0j0c1q60o32dhh:
+              label: Konszolidalt merleg. Eszkozok. Rovid tavu befektetesek csoporttagokban
+                es tarsult vallalkozasokban. Tokeinstrumentumok
+            x-agp34c1g6d0j0c1q60o32dhn:
+              label: Konszolidalt merleg. Eszkozok. Rovid tavu befektetesek csoporttagokban
+                es tarsult vallalkozasokban. Tobbi
+            x-agp34c1g6d0j0c1q60o32dho:
+              label: Konszolidalt merleg. Eszkozok. Rovid tavu penzugyi befektetesek
+            x-agp34c1g6d0j0c1q60o32dhp:
+              label: Konszolidalt merleg. Eszkozok. Rovid tavu penzugyi befektetesek.
+                Tokeinstrumentumok
+            x-agp34c1g6d0j0c1q60o32dpl:
+              label: Konszolidalt merleg. Eszkozok. Rovid tavu penzugyi befektetesek.
+                Tobbi
+            x-agp34c1g6d0j0c1q60o32dpm:
+              label: Konszolidalt merleg. Eszkozok. Rovid tavu idobeli elhatarolasok
+            x-agp34c1g6d0j0c1q60o32dpn:
+              label: Konszolidalt merleg. Eszkozok. Penzeszkozok es egyeb likvid eszkozok
+            x-agp34c1g6d0j0c1q60o32e1g:
+              label: Konszolidalt merleg. Eszkozok. Eszkozok osszesen
+            x-agp34c1g6d0j0c1q60o3ec1g:
+              label: Konszolidalt merleg. Eszkozok. Immaterialis javak. Szellemi tulajdon
+            x-agp34c1g6d0j0c1q60o3ec1h:
+              label: Konszolidalt merleg. Eszkozok. Uveghazhatasu gaz kibocsatasi
+                egysegek
+            x-agp34c1g6d0j0c1q60o3ecpk:
+              label: Konszolidalt merleg. Eszkozok. Immaterialis javak. Kutatas
+            x-agp34c1g6d0j0c1q60o3edhh:
+              label: Konszolidalt merleg. Eszkozok. Egyeb
             x-agp34c1g6l0j0c1q60o36cpj:
               label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.
                 Az elszamolt konszolidalt bevetelek es raforditasok osszesen. Az anyavallalatnak

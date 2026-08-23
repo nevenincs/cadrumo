@@ -8,6 +8,105 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g6d0j0c1q60o32c1h:
+              label: Balance consolidado. Activo. Activo no corriente
+            x-agp34c1g6d0j0c1q60o32c1i:
+              label: Balance consolidado. Activo. Inmovilizado intangible
+            x-agp34c1g6d0j0c1q60o32c1m:
+              label: Balance consolidado. Activo. Inmovilizado intangible. Fondo de
+                comercio de consolidacion
+            x-agp34c1g6d0j0c1q60o32c9g:
+              label: Balance consolidado. Activo. Inmovilizado intangible. Otro inmovilizado
+                intangible
+            x-agp34c1g6d0j0c1q60o32c9h:
+              label: Balance consolidado. Activo. Inmovilizado material
+            x-agp34c1g6d0j0c1q60o32c9i:
+              label: Balance consolidado. Activo. Inmovilizado material. Terrenos
+                y construcciones
+            x-agp34c1g6d0j0c1q60o32c9j:
+              label: Balance consolidado. Activo. Inmovilizado material. Instalaciones
+                tecnicas y otro inmovilizado material
+            x-agp34c1g6d0j0c1q60o32c9k:
+              label: Balance consolidado. Activo. Inmovilizado material. Inmovilizado
+                en curso y anticipos
+            x-agp34c1g6d0j0c1q60o32c9l:
+              label: Balance consolidado. Activo. Inversiones inmobiliarias
+            x-agp34c1g6d0j0c1q60o32c9o:
+              label: Balance consolidado. Activo. Inversiones en empresas del grupo
+                y asociadas a largo plazo
+            x-agp34c1g6d0j0c1q60o32c9p:
+              label: Balance consolidado. Activo. Inversiones en empresas del grupo
+                y asociadas a largo plazo. Instrumentos de patrimonio
+            x-agp34c1g6d0j0c1q60o32chl:
+              label: Balance consolidado. Activo. Inversiones en empresas del grupo
+                y asociadas a largo plazo. Resto
+            x-agp34c1g6d0j0c1q60o32chm:
+              label: Balance consolidado. Activo. Inversiones financieras a largo
+                plazo
+            x-agp34c1g6d0j0c1q60o32chn:
+              label: Balance consolidado. Activo. Inversiones financieras a largo
+                plazo. Instrumentos de patrimonio
+            x-agp34c1g6d0j0c1q60o32cpj:
+              label: Balance consolidado. Activo. Inversiones financieras a largo
+                plazo. Resto
+            x-agp34c1g6d0j0c1q60o32cpk:
+              label: Balance consolidado. Activo. Activos por impuesto diferido
+            x-agp34c1g6d0j0c1q60o32cpl:
+              label: Balance consolidado. Activo. Deudores comerciales no corrientes
+            x-agp34c1g6d0j0c1q60o32cpm:
+              label: Balance consolidado. Activo. Activo corriente
+            x-agp34c1g6d0j0c1q60o32cpn:
+              label: Balance consolidado. Activo. Activos no corrientes mantenidos
+                para la venta
+            x-agp34c1g6d0j0c1q60o32cpo:
+              label: Balance consolidado. Activo. Existencias
+            x-agp34c1g6d0j0c1q60o32d1p:
+              label: Balance consolidado. Activo. Deudores comerciales y otras cuentas
+                a cobrar
+            x-agp34c1g6d0j0c1q60o32d9g:
+              label: Balance consolidado. Activo. Deudores comerciales y otras cuentas
+                a cobrar. Clientes por ventas y prestaciones de servicios
+            x-agp34c1g6d0j0c1q60o32d9m:
+              label: Balance consolidado. Activo. Deudores comerciales y otras cuentas
+                a cobrar. Activos por impuesto corriente
+            x-agp34c1g6d0j0c1q60o32d9p:
+              label: Balance consolidado. Activo. Deudores comerciales y otras cuentas
+                a cobrar. Otros deudores
+            x-agp34c1g6d0j0c1q60o32dhg:
+              label: Balance consolidado. Activo. Inversiones en empresas del grupo
+                y asociadas a corto plazo
+            x-agp34c1g6d0j0c1q60o32dhh:
+              label: Balance consolidado. Activo. Inversiones en empresas del grupo
+                y asociadas a corto plazo. Instrumentos de patrimonio
+            x-agp34c1g6d0j0c1q60o32dhn:
+              label: Balance consolidado. Activo. Inversiones en empresas del grupo
+                y asociadas a corto plazo. Resto
+            x-agp34c1g6d0j0c1q60o32dho:
+              label: Balance consolidado. Activo. Inversiones financieras a corto
+                plazo
+            x-agp34c1g6d0j0c1q60o32dhp:
+              label: Balance consolidado. Activo. Inversiones financieras a corto
+                plazo. Instrumentos de patrimonio
+            x-agp34c1g6d0j0c1q60o32dpl:
+              label: Balance consolidado. Activo. Inversiones financieras a corto
+                plazo. Resto
+            x-agp34c1g6d0j0c1q60o32dpm:
+              label: Balance consolidado. Activo. Periodificaciones a corto plazo
+            x-agp34c1g6d0j0c1q60o32dpn:
+              label: Balance consolidado. Activo. Efectivo y otros activos liquidos
+                equivalentes
+            x-agp34c1g6d0j0c1q60o32e1g:
+              label: Balance consolidado. Activo. Total activo
+            x-agp34c1g6d0j0c1q60o3ec1g:
+              label: Balance consolidado. Activo. Inmovilizado intangible. Propiedad
+                intelectual
+            x-agp34c1g6d0j0c1q60o3ec1h:
+              label: Balance consolidado. Activo. Derechos de emision de gases de
+                efecto invernadero
+            x-agp34c1g6d0j0c1q60o3ecpk:
+              label: Balance consolidado. Activo. Inmovilizado intangible. Investigacion
+            x-agp34c1g6d0j0c1q60o3edhh:
+              label: Balance consolidado. Activo. Otros
             x-agp34c1g6l0j0c1q60o36cpj:
               label: Estado de ingresos y gastos consolidados reconocidos. Total de
                 ingresos y gastos consolidados reconocidos. Total de ingresos y gastos

@@ -7,6 +7,101 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g6d0j0c1q60o32c1h:
+              label: Balanc consolidat. Actiu. Actiu no corrent
+            x-agp34c1g6d0j0c1q60o32c1i:
+              label: Balanc consolidat. Actiu. Immobilitzat intangible
+            x-agp34c1g6d0j0c1q60o32c1m:
+              label: Balanc consolidat. Actiu. Immobilitzat intangible. Fons de comerc
+                de consolidacio
+            x-agp34c1g6d0j0c1q60o32c9g:
+              label: Balanc consolidat. Actiu. Immobilitzat intangible. Altre immobilitzat
+                intangible
+            x-agp34c1g6d0j0c1q60o32c9h:
+              label: Balanc consolidat. Actiu. Immobilitzat material
+            x-agp34c1g6d0j0c1q60o32c9i:
+              label: Balanc consolidat. Actiu. Immobilitzat material. Terrenys i construccions
+            x-agp34c1g6d0j0c1q60o32c9j:
+              label: Balanc consolidat. Actiu. Immobilitzat material. Installacions
+                tecniques i altre immobilitzat material
+            x-agp34c1g6d0j0c1q60o32c9k:
+              label: Balanc consolidat. Actiu. Immobilitzat material. Immobilitzat
+                en curs i bestretes
+            x-agp34c1g6d0j0c1q60o32c9l:
+              label: Balanc consolidat. Actiu. Inversions immobiliaries
+            x-agp34c1g6d0j0c1q60o32c9o:
+              label: Balanc consolidat. Actiu. Inversions en empreses del grup i associades
+                a llarg termini
+            x-agp34c1g6d0j0c1q60o32c9p:
+              label: Balanc consolidat. Actiu. Inversions en empreses del grup i associades
+                a llarg termini. Instruments de patrimoni
+            x-agp34c1g6d0j0c1q60o32chl:
+              label: Balanc consolidat. Actiu. Inversions en empreses del grup i associades
+                a llarg termini. Resta
+            x-agp34c1g6d0j0c1q60o32chm:
+              label: Balanc consolidat. Actiu. Inversions financeres a llarg termini
+            x-agp34c1g6d0j0c1q60o32chn:
+              label: Balanc consolidat. Actiu. Inversions financeres a llarg termini.
+                Instruments de patrimoni
+            x-agp34c1g6d0j0c1q60o32cpj:
+              label: Balanc consolidat. Actiu. Inversions financeres a llarg termini.
+                Resta
+            x-agp34c1g6d0j0c1q60o32cpk:
+              label: Balanc consolidat. Actiu. Actius per impost diferit
+            x-agp34c1g6d0j0c1q60o32cpl:
+              label: Balanc consolidat. Actiu. Deutors comercials no corrents
+            x-agp34c1g6d0j0c1q60o32cpm:
+              label: Balanc consolidat. Actiu. Actiu corrent
+            x-agp34c1g6d0j0c1q60o32cpn:
+              label: Balanc consolidat. Actiu. Actius no corrents mantinguts per a
+                la venda
+            x-agp34c1g6d0j0c1q60o32cpo:
+              label: Balanc consolidat. Actiu. Existencies
+            x-agp34c1g6d0j0c1q60o32d1p:
+              label: Balanc consolidat. Actiu. Deutors comercials i altres comptes
+                a cobrar
+            x-agp34c1g6d0j0c1q60o32d9g:
+              label: Balanc consolidat. Actiu. Deutors comercials i altres comptes
+                a cobrar. Clients per vendes i prestacions de serveis
+            x-agp34c1g6d0j0c1q60o32d9m:
+              label: Balanc consolidat. Actiu. Deutors comercials i altres comptes
+                a cobrar. Actius per impost corrent
+            x-agp34c1g6d0j0c1q60o32d9p:
+              label: Balanc consolidat. Actiu. Deutors comercials i altres comptes
+                a cobrar. Altres deutors
+            x-agp34c1g6d0j0c1q60o32dhg:
+              label: Balanc consolidat. Actiu. Inversions en empreses del grup i associades
+                a curt termini
+            x-agp34c1g6d0j0c1q60o32dhh:
+              label: Balanc consolidat. Actiu. Inversions en empreses del grup i associades
+                a curt termini. Instruments de patrimoni
+            x-agp34c1g6d0j0c1q60o32dhn:
+              label: Balanc consolidat. Actiu. Inversions en empreses del grup i associades
+                a curt termini. Resta
+            x-agp34c1g6d0j0c1q60o32dho:
+              label: Balanc consolidat. Actiu. Inversions financeres a curt termini
+            x-agp34c1g6d0j0c1q60o32dhp:
+              label: Balanc consolidat. Actiu. Inversions financeres a curt termini.
+                Instruments de patrimoni
+            x-agp34c1g6d0j0c1q60o32dpl:
+              label: Balanc consolidat. Actiu. Inversions financeres a curt termini.
+                Resta
+            x-agp34c1g6d0j0c1q60o32dpm:
+              label: Balanc consolidat. Actiu. Periodificacions a curt termini
+            x-agp34c1g6d0j0c1q60o32dpn:
+              label: Balanc consolidat. Actiu. Efectiu i altres actius liquids equivalents
+            x-agp34c1g6d0j0c1q60o32e1g:
+              label: Balanc consolidat. Actiu. Total actiu
+            x-agp34c1g6d0j0c1q60o3ec1g:
+              label: Balanc consolidat. Actiu. Immobilitzat intangible. Propietat
+                intel-lectual
+            x-agp34c1g6d0j0c1q60o3ec1h:
+              label: Balanc consolidat. Actiu. Drets d'emissio de gasos amb efecte
+                d'hivernacle
+            x-agp34c1g6d0j0c1q60o3ecpk:
+              label: Balanc consolidat. Actiu. Immobilitzat intangible. Investigacio
+            x-agp34c1g6d0j0c1q60o3edhh:
+              label: Balanc consolidat. Actiu. Altres
             x-agp34c1g6l0j0c1q60o36cpj:
               label: Estat d'ingressos i despeses consolidats reconeguts. Total d'ingressos
                 i despeses consolidats reconeguts. Total d'ingressos i despeses atribuits
