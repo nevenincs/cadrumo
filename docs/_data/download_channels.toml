@@ -64,9 +64,9 @@ exposes_user_invoked_command = true
 # toolchain cannot be assumed. This is the property that earns the managed
 # installers.
 assumes_language_toolchain = false
-# External clients are separate products; this base application does not extend
-# or declare awareness of a host application.
-extends_host_application = false
+# It also ships as a Claude plugin and a Claude Desktop extension, so it carries
+# its host application's own channels.
+extends_host_application = true
 # Derived-but-unbuilt: cadrumo ships no standalone per-platform executables and
 # has no community Windows package submission yet. Both are selected by the rule
 # above and are release-blocking for neither, because an unclaimed channel does
@@ -78,13 +78,7 @@ id = "python"
 title = "Python package"
 platform = "Any platform with Python 3.13+"
 tier = "registry"
-artifact_kinds = [
-  "python-wheel",
-  "python-sdist",
-  "python-manifest",
-  "python-source-archive",
-  "python-wheelhouse",
-]
+artifact_kinds = ["python-wheel", "python-sdist", "python-manifest", "python-source-archive"]
 availability = "public_launch"
 package = "cadrumo"
 registry = "PyPI listing"
@@ -148,3 +142,38 @@ install_commands = [
   "brew tap nevenincs/tap",
   "brew install nevenincs/tap/cadrumo",
 ]
+
+[[channel]]
+id = "claude-plugin"
+title = "Claude plugin"
+platform = "Claude Code, Claude Desktop, Claude Cowork"
+tier = "host-extension"
+artifact_kinds = ["claude-plugin", "claude-marketplace"]
+availability = "public_launch"
+package = "cadrumo@neve"
+registry = "neve marketplace listing"
+marketplace = "neve"
+marketplace_source = "nevenincs/neve-marketplace"
+evidence_rows = [
+  "claude-code-plugin",
+  "claude-cowork-plugin",
+  "claude-desktop-plugin",
+]
+install_commands = [
+  "/plugin marketplace add nevenincs/neve-marketplace",
+  "/plugin install cadrumo@neve",
+]
+
+[[channel]]
+id = "mcpb"
+title = "Claude Desktop extension (MCPB)"
+platform = "Claude Desktop"
+tier = "host-extension"
+artifact_kinds = ["mcpb"]
+availability = "public_launch"
+package = "cadrumo"
+registry = "Claude Desktop extension directory"
+evidence_rows = ["claude-desktop-mcpb"]
+# The MCPB bundle is a single file installed by opening it in Claude Desktop,
+# not a registry command; the release-page artifact is the acquisition path.
+install_commands = []

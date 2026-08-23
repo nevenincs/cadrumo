@@ -1,14 +1,14 @@
 # Install Cadrumo
 
 This page covers installation only: get the package, install the `aeat`
-command, and add the optional extras you want. If you do not have Cadrumo on
-your machine yet,
+command, add the optional extras you want, and (if you use an AI assistant)
+install the agent surface. If you do not have Cadrumo on your machine yet,
 start at [Get Cadrumo](download.md) for the acquisition paths and their
 current availability. Configuration and first use start in the
 [quickstart](how-to/quickstart.md) once the install checks pass.
 
 Cadrumo works without any optional service. Google export, on-host LLM vision,
-and cloud LLM upload are all opt-in. The core filing
+cloud LLM upload, and the agent surface are all opt-in. The core filing
 workflow runs with none of them.
 
 ## Before you start
@@ -53,15 +53,15 @@ flag, so it goes before the command):
 ## Install optional extras from the checkout
 
 The core install is lean. Google export, the live AEAT browser, the
-Anthropic-API provider and OFX/QFX bank-statement import
+Anthropic-API provider, OFX/QFX bank-statement import, and the agent surface
 are optional package extras. Name the extras you need when you install:
 
 ```bash
 uv sync --extra google --extra browser
 ```
 
-The available extras are `google`, `browser`, `anthropic`, `ofx`, and `all`.
-`aeat config check` lists each extra and prints the exact install
+The available extras are `google`, `browser`, `anthropic`, `ofx`, `agent`, and
+`all`. `aeat config check` lists each extra and prints the exact install
 command for any that is missing. A feature whose extra is not installed
 refuses with the same hint instead of failing obscurely.
 
@@ -88,10 +88,38 @@ with that provider's flow. See
 
 Run `aeat config check` again after each change to confirm the gap is closed.
 
+## Run the Model Context Protocol (MCP) surface
+
+Cadrumo ships an MCP server, `cadrumo-mcp`, so an AI
+assistant can operate the same local, gated commands the CLI exposes,
+together with an agent harness: the operator rules, taxpayer-situation
+skills, and scoped agent personas that keep the assistant inside the safety
+boundary.
+
+In the beta, run the server from the same repository checkout:
+
+```bash
+uv sync --extra agent
+uv run cadrumo-mcp --help
+```
+
+[Connect an agent](how-to/connect-an-agent.md) shows the source-checkout
+registration and explains what the agent can and cannot do.
+
+### Materialize the agent harness in a project workspace
+
+To place the harness (rules, personas, skills, and a `CLAUDE.md`) directly
+into a project directory, materialize it with the CLI:
+
+```{cli-sequence} install-agent-harness
+:verify: Confirm the operator harness materializes into the chosen workspace.
+```
+
 ## Next steps
 
 - [Quickstart](how-to/quickstart.md) - from an empty profile to an exported
   modelo file.
 - [Set up a profile](how-to/profile-setup.md) - including the per-profile
   service capabilities (Google export, LLM vision, cloud evidence upload).
+- [Connect an agent](how-to/connect-an-agent.md)
 - [Troubleshooting](how-to/troubleshooting.md)

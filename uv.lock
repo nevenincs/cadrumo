@@ -7,6 +7,10 @@ resolution-markers = [
 ]
 
 [manifest]
+members = [
+    "cadrumo",
+    "cadrumo-harness",
+]
 overrides = [{ name = "tree-sitter-language-pack", specifier = "<1.6.2" }]
 
 [[package]]
@@ -236,6 +240,7 @@ dev = [
     { name = "anthropic" },
     { name = "babel" },
     { name = "basedpyright" },
+    { name = "cadrumo-harness" },
     { name = "complexipy" },
     { name = "deptry" },
     { name = "doc8" },
@@ -347,6 +352,7 @@ dev = [
     { name = "anthropic", specifier = ">=0.74.1,<1" },
     { name = "babel", specifier = ">=2.16" },
     { name = "basedpyright", specifier = ">=1.39.9" },
+    { name = "cadrumo-harness", editable = "src/cadrumo-harness" },
     { name = "complexipy", specifier = ">=3.3.0" },
     { name = "deptry", specifier = ">=0.24" },
     { name = "doc8", specifier = ">=1.1" },
@@ -413,6 +419,27 @@ source = { directory = "packaging/cadrumo_data_manuals" }
 name = "cadrumo-data-official"
 version = "0.2.2"
 source = { directory = "packaging/cadrumo_data_official" }
+
+[[package]]
+name = "cadrumo-harness"
+version = "0.1.0"
+source = { editable = "src/cadrumo-harness" }
+dependencies = [
+    { name = "anyio" },
+    { name = "cadrumo" },
+    { name = "mcp" },
+    { name = "pydantic" },
+    { name = "pyyaml" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "anyio", specifier = ">=4.5,<5" },
+    { name = "cadrumo", editable = "." },
+    { name = "mcp", specifier = ">=2,<3" },
+    { name = "pydantic", specifier = ">=2.12.5,<3" },
+    { name = "pyyaml", specifier = ">=6.0.3,<7" },
+]
 
 [[package]]
 name = "certifi"

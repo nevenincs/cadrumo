@@ -355,7 +355,7 @@ class PythonCohort:
         return (self.manuals_wheel, self.official_wheel)
 
     @property
-    def product_wheels(self) -> tuple[Path, Path, Path]:
+    def product_wheels(self) -> tuple[Path, Path, Path, Path]:
         """Return every exact installable product wheel in stable order."""
         return (self.root_wheel, self.manuals_wheel, self.official_wheel)
 

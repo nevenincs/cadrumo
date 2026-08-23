@@ -9,13 +9,13 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: 2026-07-19 09:00+0200\n"
-"Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
-"Language-Team: es <LL@li.org>\n"
+"Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../download.md:1
@@ -26,13 +26,13 @@ msgstr "Obtén Cadrumo"
 msgid ""
 "This page covers how to install the current Cadrumo beta: the supported "
 "install paths, what each one gives you, and how to confirm the install "
-"before you prepare your first declaration. Cadrumo runs on Windows, macOS, "
-"and Linux."
+"before you prepare your first declaration. Cadrumo runs on Windows, "
+"macOS, and Linux."
 msgstr ""
 "Esta página cubre cómo instalar la beta actual de Cadrumo: las vías de "
 "instalación admitidas, qué te ofrece cada una y cómo confirmar la "
-"instalación antes de preparar tu primera declaración. Cadrumo funciona en "
-"Windows, macOS y Linux."
+"instalación antes de preparar tu primera declaración. Cadrumo funciona en"
+" Windows, macOS y Linux."
 
 #: ../../download.md:8
 msgid ""
@@ -41,11 +41,11 @@ msgid ""
 "before the release is cut. The beta is distributed through the project's "
 "GitHub repository; public registry listings open with the public launch."
 msgstr ""
-"Cadrumo está en beta. Cada versión incluye paquetes instalables para cada "
-"canal admitido, y cada paquete se prueba instalándolo en su plataforma antes"
-" de cerrar la versión. La beta se distribuye a través del repositorio de "
-"GitHub del proyecto; los listados en los registros públicos se abrirán con "
-"el lanzamiento público."
+"Cadrumo está en beta. Cada versión incluye paquetes instalables para cada"
+" canal admitido, y cada paquete se prueba instalándolo en su plataforma "
+"antes de cerrar la versión. La beta se distribuye a través del "
+"repositorio de GitHub del proyecto; los listados en los registros "
+"públicos se abrirán con el lanzamiento público."
 
 #: ../../download.md:14
 msgid "What you need"
@@ -57,13 +57,13 @@ msgstr "Python 3.13 o posterior."
 
 #: ../../download.md:17
 msgid ""
-"[Git](https://git-scm.com/downloads) and "
-"[uv](https://docs.astral.sh/uv/getting-started/installation/), each "
-"installed per its official guide for your operating system."
+"[Git](https://git-scm.com/downloads) and [uv](https://docs.astral.sh/uv"
+"/getting-started/installation/), each installed per its official guide "
+"for your operating system."
 msgstr ""
-"[Git](https://git-scm.com/downloads) y "
-"[uv](https://docs.astral.sh/uv/getting-started/installation/), cada uno "
-"instalado según su guía oficial para tu sistema operativo."
+"[Git](https://git-scm.com/downloads) y [uv](https://docs.astral.sh/uv"
+"/getting-started/installation/), cada uno instalado según su guía oficial"
+" para tu sistema operativo."
 
 #: ../../download.md:19
 msgid "Around 200 MB of free disk space."
@@ -71,21 +71,22 @@ msgstr "Alrededor de 200 MB de espacio libre en disco."
 
 #: ../../download.md:20
 msgid ""
-"Access to the [project repository](https://github.com/nevenincs/cadrumo) as "
-"a beta participant."
+"Access to the [project repository](https://github.com/nevenincs/cadrumo) "
+"as a beta participant."
 msgstr ""
-"Acceso al [repositorio del proyecto](https://github.com/nevenincs/cadrumo) "
-"como participante de la beta."
+"Acceso al [repositorio del "
+"proyecto](https://github.com/nevenincs/cadrumo) como participante de la "
+"beta."
 
 #: ../../download.md:23
 msgid ""
 "No taxpayer data, AEAT credentials, or online account is involved in the "
-"install. Cadrumo stores everything locally and encrypted; nothing about your"
-" taxes leaves your machine."
+"install. Cadrumo stores everything locally and encrypted; nothing about "
+"your taxes leaves your machine."
 msgstr ""
-"En la instalación no interviene ningún dato del contribuyente, credenciales "
-"de la AEAT ni cuenta en línea. Cadrumo lo guarda todo de forma local y "
-"cifrada; nada sobre tus impuestos sale de tu máquina."
+"En la instalación no interviene ningún dato del contribuyente, "
+"credenciales de la AEAT ni cuenta en línea. Cadrumo lo guarda todo de "
+"forma local y cifrada; nada sobre tus impuestos sale de tu máquina."
 
 #: ../../download.md:27
 msgid "Install the current beta"
@@ -96,28 +97,29 @@ msgid ""
 "Install from the repository checkout. The flow is identical on Windows, "
 "macOS, and Linux:"
 msgstr ""
-"Instala desde la copia del repositorio. El proceso es idéntico en Windows, "
-"macOS y Linux:"
+"Instala desde la copia del repositorio. El proceso es idéntico en "
+"Windows, macOS y Linux:"
 
 #: ../../download.md:38
 msgid ""
-"`uv sync` creates an isolated environment and installs the `aeat` command "
-"into it with every dependency pinned to the tested versions. Nothing is "
-"installed globally and nothing outside the checkout directory is modified: "
-"removing the directory removes Cadrumo. To move to a newer beta release "
-"later, run `git pull` followed by `uv sync` in the same directory."
+"`uv sync` creates an isolated environment and installs the `aeat` command"
+" into it with every dependency pinned to the tested versions. Nothing is "
+"installed globally and nothing outside the checkout directory is "
+"modified: removing the directory removes Cadrumo. To move to a newer beta"
+" release later, run `git pull` followed by `uv sync` in the same "
+"directory."
 msgstr ""
 "`uv sync` crea un entorno aislado e instala en él el comando `aeat` con "
-"todas las dependencias fijadas a las versiones probadas. No se instala nada "
-"de forma global y no se modifica nada fuera del directorio de la copia: "
-"eliminar el directorio elimina Cadrumo. Para pasar más adelante a una "
-"versión beta más reciente, ejecuta `git pull` seguido de `uv sync` en el "
-"mismo directorio."
+"todas las dependencias fijadas a las versiones probadas. No se instala "
+"nada de forma global y no se modifica nada fuera del directorio de la "
+"copia: eliminar el directorio elimina Cadrumo. Para pasar más adelante a "
+"una versión beta más reciente, ejecuta `git pull` seguido de `uv sync` en"
+" el mismo directorio."
 
 #: ../../download.md:44
 msgid ""
-"Release artifacts for the current version, including the packaged builds for"
-" every channel below, are attached to the [latest "
+"Release artifacts for the current version, including the packaged builds "
+"for every channel below, are attached to the [latest "
 "release](https://github.com/nevenincs/cadrumo/releases/latest)."
 msgstr ""
 "Los artefactos de la versión actual, incluidas las compilaciones "
@@ -132,6 +134,26 @@ msgstr "Confirma la instalación"
 msgid "Run the version check from the checkout:"
 msgstr "Ejecuta la comprobación de versión desde la copia:"
 
+#: ../../download.md:56
+msgid ""
+"A version number confirms the install. Then run the full workstation "
+"check and add the optional extras you want (Google export, the live AEAT "
+"browser, OFX/QFX import, the agent surface) by following [Install Cadrumo"
+"](workstation-setup.md), which covers the dependency report, platform "
+"checks, and per-extra install commands. To let an AI assistant such as "
+"Claude drive Cadrumo, continue with [Connect an agent (MCP)](how-to"
+"/connect-an-agent.md)."
+msgstr ""
+"Un número de versión confirma la instalación. Después ejecuta la "
+"comprobación completa de la estación de trabajo y añade los extras "
+"opcionales que quieras (exportación a Google, el navegador en vivo de la "
+"AEAT, la importación OFX/QFX, la superficie de agente) siguiendo "
+"[Instalar Cadrumo](workstation-setup.md), que cubre el informe de "
+"dependencias, las comprobaciones de plataforma y los comandos de "
+"instalación de cada extra. Para dejar que un asistente de IA como Claude "
+"maneje Cadrumo, continúa con [Conecta un agente (MCP)](how-to/connect-an-"
+"agent.md)."
+
 #: ../../download.md:64
 msgid "Install channels"
 msgstr "Canales de instalación"
@@ -144,10 +166,10 @@ msgid ""
 "channel's install command once that channel is live."
 msgstr ""
 "Cada versión compila y prueba mediante instalación un paquete nativo por "
-"canal. Los participantes de la beta obtienen todos los artefactos desde la "
-"página de la versión; el listado en el registro de cada canal se abrirá con "
-"el lanzamiento público, y esta página muestra el comando de instalación de "
-"un canal cuando ese canal ya está activo."
+"canal. Los participantes de la beta obtienen todos los artefactos desde "
+"la página de la versión; el listado en el registro de cada canal se "
+"abrirá con el lanzamiento público, y esta página muestra el comando de "
+"instalación de un canal cuando ese canal ya está activo."
 
 #: ../../download.md:78
 msgid "Platform"
@@ -203,6 +225,34 @@ msgstr ""
 "Artefacto de la página de la versión; tap de Homebrew en el lanzamiento "
 "público"
 
+#: ../../download.md:90
+msgid "Claude Code, Claude Desktop, Claude Cowork"
+msgstr "Claude Code, Claude Desktop, Claude Cowork"
+
+#: ../../download.md:91
+msgid "Claude plugin"
+msgstr "Plugin de Claude"
+
+#: ../../download.md:92
+msgid "Release page artifact; neve marketplace listing at public launch"
+msgstr ""
+"Artefacto de la página de la versión; listado en el marketplace neve en "
+"el lanzamiento público"
+
+#: ../../download.md:93
+msgid "Claude Desktop"
+msgstr "Claude Desktop"
+
+#: ../../download.md:94
+msgid "Claude Desktop extension (MCPB)"
+msgstr "Extensión de Claude Desktop (MCPB)"
+
+#: ../../download.md:95
+msgid "Release page artifact; Claude Desktop extension directory at public launch"
+msgstr ""
+"Artefacto de la página de la versión; directorio de extensiones de Claude"
+" Desktop en el lanzamiento público"
+
 #: ../../download.md:98
 msgid "Per-channel install paths:"
 msgstr "Vías de instalación por canal:"
@@ -218,7 +268,8 @@ msgid ""
 "page artifact attached to the latest release."
 msgstr ""
 "El listado en PyPI se abrirá con el lanzamiento público; hasta entonces, "
-"instala el artefacto de la página de la versión adjunto a la última versión."
+"instala el artefacto de la página de la versión adjunto a la última "
+"versión."
 
 #: ../../download.md:104
 #, fuzzy
@@ -231,13 +282,13 @@ msgid ""
 "page artifact attached to the latest release."
 msgstr ""
 "El bucket de Scoop se abrirá con el lanzamiento público; hasta entonces, "
-"instala el artefacto de la página de la versión adjunto a la última versión."
+"instala el artefacto de la página de la versión adjunto a la última "
+"versión."
 
 #: ../../download.md:108
 #, fuzzy
 msgid "**Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)"
-msgstr ""
-"**Fórmula de Homebrew** — macOS (Apple silicon), Linux (x86-64 y arm64)"
+msgstr "**Fórmula de Homebrew** — macOS (Apple silicon), Linux (x86-64 y arm64)"
 
 #: ../../download.md:110
 msgid ""
@@ -245,18 +296,47 @@ msgid ""
 "page artifact attached to the latest release."
 msgstr ""
 "El tap de Homebrew se abrirá con el lanzamiento público; hasta entonces, "
-"instala el artefacto de la página de la versión adjunto a la última versión."
+"instala el artefacto de la página de la versión adjunto a la última "
+"versión."
+
+#: ../../download.md:112
+#, fuzzy
+msgid "**Claude plugin**: Claude Code, Claude Desktop, Claude Cowork"
+msgstr "**Plugin de Claude** — Claude Code, Claude Desktop, Claude Cowork"
+
+#: ../../download.md:114
+msgid ""
+"The neve marketplace listing opens at public launch; until then, install "
+"the release-page artifact attached to the latest release."
+msgstr ""
+"El listado en el marketplace neve se abrirá con el lanzamiento público; "
+"hasta entonces, instala el artefacto de la página de la versión adjunto a"
+" la última versión."
+
+#: ../../download.md:116
+#, fuzzy
+msgid "**Claude Desktop extension (MCPB)**: Claude Desktop"
+msgstr "**Extensión de Claude Desktop (MCPB)** — Claude Desktop"
+
+#: ../../download.md:118
+msgid ""
+"The Claude Desktop extension directory opens at public launch; until "
+"then, install the release-page artifact attached to the latest release."
+msgstr ""
+"El directorio de extensiones de Claude Desktop se abrirá con el "
+"lanzamiento público; hasta entonces, instala el artefacto de la página de"
+" la versión adjunto a la última versión."
 
 #: ../../download.md:123
 msgid ""
-"Every published artifact carries the exact bytes that passed its platform's "
-"install-and-run checks for that release, and each release's notes in "
-"[Updates](updates.md) name what changed."
+"Every published artifact carries the exact bytes that passed its "
+"platform's install-and-run checks for that release, and each release's "
+"notes in [Updates](updates.md) name what changed."
 msgstr ""
 "Cada artefacto publicado lleva los bytes exactos que superaron las "
-"comprobaciones de instalación y ejecución de su plataforma para esa versión,"
-" y las notas de cada versión en [Actualizaciones](updates.md) indican qué ha"
-" cambiado."
+"comprobaciones de instalación y ejecución de su plataforma para esa "
+"versión, y las notas de cada versión en [Actualizaciones](updates.md) "
+"indican qué ha cambiado."
 
 #: ../../download.md:127
 msgid "After you install"
@@ -267,14 +347,26 @@ msgid "Quickstart"
 msgstr "Guía rápida"
 
 #: ../../download.md:138
-msgid ""
-"Take the shortest path from an empty profile to an exported modelo file."
+msgid "Take the shortest path from an empty profile to an exported modelo file."
 msgstr ""
-"Toma el camino más corto desde un perfil vacío hasta un fichero de modelo "
-"exportado."
+"Toma el camino más corto desde un perfil vacío hasta un fichero de modelo"
+" exportado."
+
+#: ../../download.md:141
+msgid "Connect an agent (MCP)"
+msgstr "Conecta un agente (MCP)"
+
+#: ../../download.md:146
+msgid ""
+"Let an AI assistant such as Claude drive Cadrumo with you, on your "
+"machine."
+msgstr ""
+"Deja que un asistente de IA como Claude maneje Cadrumo contigo, en tu "
+"máquina."
 
 #~ msgid "macOS (Apple silicon)"
 #~ msgstr "macOS (Apple silicon)"
 
 #~ msgid "Repository checkout today; PyPI at public launch"
 #~ msgstr "Copia del repositorio hoy; PyPI en el lanzamiento público"
+

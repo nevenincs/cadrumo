@@ -1,0 +1,166 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 23:20+0200\n"
+"PO-Revision-Date: 2026-07-19 10:00+0200\n"
+"Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/connect-an-agent.md:1
+msgid "Connect an agent (MCP)"
+msgstr "Ügynök csatlakoztatása (MCP)"
+
+#: ../../how-to/connect-an-agent.md:3
+msgid ""
+"Use this when you want an AI assistant, such as Claude, to operate "
+"Cadrumo with you. The assistant reads your records, asks the engine to "
+"run calculations, and explains results in plain language. Every figure "
+"still comes from the deterministic engine, and nothing is ever submitted "
+"to the Agencia Estatal de Administración Tributaria (AEAT): the agent "
+"surface exposes the same local, gated commands the CLI does."
+msgstr ""
+"Ezt akkor használja, amikor azt szeretné, hogy egy MI-asszisztens, "
+"például a Claude, Önnel együtt működtesse a Cadrumót. Az asszisztens "
+"beolvassa a nyilvántartásait, megkéri a motort a számítások futtatására, "
+"és közérthető nyelven elmagyarázza az eredményeket. Minden szám továbbra "
+"is a determinisztikus motorból származik, és semmi sem kerül benyújtásra "
+"az Agencia Estatal de Administración Tributariának (AEAT): az "
+"ügynökfelület ugyanazokat a helyi, korlátozott parancsokat teszi "
+"elérhetővé, mint a CLI."
+
+#: ../../how-to/connect-an-agent.md:10
+msgid "What the agent connection is"
+msgstr "Mi az ügynökkapcsolat"
+
+#: ../../how-to/connect-an-agent.md:12
+msgid ""
+"Cadrumo ships an MCP (Model Context Protocol) server, `cadrumo-mcp`, "
+"alongside the `aeat` command. MCP is an open standard that lets "
+"assistants call tools. Any MCP-capable client can connect; Claude is one "
+"such client."
+msgstr ""
+"A Cadrumo az `aeat` parancs mellett egy MCP-kiszolgálót (Model Context "
+"Protocol) is szállít, a `cadrumo-mcp`-t. Az MCP egy nyílt szabvány, amely"
+" lehetővé teszi, hogy az asszisztensek eszközöket hívjanak meg. Bármely "
+"MCP-képes kliens csatlakozhat; a Claude egy ilyen kliens."
+
+#: ../../how-to/connect-an-agent.md:16
+msgid ""
+"The server exposes the CLI's read and prepare operations as tools, plus "
+"grounded search over the bundled BOE and AEAT legal corpus. It refuses "
+"live submission by construction, exactly like the CLI."
+msgstr ""
+"A kiszolgáló a CLI olvasási és előkészítő műveleteit teszi elérhetővé "
+"eszközként, valamint megalapozott keresést a mellékelt BOE- és AEAT-"
+"jogszabálykorpuszon. Felépítéséből adódóan elutasítja az élő benyújtást, "
+"pontosan úgy, mint a CLI."
+
+#: ../../how-to/connect-an-agent.md:20
+msgid ""
+"In the beta, connect from the repository checkout below. Every release "
+"also builds the plugin and Desktop extension artifacts; their marketplace"
+" and registry listings open with the public launch (see [Get "
+"Cadrumo](../download.md) for channel status)."
+msgstr ""
+"A bétában az alábbi tároló-kicsekkolásból csatlakozzon. Minden kiadás "
+"elkészíti a beépülő és az asztali bővítmény műtárgyait is; ezek piactéri "
+"és registry-listázásai a nyilvános indulással nyílnak meg (a csatornák "
+"állapotát lásd az [A Cadrumo beszerzése](../download.md) oldalon)."
+
+#: ../../how-to/connect-an-agent.md:25
+msgid "Prepare the source checkout"
+msgstr "A forráskód-kiszedés előkészítése"
+
+#: ../../how-to/connect-an-agent.md:34
+msgid "Register the source server"
+msgstr "A forráskiszolgáló regisztrálása"
+
+#: ../../how-to/connect-an-agent.md:36
+msgid ""
+"Register `uv run cadrumo-mcp` as a stdio server and set the checkout as "
+"the working directory. In clients that accept a JSON server definition:"
+msgstr ""
+"Regisztrálja az `uv run cadrumo-mcp`-t stdio-kiszolgálóként, és állítsa "
+"be a kiszedést munkakönyvtárként. Azoknál a klienseknél, amelyek "
+"elfogadnak egy JSON-kiszolgálódefiníciót:"
+
+#: ../../how-to/connect-an-agent.md:51
+msgid ""
+"Replace the example path with the absolute path to your authorized "
+"checkout. Do not replace this with `uvx`, a marketplace install, or a "
+"downloaded extension until public distribution is announced."
+msgstr ""
+"Cserélje le a példaútvonalat az engedélyezett kiszedéséhez tartozó "
+"abszolút útvonalra. Ne cserélje le ezt `uvx`-re, egy piactéri telepítésre"
+" vagy egy letöltött bővítményre, amíg a nyilvános terjesztést be nem "
+"jelentik."
+
+#: ../../how-to/connect-an-agent.md:55
+msgid "Before the first agent session"
+msgstr "Az első ügynökmunkamenet előtt"
+
+#: ../../how-to/connect-an-agent.md:57
+msgid ""
+"The server uses the same local encrypted store and the same active "
+"profile as the CLI. A server cannot answer a passphrase prompt, so "
+"configure the passphrase for unattended runs first - see [Run without a "
+"passphrase prompt](protect-data-access.md#run-without-a-passphrase-"
+"prompt)."
+msgstr ""
+"A kiszolgáló ugyanazt a helyi titkosított tárolót és ugyanazt az aktív "
+"profilt használja, mint a CLI. Egy kiszolgáló nem tud válaszolni egy "
+"jelmondat-kérésre, ezért először állítsa be a jelmondatot a felügyelet "
+"nélküli futtatásokhoz - lásd [Futtatás jelmondat-kérés nélkül](protect-"
+"data-access.md#run-without-a-passphrase-prompt)."
+
+#: ../../how-to/connect-an-agent.md:62
+msgid "What the agent can and cannot do"
+msgstr "Mit tehet és mit nem tehet az ügynök"
+
+#: ../../how-to/connect-an-agent.md:64
+msgid ""
+"The agent can import and classify records, run calculations, verify "
+"drafts, and prepare exports, because those are local operations. It "
+"cannot file, notify, or submit anything to AEAT, and it cannot invent a "
+"figure: calculations always run inside the deterministic engine, and "
+"every value keeps its legal references. You review and file yourself, "
+"exactly as in the [Quickstart](quickstart.md) and the [filing guide"
+"](file-at-aeat.md)."
+msgstr ""
+"Az ügynök importálhat és osztályozhat nyilvántartásokat, futtathat "
+"számításokat, ellenőrizhet piszkozatokat és előkészíthet exportokat, mert"
+" ezek helyi műveletek. Nem nyújthat be, nem küldhet értesítést, és nem "
+"küldhet be semmit az AEAT-hoz, és nem találhat ki számot: a számítások "
+"mindig a determinisztikus motoron belül futnak, és minden érték megtartja"
+" a jogszabályi hivatkozásait. Ön tekinti át és nyújtja be maga, pontosan "
+"úgy, mint a [Gyorsindítóban](quickstart.md) és a [benyújtási útmutatóban"
+"](file-at-aeat.md)."
+
+#~ msgid ""
+#~ "Public plugin, Desktop extension, and "
+#~ "PyPI acquisition are not available yet."
+#~ " For now, connect from an authorized"
+#~ " source checkout. Generated plugin and "
+#~ "extension artifacts are release candidates,"
+#~ " not public install channels."
+#~ msgstr ""
+#~ "A nyilvános beépülő modul, az asztali"
+#~ " bővítmény és a PyPI-ből való "
+#~ "beszerzés még nem érhető el. Egyelőre"
+#~ " egy engedélyezett forráskód-kiszedésből "
+#~ "csatlakozzon. A generált beépülő modul- "
+#~ "és bővítmény-műtermékek kiadásjelöltek, nem"
+#~ " nyilvános telepítési csatornák."
+
