@@ -4,7 +4,7 @@ tags:
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
 modified: '2026-08-23'
-body_hash: 'sha256:570a129c9a418d8b51edaba8c4b8b04c36e6c70e254b0c4e8b87eb00c053dee3'
+body_hash: 'sha256:8c423ec538e5fe2a0ef5238954417a00848cd5a5f2ef593d16706baed1849071'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
@@ -49,7 +49,7 @@ Move all scalar-secret verbs to the capability and delete obsolete routes and na
 Migrate login and profile creation while preserving policy and mutation ordering.
 
 - [x] `W02.P03.S06` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and migrate config login to both canonical explicit channels and explicit prompt or refusal while deleting CLI environment, settings, keyring, substrate fallthrough, and local transport branches; `src/cadrumo/entrypoints/cli/_config/_custody.py`.
-- [ ] `W02.P03.S07` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and migrate profile creation to both canonical channels, remove manual injection and CLI environment fallback, and preserve confirmation, policy, lazy materialization, and mutation order; `src/cadrumo/entrypoints/cli/_config/_scripted_registration.py and src/cadrumo/entrypoints/cli/_config/_manager_dispatch.py`.
+- [x] `W02.P03.S07` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and migrate profile creation to both canonical channels, remove manual injection and CLI environment fallback, and preserve confirmation, policy, lazy materialization, and mutation order; `src/cadrumo/entrypoints/cli/_config/_scripted_registration.py and src/cadrumo/entrypoints/cli/_config/_manager_dispatch.py`.
 
 ### Phase `W02.P04` - Rotation, recovery, and certificate custody
 

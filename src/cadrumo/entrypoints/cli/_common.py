@@ -730,7 +730,7 @@ def _emit_envelope(
     # ``--format`` values (e.g. ``xml``) raise the shared refusal contract.
     # ``render_command_output``
     # ignores ``payload`` outside JSON mode and emits the line iterator.
-    rendered_lines = (*lines, *notice_lines(root_notices), *_action_text_lines(resolved_notices))
+    rendered_lines = (*lines, *notice_lines(resolved_notices), *_action_text_lines(resolved_notices))
     if not metadata_invocation:
         from ...application.operator_output import sandbox_banner_line, sandbox_notice_for_active_bucket
 

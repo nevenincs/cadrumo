@@ -107,7 +107,7 @@ def test_scripted_create_persists_the_field_flags_it_was_given(tmp_path: Path) -
 
         shown = invoke_cached_cli(
             ("--format", "json", "--profile-secrets-stdin", "config", "profile", "show"),
-            input=json.dumps({"passphrase": _PASSPHRASE}),
+            input=json.dumps({"profile_passphrase": _PASSPHRASE}),
         )
 
     # `show` reports a non-zero code for an INCOMPLETE profile, which this one
@@ -115,7 +115,9 @@ def test_scripted_create_persists_the_field_flags_it_was_given(tmp_path: Path) -
     # the rest afterwards. The envelope is still a success document, and it is
     # the facts inside it that this case is about.
     document = json.loads(shown.stdout)
-    assert document["status"] == "success", shown.output
+    # Explicit root authentication is process-local without a usable system
+    # keyring, so the shared envelope truthfully elevates its notice to warning.
+    assert document["status"] == "warning", shown.output
     values = _fact_values(document)
     assert values.get("identity.name") == "Flagged"
     assert values.get("identity.surnames") == "Operator"
@@ -388,7 +390,7 @@ def test_scripted_create_refuses_a_blank_name(tmp_path: Path) -> None:
 
 
 def test_scripted_create_is_refused_for_a_duplicate_label(tmp_path: Path) -> None:
-    """The second create under one label refuses and leaves the first intact."""
+    """Text success renders normally; a retry refuses without a second mutation."""
     with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
         first = invoke_cached_cli(
             ("config", "profile", "create", "Only One", "--quiet", "--secrets-stdin"),

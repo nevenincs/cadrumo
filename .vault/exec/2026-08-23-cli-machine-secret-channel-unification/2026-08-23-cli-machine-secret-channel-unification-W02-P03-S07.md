@@ -27,6 +27,7 @@ related:
 - Prove explicit stdin creation, fd reading and closure, hostile configured-secret non-interference, lazy help/schema parity, policy refusal, fact ordering, and real encrypted creation.
 - Remediate review findings with real lazy-leaf descriptor success and dual-channel conflict-before-read and no-mutation coverage.
 - Validate direct command-graph metadata projection after the generated registration cache and generator were retired by shared centralisation work.
+- Correct the shared text-envelope notice collection exposed by the full creation suite and retain a create-and-retry single-mutation regression gate.
 
 ## Outcome
 
@@ -45,3 +46,5 @@ The installed `vaultspec-rag` client initially refused discovery because it was 
 Focused Ruff and 36 profile-create, manager-routing, command-spec, and secure-input tests passed. An additional integration checkpoint passed 25 of 27 tests; its two failures concern the concurrently modified root error-envelope command identifier, outside this Step and absent from its scoped diff. Focused static analysis reported only existing private-use and unknown-wrapper findings in the unchanged manager dispatch/common boundary. No data was deleted and no compatibility scaffold was added.
 
 The initial remediation attempt correctly left the Step open because the then-running command-spec migration made the legacy generator incoherent. On the resumed coherent HEAD, that migration had structurally retired the generated registration cache and generator in favor of direct graph projection. The authoritative graph, input-schema, metadata, help, and focused creation suites then passed together; no generated JSON was hand-edited or restored.
+
+Final closure passed all 16 profile-creation integration tests, 17 direct command-graph, machine-secret authority, and config-spec tests, focused Ruff, and focused static typing with zero findings. The real projected creation row contains exactly `--secrets-stdin` followed by `--secrets-fd` and the strict `passphrase` plus `passphrase_confirmation` payload.
