@@ -167,6 +167,7 @@ from ._source_connectivity_authority import (
     RepositoryRootEvidenceDigestVerifier,
     build_calculation_route_source_ownership_catalogue,
 )
+from .source_connectivity import RegistryDestinationRecord, derive_registry_destination_records
 
 _import_module("cadrumo.domain.renta")
 
@@ -576,6 +577,7 @@ __all__ = [
     "RegistryCitationsVerificationReport",
     "RegistryConformanceProfile",
     "RegistryCorpusIssueProjection",
+    "RegistryDestinationRecord",
     "RegistryManualId",
     "RegistryManualPartProjection",
     "RegistryManualRuleProjection",
@@ -605,6 +607,7 @@ __all__ = [
     "build_registry_conformance_profile",
     "compare_annual_casilla_population",
     "compare_annual_casilla_population_for_revision",
+    "derive_registry_destination_records",
     "diff_registry_revisions",
     "inspect_registry_tree",
     "list_registry_citations",

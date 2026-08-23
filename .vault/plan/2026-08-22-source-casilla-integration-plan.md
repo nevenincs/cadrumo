@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:c52c3ea8ca7493434cc8c24eaaf4ddda6d15cc7a66bc5b5e337d44f0fec556a4'
+body_hash: 'sha256:7578d29a6400c89cefad6764ba7e4976753c760461f3344d72c3145b133ea429'
 ---
 
 # `source-casilla-integration` plan
@@ -65,7 +65,7 @@ Define the typed candidate identity, evidence, ownership, disposition, expiry, a
 
 Produce deterministic records for every validated manual casilla, binding, relation, formula, and source disposition.
 
-- [ ] `W01.P02.S06` - derive registry destination records from validated revision snapshots; `src/cadrumo/application/registry/source_connectivity.py`.
+- [x] `W01.P02.S06` - derive registry destination records from validated revision snapshots; `src/cadrumo/application/registry/source_connectivity.py`.
 - [ ] `W01.P02.S07` - classify manual casillas without inferring substitutability from labels or numeric identifiers; `src/cadrumo/application/registry/source_connectivity.py`.
 - [ ] `W01.P02.S08` - project declared bindings, typed selectors, aggregation operations, and target casillas; `src/cadrumo/application/registry/source_connectivity.py`.
 - [ ] `W01.P02.S09` - project relations, formula dependencies, and existing source dispositions; `src/cadrumo/application/registry/source_connectivity.py`.
