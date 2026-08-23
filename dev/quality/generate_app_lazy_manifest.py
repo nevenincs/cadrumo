@@ -19,10 +19,40 @@ LANGUAGES = ("ca", "en", "es", "hu")
 def _probe(language: str) -> dict[str, dict[str, object]]:
     code = r"""
 import json
+import typer
 from typer._click.core import Context
-from cadrumo.entrypoints.cli import full_command_tree
+from typer.main import get_command
+from cadrumo.entrypoints.cli._app_execution_policies import declare_metadata_group
+from cadrumo.entrypoints.cli import _app_diagnostics, _app_live, _app_maintenance, _app_quickfile, _ledger, _modelo, _overview, _review, registry
+from cadrumo.entrypoints.cli._app_diagnostics_telemetry import telemetry_app
+from cadrumo.entrypoints.cli._ledger_review_cli import register_ledger_review_command
+from cadrumo.entrypoints.cli._participation_cli import register_participation_commands
 
-root = full_command_tree()
+# Build the canonical source applications independently of the generated lazy
+# manifest and runtime registration table.  Runtime omissions therefore cannot
+# make their own expected set disappear.
+_app_diagnostics.app.add_typer(telemetry_app, name="telemetry")
+register_ledger_review_command(_ledger.app, resolve_transaction_id=_ledger._resolve_read_id)
+register_participation_commands(_ledger.app, resolve_transaction_id=_ledger._resolve_read_id)
+source_app = typer.Typer(name="app")
+declare_metadata_group(source_app)
+for name, source in (
+    ("diagnostics", _app_diagnostics.app),
+    ("ledger", _ledger.app),
+    ("live", _app_live.app),
+    ("maintenance", _app_maintenance.app),
+    ("modelo", _modelo.app),
+    ("overview", _overview.app),
+    ("quickfile", _app_quickfile.app),
+    ("registry", registry.app),
+    ("review", _review.app),
+):
+    source_app.add_typer(source, name=name)
+root_app = typer.Typer(name="aeat")
+declare_metadata_group(root_app)
+root_app.add_typer(source_app, name="app")
+root = get_command(root_app)
+root.name = "aeat"
 rows = {}
 def owner(callback):
     if callback is None:

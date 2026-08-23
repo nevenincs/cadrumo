@@ -1,0 +1,8 @@
+[[revisions."2008-2022".applicability]]
+id = "m322-seed"
+applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
+required_payer_fact = "iva_group_member"
+applicable_reason = "Modelo 322 (IVA grupo de entidades, modelo individual): el contribuyente esta inscrito como entidad miembro de un grupo de IVA y presenta la autoliquidacion mensual individual."
+not_applicable_reason = "Modelo 322 no aplica: solo corresponde a entidades miembro de un grupo de IVA que hayan optado por el regimen especial del grupo de entidades."
+cuota_bearing = false
+legal_refs = ["orden-eha-3434-2007:art-1", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]

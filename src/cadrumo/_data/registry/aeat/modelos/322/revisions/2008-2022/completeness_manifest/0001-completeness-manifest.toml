@@ -1,0 +1,24 @@
+[revisions."2008-2022".completeness_manifest]
+source_ref = "aeat-dr-322-2022"
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2022"]
+
+[[revisions."2008-2022".completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
+number = "iva.autorepercutido.intracomunitaria"
+
+[[revisions."2008-2022".completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.general"
+number = "iva.repercutido.general"
+
+[[revisions."2008-2022".completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.reducido"
+number = "iva.repercutido.reducido"
+
+[[revisions."2008-2022".completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.super-reducido"
+number = "iva.repercutido.super-reducido"
+
+[[revisions."2008-2022".completeness_manifest.casillas]]
+casilla_id = "iva.soportado.interiores"
+number = "iva.soportado.interiores"

@@ -278,7 +278,7 @@ def test_every_lazy_registration_wires_a_cold_subcommand() -> None:
 
         missing = []
         eager = []
-        for group_name, command_name, module_name in _LAZY_COMMAND_REGISTRATIONS:
+        for group_name, command_name, module_name, _help_key in _LAZY_COMMAND_REGISTRATIONS:
             child = _LAZY_REGISTRY.get(group_name, {}).get(command_name)
             if not isinstance(child, LazySubcommand):
                 missing.append((group_name, command_name, type(child).__name__ if child is not None else None))
