@@ -13,6 +13,8 @@ from typing import Literal
 
 from ...core import CasillaId
 from ...domain.calculations.registry import (
+    BindingId,
+    DataBindingDefinition,
     InputKind,
     InputKindValue,
     LegalRefId,
@@ -20,11 +22,14 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     RevisionId,
     SourceRefId,
+    casillas_by_binding,
 )
 
 __all__ = [
     "ManualCasillaRequirement",
+    "RegistryBindingRecord",
     "RegistryDestinationRecord",
+    "derive_registry_binding_records",
     "derive_registry_destination_records",
 ]
 
@@ -52,6 +57,24 @@ class RegistryDestinationRecord:
     manual_requirement: ManualCasillaRequirement | None
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryBindingRecord:
+    """One declared binding and its canonical casilla targets.
+
+    ``binding`` is the validated registry declaration itself, preserving its
+    typed selector and aggregation model.  Target derivation delegates to the
+    registry's canonical binding/casilla dual instead of reproducing the join.
+    """
+
+    modelo_id: ModeloId
+    revision_id: RevisionId
+    filing_year: int
+    period: str
+    binding_id: BindingId
+    binding: DataBindingDefinition
+    target_casilla_ids: tuple[CasillaId, ...]
 
 
 def derive_registry_destination_records(snapshot: RegistrySnapshot) -> tuple[RegistryDestinationRecord, ...]:
@@ -82,4 +105,21 @@ def derive_registry_destination_records(snapshot: RegistrySnapshot) -> tuple[Reg
             source_refs=tuple(casilla.source_refs),
         )
         for casilla in sorted(snapshot.revision.casillas, key=lambda item: item.id)
+    )
+
+
+def derive_registry_binding_records(snapshot: RegistrySnapshot) -> tuple[RegistryBindingRecord, ...]:
+    """Project declared bindings with typed selectors, aggregation, and targets."""
+    targets_by_binding = casillas_by_binding(snapshot.revision)
+    return tuple(
+        RegistryBindingRecord(
+            modelo_id=snapshot.modelo.id,
+            revision_id=snapshot.revision.id,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+            binding_id=binding.id,
+            binding=binding,
+            target_casilla_ids=tuple(sorted(targets_by_binding.get(binding.id, ()))),
+        )
+        for binding in sorted(snapshot.revision.bindings, key=lambda item: item.id)
     )

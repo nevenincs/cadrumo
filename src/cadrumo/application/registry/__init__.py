@@ -169,7 +169,9 @@ from ._source_connectivity_authority import (
 )
 from .source_connectivity import (
     ManualCasillaRequirement,
+    RegistryBindingRecord,
     RegistryDestinationRecord,
+    derive_registry_binding_records,
     derive_registry_destination_records,
 )
 
@@ -573,6 +575,7 @@ __all__ = [
     "ParameterDiff",
     "RegistryApplicationError",
     "RegistryApplicationInputError",
+    "RegistryBindingRecord",
     "RegistryCitationArticleProjection",
     "RegistryCitationReferenceProjection",
     "RegistryCitationShowCommand",
@@ -612,6 +615,7 @@ __all__ = [
     "build_registry_conformance_profile",
     "compare_annual_casilla_population",
     "compare_annual_casilla_population_for_revision",
+    "derive_registry_binding_records",
     "derive_registry_destination_records",
     "diff_registry_revisions",
     "inspect_registry_tree",
