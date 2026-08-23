@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:748db1ddd48bbd38f71b92180ad7eac1c3d891f774ece17d7cea5d4af7ce1f3e'
+body_hash: 'sha256:29743d13534bacd8178419c91e45b419bfa081dac790bb3984129ea5d0576954'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7758,3 +7758,41 @@ Cost of leaving it, stated so the choice is informed: the refusal accounts for T
 twenty-two current failures across this domain's two lanes (`OperatorSurfaceContractError`),
 and `config profile show` emits nothing on stdout for an operator. It is the single
 highest-impact defect in the domain right now, and it is in HEAD.
+
+### RESOLVED by the peer's own ADR: `config passphrase change` is a regression, not a retirement
+
+The previous entry left the fix direction open because intent was unknown -- delete the orphan
+declaration and retire passphrase rotation, or keep it and restore the verb. The intent was
+recorded all along, in the place this project keeps intent. Reading
+`.vault/adr/2026-08-23-cli-machine-secret-channel-unification-adr.md` -- the peer's OWN ADR,
+dated today, governing the very landing that caused this -- settles it under Constraints:
+
+    The closed scalar-secret verb inventory is `config login`, `config profile create`,
+    `config passphrase change`, `config profile restore`, and `config auth certificate
+    secret set`.
+
+Measured against the live tree, three of those four resolve and one does not:
+`config.login`, `config.profile.create` and `config.profile.restore` all exist;
+`config.passphrase.change` raises `LookupError`. The ADR further specifies its three secret
+fields (`current_passphrase`, `new_passphrase`, `new_passphrase_confirmation`), so the verb is
+not an aspiration in that document, it is a named member of a closed inventory with a declared
+field set.
+
+**So the direction is the opposite of the one this campaign offered to take.** Deleting the
+orphan declaration -- the "two-line fix" proposed two ticks ago -- would have silently retired
+a verb the governing ADR requires, and would have made the contract green by removing the
+evidence that a required verb is missing. The declaration is CORRECT. The missing verb is the
+defect, and `operator_surface_reconciliation` refusing is that contract doing precisely its
+job: catching a mounted family whose door disappeared.
+
+Not restored from here, and now for a stronger reason than tree ownership: rebuilding the verb
+means re-creating the deleted `_config/_passphrase_command_specs.py` and its registration
+inside a command-spec structure the owner is actively reshaping, against an ADR whose channel
+requirements (one `--secrets-stdin`, one `--secrets-fd`, identical names and ordering, refusal
+before any source read) are theirs to satisfy. A restoration authored blind would collide and
+would likely not match the shape their other three verbs now share.
+
+Current cost, unchanged and now precisely attributable: integration 13, unit 9, and the
+contract refusal is the largest single cause among them; `config profile show` still emits
+nothing to an operator. Handover is one line long -- restore `config passphrase change` per
+your own ADR's closed inventory, and the contract goes green.
