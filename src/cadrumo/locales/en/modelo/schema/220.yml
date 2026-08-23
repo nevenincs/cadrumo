@@ -7,6 +7,1247 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1h68o30c1q60o30c1h:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2009. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o30c1i:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2009. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o30c1j:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2009. outstanding for application in future periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60o30chl:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2012. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o30chm:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2012. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o30chn:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2012. outstanding for application in future periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o30cho:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2010. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o30chp:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2010. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o30cpg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2010. outstanding for application in future periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60o30dph:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2011. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o32c1k:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2008. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32c1m:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2009. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32c1o:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2010. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32c9g:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2011. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32c9i:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2012. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32c9k:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2013. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32c9m:
+              label: Deductions for internal double taxation, RDLEG 4/2004. total.
+                deduction outstanding from prior periods (record T22012000)
+            x-agp34c1h68o30c1q60o32c9n:
+              label: Deductions for internal double taxation, RDLEG 4/2004. total.
+                deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o32c9o:
+              label: Deductions for internal double taxation, RDLEG 4/2004. total
+                for prior periods. outstanding for application in future periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32d9j:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2005. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32d9k:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2006. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32d9l:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2007. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32d9m:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2008. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32d9n:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2009. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32d9o:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2010. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32d9p:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2011. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32dhg:
+              label: Deductions for international double taxation, RDLEG 4/2004. total
+                for prior periods. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32dhh:
+              label: Deductions for international double taxation, RDLEG 4/2004. total
+                for prior periods. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o32dhi:
+              label: Deductions for international double taxation, RDLEG 4/2004. total
+                for prior periods. outstanding for application in future periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o32e1n:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2011. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o32e9n:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2006. outstanding for application in future periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60o34e1i:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2009. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o34e1j:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2009. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o34e1k:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2009. outstanding for application in future periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o34e1l:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2007. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o34e1m:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2007. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o34e1n:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2007. outstanding for application in future periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60o36c1g:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2011. outstanding for application in future periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o36chg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2014. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o36chh:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2014. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o36chi:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2014. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o36chj:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2014. outstanding for application in future periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o36chk:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2012. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o36chl:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2012. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o36chm:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2012. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o36chn:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2012. outstanding for application in future periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60o36cho:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2013. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o36chp:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2013. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o36cpg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2013. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o36cph:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2013. outstanding for application in future periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60o36dhn:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2014. deduction outstanding from prior periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o36dho:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2014. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o36dhp:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2014. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o36dpg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2014. outstanding for application in future periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60o3adpg:
+              label: Deductions for internal double taxation, RDLEG 4/2004. total.
+                applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o3adph:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. total. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o3adpi:
+              label: Deductions for international double taxation, RDLEG 4/2004. total
+                for prior periods. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o3ccpn:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2005. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o3ccpo:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2005. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o3ec1i:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2010. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o3ec1j:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2010. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o3ec1n:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2010. outstanding for application in future periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o3ec9k:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2013. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o3ec9l:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2013. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o3ec9m:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2013. outstanding for application in future periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60o3ec9n:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2011. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o3ec9o:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2011. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o3ec9p:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2011. outstanding for application in future periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60o3gchl:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2008. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o3gchm:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2008. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o3gchn:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2008. outstanding for application in future periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60o3gd1m:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2008. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o3gd1n:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2008. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o3gd1p:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2006. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60o3ge9k:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2006. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60o3ichm:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2017. outstanding
+                for application in future periods (record T22012000)
+            x-agp34c1h68o30c1q60o3ichn:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2017. deduction outstanding from prior periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60o3icho:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2017. deduction outstanding in 2024 (record
+                T22012000)
+            x-agp34c1h68o30c1q60o3id1o:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2017. applied in this assessment (record
+                T22012000)
+            x-agp34c1h68o30c1q60o3id1p:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2017. outstanding for application in future
+                periods (record T22012000)
+            x-agp34c1h68o30c1q60oj2dpj:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2017. deduction
+                outstanding from prior periods (record T22012000)
+            x-agp34c1h68o30c1q60oj2dpk:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2017. deduction
+                outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60oj2dpl:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2017. applied in
+                this assessment (record T22012000)
+            x-agp34c1h68o30c1q60oj2e9k:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2019. deduction
+                outstanding from prior periods (record T22012000)
+            x-agp34c1h68o30c1q60oj2e9l:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2019. deduction
+                outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60oj2e9m:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2019. applied in
+                this assessment (record T22012000)
+            x-agp34c1h68o30c1q60oj2e9n:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2019. outstanding
+                for application in future periods (record T22012000)
+            x-agp34c1h68o30c1q60oj2e9o:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2019. deduction outstanding from prior periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60oj2e9p:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2019. deduction outstanding in 2024 (record
+                T22012000)
+            x-agp34c1h68o30c1q60oj4c1g:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2019. applied in this assessment (record
+                T22012000)
+            x-agp34c1h68o30c1q60oj4c1h:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2019. outstanding for application in future
+                periods (record T22012000)
+            x-agp34c1h68o30c1q60oj6dpm:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2023. deduction
+                outstanding from prior periods (record T22012000)
+            x-agp34c1h68o30c1q60oj6dpn:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2023. deduction
+                outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60oj6dpo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2023. applied in
+                this assessment (record T22012000)
+            x-agp34c1h68o30c1q60oj6dpp:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2023. outstanding
+                for application in future periods (record T22012000)
+            x-agp34c1h68o30c1q60oj6e1g:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2023. deduction outstanding from prior periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60oj6e1h:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2023. deduction outstanding in 2024 (record
+                T22012000)
+            x-agp34c1h68o30c1q60oj6e1i:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2023. applied in this assessment (record
+                T22012000)
+            x-agp34c1h68o30c1q60oj8c1o:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2023. outstanding for application in future
+                periods (record T22012000)
+            x-agp34c1h68o30c1q60ojccpj:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2022. deduction
+                outstanding from prior periods (record T22012000)
+            x-agp34c1h68o30c1q60ojccpk:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2022. deduction
+                outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60ojccpl:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2022. applied in
+                this assessment (record T22012000)
+            x-agp34c1h68o30c1q60ojccpm:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2022. outstanding
+                for application in future periods (record T22012000)
+            x-agp34c1h68o30c1q60ojccpn:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2022. deduction outstanding from prior periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60ojccpo:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2022. deduction outstanding in 2024 (record
+                T22012000)
+            x-agp34c1h68o30c1q60ojccpp:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2022. applied in this assessment (record
+                T22012000)
+            x-agp34c1h68o30c1q60ojcd1g:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2022. outstanding for application in future
+                periods (record T22012000)
+            x-agp34c1h68o30c1q60ojid9l:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2015. deduction
+                outstanding from prior periods (record T22012000)
+            x-agp34c1h68o30c1q60ojid9m:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2015. deduction
+                outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60ojid9n:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2015. applied in
+                this assessment (record T22012000)
+            x-agp34c1h68o30c1q60ojid9o:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2015. outstanding
+                for application in future periods (record T22012000)
+            x-agp34c1h68o30c1q60ojid9p:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2016. deduction
+                outstanding from prior periods (record T22012000)
+            x-agp34c1h68o30c1q60ojidhg:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2016. deduction
+                outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60ojidhh:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2016. applied in
+                this assessment (record T22012000)
+            x-agp34c1h68o30c1q60ojidhi:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2016. outstanding
+                for application in future periods (record T22012000)
+            x-agp34c1h68o30c1q60ojidhj:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. total. deduction outstanding from prior
+                periods (record T22012000)
+            x-agp34c1h68o30c1q60ojidhk:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. total. deduction outstanding in 2024
+                (record T22012000)
+            x-agp34c1h68o30c1q60ojidhl:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. total. applied in this assessment (record
+                T22012000)
+            x-agp34c1h68o30c1q60ojidhm:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. total. outstanding for application
+                in future periods (record T22012000)
+            x-agp34c1h68o30c1q60ojidhn:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. financial year 2024. deduction generated (record T22012000)
+            x-agp34c1h68o30c1q60ojidho:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. financial year 2024. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60ojidhp:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. financial year 2024. outstanding for application in future
+                periods (record T22012000)
+            x-agp34c1h68o30c1q60ojidpg:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. total. deduction generated (record T22012000)
+            x-agp34c1h68o30c1q60ojidpi:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. total. outstanding for application in future periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60ojidpj:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2005. outstanding for application in future periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60ojidpk:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2016. deduction outstanding from prior periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60ojidpl:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2016. deduction outstanding in 2024 (record
+                T22012000)
+            x-agp34c1h68o30c1q60ojidpm:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2016. applied in this assessment (record
+                T22012000)
+            x-agp34c1h68o30c1q60ojidpn:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2016. outstanding for application in future
+                periods (record T22012000)
+            x-agp34c1h68o30c1q60p34d1p:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2024. deduction
+                outstanding from prior periods (record T22012000)
+            x-agp34c1h68o30c1q60p34d9g:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2024. deduction
+                outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60p34d9h:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2024. applied in
+                this assessment (record T22012000)
+            x-agp34c1h68o30c1q60p34d9i:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2024. outstanding
+                for application in future periods (record T22012000)
+            x-agp34c1h68o30c1q60p34d9j:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2024. deduction outstanding from prior periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60p34d9k:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2024. deduction outstanding in 2024 (record
+                T22012000)
+            x-agp34c1h68o30c1q60p34d9l:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2024. applied in this assessment (record
+                T22012000)
+            x-agp34c1h68o30c1q60p34d9m:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2024. outstanding for application in future
+                periods (record T22012000)
+            x-agp34c1h68o30c1q60p36d9l:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2020. deduction
+                outstanding from prior periods (record T22012000)
+            x-agp34c1h68o30c1q60p36d9m:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2020. deduction
+                outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60p36d9n:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2020. applied in
+                this assessment (record T22012000)
+            x-agp34c1h68o30c1q60p36d9o:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2020. outstanding
+                for application in future periods (record T22012000)
+            x-agp34c1h68o30c1q60p36d9p:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2020. deduction outstanding from prior periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60p36dhg:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2020. deduction outstanding in 2024 (record
+                T22012000)
+            x-agp34c1h68o30c1q60p36dhh:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2020. applied in this assessment (record
+                T22012000)
+            x-agp34c1h68o30c1q60p36dhi:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2020. outstanding for application in future
+                periods (record T22012000)
+            x-agp34c1h68o30c1q60p3ac1l:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2008. outstanding for application in future periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60p3ccpo:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2018. deduction
+                outstanding from prior periods (record T22012000)
+            x-agp34c1h68o30c1q60p3ccpp:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2018. deduction
+                outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60p3cd1g:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2018. applied in
+                this assessment (record T22012000)
+            x-agp34c1h68o30c1q60p3cd1h:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2018. outstanding
+                for application in future periods (record T22012000)
+            x-agp34c1h68o30c1q60p3cd1i:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2018. deduction outstanding from prior periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60p3cd1j:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2018. deduction outstanding in 2024 (record
+                T22012000)
+            x-agp34c1h68o30c1q60p3cd1k:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2018. applied in this assessment (record
+                T22012000)
+            x-agp34c1h68o30c1q60p3cd1l:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2018. outstanding for application in future
+                periods (record T22012000)
+            x-agp34c1h68o30c1q60p3gc9k:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2021. deduction
+                outstanding from prior periods (record T22012000)
+            x-agp34c1h68o30c1q60p3gc9l:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2021. deduction
+                outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60p3gc9m:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2021. applied in
+                this assessment (record T22012000)
+            x-agp34c1h68o30c1q60p3gc9n:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2021. outstanding
+                for application in future periods (record T22012000)
+            x-agp34c1h68o30c1q60p3gc9o:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2021. deduction outstanding from prior periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60p3gc9p:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2021. deduction outstanding in 2024 (record
+                T22012000)
+            x-agp34c1h68o30c1q60p3gchg:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2021. applied in this assessment (record
+                T22012000)
+            x-agp34c1h68o30c1q60p3gchh:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2021. outstanding for application in future
+                periods (record T22012000)
+            x-agp34c1h68o30c1q60pj4d1k:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2015. deduction outstanding from prior periods
+                (record T22012000)
+            x-agp34c1h68o30c1q60pj4d1m:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2015. deduction outstanding in 2024 (record
+                T22012000)
+            x-agp34c1h68o30c1q60pj4d1n:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2015. applied in this assessment (record
+                T22012000)
+            x-agp34c1h68o30c1q60pj4d1o:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. double taxation of 2015. outstanding for application in future
+                periods (record T22012000)
+            x-agp34c1h68o30c1q60pj4d1p:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. total. deduction outstanding from prior periods (record T22012000)
+            x-agp34c1h68o30c1q60pj4d9g:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. total. deduction outstanding in 2024 (record T22012000)
+            x-agp34c1h68o30c1q60pj4d9h:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. total. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60pj4d9i:
+              label: Deductions for international double taxation, LIS. prior financial
+                years. total. outstanding for application in future periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60pj4d9j:
+              label: Tax rate (record T22012000)
+            x-agp34c1h68o30c1q60pj4d9k:
+              label: Deductions for international double taxation, LIS. juridical
+                double taxation, tax borne by the taxpayer (art. 31 LIS). double taxation
+                of 2024. deduction generated (record T22012000)
+            x-agp34c1h68o30c1q60pj4d9l:
+              label: Deductions for international double taxation, LIS. juridical
+                double taxation, tax borne by the taxpayer (art. 31 LIS). double taxation
+                of 2024. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60pj4d9m:
+              label: Deductions for international double taxation, LIS. juridical
+                double taxation, tax borne by the taxpayer (art. 31 LIS). double taxation
+                of 2024. outstanding for application in future periods (record T22012000)
+            x-agp34c1h68o30c1q60pj4d9n:
+              label: Deductions for international double taxation, LIS. economic double
+                taxation, dividends and profit participations (art. 32 LIS). double
+                taxation of 2024. deduction generated (record T22012000)
+            x-agp34c1h68o30c1q60pj4d9o:
+              label: Deductions for international double taxation, LIS. economic double
+                taxation, dividends and profit participations (art. 32 LIS). double
+                taxation of 2024. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60pj4d9p:
+              label: Deductions for international double taxation, LIS. economic double
+                taxation, dividends and profit participations (art. 32 LIS). double
+                taxation of 2024. outstanding for application in future periods (record
+                T22012000)
+            x-agp34c1h68o30c1q60pj4dhg:
+              label: Deductions for international double taxation, LIS. total for
+                financial year 2024. deduction generated (record T22012000)
+            x-agp34c1h68o30c1q60pj4dhh:
+              label: Deductions for international double taxation, LIS. total for
+                financial year 2024. applied in this assessment (record T22012000)
+            x-agp34c1h68o30c1q60pj4dhi:
+              label: Deductions for international double taxation, LIS. total for
+                financial year 2024. outstanding for application in future periods
+                (record T22012000)
+            x-agp34c1h69130c1q60o34dpk:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2017. deduction
+                outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60o34dpl:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2017. deduction
+                outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60o34dpm:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2017. applied in
+                this assessment (record T22012B00)
+            x-agp34c1h69130c1q60o34e1i:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2017. outstanding
+                for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60o34e1j:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2017. deduction outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60o34e1k:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2017. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60o34e1l:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2017. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60o34e1m:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2017. outstanding for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60o3ac9h:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2016. applied in
+                this assessment (record T22012B00)
+            x-agp34c1h69130c1q60o3ac9i:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2016. outstanding
+                for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60o3ac9j:
+              label: Deductions for international double taxation, RDLEG 4/2004. total.
+                deduction outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60o3ac9k:
+              label: Deductions for international double taxation, RDLEG 4/2004. total.
+                deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60o3ac9l:
+              label: Deductions for international double taxation, RDLEG 4/2004. total.
+                applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60o3ac9m:
+              label: Deductions for international double taxation, RDLEG 4/2004. total.
+                outstanding for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60o3ac9n:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2016. deduction outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60o3ac9o:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2016. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60o3ac9p:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2016. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj0c1g:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2019. deduction
+                outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60oj0c9n:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2019. deduction
+                outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj0e1j:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2019. applied in
+                this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj0e1k:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2019. outstanding
+                for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60oj2dpn:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2019. deduction outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60oj2dpo:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2019. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj2dpp:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2019. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj2e1g:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2019. outstanding for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60oj4dpp:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2008. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj4e1g:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2008. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj4e1h:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2008. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj4e1j:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2009. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj4e1k:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2009. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj4e1l:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2009. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj4e1m:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2009. outstanding for application in future periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj4e1n:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2010. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj4e1o:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2010. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj4e1p:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2010. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj4e9g:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2010. outstanding for application in future periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj4e9h:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2011. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj4e9i:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2011. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj4e9j:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2011. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj4e9k:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2011. outstanding for application in future periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj4e9l:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2012. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj4e9m:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2012. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj4e9n:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2012. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj4e9o:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2012. outstanding for application in future periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj4e9p:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2013. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6c1g:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2013. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj6c1h:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2013. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj6c1i:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2013. outstanding for application in future periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6c1j:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2014. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6c1k:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2014. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj6c1l:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2014. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj6c1m:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2014. outstanding for application in future periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6c1n:
+              label: Deductions for internal double taxation, RDLEG 4/2004. total
+                for prior periods. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6c1o:
+              label: Deductions for internal double taxation, RDLEG 4/2004. total
+                for prior periods. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj6c1p:
+              label: Deductions for internal double taxation, RDLEG 4/2004. total
+                for prior periods. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj6c9g:
+              label: Deductions for internal double taxation, RDLEG 4/2004. total
+                for prior periods. outstanding for application in future periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6c9l:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2005. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6c9m:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2005. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj6c9n:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2005. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj6c9p:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2006. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6chg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2006. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj6chh:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2006. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj6chi:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2006. outstanding for application in future periods
+                (record T22012B00)
+            x-agp34c1h69130c1q60oj6chj:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2007. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6chk:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2007. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj6chl:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2007. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj6chm:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2007. outstanding for application in future periods
+                (record T22012B00)
+            x-agp34c1h69130c1q60oj6chn:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2008. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6cho:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2008. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj6chp:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2008. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj6cpg:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2008. outstanding for application in future periods
+                (record T22012B00)
+            x-agp34c1h69130c1q60oj6cph:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2009. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6cpi:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2009. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj6cpj:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2009. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj6cpk:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2009. outstanding for application in future periods
+                (record T22012B00)
+            x-agp34c1h69130c1q60oj6cpl:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2010. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6cpm:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2010. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj6cpn:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2010. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj6cpo:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2010. outstanding for application in future periods
+                (record T22012B00)
+            x-agp34c1h69130c1q60oj6cpp:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2011. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6d1g:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2011. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj6d1h:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2011. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj6d1i:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2011. outstanding for application in future periods
+                (record T22012B00)
+            x-agp34c1h69130c1q60oj6d1j:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2012. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6d1k:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2012. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj6d1l:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2012. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj6d1m:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2012. outstanding for application in future periods
+                (record T22012B00)
+            x-agp34c1h69130c1q60oj6d1n:
+              label: Deductions for international double taxation, RDLEG 4/2004. total
+                for prior periods. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60oj6d1o:
+              label: Deductions for international double taxation, RDLEG 4/2004. total
+                for prior periods. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60oj6d1p:
+              label: Deductions for international double taxation, RDLEG 4/2004. total
+                for prior periods. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60oj6d9g:
+              label: Deductions for international double taxation, RDLEG 4/2004. total
+                for prior periods. outstanding for application in future periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60ojic9g:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2013. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60ojic9h:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2013. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60ojic9i:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2013. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60ojic9j:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2013. outstanding for application in future periods
+                (record T22012B00)
+            x-agp34c1h69130c1q60p30chm:
+              label: Deductions for internal double taxation, RDLEG 4/2004. year of
+                generation 2008. outstanding for application in future periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60p30chn:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2015. deduction
+                outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60p30cho:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2015. deduction
+                outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60p30chp:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2015. applied in
+                this assessment (record T22012B00)
+            x-agp34c1h69130c1q60p30cpg:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2015. outstanding
+                for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60p30cph:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2016. deduction
+                outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60p30cpi:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2016. deduction
+                outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60p30cpp:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2005. outstanding for application in future periods
+                (record T22012B00)
+            x-agp34c1h69130c1q60p30d1j:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2016. outstanding for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60p32d9h:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2023. deduction
+                outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60p32d9i:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2023. deduction
+                outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60p32d9j:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2023. applied in
+                this assessment (record T22012B00)
+            x-agp34c1h69130c1q60p32d9k:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2023. outstanding
+                for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60p32d9l:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2023. deduction outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60p32d9m:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2023. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60p32d9n:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2023. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60p32d9o:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2023. outstanding for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60p36c1m:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2014. deduction outstanding from prior periods (record
+                T22012B00)
+            x-agp34c1h69130c1q60p36c1n:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2014. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60p36c1o:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2014. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60p3gchl:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2024. deduction
+                outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60p3gchm:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2024. deduction
+                outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60p3gchn:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2024. applied in
+                this assessment (record T22012B00)
+            x-agp34c1h69130c1q60p3gcho:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2024. outstanding
+                for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60p3gdph:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2024. deduction outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60p3gdpi:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2024. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60p3gdpj:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2024. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60p3gdpk:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2024. outstanding for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60pj8c1j:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2018. deduction
+                outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60pj8c1k:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2018. deduction
+                outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60pj8c1l:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2018. applied in
+                this assessment (record T22012B00)
+            x-agp34c1h69130c1q60pj8c1m:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2018. outstanding
+                for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60pj8c1n:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2018. deduction outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60pj8c1o:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2018. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60pj8c1p:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2018. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60pj8c9g:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2018. outstanding for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60pjae1o:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2022. deduction
+                outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60q30c9p:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2020. deduction
+                outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60q30chg:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2020. deduction
+                outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60q30chh:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2020. applied in
+                this assessment (record T22012B00)
+            x-agp34c1h69130c1q60q30chi:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2020. outstanding
+                for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60q30chj:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2020. deduction outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60q30chk:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2020. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60q30chl:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2020. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60q30chm:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2020. outstanding for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60q3achh:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2021. deduction
+                outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60q3achi:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2021. applied in
+                this assessment (record T22012B00)
+            x-agp34c1h69130c1q60q3achj:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2021. outstanding
+                for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60q3achk:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2021. deduction outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60q3achl:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2021. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60q3achm:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2021. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60q3achn:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2021. outstanding for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60qjad9n:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2015. deduction outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60qjad9o:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2015. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60qjad9p:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2015. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60qjadhg:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2015. outstanding for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60qjadhh:
+              label: Deductions for international double taxation, LIS. total. deduction
+                outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60qjadhi:
+              label: Deductions for international double taxation, LIS. total. deduction
+                outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60qjadhj:
+              label: Deductions for international double taxation, LIS. total. applied
+                in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60qjadhk:
+              label: Deductions for international double taxation, LIS. total. outstanding
+                for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60r32cph:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2022. deduction
+                outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60r32cpi:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2022. applied in
+                this assessment (record T22012B00)
+            x-agp34c1h69130c1q60r32cpj:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2022. outstanding
+                for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q60r32cpk:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2022. deduction outstanding from prior periods (record T22012B00)
+            x-agp34c1h69130c1q60r32cpl:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2022. deduction outstanding in 2024 (record T22012B00)
+            x-agp34c1h69130c1q60r32cpm:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2022. applied in this assessment (record T22012B00)
+            x-agp34c1h69130c1q60r32cpn:
+              label: Deductions for international double taxation, LIS. double taxation
+                of 2022. outstanding for application in future periods (record T22012B00)
+            x-agp34c1h69130c1q68pj0e8:
+              label: Deductions for international double taxation, RDLEG 4/2004. year
+                of generation 2014. outstanding for application in future periods
+                (record T22012B00)
+            x-agp34c1h69130c1q6gqj4c0:
+              label: Deductions for internal double taxation, transitional provision
+                23 LIS. prior financial years. double taxation of 2021. deduction
+                outstanding from prior periods (record T22012B00)
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
               label: Group activities. CNAE code of activity 1
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:

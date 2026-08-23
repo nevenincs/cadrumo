@@ -7,6 +7,1176 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1h68o30c1q60o30c1h:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o30c1i:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o30c1j:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o30chl:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o30chm:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o30chn:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o30cho:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o30chp:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o30cpg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o30dph:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32c1k:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32c1m:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32c1o:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32c9g:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32c9i:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32c9k:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32c9m:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32c9n:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32c9o:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o32d9j:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2005.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32d9k:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2006.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32d9l:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2007.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32d9m:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32d9n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32d9o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32d9p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32dhg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. korabbi idoszakokbol fennallo levonas (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60o32dhh:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o32dhi:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o32e1n:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o32e9n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2006.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o34e1i:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o34e1j:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o34e1k:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o34e1l:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2007.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o34e1m:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2007.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o34e1n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2007.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o36c1g:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o36chg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o36chh:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o36chi:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o36chj:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o36chk:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o36chl:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o36chm:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o36chn:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o36cho:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o36chp:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o36cpg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o36cph:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o36dhn:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o36dho:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o36dhp:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o36dpg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o3adpg:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o3adph:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. osszesen. ebben az elszamolasban ervenyesitve (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60o3adpi:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ccpn:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2005.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ccpo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2005.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ec1i:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ec1j:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ec1n:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ec9k:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ec9l:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ec9m:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ec9n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ec9o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ec9p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o3gchl:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o3gchm:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o3gchn:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o3gd1m:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o3gd1n:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o3gd1p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2006.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ge9k:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2006.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ichm:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2017. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60o3ichn:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2017. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60o3icho:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2017. evi kettos adoztatas. 2024-ben fennallo levonas (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60o3id1o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2017. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60o3id1p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2017. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60oj2dpj:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2017. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60oj2dpk:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2017. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60oj2dpl:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2017. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60oj2e9k:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2019. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60oj2e9l:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2019. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60oj2e9m:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2019. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60oj2e9n:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2019. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60oj2e9o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2019. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60oj2e9p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2019. evi kettos adoztatas. 2024-ben fennallo levonas (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60oj4c1g:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2019. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60oj4c1h:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2019. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60oj6dpm:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2023. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60oj6dpn:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2023. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60oj6dpo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2023. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60oj6dpp:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2023. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60oj6e1g:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2023. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60oj6e1h:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2023. evi kettos adoztatas. 2024-ben fennallo levonas (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60oj6e1i:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2023. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60oj8c1o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2023. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60ojccpj:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2022. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60ojccpk:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2022. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60ojccpl:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2022. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60ojccpm:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2022. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60ojccpn:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2022. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60ojccpo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2022. evi kettos adoztatas. 2024-ben fennallo levonas (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60ojccpp:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2022. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60ojcd1g:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2022. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60ojid9l:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2015. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60ojid9m:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2015. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60ojid9n:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2015. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60ojid9o:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2015. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60ojid9p:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2016. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidhg:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2016. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidhh:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2016. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidhi:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2016. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidhj:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. osszesen. korabbi idoszakokbol fennallo
+                levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidhk:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. osszesen. 2024-ben fennallo levonas
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidhl:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. osszesen. ebben az elszamolasban
+                ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidhm:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. osszesen. jovobeli idoszakokban
+                ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidhn:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. 2024. uzleti ev. keletkezett levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidho:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. 2024. uzleti ev. ebben az elszamolasban ervenyesitve
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidhp:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. 2024. uzleti ev. jovobeli idoszakokban ervenyesitheto
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidpg:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. osszesen. keletkezett levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidpi:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. osszesen. jovobeli idoszakokban ervenyesitheto (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60ojidpj:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2005.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidpk:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2016. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidpl:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2016. evi kettos adoztatas. 2024-ben fennallo levonas (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60ojidpm:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2016. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60ojidpn:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2016. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60p34d1p:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2024. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60p34d9g:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2024. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60p34d9h:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2024. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60p34d9i:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2024. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60p34d9j:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2024. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60p34d9k:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2024. evi kettos adoztatas. 2024-ben fennallo levonas (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60p34d9l:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2024. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60p34d9m:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2024. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60p36d9l:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2020. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60p36d9m:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2020. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60p36d9n:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2020. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60p36d9o:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2020. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60p36d9p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2020. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60p36dhg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2020. evi kettos adoztatas. 2024-ben fennallo levonas (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60p36dhh:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2020. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60p36dhi:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2020. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60p3ac1l:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60p3ccpo:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2018. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60p3ccpp:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2018. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60p3cd1g:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2018. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60p3cd1h:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2018. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60p3cd1i:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2018. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60p3cd1j:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2018. evi kettos adoztatas. 2024-ben fennallo levonas (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60p3cd1k:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2018. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60p3cd1l:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2018. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60p3gc9k:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2021. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60p3gc9l:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2021. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60p3gc9m:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2021. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60p3gc9n:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2021. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60p3gc9o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2021. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60p3gc9p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2021. evi kettos adoztatas. 2024-ben fennallo levonas (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60p3gchg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2021. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60p3gchh:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2021. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d1k:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2015. evi kettos adoztatas. korabbi idoszakokbol fennallo levonas
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d1m:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2015. evi kettos adoztatas. 2024-ben fennallo levonas (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60pj4d1n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2015. evi kettos adoztatas. ebben az elszamolasban ervenyesitve
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d1o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. 2015. evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto
+                (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d1p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. osszesen. korabbi idoszakokbol fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d9g:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. osszesen. 2024-ben fennallo levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d9h:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. osszesen. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d9i:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. korabbi uzleti
+                evek. osszesen. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d9j:
+              label: Adokulcs (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d9k:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. jogi kettos
+                adoztatas, az adozo altal viselt ado (LIS 31. cikk). 2024. evi kettos
+                adoztatas. keletkezett levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d9l:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. jogi kettos
+                adoztatas, az adozo altal viselt ado (LIS 31. cikk). 2024. evi kettos
+                adoztatas. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d9m:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. jogi kettos
+                adoztatas, az adozo altal viselt ado (LIS 31. cikk). 2024. evi kettos
+                adoztatas. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d9n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. gazdasagi
+                kettos adoztatas, osztalek es nyeresegreszesedes (LIS 32. cikk). 2024.
+                evi kettos adoztatas. keletkezett levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4d9o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. gazdasagi
+                kettos adoztatas, osztalek es nyeresegreszesedes (LIS 32. cikk). 2024.
+                evi kettos adoztatas. ebben az elszamolasban ervenyesitve (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60pj4d9p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. gazdasagi
+                kettos adoztatas, osztalek es nyeresegreszesedes (LIS 32. cikk). 2024.
+                evi kettos adoztatas. jovobeli idoszakokban ervenyesitheto (rekord
+                T22012000)
+            x-agp34c1h68o30c1q60pj4dhg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. a 2024. uzleti
+                ev osszesen. keletkezett levonas (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4dhh:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. a 2024. uzleti
+                ev osszesen. ebben az elszamolasban ervenyesitve (rekord T22012000)
+            x-agp34c1h68o30c1q60pj4dhi:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. a 2024. uzleti
+                ev osszesen. jovobeli idoszakokban ervenyesitheto (rekord T22012000)
+            x-agp34c1h69130c1q60o34dpk:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2017. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60o34dpl:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2017. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60o34dpm:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2017. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60o34e1i:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2017. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60o34e1j:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2017. evi
+                kettos adoztatas. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60o34e1k:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2017. evi
+                kettos adoztatas. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60o34e1l:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2017. evi
+                kettos adoztatas. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60o34e1m:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2017. evi
+                kettos adoztatas. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60o3ac9h:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2016. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60o3ac9i:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2016. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60o3ac9j:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60o3ac9k:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60o3ac9l:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60o3ac9m:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. osszesen.
+                jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60o3ac9n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2016. evi
+                kettos adoztatas. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60o3ac9o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2016. evi
+                kettos adoztatas. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60o3ac9p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2016. evi
+                kettos adoztatas. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj0c1g:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2019. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj0c9n:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2019. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj0e1j:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2019. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj0e1k:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2019. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj2dpn:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2019. evi
+                kettos adoztatas. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj2dpo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2019. evi
+                kettos adoztatas. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj2dpp:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2019. evi
+                kettos adoztatas. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj2e1g:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2019. evi
+                kettos adoztatas. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4dpp:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e1g:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e1h:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e1j:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e1k:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e1l:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e1m:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e1n:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e1o:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e1p:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e9g:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e9h:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e9i:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e9j:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e9k:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e9l:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e9m:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e9n:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e9o:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj4e9p:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c1g:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c1h:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c1i:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c1j:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c1k:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c1l:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c1m:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c1n:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. korabbi idoszakokbol fennallo levonas (rekord
+                T22012B00)
+            x-agp34c1h69130c1q60oj6c1o:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c1p:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c9g:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c9l:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2005.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c9m:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2005.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c9n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2005.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6c9p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2006.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6chg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2006.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6chh:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2006.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6chi:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2006.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6chj:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2007.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6chk:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2007.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6chl:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2007.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6chm:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2007.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6chn:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6cho:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6chp:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6cpg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6cph:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6cpi:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6cpj:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6cpk:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6cpl:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6cpm:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6cpn:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6cpo:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2010.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6cpp:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6d1g:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6d1h:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6d1i:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2011.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6d1j:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6d1k:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6d1l:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6d1m:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2012.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6d1n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. korabbi idoszakokbol fennallo levonas (rekord
+                T22012B00)
+            x-agp34c1h69130c1q60oj6d1o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6d1p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60oj6d9g:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. korabbi
+                idoszakok osszesen. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60ojic9g:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60ojic9h:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60ojic9i:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60ojic9j:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2013.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60p30chm:
+              label: Belfoldi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2008.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60p30chn:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2015. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p30cho:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2015. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p30chp:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2015. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60p30cpg:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2015. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60p30cph:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2016. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p30cpi:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2016. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p30cpp:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2005.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60p30d1j:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2016. evi
+                kettos adoztatas. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60p32d9h:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2023. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p32d9i:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2023. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p32d9j:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2023. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60p32d9k:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2023. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60p32d9l:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2023. evi
+                kettos adoztatas. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p32d9m:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2023. evi
+                kettos adoztatas. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p32d9n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2023. evi
+                kettos adoztatas. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60p32d9o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2023. evi
+                kettos adoztatas. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60p36c1m:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p36c1n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p36c1o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60p3gchl:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2024. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p3gchm:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2024. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p3gchn:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2024. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60p3gcho:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2024. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60p3gdph:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2024. evi
+                kettos adoztatas. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p3gdpi:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2024. evi
+                kettos adoztatas. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60p3gdpj:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2024. evi
+                kettos adoztatas. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60p3gdpk:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2024. evi
+                kettos adoztatas. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60pj8c1j:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2018. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60pj8c1k:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2018. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60pj8c1l:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2018. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60pj8c1m:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2018. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60pj8c1n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2018. evi
+                kettos adoztatas. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60pj8c1o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2018. evi
+                kettos adoztatas. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60pj8c1p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2018. evi
+                kettos adoztatas. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60pj8c9g:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2018. evi
+                kettos adoztatas. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60pjae1o:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2022. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60q30c9p:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2020. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60q30chg:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2020. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60q30chh:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2020. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60q30chi:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2020. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60q30chj:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2020. evi
+                kettos adoztatas. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60q30chk:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2020. evi
+                kettos adoztatas. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60q30chl:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2020. evi
+                kettos adoztatas. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60q30chm:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2020. evi
+                kettos adoztatas. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60q3achh:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2021. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60q3achi:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2021. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60q3achj:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2021. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60q3achk:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2021. evi
+                kettos adoztatas. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60q3achl:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2021. evi
+                kettos adoztatas. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60q3achm:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2021. evi
+                kettos adoztatas. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60q3achn:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2021. evi
+                kettos adoztatas. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60qjad9n:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2015. evi
+                kettos adoztatas. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60qjad9o:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2015. evi
+                kettos adoztatas. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60qjad9p:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2015. evi
+                kettos adoztatas. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60qjadhg:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2015. evi
+                kettos adoztatas. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60qjadhh:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. osszesen.
+                korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60qjadhi:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. osszesen.
+                2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60qjadhj:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. osszesen.
+                ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60qjadhk:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. osszesen.
+                jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60r32cph:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2022. evi kettos adoztatas. 2024-ben
+                fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60r32cpi:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2022. evi kettos adoztatas. ebben
+                az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60r32cpj:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2022. evi kettos adoztatas. jovobeli
+                idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q60r32cpk:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2022. evi
+                kettos adoztatas. korabbi idoszakokbol fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60r32cpl:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2022. evi
+                kettos adoztatas. 2024-ben fennallo levonas (rekord T22012B00)
+            x-agp34c1h69130c1q60r32cpm:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2022. evi
+                kettos adoztatas. ebben az elszamolasban ervenyesitve (rekord T22012B00)
+            x-agp34c1h69130c1q60r32cpn:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, LIS. 2022. evi
+                kettos adoztatas. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q68pj0e8:
+              label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2014.
+                keletkezesi ev. jovobeli idoszakokban ervenyesitheto (rekord T22012B00)
+            x-agp34c1h69130c1q6gqj4c0:
+              label: Belfoldi kettos adoztatas miatti levonasok, LIS 23. atmeneti
+                rendelkezes. korabbi uzleti evek. 2021. evi kettos adoztatas. korabbi
+                idoszakokbol fennallo levonas (rekord T22012B00)
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
               label: A csoport tevekenysegei. A(z) 1. tevekenyseg CNAE-kodja
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:

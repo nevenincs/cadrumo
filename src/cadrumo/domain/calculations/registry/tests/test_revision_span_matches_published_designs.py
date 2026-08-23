@@ -421,6 +421,46 @@ def _content_ejercicio_years(path: Path) -> tuple[int, ...]:
     return tuple(sorted(set(_title_ejercicio_years(path)) | set(_constant_ejercicio_years(path))))
 
 
+
+@cache
+def _catalogue_ejercicio_span() -> dict[str, tuple[int, int]]:
+    """Design filename -> the ejercicio span its SOURCE ENTRY declares, where it states one.
+
+    A design that names no ejercicio in its filename or title enters no
+    comparison, and that is a hole in boundary detection rather than only a gap
+    in a ledger: Modelo 347's ``Orden EHA/3378/2011`` design is cited by its
+    revision, carries an authored coverage span in the source catalogue, and is
+    still never paired against its neighbour, so the re-layout between them goes
+    unreported.
+
+    ADMITTED ONLY FROM A CLOSED, EJERCICIO-ALIGNED SPAN, and both conditions are
+    load-bearing. An OPEN span (``applies_to`` unset) cannot be enumerated for
+    the same reason ``y-siguientes`` is not expanded -- it would invent every
+    year to the end of time. A span whose ends do not fall on 1 January and 31
+    December is not describing ejercicios at all: Modelo 180's design runs
+    2000-11-28 to 2014-09-26, which are promulgation and repeal dates, and
+    Modelo 210's run 2022-06-01 to 2025-12-31, which is a DEVENGO span on an
+    axis that is not an ejercicio. Reading either as coverage would repeat the
+    update-date-as-governed-period conflation this campaign has twice had to
+    undo.
+
+    So the rule is checked against the dates themselves rather than against a
+    list of modelos, and the designs it admits are exactly those whose catalogue
+    entry states a whole number of ejercicios.
+    """
+    spans: dict[str, tuple[int, int]] = {}
+    for source in _authority().catalogues.sources.values():
+        if source.kind != "record_design":
+            continue
+        start, end_date = getattr(source, "applies_from", None), getattr(source, "applies_to", None)
+        if start is None or end_date is None:
+            continue
+        if (start.month, start.day, end_date.month, end_date.day) != (1, 1, 12, 31):
+            continue
+        spans[str(source.corpus_path).rsplit("/", 1)[-1]] = (start.year, end_date.year)
+    return spans
+
+
 def _design_coverage_years(path: Path) -> tuple[int, ...]:
     """Every ejercicio a design covers, from its content and its filename TOGETHER.
 
@@ -449,7 +489,16 @@ def _design_coverage_years(path: Path) -> tuple[int, ...]:
     Modelo 210 by a devengo span, neither of which is an ejercicio -- and the
     coverage guard reports such designs as unattributable rather than guessing.
     """
-    return tuple(sorted(set(_content_ejercicio_years(path)) | set(_design_years(path.name))))
+    stated = set(_content_ejercicio_years(path)) | set(_design_years(path.name))
+    if stated:
+        return tuple(sorted(stated))
+    # The document says nothing; fall back to a coverage span its source entry
+    # states outright. See _catalogue_ejercicio_span for why only a closed,
+    # ejercicio-aligned span qualifies.
+    span = _catalogue_ejercicio_span().get(path.name)
+    if span is None:
+        return ()
+    return tuple(range(span[0], span[1] + 1))
 
 
 #: AEAT's declared period bound for a design that covers only part of an ejercicio.
