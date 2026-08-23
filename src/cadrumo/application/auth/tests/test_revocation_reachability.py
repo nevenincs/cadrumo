@@ -116,7 +116,13 @@ def test_a_locked_profile_refuses_the_revocation_that_reachability_predicted(
             ttl_seconds=60,
             operation="test-locked-profile-key-free-half",
         ):
-            cleared = clear_operator_auth_acquisition_locks(settings, bucket_id=_PROFILE_ID)
+            # Mirrors the erase caller: this is the reset's key-free half, which
+            # is the one path entitled to take a lock somebody still holds.
+            cleared = clear_operator_auth_acquisition_locks(
+                settings,
+                bucket_id=_PROFILE_ID,
+                allow_held=True,
+            )
         assert cleared == (AuthProviderKind.CLAVE_PERMANENTE.value,)
         assert (
             clear_auth_acquisition_lock(
