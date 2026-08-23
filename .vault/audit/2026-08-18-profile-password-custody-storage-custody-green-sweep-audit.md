@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:b526a4d554cc7d0611840d489768909c2d4b16d9a73db22d0be2287fabe25187'
+body_hash: 'sha256:204ae2f4a5a4af0a3d107f6a55531141cbcccd830962d475ede26a07b2510d9e'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7687,3 +7687,38 @@ tree on disk, and only `git show HEAD:path` / `git grep ... HEAD` speak for HEAD
 
 Third near-miss of this class here, and the most persuasive of the three, precisely because it
 was reproducible rather than inferred.
+
+### FINDING: HEAD refuses `config profile show` on an operator-surface contract violation
+
+The tree went quiet this tick -- one modified file, both untracked additions in the registry,
+nothing under `entrypoints/cli` -- so behaviour observed now IS HEAD's behaviour, which is what
+the previous entry said could not be assumed during churn. Re-probed against that clean tree,
+`config profile show --format json` writes NOTHING to stdout and refuses on stderr with
+`REFUSED_OPERATOR_SURFACE_CONTRACT`:
+
+    ambiguous CLI path config profile descendiente: config.profile.descendiente and
+    config.profile.descendiente.list; orphan mounted family declaration config passphrase
+    from OperatorSurfaceContract.command_families
+
+Two committed defects, both fallout from the machine-secret landing, and the second is
+confirmed against HEAD rather than the working tree:
+`src/cadrumo/entrypoints/cli/_config/_passphrase_command_specs.py` is DELETED at HEAD while
+`src/cadrumo/application/operator_surface/_contract.py:48` and `:120` still declare the
+`passphrase` family. The first is a leaf colliding with a group at
+`config.profile.descendiente`.
+
+Scope, measured rather than assumed: `config profile show` refuses and `config check` exits 2
+(different cause, unverified -- it emits no envelope, so it is NOT claimed here as the same
+defect). `config profile list` and `--help` both work. So this is a contract-reconciliation
+refusal on the verbs that trigger the check, not a dead CLI.
+
+NOT fixed here, and the reasoning is the standing one rather than reluctance. The owner is
+mid-landing and demonstrably active (two commits in the preceding twenty-five minutes), their
+own module still carries the failing case that led here, and the repair sites are
+`application/operator_surface/_contract.py` plus their command-spec restructure -- their tree,
+their sequence. Reaching in would collide with a sweep still in motion.
+
+What makes it worth recording rather than deferring silently: this is the first time in this
+campaign that the CLI breakage is verifiably in HEAD rather than in a working tree, so anyone
+cloning or running CI right now meets it. The exact sites are above; the fix is to drop the
+orphan family declaration and disambiguate the `descendiente` leaf against its group.
