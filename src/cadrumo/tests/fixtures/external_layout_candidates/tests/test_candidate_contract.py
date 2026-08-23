@@ -186,6 +186,11 @@ def test_registry_applicability_requires_a_revision_exactly_for_authored_verdict
     ("path", "replacement", "message"),
     [
         (("official_source", "source_url"), "http://example.test/form.pdf", "String should match pattern"),
+        (
+            ("official_source", "source_url"),
+            "https://www.boe.es/example.pdf",
+            "aeat official source URL must use an official host",
+        ),
         (("official_source", "sha256"), "not-a-digest", "String should match pattern"),
         (("pair_render", "counterpart_kind"), "plain", "counterpart_kind must be 'fillable'"),
     ],
@@ -206,6 +211,20 @@ def test_official_source_and_pair_evidence_fail_closed(
     record[path[1]] = replacement
     with pytest.raises(ValidationError, match=message):
         ExternalLayoutCandidate.model_validate(payload)
+
+
+@pytest.mark.parametrize("host", ["boe.es", "www.boe.es"])
+def test_official_source_accepts_both_boe_host_spellings(host: str) -> None:
+    """The official BOE publishes first-party links with and without ``www``."""
+    payload = _adjudicated_payload()
+    adjudication = payload["authority_adjudication"]
+    assert isinstance(adjudication, dict)
+    derivation = adjudication["official_base_derivation"]
+    assert isinstance(derivation, dict)
+    official_source = derivation["official_source"]
+    assert isinstance(official_source, dict)
+    official_source.update(authority="boe", source_url=f"https://{host}/example.pdf")
+    ExternalLayoutCandidate.model_validate(payload)
 
 
 def test_strict_contract_rejects_an_unknown_sidecar_field() -> None:

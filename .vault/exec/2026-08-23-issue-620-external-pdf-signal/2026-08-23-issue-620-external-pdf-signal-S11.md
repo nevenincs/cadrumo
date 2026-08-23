@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:ea5214a5715cd180dfcac1eff7b292560351292562b52cc9df59e55700911167'
+body_hash: 'sha256:38d929aaa4c55ebcd688bf551bb878b24b8a05d71cbc5f5c9ffd3724bde4feab'
 step_id: 'S11'
 related:
   - "[[2026-08-23-issue-620-external-pdf-signal-plan]]"
@@ -26,7 +26,8 @@ related:
 - Define independent typed verdicts for third-party artifact authenticity,
   verified official-base derivation, and registry applicability.
 - Require official authority, document identity, HTTPS URL, SHA-256 digest,
-  one-based page mapping, comparison method, and reproducible summary.
+  authority-bound AEAT or BOE host, complete one-based page mapping,
+  comparison method, and reproducible summary.
 - Bind each candidate to the opposite pair member by digest and distinguish
   exact from measured-similarity 96-dpi render comparisons.
 - Enforce authored-revision identifiers only for current or historical
@@ -42,7 +43,7 @@ related:
   adjudication contract without treating third-party bytes as AEAT or BOE
   publication artifacts.
 - Ruff passed for both S11 Python files.
-- The focused candidate-contract unit module passed: 33 tests.
+- The focused candidate-contract unit module passed: 36 tests.
 
 ## Notes
 
