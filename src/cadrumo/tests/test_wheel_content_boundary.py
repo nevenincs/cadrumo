@@ -16,8 +16,7 @@ way:
 3. The required functional payload still ships — the ``_data`` roots (corpus,
    registry, terminology), the ``py.typed`` marker, the BIP-39 recovery
    wordlist, and ``external_constants.toml`` — so the exclude cannot silently
-   strip something the installed package needs. The agent-harness payload is
-   asserted ABSENT: it lives in the sibling ``cadrumo-harness`` distribution.
+   strip something the installed package needs.
 4. The corpus DERIVED surfaces the runtime reads (extracted text
    ``*.extracted.md``/``.json`` and normative html) survive: the corpus-binary
    exclude must shed only the source binaries, never the derived payload.
@@ -222,19 +221,3 @@ def test_wheel_keeps_registry_payload(wheel_members: frozenset[str]) -> None:
     registry_count = _count(f"{_WHEEL_DATA_PREFIX}/registry/")
     assert registry_count > 0, "the wheel ships no registry members; the split over-stripped the registry payload"
 
-
-def test_wheel_ships_no_agent_harness_payload(wheel_members: frozenset[str]) -> None:
-    """The agent harness left this distribution; the CLI wheel must not carry it.
-
-    The harness data and its accessors ship in the sibling ``cadrumo-harness``
-    distribution. A member reappearing under ``_data/agent`` here means the
-    harness payload was re-added to the CLI package, which reinstates the
-    dependency direction the split removed.
-    """
-
-    offenders = sorted(member for member in wheel_members if member.startswith(f"{_WHEEL_DATA_PREFIX}/agent/"))
-    assert wheel_members, "the wheel listed no members; every probe would read as absent alike"
-    assert not offenders, (
-        f"the cadrumo wheel ships {len(offenders)} agent-harness member(s) that belong to cadrumo-harness; "
-        f"first ten: {offenders[:10]!r}"
-    )

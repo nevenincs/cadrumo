@@ -249,12 +249,7 @@ def _claim_names(location: StorageLocation) -> frozenset[str]:
     return frozenset(names)
 
 
-#: The harness ships as its own distribution beside the package, so a consumer
-#: living there is not reachable under ``src/cadrumo``. Resolving both roots
-#: keeps a TRUE claim expressible; without it the only way to make the gate
-#: green is to call a live consumer dormant, which is the lie this gate exists
-#: to catch.
-_CONSUMER_ROOTS = (SRC_CADRUMO, SRC_CADRUMO.parent / "cadrumo-harness" / "src")
+_CONSUMER_ROOTS = (SRC_CADRUMO,)
 
 
 @cache

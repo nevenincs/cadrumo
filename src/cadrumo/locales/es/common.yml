@@ -637,63 +637,6 @@ llm:
         para esta invocación.'
       mint_refused: 'Rechazado: la lectura externa de documentos del contribuyente
         no está permitida para esta invocación.'
-mcp:
-  call:
-    timeout: '''{command}'' superó el límite de tiempo del nivel {tier} ({seconds}s)
-      y se canceló. Reinténtalo o ejecuta el comando aeat equivalente directamente
-      en un terminal.'
-    timeout_may_complete: '''{command}'' superó su límite de tiempo; puede que la
-      operación siga completándose en segundo plano. Vuelve a ejecutarla con la misma
-      clave de idempotencia para comprobarlo: la garantía de idempotencia hace que
-      el reintento sea seguro y nunca duplica la escritura.'
-  elicitation:
-    confirm:
-      consequence_handoff: Esto genera el documento de presentación que el contribuyente
-        presentará ante la AEAT por sí mismo. Confirmar no envía nada a ninguna parte.
-      consequence_local: Esto modifica datos locales del perfil de contribuyente activo.
-      declined: '''{command}'' no fue confirmado por el usuario ({outcome}); no se
-        ejecutó nada.'
-      field_description: ¿Ejecutar '{command}' ahora?
-      message: Confirma la ejecución de '{command}'. {consequence} Responde sí para
-        continuar o no para detener.
-    refusal:
-      blocked: '''{command}'' está bloqueado permanentemente: la presentación en línea
-        ante la AEAT está prohibida por diseño. Exporta localmente; el contribuyente
-        presenta por sí mismo.'
-      no_channel: '''{command}'' requiere confirmación humana y este cliente no admite
-        la función de preguntas (elicitation). Ejecútalo desde un cliente que pueda
-        hacerte preguntas, o ejecuta el comando equivalente de Cadrumo CLI (`aeat`)
-        directamente en un terminal.'
-  faithfulness:
-    advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}]
-      que ningún resultado de herramienta de esta sesión ha producido. Verifica la
-      cifra con una lectura de calculate/revision antes de confiar en ella.'
-  harness:
-    off_host_consent: 'Aviso de privacidad - léalo antes de continuar. Esta consola
-      la maneja un asistente de IA que se ejecuta en el proveedor de LLM que usted
-      elija. Sus palabras, y las cifras con las que trabaja el asistente (importes,
-      valores de casilla, obligaciones), se envían a ese proveedor para operar la
-      consola. Sus DOCUMENTOS DE ORIGEN - facturas, extractos bancarios y cualquier
-      byte de evidencia - NUNCA salen de su equipo: permanecen en almacenamiento local
-      cifrado y nunca se transmiten. Si actúa por cuenta de un tercero (un gestor
-      o profesional), confirme que esto es aceptable antes de continuar.'
-  identity_gate:
-    elicitation_echo: 'Actuando como el perfil del contribuyente: %{label}.'
-    first_mutation_refused: 'Rechazado: confirma el contribuyente activo antes del
-      primer cambio de esta sesión. Una presentación o edición nunca debe ejecutarse
-      bajo la identidad equivocada. Ejecuta whoami (o ''config profile status'' /
-      ''overview status'') para ver qué contribuyente está activo y vuelve a intentarlo;
-      una sola lectura de identidad lo desbloquea durante la sesión hasta que cambies
-      de perfil.'
-  persona:
-    handoff_denied: '''{command}'' es la frontera irreversible de entrega de la presentación,
-      propiedad de la persona ''{owner}''; la persona ''{persona}'' la tiene denegada
-      estructuralmente. Entrega la unidad de trabajo verificada a la sesión del verificador
-      para producir la exportación o el marcador de registro.'
-  serving:
-    warm_degraded: '''{command}'' se atendió por el transporte de subproceso porque
-      el runtime en caliente estaba {reason}; el resultado es idéntico, solo más lento.
-      El servicio en caliente se reanuda cuando se libera la llamada lenta.'
 overview:
   no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
   no_aeat_history_sociedades: Este perfil no tiene ninguna presentación confirmada

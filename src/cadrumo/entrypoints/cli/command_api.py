@@ -44,6 +44,7 @@ def command_spec_for_path(path: tuple[str, ...]) -> CommandSpec:
     """Resolve one exact operator path from the production command graph."""
     return COMMAND_GRAPH.resolve_path(path)
 
+
 __all__ = [
     "DECLARED_UNIMPLEMENTED_SURFACES",
     "ArgumentSpec",

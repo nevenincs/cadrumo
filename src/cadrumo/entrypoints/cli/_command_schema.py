@@ -170,9 +170,7 @@ class CommandRegistrationMetadata:
     handler_owner: str | None
     source_sha256: str | None
     machine_secret_payloads: tuple[MachineSecretPayloadMetadata, ...] = ()
-    profile_authentication: Literal["not-applicable", "resume-fallback", "self-authenticating"] = (
-        "not-applicable"
-    )
+    profile_authentication: Literal["not-applicable", "resume-fallback", "self-authenticating"] = "not-applicable"
 
     @property
     def help(self) -> dict[str, str]:
@@ -317,8 +315,7 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
         tuple(nodes),
         ProfileAuthenticationContractMetadata(
             fields=tuple(
-                MachineSecretFieldMetadata(field.name, field.json_type)
-                for field in root_profile_secret.fields
+                MachineSecretFieldMetadata(field.name, field.json_type) for field in root_profile_secret.fields
             ),
             maximum_bytes=MACHINE_SECRET_MAX_BYTES,
             same_scope_exclusive=True,

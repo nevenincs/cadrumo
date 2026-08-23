@@ -145,9 +145,7 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
             from .._profile_session_gate import resume_registered_profile_for_manager
 
             # CAST-RATIONALE-TYPER-CLICK-CONTEXT: see emit_manager_closed below.
-            resume_registered_profile_for_manager(
-                cast(typer.Context, ctx), bucket_id=outcome.bucket_id
-            )
+            resume_registered_profile_for_manager(cast(typer.Context, ctx), bucket_id=outcome.bucket_id)
             present_profile_manager(label=outcome.label)
             emit_manager_closed(ctx, outcome.label, created=True)
             return None

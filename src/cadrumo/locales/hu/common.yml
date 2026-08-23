@@ -625,62 +625,6 @@ llm:
         kifejezett hozzájárulás nélkül.'
       mint_refused: 'Elutasítva: az adózó bizonylatainak gépen kívüli olvasása ehhez
         a híváshoz nem engedélyezett.'
-mcp:
-  call:
-    timeout: A(z) '{command}' túllépte a(z) {tier} szint időkorlátját ({seconds}s),
-      és megszakadt. Próbáld újra, vagy futtasd a megfelelő aeat parancsot a terminálban.
-    timeout_may_complete: A(z) '{command}' túllépte az időkorlátját; előfordulhat,
-      hogy a művelet még a háttérben fejeződik be. Futtasd újra ugyanazzal az idempotenciakulccsal
-      az ellenőrzéshez – az idempotenciavédelem biztonságossá teszi az újrapróbálkozást,
-      és soha nem ír kétszer.
-  elicitation:
-    confirm:
-      consequence_handoff: Ez elkészíti a benyújtásra szánt dokumentumot, amelyet
-        az adózó saját maga nyújt be az AEAT-nál. A megerősítés semmit nem küld be
-        sehová.
-      consequence_local: Ez a művelet az aktív adózói profil helyi adatait módosítja.
-      declined: A(z) '{command}' parancsot a felhasználó nem erősítette meg ({outcome});
-        semmi nem futott le.
-      field_description: Futtatod most a(z) '{command}' parancsot?
-      message: Erősítsd meg a(z) '{command}' futtatását. {consequence} Válaszolj igennel
-        a folytatáshoz vagy nemmel a leállításhoz.
-    refusal:
-      blocked: 'A(z) ''{command}'' véglegesen tiltott: az AEAT felé történő élő benyújtás
-        tervezetten tilos. Exportálj helyben; az adózó maga nyújt be.'
-      no_channel: A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem
-        támogatja a kérdezés (elicitation) funkciót. Futtasd olyan kliensből, amely
-        tud kérdezni, vagy futtasd a megfelelő Cadrumo CLI (`aeat`) parancsot közvetlenül
-        a terminálban.
-  faithfulness:
-    advisory: 'HŰSÉGI FIGYELMEZTETÉS: a hívás argumentumai olyan összeg(ek)et [{values}]
-      hivatkoznak, amelyeket ebben a munkamenetben egyetlen eszközeredmény sem állított
-      elő. Ellenőrizd az összeget calculate/revision olvasással, mielőtt támaszkodnál
-      rá.'
-  harness:
-    off_host_consent: 'Adatvédelmi tájékoztató - olvassa el a folytatás előtt. Ezt
-      a konzolt egy mesterséges intelligencia asszisztens működteti az Ön által választott
-      LLM-szolgáltatón. Az Ön szavai és az asszisztens által kezelt számok (összegek,
-      casilla-értékek, kötelezettségek) elküldésre kerülnek ehhez a szolgáltatóhoz
-      a konzol működtetéséhez. A FORRÁSDOKUMENTUMAI - számlák, bankkivonatok és bármilyen
-      bizonyítékbájt - SOHA nem hagyják el a gépét: titkosított helyi tárolóban maradnak,
-      és soha nem kerülnek továbbításra. Ha harmadik fél (könyvelő vagy szakember)
-      nevében jár el, a folytatás előtt erősítse meg, hogy ez elfogadható.'
-  identity_gate:
-    elicitation_echo: 'Az adóalany-profil nevében eljárva: %{label}.'
-    first_mutation_refused: 'Elutasítva: erősítsd meg az aktív adóalanyt a munkamenet
-      első módosítása előtt. Bevallás vagy szerkesztés soha nem futhat rossz identitás
-      alatt. Futtasd a whoami parancsot (vagy a ''config profile status'' / ''overview
-      status'' parancsot), hogy lásd, melyik adóalany aktív, majd próbáld újra; egyetlen
-      identitásolvasás feloldja ezt a munkamenetre, amíg profilt nem váltasz.'
-  persona:
-    handoff_denied: A(z) '{command}' a benyújtás-átadás visszafordíthatatlan határa,
-      amely a(z) '{owner}' personához tartozik; a(z) '{persona}' persona számára szerkezetileg
-      tiltott. Add át az ellenőrzött munkaegységet a verifier munkamenetnek az export
-      vagy a nyilvántartási jelölő elkészítéséhez.
-  serving:
-    warm_degraded: A(z) '{command}' az alfolyamat-transzporton keresztül lett kiszolgálva,
-      mert a meleg futtatókörnyezet {reason} volt; az eredmény azonos, csak lassabb.
-      A meleg kiszolgálás folytatódik, amint a lassú hívás befejeződik.
 overview:
   no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
   no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import typer
 from pydantic import SecretStr
 
 from ....core.external_constants import OutputLanguage
@@ -53,7 +54,7 @@ class CertificateSecretSetSecrets(MachineSecretPayload):
 
 
 def certificate_register(
-    ctx: object,
+    ctx: typer.Context,
     name: str,
     file: Path,
     friendly_name: str | None = None,
@@ -92,7 +93,7 @@ def certificate_register(
 
 
 def certificate_list(
-    ctx: object,
+    ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Enumerate every registered certificate source for the active profile."""
@@ -126,7 +127,7 @@ def certificate_list(
 
 
 def certificate_select(
-    ctx: object,
+    ctx: typer.Context,
     name: str,
     output_language: OutputLanguage | None = None,
 ) -> None:
@@ -164,7 +165,7 @@ def certificate_select(
 
 
 def certificate_remove(
-    ctx: object,
+    ctx: typer.Context,
     name: str,
     output_language: OutputLanguage | None = None,
 ) -> None:
@@ -197,7 +198,7 @@ def certificate_remove(
 
 
 def certificate_check(
-    ctx: object,
+    ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Report expiry/rotation status for every registered certificate source.
@@ -266,7 +267,7 @@ def certificate_check(
 
 
 def certificate_secret_set(
-    ctx: object,
+    ctx: typer.Context,
     name: str,
     secrets_stdin: bool = False,
     secrets_fd: int | None = None,
@@ -335,7 +336,7 @@ def certificate_secret_set(
 
 
 def certificate_secret_remove(
-    ctx: object,
+    ctx: typer.Context,
     name: str,
     output_language: OutputLanguage | None = None,
 ) -> None:

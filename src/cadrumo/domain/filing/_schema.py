@@ -7,11 +7,21 @@ records the rest of the project pins against — keep them stable.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializationInfo,
+    SerializerFunctionWrapHandler,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Hex16Str, Period
 from ...core.errors import BaseSeverity
@@ -20,6 +30,7 @@ from ...core.i18n import Translatable as tr
 from ...core.identity import ContentDigest, SubjectTaxId
 from ...core.time import UtcInstant
 from ...domain.calculations.registry import RevisionId
+from ..calculations import RowSourceIdentity
 from ..calculations.registry import BindingId, FormulaId, LegalRefId, RegistrySnapshotRef, SourceRefId
 from ..submission import ModeloDraftStatus
 from ._errors import FilingValidationError
@@ -122,7 +133,7 @@ class ModeloBindingValue(BaseModel):
         row_index: 1-based row index for multi-row (detail-record) bindings.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = ConfigDict(**{**STRICT_FROZEN_CONFIG, "hide_input_in_errors": True})
 
     binding_id: BindingId
     value: ModeloScalar
@@ -131,6 +142,50 @@ class ModeloBindingValue(BaseModel):
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     row_index: int | None = Field(default=None, ge=1)
+    row_source_identity: RowSourceIdentity | None = Field(default=None, exclude=True, repr=False)
+
+    @model_validator(mode="after")
+    def _row_source_identity_matches_the_binding_coordinate(self) -> ModeloBindingValue:
+        identity = self.row_source_identity
+        if identity is None:
+            return self
+        if self.row_index is None:
+            raise FilingValidationError("binding row source identity requires a row index")
+        if identity.source_kind is not self.source:
+            raise FilingValidationError("binding row source identity must match the binding source kind")
+        return self
+
+    def secure_row_source_identity_payload(self) -> dict[str, object] | None:
+        """Return the explicit encrypted-state projection for this row identity."""
+        identity = self.row_source_identity
+        if identity is None:
+            return None
+        assert self.row_index is not None
+        return {
+            "binding_id": self.binding_id,
+            "row_index": self.row_index,
+            "source_kind": identity.source_kind.value,
+            "source_row_identity": identity.source_row_identity,
+            "fingerprint": identity.fingerprint,
+        }
+
+    @model_serializer(mode="wrap")
+    def _redact_or_project_row_source_identity(
+        self,
+        handler: SerializerFunctionWrapHandler,
+        info: SerializationInfo,
+    ) -> object:
+        payload = handler(self)
+        if not isinstance(payload, dict):
+            return payload
+        context = getattr(info, "context", None)
+        if not isinstance(context, Mapping) or context.get("secure_modelo_binding_value") is not True:
+            payload.pop("row_source_identity", None)
+            return payload
+        identity = self.row_source_identity
+        if identity is not None:
+            payload["row_source_identity"] = identity.model_dump(mode="json")
+        return payload
 
 
 class ModeloCasillaProvenance(BaseModel):
@@ -424,6 +479,8 @@ def compute_modelo_draft_id(
         "profile_tax_id": profile_tax_id,
         "snapshot_ref": snapshot_ref.model_dump(mode="json"),
         "values": [v.model_dump(mode="json") for v in sorted_values],
-        "binding_values": [v.model_dump(mode="json") for v in sorted_binding_values],
+        "binding_values": [
+            v.model_dump(mode="json", context={"secure_modelo_binding_value": True}) for v in sorted_binding_values
+        ],
     }
     return content_hash_hex(payload)[:16]
