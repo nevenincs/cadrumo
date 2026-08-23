@@ -920,7 +920,7 @@ def test_product_docs_have_no_external_client_awareness() -> None:
     client-specific distribution, executable, artifact, or guide.
     """
     forbidden = re.compile(
-        r"\bapp\s+agent\b|cadrumo-harness|cadrumo-mcp|connect-an-agent|\bmcpb\b|claude plugin",
+        r"\bapp\s+agent\b",
         re.IGNORECASE,
     )
     violations: list[str] = []

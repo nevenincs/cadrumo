@@ -39,6 +39,12 @@ def add_test_runtime_wheelhouse(
     rows = {"cadrumo-test-dependency": filename}
     manifest = {
         "lock_sha256": hashlib.sha256(lock).hexdigest(),
+        "platform_floors": {
+            "linux-aarch64": "glibc-2.17",
+            "linux-x86-64": "glibc-2.17",
+            "macos-arm64": "macos-11.0",
+            "windows-x86-64": "windows-10",
+        },
         "platforms": {
             target: rows
             for target in (
@@ -49,7 +55,7 @@ def add_test_runtime_wheelhouse(
             )
         },
         "python": "3.13",
-        "schema": "cadrumo.runtime-wheelhouse.v1",
+        "schema": "cadrumo.runtime-wheelhouse.v2",
         "wheels": {
             filename: {
                 "distribution": "cadrumo-test-dependency",
@@ -115,12 +121,12 @@ def make_minimal_test_python_cohort(
     directory.mkdir(parents=True, exist_ok=True)
     artifacts: dict[str, str] = {}
     digests: dict[str, str] = {}
-    for distribution in ("cadrumo", "cadrumo-harness", "cadrumo-data-manuals", "cadrumo-data-official"):
+    for distribution in ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official"):
         normalized = distribution.replace("-", "_")
         requires = (
             (f"cadrumo-data-manuals=={version}", f"cadrumo-data-official=={version}")
             if distribution == "cadrumo"
-            else ((f"cadrumo>={version}",) if distribution == "cadrumo-harness" else ())
+            else ()
         )
         metadata = "\n".join(
             (f"Name: {distribution}", f"Version: {version}", *(f"Requires-Dist: {item}" for item in requires), "")
@@ -147,7 +153,6 @@ def make_minimal_test_python_cohort(
         "sha256": digests,
         "source_commit": source_commit,
         "version": version,
-        "harness_version": version,
         "command_spec_attestation": make_test_command_spec_attestation(
             directory, artifacts, source_commit=source_commit
         ),

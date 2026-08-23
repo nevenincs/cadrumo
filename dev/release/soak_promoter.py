@@ -255,7 +255,6 @@ def dispatch_publication(candidate: ReleaseCandidate, *, repository: str, gh_exe
     for field, value in (
         ("scoop_run_id", candidate.scoop_run_id),
         ("homebrew_run_id", candidate.homebrew_run_id),
-        ("claude_evidence_release", candidate.claude_evidence_release),
     ):
         if value:
             arguments.extend(["-f", f"{field}={value}"])

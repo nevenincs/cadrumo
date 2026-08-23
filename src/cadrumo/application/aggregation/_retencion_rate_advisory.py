@@ -84,7 +84,7 @@ screen stays silent. 1 % and 2 % are small enough that a routine bank fee lands 
 them exactly — a 20,00 EUR correspondent fee on a 2.000,00 base is precisely 1 % —
 so a sectoral-only match is a WEAKER claim and raises its own advisory under a
 separate reason code, ``inferred_retencion_sectoral_rate_unconfirmed``. Separate
-rather than reworded, because the operator driving this CLI is an autonomous agent
+rather than reworded, because a machine-readable caller
 that routes on fields: "matches nothing" and "matches a small rate that may be a
 coincidence" are different epistemic states and must not be collapsed into one.
 

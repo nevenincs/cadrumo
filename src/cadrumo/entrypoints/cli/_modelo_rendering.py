@@ -184,7 +184,7 @@ def source_diagnostic_notice(diagnostic: CalculationSourceDiagnostic, *, code: s
 
     Every field an operator would otherwise have to recover by parsing the
     message is carried as a structured context key. That is the point rather than
-    a convenience: this CLI's operator is an autonomous agent directed to route on
+    a convenience: a machine-readable caller routes on
     fields, and a context of only ``reason`` / ``source_kind`` / ``resolver_id`` is
     IDENTICAL across every carry advisory on a revision, so two advisories about
     two different casillas were indistinguishable except by prose. A typed channel

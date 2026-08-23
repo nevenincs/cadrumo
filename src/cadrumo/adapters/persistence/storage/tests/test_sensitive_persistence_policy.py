@@ -162,11 +162,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "atomic_write_stream",
         "tempfile.NamedTemporaryFile",
     ): "shared streaming atomic-write primitive; writes caller-supplied chunks only, no data of its own",
-    # The MCP telemetry writer was NOT deleted -- it moved out of the shipped
-    # `cadrumo` package into the sibling `cadrumo-harness` distribution, which
-    # this inventory's scan root no longer walks. It is retired from the list
-    # because the list may only name what the scan can see; a reviewed entry
-    # over an unscanned file is the same silent green this tier already suffered.
     (
         "src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_writer.py",
         "write_sealed_archive",

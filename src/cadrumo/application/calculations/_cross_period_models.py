@@ -247,6 +247,7 @@ class CrossPeriodDependencyRequirement(BaseModel):
     period: Period
     source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
     required_source_casilla_ids: tuple[CasillaId, ...] | None = None
+    source_presence_groups: tuple[tuple[CasillaId, ...], ...] = ()
     origin: CrossPeriodDependencyOrigin
     origin_ids: tuple[str, ...] = Field(min_length=1)
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
@@ -260,6 +261,10 @@ class CrossPeriodDependencyRequirement(BaseModel):
             self.source_casilla_ids
         ):
             raise ValueError("required_source_casilla_ids must be candidate source_casilla_ids")
+        candidate_ids = set(self.source_casilla_ids)
+        for group in self.source_presence_groups:
+            if not group or not set(group) <= candidate_ids:
+                raise ValueError("source_presence_groups must be non-empty subsets of source_casilla_ids")
         return self
 
     @property

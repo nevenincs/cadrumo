@@ -255,19 +255,29 @@ _FAMILY_CASES: tuple[
         "inventory",
         "inventory",
         {
-            "actividad_id": "actividad-profesional-1",
-            "operation": "closing_minus_opening_positive",
+            "modelo": "100",
+            "filing_year": 2025,
+            "projection_grain": "taxpayer_year_activity",
+            "fact": "row_field",
+            "record": "inventory_activity",
+            "grouping": "per_inventory_activity",
+            "row_field": "closing_minus_opening_positive",
             "target_casilla_id": "0177",
         },
-        BindingAggregationOp.COPY,
+        BindingAggregationOp.ROWS,
         # The operation-to-destination identity is closed: an inventory
         # increase cannot be projected into the decrease casilla.
         {
-            "actividad_id": "actividad-profesional-1",
-            "operation": "closing_minus_opening_positive",
+            "modelo": "100",
+            "filing_year": 2025,
+            "projection_grain": "taxpayer_year_activity",
+            "fact": "row_field",
+            "record": "inventory_activity",
+            "grouping": "per_inventory_activity",
+            "row_field": "closing_minus_opening_positive",
             "target_casilla_id": "0182",
         },
-        BindingAggregationOp.COPY,
+        BindingAggregationOp.ROWS,
     ),
 )
 

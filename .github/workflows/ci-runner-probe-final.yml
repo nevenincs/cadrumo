@@ -1,7 +1,7 @@
 # TEMPORARY proof harness for the SHIPPING watchdog. Branch-only; never on main.
 #
 # The `runner-queue-watchdog` job below is the exact stanza landed in
-# packaging-quick / packaging-smoke / packaging-claude / packaging-scoop /
+# packaging-quick / packaging-smoke / packaging-scoop /
 # packaging-homebrew, running the same dev/ci/runner_queue_watchdog.py, with the
 # threshold shortened so the proof completes in minutes. The lanes around it
 # exist to drive BOTH directions in one run: one lane no runner can serve, and

@@ -13,10 +13,7 @@ release-pr --dry-run --debug` invocation `just release` already runs, and
 :func:`parse_computed_version` reads the version release-please decided on
 rather than accepting one as a parameter. Every mutation is applied through
 :func:`apply_version`, which refuses rather than guesses whenever a surface
-does not carry exactly the one version literal it expects, and the
-build-stamped `.mcpb` manifest sentinel is asserted untouched on every call --
-it is never a version authority; `packaging/mcpb/build.py` stamps the real
-cohort version over it at build time.
+does not carry exactly the one version literal it expects.
 
 See Also:
     :func:`apply_version`
@@ -54,12 +51,7 @@ _UTF_8: Final[str] = UTF_8
 
 #: The seven declaration surfaces the retired manual bump checklist printed
 #: as steps 1-7,
-#: relative to the repository root. NOT included: `packaging/mcpb/manifest.json`
-#: -- its tracked "version" is a build-stamped sentinel
-#: (`dev.release.readiness.check_version_surfaces_agree` requires it stay put;
-#: `packaging/mcpb/build.py` stamps the real version at build time), so
-#: touching it here would make the bump fail its own post-bump readiness
-#: re-check.
+#: relative to the repository root.
 MANIFEST_RELATIVE: Final[Path] = Path(".release-please-manifest.json")
 #: release-please's own config file, relative to the repository root -- see
 #: `run_release_please_dry_run`'s docstring for why this MUST stay relative.
@@ -69,7 +61,6 @@ DATA_MANUALS_PYPROJECT_RELATIVE: Final[Path] = Path("packaging/cadrumo_data_manu
 DATA_OFFICIAL_PYPROJECT_RELATIVE: Final[Path] = Path("packaging/cadrumo_data_official/pyproject.toml")
 INIT_RELATIVE: Final[Path] = Path("src/cadrumo/__init__.py")
 CHANGELOG_RELATIVE: Final[Path] = Path("CHANGELOG.md")
-MCPB_MANIFEST_RELATIVE: Final[Path] = Path("packaging/mcpb/manifest.json")
 
 _INIT_VERSION_RE: Final = re.compile(r'^(__version__\s*=\s*)"[^"]*"', re.MULTILINE)
 _PYPROJECT_VERSION_RE: Final = re.compile(r'^(version\s*=\s*)"[^"]*"', re.MULTILINE)
@@ -194,11 +185,8 @@ def apply_version(
     Raises:
         VersionBumpError: If any surface does not carry exactly the expected
             single version literal, if the changelog already carries a
-            section for *version*, or if the build-stamped `.mcpb` manifest
-            sentinel changed during the call.
+            section for *version*.
     """
-    mcpb_path = repo_root / MCPB_MANIFEST_RELATIVE
-    mcpb_before = mcpb_path.read_text(encoding=_UTF_8)
     updates = (
         _bump_manifest(repo_root, version),
         _bump_pyproject_version(repo_root, ROOT_PYPROJECT_RELATIVE, version),
@@ -208,12 +196,6 @@ def apply_version(
         _bump_dependency_pins(repo_root, version),
         _bump_changelog(repo_root, version, changelog_block, release_date=release_date),
     )
-    mcpb_after = mcpb_path.read_text(encoding=_UTF_8)
-    if mcpb_after != mcpb_before:
-        raise VersionBumpError(
-            f"{MCPB_MANIFEST_RELATIVE} changed during the bump; it must stay the build-stamped sentinel "
-            "that packaging/mcpb/build.py stamps over at build time",
-        )
     return updates
 
 
@@ -290,9 +272,7 @@ def stage_bump(
 
 #: The bumped surfaces plus the regenerated lock, staged for the release
 #: commit. Mirrors the retired manual bump checklist's step 9 explicit
-#: `git add` file list exactly (which deliberately excludes
-#: `packaging/mcpb/manifest.json` -- see the module docstring and
-#: `apply_version`).
+#: `git add` file list exactly.
 _STAGED_RELATIVE_PATHS: Final[tuple[Path, ...]] = (
     MANIFEST_RELATIVE,
     ROOT_PYPROJECT_RELATIVE,

@@ -24,6 +24,19 @@ ExternalLayoutModelo = Literal["036", "130", "131", "303", "349"]
 ExternalLayoutCandidateKind = Literal["plain", "fillable"]
 ExternalLayoutSourceClassification = Literal["third_party_hosted_external_layout_candidate"]
 ExternalLayoutAuthorityStatus = Literal["unverified"]
+ExternalLayoutArtifactAuthenticityVerdict = Literal["third_party_sample"]
+ExternalLayoutOfficialBaseVerdict = Literal["verified_official_base_derivative"]
+ExternalLayoutOfficialAuthority = Literal["aeat", "boe"]
+ExternalLayoutOfficialComparisonMethod = Literal["pdf_text_geometry_and_normalized_render"]
+ExternalLayoutPairComparisonMethod = Literal[
+    "exact_96_dpi_render_match",
+    "normalized_96_dpi_render_similarity",
+]
+ExternalLayoutRegistryApplicabilityVerdict = Literal[
+    "current_authored_revision",
+    "historical_authored_revision",
+    "historical_layout_without_authored_revision",
+]
 
 EXTERNAL_LAYOUT_MODELOS: frozenset[str] = frozenset({"036", "130", "131", "303", "349"})
 EXTERNAL_LAYOUT_CANDIDATE_KINDS: frozenset[str] = frozenset({"plain", "fillable"})
@@ -48,7 +61,79 @@ class ExternalLayoutSourceChain(_FrozenStrictModel):
 
     classification: ExternalLayoutSourceClassification
     host: Literal["fiscalbot.es"]
-    authority_status: ExternalLayoutAuthorityStatus
+    authority_status: ExternalLayoutAuthorityStatus | None = None
+
+
+class ExternalLayoutArtifactAuthenticity(_FrozenStrictModel):
+    """Identity of the committed candidate bytes, independent of form ancestry."""
+
+    verdict: ExternalLayoutArtifactAuthenticityVerdict
+    evidence_summary: _NONEMPTY
+
+
+class ExternalLayoutOfficialPageMapping(_FrozenStrictModel):
+    """One candidate page's one-based location in the pinned official source."""
+
+    candidate_page: Annotated[int, Field(gt=0)]
+    official_page: Annotated[int, Field(gt=0)]
+
+
+class ExternalLayoutOfficialSourceEvidence(_FrozenStrictModel):
+    """Offline-verifiable identity and page selection of an official publication."""
+
+    authority: ExternalLayoutOfficialAuthority
+    document_id: _NONEMPTY
+    source_url: Annotated[str, Field(pattern=r"^https://")]
+    sha256: _SHA256
+    page_mapping: Annotated[tuple[ExternalLayoutOfficialPageMapping, ...], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def _candidate_pages_are_unique(self) -> ExternalLayoutOfficialSourceEvidence:
+        candidate_pages = tuple(mapping.candidate_page for mapping in self.page_mapping)
+        if len(candidate_pages) != len(set(candidate_pages)):
+            raise ValueError("official page mapping must contain each candidate page once")
+        return self
+
+
+class ExternalLayoutPairRenderEvidence(_FrozenStrictModel):
+    """Digest-bound render relationship to the other member of a candidate pair."""
+
+    counterpart_kind: ExternalLayoutCandidateKind
+    counterpart_sha256: _SHA256
+    comparison_method: ExternalLayoutPairComparisonMethod
+    comparison_summary: _NONEMPTY
+
+
+class ExternalLayoutOfficialBaseDerivation(_FrozenStrictModel):
+    """Measured official-form ancestry without an official-byte authenticity claim."""
+
+    verdict: ExternalLayoutOfficialBaseVerdict
+    official_source: ExternalLayoutOfficialSourceEvidence
+    comparison_method: ExternalLayoutOfficialComparisonMethod
+    comparison_summary: _NONEMPTY
+    pair_render: ExternalLayoutPairRenderEvidence
+
+
+class ExternalLayoutRegistryApplicability(_FrozenStrictModel):
+    """Whether the derived layout corresponds to an authored registry revision."""
+
+    verdict: ExternalLayoutRegistryApplicabilityVerdict
+    revision_id: _NONEMPTY | None
+
+    @model_validator(mode="after")
+    def _revision_matches_verdict(self) -> ExternalLayoutRegistryApplicability:
+        has_authored_revision = self.verdict != "historical_layout_without_authored_revision"
+        if has_authored_revision != (self.revision_id is not None):
+            raise ValueError("revision_id is required exactly when the applicability verdict names an authored revision")
+        return self
+
+
+class ExternalLayoutAuthorityAdjudication(_FrozenStrictModel):
+    """Independent artifact, official-base, and registry-applicability verdicts."""
+
+    artifact_authenticity: ExternalLayoutArtifactAuthenticity
+    official_base_derivation: ExternalLayoutOfficialBaseDerivation
+    registry_applicability: ExternalLayoutRegistryApplicability
 
 
 class ExternalLayoutContent(_FrozenStrictModel):
@@ -97,7 +182,7 @@ class ExternalLayoutObservations(_FrozenStrictModel):
 
 
 class ExternalLayoutCandidate(_FrozenStrictModel):
-    """Strict sidecar for one unverified external layout candidate."""
+    """Strict sidecar for one external layout candidate."""
 
     modelo: ExternalLayoutModelo
     candidate_kind: ExternalLayoutCandidateKind
@@ -109,6 +194,7 @@ class ExternalLayoutCandidate(_FrozenStrictModel):
     pdf: ExternalLayoutPdfProperties
     observations: ExternalLayoutObservations
     limitations: Annotated[tuple[_NONEMPTY, ...], Field(min_length=1)]
+    authority_adjudication: ExternalLayoutAuthorityAdjudication | None = None
 
     @model_validator(mode="after")
     def _source_urls_and_limitations_are_bound_to_candidate(self) -> ExternalLayoutCandidate:
@@ -127,6 +213,16 @@ class ExternalLayoutCandidate(_FrozenStrictModel):
             for phrase in ("cannot ground populated-value placement", "does not ground populated-value placement")
         ):
             raise ValueError("limitations must retain the populated-value placement gap")
+        legacy_unverified = self.source_chain.authority_status is not None
+        adjudicated = self.authority_adjudication is not None
+        if legacy_unverified == adjudicated:
+            raise ValueError("candidate must carry exactly one of legacy authority_status or authority_adjudication")
+        if adjudicated:
+            assert self.authority_adjudication is not None
+            pair_render = self.authority_adjudication.official_base_derivation.pair_render
+            expected_counterpart = "fillable" if self.candidate_kind == "plain" else "plain"
+            if pair_render.counterpart_kind != expected_counterpart:
+                raise ValueError(f"pair_render counterpart_kind must be {expected_counterpart!r}")
         return self
 
 
@@ -263,12 +359,25 @@ __all__ = [
     "EXTERNAL_LAYOUT_CANDIDATE_KINDS",
     "EXTERNAL_LAYOUT_MODELOS",
     "EXTERNAL_LAYOUT_SOURCE_CLASSIFICATION",
+    "ExternalLayoutArtifactAuthenticity",
+    "ExternalLayoutArtifactAuthenticityVerdict",
+    "ExternalLayoutAuthorityAdjudication",
     "ExternalLayoutCandidate",
     "ExternalLayoutCandidateKind",
     "ExternalLayoutContent",
     "ExternalLayoutModelo",
     "ExternalLayoutObservations",
+    "ExternalLayoutOfficialAuthority",
+    "ExternalLayoutOfficialBaseDerivation",
+    "ExternalLayoutOfficialBaseVerdict",
+    "ExternalLayoutOfficialComparisonMethod",
+    "ExternalLayoutOfficialPageMapping",
+    "ExternalLayoutOfficialSourceEvidence",
+    "ExternalLayoutPairComparisonMethod",
+    "ExternalLayoutPairRenderEvidence",
     "ExternalLayoutPdfProperties",
+    "ExternalLayoutRegistryApplicability",
+    "ExternalLayoutRegistryApplicabilityVerdict",
     "ExternalLayoutSourceChain",
     "ObservedDocumentInfo",
     "external_layout_source_class_is_non_authoritative",

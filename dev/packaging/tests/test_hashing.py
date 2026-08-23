@@ -23,8 +23,6 @@ _REHOMED_STREAMED_DIGEST_SITES: Final[tuple[str, ...]] = (
     "dev/packaging/cohort_manifest.py",
     "dev/packaging/smoke_homebrew.py",
     "dev/corpus/sync_aeat_record_design_corpus.py",
-    "dev/packaging/smoke_mcpb.py",
-    "dev/packaging/smoke_plugin_install.py",
 )
 
 
@@ -72,7 +70,7 @@ def test_rehomed_digest_site_declares_no_private_digest_helper(relative_path: st
     assert streaming_helpers == []
 
 
-@pytest.mark.parametrize("module_name", ("cohort_manifest", "smoke_homebrew", "smoke_mcpb", "smoke_plugin_install"))
+@pytest.mark.parametrize("module_name", ("cohort_manifest", "smoke_homebrew"))
 def test_rehomed_digest_module_uses_the_canonical_helper(module_name: str) -> None:
     """The re-homed module resolves file digests through the one owner."""
     module = importlib.import_module(f"dev.packaging.{module_name}")

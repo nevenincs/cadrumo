@@ -62,39 +62,12 @@ def _write_manifest(root: Path, version: str) -> None:
     (root / ".release-please-manifest.json").write_text(json.dumps({".": version}), encoding="utf-8")
 
 
-def _write_mcpb_manifest(root: Path, version: str) -> None:
-    manifest_dir = root / "packaging" / "mcpb"
-    manifest_dir.mkdir(parents=True, exist_ok=True)
-    # Mirrors the real committed manifest.json shape: the bundle launches its
-    # own bundle-local bootstrap through ``uv run --no-project`` rather than
-    # an on-index ``uvx --from cadrumo[agent] cadrumo-mcp`` install — the
-    # retired extra is gone, and the harness wheel this bundle needs ships
-    # bundled, resolved by the first-launch ``uv sync`` (packaging/mcpb/build.py).
-    (manifest_dir / "manifest.json").write_text(
-        json.dumps(
-            {
-                "version": version,
-                "server": {
-                    "mcp_config": {
-                        "command": "uv",
-                        "args": ["run", "--no-project", "--directory", "${__dirname}", "src/server.py"],
-                    },
-                },
-            },
-        ),
-        encoding="utf-8",
-    )
-
-
 def _make_repo_root(tmp_path: Path, *, version: str = "1.2.3") -> Path:
     root = tmp_path / "repo"
     root.mkdir()
     _write_pyprojects(root, version)
     _write_init(root, version)
     _write_manifest(root, version)
-    # The tracked MCPB manifest never carries the release version: build.py
-    # stamps it, so the version gate requires the synthetic sentinel.
-    _write_mcpb_manifest(root, readiness._MCPB_MANIFEST_VERSION_SENTINEL)
     (root / "CHANGELOG.md").write_text(
         "# Changelog\n\n## [1.2.3] - 2026-07-04\n\n### Features\n- thing\n", encoding="utf-8"
     )
@@ -110,26 +83,6 @@ def test_version_surfaces_agree_passes_when_all_release_authorities_match(tmp_pa
     assert check.severity == "blocking"
     assert check.passed is True
     assert "2.0.0" in check.detail
-
-
-def test_version_surfaces_agree_fails_when_the_mcpb_manifest_is_not_the_sentinel(tmp_path: Path) -> None:
-    """A real-looking tracked ``.mcpb`` manifest version reds the release parity gate.
-
-    build.py stamps the cohort version over the tracked manifest at build time,
-    so the committed literal must stay the synthetic sentinel: a hand-stamped
-    real version would masquerade as a version authority and rot on the next
-    release bump. The BUILT bundle's stamped version is bound to the cohort by
-    ``check_generated_surface_versions`` instead.
-    """
-    root = _make_repo_root(tmp_path, version="2.0.0")
-    # A stale hand-stamped literal (the pre-sentinel failure mode).
-    _write_mcpb_manifest(root, "2.0.0")
-
-    check = readiness.check_version_surfaces_agree(root)
-
-    assert check.passed is False
-    assert "mcpb='2.0.0'" in check.detail
-    assert readiness._MCPB_MANIFEST_VERSION_SENTINEL in check.detail
 
 
 def test_project_names_are_canonical_for_root_and_both_companions(tmp_path: Path) -> None:

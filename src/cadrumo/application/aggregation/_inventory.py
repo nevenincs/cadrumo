@@ -3,27 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import Decimal
 from typing import Protocol, get_args
 
-from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
-from ...core import BindingSourceKind, CalculationSourceLineageRole, Modelo
+from ...core import BindingSourceKind, Modelo
 from ...domain.calculations.registry import (
-    BindingId,
     DataBindingDefinition,
     InventorySelector,
 )
-from ...domain.contribuyente.inventory import (
-    InventoryAnexoDResult,
-    InventoryLedgerDocument,
-    InventoryLedgerError,
-    compute_inventory_anexo_d_projection,
-)
+from ...domain.contribuyente.inventory import InventoryLedgerDocument
 from ._source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceDiagnosticReason,
-    CalculationSourceProvenance,
     CalculationSourceResolution,
 )
 
@@ -34,7 +25,7 @@ _VALUE_ATTRIBUTE_BY_OPERATION: Mapping[str, str] = {
     "closing_minus_opening_positive": "casilla_0177",
     "opening_minus_closing_positive": "casilla_0182",
 }
-_OPERATION_ANNOTATION = InventorySelector.model_fields["operation"].annotation
+_OPERATION_ANNOTATION = InventorySelector.model_fields["row_field"].annotation
 _CANONICAL_OPERATIONS = get_args(getattr(_OPERATION_ANNOTATION, "__value__", _OPERATION_ANNOTATION))
 if set(_VALUE_ATTRIBUTE_BY_OPERATION) != set(_CANONICAL_OPERATIONS):
     raise RuntimeError("inventory projection operation adapter is not exhaustive")
@@ -51,18 +42,15 @@ def _inventory_bindings(context: CalculationSourceContext) -> tuple[DataBindingD
 
 
 def _diagnostic(
-    *, reason: CalculationSourceDiagnosticReason, state: str, message: str
+    *, reason: CalculationSourceDiagnosticReason, state: str, message: str, remedy: str | None = None
 ) -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason=reason,
         source_kind=_SOURCE.value,
         resolver_id=InventorySourceResolver.resolver_id,
         message=f"inventory source {state}: {message}",
+        remedy=remedy,
     )
-
-
-def _source_ref(context: CalculationSourceContext, actividad_id: str) -> str:
-    return f"inventory:{context.bucket_id}:{context.filing_year}:{actividad_id}"
 
 
 class InventorySourceResolver:
@@ -98,108 +86,31 @@ class InventorySourceResolver:
                     ),
                 ),
             )
-        repository = self._inventory_repository or InventoryLedgerRepository()
-        try:
-            document = repository.load()
-        except InventoryLedgerError:
+        if any(not isinstance(binding.selector, InventorySelector) for binding in bindings):
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
                 unresolved_binding_ids=binding_ids,
                 diagnostics=(
                     _diagnostic(
-                        reason="storage_degraded",
-                        state="repository_unreadable",
-                        message="the encrypted inventory document could not be read",
+                        reason="unresolved_derived_binding",
+                        state="selector_unreadable",
+                        message="one or more bindings do not carry the canonical inventory row template",
                     ),
                 ),
             )
-
-        ledgers = {(ledger.actividad_id, ledger.year): ledger for ledger in document.ledgers}
-        values: dict[BindingId, Decimal] = {}
-        unresolved: list[BindingId] = []
-        diagnostics: list[CalculationSourceDiagnostic] = []
-        projections: dict[str, InventoryAnexoDResult] = {}
-        bindings_by_activity: dict[str, list[DataBindingDefinition]] = {}
-        for binding in bindings:
-            selector = binding.selector
-            if not isinstance(selector, InventorySelector):
-                unresolved.append(binding.id)
-                diagnostics.append(
-                    _diagnostic(
-                        reason="unresolved_derived_binding",
-                        state="selector_unreadable",
-                        message=f"binding {binding.id} does not carry the canonical inventory selector",
-                    ),
-                )
-                continue
-            bindings_by_activity.setdefault(selector.actividad_id, []).append(binding)
-
-        for actividad_id, activity_bindings in sorted(bindings_by_activity.items()):
-            ledger = ledgers.get((actividad_id, 2025))
-            if ledger is None:
-                unresolved.extend(binding.id for binding in activity_bindings)
-                diagnostics.append(
-                    _diagnostic(
-                        reason="unresolved_binding",
-                        state="ledger_absent",
-                        message=(
-                            f"no encrypted schema-v3 ledger exists for activity {actividad_id!r} "
-                            "and filing year 2025"
-                        ),
-                    ),
-                )
-                continue
-            try:
-                projection = compute_inventory_anexo_d_projection(ledger)
-            except InventoryLedgerError:
-                unresolved.extend(binding.id for binding in activity_bindings)
-                diagnostics.append(
-                    _diagnostic(
-                        reason="source_domain_not_ready",
-                        state="projection_refused",
-                        message=(
-                            f"activity {actividad_id!r} filing year 2025 is incomplete, inconsistent, or tampered"
-                        ),
-                    ),
-                )
-                continue
-            projections[actividad_id] = projection
-            for binding in activity_bindings:
-                selector = binding.selector
-                assert isinstance(selector, InventorySelector)
-                values[binding.id] = getattr(projection, _VALUE_ATTRIBUTE_BY_OPERATION[selector.operation])
-            if projection.closing_conflict is not None:
-                diagnostics.append(
-                    _diagnostic(
-                        reason="source_issue",
-                        state="closing_conflict_retained",
-                        message=(
-                            f"activity {actividad_id!r} filing year 2025 retains a reviewed physical-closing conflict"
-                        ),
-                    ),
-                )
-
-        provenance = tuple(
-            CalculationSourceProvenance(
-                resolver_id=self.resolver_id,
-                resolved_binding_source=_SOURCE,
-                contributor_source_kind=_SOURCE.value,
-                contributor_binding_source=_SOURCE,
-                lineage_role=CalculationSourceLineageRole.PRIMARY,
-                source_ref=_source_ref(context, actividad_id),
-                parent_source_ref=None,
-                fingerprint=projection.projection_fingerprint,
-            )
-            for actividad_id, projection in sorted(projections.items())
-        )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            binding_values=values,
-            unresolved_binding_ids=tuple(sorted(unresolved)),
-            diagnostics=tuple(diagnostics),
-            provenance=provenance,
+            unresolved_binding_ids=binding_ids,
+            diagnostics=(
+                _diagnostic(
+                    reason="source_domain_not_ready",
+                    state="row_template_not_expanded",
+                    message="runtime inventory activity-row expansion is not enrolled",
+                    remedy="complete the canonical inventory row-expansion integration before calculation",
+                ),
+            ),
         )
 
 

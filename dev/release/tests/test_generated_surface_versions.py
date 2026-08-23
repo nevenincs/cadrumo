@@ -1,8 +1,7 @@
 """Real-behavior tests for the generated-surface version/digest readiness check.
 
-Builds a minimal cohort carrying the four real generated-surface formats (the
-Scoop JSON manifest, the Homebrew Ruby formula, the marketplace plugin JSON
-inside its zip, and the stamped manifest inside the ``.mcpb`` bundle) and drives
+Builds a minimal cohort carrying the Scoop JSON manifest and Homebrew Ruby
+formula and drives
 ``check_generated_surface_versions`` end to end - no mocks, real parsing of each
 format on disk. Each test mutates one embedded value and asserts the
 per-surface failure is named.
@@ -11,12 +10,9 @@ per-surface failure is named.
 from __future__ import annotations
 
 import json
-import zipfile
 from pathlib import Path
 
 import pytest
-
-from cadrumo.core import iter_directory
 
 from ...packaging.tests._cohort_attestation import make_minimal_test_python_cohort
 from ..readiness import check_generated_surface_versions
@@ -37,15 +33,11 @@ def _cohort(
     scoop_hashes: list[str] | None = None,
     homebrew_version: str | None = None,
     homebrew_sha: str | None = None,
-    marketplace_version: str | None = None,
-    mcpb_version: str | None = None,
 ) -> Path:
     """Materialise a cohort's version/digest surfaces; any override introduces drift."""
     (root / "python").mkdir(parents=True)
     (root / "scoop").mkdir()
     (root / "homebrew" / "Formula").mkdir(parents=True)
-    (root / "claude").mkdir()
-    (root / "mcpb").mkdir()
 
     (root / "release-cohort.json").write_text(json.dumps({"version": version}), encoding="utf-8")
     python_sha = make_minimal_test_python_cohort(root / "python", version=version)
@@ -73,13 +65,6 @@ def _cohort(
         "end\n",
         encoding="utf-8",
     )
-    with zipfile.ZipFile(root / "claude" / f"cadrumo-marketplace-{version}.zip", "w") as archive:
-        archive.writestr(
-            "plugins/cadrumo/.claude-plugin/plugin.json",
-            json.dumps({"version": marketplace_version or version}),
-        )
-    with zipfile.ZipFile(root / "mcpb" / f"cadrumo-{version}.mcpb", "w") as archive:
-        archive.writestr("manifest.json", json.dumps({"version": mcpb_version or version}))
     return root
 
 
@@ -89,16 +74,6 @@ def _replace_generated_json_surface(cohort: Path, *, surface: str, payload: obje
     if surface == "scoop":
         (cohort / "scoop" / "cadrumo.json").write_text(encoded, encoding="utf-8")
         return "scoop manifest unreadable"
-    if surface == "marketplace":
-        bundle = next(iter_directory(cohort / "claude", pattern="cadrumo-marketplace-*.zip"))
-        with zipfile.ZipFile(bundle, "w") as archive:
-            archive.writestr("plugins/cadrumo/.claude-plugin/plugin.json", encoded)
-        return "marketplace plugin manifest unreadable"
-    if surface == "mcpb":
-        bundle = next(iter_directory(cohort / "mcpb", pattern="cadrumo-*.mcpb"))
-        with zipfile.ZipFile(bundle, "w") as archive:
-            archive.writestr("manifest.json", encoded)
-        return "mcpb bundle manifest unreadable"
     raise AssertionError(f"unexpected generated JSON surface: {surface}")
 
 
@@ -135,32 +110,14 @@ def test_homebrew_version_and_sha_drift_are_named(tmp_path: Path) -> None:
     assert "homebrew formula stable sha256" in check.detail
 
 
-def test_marketplace_version_drift_is_named(tmp_path: Path) -> None:
-    """A stale marketplace plugin.json version drifts from the cohort and fails."""
-    cohort = _cohort(tmp_path / "cohort", marketplace_version="7.7.7")
-    check = check_generated_surface_versions(tmp_path, cohort_directory=cohort)
-    assert not check.passed
-    assert "marketplace plugin version" in check.detail
-
-
-def test_mcpb_stamped_version_drift_is_named(tmp_path: Path) -> None:
-    """A ``.mcpb`` bundle whose stamped manifest version drifts from the cohort fails."""
-    cohort = _cohort(tmp_path / "cohort", mcpb_version="6.6.6")
-    check = check_generated_surface_versions(tmp_path, cohort_directory=cohort)
-    assert not check.passed
-    assert "mcpb stamped version" in check.detail
-
-
-@pytest.mark.parametrize("surface", ("scoop", "marketplace", "mcpb"))
 @pytest.mark.parametrize("payload", ([], 7))
 def test_generated_json_non_object_surface_blocks_readiness(
     tmp_path: Path,
-    surface: str,
     payload: object,
 ) -> None:
     """Real JSON files and bundle members with list/scalar bodies block instead of crashing the gate."""
     cohort = _cohort(tmp_path / "cohort")
-    expected_detail = _replace_generated_json_surface(cohort, surface=surface, payload=payload)
+    expected_detail = _replace_generated_json_surface(cohort, surface="scoop", payload=payload)
 
     check = check_generated_surface_versions(tmp_path, cohort_directory=cohort)
 

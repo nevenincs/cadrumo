@@ -109,18 +109,20 @@ def _binding(
     source: str | BindingSourceKind,
     selector: Mapping[str, object],
     binding_id: str = "test-binding",
+    aggregation_op: BindingAggregationOp | None = None,
 ) -> DataBindingDefinition:
     """Build a minimal DataBindingDefinition for the gate to validate."""
 
-    return DataBindingDefinition.model_validate(
-        {
+    payload: dict[str, object] = {
             "id": binding_id,
             "source": source,
             "selector": selector,
             "legal_refs": ("ley-35-2006:art-99",),
             "source_refs": ("aeat-test",),
-        },
-    )
+        }
+    if aggregation_op is not None:
+        payload["aggregation"] = {"op": aggregation_op}
+    return DataBindingDefinition.model_validate(payload)
 
 
 def _assert_selector_refused_at_construction(
@@ -604,10 +606,16 @@ def test_inventory_selector_enrollment_hydrates_the_family_model() -> None:
     binding = _binding(
         source=BindingSourceKind.INVENTORY,
         selector={
-            "actividad_id": "actividad-profesional-1",
-            "operation": "opening_minus_closing_positive",
+            "modelo": "100",
+            "filing_year": 2025,
+            "projection_grain": "taxpayer_year_activity",
+            "fact": "row_field",
+            "record": "inventory_activity",
+            "grouping": "per_inventory_activity",
+            "row_field": "opening_minus_closing_positive",
             "target_casilla_id": "0182",
         },
+        aggregation_op=BindingAggregationOp.ROWS,
     )
     selector_model = selector_model_for_source(BindingSourceKind.INVENTORY)
 
@@ -622,8 +630,13 @@ def test_inventory_selector_enrollment_refuses_destination_drift() -> None:
     _assert_selector_refused_at_construction(
         source=BindingSourceKind.INVENTORY,
         selector={
-            "actividad_id": "actividad-profesional-1",
-            "operation": "opening_minus_closing_positive",
+            "modelo": "100",
+            "filing_year": 2025,
+            "projection_grain": "taxpayer_year_activity",
+            "fact": "row_field",
+            "record": "inventory_activity",
+            "grouping": "per_inventory_activity",
+            "row_field": "opening_minus_closing_positive",
             "target_casilla_id": "0177",
         },
         binding_id="bad-inventory-destination",

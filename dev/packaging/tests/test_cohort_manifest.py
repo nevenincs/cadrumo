@@ -72,7 +72,9 @@ def test_manifest_roundtrip_binds_every_file_and_stable_identity(tmp_path: Path)
     loaded = load_release_cohort(tmp_path)
     assert loaded.manifest_path == manifest_path
     assert loaded.manifest == first
-    assert loaded.artifact("mcpb").read_bytes() == b"real retained bytes for mcpb\n"
+    assert loaded.artifact("cadrumo-runtime-wheelhouse").read_bytes() == (
+        b"real retained bytes for cadrumo-runtime-wheelhouse\n"
+    )
 
 
 def test_manifest_rejects_changed_or_undeclared_bytes(tmp_path: Path) -> None:
@@ -87,7 +89,7 @@ def test_manifest_rejects_changed_or_undeclared_bytes(tmp_path: Path) -> None:
         artifacts=rows,
     )
     write_manifest(tmp_path, manifest)
-    changed = next(path for name, _kind, path in rows if name == "claude-plugin")
+    changed = next(path for name, _kind, path in rows if name == "cadrumo-runtime-wheelhouse")
     original = changed.read_bytes()
     changed.write_bytes(b"X" * len(original))
     with pytest.raises(SystemExit, match="digest mismatch"):
@@ -130,8 +132,8 @@ def test_artifact_record_rejects_nonportable_paths(path: str) -> None:
     """Persisted paths use one traversal-free POSIX grammar on every host."""
     with pytest.raises(ValidationError, match="normalized relative POSIX path"):
         ArtifactRecord(
-            name="mcpb",
-            kind=ArtifactKind.MCPB,
+            name="cadrumo-runtime-wheelhouse",
+            kind=ArtifactKind.PYTHON_WHEELHOUSE,
             path=path,
             sha256="a" * 64,
             size=1,

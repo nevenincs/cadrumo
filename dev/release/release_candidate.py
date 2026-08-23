@@ -125,7 +125,6 @@ class ReleaseCandidate(BaseModel):
     packaging_run_id: str = Field(pattern=_RUN_ID_PATTERN)
     scoop_run_id: str = Field(default="")
     homebrew_run_id: str = Field(default="")
-    claude_evidence_release: str = Field(default="")
     claimed_channels: tuple[str, ...]
     dry_run: bool
     soak_opened_at: datetime
@@ -215,7 +214,6 @@ def seal_candidate(
     opened_at: datetime,
     scoop_run_id: str = "",
     homebrew_run_id: str = "",
-    claude_evidence_release: str = "",
     soak_hours_override: int | None = None,
     incident_reference: str = "",
     release_owner_approval: str = "",
@@ -248,7 +246,6 @@ def seal_candidate(
         packaging_run_id=packaging_run_id,
         scoop_run_id=scoop_run_id,
         homebrew_run_id=homebrew_run_id,
-        claude_evidence_release=claude_evidence_release,
         claimed_channels=claimed_channels,
         dry_run=dry_run,
         soak_opened_at=opened,

@@ -427,6 +427,7 @@ if TYPE_CHECKING:
     from .aggregation import (
         OBSERVATION_BACKED_BINDING_SOURCE_KINDS,
         AggregationCaptureKind,
+        BindingAggregationOp,
         BindingSourceKind,
         CalculationSourceLineageRole,
         IntracomOperationType,
@@ -588,6 +589,7 @@ __all__: list[str] = [
     "Art104TresExclusion",
     "AuthProviderDescription",
     "AuthProviderKind",
+    "BindingAggregationOp",
     "BindingSourceKind",
     "BucketPointer",
     "CalculationSourceLineageRole",
@@ -921,6 +923,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "AuthProviderDescription": "._auth_provider",
     "AuthProviderKind": "._auth_provider",
     "BROWSER_EXTRA": "._optional_extras",
+    "BindingAggregationOp": ".aggregation",
     "BindingSourceKind": ".aggregation",
     "CalculationSourceLineageRole": ".aggregation",
     "BucketPointer": "._bucket_pointer",

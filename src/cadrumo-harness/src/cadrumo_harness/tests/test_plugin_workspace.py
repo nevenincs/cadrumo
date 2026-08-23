@@ -13,8 +13,8 @@ suite never silently degrades to a validator-only skip.
 
 from __future__ import annotations
 
-import json
 import inspect
+import json
 import shutil
 import subprocess
 from pathlib import Path

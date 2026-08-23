@@ -30,7 +30,6 @@ _PACKAGING_WORKFLOWS: Final = (
     "packaging-smoke.yml",
     "packaging-scoop.yml",
     "packaging-homebrew.yml",
-    "packaging-claude.yml",
 )
 _TRANSPORT_WORKFLOWS: Final = (*_PACKAGING_WORKFLOWS, "publish-release.yml")
 
@@ -200,16 +199,6 @@ def test_windows_transport_steps_pin_shell_pwsh() -> None:
                 continue
             shell = step.get("shell")
             assert shell in (None, "pwsh"), (workflow, step.get("name"), shell)
-    # The claude lane runs on the SAME broken-5.1 self-hosted runner; its
-    # module-cmdlet steps (ConvertTo-Json, Invoke-RestMethod, Get-ChildItem/
-    # Copy-Item) are pinned too, even though they predate the transport.
-    claude_steps = {str(step.get("name")): step.get("shell") for step in _steps(_document("packaging-claude.yml"))}
-    for step_name in (
-        "Initialize current-run evidence root",
-        "Verify source workflow identity",
-        "Curate non-sensitive acquisition evidence",
-    ):
-        assert claude_steps[step_name] == "pwsh", (step_name, claude_steps[step_name])
 
 
 def test_acquisition_lanes_pin_the_linux_python_cohort() -> None:
@@ -218,7 +207,7 @@ def test_acquisition_lanes_pin_the_linux_python_cohort() -> None:
     Wheels are py3-none-any, and every lane has always consumed the Linux
     cohort; the artifact spelling keeps that parity.
     """
-    for workflow in ("packaging-scoop.yml", "packaging-homebrew.yml", "packaging-claude.yml"):
+    for workflow in ("packaging-scoop.yml", "packaging-homebrew.yml"):
         surface = _run_surface(_document(workflow))
         assert "cadrumo-python-cohort-linux" in surface, workflow
         assert "cadrumo-python-cohort-windows" not in surface, workflow

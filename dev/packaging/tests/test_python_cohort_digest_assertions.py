@@ -41,14 +41,12 @@ def _make_artifacts(tmp_path: Path) -> tuple[PythonCohort, Path]:
     payloads: dict[str, bytes] = {
         "cadrumo": b"cadrumo wheel bytes",
         "cadrumo-sdist": b"cadrumo sdist bytes",
-        "cadrumo-harness": b"harness wheel bytes",
         "cadrumo-data-manuals": b"manuals wheel bytes",
         "cadrumo-data-official": b"official wheel bytes",
     }
     paths: dict[str, Path] = {
         "cadrumo": tmp_path / f"cadrumo-{_VERSION}-py3-none-any.whl",
         "cadrumo-sdist": tmp_path / f"cadrumo-{_VERSION}.tar.gz",
-        "cadrumo-harness": tmp_path / f"cadrumo_harness-{_VERSION}-py3-none-any.whl",
         "cadrumo-data-manuals": tmp_path / f"cadrumo_data_manuals-{_VERSION}-py3-none-any.whl",
         "cadrumo-data-official": tmp_path / f"cadrumo_data_official-{_VERSION}-py3-none-any.whl",
     }
@@ -62,12 +60,11 @@ def _make_artifacts(tmp_path: Path) -> tuple[PythonCohort, Path]:
         manifest=tmp_path / "python-cohort.json",
         source_commit=_SAMPLE_COMMIT,
         version=_VERSION,
-        harness_version=_VERSION,
         root_wheel=paths["cadrumo"],
         root_sdist=paths["cadrumo-sdist"],
         source_archive=tmp_path / "cadrumo-source.zip",
-        harness_wheel=paths["cadrumo-harness"],
-        harness_sdist=tmp_path / f"cadrumo_harness-{_VERSION}.tar.gz",
+        runtime_wheelhouse=tmp_path / "cadrumo-runtime-wheelhouse-py313.zip",
+        runtime_wheelhouse_manifest={},
         manuals_wheel=paths["cadrumo-data-manuals"],
         manuals_sdist=tmp_path / f"cadrumo_data_manuals-{_VERSION}.tar.gz",
         official_wheel=paths["cadrumo-data-official"],
@@ -83,10 +80,6 @@ def _uv_direct_urls(cohort: PythonCohort, root_artifact: Path) -> dict[str, dict
     return {
         "cadrumo": {
             "url": f"{root_resolved.as_uri()}#sha256={cohort.sha256['cadrumo']}",
-            "archive_info": {},
-        },
-        "cadrumo-harness": {
-            "url": f"{cohort.harness_wheel.as_uri()}#sha256={cohort.sha256['cadrumo-harness']}",
             "archive_info": {},
         },
         "cadrumo-data-manuals": {
@@ -107,10 +100,6 @@ def _pip_direct_urls(cohort: PythonCohort, root_artifact: Path) -> dict[str, dic
         "cadrumo": {
             "url": root_resolved.as_uri(),
             "archive_info": {"hashes": {"sha256": cohort.sha256["cadrumo"]}},
-        },
-        "cadrumo-harness": {
-            "url": cohort.harness_wheel.as_uri(),
-            "archive_info": {"hashes": {"sha256": cohort.sha256["cadrumo-harness"]}},
         },
         "cadrumo-data-manuals": {
             "url": cohort.manuals_wheel.as_uri(),

@@ -54,10 +54,6 @@ EXEMPTIONS: dict[tuple[str, str], str] = {
         "Writes to the CONOUT$ / /dev/tty console DEVICE, not a file. A device cannot "
         "drift a tracked artefact, and forcing LF would degrade Windows console rendering."
     ),
-    ("packaging/mcpb/build.py", "_write_archive_member"): (
-        "zipfile.ZipFile.open(info, mode='w') returns a BINARY archive member handle. "
-        "It takes no newline argument; the 'w' mode string is the zip member mode."
-    ),
     (
         "src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_writer.py",
         "write_sealed_archive",

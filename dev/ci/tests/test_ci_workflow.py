@@ -523,6 +523,5 @@ def test_full_lane_runs_the_channel_generator_tests_explicitly_and_serially() ->
     )
     assert generator is not None, "no justfile line names packaging/homebrew/tests; the delegated lane has no home"
     assert "packaging/scoop/tests" in generator, "the Scoop generator tests share this lane"
-    assert "packaging/mcpb/tests" in generator, "the mcpb generator tests share this lane"
     assert "-n0" in generator, "serial tests must run single-worker or they are held out silently"
     assert "-m serial" in generator, "the lane must select the serial marker these tests carry"

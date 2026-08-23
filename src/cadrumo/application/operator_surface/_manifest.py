@@ -558,7 +558,7 @@ def _reconcile_mounted_families(
     check is symmetric: a declaration no live canonical path reaches is a dead
     manifest entry that advertises a door which is not there, and a live family
     with no declaration is a mounted subtree the capability manifest omits, so
-    an operator agent reads an authoritative-looking tool map with a hole in it.
+    an adapter reads an authoritative-looking command map with a hole in it.
     Neither direction is a warning.
 
     A declaration that STATES it is unimplemented is the third case, and it is

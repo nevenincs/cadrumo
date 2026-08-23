@@ -297,7 +297,7 @@ class NotificationDocumentService:
         content-addressed write, the reading, the record — runs here.
 
         **Re-storing a certificado already in custody is a content-addressed
-        no-op.** The operator here is an autonomous agent that retries, and the
+        no-op.** A non-interactive caller may retry, and the
         AEAT document behind one certificado is immutable — the act was served
         once. So a retry carrying the same bytes returns the record that is
         already stored: no second attachment write, no re-run of the reading,

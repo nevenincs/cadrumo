@@ -947,7 +947,7 @@ def _maternidad_meses_withheld_advisory(
     Nor may the remedy name ``descendiente add`` as the way to CHANGE a
     declared row. That verb only appends, and the paged editing door
     (``aeat config profile descendiente`` with no subcommand) refuses on a
-    piped host, which the autonomous-agent operator this CLI is built for
+    piped host, which the non-interactive CLI contract
     always is. The actionable route is ``descendiente remove <index>`` then
     ``add`` to restate the row.
     """

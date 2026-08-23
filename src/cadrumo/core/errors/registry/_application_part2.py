@@ -396,7 +396,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             # NOT retryable, unlike the conflict class it extends: that one
             # reports a stale witness a re-read fixes, while a label already
             # bound to a committed capsule can never be taken by the identical
-            # command. Publishing it as retryable invites the agent operator
+            # command. Publishing it as retryable invites a machine caller
             # into a loop that cannot terminate.
             retryable=False,
             runbook_id=None,

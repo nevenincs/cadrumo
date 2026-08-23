@@ -8,8 +8,8 @@ normal-path soak, or second approval step.
 
 A successful release uses one version, source commit, and set of artifact digests.
 The currently claimed registry tier publishes the three PyPI distributions and the
-GitHub release cohort. Scoop, Homebrew, Claude marketplace, and MCPB publication remain
-conditional until the channel descriptor claims them and their prerequisites are met.
+GitHub release cohort. Scoop and Homebrew publication remain conditional until the
+channel descriptor claims them and their prerequisites are met.
 
 The marketing website belongs to the separate `cadrumo-marketing` repository; its
 source, build, tests, deployment, and release lifecycle are not part of this product
@@ -47,7 +47,6 @@ reviewers.
 Confirm the repository configuration used by the destinations that are enabled:
 
 - variable `HOMEBREW_TAP_REPO` and secret `HOMEBREW_TAP_TOKEN`
-- variable `CLAUDE_MARKETPLACE_REPO` and secret `CLAUDE_MARKETPLACE_TOKEN`
 - the `release-alert` repository label, or the configured webhook fallback
 
 ## Per-release preflight
@@ -133,7 +132,7 @@ The orchestrator performs these steps in order:
 5. Dispatches `publish-release.yml` at the campaign commit and waits for that exact run
    to finish successfully.
 6. Revalidates all identities and digests, then writes GitHub Release assets, Scoop,
-   Homebrew, and Claude marketplace state before the irreversible PyPI uploads.
+   and Homebrew state before the irreversible PyPI uploads.
 7. Replaces `release-candidate-<run-id>` with
    `release-candidate-consumed-<run-id>` only after publication succeeds.
 
@@ -174,9 +173,7 @@ Run only the reacquisition commands for destinations the channel descriptor clai
 ```console
 uv run --no-sync python -m dev.packaging.acquire_github_release --cohort-dir var/post-release/v<VERSION>/cohort --evidence-dir var/post-release/v<VERSION>/evidence/github-release --repo nevenincs/cadrumo
 uv run --no-sync python -m dev.packaging.acquire_pypi --cohort-dir var/post-release/v<VERSION>/cohort/python --evidence-dir var/post-release/v<VERSION>/evidence/pypi
-uv run --no-sync python -m dev.packaging.acquire_mcpb --cohort-dir var/post-release/v<VERSION>/cohort --evidence-dir var/post-release/v<VERSION>/evidence/mcpb --repo nevenincs/cadrumo
 uv run --no-sync python -m dev.packaging.acquire_homebrew --cohort-dir var/post-release/v<VERSION>/cohort/python --evidence-dir var/post-release/v<VERSION>/evidence/homebrew --tap <OWNER/TAP>
-uv run --no-sync python -m dev.packaging.acquire_claude_plugin --cohort-dir var/post-release/v<VERSION>/cohort/python --evidence-dir var/post-release/v<VERSION>/evidence/claude --marketplace-source <PUBLIC_MARKETPLACE> --plugin-id <PLUGIN@MARKETPLACE>
 ```
 
 On the dedicated Windows Scoop runner:

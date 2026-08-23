@@ -371,7 +371,7 @@ def invoice_wizard(
     """Guided manual-entry invoice creation for when extraction is unavailable.
 
     A non-interactive, step-wise validated entry point: every field is
-    supplied up front as an option (the operator is an autonomous agent that
+    supplied up front as an option (a non-interactive caller
     cannot answer an interactive prompt), and every field is validated
     independently before any write is attempted — a malformed NIF and a
     malformed date are BOTH reported in one refusal, never just the first one

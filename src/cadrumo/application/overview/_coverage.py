@@ -5,7 +5,7 @@ answer "what must this taxpayer file?". A filing obligation reaches those
 surfaces only when it has BOTH a registered deadline window (so the deadline
 engine emits it) AND a positively ``APPLICABLE`` seed applicability verdict (so
 the calendar keeps it). A modelo that lacks either is otherwise dropped without a
-default-visible trace, so an operator — or the autonomous agent the CLI targets —
+default-visible trace, so an operator or machine-readable caller
 trusting the surface would under-file.
 
 This module reconciles the full :func:`~application.modelo.registry_modelo_codes`

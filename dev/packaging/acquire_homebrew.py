@@ -3,8 +3,7 @@
 This post-publication check taps the public Homebrew tap, installs ``cadrumo``,
 proves the formula's declared source digests match the promoted cohort sdists,
 and repeats the grounded installed CLI tax-work oracle against the
-tap-installed command. The formula is CLI-only by scope: ``cadrumo-mcp`` ships
-in the sibling ``cadrumo-harness`` distribution, which Homebrew does not carry.
+tap-installed CLI command.
 It refuses instructively when ``brew`` is unavailable or the public tap does
 not yet carry the formula (implements post-release-distribution plan row
 P03.S17).
@@ -246,8 +245,6 @@ def run_homebrew_acquisition(
         "verified_formula_digests": verified_digests,
         "installed_prefix": str(installed_prefix),
         "installed_tax_oracle": tax_evidence.to_jsonable(),
-        # The formula ships the CLI distribution only; cadrumo-mcp lives in the
-        # sibling cadrumo-harness distribution, which Homebrew does not carry.
         "installed_mcp_oracle": None,
     }
     evidence_path = run_root / "acquire-homebrew-evidence.json"

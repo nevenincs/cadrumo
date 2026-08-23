@@ -43,12 +43,10 @@ transport they actually ran at. The partition is checked against the readers
 discovered in source, because the assertion this replaced said it ran over the
 readers that exist while naming two of five.
 
-**The set is symbols, never the word ``subprocess``.** ``cadrumo_harness/mcp/
-_call_runtime.py`` shells the deterministic CLI for every MCP tool call: it is
-a subprocess transport and it is NOT the cloud LLM transport. A word-sweep
-would delete the MCP server's entire call path. A duplication-audit helper that
-shells a Node tool is a second such neighbour. Both are asserted to survive, so
-this gate proves the deletion was scoped by meaning rather than by string.
+**The set is symbols, never the word ``subprocess``.** Other product features
+legitimately spawn subprocesses, so a word-sweep would delete unrelated
+behavior. This gate proves the deletion was scoped by meaning rather than by
+string.
 """
 
 from __future__ import annotations
@@ -111,8 +109,8 @@ _SCANNER_CONTROL_SYMBOL = "build_provenance_stamp"
 
 The sweep below reports clean when it finds nothing, and finding nothing is also
 exactly what a broken scanner reports: an empty file list, a changed helper, a
-read that silently yields no text. The MCP control proves the DELETION was
-scoped by meaning rather than by string; it says nothing about whether the
+read that silently yields no text. A neighboring-transport control proves the
+deletion was scoped by meaning rather than by string; it says nothing about whether the
 scanner ran. This symbol is the control for the instrument itself.
 """
 
@@ -190,16 +188,6 @@ if _ORPHANED_CONSENT_VERIFIERS:  # pragma: no cover - the failure is the collect
         "verifier with no declared symbol runs against nothing."
     )
 
-#: The MCP call runtime now ships in the harness distribution beside the
-#: package rather than under ``entrypoints/mcp``. It is still the neighbouring
-#: transport this gate must see survive, so the path follows it; asserting the
-#: old location would report the cloud transport's deletion as having taken a
-#: live neighbour with it.
-_NEIGHBOURING_TRANSPORTS_THAT_MUST_SURVIVE = (
-    SRC_CADRUMO.parent / "cadrumo-harness" / "src" / "cadrumo_harness" / "mcp" / "_call_runtime.py",
-)
-
-
 def _production_sites_naming(symbols: tuple[str, ...]) -> dict[str, list[str]]:
     """Return, per symbol, every production file naming it.
 
@@ -234,25 +222,6 @@ def test_no_deleted_cloud_symbol_survives_in_production() -> None:
     )
 
 
-def test_the_neighbouring_mcp_subprocess_transport_survived_the_deletion() -> None:
-    """The MCP call runtime is a subprocess transport and must NOT have been deleted.
-
-    This is the positive control, and without it the gate above proves only that
-    a sweep happened -- not that it was scoped correctly. A deletion driven by
-    the word ``subprocess`` would satisfy every assertion in the previous test
-    while removing the MCP server's ability to make any tool call at all.
-
-    Asserted on the file's continued existence AND on it still spawning
-    processes, because a version stripped of its spawn would exist and do
-    nothing.
-    """
-    for path in _NEIGHBOURING_TRANSPORTS_THAT_MUST_SURVIVE:
-        assert path.exists(), f"{repo_relative(path)} is not the cloud transport and must survive the deletion"
-        text = path.read_text(encoding="utf-8")
-        assert "subprocess" in text, (
-            f"{repo_relative(path)} still exists but no longer spawns a process; the cloud deletion "
-            "was scoped by the word 'subprocess' rather than by symbol name"
-        )
 
 
 def test_the_scanner_finds_a_symbol_that_is_actually_present() -> None:

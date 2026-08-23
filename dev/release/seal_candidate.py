@@ -77,19 +77,6 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     dry_run = str(args.dry_run).strip().lower() == "true"
 
-    # Structural guard against the confusion this argument invites. The
-    # publication authority consumes this value as a release TAG
-    # (`gh release download "$CLAUDE_EVIDENCE_RELEASE"`), while an acquisition
-    # lane produces a workflow RUN ID. A bare integer here is therefore always
-    # a mis-wiring, and catching it at seal time costs nothing - catching it at
-    # publication costs a full 48-72 hour soak first.
-    evidence_release = os.environ.get("CLAUDE_EVIDENCE_RELEASE", "").strip()
-    if evidence_release.isdigit():
-        raise ReleaseCandidateError(
-            f"CLAUDE_EVIDENCE_RELEASE is {evidence_release!r}, which is a workflow run id rather than a "
-            "release tag. The four claude-* rows come from an operator-minted evidence RELEASE; the "
-            "packaging-claude acquisition lane's run id is a different fact and must not be substituted.",
-        )
     repo_root = REPO_ROOT
     descriptor = load_descriptor()
 
@@ -122,7 +109,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             opened_at=datetime.now(UTC),
             scoop_run_id=os.environ.get("SCOOP_RUN_ID", ""),
             homebrew_run_id=os.environ.get("HOMEBREW_RUN_ID", ""),
-            claude_evidence_release=evidence_release,
         )
         tag = publish_candidate(
             candidate,

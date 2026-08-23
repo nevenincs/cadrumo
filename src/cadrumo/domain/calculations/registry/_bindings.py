@@ -101,6 +101,7 @@ from ._gasto193_bindings import (
 )
 from ._ids import BindingId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
 from ._inventory_bindings import (
+    InventoryProjectionOperation,
     InventorySelector,
     validate_inventory_binding,
 )
@@ -233,6 +234,7 @@ __all__ = [
     "DonativoDonorObservation",
     "Gasto193Observation",
     "ImpatriadoIncomeObservationProtocol",
+    "InventoryProjectionOperation",
     "InventorySelector",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
