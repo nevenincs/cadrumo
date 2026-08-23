@@ -487,6 +487,163 @@ class Modelo210ProfileFacts(BaseModel):
     representante: Modelo210RepresentanteFacts | None = None
     sin_ingreso_ni_devolucion: Modelo210SinIngresoNiDevolucionFacts | None = None
 
+class Modelo200ProfileFacts(BaseModel):
+    """The header facts modelo 200's export layout cites as operator-supplied.
+
+    All 132 ``m200.*`` producer keys resolved to nothing, so every one of these fields
+    rendered blank on a filed Impuesto sobre Sociedades return.
+
+    Two groups inside them are worth naming, because they are not operator facts at all
+    and the categorisation belongs to the layout rather than to this type. SIX are
+    ``identificador_de_fin_de_registro*`` at length 12 -- the record terminator, envelope
+    mechanics. TWENTY-ONE are period and date components the snapshot's :class:`Period`
+    and the draft's filing year already determine. Both are declared here because the
+    layout cites them as header producers; correcting that belongs in the semantic map.
+
+    Six field names carry an ``apartado_`` prefix because AEAT numbers those apartados and
+    the key tail begins with a digit, which is not a legal Python identifier. The prefix
+    is added rather than the name changed, so the field still reads as the key it resolves.
+
+    Every field is optional and absent stays absent -- AEAT writes an empty alphanumeric
+    header field to blancos.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apartado_6_deduc_evitar_doble_imposicion_participacio: str | None = None
+    apartado_6_deduc_evitar_doble_imposicion_participacio_2: str | None = None
+    apartado_6_deduc_evitar_doble_imposicion_participacio_3: str | None = None
+    apartado_6_deduc_evitar_doble_imposicion_participacio_4: str | None = None
+    apartado_6_deduc_evitar_doble_imposicion_participacio_5: str | None = None
+    apartado_6_deduc_evitar_doble_imposicion_participacio_6: str | None = None
+    abono_compensacion_abono_por_conversion_de_a: str | None = None
+    abono_compensacion_compensacion_por_conversi: str | None = None
+    apellidos_y_nombre: str | None = None
+    b_2_suma_de_porcentajes_de_participacion_de: str | None = None
+    b_2_suma_de_porcentajes_de_participaciones_e: str | None = None
+    balance_0_no_consta_1_mod_normal_2_mod_abrev: str | None = None
+    codigo_cnae_2025_actividad_principal: str | None = None
+    codigo_pais_country_code: str | None = None
+    como_consecuencia_de_la_presentacion_de_la_a: str | None = None
+    cuenta_bancaria_banco_bank_name: str | None = None
+    cuenta_bancaria_ciudad_city: str | None = None
+    cuenta_bancaria_codigo_swift_bic: str | None = None
+    cuenta_bancaria_marca_sepa: str | None = None
+    cuenta_corriente_tributaria: str | None = None
+    datos_de_la_sociedad_matriz_ultima_nif: str | None = None
+    datos_de_la_sociedad_matriz_ultima_nombre_de: str | None = None
+    datos_de_la_sociedad_matriz_ultima_razon_soc: str | None = None
+    deduccion_resto_del_grupo: str | None = None
+    deduccion_resto_del_grupo_10: str | None = None
+    deduccion_resto_del_grupo_11: str | None = None
+    deduccion_resto_del_grupo_12: str | None = None
+    deduccion_resto_del_grupo_13: str | None = None
+    deduccion_resto_del_grupo_14: str | None = None
+    deduccion_resto_del_grupo_15: str | None = None
+    deduccion_resto_del_grupo_16: str | None = None
+    deduccion_resto_del_grupo_17: str | None = None
+    deduccion_resto_del_grupo_18: str | None = None
+    deduccion_resto_del_grupo_19: str | None = None
+    deduccion_resto_del_grupo_2: str | None = None
+    deduccion_resto_del_grupo_20: str | None = None
+    deduccion_resto_del_grupo_21: str | None = None
+    deduccion_resto_del_grupo_22: str | None = None
+    deduccion_resto_del_grupo_23: str | None = None
+    deduccion_resto_del_grupo_24: str | None = None
+    deduccion_resto_del_grupo_25: str | None = None
+    deduccion_resto_del_grupo_26: str | None = None
+    deduccion_resto_del_grupo_3: str | None = None
+    deduccion_resto_del_grupo_4: str | None = None
+    deduccion_resto_del_grupo_5: str | None = None
+    deduccion_resto_del_grupo_6: str | None = None
+    deduccion_resto_del_grupo_7: str | None = None
+    deduccion_resto_del_grupo_8: str | None = None
+    deduccion_resto_del_grupo_9: str | None = None
+    direccion_de_correo_electronico_para_inciden: str | None = None
+    direccion_del_banco_bank_address: str | None = None
+    ecpn_0_no_consta_1_mod_normal_2_mod_abreviad: str | None = None
+    ejercicio: str | None = None
+    entidad_cuyo_importe_neto_de_la_cifra_de_neg: str | None = None
+    entidad_sin_obligacion_de_identificar_el_tit: str | None = None
+    f_identificacion_del_titular_real_de_la_enti: str | None = None
+    fecha_de_nacimiento: str | None = None
+    identificacion_ejercicio: str | None = None
+    identificacion_tipo_de_ejercicio: str | None = None
+    identificador_de_fin_de_registro: str | None = None
+    identificador_de_fin_de_registro_2: str | None = None
+    identificador_de_fin_de_registro_3: str | None = None
+    identificador_de_fin_de_registro_4: str | None = None
+    identificador_de_fin_de_registro_5: str | None = None
+    identificador_de_fin_de_registro_6: str | None = None
+    importe_a_devolver: str | None = None
+    importe_a_ingresar: str | None = None
+    importe_neto_de_la_cifra_de_negocios_de_los: str | None = None
+    importe_neto_de_la_cifra_de_negocios_de_los_2: str | None = None
+    importe_neto_de_la_cifra_de_negocios_de_los_3: str | None = None
+    informacion_adicional_producciones_cinematog: str | None = None
+    informacion_adicional_producciones_cinematog_2: str | None = None
+    informacion_adicional_producciones_cinematog_3: str | None = None
+    informacion_adicional_producciones_cinematog_4: str | None = None
+    informacion_adicional_producciones_cinematog_5: str | None = None
+    informacion_adicional_producciones_cinematog_6: str | None = None
+    inoperatividad_del_orden_de_cumplimentacion: str | None = None
+    inversiones_en_producciones_cinematograficas: str | None = None
+    inversiones_en_producciones_cinematograficas_2: str | None = None
+    inversiones_en_producciones_cinematograficas_3: str | None = None
+    inversiones_en_producciones_cinematograficas_4: str | None = None
+    inversiones_en_producciones_cinematograficas_5: str | None = None
+    inversiones_en_producciones_cinematograficas_6: str | None = None
+    modalidad_de_ingreso_uno_de_los_siguientes_v: str | None = None
+    modelo_de_estados_contables_que_se_va_a_cump: str | None = None
+    n_i_f_de_la_sociedad_representante_dominante: str | None = None
+    nif_codigo_de_identificacion_extranjero: str | None = None
+    nif_en_el_pais_de_residencia_tin: str | None = None
+    no_identificacion_de_la_sociedad_dominante_e: str | None = None
+    no_residentes_mas_de_un_establecimiento_perm: str | None = None
+    nombre_y_apellidos_de_la_persona_de_contacto: str | None = None
+    numero_de_cuenta_iban: str | None = None
+    numero_de_cuenta_iban_2: str | None = None
+    numero_de_periodo_impositivo: str | None = None
+    pais_de_expedicion_del_documento_de_identifi: str | None = None
+    pais_de_residencia: str | None = None
+    pais_de_residencia_2: str | None = None
+    parte_de_la_base_imponible_del_periodo_impos: str | None = None
+    parte_de_la_base_imponible_del_periodo_impos_2: str | None = None
+    perdidas_y_ganancias_0_no_consta_1_mod_norma: str | None = None
+    periodo: str | None = None
+    periodo_impositivo: str | None = None
+    periodo_impositivo_ano_final: str | None = None
+    periodo_impositivo_ano_inicio: str | None = None
+    periodo_impositivo_dia_final: str | None = None
+    periodo_impositivo_dia_inicio: str | None = None
+    periodo_impositivo_fin_ano: str | None = None
+    periodo_impositivo_fin_dia: str | None = None
+    periodo_impositivo_fin_mes: str | None = None
+    periodo_impositivo_inicio_ano: str | None = None
+    periodo_impositivo_inicio_dia: str | None = None
+    periodo_impositivo_inicio_mes: str | None = None
+    periodo_impositivo_mes_final: str | None = None
+    periodo_impositivo_mes_inicio: str | None = None
+    presentacion_de_documentacion_previa_en_la_s: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_2: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_3: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_4: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_5: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_6: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_7: str | None = None
+    presentacion_de_documentacion_previa_en_la_s_8: str | None = None
+    realiza_actividades_agricolas_y_o_ganaderas: str | None = None
+    reg_entidades_navieras_en_funcion_del_tonela: str | None = None
+    renuncia_o_por_transferencia: str | None = None
+    resultado_a_ingresar_correspondiente_a_la_an: str | None = None
+    resultado_a_ingresar_correspondiente_a_la_an_2: str | None = None
+    resultado_cero: str | None = None
+    socimis_regimen_fiscal_de_entrada_salida_ren: str | None = None
+    tipo_de_declaracion_ver_nota: str | None = None
+    tipo_de_ejercicio: str | None = None
+    tipo_documento_identificativo: str | None = None
+
+
 class GeneralFilingProfileFacts(BaseModel):
     """Explicit absence of modelo-specific producer facts for a layout."""
 
@@ -721,6 +878,7 @@ type FilingModelProfileFacts = (
     GeneralFilingProfileFacts
     | Modelo111ProfileFacts
     | Modelo202ProducerProfile
+    | Modelo200ProfileFacts
     | Modelo210ProfileFacts
     | Modelo222ProfileFacts
     | Modelo353ProfileFacts
