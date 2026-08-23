@@ -499,18 +499,6 @@ source_refs = ["aeat-dr-322-2023"]
 export_refs = ["m322-2023.page-01.f044"]
 
 [[revisions."2008-2023".casillas]]
-id = "171"
-number = "171"
-section = ["iva", "regimen_general", "intragrupo", "devengado"]
-semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
-data_type = "money"
-required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
-export_refs = ["m322-2023.page-01.f097"]
-
-[[revisions."2008-2023".casillas]]
 id = "18"
 number = "18"
 section = ["iva", "regimen_general", "devengado"]

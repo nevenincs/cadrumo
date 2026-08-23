@@ -1,0 +1,490 @@
+# Modelo 220 RECORD T22003A00 -- BALANCE CONSOLIDADO, ACTIVO, in the general Plan General de Contabilidad
+# shape: activo no corriente and activo corriente down to TOTAL ACTIVO.
+#
+# 37 casillas describe all 47 design fields -- 37 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position. Every box carries AEAT's own five-digit
+# number, so not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# TWO BOXES HERE ARE THE EXCEPTION AND ARE LEFT FLAT: [00701] "Derechos de emision de gases
+# de efecto invernadero" and [00761] "Otros" carry NO parent name, though they sit between
+# [00138] Existencias and [00149] Deudores comerciales and read on the printed modelo as
+# breakdowns of Existencias. The design does not say so, so nothing here says so either.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
+# intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is
+# derived as the common prefix of every numbered line and the remainder is stripped, so
+# both spellings land on the same heading. 0 parent-child separator repair(s)
+# applied: none needed.
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 0
+# rejoin(s) applied: none.
+#
+# 7 of this record's 37 numbered lines carry the real ligature CODEPOINT (U+FB01 in
+# "Inversiones fi-nancieras", "Periodifi-caciones"), unsplit. It is expanded in the labels and
+# kept as emitted in the verbatim comments. The design carries 309 such codepoints in all,
+# so a plain-text search of this workbook for a Spanish word silently misses them.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22003A00 tiles
+# 1..806 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @645+150 RESERVADO PARA LA ADMINISTRACION; and
+# @795+12 Fin de registro.
+#
+# NOT CLAIMED: THIS BALANCE SHEET DOES NOT BALANCE HERE. Every subtotal and the TOTAL are
+# DECLARED, not computed: no formula, construct or binding sums a group into its head or
+# the heads into the total, and nothing checks activo against patrimonio neto plus pasivo.
+# Every box is a manual input.
+
+# @16+17 N. ACTIVO. ACTIVO NO CORRIENTE [00101]
+[[revisions."2024".casillas]]
+id = "T22003A00:00101"
+number = "00101"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. ACTIVO. Inmovilizado intangible [00102]
+[[revisions."2024".casillas]]
+id = "T22003A00:00102"
+number = "00102"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. ACTIVO. Inmovilizado intangible. Fondo de comercio de consolidación [00106]
+[[revisions."2024".casillas]]
+id = "T22003A00:00106"
+number = "00106"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. ACTIVO. Inmovilizado intangible. Investigación [00734]
+[[revisions."2024".casillas]]
+id = "T22003A00:00734"
+number = "00734"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. ACTIVO. Inmovilizado intangible. Propiedad intelectual [00700]
+[[revisions."2024".casillas]]
+id = "T22003A00:00700"
+number = "00700"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. ACTIVO. Inmovilizado intangible. Otro inmovilizado intangible [00110]
+[[revisions."2024".casillas]]
+id = "T22003A00:00110"
+number = "00110"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. ACTIVO. Inmovilizado material [00111]
+[[revisions."2024".casillas]]
+id = "T22003A00:00111"
+number = "00111"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. ACTIVO. Inmovilizado material. Terrenos y construcciones [00112]
+[[revisions."2024".casillas]]
+id = "T22003A00:00112"
+number = "00112"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. ACTIVO. Inmovilizado material. Instalaciones técnicas y otro inmovilizado material [00113]
+[[revisions."2024".casillas]]
+id = "T22003A00:00113"
+number = "00113"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. ACTIVO. Inmovilizado material. Inmovilizado en curso y anticipos [00114]
+[[revisions."2024".casillas]]
+id = "T22003A00:00114"
+number = "00114"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. ACTIVO. Inversiones inmobiliarias [00115]
+[[revisions."2024".casillas]]
+id = "T22003A00:00115"
+number = "00115"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. ACTIVO. Inversiones en empresas del grupo y asociadas a largo plazo [00118]
+[[revisions."2024".casillas]]
+id = "T22003A00:00118"
+number = "00118"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. ACTIVO. Inversiones en empresas del grupo y asociadas a largo plazo. Instrumentos de patrimonio [00119]
+[[revisions."2024".casillas]]
+id = "T22003A00:00119"
+number = "00119"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. ACTIVO. Inversiones en empresas del grupo y asociadas a largo plazo. Resto [00125]
+[[revisions."2024".casillas]]
+id = "T22003A00:00125"
+number = "00125"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. ACTIVO. Inversiones ﬁnancieras a largo plazo [00126]
+[[revisions."2024".casillas]]
+id = "T22003A00:00126"
+number = "00126"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. ACTIVO. Inversiones ﬁnancieras a largo plazo. Instrumentos de patrimonio [00127]
+[[revisions."2024".casillas]]
+id = "T22003A00:00127"
+number = "00127"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. ACTIVO. Inversiones ﬁnancieras a largo plazo. Resto [00133]
+[[revisions."2024".casillas]]
+id = "T22003A00:00133"
+number = "00133"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. ACTIVO.Activos por impuesto diferido [00134]
+[[revisions."2024".casillas]]
+id = "T22003A00:00134"
+number = "00134"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. ACTIVO.Deudores comerciales no corrientes [00135]
+[[revisions."2024".casillas]]
+id = "T22003A00:00135"
+number = "00135"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. ACTIVO.ACTIVO CORRIENTE [00136]
+[[revisions."2024".casillas]]
+id = "T22003A00:00136"
+number = "00136"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 N. ACTIVO.Activos no corrientes mantenidos para la venta [00137]
+[[revisions."2024".casillas]]
+id = "T22003A00:00137"
+number = "00137"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17 N. ACTIVO.Existencias [00138]
+[[revisions."2024".casillas]]
+id = "T22003A00:00138"
+number = "00138"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17 N. ACTIVO. Derechos de emisión de gases de efecto invernadero. [00701]
+[[revisions."2024".casillas]]
+id = "T22003A00:00701"
+number = "00701"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17 N. ACTIVO. Otros. [00761]
+[[revisions."2024".casillas]]
+id = "T22003A00:00761"
+number = "00761"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17 N. ACTIVO.Deudores comerciales y otras cuentas a cobrar [00149]
+[[revisions."2024".casillas]]
+id = "T22003A00:00149"
+number = "00149"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17 N. ACTIVO.Deudores comerciales y otras cuentas a cobrar. Clientes por ventas y prestaciones de servicios [00150]
+[[revisions."2024".casillas]]
+id = "T22003A00:00150"
+number = "00150"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17 N. ACTIVO.Deudores comerciales y otras cuentas a cobrar. Activos por impuesto corriente [00156]
+[[revisions."2024".casillas]]
+id = "T22003A00:00156"
+number = "00156"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @475+17 N. ACTIVO.Deudores comerciales y otras cuentas a cobrar. Otros deudores [00159]
+[[revisions."2024".casillas]]
+id = "T22003A00:00159"
+number = "00159"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @492+17 N. ACTIVO.Inversiones en empresas del grupo y asociadas a corto plazo [00160]
+[[revisions."2024".casillas]]
+id = "T22003A00:00160"
+number = "00160"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @509+17 N. ACTIVO. Inversiones en empresas del grupo y asociadas a corto plazo. Instrumentos de patrimonio [00161]
+[[revisions."2024".casillas]]
+id = "T22003A00:00161"
+number = "00161"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @526+17 N. ACTIVO. Inversiones en empresas del grupo y asociadas a corto plazo. Resto [00167]
+[[revisions."2024".casillas]]
+id = "T22003A00:00167"
+number = "00167"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @543+17 N. ACTIVO.Inversiones ﬁnancieras a corto plazo [00168]
+[[revisions."2024".casillas]]
+id = "T22003A00:00168"
+number = "00168"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @560+17 N. ACTIVO.Inversiones ﬁnancieras a corto plazo. Instrumentos de patrimonio [00169]
+[[revisions."2024".casillas]]
+id = "T22003A00:00169"
+number = "00169"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @577+17 N. ACTIVO.Inversiones ﬁnancieras a corto plazo. Resto [00175]
+[[revisions."2024".casillas]]
+id = "T22003A00:00175"
+number = "00175"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @594+17 N. ACTIVO.Periodiﬁcaciones a corto plazo [00176]
+[[revisions."2024".casillas]]
+id = "T22003A00:00176"
+number = "00176"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @611+17 N. ACTIVO.Efectivo y otros activos líquidos equivalentes [00177]
+[[revisions."2024".casillas]]
+id = "T22003A00:00177"
+number = "00177"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @628+17 N. ACTIVO.TOTAL ACTIVO [00180]
+[[revisions."2024".casillas]]
+id = "T22003A00:00180"
+number = "00180"
+segmento = "T22003A00"
+section = ["liquidacion", "balance_consolidado_activo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
