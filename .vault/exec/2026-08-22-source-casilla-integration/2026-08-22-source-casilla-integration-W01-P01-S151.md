@@ -11,9 +11,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
-
-
-
 # emit IVA wallet decisions as immutable event-key primaries and parent their authority-source contributors to the decision provenance node
 
 ## Scope

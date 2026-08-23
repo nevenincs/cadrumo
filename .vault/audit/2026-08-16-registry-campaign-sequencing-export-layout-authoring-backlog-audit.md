@@ -18942,3 +18942,84 @@ The 322 split itself, now fully specified: create `2008-2022` on
 pairs, author box [73]'s casilla and map entry, leave `2023` on the existing
 2023-authored content. Modelo 200 and 347 splits unchanged, 347 still needing
 three revisions. Backlog otherwise unchanged.
+
+## Tick: the 322 map derived, and an era-bleed casilla routed into padding
+
+The 2022 semantic map for modelo 322 was derived and the split's remaining
+inputs are now built rather than planned. The split itself is still not landed.
+What DID land is a registry fix the split work uncovered, and a cross-registry
+gate for its defect class.
+
+### The map, built
+
+Generated from the 2023 map by aligning the two designs' intermediates on
+`(length, normalized_description)`, carrying each aligned entry's kind,
+casilla id and grounding, and taking anchors (`source_row`, `ordinal`) from the
+2022 intermediate. Result matches last tick's prediction exactly: **216 of 217
+fields aligned, one authored** -- box `[73]`, the 2022-only *Informacion
+adicional* slot.
+
+Reconciled against the revision before writing anything into `src`: 187 casilla
+ids referenced, none twice, exactly one referenced-but-undeclared (`73`), and
+sixteen numbered casillas the 2022 map does not reference. Fifteen are the
+2023-only boxes `150`-`164`, expected. The sixteenth was not.
+
+### Casilla 171: a box from a later form, routed to a filler
+
+Revision `2008-2023` declared casilla `171` -- operaciones intragrupo, base
+imponible, money -- with `export_refs = ["m322-2023.page-01.f097"]`. That map
+entry is `kind = "filler"`. So the casilla's figure was computed, carried full
+legal grounding, and then had nowhere to be written; the layout emits no casilla
+field for it at all.
+
+Chased to root rather than deleted on sight, and each step had its control:
+
+* box 171 is in the **2024-2025 and 2026** designs and in NEITHER design
+  governing this revision -- an era bleed;
+* the revision declares `171` ALONE, not its neighbours `170` and `172`, which
+  the later revisions correctly carry as a set;
+* the disproving control -- is 171 a mis-numbered version of a real 2022/2023
+  box? -- fails: the intragrupo base-imponible boxes for those years are `01`,
+  `04` and `159`, and the revision already declares all of them;
+* nothing references it: no formula, construct, binding or verification
+  expectation, only its own declaration.
+
+Removed. Authority CLEAN, 211 casillas.
+
+### The gate, and a predicate corrected mid-measurement
+
+`test_no_casilla_is_routed_to_a_valueless_slot.py` fails on any casilla whose
+`export_refs` resolves to a map entry that writes no value.
+
+The first predicate was "any kind other than `casilla`" and it reported ten
+modelo 303 casillas. Those route through `projection` entries, which ARE real
+derived values, so the predicate was discarding true positives as well as the
+false ones. Narrowed to `filler` and `literal` -- padding and constants, the two
+kinds that genuinely cannot hold a figure -- the count registry-wide is ZERO
+across 8900 resolvable refs, and was exactly one before casilla 171 was removed.
+
+A companion asserts the valueless set has NOT swallowed the value-bearing kinds,
+so the narrowing cannot silently widen back and make a correct registry look
+broken. Only refs that RESOLVE against a bundled map are judged: a hand-authored
+layout has no entry to look up and inventing a verdict would be a guess.
+
+Worth carrying: this defect is invisible to every existing check. The reference
+is not dangling, so referential integrity passes; the byte range is covered by
+the filler, so no contiguity or coverage check fires. Only asking what the target
+entry WRITES surfaces it.
+
+### Verified
+
+* the new module: 2 passed, ruff clean; all three conditions proved to bite from
+  outside the repo -- a routed casilla flipped to `filler`, an unread mappings
+  tree, and a predicate widened to swallow every kind.
+* registry package: 9 failed, 5342 passed -- the standing declared inventories,
+  unchanged. Authority loads CLEAN.
+
+### Still open
+
+The 322 split. Its map is built and reconciled but lives in scratch, and landing
+it still needs the new revision directory, 211 casillas re-pointed from
+`m322-2023.*` to `m322-2022.*`, casilla `[73]` authored, the fifteen 2023-only
+boxes dropped from the earlier revision, and the render/validate/publish cycle.
+Modelo 200 and 347 splits unchanged.

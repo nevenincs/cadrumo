@@ -11,9 +11,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
-
-
-
 # correct composite-provenance documentation and validation language identified by formal review
 
 ## Scope

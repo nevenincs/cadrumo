@@ -11,9 +11,6 @@ related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
-
-
-
 # define the canonical primary/contributor lineage role and replace the calculation-source provenance shape atomically with separate resolved and contributor axes
 
 ## Scope
