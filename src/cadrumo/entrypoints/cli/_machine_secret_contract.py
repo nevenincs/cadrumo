@@ -195,6 +195,15 @@ def register_machine_secret_payload_model(
     name, non-``SecretStr`` fields, or a competing model for an occupied slot.
     The returned model allows direct use as a class decorator target.
     """
+    # Imported at registration time to preserve this inventory module's
+    # import-light metadata boundary while still making the canonical strict
+    # payload base an enforceable capability, not a documentation convention.
+    from ._config._secure_input import MachineSecretPayload
+
+    if not issubclass(model, MachineSecretPayload):
+        raise MachineSecretContractError(
+            f"payload model for {command_key!r}/{variant_key!r} must inherit MachineSecretPayload",
+        )
     contract = machine_secret_contract(command_key)
     variants = {variant.key: variant for variant in contract.variants}
     try:

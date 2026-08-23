@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
+
 import pytest
-from pydantic import BaseModel, ConfigDict, SecretStr
+from pydantic import BaseModel, SecretStr
 
 from .. import _machine_secret_contract as contract_module
+from .._config._secure_input import MachineSecretPayload
 from .._machine_secret_contract import (
     MACHINE_SECRET_COMMANDS,
     MachineSecretContractError,
@@ -58,10 +62,12 @@ def test_inventory_and_value_free_payload_shapes_are_exact() -> None:
 
 def test_restore_variant_is_selected_only_by_public_artifact_presence() -> None:
     restore = machine_secret_contract("config.profile.restore")
-    assert restore.variant_for(artifact_present=False).condition is not None
-    assert restore.variant_for(artifact_present=False).condition.presence is OptionPresence.ABSENT
-    assert restore.variant_for(artifact_present=True).condition is not None
-    assert restore.variant_for(artifact_present=True).condition.presence is OptionPresence.PRESENT
+    password_condition = restore.variant_for(artifact_present=False).condition
+    recovery_condition = restore.variant_for(artifact_present=True).condition
+    assert password_condition is not None
+    assert password_condition.presence is OptionPresence.ABSENT
+    assert recovery_condition is not None
+    assert recovery_condition.presence is OptionPresence.PRESENT
     with pytest.raises(MachineSecretContractError, match="requires the public artifact-presence selector"):
         restore.variant_for()
 
@@ -69,8 +75,7 @@ def test_restore_variant_is_selected_only_by_public_artifact_presence() -> None:
 def test_registration_accepts_only_the_declared_secret_model_shape(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(contract_module, "_REGISTERED_MODELS", {})
 
-    class LoginPayload(BaseModel):
-        model_config = ConfigDict(extra="forbid", frozen=True)
+    class LoginPayload(MachineSecretPayload):
         passphrase: SecretStr
 
     assert register_machine_secret_payload_model("config.login", "passphrase", LoginPayload) is LoginPayload
@@ -79,10 +84,16 @@ def test_registration_accepts_only_the_declared_secret_model_shape(monkeypatch: 
     class WrongName(BaseModel):
         wrong: SecretStr
 
-    with pytest.raises(MachineSecretContractError, match="do not match"):
+    with pytest.raises(MachineSecretContractError, match="must inherit MachineSecretPayload"):
         register_machine_secret_payload_model("config.login", "passphrase", WrongName)
 
-    class PublicString(BaseModel):
+    class CanonicalWrongName(MachineSecretPayload):
+        wrong: SecretStr
+
+    with pytest.raises(MachineSecretContractError, match="do not match"):
+        register_machine_secret_payload_model("config.login", "passphrase", CanonicalWrongName)
+
+    class PublicString(MachineSecretPayload):
         passphrase: str
 
     with pytest.raises(MachineSecretContractError, match="must use SecretStr"):
@@ -92,3 +103,20 @@ def test_registration_accepts_only_the_declared_secret_model_shape(monkeypatch: 
 def test_commands_outside_the_inventory_are_refused() -> None:
     with pytest.raises(MachineSecretContractError, match="outside the scalar-secret command inventory"):
         machine_secret_contract("config.auth.certificate.register")
+
+
+def test_inventory_import_does_not_eagerly_load_secure_input() -> None:
+    probe = (
+        "import sys; import cadrumo.entrypoints.cli._machine_secret_contract; "
+        "print('cadrumo.entrypoints.cli._config._secure_input' in sys.modules)"
+    )
+    completed = subprocess.run(  # noqa: S603 - fixed interpreter and constant import-hygiene probe
+        [sys.executable, "-I", "-c", probe],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=30,
+        check=True,
+    )
+
+    assert completed.stdout.strip() == "False"

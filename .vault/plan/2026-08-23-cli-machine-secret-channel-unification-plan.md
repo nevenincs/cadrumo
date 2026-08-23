@@ -4,7 +4,7 @@ tags:
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
 modified: '2026-08-23'
-body_hash: 'sha256:d0141a9b781d567e0ee4f74c20104c61382b1a1f775da1a69ec31ee3e66a0e8b'
+body_hash: 'sha256:de99b97e65b4a7d52d4bf25fb640a3a42dc5ab487260a47e5c647b66f9b53043'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
@@ -38,7 +38,7 @@ Define the authoritative adopter inventory and value-free metadata contract.
 
 - [x] `W01.P02.S03` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and define the exact five-command machine-secret inventory, command-model registration, safe field and type schemas, conditional restore variants, and conformance API; `src/cadrumo/entrypoints/cli/_machine_secret_contract.py`.
 - [x] `W01.P02.S04` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and project value-free machine-secret payload variants into verb input and command schemas; `src/cadrumo/entrypoints/cli/_verb_input_schema.py and src/cadrumo/entrypoints/cli/_command_schema.py`.
-- [ ] `W01.P02.S05` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and prove exact inventory membership, single identical flag declarations across help, Click, metadata, and schema, safe field types without values, and no outside adopters; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_metadata.py`.
+- [x] `W01.P02.S05` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and prove exact inventory membership, single identical flag declarations across help, Click, metadata, and schema, safe field types without values, and no outside adopters; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_metadata.py`.
 
 ## Wave `W02` - Atomic verb migration and hard cut
 
@@ -48,7 +48,7 @@ Move all scalar-secret verbs to the capability and delete obsolete routes and na
 
 Migrate login and profile creation while preserving policy and mutation ordering.
 
-- [ ] `W02.P03.S06` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and migrate config login to both canonical explicit channels and explicit prompt or refusal while deleting CLI environment, settings, keyring, substrate fallthrough, and local transport branches; `src/cadrumo/entrypoints/cli/_config/_custody.py`.
+- [x] `W02.P03.S06` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and migrate config login to both canonical explicit channels and explicit prompt or refusal while deleting CLI environment, settings, keyring, substrate fallthrough, and local transport branches; `src/cadrumo/entrypoints/cli/_config/_custody.py`.
 - [x] `W02.P03.S07` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and migrate profile creation to both canonical channels, remove manual injection and CLI environment fallback, and preserve confirmation, policy, lazy materialization, and mutation order; `src/cadrumo/entrypoints/cli/_config/_scripted_registration.py and src/cadrumo/entrypoints/cli/_config/_manager_dispatch.py`.
 
 ### Phase `W02.P04` - Rotation, recovery, and certificate custody
