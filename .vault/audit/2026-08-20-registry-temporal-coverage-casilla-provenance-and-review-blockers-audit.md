@@ -4150,3 +4150,61 @@ tells them apart, and that subject is derived from the total's own text rather t
 ### Scale
 
 **10437 of 11570 slots remain** across 111 numbered records; 1133 modelled, zero orphaned.
+
+## 2026-08-23 — T22007M00, the gastos financieros limitation, and fixing the cause
+
+### What landed
+
+Record **T22007M00** — the *limitación en la deducibilidad de gastos financieros* of the
+grupo fiscal: the art. 16.5 / 67 b) / 83 LIS limit for debt taken on to acquire
+participaciones, then the general 30% del beneficio operativo limit of art. 16.1 and 16.2.
+Lettered a)–r) with j1)–j6) and a closing total. **27 casillas**, revision 1299 → **1326**,
+twenty-three of 137 records. A **flat** record: no repeating block, and every one of its 27
+boxes carries AEAT's own number, so nothing is minted.
+
+Suite: **identical FAILED list, zero regressions.**
+
+### The normalisation bug, fixed at the cause this time
+
+Two stamps running recorded the same defect — a punctuation rule written to make two
+strings compare equal reaching a third that was already correct (`DT 24.5 LIS` →
+`DT 24. 5 LIS`, then `N.I.F.` → `N. I. F.`). Last entry named the cause but deferred the
+fix.
+
+**The cause is normalising for OUTPUT what only needed normalising for COMPARISON.** This
+record needs no comparison at all, so its label is the design's own text with only the box
+number and the heading removed, and no spacing rule runs over it. That is the shape any
+future generator should take: normalise inside the comparison key, never on the way to a
+label.
+
+### AEAT emits the real ligature codepoint — inconsistently, inside one record
+
+Not the broken `fi ` spacing seen on families 07, 09 and 16 but **U+FB01 itself**, in 21 of
+these 27 descriptions — and mixed with plain `financieros` on the other lines of the *same
+record*.
+
+Consequence worth keeping: **a search for `financieros` over the raw design misses 21 of
+these lines.** Any survey of this workbook that greps for a Spanish word is undercounting by
+an unknown amount unless it folds the ligature first.
+
+### AEAT's arithmetic annotations are not well-formed
+
+The descriptions carry the record's own algebra in square brackets that are *not* box
+numbers: `(= [c1+f])`, `(<= [b], [a=c1+c2], >= 0)`, `(= 30%* [j1-j2-j3-j4+j5-j6]`. The
+letters name other lines of the record.
+
+But line d) closes a parenthesis with a square bracket — `([b>=c1+d+e], >= 0]` — and line
+j) never closes its parenthesis at all. **Any future attempt to compile these into formulas
+must treat them as prose needing human adjudication, not as a parseable grammar.** They are
+kept verbatim in all four catalogues rather than translated away, since they are the
+record's cross-reference notation.
+
+### Two numbers fall outside the record's own run
+
+Twenty-five boxes are `03196`–`03220` consecutively; **j6) is `02219` and m) is `02220`**,
+from a different block. Recorded because a reader scanning for a contiguous range would
+conclude two boxes were missing.
+
+### Scale
+
+**10410 of 11570 slots remain** across 110 numbered records; 1160 modelled, zero orphaned.
