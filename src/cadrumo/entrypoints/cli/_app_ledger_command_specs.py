@@ -1902,9 +1902,7 @@ LEDGER_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declarations=("--provider",),
                 value=ValueContract(DeferredTarget("cadrumo.application.ledger", "LedgerProviderID")),
                 default=ParameterDefault.required(),
-                help_key=TranslationKey(
-                    "Statement format provider. Recognised values: auto, csv, ofx, qfx, xlsx, excel, n26, pdf, pdf-n26"
-                ),
+                help_key=TranslationKey("cli.ledger.import.provider_help"),
                 metavar=None,
                 is_flag=False,
                 flag_value=None,
@@ -2449,7 +2447,7 @@ LEDGER_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parent_key="app_ledger",
         token="participation",
         kind="group",
-        help_key=TranslationKey("Audit which finalized modelo revisions and filings consumed a ledger transaction."),
+        help_key=TranslationKey("cli.ledger.participation.help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=True, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
@@ -2457,7 +2455,7 @@ LEDGER_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 name="transaction_id",
                 value=ValueContract(DeferredTarget("builtins", "str")),
                 default=ParameterDefault.value(None),
-                help_key=TranslationKey("Ledger transaction id whose finalized-revision participations to list."),
+                help_key=TranslationKey("cli.ledger.participation.transaction_id_help"),
                 metavar=None,
                 constraint=ParameterConstraint(),
                 show_default=True,
@@ -6046,7 +6044,7 @@ LEDGER_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parent_key="app_ledger_participation",
         token="rebuild",
         kind="leaf",
-        help_key=TranslationKey("Run :func:`rebuild_participation_index` for the active bucket."),
+        help_key=TranslationKey("cli.ledger.participation.rebuild_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),

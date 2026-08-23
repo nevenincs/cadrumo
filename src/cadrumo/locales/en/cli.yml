@@ -2489,6 +2489,10 @@ cli:
     try_for_help: Try [blue]'{command_path} {help_option}'[/] for help.
     usage_prefix: 'Usage: '
   ledger:
+    participation:
+      help: Audit which finalized modelo revisions and filings consumed a ledger transaction.
+      rebuild_help: Rebuild the participation index for the active bucket.
+      transaction_id_help: Ledger transaction id whose finalized-revision participations to list.
     add:
       actor_help: Operator name recorded on the bucket event
       amount_help: Transaction amount in the transaction currency (decimal, e.g. 1200.50).

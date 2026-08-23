@@ -1,0 +1,14 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200026:00625"
+number = "00625"
+segmento = "DP200026"
+section = ["tributacion_conjunta_estado_adm_forales", "calculo_porcentajes_tributacion"]
+data_type = "decimal"
+semantic_role = "is_tributacion_conjunta_porcentaje_estado"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Tributación conjunta porcentaje de tributación a la Administración del Estado is the single cuota-chain Estado-share casilla; no sibling casilla shares this role within the modelo revision."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200011.f0112", "m200-2025.dp200026.f0017", "m200-2025.dp200042.f0122"]

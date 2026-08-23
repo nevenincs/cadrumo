@@ -1,0 +1,35 @@
+# Modelo 200 at the authenticated declaraciones-presentadas register.
+#
+# AEAT's register offers modelo 200 in its own modelo combobox, read from the
+# register's controls rather than inferred: an authenticated read-only
+# discovery run on 2026-08-13 returned 200 for ejercicios 2012 through 2026.
+# Until then this modelo declared no read surface, and the capture path
+# correctly refused to claim anything about AEAT's coverage from that silence.
+#
+# READ-ONLY BY CONSTRUCTION. The guard policy is built from this decision, so
+# the method and action lists below are the whole authorisation: GET/HEAD/
+# OPTIONS against the sede host the register serves, and every state-changing
+# verb forbidden. Nothing here permits a presentation, a signature or a payment.
+
+[[revisions."2024-y-siguientes".live_cross_references]]
+id = "modelo-200-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-200-filed-declarations-read-only"
+allowed_hosts = ["www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-modelo-200-manual-2024", "aeat-modelo-200-manual-2025"]

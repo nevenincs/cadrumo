@@ -79,7 +79,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         parent_key="config_repair",
         token="integrity",  # noqa: S106 - CLI token, not a credential.
         kind="group",
-        help_key=TranslationKey("cli.config.repair.integrity.help"),
+        help_key=TranslationKey("cli.config.repair.integrity_help"),
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
         parameters=(),
@@ -183,9 +183,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         help_key=TranslationKey("cli.config.repair.connectivity_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            _flag("headless", "--headless/--headed", None, default=True),
-        ),
+        parameters=(_flag("headless", "--headless/--headed", None, default=True),),
         policy=BROWSER_CONNECTIVITY,
         handler=_handler("_repair_cli", "repair_connectivity"),
         result_schema=_schema("RepairConnectivityResult", "config.repair.connectivity"),

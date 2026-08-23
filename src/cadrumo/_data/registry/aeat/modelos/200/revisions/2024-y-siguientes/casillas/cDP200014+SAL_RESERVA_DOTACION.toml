@@ -1,0 +1,13 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:SAL_RESERVA_DOTACION"
+number = "SAL_RESERVA_DOTACION"
+segmento = "DP200014"
+section = ["liquidacion_iii", "base_imponible"]
+data_type = "money"
+semantic_role = "is_sal_reserva_especial_dotacion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "SAL/SLL reserva especial dotacion is the single calculation-only casilla carrying the Ley 44/2015 Art. 14 reduction to base imponible IS; no sibling casilla shares this role within the modelo revision."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-44-2015:art-14", "ley-44-2015:art-13", "ley-44-2015:art-2"]
+source_refs = ["aeat-modelo-200-manual-2024"]
