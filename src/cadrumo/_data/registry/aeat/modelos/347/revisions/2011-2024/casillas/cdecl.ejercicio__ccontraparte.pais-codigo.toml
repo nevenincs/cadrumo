@@ -1,0 +1,127 @@
+[[revisions."2011-2024".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+export_refs = ["m347-2011.declarante.f003"]
+[[revisions."2011-2024".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+# The abstract declaration type has no box of its own on this design. AEAT
+# prints only the two flags that qualify it -- declaracion complementaria and
+# declaracion sustitutiva, at positions 121-122, carried by
+# 'decl.complementaria-sustitutiva' -- and an ordinaria declaration is the
+# unmarked case, expressed by leaving both blank rather than by a positive
+# value anywhere on the record.
+export_exemption_reason = "not_in_record_design"
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+
+# --- Per-counterparty detail fields (Tipo 2 contraparte declarada) ---
+
+[[revisions."2011-2024".casillas]]
+id = "contraparte.nif"
+number = "contraparte.nif"
+section = ["contraparte", "identificacion"]
+data_type = "nif"
+semantic_role = "contraparte_nif"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+export_refs = ["m347-2011.declarado.f005"]
+[[revisions."2011-2024".casillas]]
+id = "contraparte.nombre"
+number = "contraparte.nombre"
+section = ["contraparte", "identificacion"]
+data_type = "text"
+semantic_role = "contraparte_nombre"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+export_refs = ["m347-2011.declarado.f007"]
+[[revisions."2011-2024".casillas]]
+id = "contraparte.clave-operacion"
+number = "contraparte.clave-operacion"
+section = ["contraparte", "operacion"]
+data_type = "text"
+semantic_role = "contraparte_clave_operacion"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+export_refs = ["m347-2011.declarado.f011"]
+[[revisions."2011-2024".casillas]]
+id = "contraparte.importe-Q1"
+number = "contraparte.importe-Q1"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "contraparte_importe_q1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "El Modelo 347 desglosa el importe de operaciones con la contraparte por trimestre (Q1-Q4) en casillas distintas (RD 1065/2007 art.31); el rol del primer trimestre aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+export_refs = ["m347-2011.declarado.f019"]
+[[revisions."2011-2024".casillas]]
+id = "contraparte.importe-Q2"
+number = "contraparte.importe-Q2"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "contraparte_importe_q2"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "El Modelo 347 desglosa el importe de operaciones con la contraparte por trimestre (Q1-Q4) en casillas distintas (RD 1065/2007 art.31); el rol del segundo trimestre aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+export_refs = ["m347-2011.declarado.f021"]
+[[revisions."2011-2024".casillas]]
+id = "contraparte.importe-Q3"
+number = "contraparte.importe-Q3"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "contraparte_importe_q3"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "El Modelo 347 desglosa el importe de operaciones con la contraparte por trimestre (Q1-Q4) en casillas distintas (RD 1065/2007 art.31); el rol del tercer trimestre aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+export_refs = ["m347-2011.declarado.f023"]
+[[revisions."2011-2024".casillas]]
+id = "contraparte.importe-Q4"
+number = "contraparte.importe-Q4"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "contraparte_importe_q4"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "El Modelo 347 desglosa el importe de operaciones con la contraparte por trimestre (Q1-Q4) en casillas distintas (RD 1065/2007 art.31); el rol del cuarto trimestre aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+export_refs = ["m347-2011.declarado.f025"]
+[[revisions."2011-2024".casillas]]
+id = "contraparte.pais-codigo"
+number = "contraparte.pais-codigo"
+section = ["contraparte", "identificacion"]
+data_type = "country_code"
+semantic_role = "contraparte_pais_codigo"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+export_refs = ["m347-2011.declarado.f009"]

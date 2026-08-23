@@ -47,14 +47,14 @@ _M347_BINDING_SOURCE_REFS = {
 
 #: Grounding only the later half may carry. Orden HAC/1431/2025 is applicable
 #: from ejercicio 2025 and its design is the 2025 edition, so a binding on the
-#: 2008-2024 half citing either would ground a filing in a norm published after
+#: 2011-2024 half citing either would ground a filing in a norm published after
 #: every year that half governs. This pinned the UNION on the early half, which
 #: was the pre-split shape: one revision then answered for every year and
 #: legitimately carried both eras' grounding.
 _M347_2025_ERA_LEGAL_REFS = {"orden-hac-1431-2025:art-1"}
 _M347_2025_ERA_SOURCE_REFS = {"aeat-dr-347-2025"}
 
-_M347_EARLY_REVISION = "2008-2024"
+_M347_EARLY_REVISION = "2011-2024"
 _M347_LATER_REVISION = "2025-y-siguientes"
 
 
@@ -112,7 +112,7 @@ def test_committed_modelo_347_declares_counterpart_source_summary_bindings() -> 
     for binding in (count_binding, amount_binding):
         assert set(binding.legal_refs) >= _M347_BINDING_LEGAL_REFS
         assert set(binding.source_refs) >= _M347_BINDING_SOURCE_REFS
-        # The half this test reads governs 2008-2024, so it must NOT reach
+        # The half this test reads governs 2011-2024, so it must NOT reach
         # forward into the 2025 orden or its design.
         assert not set(binding.legal_refs) & _M347_2025_ERA_LEGAL_REFS
         assert not set(binding.source_refs) & _M347_2025_ERA_SOURCE_REFS

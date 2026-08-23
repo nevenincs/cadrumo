@@ -1,6 +1,6 @@
 """Modelo 347 spans a SECOND re-layout the boundary detector does not report.
 
-The relayout gate reports one boundary for revision ``2008-2024`` -- 2009/2010 --
+The relayout gate reports one boundary for revision ``2011-2024`` -- 2009/2010 --
 and its own message warns that "splitting at only the ones one signal saw leaves
 the rest live". That warning applies here, because there is a second boundary it
 does not see.
@@ -125,7 +125,7 @@ def test_the_revision_really_covers_both_designs_years() -> None:
     """The consequence: this is a live span, not an abstract difference."""
     modelos, catalogues = _committed_registry_tree()
     modelo = next(m for m in modelos if m.id == "347")
-    revision = modelo.revisions["2008-2024"]
+    revision = modelo.revisions["2011-2024"]
 
     cited = [r for r in revision.source_refs if catalogues.sources[r].kind == "record_design"]
     assert cited == [_2011], cited

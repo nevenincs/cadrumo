@@ -1,8 +1,0 @@
-[[revisions."2008-2024".applicability]]
-id = "m347-seed"
-applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
-required_payer_fact = "exceeds_third_party_threshold"
-applicable_reason = "Modelo 347 (declaración anual de operaciones con terceras personas): las operaciones del contribuyente con un tercero superan el umbral de declaración y debe presentar la declaración informativa anual."
-not_applicable_reason = "Modelo 347 no aplica: la declaración de operaciones con terceros solo corresponde a quien supera el umbral de operaciones declarable."
-cuota_bearing = false
-legal_refs = ["rd-1065-2007:art-31", "orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "ley-58-2003:art-93"]

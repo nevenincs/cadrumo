@@ -106,7 +106,7 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     # 347's printed ordinal IS a box identity (unlike modelo 322, where it is
     # a contiguous position); the 2008 and 2010 designs pair with nothing, so
     # 2008-2010 still emits the 2011 layout and keeps reporting.
-    _GeneratedTree("347", "2008-2024", "aeat-dr-347-2011", "2011", 2011, "0A"),
+    _GeneratedTree("347", "2011-2024", "aeat-dr-347-2011", "2011", 2011, "0A"),
     _GeneratedTree("347", "2025-y-siguientes", "aeat-dr-347-2025", "2025", 2025, "0A"),
     # Enrolled with the layout, not after it, which is the whole lesson of the 347
     # entry above: a published tree that nothing compares against a fresh render

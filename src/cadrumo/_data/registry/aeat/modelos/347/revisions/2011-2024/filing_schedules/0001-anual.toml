@@ -1,0 +1,8 @@
+[[revisions."2011-2024".filing_schedules]]
+id = "modelo-347-anual"
+period_kind = "annual"
+periods = ["0A"]
+profile_condition_mode = "all"
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-347-2008-form", "aeat-modelo-347-procedure"]
+

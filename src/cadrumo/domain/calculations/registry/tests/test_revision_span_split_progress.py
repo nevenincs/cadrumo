@@ -56,37 +56,26 @@ _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
         # and still await their split. Each is recorded in the export-layout
         # authoring backlog audit with the boundary it crosses.
         ("200", "2024-y-siguientes"),
-        ("347", "2008-2024"),
     },
 )
-#: `("347", "2008-y-siguientes")` became `("347", "2008-2024")`: the 2024/2025
-#: boundary was split and the revision keeps reporting for the earlier two.
-#: The 2011 epoch was derivable on the printed ordinal, which for these PDFs
-#: is a real box identity -- 52 of 54 paired fields agree on a normalised
-#: description and 51 share a length. The 2008 and 2010 designs are NOT
-#: derivable: their box numbers agree with 2010's on 11 of 43, so a derivation
-#: would carry semantics onto the wrong boxes.
-#: That verdict is about the KEY, not the layouts, and it reads wider than it
-#: is: these two designs print no bracketed box numbers AT ALL, so the low
-#: agreement rate was never evidence they fail to correspond. Read on BYTES
-#: they nest exactly -- no field of either partially overlaps a field of the
-#: other, the re-layout being four merges plus a 4-byte EJERCICIO carved out
-#: of trailing BLANCOS. Proved in
-#: test_modelo_347_designs_are_boundary_compatible.py, which supplies the
-#: pairing this split needs.
-#: AND THE ROW UNDERSTATES THE WORK: modelo 347 spans a SECOND boundary this
-#: module does not report. Between the 2010 and 2011 designs AEAT widened
-#: IMPORTE TOTAL ANUAL on the declarante from 15 bytes to 16 and shifted
-#: everything after it by one (NUMERO TOTAL DE INMUEBLES 160 -> 161); the
-#: The detector does not report it, and the cause is NOT that its signals are
-#: blind -- run directly on the two designs the comparator returns three
-#: pieces of evidence. The PAIR IS NEVER FORMED: the 2011 design is named for
-#: its orden, states no ejercicio, so it attributes to no year and is not
-#: claimed by the revision, even though the revision cites it and the source
-#: catalogue declares applies_from 2011-01-01 / applies_to 2024-12-31 for it.
-#: So this revision needs THREE revisions, not two, and an unattributed
-#: design is a hole in detection rather than only a ledger entry.
-#: Measured in test_modelo_347_second_undetected_boundary.py.
+#: `("347", "2008-2024")` removed by NARROWING, not by partition -- the
+#: distinction matters, because the row would otherwise read as a completed
+#: split. The revision cited `aeat-dr-347-2011`, a design AEAT published for
+#: ejercicio 2011 onward, while claiming 2008 too, so filings for 2008-2010 were
+#: written at 2011 offsets. It now claims 2011-2024, the years its design governs.
+#:
+#: The 2008 and 2010 designs remain bundled and UNSERVED: no revision covers
+#: those ejercicios now. That is the honest state rather than a regression --
+#: the capability removed was writing wrong bytes, and the years were never
+#: correctly filable. Authoring them needs a field-to-field reading of AEAT's
+#: prose, which test_modelo_347_designs_are_boundary_compatible.py deliberately
+#: refuses to supply: it proves the layouts NEST -- no field of either partially
+#: overlaps a field of the other -- which makes a split AUTHORABLE, and stops
+#: short of a similarity-derived pairing because the grounding rule forbids that
+#: as a route to box identity. Measured rather than assumed: a derivation like
+#: modelo 322's, keyed on (length, normalized description), aligns only 31 of the
+#: 2008 design's 69 fields, so it would be exactly the guess that module warns
+#: against.
 #:
 #: `("322", "2008-2023")` removed: the revision was partitioned into `2008-2022`
 #: and `2023` at the boundary between the two designs it straddled. Position
