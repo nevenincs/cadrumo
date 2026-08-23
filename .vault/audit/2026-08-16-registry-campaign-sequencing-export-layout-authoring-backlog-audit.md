@@ -20302,3 +20302,116 @@ isolation, 30 passed.
 * the split routing, the drift report and both parity directions were each
   re-derived here rather than read from the agent's report.
 * authority loads CLEAN; registry package unchanged at 8 failures.
+
+## Tick: modelo 200's translation blocker measured shut, and two designs attributed on AEAT's own titles
+
+### The composability hypothesis, tested and refused
+
+Modelo 200's split needs `en/ca/hu` labels for the boxes AEAT carries only in
+2024, and the shipped catalogues DO translate this material -- the Catalan for
+`01049` reads "Detall compensacio bases imposables negatives - 2025 - Pendent
+d'aplicacio en periodes futurs", with the YEAR token carried across verbatim.
+That suggested a mechanical route: where a 2024-only box's Spanish is an existing
+label with one year swapped, its ca/hu could be composed by the same swap without
+inventing a translation.
+
+Measured over all 145 2024-only boxes against every label the revision carries:
+**zero** match an existing label's skeleton under year normalisation. The route
+does not exist, and the blocker is now a measurement rather than an assumption.
+
+### Two of the seventeen unattributed designs DO state an era
+
+Read from AEAT's own published titles in the per-modelo corpus manifest, not
+inferred from the stored filename:
+
+* modelo 111 -- "111 - Ejercicios anteriores al 2001": open BELOW, no earliest
+  ejercicio stated. Its siblings are bounded ("Ejercicios 2004 a 2009", "2016
+  hasta 2018") and parse today.
+* modelo 763 -- "763 - Desde 2018 4T y siguientes": open ABOVE, and
+  period-qualified.
+
+Both state a real era that this module refuses to enumerate, for the reason it
+already refuses `y siguientes`: turning "everything before 2001" into a year list
+invents years AEAT did not write. Declared in `_OPEN_BOUNDED_ERA_DESIGNS`, kept
+DISTINCT from `_NON_EJERCICIO_COVERAGE_AXIS` -- those designs are scoped on
+another axis entirely (modelo 036 by in-force date, modelo 210 by devengo span),
+while these are ejercicio-scoped and merely unbounded. Conflating them would
+misdescribe both, and the audit refuses an entry claimed by both classes.
+
+Checked and NOT declared: modelo 576's "Diseno de registro vigente" and modelo
+604's two "ATF" designs state no era at all, so they stay reported.
+
+Unattributed designs: **15, from 17.**
+
+### Verified
+
+* the span module: 22 passed, 3 failed -- from 21 and 3.
+* the new audit's four conditions all bite from outside the repo: an entry for an
+  unbundled design, an empty declaration, an entry claimed by both classes, and a
+  design that became enumerable.
+* registry package: 8 failed, 5,385 passed. Authority loads CLEAN.
+
+### Still open
+
+Modelo 200's split, blocked on 145 boxes' `en/ca/hu` labels -- now proven
+uncomposable. The 104 casilla labels, same blocker. Modelo 347's earlier
+revisions, per-field reading. 15 unattributed designs, 12 year-coverage lines and
+78 unproven spans, all corpus acquisition; 12 more on the deadline-window ruling.
+
+## Tick: five leads closed by their controls, three of which would have done damage
+
+Standing registry failures: 8, unchanged. This tick found no new work to land and
+that is the finding -- each candidate was chased to a control that refused it,
+and three of the three "fixes" would have written something false.
+
+### The two attribution sweeps are exhausted
+
+* **Unattributed designs.** The remaining 15 were re-read against AEAT's OWN
+  manifest titles, the source that recovered modelo 111 and 763 last tick. None
+  states an era: modelo 038 gives an update date, 145 a version number, and 180,
+  200, 349, 360, 720 and 840 an orden name only. The module's refusal to infer an
+  era from an orden year stands -- its own docstring measures modelo 180's orden
+  as seven years off its stated ejercicio.
+* **Unregistered designs.** The same title-based re-read of all 39 returns the
+  same two candidates the filename pass found: modelo 036's "Ejercicio 2021 y
+  siguientes" pair. Nothing new is registrable.
+
+### Modelo 036's pair is now refused on evidence, not caution
+
+The campaign twice declined to register them rather than read an "actualizado"
+date as a governed period. Measured this tick, the two editions are not
+cosmetically different: they carry DIFFERENT LAYOUTS under one declared scope --
+`Pag. 5` has 115 fields against 112, `Pag. 7` has 84 against 76. So choosing
+between them decides bytes, and the prior refusal is reinforced rather than
+merely restated.
+
+### The overlap that looked like a defect is AEAT's own rule
+
+Six registered design windows overlap within their modelo, and one pair looked
+plainly wrong: `aeat-dr-303-2024-early` ends 2024-08-31 while `-late` starts
+2024-07-01. Reading the titles refused the fix: `-early` is "hasta periodos 08 y
+2T" and `-late` "a partir de periodos 09 y 3T". A MONTHLY filer switches at
+September; a QUARTERLY filer's 3T already starts in July. Both designs are
+genuinely live across those two months and the FILER'S CADENCE decides, not the
+date. Narrowing either window to make the pair tile would have made one cadence
+cite a design AEAT never published for it.
+
+That rationale is now recorded beside the catalogue entry, where the next reader
+would otherwise trip on it, together with the note that the 2021 and 2018 pairs
+span the whole ejercicio for the same reason.
+
+### Also checked and clean
+
+Modelo 036's single revision cites a design whose window matches it exactly; no
+modelo has two registered designs claiming the same epoch.
+
+### Verified
+
+* registry package: 8 failed, 5,385 passed -- unchanged. Authority loads CLEAN.
+
+### Still open
+
+Unchanged. Modelo 200's split and the 104 labels on translation; modelo 347's
+earlier revisions on a per-field reading; 15 unattributed designs, 37
+unregistered, 12 year-coverage lines and 78 unproven spans on corpus
+acquisition; 12 more on the deadline-window ruling.
