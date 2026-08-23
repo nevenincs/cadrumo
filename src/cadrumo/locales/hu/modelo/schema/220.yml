@@ -9,515 +9,529 @@ modelo:
           casilla:
             x-agp34c1g6d0j0c1q60o32c1h:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Befektetett
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Befektetett
                 eszközök
             x-agp34c1g6d0j0c1q60o32c1i:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Immateriális
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Immateriális
                 javak
             x-agp34c1g6d0j0c1q60o32c1m:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Immateriális
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Immateriális
                 javak. Konszolidációs üzleti vagy cégérték
             x-agp34c1g6d0j0c1q60o32c9g:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Immateriális
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Immateriális
                 javak. Egyéb immateriális javak
             x-agp34c1g6d0j0c1q60o32c9h:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Tárgyi eszközök
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Tárgyi eszközök
             x-agp34c1g6d0j0c1q60o32c9i:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Tárgyi eszközök.
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Tárgyi eszközök.
                 Földterületek és épületek
             x-agp34c1g6d0j0c1q60o32c9j:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Tárgyi eszközök.
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Tárgyi eszközök.
                 Műszaki berendezések és egyéb tárgyi eszközök
             x-agp34c1g6d0j0c1q60o32c9k:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Tárgyi eszközök.
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Tárgyi eszközök.
                 Beruházások és előlegek
             x-agp34c1g6d0j0c1q60o32c9l:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Befektetési
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Befektetési
                 célú ingatlanok
             x-agp34c1g6d0j0c1q60o32c9o:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Hosszú távú
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Hosszú távú
                 befektetések csoporttagokban és társult vállalkozásokban
             x-agp34c1g6d0j0c1q60o32c9p:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Hosszú távú
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Hosszú távú
                 befektetések csoporttagokban és társult vállalkozásokban. Tőkeinstrumentumok
             x-agp34c1g6d0j0c1q60o32chl:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Hosszú távú
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Hosszú távú
                 befektetések csoporttagokban és társult vállalkozásokban. Többi
             x-agp34c1g6d0j0c1q60o32chm:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Hosszú távú
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Hosszú távú
                 pénzügyi befektetések
             x-agp34c1g6d0j0c1q60o32chn:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Hosszú távú
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Hosszú távú
                 pénzügyi befektetések. Tőkeinstrumentumok
             x-agp34c1g6d0j0c1q60o32cpj:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Hosszú távú
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Hosszú távú
                 pénzügyi befektetések. Többi
             x-agp34c1g6d0j0c1q60o32cpk:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Halasztott adókövetelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Halasztott
+                adókövetelések
             x-agp34c1g6d0j0c1q60o32cpl:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Befektetett
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Befektetett
                 vevőkövetelések
             x-agp34c1g6d0j0c1q60o32cpm:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Forgóeszközök
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Forgóeszközök
             x-agp34c1g6d0j0c1q60o32cpn:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Értékesítésre
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Értékesítésre
                 tartott befektetett eszközök
             x-agp34c1g6d0j0c1q60o32cpo:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Készletek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Készletek
             x-agp34c1g6d0j0c1q60o32d1p:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Vevőkövetelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Vevőkövetelések
                 és egyéb követelések
             x-agp34c1g6d0j0c1q60o32d9g:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Vevőkövetelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Vevőkövetelések
                 és egyéb követelések. Vevők árbevételből és szolgáltatásnyújtásból
             x-agp34c1g6d0j0c1q60o32d9m:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Vevőkövetelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Vevőkövetelések
                 és egyéb követelések. Tényleges adókövetelések
             x-agp34c1g6d0j0c1q60o32d9p:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Vevőkövetelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Vevőkövetelések
                 és egyéb követelések. Egyéb követelések
             x-agp34c1g6d0j0c1q60o32dhg:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Rövid távú befektetések
-                csoporttagokban és társult vállalkozásokban
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Rövid távú
+                befektetések csoporttagokban és társult vállalkozásokban
             x-agp34c1g6d0j0c1q60o32dhh:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Rövid távú befektetések
-                csoporttagokban és társult vállalkozásokban. Tőkeinstrumentumok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Rövid távú
+                befektetések csoporttagokban és társult vállalkozásokban. Tőkeinstrumentumok
             x-agp34c1g6d0j0c1q60o32dhn:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Rövid távú befektetések
-                csoporttagokban és társult vállalkozásokban. Többi
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Rövid távú
+                befektetések csoporttagokban és társult vállalkozásokban. Többi
             x-agp34c1g6d0j0c1q60o32dho:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Rövid távú pénzügyi
-                befektetések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Rövid távú
+                pénzügyi befektetések
             x-agp34c1g6d0j0c1q60o32dhp:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Rövid távú pénzügyi
-                befektetések. Tőkeinstrumentumok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Rövid távú
+                pénzügyi befektetések. Tőkeinstrumentumok
             x-agp34c1g6d0j0c1q60o32dpl:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Rövid távú pénzügyi
-                befektetések. Többi
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Rövid távú
+                pénzügyi befektetések. Többi
             x-agp34c1g6d0j0c1q60o32dpm:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Rövid távú időbeli
-                elhatárolások
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Rövid távú
+                időbeli elhatárolások
             x-agp34c1g6d0j0c1q60o32dpn:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Pénzeszközök
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Pénzeszközök
                 és egyéb likvid eszközök
             x-agp34c1g6d0j0c1q60o32e1g:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Eszközök összesen
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Eszközök
+                összesen
             x-agp34c1g6d0j0c1q60o3ec1g:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Immateriális
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Immateriális
                 javak. Szellemi tulajdon
             x-agp34c1g6d0j0c1q60o3ec1h:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Üvegházhatású
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Üvegházhatású
                 gáz kibocsátási egységek
             x-agp34c1g6d0j0c1q60o3ecpk:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Immateriális
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Immateriális
                 javak. Kutatás
             x-agp34c1g6d0j0c1q60o3edhh:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 00). Egyéb
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Egyéb
             x-agp34c1g6d0j0c9q60o32c1h:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Pénzeszközök,
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Pénzeszközök,
                 jegybanki számlaegyenlegek és egyéb látra szóló betétek
             x-agp34c1g6d0j0c9q60o32c1i:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Kereskedési
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Kereskedési
                 célú pénzügyi eszközök
             x-agp34c1g6d0j0c9q60o32c1j:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Derivatívák
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Derivatívák
             x-agp34c1g6d0j0c9q60o32c1k:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Tőkeinstrumentumok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Tőkeinstrumentumok
             x-agp34c1g6d0j0c9q60o32c1l:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelviszonyt
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelviszonyt
                 megtestesítő értékpapírok
             x-agp34c1g6d0j0c9q60o32c1m:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelek és előlegek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
+                előlegek
             x-agp34c1g6d0j0c9q60o32c1n:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelek és előlegek.
-                Jegybankok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
+                előlegek. Jegybankok
             x-agp34c1g6d0j0c9q60o32c1o:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelek és előlegek.
-                Hitelintézetek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
+                előlegek. Hitelintézetek
             x-agp34c1g6d0j0c9q60o32c1p:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelek és előlegek.
-                Ügyfelek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
+                előlegek. Ügyfelek
             x-agp34c1g6d0j0c9q60o32c9g:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Az eredménnyel
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Az eredménnyel
                 szemben valós értéken értékeltnek megjelölt pénzügyi eszközök
             x-agp34c1g6d0j0c9q60o32c9i:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelviszonyt
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelviszonyt
                 megtestesítő értékpapírok
             x-agp34c1g6d0j0c9q60o32c9j:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelek és előlegek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
+                előlegek
             x-agp34c1g6d0j0c9q60o32c9k:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelek és előlegek.
-                Jegybankok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
+                előlegek. Jegybankok
             x-agp34c1g6d0j0c9q60o32c9l:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelek és előlegek.
-                Hitelintézetek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
+                előlegek. Hitelintézetek
             x-agp34c1g6d0j0c9q60o32c9m:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelek és előlegek.
-                Ügyfelek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
+                előlegek. Ügyfelek
             x-agp34c1g6d0j0c9q60o32chn:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Derivatívák
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Derivatívák
                 - fedezeti elszámolás
             x-agp34c1g6d0j0c9q60o32cho:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Kamatlábkockázat
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Kamatlábkockázat
                 portfóliófedezete során a fedezett tételek valós értékének változása
             x-agp34c1g6d0j0c9q60o32chp:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Befektetések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Befektetések
                 közös vállalkozásokban és társult vállalkozásokban
             x-agp34c1g6d0j0c9q60o32cph:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Közös vállalkozások
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Közös vállalkozások
             x-agp34c1g6d0j0c9q60o32cpi:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Társult vállalkozások
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Társult vállalkozások
             x-agp34c1g6d0j0c9q60o32cpj:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Biztosítási
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Biztosítási
                 vagy viszontbiztosítási szerződésekkel fedezett eszközök
             x-agp34c1g6d0j0c9q60o32cpk:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Tárgyi eszközök
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Tárgyi eszközök
             x-agp34c1g6d0j0c9q60o32cpl:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Ingatlanok,
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ingatlanok,
                 gépek és berendezések
             x-agp34c1g6d0j0c9q60o32cpm:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Ingatlanok,
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ingatlanok,
                 gépek és berendezések. Saját használatú
             x-agp34c1g6d0j0c9q60o32cpn:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Ingatlanok,
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ingatlanok,
                 gépek és berendezések. Operatív lízingbe adva
             x-agp34c1g6d0j0c9q60o32cpo:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Ingatlanok,
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ingatlanok,
                 gépek és berendezések. Jólét célú tevékenységre rendelve (takarékpénztárak
                 és hitelszövetkezetek)
             x-agp34c1g6d0j0c9q60o32cpp:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Befektetési
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Befektetési
                 célú ingatlanok
             x-agp34c1g6d0j0c9q60o32d1g:
-              label: 'Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Befektetési
+              label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Befektetési
                 célú ingatlanok. Ebből: operatív lízingbe adva'
             x-agp34c1g6d0j0c9q60o3cc9l:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Nem kereskedési
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Nem kereskedési
                 célú pénzügyi eszközök, kötelezően az eredménnyel szemben valós értéken
                 értékelve
             x-agp34c1g6d0j0c9q60o3cc9m:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Tőkeinstrumentumok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Tőkeinstrumentumok
             x-agp34c1g6d0j0c9q60o3cc9n:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelviszonyt
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelviszonyt
                 megtestesítő értékpapírok
             x-agp34c1g6d0j0c9q60o3cc9o:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelek és előlegek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
+                előlegek
             x-agp34c1g6d0j0c9q60o3cc9p:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Jegybankok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Jegybankok
             x-agp34c1g6d0j0c9q60o3cchg:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelintézetek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelintézetek
             x-agp34c1g6d0j0c9q60o3cchh:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Ügyfelek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ügyfelek
             x-agp34c1g6d0j0c9q60o3cchi:
-              label: 'Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Emlékeztető
+              label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Emlékeztető
                 tétel: értékesítési vagy elzálogosítási joggal kölcsönadott vagy biztosítékként
                 átadott'
             x-agp34c1g6d0j0c9q60o3cchj:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Az egyéb átfogó
-                eredménnyel szemben valós értéken értékelt pénzügyi eszközök
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Az egyéb
+                átfogó eredménnyel szemben valós értéken értékelt pénzügyi eszközök
             x-agp34c1g6d0j0c9q60o3cchk:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Tőkeinstrumentumok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Tőkeinstrumentumok
             x-agp34c1g6d0j0c9q60o3cchl:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelviszonyt
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelviszonyt
                 megtestesítő értékpapírok
             x-agp34c1g6d0j0c9q60o3cchm:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelek és előlegek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
+                előlegek
             x-agp34c1g6d0j0c9q60o3cchn:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Jegybankok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Jegybankok
             x-agp34c1g6d0j0c9q60o3ccho:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelintézetek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelintézetek
             x-agp34c1g6d0j0c9q60o3cchp:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Ügyfelek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ügyfelek
             x-agp34c1g6d0j0c9q60o3ccpg:
-              label: 'Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Emlékeztető
+              label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Emlékeztető
                 tétel: értékesítési vagy elzálogosítási joggal kölcsönadott vagy biztosítékként
                 átadott'
             x-agp34c1g6d0j0c9q60o3ccph:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Amortizált bekerülési
-                értéken értékelt pénzügyi eszközök
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Amortizált
+                bekerülési értéken értékelt pénzügyi eszközök
             x-agp34c1g6d0j0c9q60o3ccpi:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelviszonyt
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelviszonyt
                 megtestesítő értékpapírok
             x-agp34c1g6d0j0c9q60o3ccpj:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelek és előlegek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelek és
+                előlegek
             x-agp34c1g6d0j0c9q60o3ccpk:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Jegybankok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Jegybankok
             x-agp34c1g6d0j0c9q60o3ccpl:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Hitelintézetek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Hitelintézetek
             x-agp34c1g6d0j0c9q60o3ccpm:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Ügyfelek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Ügyfelek
             x-agp34c1g6d0j0c9q60o3ccpn:
-              label: 'Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Emlékeztető
+              label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Emlékeztető
                 tétel: értékesítési vagy elzálogosítási joggal kölcsönadott vagy biztosítékként
                 átadott'
             x-agp34c1g6d0j0c9q60o3ed9g:
-              label: 'Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Emlékeztető
+              label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Emlékeztető
                 tétel: értékesítési vagy elzálogosítási joggal kölcsönadott vagy biztosítékként
                 átadott'
             x-agp34c1g6d0j0c9q60o3ed9h:
-              label: 'Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Emlékeztető
+              label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Emlékeztető
                 tétel: értékesítési vagy elzálogosítási joggal kölcsönadott vagy biztosítékként
                 átadott'
             x-agp34c1g6d0j0c9q60o3ed9l:
-              label: 'Konszolidált mérleg. Eszközök (pag. 3A hoja 01). Emlékeztető
+              label: 'Konszolidált mérleg. Eszközök (3A. oldal, 01. lap). Emlékeztető
                 tétel: pénzügyi lízing keretében megszerezve'
             x-agp34c1g6d0j0chq60o32c1h:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Pénzeszközök
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Pénzeszközök
                 és egyéb likvid eszközök
             x-agp34c1g6d0j0chq60o32c1i:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Kereskedési
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Kereskedési
                 célú pénzügyi eszközök
             x-agp34c1g6d0j0chq60o32c1j:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Kereskedési
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Kereskedési
                 célú pénzügyi eszközök. Tőkeinstrumentumok
             x-agp34c1g6d0j0chq60o32c1k:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Kereskedési
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Kereskedési
                 célú pénzügyi eszközök. Hitelviszonyt megtestesítő értékpapírok
             x-agp34c1g6d0j0chq60o32c1l:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Kereskedési
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Kereskedési
                 célú pénzügyi eszközök. Derivatívák
             x-agp34c1g6d0j0chq60o32c1m:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Kereskedési
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Kereskedési
                 célú pénzügyi eszközök. Egyéb
             x-agp34c1g6d0j0chq60o32c1n:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Egyéb, az eredménnyel
-                szemben valós értéken értékelt pénzügyi eszközök
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Egyéb, az
+                eredménnyel szemben valós értéken értékelt pénzügyi eszközök
             x-agp34c1g6d0j0chq60o32c1o:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Egyéb, az eredménnyel
-                szemben valós értéken értékelt pénzügyi eszközök. Tőkeinstrumentumok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Egyéb, az
+                eredménnyel szemben valós értéken értékelt pénzügyi eszközök. Tőkeinstrumentumok
             x-agp34c1g6d0j0chq60o32c1p:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Egyéb, az eredménnyel
-                szemben valós értéken értékelt pénzügyi eszközök. Hitelviszonyt megtestesítő
-                értékpapírok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Egyéb, az
+                eredménnyel szemben valós értéken értékelt pénzügyi eszközök. Hitelviszonyt
+                megtestesítő értékpapírok
             x-agp34c1g6d0j0chq60o32c9g:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Egyéb, az eredménnyel
-                szemben valós értéken értékelt pénzügyi eszközök. Hibrid instrumentumok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Egyéb, az
+                eredménnyel szemben valós értéken értékelt pénzügyi eszközök. Hibrid
+                instrumentumok
             x-agp34c1g6d0j0chq60o32c9h:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Egyéb, az eredménnyel
-                szemben valós értéken értékelt pénzügyi eszközök. A befektetési kockázatot
-                vállaló életbiztosítási szerződők javára történő befektetések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Egyéb, az
+                eredménnyel szemben valós értéken értékelt pénzügyi eszközök. A befektetési
+                kockázatot vállaló életbiztosítási szerződők javára történő befektetések
             x-agp34c1g6d0j0chq60o32c9i:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Egyéb, az eredménnyel
-                szemben valós értéken értékelt pénzügyi eszközök. Egyéb
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Egyéb, az
+                eredménnyel szemben valós értéken értékelt pénzügyi eszközök. Egyéb
             x-agp34c1g6d0j0chq60o32c9j:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Értékesíthető
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Értékesíthető
                 pénzügyi eszközök
             x-agp34c1g6d0j0chq60o32c9k:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Értékesíthető
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Értékesíthető
                 pénzügyi eszközök. Tőkeinstrumentumok
             x-agp34c1g6d0j0chq60o32c9l:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Értékesíthető
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Értékesíthető
                 pénzügyi eszközök. Hitelviszonyt megtestesítő értékpapírok
             x-agp34c1g6d0j0chq60o32c9m:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Értékesíthető
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Értékesíthető
                 pénzügyi eszközök. A befektetési kockázatot vállaló életbiztosítási
                 szerződők javára történő befektetések
             x-agp34c1g6d0j0chq60o32c9n:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Értékesíthető
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Értékesíthető
                 pénzügyi eszközök. Egyéb
             x-agp34c1g6d0j0chq60o32c9o:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések
             x-agp34c1g6d0j0chq60o32c9p:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Hitelviszonyt megtestesítő értékpapírok
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Hitelviszonyt megtestesítő értékpapírok
             x-agp34c1g6d0j0chq60o32chg:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Hitelek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Hitelek
             x-agp34c1g6d0j0chq60o32chh:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Kötvényekre nyújtott előlegek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Kötvényekre nyújtott előlegek
             x-agp34c1g6d0j0chq60o32chi:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Csoporttagoknak és társult vállalkozásoknak nyújtott hitelek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Csoporttagoknak és társult vállalkozásoknak nyújtott
+                hitelek
             x-agp34c1g6d0j0chq60o32chj:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Egyéb kapcsolt feleknek nyújtott hitelek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Egyéb kapcsolt feleknek nyújtott hitelek
             x-agp34c1g6d0j0chq60o32chk:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Hitelintézeti betétek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Hitelintézeti betétek
             x-agp34c1g6d0j0chq60o32chl:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Elfogadott viszontbiztosításra képzett betétek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Elfogadott viszontbiztosításra képzett betétek
             x-agp34c1g6d0j0chq60o32chm:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Közvetlen biztosítási ügyletekből származó követelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Közvetlen biztosítási ügyletekből származó követelések
             x-agp34c1g6d0j0chq60o32chn:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Biztosítási szerződők
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Biztosítási szerződők
             x-agp34c1g6d0j0chq60o32cho:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Közvetítők
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Közvetítők
             x-agp34c1g6d0j0chq60o32chp:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Viszontbiztosítási ügyletekből származó követelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Viszontbiztosítási ügyletekből származó követelések
             x-agp34c1g6d0j0chq60o32cpg:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Együttbiztosítási ügyletekből származó követelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Együttbiztosítási ügyletekből származó követelések
             x-agp34c1g6d0j0chq60o32cph:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Befizetésre felszólított tőke
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Befizetésre felszólított tőke
             x-agp34c1g6d0j0chq60o32cpi:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Egyéb követelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Egyéb követelések
             x-agp34c1g6d0j0chq60o32cpj:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Közigazgatási szervekkel szembeni követelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Közigazgatási szervekkel szembeni követelések
             x-agp34c1g6d0j0chq60o32cpk:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                További követelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. További követelések
             x-agp34c1g6d0j0chq60o32cpl:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Lejáratig tartott
-                befektetési portfólió
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Lejáratig
+                tartott befektetési portfólió
             x-agp34c1g6d0j0chq60o32cpm:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Fedezeti derivatívák
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Fedezeti
+                derivatívák
             x-agp34c1g6d0j0chq60o32cpn:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). A viszontbiztosító
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). A viszontbiztosító
                 részesedése a biztosítástechnikai tartalékokból
             x-agp34c1g6d0j0chq60o32cpo:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). A viszontbiztosító
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). A viszontbiztosító
                 részesedése a biztosítástechnikai tartalékokból. Meg meg nem szolgált
                 díjak tartaléka
             x-agp34c1g6d0j0chq60o32cpp:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). A viszontbiztosító
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). A viszontbiztosító
                 részesedése a biztosítástechnikai tartalékokból. Életbiztosítási tartalék
             x-agp34c1g6d0j0chq60o32d1g:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). A viszontbiztosító
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). A viszontbiztosító
                 részesedése a biztosítástechnikai tartalékokból. Kárkifizetési tartalék
             x-agp34c1g6d0j0chq60o32d1h:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). A viszontbiztosító
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). A viszontbiztosító
                 részesedése a biztosítástechnikai tartalékokból. Egyéb biztosítástechnikai
                 tartalékok
             x-agp34c1g6d0j0chq60o32d1i:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Tárgyi eszközök
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Tárgyi eszközök
                 és befektetési célú ingatlanok
             x-agp34c1g6d0j0chq60o32d1j:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Tárgyi eszközök
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Tárgyi eszközök
                 és befektetési célú ingatlanok. Tárgyi eszközök
             x-agp34c1g6d0j0chq60o32d1k:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Tárgyi eszközök
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Tárgyi eszközök
                 és befektetési célú ingatlanok. Befektetési célú ingatlanok
             x-agp34c1g6d0j0chq60o3ec1g:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Hitelek. Társult vállalkozások
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Hitelek. Társult vállalkozások
             x-agp34c1g6d0j0chq60o3ec1h:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Hitelek. Közös vezetésű vállalkozások
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Hitelek. Közös vezetésű vállalkozások
             x-agp34c1g6d0j0chq60o3ec1i:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 02). Hitelek és követelések.
-                Hitelek. Egyéb
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). Hitelek és
+                követelések. Hitelek. Egyéb
             x-agp34c1g6d0j2c9q60o32d1h:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 11). Immateriális
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Immateriális
                 javak
             x-agp34c1g6d0j2c9q60o32d1i:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 11). Üzleti vagy
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Üzleti vagy
                 cégérték
             x-agp34c1g6d0j2c9q60o32d1j:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 11). Egyéb immateriális
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Egyéb immateriális
                 javak
             x-agp34c1g6d0j2c9q60o32d1k:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 11). Adókövetelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Adókövetelések
             x-agp34c1g6d0j2c9q60o32d1l:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 11). Tényleges adókövetelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Tényleges
+                adókövetelések
             x-agp34c1g6d0j2c9q60o32d1m:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 11). Halasztott adókövetelések
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Halasztott
+                adókövetelések
             x-agp34c1g6d0j2c9q60o32d1n:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 11). Egyéb eszközök
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Egyéb eszközök
             x-agp34c1g6d0j2c9q60o32d1o:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 11). Nyugdíjakhoz
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Nyugdíjakhoz
                 kapcsolódó biztosítási szerződések
             x-agp34c1g6d0j2c9q60o32d1p:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 11). Készletek
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Készletek
             x-agp34c1g6d0j2c9q60o32d9g:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 11). Az egyéb eszközök
-                többi része
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Az egyéb
+                eszközök többi része
             x-agp34c1g6d0j2c9q60o32d9h:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 11). Értékesítésre
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Értékesítésre
                 tartottnak minősített befektetett eszközök és elidegenítési csoportok
             x-agp34c1g6d0j2c9q60o32d9i:
-              label: Konszolidált mérleg. Eszközök (pag. 3A hoja 11). Eszközök összesen
+              label: Konszolidált mérleg. Eszközök (3A. oldal, 11. lap). Eszközök
+                összesen
             x-agp34c1g6d130c1q60o30c1j:
               help: null
               label: Konszolidált mérleg. Saját tőke és kötelezettségek. Törvényi
@@ -715,603 +729,607 @@ modelo:
               label: Konszolidált mérleg. Saját tőke és kötelezettségek. Szövetkezetek
                 kötelező tartalékalapja
             x-agp34c1g6d130c9q60o32d9j:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Kereskedési
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Kereskedési
                 célú pénzügyi kötelezettségek
             x-agp34c1g6d130c9q60o32d9k:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Derivatívák
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Derivatívák
             x-agp34c1g6d130c9q60o32d9l:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Rövid
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Rövid
                 pozíciók
             x-agp34c1g6d130c9q60o32d9m:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Betétek
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek
             x-agp34c1g6d130c9q60o32d9n:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Betétek.
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Jegybankok
             x-agp34c1g6d130c9q60o32d9o:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Betétek.
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Hitelintézetek
             x-agp34c1g6d130c9q60o32d9p:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Betétek.
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Ügyfelek
             x-agp34c1g6d130c9q60o32dhg:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Kibocsátott
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Kibocsátott
                 hitelviszonyt megtestesítő értékpapírok
             x-agp34c1g6d130c9q60o32dhh:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Egyéb
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Egyéb
                 pénzügyi kötelezettségek
             x-agp34c1g6d130c9q60o32dhi:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Az eredménnyel
-                szemben valós értéken értékeltnek megjelölt pénzügyi kötelezettségek
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Az
+                eredménnyel szemben valós értéken értékeltnek megjelölt pénzügyi kötelezettségek
             x-agp34c1g6d130c9q60o32dhj:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Betétek
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek
             x-agp34c1g6d130c9q60o32dhk:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Betétek.
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Jegybankok
             x-agp34c1g6d130c9q60o32dhl:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Betétek.
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Hitelintézetek
             x-agp34c1g6d130c9q60o32dhm:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Betétek.
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Ügyfelek
             x-agp34c1g6d130c9q60o32dhn:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Kibocsátott
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Kibocsátott
                 hitelviszonyt megtestesítő értékpapírok
             x-agp34c1g6d130c9q60o32dho:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Egyéb
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Egyéb
                 pénzügyi kötelezettségek
             x-agp34c1g6d130c9q60o32dhp:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Amortizált
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Amortizált
                 bekerülési értéken értékelt pénzügyi kötelezettségek
             x-agp34c1g6d130c9q60o32dpg:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Betétek
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek
             x-agp34c1g6d130c9q60o32dph:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Betétek.
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Jegybankok
             x-agp34c1g6d130c9q60o32dpi:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Betétek.
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Hitelintézetek
             x-agp34c1g6d130c9q60o32dpj:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Betétek.
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Betétek.
                 Ügyfelek
             x-agp34c1g6d130c9q60o32dpk:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Kibocsátott
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Kibocsátott
                 hitelviszonyt megtestesítő értékpapírok
             x-agp34c1g6d130c9q60o32dpl:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Egyéb
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Egyéb
                 pénzügyi kötelezettségek
             x-agp34c1g6d130c9q60o32dpm:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Derivatívák
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Derivatívák
                 - fedezeti elszámolás
             x-agp34c1g6d130c9q60o32dpn:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Kamatlábkockázat
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Kamatlábkockázat
                 portfóliófedezete során a fedezett tételek valós értékének változása
             x-agp34c1g6d130c9q60o32dpo:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Biztosítási
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Biztosítási
                 vagy viszontbiztosítási szerződésekkel fedezett kötelezettségek
             x-agp34c1g6d130c9q60o32dpp:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Céltartalékok
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Céltartalékok
             x-agp34c1g6d130c9q60o32e1g:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Nyugdíjak
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Nyugdíjak
                 és egyéb, munkaviszony utáni meghatározott juttatási kötelezettségek
             x-agp34c1g6d130c9q60o32e1h:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Egyéb
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Egyéb
                 hosszú távú munkavállalói juttatások
             x-agp34c1g6d130c9q60o32e1i:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Folyamatban
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Folyamatban
                 lévő jogi eljárások és adóperek
             x-agp34c1g6d130c9q60o32e1j:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Vállalt
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Vállalt
                 kötelezettségek és garanciák
             x-agp34c1g6d130c9q60o32e1k:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). További
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). További
                 céltartalékok
             x-agp34c1g6d130c9q60o32e1l:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Adókötelezettségek
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Adókötelezettségek
             x-agp34c1g6d130c9q60o32e1m:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Tényleges
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Tényleges
                 adókötelezettségek
             x-agp34c1g6d130c9q60o32e1n:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Halasztott
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Halasztott
                 adókötelezettségek
             x-agp34c1g6d130c9q60o32e1o:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Látra
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Látra
                 visszafizetendő jegyzett tőke
             x-agp34c1g6d130c9q60o32e1p:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Egyéb
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Egyéb
                 kötelezettségek
             x-agp34c1g6d130c9q60o32e9g:
-              label: 'Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Ebből:
+              label: 'Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Ebből:
                 jólét célú alap (csak takarékpénztárak és hitelszövetkezetek)'
             x-agp34c1g6d130c9q60o32e9h:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Értékesítésre
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Értékesítésre
                 tartottnak minősített elidegenítési csoportokba tartozó kötelezettségek
             x-agp34c1g6d130c9q60o32e9i:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Kötelezettségek
+              label: Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Kötelezettségek
                 összesen
             x-agp34c1g6d130c9q60o3ed9m:
-              label: 'Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Emlékeztető
+              label: 'Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Emlékeztető
                 tétel: alárendelt kötelezettségek'
             x-agp34c1g6d130c9q60o3ed9n:
-              label: 'Konszolidált mérleg. Kötelezettségek (pag. 3B hoja 01). Emlékeztető
+              label: 'Konszolidált mérleg. Kötelezettségek (3B. oldal, 01. lap). Emlékeztető
                 tétel: alárendelt kötelezettségek'
             x-agp34c1g6d130chq60o32d1l:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Immateriális
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Immateriális
                 javak
             x-agp34c1g6d130chq60o32d1m:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Immateriális
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Immateriális
                 javak. Egyéb
             x-agp34c1g6d130chq60o32d1n:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Immateriális
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Immateriális
                 javak. Közvetítőktől megszerzett kötvényportfóliókból eredő gazdasági
                 jogok
             x-agp34c1g6d130chq60o32d1o:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Immateriális
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Immateriális
                 javak. Egyéb immateriális eszköz
             x-agp34c1g6d130chq60o32d1p:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Részesedések
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Részesedések
                 csoporttagokban és társult vállalkozásokban
             x-agp34c1g6d130chq60o32d9g:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Részesedések
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Részesedések
                 társult vállalkozásokban
             x-agp34c1g6d130chq60o32d9h:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Részesedések
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Részesedések
                 közös vezetésű vállalkozásokban
             x-agp34c1g6d130chq60o32d9i:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Részesedések
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Részesedések
                 nem konszolidált csoporttagokban
             x-agp34c1g6d130chq60o32d9j:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Adókövetelések
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Adókövetelések
             x-agp34c1g6d130chq60o32d9k:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Adókövetelések.
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Adókövetelések.
                 Tényleges adókövetelések
             x-agp34c1g6d130chq60o32d9l:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Adókövetelések.
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Adókövetelések.
                 Halasztott adókövetelések
             x-agp34c1g6d130chq60o32d9m:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Egyéb eszközök
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Egyéb eszközök
             x-agp34c1g6d130chq60o32d9n:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Egyéb eszközök.
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Egyéb eszközök.
                 Hosszú távú munkavállalói juttatásokhoz kapcsolódó eszközök és megtérítési
                 jogok
             x-agp34c1g6d130chq60o32d9o:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Egyéb eszközök.
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Egyéb eszközök.
                 Előre fizetett jutalékok és egyéb szerzési költségek
             x-agp34c1g6d130chq60o32d9p:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Egyéb eszközök.
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Egyéb eszközök.
                 Időbeli elhatárolások
             x-agp34c1g6d130chq60o32dhg:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Egyéb eszközök.
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Egyéb eszközök.
                 További eszközök
             x-agp34c1g6d130chq60o32dhh:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Értékesítésre
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Értékesítésre
                 tartott eszközök és eszközcsoportok
             x-agp34c1g6d130chq60o32dhi:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Eszközök összesen
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Eszközök
+                összesen
             x-agp34c1g6d130chq60o3cd1n:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Immateriális
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Immateriális
                 javak. Üzleti vagy cégérték
             x-agp34c1g6d130chq60o3cd1o:
               help: null
-              label: Konszolidált mérleg. Eszközök (pag. 3B hoja 02). Immateriális
+              label: Konszolidált mérleg. Eszközök (3B. oldal, 02. lap). Immateriális
                 javak. Konszolidációs üzleti vagy cégérték
             x-agp34c1g6d1j0c9q60o32e9j:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Saját források
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Saját források
             x-agp34c1g6d1j0c9q60o32e9k:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Jegyzett tőke
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Jegyzett
+                tőke
             x-agp34c1g6d1j0c9q60o32e9l:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Jegyzett tőke.
-                Befizetett tőke
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Jegyzett
+                tőke. Befizetett tőke
             x-agp34c1g6d1j0c9q60o32e9m:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Jegyzett tőke.
-                Befizetésre felszólított, be nem fizetett tőke
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Jegyzett
+                tőke. Befizetésre felszólított, be nem fizetett tőke
             x-agp34c1g6d1j0c9q60o32e9n:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Tőketartalék
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Tőketartalék
             x-agp34c1g6d1j0c9q60o32e9o:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). A jegyzett
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). A jegyzett
                 tőkétől eltérő kibocsátott tőkeinstrumentumok
             x-agp34c1g6d1j0c9q60o32e9p:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Összetett
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Összetett
                 pénzügyi instrumentumok saját tőke komponense
             x-agp34c1g6d1j0c9q60o34c1g:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Egyéb kibocsátott
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Egyéb kibocsátott
                 tőkeinstrumentumok
             x-agp34c1g6d1j0c9q60o34c1h:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Egyéb saját
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Egyéb saját
                 tőke elemek
             x-agp34c1g6d1j0c9q60o34c1i:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Eredménytartalék
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Eredménytartalék
             x-agp34c1g6d1j0c9q60o34c1j:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Értékhelyesbítési
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Értékhelyesbítési
                 tartalékok
             x-agp34c1g6d1j0c9q60o34c1k:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Egyéb eredménytartalékok
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Egyéb eredménytartalékok
             x-agp34c1g6d1j0c9q60o34c1l:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Közös vállalkozásokban
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Közös vállalkozásokban
                 és társult vállalkozásokban lévő befektetések halmozott tartalékai
                 vagy veszteségei
             x-agp34c1g6d1j0c9q60o34c1m:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Egyebek
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Egyebek
             x-agp34c1g6d1j0c9q60o34c1n:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). (-) Saját
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). (-) Saját
                 részvények
             x-agp34c1g6d1j0c9q60o34c1o:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Az anyavállalat
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Az anyavállalat
                 tulajdonosainak tulajdonítható eredmény
             x-agp34c1g6d1j0c9q60o34c1p:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). (-) Osztalékelőlegek
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). (-) Osztalékelőlegek
             x-agp34c1g6d1j0c9q60o34c9g:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Halmozott
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Halmozott
                 egyéb átfogó eredmény
             x-agp34c1g6d1j0c9q60o34c9h:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Az eredménybe
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Az eredménybe
                 át nem sorolható tételek
             x-agp34c1g6d1j0c9q60o34c9i:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Aktuáriusi
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Aktuáriusi
                 nyereség vagy (-) veszteség meghatározott juttatású nyugdíjterveken
             x-agp34c1g6d1j0c9q60o34c9j:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Értékesítésre
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Értékesítésre
                 tartottnak minősített befektetett eszközök és elidegenítési csoportok
             x-agp34c1g6d1j0c9q60o34c9m:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Az eredménybe
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Az eredménybe
                 átsorolható tételek
             x-agp34c1g6d1j0c9q60o34c9n:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Külföldi érdekeltségekbe
-                történő nettó befektetések fedezése [hatékony rész]
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Külföldi
+                érdekeltségekbe történő nettó befektetések fedezése [hatékony rész]
             x-agp34c1g6d1j0c9q60o34c9o:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Devizaátváltás
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Devizaátváltás
             x-agp34c1g6d1j0c9q60o34c9p:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Fedezeti derivatívák.
-                Cash flow fedezeti tartalék [hatékony rész]
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Fedezeti
+                derivatívák. Cash flow fedezeti tartalék [hatékony rész]
             x-agp34c1g6d1j0c9q60o34chj:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Értékesítésre
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Értékesítésre
                 tartottnak minősített befektetett eszközök és elidegenítési csoportok
             x-agp34c1g6d1j0c9q60o34chk:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Részesedés
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Részesedés
                 a közös vállalkozásokban és társult vállalkozásokban lévő befektetések
                 egyéb elszámolt bevételéből és ráfordításából
             x-agp34c1g6d1j0c9q60o34chl:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Kisebbségi
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Kisebbségi
                 részesedések [nem ellenőrző részesedések]
             x-agp34c1g6d1j0c9q60o34chm:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Halmozott
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Halmozott
                 egyéb átfogó eredmény
             x-agp34c1g6d1j0c9q60o34chn:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Egyéb tételek
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Egyéb tételek
             x-agp34c1g6d1j0c9q60o34cho:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Saját tőke
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Saját tőke
                 összesen
             x-agp34c1g6d1j0c9q60o34chp:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Saját tőke
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Saját tőke
                 és kötelezettségek összesen
             x-agp34c1g6d1j0c9q60o3cd1j:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Az egyéb átfogó
-                eredménnyel szemben valós értéken értékelt hitelviszonyt megtestesítő
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Az egyéb
+                átfogó eredménnyel szemben valós értéken értékelt hitelviszonyt megtestesítő
                 instrumentumok valós értékének változása
             x-agp34c1g6d1j0c9q60o3cd1k:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Fedezeti instrumentumok
-                [nem megjelölt tételek]
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Fedezeti
+                instrumentumok [nem megjelölt tételek]
             x-agp34c1g6d1j0c9q60o3cd1l:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Egyéb nyújtott
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Egyéb nyújtott
                 kötelezettségvállalások
             x-agp34c1g6d1j0c9q60o3cdhg:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Részesedés
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Részesedés
                 a közös vállalkozásokban és társult vállalkozásokban lévő befektetések
                 egyéb elszámolt bevételéből és ráfordításából
             x-agp34c1g6d1j0c9q60o3ed9o:
-              label: 'Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Emlékeztető
+              label: 'Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Emlékeztető
                 tétel: be nem hívott tőke'
             x-agp34c1g6d1j0c9q60o3ed9p:
-              label: 'Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Emlékeztető
+              label: 'Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Emlékeztető
                 tétel: mérlegen kívüli kitettségek'
             x-agp34c1g6d1j0c9q60o3edhg:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Nyújtott hitelnyújtási
-                kötelezettségvállalások
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Nyújtott
+                hitelnyújtási kötelezettségvállalások
             x-agp34c1g6d1j0c9q60o3edhh:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Nyújtott pénzügyi
-                garanciák
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Nyújtott
+                pénzügyi garanciák
             x-agp34c1g6d1j0c9q60o3edhi:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Tőkésítési
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Tőkésítési
                 tartalék
             x-agp34c1g6d1j0c9q60o3edhj:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Kiegyenlítési
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Kiegyenlítési
                 tartalék
             x-agp34c1g6d1j0c9q60r36e0:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). az egyéb átfogó
-                eredménnyel szemben valós értéken értékelt tőkeinstrumentumok valós
-                értékének változása
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). az egyéb
+                átfogó eredménnyel szemben valós értéken értékelt tőkeinstrumentumok
+                valós értékének változása
             x-agp34c1g6d1j0c9q60r36e8:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). az egyéb átfogó
-                eredménnyel szemben valós értéken értékelt tőkeinstrumentumok valós
-                érték fedezeti ügyleteinek hatékonysághiánya
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). az egyéb
+                átfogó eredménnyel szemben valós értéken értékelt tőkeinstrumentumok
+                valós érték fedezeti ügyleteinek hatékonysághiánya
             x-agp34c1g6d1j0c9q60r38c0:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). az egyéb átfogó
-                eredménnyel szemben valós értéken értékelt tőkeinstrumentumok valós
-                értékének változása [fedezett tétel]
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). az egyéb
+                átfogó eredménnyel szemben valós értéken értékelt tőkeinstrumentumok
+                valós értékének változása [fedezett tétel]
             x-agp34c1g6d1j0c9q60r38c8:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). az egyéb átfogó
-                eredménnyel szemben valós értéken értékelt tőkeinstrumentumok valós
-                értékének változása [fedezeti instrumentum]
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). az egyéb
+                átfogó eredménnyel szemben valós értéken értékelt tőkeinstrumentumok
+                valós értékének változása [fedezeti instrumentum]
             x-agp34c1g6d1j0c9q60r38cg:
-              label: Konszolidált mérleg. Saját tőke (pag. 3C hoja 01). Az eredménnyel
+              label: Konszolidált mérleg. Saját tőke (3C. oldal, 01. lap). Az eredménnyel
                 szemben valós értéken értékelt pénzügyi kötelezettségek valós értékének
                 a hitelkockázat változásából eredő változása
             x-agp34c1g6d1j0chq60o32dhj:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Kereskedési
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Kereskedési
                 célú pénzügyi kötelezettségek
             x-agp34c1g6d1j0chq60o32dhk:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Egyéb,
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Egyéb,
                 az eredménnyel szemben valós értéken értékelt pénzügyi kötelezettségek
             x-agp34c1g6d1j0chq60o32dhl:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek
             x-agp34c1g6d1j0chq60o32dhm:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Alárendelt kötelezettségek
             x-agp34c1g6d1j0chq60o32dhn:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Átadott viszontbiztosításra kapott betétek
             x-agp34c1g6d1j0chq60o32dho:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Biztosítási ügyletekből eredő tartozások
             x-agp34c1g6d1j0chq60o32dhp:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Biztosítottakkal szembeni tartozások
             x-agp34c1g6d1j0chq60o32dpg:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Közvetítőkkel szembeni tartozások
             x-agp34c1g6d1j0chq60o32dph:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Feltételhez kötött tartozások
             x-agp34c1g6d1j0chq60o32dpi:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Viszontbiztosítási ügyletekből eredő tartozások
             x-agp34c1g6d1j0chq60o32dpj:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Együttbiztosítási ügyletekből eredő tartozások
             x-agp34c1g6d1j0chq60o32dpk:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Kötvények és egyéb forgalomképes értékpapírok
             x-agp34c1g6d1j0chq60o32dpl:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Hitelintézetekkel szembeni tartozások
             x-agp34c1g6d1j0chq60o32dpm:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Biztosítási szerződéseket előkészítő ügyletekből
                 eredő tartozások
             x-agp34c1g6d1j0chq60o32dpn:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások
             x-agp34c1g6d1j0chq60o32dpo:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások. Közigazgatási szervekkel szembeni
                 tartozások
             x-agp34c1g6d1j0chq60o32dpp:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások. Egyéb tartozások csoporttagokkal
                 és társult vállalkozásokkal
             x-agp34c1g6d1j0chq60o32e1g:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások. További egyéb tartozások
             x-agp34c1g6d1j0chq60o32e1h:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Fedezeti
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Fedezeti
                 derivatívák
             x-agp34c1g6d1j0chq60o32e1i:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Biztosítástechnikai
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok
             x-agp34c1g6d1j0chq60o32e1j:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Biztosítástechnikai
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Meg nem szolgált díjak tartaléka
             x-agp34c1g6d1j0chq60o32e1k:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Biztosítástechnikai
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Folyamatban lévő kockázatok tartaléka
             x-agp34c1g6d1j0chq60o32e1l:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Biztosítástechnikai
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Életbiztosítási tartalék
             x-agp34c1g6d1j0chq60o32e1m:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Biztosítástechnikai
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Életbiztosítási tartalék. Meg nem szolgált díjak tartaléka
             x-agp34c1g6d1j0chq60o32e1n:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Biztosítástechnikai
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Életbiztosítási tartalék. Folyamatban lévő kockázatok
                 tartaléka
             x-agp34c1g6d1j0chq60o32e1o:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Biztosítástechnikai
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Életbiztosítási tartalék. Matematikai tartalék
             x-agp34c1g6d1j0chq60o32e1p:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Biztosítástechnikai
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Életbiztosítási tartalék. Életbiztosítási tartalék, ha
                 a befektetési kockázatot a szerződő viseli
             x-agp34c1g6d1j0chq60o32e9g:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Biztosítástechnikai
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Kárkifizetési tartalék
             x-agp34c1g6d1j0chq60o32e9h:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Biztosítástechnikai
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Nyereségrészesedési és díjvisszatérítési tartalék
             x-agp34c1g6d1j0chq60o32e9i:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Biztosítástechnikai
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Biztosítástechnikai
                 tartalékok. Egyéb biztosítástechnikai tartalékok
             x-agp34c1g6d1j0chq60o32e9j:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Nem biztosítástechnikai
-                tartalékok
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Nem
+                biztosítástechnikai tartalékok
             x-agp34c1g6d1j0chq60o32e9k:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Nem biztosítástechnikai
-                tartalékok. Adókra és egyéb jogi függő tételekre képzett tartalékok
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Nem
+                biztosítástechnikai tartalékok. Adókra és egyéb jogi függő tételekre
+                képzett tartalékok
             x-agp34c1g6d1j0chq60o32e9l:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Nem biztosítástechnikai
-                tartalékok. Nyugdíjakra és hasonló kötelezettségekre képzett tartalék
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Nem
+                biztosítástechnikai tartalékok. Nyugdíjakra és hasonló kötelezettségekre
+                képzett tartalék
             x-agp34c1g6d1j0chq60o32e9m:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Nem biztosítástechnikai
-                tartalékok. Elszámolási megállapodások szerinti kifizetésekre képzett
-                tartalék
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Nem
+                biztosítástechnikai tartalékok. Elszámolási megállapodások szerinti
+                kifizetésekre képzett tartalék
             x-agp34c1g6d1j0chq60o32e9n:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Nem biztosítástechnikai
-                tartalékok. Egyéb nem biztosítástechnikai tartalékok
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Nem
+                biztosítástechnikai tartalékok. Egyéb nem biztosítástechnikai tartalékok
             x-agp34c1g6d1j0chq60o32e9o:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Adókötelezettségek
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Adókötelezettségek
             x-agp34c1g6d1j0chq60o32e9p:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Adókötelezettségek.
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Adókötelezettségek.
                 Tényleges adókötelezettségek
             x-agp34c1g6d1j0chq60o34c1g:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Adókötelezettségek.
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Adókötelezettségek.
                 Halasztott adókötelezettségek
             x-agp34c1g6d1j0chq60o34c1h:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). További
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). További
                 kötelezettségek
             x-agp34c1g6d1j0chq60o34c1i:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). További
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). További
                 kötelezettségek. Időbeli elhatárolások
             x-agp34c1g6d1j0chq60o34c1j:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). További
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). További
                 kötelezettségek. Számviteli aszimmetriákból eredő kötelezettségek
             x-agp34c1g6d1j0chq60o34c1k:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). További
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). További
                 kötelezettségek. Átadott viszontbiztosítás jutalékai és egyéb szerzési
                 költségei
             x-agp34c1g6d1j0chq60o34c1l:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). További
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). További
                 kötelezettségek. Egyéb kötelezettségek
             x-agp34c1g6d1j0chq60o34c1m:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Értékesítésre
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Értékesítésre
                 tartott eszközökhöz kapcsolódó kötelezettségek
             x-agp34c1g6d1j0chq60o34c1n:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Kötelezettségek
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Kötelezettségek
                 összesen
             x-agp34c1g6d1j0chq60o3ec1j:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások. Társult vállalkozások
             x-agp34c1g6d1j0chq60o3ec1k:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások. Közös vezetésű vállalkozások
             x-agp34c1g6d1j0chq60o3ec1l:
-              label: Konszolidált mérleg. Kötelezettségek (pag. 3C hoja 02). Tartozások
+              label: Konszolidált mérleg. Kötelezettségek (3C. oldal, 02. lap). Tartozások
                 és kötelezettségek. Egyéb tartozások. Egyéb
             x-agp34c1g6d230chq60o34c1o:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források
             x-agp34c1g6d230chq60o34c1p:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Jegyzett tőke vagy kölcsönös alap
             x-agp34c1g6d230chq60o34c9g:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Bejegyzett jegyzett tőke vagy kölcsönös alap
             x-agp34c1g6d230chq60o34c9h:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 (Be nem fizetett jegyzett tőke)
             x-agp34c1g6d230chq60o34c9i:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Tőketartalék
             x-agp34c1g6d230chq60o34c9j:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok
             x-agp34c1g6d230chq60o34c9k:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Törvényi és alapszabály szerinti
             x-agp34c1g6d230chq60o34c9l:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Stabilizációs tartalék
             x-agp34c1g6d230chq60o34c9m:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Egyéb eredménytartalékok
             x-agp34c1g6d230chq60o34c9n:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 (Saját részvények és az anyavállalat részvényei)
             x-agp34c1g6d230chq60o34c9o:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Korábbi évek anyavállalatnak tulajdonított eredményei
             x-agp34c1g6d230chq60o34c9p:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Korábbi évek anyavállalatnak tulajdonított eredményei. Eredménytartalék
             x-agp34c1g6d230chq60o34chg:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Korábbi évek eredményei. (Korábbi évek anyavállalatnak tulajdonított
                 negatív eredményei)
             x-agp34c1g6d230chq60o34chh:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Tagok és kölcsönös tagok egyéb hozzájárulásai
             x-agp34c1g6d230chq60o34chi:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Az üzleti év anyavállalatnak tulajdonított eredménye. Konszolidált
                 eredmény
             x-agp34c1g6d230chq60o34chj:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 (Osztalékelőleg és stabilizációs tartalék előleg)
             x-agp34c1g6d230chq60o34chk:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Egyéb tőkeinstrumentumok
             x-agp34c1g6d230chq60o34chl:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Értékelési
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók
             x-agp34c1g6d230chq60o34chm:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Értékelési
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók. Értékesíthető pénzügyi eszközök
             x-agp34c1g6d230chq60o34chn:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Értékelési
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók. Fedezeti ügyletek
             x-agp34c1g6d230chq60o34cho:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Értékelési
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók. Árfolyam- és átváltási különbözetek
             x-agp34c1g6d230chq60o34chp:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Értékelési
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók. Számviteli aszimmetriák korrekciója
             x-agp34c1g6d230chq60o34cpg:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Értékelési
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók. Egyéb korrekciók
             x-agp34c1g6d230chq60o34cph:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Kapott támogatások,
-                adományok és hagyatékok
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Kapott
+                támogatások, adományok és hagyatékok
             x-agp34c1g6d230chq60o34cpi:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját tőke
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját tőke
                 összesen
             x-agp34c1g6d230chq60o34cpj:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Kötelezettségek
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Kötelezettségek
                 és saját tőke összesen
             x-agp34c1g6d230chq60o3cd1p:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Konszolidált társaságok eredménytartalékai
             x-agp34c1g6d230chq60o3cd9i:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Külső tagok
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Külső tagok
             x-agp34c1g6d230chq60o3ce9i:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Az üzleti év anyavállalatnak tulajdonított eredménye
             x-agp34c1g6d230chq60o3ce9j:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Az üzleti év anyavállalatnak tulajdonított eredménye. (Külső tagok
                 eredménye)
             x-agp34c1g6d230chq60o3ce9k:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Külső tagok.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Külső tagok.
                 Értékelési korrekciók
             x-agp34c1g6d230chq60o3ce9l:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Külső tagok.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Külső tagok.
                 Többi
             x-agp34c1g6d230chq60o3echo:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Tőkemódszerrel elszámolt társaságok eredménytartalékai
             x-agp34c1g6d230chq60o3echp:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Értékelési
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Értékelési
                 korrekciók. Tőkemódszerrel elszámolt társaságok
             x-agp34c1g6d230chq60o3ecpk:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Tőkésítési tartalék
             x-agp34c1g6d230chq60o3ecpl:
-              label: Konszolidált mérleg. Saját tőke (pag. 3D hoja 02). Saját források.
+              label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Kiegyenlítési tartalék
             x-agp34c1g6h130chq60o34dpn:
               label: Nem-életbiztosítási technikai számla. A tárgyi eszközök és a
@@ -1480,567 +1498,568 @@ modelo:
             x-agp34c1g6l0j0c9q60o34dpj:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Egyéb átfogó eredmény
+                (5A. oldal, 01. lap). Egyéb átfogó eredmény
             x-agp34c1g6l0j0c9q60o34dpk:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az eredménybe át nem sorolható tételek
+                (5A. oldal, 01. lap). Az eredménybe át nem sorolható tételek
             x-agp34c1g6l0j0c9q60o34dpl:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Aktuáriusi nyereség vagy (-) veszteség meghatározott
+                (5A. oldal, 01. lap). Aktuáriusi nyereség vagy (-) veszteség meghatározott
                 juttatású nyugdíjterveken
             x-agp34c1g6l0j0c9q60o34dpm:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Értékesítésre tartott befektetett eszközök és elidegenítési
-                csoportok
+                (5A. oldal, 01. lap). Értékesítésre tartott befektetett eszközök és
+                elidegenítési csoportok
             x-agp34c1g6l0j0c9q60o34dpn:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Részesedés közös vállalkozásokban és társult vállalkozásokban
-                lévő befektetések egyéb elszámolt bevételéből és ráfordításából
+                (5A. oldal, 01. lap). Részesedés közös vállalkozásokban és társult
+                vállalkozásokban lévő befektetések egyéb elszámolt bevételéből és
+                ráfordításából
             x-agp34c1g6l0j0c9q60o34dpp:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az át nem sorolható tételekhez kapcsolódó nyereségadó
+                (5A. oldal, 01. lap). Az át nem sorolható tételekhez kapcsolódó nyereségadó
             x-agp34c1g6l0j0c9q60o34e1g:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az eredménybe átsorolható tételek
+                (5A. oldal, 01. lap). Az eredménybe átsorolható tételek
             x-agp34c1g6l0j0c9q60o34e1h:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Külföldi érdekeltségekbe történő nettó befektetések
+                (5A. oldal, 01. lap). Külföldi érdekeltségekbe történő nettó befektetések
                 fedezése [hatékony rész]
             x-agp34c1g6l0j0c9q60o34e1i:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). A saját tőkében elszámolt értékelési nyereség vagy
-                (-) veszteség
+                (5A. oldal, 01. lap). A saját tőkében elszámolt értékelési nyereség
+                vagy (-) veszteség
             x-agp34c1g6l0j0c9q60o34e1j:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az eredménybe átvezetve
+                (5A. oldal, 01. lap). Az eredménybe átvezetve
             x-agp34c1g6l0j0c9q60o34e1k:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Egyéb átsorolások
+                (5A. oldal, 01. lap). Egyéb átsorolások
             x-agp34c1g6l0j0c9q60o34e1l:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Devizaátváltás
+                (5A. oldal, 01. lap). Devizaátváltás
             x-agp34c1g6l0j0c9q60o34e1m:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). A saját tőkében elszámolt árfolyamnyereség vagy
+                (5A. oldal, 01. lap). A saját tőkében elszámolt árfolyamnyereség vagy
                 (-) veszteség
             x-agp34c1g6l0j0c9q60o34e1n:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az eredménybe átvezetve
+                (5A. oldal, 01. lap). Az eredménybe átvezetve
             x-agp34c1g6l0j0c9q60o34e1o:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Egyéb átsorolások
+                (5A. oldal, 01. lap). Egyéb átsorolások
             x-agp34c1g6l0j0c9q60o34e1p:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Cash flow fedezeti ügyletek [hatékony rész]
+                (5A. oldal, 01. lap). Cash flow fedezeti ügyletek [hatékony rész]
             x-agp34c1g6l0j0c9q60o34e9g:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). A saját tőkében elszámolt értékelési nyereség vagy
-                (-) veszteség
+                (5A. oldal, 01. lap). A saját tőkében elszámolt értékelési nyereség
+                vagy (-) veszteség
             x-agp34c1g6l0j0c9q60o34e9h:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az eredménybe átvezetve
+                (5A. oldal, 01. lap). Az eredménybe átvezetve
             x-agp34c1g6l0j0c9q60o34e9i:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). A fedezett tételek kezdeti könyv szerinti értékébe
+                (5A. oldal, 01. lap). A fedezett tételek kezdeti könyv szerinti értékébe
                 átvezetve
             x-agp34c1g6l0j0c9q60o34e9j:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Egyéb átsorolások
+                (5A. oldal, 01. lap). Egyéb átsorolások
             x-agp34c1g6l0j0c9q60o34e9o:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Értékesítésre tartott befektetett eszközök és elidegenítési
-                csoportok
+                (5A. oldal, 01. lap). Értékesítésre tartott befektetett eszközök és
+                elidegenítési csoportok
             x-agp34c1g6l0j0c9q60o34e9p:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). A saját tőkében elszámolt értékelési nyereség vagy
-                (-) veszteség
+                (5A. oldal, 01. lap). A saját tőkében elszámolt értékelési nyereség
+                vagy (-) veszteség
             x-agp34c1g6l0j0c9q60o36c1g:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az eredménybe átvezetve
+                (5A. oldal, 01. lap). Az eredménybe átvezetve
             x-agp34c1g6l0j0c9q60o36c1h:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Egyéb átsorolások
+                (5A. oldal, 01. lap). Egyéb átsorolások
             x-agp34c1g6l0j0c9q60o36c1i:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az eredménybe átsorolható tételekhez kapcsolódó
+                (5A. oldal, 01. lap). Az eredménybe átsorolható tételekhez kapcsolódó
                 nyereségadó
             x-agp34c1g6l0j0c9q60o36c1j:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az üzleti év teljes átfogó eredménye
+                (5A. oldal, 01. lap). Az üzleti év teljes átfogó eredménye
             x-agp34c1g6l0j0c9q60o36c1k:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Kisebbségi részesedéseknek tulajdonítható
+                (5A. oldal, 01. lap). Kisebbségi részesedéseknek tulajdonítható
             x-agp34c1g6l0j0c9q60o36c1l:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az anyavállalat tulajdonosainak tulajdonítható
+                (5A. oldal, 01. lap). Az anyavállalat tulajdonosainak tulajdonítható
             x-agp34c1g6l0j0c9q60o36c1m:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Részesedés a közös vállalkozásokban és társult
+                (5A. oldal, 01. lap). Részesedés a közös vállalkozásokban és társult
                 vállalkozásokban lévő befektetések egyéb elszámolt bevételéből és
                 ráfordításából
             x-agp34c1g6l0j0c9q60o3ac1g:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az üzleti év konszolidált eredménye
+                (5A. oldal, 01. lap). Az üzleti év konszolidált eredménye
             x-agp34c1g6l0j0c9q60o3cd1n:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az egyéb átfogó eredménnyel szemben valós értéken
+                (5A. oldal, 01. lap). Az egyéb átfogó eredménnyel szemben valós értéken
                 értékelt tőkeinstrumentumok valós értékének változása
             x-agp34c1g6l0j0c9q60o3cd1o:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az egyéb átfogó eredménnyel szemben valós értéken
+                (5A. oldal, 01. lap). Az egyéb átfogó eredménnyel szemben valós értéken
                 értékelt tőkeinstrumentumok fedezeti elszámolásából eredő nettó nyereség
                 vagy (-) veszteség
             x-agp34c1g6l0j0c9q60o3cd1p:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az egyéb átfogó eredménnyel szemben valós értéken
+                (5A. oldal, 01. lap). Az egyéb átfogó eredménnyel szemben valós értéken
                 értékelt tőkeinstrumentumok valós értékének változása (fedezett tétel)
             x-agp34c1g6l0j0c9q60o3cd9g:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az egyéb átfogó eredménnyel szemben valós értéken
+                (5A. oldal, 01. lap). Az egyéb átfogó eredménnyel szemben valós értéken
                 értékelt tőkeinstrumentumok valós értékének változása (fedezeti instrumentum)
             x-agp34c1g6l0j0c9q60o3cd9h:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az eredménnyel szemben valós értéken értékelt pénzügyi
-                kötelezettségek valós értékének a hitelkockázat változásából eredő
-                változása
+                (5A. oldal, 01. lap). Az eredménnyel szemben valós értéken értékelt
+                pénzügyi kötelezettségek valós értékének a hitelkockázat változásából
+                eredő változása
             x-agp34c1g6l0j0c9q60o3cd9i:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Fedezeti instrumentumok [nem megjelölt tételek]
+                (5A. oldal, 01. lap). Fedezeti instrumentumok [nem megjelölt tételek]
             x-agp34c1g6l0j0c9q60o3cd9j:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). A saját tőkében elszámolt értékelési nyereség vagy
-                (-) veszteség
+                (5A. oldal, 01. lap). A saját tőkében elszámolt értékelési nyereség
+                vagy (-) veszteség
             x-agp34c1g6l0j0c9q60o3cd9k:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az eredménybe átvezetve
+                (5A. oldal, 01. lap). Az eredménybe átvezetve
             x-agp34c1g6l0j0c9q60o3cd9l:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Egyéb átsorolások
+                (5A. oldal, 01. lap). Egyéb átsorolások
             x-agp34c1g6l0j0c9q60o3cd9m:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az egyéb átfogó eredménnyel szemben valós értéken
+                (5A. oldal, 01. lap). Az egyéb átfogó eredménnyel szemben valós értéken
                 értékelt hitelviszonyt megtestesítő instrumentumok
             x-agp34c1g6l0j0c9q60o3cd9n:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). A saját tőkében elszámolt értékelési nyereség vagy
-                (-) veszteség
+                (5A. oldal, 01. lap). A saját tőkében elszámolt értékelési nyereség
+                vagy (-) veszteség
             x-agp34c1g6l0j0c9q60o3cd9o:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Az eredménybe átvezetve
+                (5A. oldal, 01. lap). Az eredménybe átvezetve
             x-agp34c1g6l0j0c9q60o3cd9p:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 01). Egyéb átsorolások
+                (5A. oldal, 01. lap). Egyéb átsorolások
             x-agp34c1g6l0j0chq60o36e1j:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Egyéb elszámolt bevételek és ráfordítások
+                (5A. oldal, 02. lap). Egyéb elszámolt bevételek és ráfordítások
             x-agp34c1g6l0j0chq60o36e1k:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Értékesíthető pénzügyi eszközök
+                (5A. oldal, 02. lap). Értékesíthető pénzügyi eszközök
             x-agp34c1g6l0j0chq60o36e1l:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Értékesíthető pénzügyi eszközök. Értékelési nyereségek
-                és veszteségek
+                (5A. oldal, 02. lap). Értékesíthető pénzügyi eszközök. Értékelési
+                nyereségek és veszteségek
             x-agp34c1g6l0j0chq60o36e1m:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Értékesíthető pénzügyi eszközök. Az eredménykimutatásba
+                (5A. oldal, 02. lap). Értékesíthető pénzügyi eszközök. Az eredménykimutatásba
                 átvezetett összegek
             x-agp34c1g6l0j0chq60o36e1n:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Értékesíthető pénzügyi eszközök. Egyéb átsorolások
+                (5A. oldal, 02. lap). Értékesíthető pénzügyi eszközök. Egyéb átsorolások
             x-agp34c1g6l0j0chq60o36e1o:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Cash flow fedezeti ügyletek
+                (5A. oldal, 02. lap). Cash flow fedezeti ügyletek
             x-agp34c1g6l0j0chq60o36e1p:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Cash flow fedezeti ügyletek. Értékelési nyereségek
+                (5A. oldal, 02. lap). Cash flow fedezeti ügyletek. Értékelési nyereségek
                 és veszteségek
             x-agp34c1g6l0j0chq60o36e9g:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Cash flow fedezeti ügyletek. Az eredménykimutatásba
+                (5A. oldal, 02. lap). Cash flow fedezeti ügyletek. Az eredménykimutatásba
                 átvezetett összegek
             x-agp34c1g6l0j0chq60o36e9h:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Cash flow fedezeti ügyletek. A fedezett tételek
+                (5A. oldal, 02. lap). Cash flow fedezeti ügyletek. A fedezett tételek
                 kezdeti értékébe átvezetett összegek
             x-agp34c1g6l0j0chq60o36e9i:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Cash flow fedezeti ügyletek. Egyéb átsorolások
+                (5A. oldal, 02. lap). Cash flow fedezeti ügyletek. Egyéb átsorolások
             x-agp34c1g6l0j0chq60o36e9j:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Külföldi érdekeltségekbe történő nettó befektetések
+                (5A. oldal, 02. lap). Külföldi érdekeltségekbe történő nettó befektetések
                 fedezése
             x-agp34c1g6l0j0chq60o36e9k:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Külföldi érdekeltségekbe történő nettó befektetések
+                (5A. oldal, 02. lap). Külföldi érdekeltségekbe történő nettó befektetések
                 fedezése. Értékelési nyereségek és veszteségek
             x-agp34c1g6l0j0chq60o36e9l:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Külföldi érdekeltségekbe történő nettó befektetések
+                (5A. oldal, 02. lap). Külföldi érdekeltségekbe történő nettó befektetések
                 fedezése. Az eredménykimutatásba átvezetett összegek
             x-agp34c1g6l0j0chq60o36e9m:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Külföldi érdekeltségekbe történő nettó befektetések
+                (5A. oldal, 02. lap). Külföldi érdekeltségekbe történő nettó befektetések
                 fedezése. Egyéb átsorolások
             x-agp34c1g6l0j0chq60o36e9n:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Árfolyam- és átváltási különbözetek
+                (5A. oldal, 02. lap). Árfolyam- és átváltási különbözetek
             x-agp34c1g6l0j0chq60o36e9o:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Árfolyam- és átváltási különbözetek. Értékelési
+                (5A. oldal, 02. lap). Árfolyam- és átváltási különbözetek. Értékelési
                 nyereségek és veszteségek
             x-agp34c1g6l0j0chq60o36e9p:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Árfolyam- és átváltási különbözetek. Az eredménykimutatásba
+                (5A. oldal, 02. lap). Árfolyam- és átváltási különbözetek. Az eredménykimutatásba
                 átvezetett összegek
             x-agp34c1g6l0j0chq60o38c1g:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Árfolyam- és átváltási különbözetek. Egyéb átsorolások
+                (5A. oldal, 02. lap). Árfolyam- és átváltási különbözetek. Egyéb átsorolások
             x-agp34c1g6l0j0chq60o38c1h:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Számviteli aszimmetriák korrekciója
+                (5A. oldal, 02. lap). Számviteli aszimmetriák korrekciója
             x-agp34c1g6l0j0chq60o38c1i:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Számviteli aszimmetriák korrekciója. Értékelési
+                (5A. oldal, 02. lap). Számviteli aszimmetriák korrekciója. Értékelési
                 nyereségek és veszteségek
             x-agp34c1g6l0j0chq60o38c1j:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Számviteli aszimmetriák korrekciója. Az eredménykimutatásba
+                (5A. oldal, 02. lap). Számviteli aszimmetriák korrekciója. Az eredménykimutatásba
                 átvezetett összegek
             x-agp34c1g6l0j0chq60o38c1k:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Számviteli aszimmetriák korrekciója. Egyéb átsorolások
+                (5A. oldal, 02. lap). Számviteli aszimmetriák korrekciója. Egyéb átsorolások
             x-agp34c1g6l0j0chq60o38c1l:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Értékesítésre tartott eszközök
+                (5A. oldal, 02. lap). Értékesítésre tartott eszközök
             x-agp34c1g6l0j0chq60o38c1m:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Értékesítésre tartott eszközök. Értékelési nyereségek
+                (5A. oldal, 02. lap). Értékesítésre tartott eszközök. Értékelési nyereségek
                 és veszteségek
             x-agp34c1g6l0j0chq60o38c1n:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Értékesítésre tartott eszközök. Az eredménykimutatásba
+                (5A. oldal, 02. lap). Értékesítésre tartott eszközök. Az eredménykimutatásba
                 átvezetett összegek
             x-agp34c1g6l0j0chq60o38c1o:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Értékesítésre tartott eszközök. Egyéb átsorolások
+                (5A. oldal, 02. lap). Értékesítésre tartott eszközök. Egyéb átsorolások
             x-agp34c1g6l0j0chq60o38c1p:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Aktuáriusi nyereség / (veszteség) hosszú távú munkavállalói
-                juttatásokon
+                (5A. oldal, 02. lap). Aktuáriusi nyereség / (veszteség) hosszú távú
+                munkavállalói juttatásokon
             x-agp34c1g6l0j0chq60o38c9g:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Egyéb elszámolt bevételek és ráfordítások (többi)
+                (5A. oldal, 02. lap). Egyéb elszámolt bevételek és ráfordítások (többi)
             x-agp34c1g6l0j0chq60o38c9h:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Nyereségadó
+                (5A. oldal, 02. lap). Nyereségadó
             x-agp34c1g6l0j0chq60o38c9i:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Az elszámolt konszolidált bevételek és ráfordítások
+                (5A. oldal, 02. lap). Az elszámolt konszolidált bevételek és ráfordítások
                 összesen
             x-agp34c1g6l0j0chq60o3ac1g:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Az üzleti év konszolidált eredménye
+                (5A. oldal, 02. lap). Az üzleti év konszolidált eredménye
             x-agp34c1g6l0j0chq60o3ce9n:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Az elszámolt konszolidált bevételek és ráfordítások
+                (5A. oldal, 02. lap). Az elszámolt konszolidált bevételek és ráfordítások
                 összesen. Az anyavállalatnak tulajdonítva
             x-agp34c1g6l0j0chq60o3ce9o:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Az elszámolt konszolidált bevételek és ráfordítások
+                (5A. oldal, 02. lap). Az elszámolt konszolidált bevételek és ráfordítások
                 összesen. Külső tagoknak tulajdonítva
             x-agp34c1g6l0j0chq60o3ecpg:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Tőkemódszerrel elszámolt entitások
+                (5A. oldal, 02. lap). Tőkemódszerrel elszámolt entitások
             x-agp34c1g6l0j0chq60o3ecph:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Tőkemódszerrel elszámolt entitások. Értékelési
+                (5A. oldal, 02. lap). Tőkemódszerrel elszámolt entitások. Értékelési
                 nyereségek és veszteségek
             x-agp34c1g6l0j0chq60o3ecpi:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Tőkemódszerrel elszámolt entitások. Az eredménykimutatásba
+                (5A. oldal, 02. lap). Tőkemódszerrel elszámolt entitások. Az eredménykimutatásba
                 átvezetett összegek
             x-agp34c1g6l0j0chq60o3ecpj:
               help: null
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
-                (pag. 5A hoja 02). Tőkemódszerrel elszámolt entitások. Egyéb átsorolások
+                (5A. oldal, 02. lap). Tőkemódszerrel elszámolt entitások. Egyéb átsorolások
             x-agp34c1g6so30c1q60o30d1j:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Az adócsoport entitásainak egyedi adóalapjai összesen (a hajózási
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Az adócsoport entitásainak egyedi adóalapjai összesen (a hajózási
                 társaságok átalányadózása szerinti alapok nélkül) (7A. o.)
             x-agp34c1g6so30c1q60o30d1n:
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Szövetkezeti csoportok: szövetkezeti eredményből származó egyedi
+              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Szövetkezeti csoportok: szövetkezeti eredményből származó egyedi
                 adóalapok összesen (7A. o.)'
             x-agp34c1g6so30c1q60o30d1o:
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Szövetkezeti csoportok: nem szövetkezeti eredményből származó
+              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Szövetkezeti csoportok: nem szövetkezeti eredményből származó
                 egyedi adóalapok összesen (7A. o.)'
             x-agp34c1g6so30c1q60o30d1p:
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Különleges rendszerben lévő hajózási társaságokat tartalmazó
+              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Különleges rendszerben lévő hajózási társaságokat tartalmazó
                 csoportok: tonnatartalom alapján, átalányadózással meghatározott adóalapok
                 összesen (7A. o.)(*)'
             x-agp34c1g6so30c1q60o30dpp:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Az adóalapok összegének belső eredmények halasztása miatti korrekciói
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Az adóalapok összegének belső eredmények halasztása miatti korrekciói
                 összesen
             x-agp34c1g6so30c1q60o30e1g:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Egyéb korrekciók az adóalapok összegéhez (**). Az adócsoport
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Egyéb korrekciók az adóalapok összegéhez (**). Az adócsoport
                 belső osztalékainak kiszűrése (7D. o.)
             x-agp34c1g6so30c1q60o30e1i:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Egyéb korrekciók az adóalapok összegéhez (**). Az adócsoport
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Egyéb korrekciók az adóalapok összegéhez (**). Az adócsoport
                 entitásaiban lévő saját tőke részesedések korábbi időszakokban kiszűrt
                 értékvesztésének beszámítása (7E. o.)
             x-agp34c1g6so30c1q60o30e1j:
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Egyéb korrekciók az adóalapok összegéhez (**). Szövetkezeti csoportok:
-                a "csoporton belüli visszatérítések", a "csoporton belüli gazdasági
-                támogatások" és a "csoport vezető entitása által felosztott eredmények"
-                kiszűrése (1345/1992. RD) (7G. o.)'
+              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Egyéb korrekciók az adóalapok összegéhez (**). Szövetkezeti
+                csoportok: a "csoporton belüli visszatérítések", a "csoporton belüli
+                gazdasági támogatások" és a "csoport vezető entitása által felosztott
+                eredmények" kiszűrése (1345/1992. RD) (7G. o.)'
             x-agp34c1g6so30c1q60o30e1l:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Egyéb korrekciók az adóalapok összegéhez (**). Egyéb korrekciók
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Egyéb korrekciók az adóalapok összegéhez (**). Egyéb korrekciók
                 az egyedi adóalapok összegéhez vagy az adócsoport adóalapjához (7H.
                 o.)
             x-agp34c1g6so30c1q60o30e1m:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Egyéb korrekciók az adóalapok összegéhez (**). Egyéb korrekciók
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Egyéb korrekciók az adóalapok összegéhez (**). Egyéb korrekciók
                 összesen
             x-agp34c1g6so30c1q60o34chl:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A csoport előzetes adóalapja
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A csoport előzetes adóalapja
             x-agp34c1g6so30c1q60o34e9h:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A LIS 11.12. cikke szerinti korlát alkalmazása (LIS 62.1. e)
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A LIS 11.12. cikke szerinti korlát alkalmazása (LIS 62.1. e)
                 cikk). Csökkenés
             x-agp34c1g6so30c1q60o36dhi:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A csoport korábbi időszaki negatív adóalapjainak beszámítása
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A csoport korábbi időszaki negatív adóalapjainak beszámítása
                 (7K. o.)(***)
             x-agp34c1g6so30c1q60o36dhj:
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Szövetkezeti csoportok: a csoport korábbi időszaki negatív adókötelezettségeinek
+              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Szövetkezeti csoportok: a csoport korábbi időszaki negatív adókötelezettségeinek
                 beszámítása (7K bis o.)(***)'
             x-agp34c1g6so30c1q60o36e9o:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A LIS 11.12. cikke szerinti képzések a csoporthoz való csatlakozás
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A LIS 11.12. cikke szerinti képzések a csoporthoz való csatlakozás
                 előtti időszakokból (LIS 67. d) és 74.3. d) cikk)(***)
             x-agp34c1g6so30c1q60o3ad1g:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
                 szerinti korlát alkalmazása. Csökkenés
             x-agp34c1g6so30c1q60o3ad1h:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
                 szerinti képzések az entitás csoporthoz való csatlakozása előtti időszakokból
                 (***)
             x-agp34c1g6so30c1q60o3ad1n:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Entitások negatív adóalapjainak beszámítása a csoporthoz való
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Entitások negatív adóalapjainak beszámítása a csoporthoz való
                 csatlakozás előtti időszakokból (LIS 67. e) és 74.3. e) cikk) (7L.
                 o.)(***)
             x-agp34c1g6so30c1q60o3ad9g:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A csoport adóalapja a tőkésítési tartalékok alkalmazása és a
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A csoport adóalapja a tőkésítési tartalékok alkalmazása és a
                 korábbi időszakok negatív adóalapjainak beszámítása előtt
             x-agp34c1g6so30c1q60o3ad9i:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A csoport adóalapja
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A csoport adóalapja
             x-agp34c1g6so30c1q60o3ad9j:
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Szövetkezeti csoportok: egyedi adóalapok összege a kiszűrések
+              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Szövetkezeti csoportok: egyedi adóalapok összege a kiszűrések
                 levonása után, szövetkezeti eredményből'
             x-agp34c1g6so30c1q60o3ad9k:
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Szövetkezeti csoportok: egyedi adóalapok összege a kiszűrések
+              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Szövetkezeti csoportok: egyedi adóalapok összege a kiszűrések
                 levonása után, nem szövetkezeti eredményből'
             x-agp34c1g6so30c1q60o3ad9o:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Adókulcs (%)
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Adókulcs (%)
             x-agp34c1g6so30c1q60o3adhg:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A csoport szövetkezeteinek bruttó adókötelezettségei összesen
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A csoport szövetkezeteinek bruttó adókötelezettségei összesen
             x-agp34c1g6so30c1q60o3adhh:
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Szövetkezeti csoportok: entitások negatív adókötelezettségeinek
+              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Szövetkezeti csoportok: entitások negatív adókötelezettségeinek
                 beszámítása a csoporthoz való csatlakozás előtti időszakokból (7L
                 bis o.)(***)'
             x-agp34c1g6so30c1q60o3adhi:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A csoport bruttó adókötelezettsége
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A csoport bruttó adókötelezettsége
             x-agp34c1g6so30c1q60oj0chh:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Korábbi időszakok beszámított egyedi negatív adóalapjainak összege
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Korábbi időszakok beszámított egyedi negatív adóalapjainak összege
                 (LIS 19. kiegészítő rendelkezés). Általános rendszer (7A bis o.)
             x-agp34c1g6so30c1q60oj4dhj:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Az időszak egyedi negatív adóalapjai 50%-anak összege, be nem
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Az időszak egyedi negatív adóalapjai 50%-anak összege, be nem
                 számítva (LIS 19. kiegészítő rendelkezés). Általános rendszer (7A.
                 o.)
             x-agp34c1g6so30c1q60oj4dhk:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Az időszak egyedi negatív adóalapjai 50%-anak összege, be nem
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Az időszak egyedi negatív adóalapjai 50%-anak összege, be nem
                 számítva (LIS 19. kiegészítő rendelkezés). Kanári-szigeteki hajók
                 és hajózási társaságok különleges rendszere (7A. o.)
             x-agp34c1g6so30c1q60ojicpl:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Korábbi időszakok beszámított negatív adóalapjainak összege (LIS
-                19. kiegészítő rendelkezés). Kanári-szigeteki hajók és hajózási társaságok
-                különleges rendszere (7A bis o.)
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Korábbi időszakok beszámított negatív adóalapjainak összege
+                (LIS 19. kiegészítő rendelkezés). Kanári-szigeteki hajók és hajózási
+                társaságok különleges rendszere (7A bis o.)
             x-agp34c1g6so30c1q60p3ad1i:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
                 szerinti céltartalékok és ráfordítások (LIS 14.1. és 14.2. cikk),
                 valamint a LIS 33.1. átmeneti rendelkezés szerinti képzések. Növekedés
             x-agp34c1g6so30c1q60p3ad1j:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
                 szerinti céltartalékok és ráfordítások (LIS 14.1. és 14.2. cikk).
                 Csökkenés
             x-agp34c1g6so30c1q60p3ad1k:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A LIS 11.12. cikke szerinti korlát alkalmazása (LIS 62.1. e)
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A LIS 11.12. cikke szerinti korlát alkalmazása (LIS 62.1. e)
                 cikk). Növekedés
             x-agp34c1g6so30c1q60p3ad1l:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Kiegyenlítési tartalék. Növekedés
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Kiegyenlítési tartalék. Növekedés
             x-agp34c1g6so30c1q60p3ad1m:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Kiegyenlítési tartalék. Csökkenés
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Kiegyenlítési tartalék. Csökkenés
             x-agp34c1g6so30c1q60p3ad1n:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Entitások kiegyenlítési tartaléka a csoporthoz való csatlakozás
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Entitások kiegyenlítési tartaléka a csoporthoz való csatlakozás
                 előtti időszakokból (LIS 67. f) és 74.3. f) cikk)
             x-agp34c1g6so30c1q60p3ad1o:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
                 szerinti céltartalékok és ráfordítások. Növekedés (szövetkezetek)
             x-agp34c1g6so30c1q60p3ad1p:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
                 szerinti céltartalékok és ráfordítások. Csökkenés (szövetkezetek)
             x-agp34c1g6so30c1q60p3ge9g:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
                 szerinti korlát alkalmazása. Növekedés
             x-agp34c1g6so30c1q60p3ge9h:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Kiegyenlítési tartalék. Növekedés
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Kiegyenlítési tartalék. Növekedés
             x-agp34c1g6so30c1q60p3ge9i:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Kiegyenlítési tartalék. Csökkenés
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Kiegyenlítési tartalék. Csökkenés
             x-agp34c1g6so30c1q60p3ge9j:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Entitások kiegyenlítési tartaléka a csoporthoz való csatlakozás
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Entitások kiegyenlítési tartaléka a csoporthoz való csatlakozás
                 előtti időszakokból
             x-agp34c1g6so30c1q60p3idhj:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Tőkésítési tartalék (***)
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Tőkésítési tartalék (***)
             x-agp34c1g6so30c1q60pj2d1g:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Entitások tőkésítési tartaléka a csoporthoz való csatlakozás
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Entitások tőkésítési tartaléka a csoporthoz való csatlakozás
                 előtti időszakokból, érvényesítve (LIS 67. c) és 74.3. c) cikk)(***)
             x-agp34c1g6so30c1q60pj4d1h:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Az adóalapok összegének korrekciói belső eredmények halasztása
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Az adóalapok összegének korrekciói belső eredmények halasztása
                 miatt (**). Belső ügyletek eredményének kiszűrése összesen (7C. o.)
             x-agp34c1g6so30c1q60pj4d1i:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Az adóalapok összegének korrekciói belső eredmények halasztása
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Az adóalapok összegének korrekciói belső eredmények halasztása
                 miatt (**). Belső ügyletek eredményének beszámítása összesen (7C.
                 o.)
             x-agp34c1g6so30c1qegp34c1g6so30c1e6ss3cb9o60p0:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Adóalap sávja 1
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Adóalap sávja 1
             x-agp34c1g6so30c1qegp34c1g6so30c1e70o36b9o60rg:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Adókulcs sávja 1 (három egész, két tizedes)
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Adókulcs sávja 1 (három egész, két tizedes)
             x-agp34c1g6so30c1qegp34c1g6so30c1e70o3gb9o68q0:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Adóalap sávja 2
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Adóalap sávja 2
             x-agp34c1g6so30c1qegp34c1g6so30c1e70p3ab9o68sg:
-              label: A csoport adóalapja és bruttó adókötelezettsége (pag. 70 hoja
-                00). Adókulcs sávja 2 (három egész, két tizedes)
+              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+                lap). Adókulcs sávja 2 (három egész, két tizedes)
             x-agp34c1g6t230c1q60o30e1g:
               help: null
               label: 'Egyéb korrekciók az adóalapok összegéhez: az adócsoport nem
