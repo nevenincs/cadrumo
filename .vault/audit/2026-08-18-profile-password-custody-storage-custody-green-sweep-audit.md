@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:195fddafdbde5c3aae6251541da4e78c689fe4b1684365120180a7d1a4b847fd'
+body_hash: 'sha256:54c25289b3b1cd42f73a82cebf948b99cd69cc3f6d19371de4c37ec065d5addd'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -8101,3 +8101,38 @@ only the sites that already have it. The signature to search for is the raw call
 
 Lanes: integration 3 to 1, unit green at 1,705. The last one is the separate missing typed
 action projection (`error["action"] is None`).
+
+### Both domain lanes green: the typed action the prose already promised
+
+Last of the four. `config profile show no-such-profile` published
+`REFUSED_PROFILE_NOT_FOUND` with a message that names the next step in prose -- "Ejecuta
+`aeat config profile list` para ver los perfiles" -- and a typed `action` of `null`. The prose
+half of the guidance was there; the machine-readable half was missing, and this CLI's operator
+is an autonomous agent for which prose is not actionable.
+
+Same root as the ambiguity defect one entry above, and found the same way: the preflight
+resolves the target through `resolve_login_target`, and `ProfileNotFoundError` escaped that call
+with no policy projection attached, so `_emit_crash` had no `precondition_action` to render.
+The root `--profile` override already projects the canonical `ProfileSelectionFailure.UNKNOWN`
+verdict for exactly this condition; the preflight, being the newer site, did not.
+
+Fixed by attaching that same verdict rather than replacing the error. Replacing it with a
+`CliRefusedBoundaryError` -- which is what the root path raises -- would have been more
+"consistent" and would have changed `REFUSED_PROFILE_NOT_FOUND` to `REFUSED_CLI_BOUNDARY` on
+the wire for every consumer of that refusal. The defect was an ABSENT projection, so the repair
+fills the absence and leaves the code and message byte-identical. `attach_cli_policy_verdict`
+sets an attribute in place, which is what makes that possible.
+
+The result is that the two halves of the guidance now agree: the typed action resolves to
+`operator.profile.list` / `["config", "profile", "list"]`, which is the same command the
+Spanish prose tells a human to run. A machine and a person reading the same refusal are told
+the same thing.
+
+Proven from outside the repo by neutering `attach_cli_policy_verdict`, which restores the null
+action and reds the case on `assert None is not None`.
+
+**Both domain lanes are now GREEN: 361 integration, 1,705 unit.** The four failures that stood
+at the start of this sequence were three distinct defects plus one shared cause, and separating
+them was what made each fixable: a command identifier lost at the process boundary, a
+previously-fixed label-ambiguity escape returning through a new call site, and this absent
+action projection.

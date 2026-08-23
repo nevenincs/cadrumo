@@ -119,8 +119,14 @@ def _resolve_login_target_or_refuse(raw: str):
     after that fix, and it did not carry the conversion, so the escape returned
     on `config profile show <label>` and `config profile validate <label>`.
     """
+    from ...application.profile_preconditions import (
+        ProfileSelectionFailure,
+        profile_selection_failure_verdict,
+    )
     from ...application.user_profile import resolve_login_target
     from ...application.workflow import ProfileLabelAmbiguousError
+    from ...domain.user_profile import ProfileNotFoundError
+    from ._common import attach_cli_policy_verdict
     from ._errors import CliRefusedBoundaryError
 
     try:
@@ -129,6 +135,24 @@ def _resolve_login_target_or_refuse(raw: str):
         raise CliRefusedBoundaryError(
             translated_message="errors.refused.refused_profile_label_ambiguous",
         ) from error
+    except ProfileNotFoundError as error:
+        # The message already names the next step in prose ("run `aeat config
+        # profile list`"), but the TYPED action was null, so the machine-readable
+        # half of that guidance was missing -- and this CLI's operator is an
+        # autonomous agent, for which the prose is not actionable. The verdict is
+        # attached to the existing error rather than replacing it with a
+        # `CliRefusedBoundaryError`, so `REFUSED_PROFILE_NOT_FOUND` and its
+        # message stay exactly as they are on the wire; only the absent
+        # projection is filled. The root `--profile` override already projects
+        # this same UNKNOWN verdict.
+        attach_cli_policy_verdict(
+            error,
+            verdict=profile_selection_failure_verdict(
+                ProfileSelectionFailure.UNKNOWN,
+                requested_profile=raw,
+            ),
+        )
+        raise
 
 
 def preflight_parsed_leaf(
