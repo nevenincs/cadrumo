@@ -36,3 +36,7 @@ Focused Ruff, scoped `ty`, command-spec, metadata, help, lifecycle, and applicat
 The previous command-spec normalization commit removed the already-canonical handler and output schema while leaving the application rotation authority intact. Recovery therefore restored the current surviving implementation through the command-spec kernel instead of resurrecting obsolete decorators, registration calls, environment routes, or compatibility names.
 
 Root `--profile-secrets-*` declarations and dispatch-time unused-source refusal deliberately remain for `W02.P11.S20` and `W02.P11.S21`; S19 establishes the exact typed exemption those steps consume.
+
+Post-landing SOL review found the initial group and leaf policies incorrect, the handler consuming secrets before active-target resolution, stale graph/lifecycle assertions, and insufficient handler-level proof. The remediation classifies the group as state-free and the leaf as encrypted destructive, resolves the exact UUID target before reading, updates the graph truth, and adds real keychain-unavailable subprocess rotation coverage.
+
+That subprocess contract currently exits at the root keychain refusal before the leaf. This is the recorded S21 dependency: root dispatch must consume the parsed `self-authenticating` posture after target normalization and write-route validation. S19 remains open until S21 makes the real two-rotation round trip green.

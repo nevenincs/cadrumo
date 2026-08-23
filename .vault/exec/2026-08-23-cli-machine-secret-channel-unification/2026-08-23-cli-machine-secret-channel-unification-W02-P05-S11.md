@@ -11,9 +11,6 @@ related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
 ---
 
-
-
-
 # Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and regenerate all four locales through python -m dev.locales with channel-neutral diagnostics that reserve only fd1/fd2 and remove stale environment and legacy-field strings
 
 ## Scope

@@ -20049,3 +20049,54 @@ itself wrong would make the module claim coverage it does not have.
 Modelo 200's split (translation-blocked), the 104 labels (same), modelo 347's
 earlier revisions (per-field reading), and now the span module's anti-vacuity
 sources, which need a sound corpus-pair enumerator.
+
+## Tick: a standing failure closed by fixing where its examples came from, and a "defect" withdrawn by its own control
+
+Standing registry failures: **8, from 9.**
+
+### The membership signal was never broken; its population was
+
+`test_a_box_added_or_removed_without_movement_reaches_the_verdict` drew its
+examples from design pairs formed by REVISIONS citing more than one design. The
+campaign's own splits reduced that population to two across the whole tree, so
+the test failed for want of an example rather than for want of the signal --
+"the corpus that made the membership signal necessary has changed" was reporting
+a change in the REVISIONS, not the corpus.
+
+Re-pointed at consecutive REGISTERED designs, ordered by the era the catalogue
+declares. That population does not move when a revision is renamed, and it finds
+seven membership-only pairs including modelo 390's 2016-to-2017 -- the very case
+the test's own docstring cites as its origin.
+
+### Two enumerators discarded before one survived
+
+* **`_design_sources` paired adjacently.** It returns every design FILE, so a
+  design AEAT ships as both `.xls` and `.xlsx` appears twice and gets compared
+  against its own format twin; and it sorts by filename, where AEAT numbers
+  newest-first, so "consecutive" runs backwards through time. Its 8 hits were
+  not trustworthy.
+* **Zero-stripped box keys.** Modelos 115, 123 and 131 appeared to add `01,02,03`
+  while removing `1,2,3` -- an obvious padding artefact, and an obvious
+  normalisation. The control refused it: **26 bundled designs declare `001` AND
+  `1` as distinct boxes**, and 94 mix padded and unpadded keys internally. So
+  padding is significant, raw comparison is correct, and the "defect" in
+  `_box_set_evidence` was mine, not the module's. Withdrawn, and the reason is
+  written into the test so the next reader does not re-derive it.
+
+What survived is the catalogue-keyed, era-ordered enumerator: one path per source
+id, ordered on `applies_from` rather than on a filename.
+
+### Verified
+
+* the module: 21 passed, 3 failed -- from 20 passed, 4 failed. The membership
+  test is green and no other test in it changed state.
+* bite proved from outside the repo over 7 live pairs: suppressing the box-SET
+  evidence in the comparator reds it, and an empty population trips the vacuity
+  guard.
+* registry package: 8 failed, 5,384 passed. Authority loads CLEAN.
+
+### Still open
+
+Modelo 200's split and the 104 casilla labels, both translation-blocked. Modelo
+347's earlier revisions, per-field reading. The locale CLI work is with its own
+agent and has not reported yet.
