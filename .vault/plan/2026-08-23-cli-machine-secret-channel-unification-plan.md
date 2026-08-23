@@ -4,7 +4,7 @@ tags:
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
 modified: '2026-08-23'
-body_hash: 'sha256:aa28aea248618c19a910c6ab494baf578fef6808db946f9bb1da4bf9f3f1c971'
+body_hash: 'sha256:630bf1e01de16519488c64afdf562392ba8cdcf04597a4012de4f8b93d5ac7ad'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
@@ -30,7 +30,7 @@ Establish one strict transport capability and one closed inventory before migrat
 Build the reusable parser, selector, option declarations, and descriptor reader.
 
 - [x] `W01.P01.S01` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and build the shared strict frozen payload base, reusable Typer option annotations, typed selection result, conflict-before-read selector, and bounded one-shot reader while retaining fd0, refusing negative descriptors and fd1/fd2, and deleting old helpers atomically after migration; `src/cadrumo/entrypoints/cli/_config/_secure_input.py`.
-- [ ] `W01.P01.S02` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and prove aliases, defaults, order, help, strict parsing, size bounds, descriptor refusal and closure, one-shot reads, and secret-free errors for the canonical capability; `src/cadrumo/entrypoints/cli/_config/tests/test_secure_input_machine_channels.py`.
+- [x] `W01.P01.S02` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and prove aliases, defaults, order, help, strict parsing, size bounds, descriptor refusal and closure, one-shot reads, and secret-free errors for the canonical capability; `src/cadrumo/entrypoints/cli/_config/tests/test_secure_input_machine_channels.py`.
 
 ### Phase `W01.P02` - Closed inventory and safe discovery
 
