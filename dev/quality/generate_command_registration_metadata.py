@@ -20,7 +20,7 @@ _LANGUAGES = ("es", "en")
 _OUTPUT = Path("src/cadrumo/entrypoints/cli/command_registration_metadata.v1.json")
 
 
-def _source_sha256(source_path: str | Path) -> str:
+def source_sha256(source_path: str | Path) -> str:
     """Hash UTF-8 source with platform line endings normalized to LF."""
     source = Path(source_path).read_text(encoding="utf-8").replace("\r\n", "\n")
     return hashlib.sha256(source.encode()).hexdigest()
@@ -37,7 +37,7 @@ def _source_identity(owner: object | None) -> tuple[str | None, str | None]:
     source_path = inspect.getsourcefile(module)
     if source_path is None:
         return f"{module_name}:{qualname}", None
-    digest = _source_sha256(source_path)
+    digest = source_sha256(source_path)
     return f"{module_name}:{qualname}", digest
 
 
@@ -47,7 +47,7 @@ def _owner_source_sha256(owner: str) -> str | None:
         return None
     module = importlib.import_module(owner.split(":", 1)[0])
     source_path = inspect.getsourcefile(module)
-    return None if source_path is None else _source_sha256(source_path)
+    return None if source_path is None else source_sha256(source_path)
 
 
 def _policy_record(policy: CommandExecutionPolicy | None) -> dict[str, object] | None:

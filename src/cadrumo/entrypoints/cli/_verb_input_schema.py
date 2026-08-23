@@ -632,17 +632,18 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
                 default=(),
             )
 
-        raise SchemaResolutionError(
-            tuple(
-                VerbLeafResolutionFailure(
-                    subject_leaf_key=key,
-                    attempted_cli_path=_naive_cli_path(key),
-                    resolved_cli_path=resolved_prefix(key),
-                    reason="registration metadata has no command identity",
-                )
-                for key in missing
+        def metadata_failure(key: str) -> VerbLeafResolutionFailure:
+            attempted = _naive_cli_path(key)
+            prefix = resolved_prefix(key)
+            unresolved = attempted[len(prefix)] if len(prefix) < len(attempted) else key
+            return VerbLeafResolutionFailure(
+                subject_leaf_key=key,
+                attempted_cli_path=attempted,
+                resolved_cli_path=prefix,
+                reason=f"resolving {unresolved!r}: registration metadata has no command identity",
             )
-        )
+
+        raise SchemaResolutionError(tuple(metadata_failure(key) for key in missing))
     language = resolve_output_language()
     schemas: dict[str, VerbInputSchema] = {}
     resolution_errors: list[VerbLeafResolutionFailure] = []

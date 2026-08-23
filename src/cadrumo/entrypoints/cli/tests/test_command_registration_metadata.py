@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from dev.quality.generate_command_registration_metadata import _source_sha256, metadata_differences
+from dev.quality.generate_command_registration_metadata import metadata_differences, source_sha256
 
 from .._command_schema import command_registration_projection
 from .._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES
@@ -64,8 +64,8 @@ def test_source_fingerprints_are_newline_invariant_and_semantic(tmp_path: Path) 
     crlf.write_bytes(b"VALUE = 1\r\n")
     changed.write_bytes(b"VALUE = 2\n")
 
-    assert _source_sha256(lf) == _source_sha256(crlf)
-    assert _source_sha256(lf) != _source_sha256(changed)
+    assert source_sha256(lf) == source_sha256(crlf)
+    assert source_sha256(lf) != source_sha256(changed)
 
 
 def test_schema_and_operator_inventory_import_no_handler_or_forbidden_authority() -> None:

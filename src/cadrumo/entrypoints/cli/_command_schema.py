@@ -414,16 +414,15 @@ def _materialized_command_schema_refs() -> tuple[CommandSchemaRef, ...]:
 
 @cache
 def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
-    """Project result schemas from import-light registration metadata.
+    """Project callable result schemas from import-light registration metadata.
 
-    Discards the per-module load failures - the consumers that need only the
-    command set proceed with whatever schemas loaded, unbroken by a single bad
-    module. A consumer that must report the failures reads them separately via
-    :func:`_ensure_result_schemas_registered`.
+    Result-schema declarations whose operator verb is explicitly absent remain
+    in :func:`command_registration_metadata` for exact-set drift accounting but
+    do not enter the MCP/HITL/operator manifest as callable commands.
 
     Returns:
-        One :class:`CommandSchemaRef` per registered command, sorted by
-        command name.
+        One :class:`CommandSchemaRef` per callable registered command, sorted
+        by command name.
     """
     from ...application.operator_surface import CommandSchemaRef
 
