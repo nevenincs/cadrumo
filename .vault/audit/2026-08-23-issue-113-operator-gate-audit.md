@@ -160,3 +160,38 @@ Verification was then exercised rather than bypassed. It correctly remained bloc
 The local encrypted `.journey/` evidence was removed after recording these redacted identifiers. The permanent no-write boundary remains unchanged.
 
 **Updated disposition:** the bounded readiness defect is fixed, but #113 should remain open because its complete verify → export acceptance still needs a synthetic operator fixture with authoritative prior-period lineage and deductible-expense evidence (or a first-period scenario whose registry dependencies genuinely do not require them). Do not weaken verification to close the gate.
+
+## Purpose-specific lineage attempt — 2026-08-23
+
+A second disposable `.journey2/` runtime tested whether the newly shipped external filing import could build the missing lineage without live AEAT access.
+
+Locally creatable prerequisites were confirmed:
+
+- `config profile create --activity-start-date 2025-01-01` records the required start date;
+- `ledger evidence add` and `ledger attach --purchase-invoice-evidence-id …` expose the deductible-expense evidence path;
+- M100 2025 work creation succeeds;
+- `modelo reconcile file --kind declaration --file src/cadrumo/tests/fixtures/justificantes/100/2025-0A.pdf` parses locally and reports `verdict=matches`;
+- `modelo reconcile file --kind justificante --file src/cadrumo/tests/fixtures/justificantes/modelo_100_2025A.pdf` also parses locally (and correctly reports the fixture/profile NIF mismatch).
+
+The external-baseline production path is discoverable:
+
+```text
+aeat app modelo filing-record import WORK_UNIT_ID \
+  --evidence-kind aeat_csv_register \
+  --evidence-id synthetic-m100-2025 \
+  --set 0235=0
+```
+
+It refuses before completeness validation:
+
+```text
+REFUSED_CLI_BOUNDARY
+La evidencia de importación externa synthetic-m100-2025 (aeat_csv_register)
+no está registrada como artefacto de justificante persistido.
+```
+
+This prerequisite has no safe local CLI creation path. `app live justificante` exposes only `pull`, `list`, and `view`; `pull` would make an AEAT call and was prohibited. Both successful `modelo reconcile file` invocations leave `app live justificante list` at `count: 0`. Reconciliation also leaves the M100 work in `borrador`, with `current_filing_record_id: null`, and no calculation observation. `work file` cannot bridge the gap because it accepts only an already verified calculation—the very lineage verification is trying to establish.
+
+**Concrete product-surface blocker:** provide a local, fail-closed CLI composition that persists an imported AEAT CSV-register/justificante evidence artifact and returns its stable evidence id for `filing-record import`, or let `filing-record import --file` atomically persist and bind that source artifact after validating its source manifest. Without that door, a safe source-only fixture cannot create clean M100-2025 or M130-2026-1T external filing lineage; therefore M130-2026-2T cannot reach approval/export without a live pull or bypassing verification.
+
+No AEAT call was made, no production code changed, and `.journey2/` was removed after the attempt. **Disposition remains keep #113 open.**
