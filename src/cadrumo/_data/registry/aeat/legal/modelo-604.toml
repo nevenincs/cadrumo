@@ -48,8 +48,8 @@ published_at = 2021-05-27
 effective_from = 2021-05-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-22
-reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-8878 disposición transitoria única, re-fetched 2026-08-22 from two BOE surfaces that agree verbatim; pending operator re-stamp)"
-notes = "Orden HAC/510/2021 disposición transitoria única, primeras autoliquidaciones del Impuesto: las autoliquidaciones de enero, febrero, marzo y abril de 2021 se presentan e ingresan en el plazo de la autoliquidación correspondiente al mes de mayo de 2021. La orden se publicó el 27 de mayo de 2021, después de esos cuatro periodos, por lo que el plazo general del art 3 no pudo regirlos. Combinada con el art 3, la ventana de los cinco primeros periodos de 2021 es del 10 al 20 de junio de 2021."
+reviewed_by = "agent-prepared; corpus-grounded vs BOE-A-2021-8878; pending operator re-stamp"
+notes = "Orden HAC/510/2021 disposición transitoria única, primeras autoliquidaciones del Impuesto: las autoliquidaciones de enero, febrero, marzo y abril de 2021 se presentan e ingresan en el plazo de la autoliquidación correspondiente al mes de mayo de 2021. La orden se publicó el 27 de mayo de 2021, después de esos cuatro periodos, por lo que el plazo general del art 3 no pudo regirlos. Combinada con el art 3, la ventana de los cinco primeros periodos de 2021 es del 10 al 20 de junio de 2021. Review grounding: agent-prepared (corpus-grounded against the bundled BOE-A-2021-8878 disposición transitoria única, re-fetched 2026-08-22 from two BOE surfaces that agree verbatim; pending operator re-stamp)"
 required_text = [
     "los meses de enero, febrero, marzo y abril de 2021",
     "el plazo para la presentación e ingreso de la autoliquidación correspondiente al mes de mayo de 2021",
