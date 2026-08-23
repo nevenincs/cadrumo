@@ -1,0 +1,460 @@
+# Modelo 220 RECORD T22007A01 -- BASES IMPONIBLES NEGATIVAS INDIVIDUALES no integradas under DA 19a
+# LIS: a matrix of TWO regimes (general, and the regimen especial de
+# buques y empresas navieras de Canarias) by FOUR generation periods
+# (2023, 2024(*), 2024, Total) by FOUR amounts (importe original,
+# pendiente de integracion at the start, integrado in the period, and
+# pendiente at the end).
+#
+# 32 casillas describe all 42 design fields -- 32 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position.
+#
+# All 32 of this record's numbers carry AEAT's own printed box number (32 are 5-digit).
+# Not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# AEAT LEAVES A PARENTHESIS OPEN IN THE RECORD HEADING and never closes it: every one
+# of the 32 lines reads "...del grupo fiscal (DA 19a LIS." with no closing bracket
+# anywhere in the field. It is kept EXACTLY as printed. Closing it would be an edit to
+# a filing-grade label on a guess about what AEAT meant to enclose, and the design gives
+# no evidence for that guess.
+#
+# THE SAME PROVISION IS SPELLED TWO WAYS IN ONE LINE: the heading writes "DA 19a LIS"
+# with the ordinal indicator and the amount name writes "DA 19 LIS (**)" without it.
+# Both are kept as printed; nothing here decides which is canonical.
+#
+# TWO GENERATION PERIODS ARE BOTH CALLED 2024, distinguished ONLY by an asterisk --
+# "Periodo de generacion 2024(*)" and "Periodo de generacion 2024". The design does
+# not say what the asterisk marks. The labels preserve the distinction verbatim rather
+# than resolving it, because collapsing them would merge two boxes AEAT numbers
+# separately and dropping the marker would make them indistinguishable to an operator.
+#
+# THE NUMBERING JUMPS AT THE VERY END: the general block runs 01007..01022 and the
+# Canarias block continues 01023..01036 unbroken, then its LAST TWO boxes are [01935]
+# and [01936] rather than 01037 and 01038. Recorded because a reader checking the range
+# would take it for a transcription error; it is AEAT's own. The exact runs were read
+# off the design rather than inferred from the shape -- a first draft of this note said
+# 01023..01035 with 01036 used earlier, and the design refuted it.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER A HEADING, writing the same one
+# both with and without the space that should follow its period. The heading is derived as
+# the common prefix of every numbered line and the remainder is stripped, so both
+# spellings land on the same heading. 0 parent-child separator
+# repair(s) applied to this record: none needed.
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 0
+# rejoin(s) applied to this record, 0 distinct: none.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22007A01 tiles
+# 1..721 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 07, letra A, hoja 01. Sibling sector pages in this modelo
+# can share every heading AEAT prints in the BODY -- on the balance-sheet pages two
+# records both head their lines "ACTIVO" and both declare a "Total activo" -- so the
+# envelope is the ONLY non-inferential way to tell such records apart. The operator label
+# carries it for exactly that reason; it claims no sector, which the design does not state.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @560+150 RESERVADO PARA LA ADMINISTRACION; and
+# @710+12 Fin de registro.
+#
+# NOT CLAIMED: THIS CARRY-FORWARD TABLE DOES NOT RECONCILE ITSELF. Within each regimen
+# and each generation period the four columns are a chain -- original, pendiente at the
+# start, integrado in the period, pendiente at the end -- and the Total row is the sum
+# down its column. NEITHER relation is expressed: no formula, construct or binding
+# subtracts the integrado from the opening pendiente, sums a column into its Total, or
+# carries an end-of-period pendiente into the next filing year. Every box is a manual
+# input, and this is the one record in the revision where an unexpressed carry crosses
+# FILING YEARS rather than staying inside one.
+
+# @16+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Período de generación 2023. [01007]
+[[revisions."2024".casillas]]
+id = "T22007A01:01007"
+number = "01007"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a inicio de período. Período de generación 2023. [01008]
+[[revisions."2024".casillas]]
+id = "T22007A01:01008"
+number = "01008"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe integrado en el periodo. Período de generación 2023 [01009]
+[[revisions."2024".casillas]]
+id = "T22007A01:01009"
+number = "01009"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a final de período. Período de generación 2023 [01010]
+[[revisions."2024".casillas]]
+id = "T22007A01:01010"
+number = "01010"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Período de generación 2024(*). [01011]
+[[revisions."2024".casillas]]
+id = "T22007A01:01011"
+number = "01011"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a inicio de período. Período de generación 2024(*). [01012]
+[[revisions."2024".casillas]]
+id = "T22007A01:01012"
+number = "01012"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe integrado en el periodo. Período de generación 2024(*). [01013]
+[[revisions."2024".casillas]]
+id = "T22007A01:01013"
+number = "01013"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a final de período. Período de generación 2024(*) [01014]
+[[revisions."2024".casillas]]
+id = "T22007A01:01014"
+number = "01014"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Período de generación 2024. [01015]
+[[revisions."2024".casillas]]
+id = "T22007A01:01015"
+number = "01015"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a inicio de período. Período de generación 2024. [01016]
+[[revisions."2024".casillas]]
+id = "T22007A01:01016"
+number = "01016"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe integrado en el periodo. Período de generación 2024. [01017]
+[[revisions."2024".casillas]]
+id = "T22007A01:01017"
+number = "01017"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a final de período. Período de generación 2024. [01018]
+[[revisions."2024".casillas]]
+id = "T22007A01:01018"
+number = "01018"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Total [01019]
+[[revisions."2024".casillas]]
+id = "T22007A01:01019"
+number = "01019"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a inicio de período. Total. [01020]
+[[revisions."2024".casillas]]
+id = "T22007A01:01020"
+number = "01020"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe integrado en el periodo. Total. [01021]
+[[revisions."2024".casillas]]
+id = "T22007A01:01021"
+number = "01021"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a final de período. Total [01022]
+[[revisions."2024".casillas]]
+id = "T22007A01:01022"
+number = "01022"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Período de generación 2023. [01023]
+[[revisions."2024".casillas]]
+id = "T22007A01:01023"
+number = "01023"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a inicio de período. Período de generación 2023. [01024]
+[[revisions."2024".casillas]]
+id = "T22007A01:01024"
+number = "01024"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe integrado en el periodo. Período de generación 2023 [01025]
+[[revisions."2024".casillas]]
+id = "T22007A01:01025"
+number = "01025"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a final de período. Período de generación 2023 [01026]
+[[revisions."2024".casillas]]
+id = "T22007A01:01026"
+number = "01026"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Período de generación 2024(*). [01027]
+[[revisions."2024".casillas]]
+id = "T22007A01:01027"
+number = "01027"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a inicio de período. Período de generación 2024(*). [01028]
+[[revisions."2024".casillas]]
+id = "T22007A01:01028"
+number = "01028"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe integrado en el periodo. Período de generación 2024(*) [01029]
+[[revisions."2024".casillas]]
+id = "T22007A01:01029"
+number = "01029"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a final de período. Período de generación 2024(*) [01030]
+[[revisions."2024".casillas]]
+id = "T22007A01:01030"
+number = "01030"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Período de generación 2024. [01031]
+[[revisions."2024".casillas]]
+id = "T22007A01:01031"
+number = "01031"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a inicio de período. Período de generación 2024. [01032]
+[[revisions."2024".casillas]]
+id = "T22007A01:01032"
+number = "01032"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe integrado en el periodo. Período de generación 2024 [01033]
+[[revisions."2024".casillas]]
+id = "T22007A01:01033"
+number = "01033"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @475+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a final de período. Período de generación 2024 [01034]
+[[revisions."2024".casillas]]
+id = "T22007A01:01034"
+number = "01034"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @492+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Total. [01035]
+[[revisions."2024".casillas]]
+id = "T22007A01:01035"
+number = "01035"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @509+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a inicio de período. Total. [01036]
+[[revisions."2024".casillas]]
+id = "T22007A01:01036"
+number = "01036"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @526+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe integrado en el periodo. Total [01935]
+[[revisions."2024".casillas]]
+id = "T22007A01:01935"
+number = "01935"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @543+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a final de período. Total [01936]
+[[revisions."2024".casillas]]
+id = "T22007A01:01936"
+number = "01936"
+segmento = "T22007A01"
+section = ["liquidacion", "bases_imponibles_negativas_individuales_da19"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
