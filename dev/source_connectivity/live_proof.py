@@ -8,7 +8,7 @@ import tomllib
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -24,13 +24,16 @@ from cadrumo.adapters.persistence.storage import KEY_SIZE, SecureObjectRepositor
 from cadrumo.adapters.persistence.storage.master_key import BucketSession, activate_session
 from cadrumo.application.aggregation import CalculationSourceContext
 from cadrumo.application.invoices import InvoiceCatalogueSourceResolver
+from cadrumo.application.invoices._creation import build_catalogue_invoice, create_catalogue_invoice
 from cadrumo.application.modelo._calculation_actions import (
-    _calculate_modelo_revision_with_trusted_mesh_sources,
     _require_calculation_route_resolver,
     _source_bound_casilla_inputs,
     _source_provenance_refs,
 )
+from cadrumo.application.modelo._calculation_helpers import build_typed_observations
+from cadrumo.application.modelo._calculation_resolution import build_calculation_replay_payloads
 from cadrumo.application.modelo._registry_resources import authority_via_resources
+from cadrumo.application.modelo._revision_persistence import persist_calculation_revision
 from cadrumo.application.operator_surface import build_supported_modelo_calculation_workflow_catalogue
 from cadrumo.application.registry import (
     LiveSourceConnectivityProofAuthority,
@@ -41,6 +44,7 @@ from cadrumo.application.registry import (
 from cadrumo.core import (
     BindingSourceKind,
     CalculationSourceLineageRole,
+    IntracomOperationType,
     Period,
     validated_casilla_id,
 )
@@ -48,8 +52,10 @@ from cadrumo.core._calculation_route import ModeloCalculationRouteId
 from cadrumo.core.resources import bundled_path
 from cadrumo.core.source_connectivity import SourceConnectivityConnectionIdentity
 from cadrumo.core.time import now
-from cadrumo.domain.invoices import Invoice, InvoiceCatalogue
-from cadrumo.domain.modelos import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from cadrumo.domain.calculations.registry import calculate_registry_snapshot
+from cadrumo.domain.invoices import PaymentStatus
+from cadrumo.domain.iva import InvoiceKind, IvaCategory
+from cadrumo.domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from cadrumo.entrypoints.cli._common import _current_operator_surface_reconciliation
 
 
@@ -76,7 +82,19 @@ class ConnectedProofFixture:
     period: str
     expected_casilla_id: str
     expected_casilla_value: Decimal
-    invoice: Invoice
+    invoice_bucket_id: str
+    invoice_kind: InvoiceKind
+    invoice_number: str
+    invoice_issued_at: date
+    invoice_counterparty_name: str
+    invoice_counterparty_tax_id: str
+    invoice_counterparty_country: str
+    invoice_taxable_base: Decimal
+    invoice_iva_rate: Decimal
+    invoice_currency: str
+    invoice_payment_status: PaymentStatus
+    invoice_iva_category: IvaCategory
+    invoice_operation_type: IntracomOperationType
 
 
 # Deliberately independent of census.toml. A vertical slice adds its fixture here
@@ -121,8 +139,23 @@ def _execute_fixture(
 ) -> LiveSourceConnectivityProofExpectation:
     period = Period.from_year_and_code(fixture.filing_year, fixture.period)
     timestamp = datetime(2026, 8, 23, 10, 0, tzinfo=UTC)
+    invoice = build_catalogue_invoice(
+        bucket_id=fixture.invoice_bucket_id,
+        kind=fixture.invoice_kind,
+        invoice_number=fixture.invoice_number,
+        issued_at=fixture.invoice_issued_at,
+        counterparty_name=fixture.invoice_counterparty_name,
+        counterparty_tax_id=fixture.invoice_counterparty_tax_id,
+        counterparty_country=fixture.invoice_counterparty_country,
+        taxable_base=fixture.invoice_taxable_base,
+        iva_rate=fixture.invoice_iva_rate,
+        currency=fixture.invoice_currency,
+        payment_status=fixture.invoice_payment_status,
+        iva_category=fixture.invoice_iva_category,
+        operation_type=fixture.invoice_operation_type,
+    )
     work_unit_id = derive_work_unit_id(
-        bucket_id=fixture.invoice.bucket_id,
+        bucket_id=fixture.invoice_bucket_id,
         modelo=fixture.modelo,
         filing_year=fixture.filing_year,
         period=period,
@@ -130,7 +163,7 @@ def _execute_fixture(
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
-        bucket_id=fixture.invoice.bucket_id,
+        bucket_id=fixture.invoice_bucket_id,
         modelo=fixture.modelo,
         filing_year=fixture.filing_year,
         period=period,
@@ -141,8 +174,14 @@ def _execute_fixture(
     )
     work_units = WorkUnitCatalogueRepository(objects=objects)
     work_units.save(WorkUnitCatalogue.from_work_units((work_unit,)))
-    InvoiceCatalogueRepository(objects=objects).save(InvoiceCatalogue.from_invoices((fixture.invoice,)))
     invoice_repository = InvoiceCatalogueRepository(objects=objects)
+    create_catalogue_invoice(
+        invoice=invoice,
+        repository=invoice_repository,
+        event_repository=BucketEventHistoryRepository(objects=objects),
+        occurred_at=timestamp,
+        actor="source-connectivity-proof",
+    )
     snapshot = authority_via_resources().snapshot(
         fixture.modelo,
         filing_year=fixture.filing_year,
@@ -160,23 +199,50 @@ def _execute_fixture(
             revision=snapshot.revision,
         ),
     )
-    revision = _calculate_modelo_revision_with_trusted_mesh_sources(
-        work_unit_id,
-        casilla_inputs={},
+    source_inputs = _source_bound_casilla_inputs(
+        snapshot.revision,
+        source_resolution=resolution,
         backend_binding_values=resolution.binding_values,
-        row_binding_values=resolution.row_binding_values,
-        backend_casilla_inputs=_source_bound_casilla_inputs(
-            snapshot.revision,
-            source_resolution=resolution,
-            backend_binding_values=resolution.binding_values,
-        ),
+    )
+    engine_result = calculate_registry_snapshot(
+        snapshot,
+        inputs=source_inputs,
+        date_context={"filing_period": period.end_date},
+        binding_values=resolution.binding_values,
+    )
+    replay = build_calculation_replay_payloads(
+        resolved_inputs=source_inputs,
+        resolved_bindings=resolution.binding_values,
+        resolved_enum_bindings={},
+        resolved_date_bindings={},
+        resolved_relations={},
+        resolved_row_bindings=resolution.row_binding_values,
+    )
+    work_unit_catalogue, work_unit_catalogue_revision_id = work_units.load_revisioned()
+    revision = persist_calculation_revision(
+        work_unit_id=work_unit_id,
+        work_unit=work_unit,
+        work_units=work_unit_catalogue,
+        work_units_revision_id=work_unit_catalogue_revision_id,
+        input_values_by_casilla_id=replay.input_values_by_casilla_id,
+        binding_overrides=replay.binding_overrides,
+        row_binding_values=replay.row_binding_values,
+        relation_overrides=replay.relation_overrides,
+        casilla_values=dict(engine_result.values),
         source_transaction_ids=tuple(resolution.source_transaction_ids),
+        borrador_snapshot_id=None,
+        bindings_sourced_from_borrador=(),
+        observations=build_typed_observations(engine_result=engine_result, snapshot=snapshot),
+        unresolved_outcomes=engine_result.unresolved_outcomes,
         source_provenance=_source_provenance_refs(resolution),
+        source_issues=(),
         detail_rows=resolution.detail_rows,
+        formula_count=len(engine_result.entries),
+        actor="source-connectivity-proof",
+        now=datetime(2026, 8, 23, 11, 0, tzinfo=UTC),
         work_unit_repository=work_units,
         calculation_repository=repository,
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
-        clock=datetime(2026, 8, 23, 11, 0, tzinfo=UTC),
     )
     revision_id = revision.calculation_revision_id
     actual_value = revision.casilla_values.get(validated_casilla_id(fixture.expected_casilla_id))
@@ -190,18 +256,7 @@ def _execute_fixture(
         raise ConnectedProofCompositionError(
             f"production fixture did not persist calculation revision: {fixture.candidate_id}",
         )
-    matching = tuple(
-        row
-        for row in revision.source_provenance
-        if row.lineage_role is CalculationSourceLineageRole.PRIMARY
-        and row.resolved_binding_source is fixture.source_kind
-        and row.resolver_id == fixture.resolver_id
-        and row.source_ref == fixture.source_ref
-    )
-    if len(matching) != 1:
-        raise ConnectedProofCompositionError(
-            f"production fixture emitted no unique expected primary provenance: {fixture.candidate_id}",
-        )
+    _require_unique_primary(revision, fixture)
     connection = SourceConnectivityConnectionIdentity(
         candidate_id=fixture.candidate_id,
         source_kind=fixture.source_kind,
@@ -219,39 +274,71 @@ def _execute_fixture(
     )
 
 
+def _require_unique_primary(revision: CalculationRevision, fixture: ConnectedProofFixture) -> None:
+    """Refuse unless the encrypted result has one exact resolver-owned primary."""
+    matching = tuple(
+        row
+        for row in revision.source_provenance
+        if row.lineage_role is CalculationSourceLineageRole.PRIMARY
+        and row.resolved_binding_source is fixture.source_kind
+        and row.resolver_id == fixture.resolver_id
+        and row.source_ref == fixture.source_ref
+    )
+    if len(matching) != 1:
+        raise ConnectedProofCompositionError(
+            f"production fixture emitted no unique expected primary provenance: {fixture.candidate_id}",
+        )
+
+
+@contextmanager
+def _ephemeral_connected_proof_material(
+    fixtures: tuple[ConnectedProofFixture, ...],
+) -> Iterator[
+    tuple[
+        CalculationRevisionCatalogueRepository,
+        tuple[LiveSourceConnectivityProofExpectation, ...],
+        Path,
+    ]
+]:
+    """Execute typed fixtures in one deterministic credential-free lifecycle."""
+    with ExitStack() as cleanup:
+        temporary = cleanup.enter_context(tempfile.TemporaryDirectory(prefix="cadrumo-source-connectivity-"))
+        key = secrets.token_bytes(KEY_SIZE)
+        session = BucketSession.open(
+            bucket_id=fixtures[0].invoice_bucket_id,
+            kek=key,
+            dek=key,
+            idle_minutes=5,
+            opened_at=now(),
+            unsecured_backend=False,
+        )
+        cleanup.callback(session.close)
+        database_path = Path(temporary) / "proof.db"
+        engine = create_engine(f"sqlite:///{database_path.as_posix()}")
+        cleanup.callback(engine.dispose)
+        cleanup.enter_context(activate_session(session))
+        objects = SecureObjectRepository(engine=engine)
+        revisions = CalculationRevisionCatalogueRepository(objects=objects)
+        expectations = tuple(_execute_fixture(objects, revisions, fixture) for fixture in fixtures)
+        yield revisions, expectations, database_path
+
+
 @contextmanager
 def _live_authority_for_fixtures(
     repository_root: Path,
     fixtures: tuple[ConnectedProofFixture, ...],
 ) -> Iterator[LiveSourceConnectivityProofAuthority]:
-    """Execute typed fixtures through the canonical ephemeral production route."""
-    key = secrets.token_bytes(KEY_SIZE)
-    session = BucketSession.open(
-        bucket_id=fixtures[0].invoice.bucket_id,
-        kek=key,
-        dek=key,
-        idle_minutes=5,
-        opened_at=now(),
-        unsecured_backend=False,
-    )
-    with tempfile.TemporaryDirectory(prefix="cadrumo-source-connectivity-") as temporary:
-        engine = create_engine(f"sqlite:///{(Path(temporary) / 'proof.db').as_posix()}")
-        with ExitStack() as cleanup:
-            cleanup.callback(engine.dispose)
-            cleanup.callback(session.close)
-            cleanup.enter_context(activate_session(session))
-            objects = SecureObjectRepository(engine=engine)
-            revisions = CalculationRevisionCatalogueRepository(objects=objects)
-            expectations = tuple(_execute_fixture(objects, revisions, fixture) for fixture in fixtures)
-            yield LiveSourceConnectivityProofAuthority(
-                source_ownership=build_calculation_route_source_ownership_catalogue(),
-                workflows=build_supported_modelo_calculation_workflow_catalogue(
-                    _current_operator_surface_reconciliation(),
-                ),
-                calculation_revisions=revisions,
-                evidence_verifier=RepositoryRootEvidenceDigestVerifier(repository_root=repository_root),
-                independent_expectations=expectations,
-            )
+    """Compose canonical authorities over independently executed proof material."""
+    with _ephemeral_connected_proof_material(fixtures) as (revisions, expectations, _database_path):
+        yield LiveSourceConnectivityProofAuthority(
+            source_ownership=build_calculation_route_source_ownership_catalogue(),
+            workflows=build_supported_modelo_calculation_workflow_catalogue(
+                _current_operator_surface_reconciliation(),
+            ),
+            calculation_revisions=revisions,
+            evidence_verifier=RepositoryRootEvidenceDigestVerifier(repository_root=repository_root),
+            independent_expectations=expectations,
+        )
 
 
 @contextmanager

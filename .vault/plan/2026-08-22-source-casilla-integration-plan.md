@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:7282d87c5c9e909feb225dcd2cdae8fbefc7fe325f94425ddc3bce159731cb75'
+body_hash: 'sha256:3e409b83707204e76d0c430c1f1568a2ee7b05b076eaf69a45aaac6aaf679232'
 ---
 
 # `source-casilla-integration` plan
@@ -114,7 +114,7 @@ Close the formal review findings before any source candidate is promoted or inve
 - [x] `W01.P23.S157` - verify every reviewed capability locator remains re-fetchable and corresponds to its stable capability identity; `dev/source_connectivity/check.py`.
 - [x] `W01.P23.S158` - emit deterministic per-capability census membership and reviewed disposition evidence for aggregate coverage buckets; `dev/source_connectivity/cli.py`.
 - [x] `W01.P23.S159` - make the census and ratchet modules clean on their intended static type-check surface; `dev/source_connectivity`.
-- [ ] `W01.P23.S160` - decide and implement the canonical live connected-proof gate composition; `src/cadrumo/application/registry`.
+- [x] `W01.P23.S160` - decide and implement the canonical live connected-proof gate composition; `src/cadrumo/application/registry`.
 - [ ] `W01.P23.S161` - re-review the remediated census foundation and close every recorded finding; `.vault/audit/2026-08-22-source-casilla-integration-census-code-review-audit.md`.
 - [x] `W01.P23.S162` - extend ingress discovery across canonical command-spec declarations and adjudicate the resulting census drift; `dev/source_connectivity/discovery.py`.
 

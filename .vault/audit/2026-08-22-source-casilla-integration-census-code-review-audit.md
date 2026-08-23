@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:4b8b57385f49ba081f7d039f500983475f164435dfb986958ac7b38b91238101'
+body_hash: 'sha256:baf6618f040c11642d10d162054858bb329c88440de8e2b664fedc09341ed97f'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-22-source-casilla-integration-adr]]"
@@ -34,7 +34,7 @@ though `derive_registry_destination_records` already exists beside the census lo
 invented, removed, or revision-ambiguous modelo/casilla destination therefore remains green. This leaves
 the destination half of the promised source-to-casilla census unverified.
 
-### connected-gate-composition | high | The enrolled CLI and CI path cannot validate a connected row
+### connected-gate-composition | resolved | Canonical live composition executes independent encrypted proof evidence
 
 `check_capability_census` accepts a `proof_authority`, but `compare` never supplies one and the enrolled
 tests load the bundled census without one. The core correctly refuses every connected row in that state.
@@ -42,6 +42,8 @@ Consequently, the first legitimate vertical slice promoted to `connected` will r
 when its resolver, workflow, evidence digest, and encrypted revision are valid; alternatively, weakening
 the loader would make the proof non-live. The concrete authority exists, but no canonical gate composition
 owns its calculation-revision repository, workflow catalogue, repository root, and execution lifecycle.
+
+Resolution review 2026-08-23: PASS. The enrolled comparison path now composes the existing live authority automatically only when connected rows exist. Its independently authored, data-only M349 scenario traverses canonical invoice construction and persistence, enrolled invoice resolution, the registry calculation engine, canonical replay and observation construction, atomic encrypted calculation-revision persistence, and encrypted reload. Production ownership, operator workflow, repository-root digests, destinations, and exact primary provenance remain independent conjunctive gates. Focused proofs cover a nonzero destination, stable-source content mutation changing fingerprint and revision identity, missing and duplicate primary refusal, zero-connected non-allocation, and deterministic session, engine, database, and temporary-directory cleanup.
 
 ### evidence-locator-drift | medium | Reviewed capability locators can silently become stale
 
@@ -82,3 +84,4 @@ selected type-check lane must be exercised after the lazy-import boundary is acc
   reviewed per-capability disposition reason or an equally auditable generated companion artifact.
 - Resolve `static-check-surface` by replacing opaque object annotations with the canonical census contract
   and enrolling the relevant modules in the intended type-check surface.
+
