@@ -19023,3 +19023,88 @@ it still needs the new revision directory, 211 casillas re-pointed from
 `m322-2023.*` to `m322-2022.*`, casilla `[73]` authored, the fifteen 2023-only
 boxes dropped from the earlier revision, and the render/validate/publish cycle.
 Modelo 200 and 347 splits unchanged.
+
+## Tick: the 322 split priced honestly, a stale gate note corrected, and a detector that did not generalise
+
+### Why the 322 split was priced out, not attempted
+
+The remaining work was inspected before starting rather than discovered midway.
+Renaming `2008-2023` to `2023` is not a rename: the revision id appears 531
+times across 25 fragments AND inside the generated `export/` provenance JSON,
+whose digests are computed at publication. So the split needs TWO full
+render/validate/publish cycles -- the renamed `2023` and the new `2008-2022` --
+where modelo 210's split needed one and consumed an entire tick with many failed
+iterations.
+
+The reason for not starting is specific rather than "too large": a half-applied
+rename across 531 id occurrences plus regenerated digests in two revisions cannot
+be repaired in place, and that exact failure mode has already cost this campaign
+three reverts. The map, reconciliation and box-73 attribution from the previous
+tick remain valid inputs.
+
+### A live gate asserting a state that had stopped being true
+
+`test_revision_span_split_progress` carried a long note explaining that modelo
+210's "single revision `2025`" declares BOTH `aeat-dr-210-2022` and
+`aeat-dr-210-2026`, citing `test_modelo_210_spans_a_record_length_change.py` for
+the measurement.
+
+Both halves were stale. That module was deleted several ticks ago for carrying a
+false explanation, and modelo 210 has since been split -- `2025` and
+`2026-y-siguientes` now cite one design each, verified by reading the revisions.
+So an always-loaded gate was telling every future reader that a closed span was
+open, and pointing at a file that does not exist.
+
+Rewritten to say what is true: the BLINDNESS it describes is real and worth
+keeping -- a length-only re-layout forms no design pair and displaces no field,
+so this set must never be read as the whole inventory of spans -- while recording
+that this particular span was split. No dangling module reference remains
+anywhere in `src`.
+
+### An era-bleed detector, generalised and then withdrawn
+
+Last tick's casilla 171 was era bleed, so the obvious next move was to look for
+it registry-wide: every numbered casilla whose number no cited design prints. Two
+revisions were flagged, and the control disproved both.
+
+Modelo 151's 2015 design tags boxes 1..43 while its revision numbers casillas 58,
+103, 235, 279 -- and modelo 308 numbers two DECLARATION-METADATA casillas 13 and
+109 against a design of twenty boxes, with hand-authored export refs rather than
+map entries. Neither is a defect; both are different numbering universes.
+
+The premise "a casilla's `number` is the box number AEAT prints" is true for
+modelo 322 and is NOT universal, so the detector produced only false positives
+outside it. No gate was landed from it. Recorded because the failure shape keeps
+recurring in this campaign: a key that is valid on the case in hand, assumed
+valid across the corpus.
+
+### What that leaves, scoped to where it was proved
+
+`test_modelo_322_boxes_match_its_designs.py` asserts EQUALITY between a modelo
+322 revision's numbered casillas and the boxes its cited design prints -- exact
+on all three revisions (179, 188, 189). Equality rather than containment because
+both directions are real and distinct defects: a casilla with no box declares a
+figure the record cannot carry, and a box with no casilla is a slot nothing can
+fill, which is how box [73] hides in the 2022 design today. Containment either
+way would license one of them.
+
+Its docstring states why it is modelo-scoped, naming the two modelos that
+disproved the general form, so the next reader does not re-derive the same wrong
+generalisation.
+
+### Verified
+
+* new module: 2 passed, ruff clean; all three conditions bite from outside the
+  repo -- restoring casilla 171 reproduces the original defect exactly, dropping
+  a casilla trips the opposite direction, and an unread design trips the vacuity
+  guard.
+* `test_revision_span_split_progress`: 3 passed after the note correction.
+* registry package: 9 failed, 5344 passed -- the standing declared inventories,
+  unchanged. Authority loads CLEAN.
+* modelo 308's 2009-2018 gap was checked and is genuinely corpus-blocked: one
+  design is bundled for that modelo and it is the 2019 edition.
+
+### Still open
+
+The 322 split, unchanged and now priced: two publish cycles. Modelo 200 and 347
+splits unchanged. Everything else as recorded.

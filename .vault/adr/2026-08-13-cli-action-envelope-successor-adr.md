@@ -5,11 +5,12 @@ tags:
 date: '2026-08-13'
 related:
   - "[[2026-08-13-profile-password-custody-research]]"
+  - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
 supersedes:
   - '2026-07-15-cli-authority-verb-conformance-adr'
-modified: '2026-08-18'
+modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:de189cb9ae940ad425f24f218e036c3d3f506f798206d62c476306e3aa887cc6'
+body_hash: 'sha256:6b8f8b1f5f092f7fc337ec29c856a0b6d412a1bfef62d53411bac06b56827de8'
 ---
 # `cli-action-envelope` adr: `profile custody action envelope grammar` | (**status:** `accepted`)
 
@@ -29,11 +30,11 @@ The superseded CLI authority record mixed backend ownership with general command
 
 ## Constraints
 
-Entrypoints render typed application outcomes and cannot infer storage backend, author security decisions, or carry secrets in argv or environment.
+Entrypoints render typed application outcomes and cannot infer storage backend, author security decisions, or carry secrets in argv or environment. Scalar-secret option declaration, payload metadata, and channel selection defer to `2026-08-23-cli-machine-secret-channel-unification-adr`.
 
 ## Implementation
 
-The canonical commands are `aeat config profile restore`, `aeat config profile restore-recover`, and `aeat config profile delete`. The existing action-envelope hardening ADR owns request/result schema, action-chain resolution, refusal rendering, output formats, and authority checks. The custody roll-up owns operation semantics and secret-FD requirements. This successor owns only their command-tree mapping and delegation boundary.
+The canonical commands are `aeat config profile restore`, `aeat config profile restore-recover`, and `aeat config profile delete`. The existing action-envelope hardening ADR owns request/result schema, action-chain resolution, refusal rendering, output formats, and authority checks. The custody roll-up owns operation semantics; `2026-08-23-cli-machine-secret-channel-unification-adr` owns scalar-secret transport requirements. This successor owns only their command-tree mapping and delegation boundary.
 
 ## Rationale
 

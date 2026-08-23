@@ -5,12 +5,13 @@ tags:
 date: '2026-08-13'
 related:
   - "[[2026-08-13-profile-password-custody-research]]"
+  - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
-modified: '2026-08-18'
+modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:ca20a8c5e9a376bc1c484f28c1af18821b40f92c9f76a773fe1ccd8e7a60e268'
+body_hash: 'sha256:21d893b8df1ac7c0f5c8942e2e28939baf12c6ffd7a5a039e06e8adfb89fc8fc'
 ---
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
 
@@ -84,7 +85,7 @@ The keyring may store only a random session key under service `cadrumo:profile-s
 
 Profile B authenticates into transaction-owned candidate memory and staged session state while profile A remains unchanged. Failure before the active-reference swap destroys B's candidate state and leaves A byte-for-byte and semantically intact. Success atomically swaps the active reference, promotes B's staged session, attempts optional keyring acceleration, cleans candidate artifacts, and only then retires A. Keyring failure leaves a valid process B session.
 
-Headless secrets use only bounded one-shot `--secrets-fd`; argv and environment secrets are forbidden. The canonical CLI verbs are `aeat config profile restore`, `aeat config profile restore-recover`, and `aeat config profile delete`. Action-envelope grammar belongs to the CLI successor ADR.
+Headless scalar-secret transport defers to `2026-08-23-cli-machine-secret-channel-unification-adr`: every applicable CLI verb exposes the paired bounded `--secrets-stdin` and `--secrets-fd` channels, and argv and environment secrets remain forbidden. The canonical CLI verbs are `aeat config profile restore`, `aeat config profile restore-recover`, and `aeat config profile delete`. Action-envelope grammar belongs to the CLI successor ADR.
 
 ### Backup, restore, and rollback
 
