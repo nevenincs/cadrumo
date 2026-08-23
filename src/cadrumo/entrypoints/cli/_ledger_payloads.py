@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for ledger CLI commands.
 
 Each class declared here is a strict
-:class:`OutputSchema` subclass and is decorated
-with CommandSpec schema authority so the
+:class:`OutputSchema` subclass and is referenced as a deferred public schema
+target by production-authored CommandSpec so the
 JSON-contract test suite can enumerate every ledger-command surface this module
 covers.  Emission wraps the validated result in
 :class:`SchemaEnvelope` through

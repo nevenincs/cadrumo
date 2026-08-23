@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for Google config CLI commands.
 
 Each class declared here is a strict
-:class:`OutputSchema` subclass and is decorated
-with CommandSpec schema authority so the
+:class:`OutputSchema` subclass and is referenced as a deferred public schema
+target by production-authored CommandSpec so the
 JSON-contract test suite can enumerate every google-config command surface this
 module covers. Validated results enter
 :class:`SchemaEnvelope` through
@@ -13,8 +13,8 @@ Field sets match the production payload dicts constructed in ``_google.py``,
 sequence fields use ``list`` rather than ``tuple`` because
 ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
 
-The payload classes document only the CLI transport shapes registered with
-CommandSpec schema authority. OAuth state remains
+The payload classes document only the CLI transport shapes referenced by
+production-authored CommandSpec. OAuth state remains
 owned by :mod:`google`, Drive mirror state by
 :mod:`storage`, and calc-sheets semantics by
 :mod:`calc_sheets`.

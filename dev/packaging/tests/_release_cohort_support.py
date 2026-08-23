@@ -29,7 +29,9 @@ for every caller that never varies it.
 
 from __future__ import annotations
 
+import importlib.metadata
 import platform
+import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -69,7 +71,21 @@ def release_cohort(
     for index, (name, kind) in enumerate(sorted(REQUIRED_ARTIFACT_KINDS.items())):
         path = root / "artifacts" / f"{name}.bin"
         path.parent.mkdir(exist_ok=True)
-        path.write_bytes(f"{index}:{name}:{payload_suffix}\n".encode())
+        if name == "cadrumo-wheel":
+            distribution = importlib.metadata.distribution("cadrumo")
+            with zipfile.ZipFile(path, "w") as archive:
+                for item in distribution.files or ():
+                    if item.name in {"INSTALLER", "RECORD", "direct_url.json", "REQUESTED"}:
+                        continue
+                    if item.as_posix().endswith(".pyc") or "/__pycache__/" in item.as_posix():
+                        continue
+                    source = distribution.locate_file(item)
+                    if source.is_file():
+                        archive.write(source, item.as_posix())
+                if payload_suffix:
+                    archive.writestr("cadrumo/_foreign_cohort_plant.py", payload_suffix)
+        else:
+            path.write_bytes(f"{index}:{name}:{payload_suffix}\n".encode())
         artifacts.append((name, kind, path))
     manifest = create_manifest(
         root=root,

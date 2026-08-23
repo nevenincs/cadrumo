@@ -19,6 +19,8 @@ import pytest
 from cadrumo.core import scan_directory
 
 from .._command import CommandResult, run_command
+from .._hashing import sha256_path
+from .._installed_wheel_binding import installed_wheel_payload_sha256
 from ..cohort_manifest import LoadedReleaseCohort
 from ..distribution_evidence_emit import (
     build_client_evidence,
@@ -61,7 +63,12 @@ def _captured_command(argv: tuple[str, ...], cwd: Path) -> CommandResult:
     return run_command(argv, cwd=cwd)
 
 
-def _tax_evidence(cwd: Path, *, version: str = _COHORT_VERSION) -> InstalledTaxEvidence:
+def _tax_evidence(
+    cwd: Path,
+    cohort: LoadedReleaseCohort,
+    *,
+    version: str = _COHORT_VERSION,
+) -> InstalledTaxEvidence:
     """Build installed-CLI oracle evidence from real captured subprocess output.
 
     ``version`` seeds the real ``--version`` transcript so the capture carries the
@@ -72,10 +79,16 @@ def _tax_evidence(cwd: Path, *, version: str = _COHORT_VERSION) -> InstalledTaxE
         (sys.executable, "-c", f"print('{_TARGET_CASILLA}={_TARGET_VALUE}')"),
         cwd,
     )
+    records = {record.name: record for record in cohort.manifest.artifacts}
     return InstalledTaxEvidence(
         requested_executable=sys.executable,
         resolved_executable=sys.executable,
         version_output=version_command.stdout.strip(),
+        cohort_source_commit=cohort.manifest.source.commit,
+        cohort_manifest_sha256=records["python-cohort-manifest"].sha256,
+        cohort_root_wheel_sha256=records["cadrumo-wheel"].sha256,
+        executable_sha256=sha256_path(Path(sys.executable)),
+        installed_wheel_payload_sha256=installed_wheel_payload_sha256(Path(sys.executable)),
         storage_root=str(cwd / "state"),
         work_unit_id="e" * 64,
         calculation_revision_id=_REVISION,
@@ -139,7 +152,7 @@ def _destination(cohort: LoadedReleaseCohort) -> DestinationIdentity:
 def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
     """The record binds the exact cohort and carries CLI transcripts + MCP proof."""
     cohort = _release_cohort(tmp_path / "cohort")
-    tax = _tax_evidence(tmp_path)
+    tax = _tax_evidence(tmp_path, cohort)
     mcp = _mcp_evidence()
 
     evidence = build_installed_oracle_evidence(
@@ -174,7 +187,7 @@ def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
 def test_cli_only_lane_records_an_absent_mcp_leg(tmp_path: Path) -> None:
     """A lane that ships no MCP leg mints with the absent marker, not a fabricated proof."""
     cohort = _release_cohort(tmp_path / "cohort")
-    tax = _tax_evidence(tmp_path)
+    tax = _tax_evidence(tmp_path, cohort)
 
     evidence = build_installed_oracle_evidence(
         row_id="homebrew-linux-x86-64",
@@ -205,7 +218,7 @@ def test_emit_writes_a_flat_record_both_gates_can_read(tmp_path: Path) -> None:
         directory=evidence_dir,
         row_id="python-linux-x86-64",
         cohort=cohort,
-        tax_evidence=_tax_evidence(tmp_path),
+        tax_evidence=_tax_evidence(tmp_path, cohort),
         mcp_evidence=_mcp_evidence(),
         acquisition=_acquisition(),
         destination=_destination(cohort),
@@ -232,9 +245,9 @@ def test_cli_emits_from_oracle_json_a_lane_already_produced(tmp_path: Path) -> N
     import json
 
     cohort_dir = tmp_path / "cohort"
-    _release_cohort(cohort_dir)
     tax_json = tmp_path / "tax-evidence.json"
-    tax_json.write_text(json.dumps(_tax_evidence(tmp_path).to_jsonable()), encoding="utf-8")
+    cohort = _release_cohort(cohort_dir)
+    tax_json.write_text(json.dumps(_tax_evidence(tmp_path, cohort).to_jsonable()), encoding="utf-8")
     evidence_dir = tmp_path / "distribution-install-readiness"
 
     exit_code = main(
@@ -456,7 +469,32 @@ def test_version_mismatched_capture_against_cohort_is_refused(tmp_path: Path) ->
         build_installed_oracle_evidence(
             row_id="python-macos-arm64",
             cohort=cohort,
-            tax_evidence=_tax_evidence(tmp_path, version="0.1.0"),
+            tax_evidence=_tax_evidence(tmp_path, cohort, version="0.1.0"),
+            mcp_evidence=_mcp_evidence(),
+            acquisition=_acquisition(),
+            destination=_destination(cohort),
+        )
+
+
+def test_copied_cohort_fields_cannot_launder_a_foreign_same_version_install(tmp_path: Path) -> None:
+    """Copied sealed fields and a truthful foreign executable hash still fail payload binding."""
+    from dataclasses import replace
+
+    from .._installed_wheel_binding import sealed_wheel_payload_sha256
+    from ..distribution_evidence_emit import EvidenceCohortBindingError
+
+    cohort = release_cohort(tmp_path / "foreign-cohort", version=_COHORT_VERSION, payload_suffix="foreign")
+    tax = _tax_evidence(tmp_path, cohort)
+    forged = replace(
+        tax,
+        installed_wheel_payload_sha256=sealed_wheel_payload_sha256(cohort.artifact("cadrumo-wheel")),
+    )
+
+    with pytest.raises(EvidenceCohortBindingError, match="payload does not match"):
+        build_installed_oracle_evidence(
+            row_id="python-windows-x86-64",
+            cohort=cohort,
+            tax_evidence=forged,
             mcp_evidence=_mcp_evidence(),
             acquisition=_acquisition(),
             destination=_destination(cohort),
@@ -478,7 +516,7 @@ def test_version_binding_matches_on_a_token_boundary_not_a_substring(tmp_path: P
             build_installed_oracle_evidence(
                 row_id="python-macos-arm64",
                 cohort=cohort,
-                tax_evidence=_tax_evidence(tmp_path, version=foreign),
+                tax_evidence=_tax_evidence(tmp_path, cohort, version=foreign),
                 mcp_evidence=_mcp_evidence(),
                 acquisition=_acquisition(),
                 destination=_destination(cohort),
@@ -495,12 +533,13 @@ def test_isolation_fields_missing_from_capture_is_an_instructive_refusal(tmp_pat
         _tax_evidence_from_mapping,
     )
 
-    tax_mapping = _tax_evidence(tmp_path).to_jsonable()
+    cohort = _release_cohort(tmp_path / "cohort")
+    tax_mapping = _tax_evidence(tmp_path, cohort).to_jsonable()
     del tax_mapping["checkout_imports_removed"]
     with pytest.raises(EvidenceCohortBindingError, match="isolation field"):
         _tax_evidence_from_mapping(json.loads(json.dumps(tax_mapping)))
 
-    tax_mapping = _tax_evidence(tmp_path).to_jsonable()
+    tax_mapping = _tax_evidence(tmp_path, cohort).to_jsonable()
     del tax_mapping["ambient_product_executables_removed"]
     with pytest.raises(EvidenceCohortBindingError, match="isolation field"):
         _tax_evidence_from_mapping(json.loads(json.dumps(tax_mapping)))
@@ -516,10 +555,12 @@ def test_cli_refuses_a_version_mismatched_capture_against_the_cohort(tmp_path: P
     import json
 
     cohort_dir = tmp_path / "cohort"
-    _release_cohort(cohort_dir)
+    cohort = _release_cohort(cohort_dir)
     tax_json = tmp_path / "tax-evidence.json"
     mcp_json = tmp_path / "mcp-evidence.json"
-    tax_json.write_text(json.dumps(_tax_evidence(tmp_path, version="0.1.0").to_jsonable()), encoding="utf-8")
+    tax_json.write_text(
+        json.dumps(_tax_evidence(tmp_path, cohort, version="0.1.0").to_jsonable()), encoding="utf-8"
+    )
     mcp_json.write_text(json.dumps(_mcp_evidence().to_jsonable()), encoding="utf-8")
     evidence_dir = tmp_path / "distribution-install-readiness"
 
@@ -558,7 +599,7 @@ def test_destination_version_mismatch_is_refused(tmp_path: Path) -> None:
         build_installed_oracle_evidence(
             row_id="python-macos-arm64",
             cohort=cohort,
-            tax_evidence=_tax_evidence(tmp_path),
+            tax_evidence=_tax_evidence(tmp_path, cohort),
             mcp_evidence=_mcp_evidence(),
             acquisition=_acquisition(),
             destination=DestinationIdentity(kind="pypi-index-install", locator="venv", version="9.9.9"),

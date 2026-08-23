@@ -41,6 +41,7 @@ from dev._paths import UTF_8
 
 from ._command import CommandResult
 from ._hashing import sha256_path
+from ._installed_wheel_binding import installed_wheel_payload_sha256, sealed_wheel_payload_sha256
 from .cohort_manifest import LoadedReleaseCohort
 from .evidence import (
     AcquisitionIdentity,
@@ -185,6 +186,37 @@ def _assert_oracle_bound_to_cohort(
             "this cohort's build. Re-run the installed oracles against the cohort under test before "
             "emitting evidence.",
         )
+    records = {record.name: record for record in cohort.manifest.artifacts}
+    expected = {
+        "cohort_source_commit": cohort.manifest.source.commit,
+        "cohort_manifest_sha256": records["python-cohort-manifest"].sha256,
+        "cohort_root_wheel_sha256": records["cadrumo-wheel"].sha256,
+    }
+    observed = {
+        "cohort_source_commit": tax_evidence.cohort_source_commit,
+        "cohort_manifest_sha256": tax_evidence.cohort_manifest_sha256,
+        "cohort_root_wheel_sha256": tax_evidence.cohort_root_wheel_sha256,
+    }
+    if observed != expected:
+        raise EvidenceCohortBindingError(
+            f"installed oracle cohort provenance mismatch: expected {expected!r}, got {observed!r}",
+        )
+    executable = Path(tax_evidence.resolved_executable).resolve(strict=True)
+    actual_executable_sha256 = sha256_path(executable)
+    if actual_executable_sha256 != tax_evidence.executable_sha256:
+        raise EvidenceCohortBindingError(
+            "installed oracle executable digest mismatch: the captured executable was replaced "
+            "or the evidence was swapped before minting",
+        )
+    expected_payload_sha256 = sealed_wheel_payload_sha256(cohort.artifact("cadrumo-wheel"))
+    observed_payload_sha256 = installed_wheel_payload_sha256(executable)
+    if (
+        tax_evidence.installed_wheel_payload_sha256 != expected_payload_sha256
+        or observed_payload_sha256 != expected_payload_sha256
+    ):
+        raise EvidenceCohortBindingError(
+            "installed cadrumo payload does not match the exact sealed root wheel",
+        )
 
 
 def build_installed_oracle_evidence(
@@ -231,6 +263,11 @@ def build_installed_oracle_evidence(
         "requested_executable": tax_evidence.requested_executable,
         "resolved_executable": tax_evidence.resolved_executable,
         "version_output": tax_evidence.version_output,
+        "cohort_source_commit": tax_evidence.cohort_source_commit,
+        "cohort_manifest_sha256": tax_evidence.cohort_manifest_sha256,
+        "cohort_root_wheel_sha256": tax_evidence.cohort_root_wheel_sha256,
+        "executable_sha256": tax_evidence.executable_sha256,
+        "installed_wheel_payload_sha256": tax_evidence.installed_wheel_payload_sha256,
         "calculation_revision_id": tax_evidence.calculation_revision_id,
         "target_casilla": tax_evidence.target_casilla,
         "target_value": tax_evidence.target_value,
@@ -507,6 +544,11 @@ def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
         requested_executable=data["requested_executable"],
         resolved_executable=data["resolved_executable"],
         version_output=data["version_output"],
+        cohort_source_commit=data["cohort_source_commit"],
+        cohort_manifest_sha256=data["cohort_manifest_sha256"],
+        cohort_root_wheel_sha256=data["cohort_root_wheel_sha256"],
+        executable_sha256=data["executable_sha256"],
+        installed_wheel_payload_sha256=data["installed_wheel_payload_sha256"],
         storage_root=data["storage_root"],
         work_unit_id=data["work_unit_id"],
         calculation_revision_id=data["calculation_revision_id"],

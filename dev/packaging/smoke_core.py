@@ -20,6 +20,7 @@ from packaging.requirements import Requirement
 from dev._paths import UTF_8
 
 from ._distribution_names import normalise_distribution_name
+from ._hashing import sha256_path
 from ._smoke_common import (
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,
@@ -178,6 +179,9 @@ def main(argv: list[str] | None = None) -> int:
         venv_cadrumo_path(venv),
         storage_root=work_dir / "tax-oracle-state",
         work_dir=work_dir / "outside-checkout",
+        cohort_source_commit=cohort.source_commit,
+        cohort_manifest_sha256=sha256_path(cohort.manifest),
+        cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
     )
     record_proof("installed grounded Modelo 200 tax-work oracle")
     tax_evidence_path = work_dir / "installed-tax-oracle.json"

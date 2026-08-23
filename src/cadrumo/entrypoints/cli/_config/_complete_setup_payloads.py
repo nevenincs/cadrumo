@@ -1,6 +1,6 @@
 """Typed ``--json`` payload schema for ``aeat config profile complete-setup``.
 
-Registered with CommandSpec schema authority so the JSON-contract gate enumerates the
+Referenced as deferred public schema targets by production-authored CommandSpec so the JSON-contract gate enumerates the
 surface, and kept beside its CLI module so importing that module runs the
 decorator on the CLI build path.
 

@@ -2,7 +2,7 @@
 
 Each payload is a strict
 :class:`OutputSchema` subclass registered with
-CommandSpec schema authority on the shared
+production-authored CommandSpec as deferred public schema targets on the shared
 :class:`SchemaEnvelope` surface through
 :func:`_emit_envelope`.
 

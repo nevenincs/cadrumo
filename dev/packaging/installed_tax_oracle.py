@@ -8,6 +8,7 @@ the calculation response and the persisted public observation surface.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -27,6 +28,7 @@ if not __package__:
     __package__ = "dev.packaging"
 
 from ._command import CommandResult, run_command  # noqa: E402
+from ._installed_wheel_binding import installed_wheel_payload_sha256  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -79,6 +81,11 @@ class InstalledTaxEvidence:
     requested_executable: str
     resolved_executable: str
     version_output: str
+    cohort_source_commit: str
+    cohort_manifest_sha256: str
+    cohort_root_wheel_sha256: str
+    executable_sha256: str
+    installed_wheel_payload_sha256: str
     storage_root: str
     work_unit_id: str
     calculation_revision_id: str
@@ -374,6 +381,9 @@ def run_installed_tax_oracle(
     *,
     storage_root: Path,
     work_dir: Path,
+    cohort_source_commit: str,
+    cohort_manifest_sha256: str,
+    cohort_root_wheel_sha256: str,
     timeout_seconds: float = 180.0,
 ) -> InstalledTaxEvidence:
     """Execute the complete installed CLI oracle and return retained evidence."""
@@ -381,6 +391,8 @@ def run_installed_tax_oracle(
     resolved_cli = requested_cli.resolve(strict=True)
     if not resolved_cli.is_file():
         raise InstalledTaxOracleError(f"installed CLI is not a file: {resolved_cli}")
+    executable_sha256 = hashlib.sha256(resolved_cli.read_bytes()).hexdigest()
+    installed_payload_sha256 = installed_wheel_payload_sha256(resolved_cli)
     resolved_work_dir = work_dir.resolve()
     resolved_work_dir.mkdir(parents=True, exist_ok=True)
     environment = isolated_product_environment(storage_root)
@@ -474,6 +486,11 @@ def run_installed_tax_oracle(
         requested_executable=str(requested_cli),
         resolved_executable=str(resolved_cli),
         version_output=version.stdout.strip(),
+        cohort_source_commit=cohort_source_commit,
+        cohort_manifest_sha256=cohort_manifest_sha256,
+        cohort_root_wheel_sha256=cohort_root_wheel_sha256,
+        executable_sha256=executable_sha256,
+        installed_wheel_payload_sha256=installed_payload_sha256,
         storage_root=str(storage_root.resolve()),
         work_unit_id=work_unit_id,
         calculation_revision_id=calculation_revision_id,
@@ -494,6 +511,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--cli", required=True, type=Path, help="Absolute installed aeat executable.")
     parser.add_argument("--storage-root", required=True, type=Path, help="Fresh isolated product storage root.")
     parser.add_argument("--work-dir", required=True, type=Path, help="Execution cwd outside the source checkout.")
+    parser.add_argument("--cohort-source-commit", required=True)
+    parser.add_argument("--cohort-manifest-sha256", required=True)
+    parser.add_argument("--cohort-root-wheel-sha256", required=True)
     parser.add_argument("--timeout-seconds", type=float, default=180.0)
     parser.add_argument("--output", type=Path, help="Optional JSON evidence destination.")
     return parser
@@ -506,6 +526,9 @@ def main() -> int:
         args.cli,
         storage_root=args.storage_root,
         work_dir=args.work_dir,
+        cohort_source_commit=args.cohort_source_commit,
+        cohort_manifest_sha256=args.cohort_manifest_sha256,
+        cohort_root_wheel_sha256=args.cohort_root_wheel_sha256,
         timeout_seconds=args.timeout_seconds,
     )
     rendered = json.dumps(evidence.to_jsonable(), ensure_ascii=False, indent=2, sort_keys=True)

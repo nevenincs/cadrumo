@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for ``aeat app diagnostics`` commands.
 
 Every declared payload is an :class:`OutputSchema` subclass registered with
-CommandSpec schema authority for the local-only run-health diagnostic surface
+production-authored CommandSpec as deferred public schema targets for the local-only run-health diagnostic surface
 carried by :class:`SchemaEnvelope` through :func:`_emit_envelope`. These
 schemas project :class:`~application.diagnostics_run_health.RunHealthReport`,
 :class:`~application.diagnostics_run_health.LatencyReport`,

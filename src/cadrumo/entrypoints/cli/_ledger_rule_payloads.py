@@ -2,7 +2,7 @@
 
 Every declared payload is an
 :class:`OutputSchema` subclass registered with
-CommandSpec schema authority for the ledger rule
+production-authored CommandSpec as deferred public schema targets for the ledger rule
 command JSON-contract surface carried by
 :class:`SchemaEnvelope` through
 :func:`_emit_envelope`. These schemas are the CLI projection of the secure,

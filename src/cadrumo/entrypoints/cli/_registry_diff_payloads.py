@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for ``aeat app registry diff-revisions``.
 
 Each class declared here is a strict
-:class:`~core.json_contract.OutputSchema` subclass and is decorated
-with CommandSpec schema authority so the JSON-contract test suite can enumerate the
+:class:`~core.json_contract.OutputSchema` subclass and a deferred public schema
+target referenced by production-authored CommandSpec so the JSON-contract test suite can enumerate the
 ``registry.diff_revisions`` command surface.
 
 Field sets mirror :class:`~application.registry.RegistryRevisionDiffReport`
@@ -26,7 +26,7 @@ See Also:
         and legal refs are compared.
     :class:`~core.json_contract.OutputSchema`
         Strict base class for typed CLI JSON result payloads.
-    CommandSpec schema authority
+    Production-authored CommandSpec deferred schema target
         Schema registry hook used by the JSON-contract tests.
 """
 

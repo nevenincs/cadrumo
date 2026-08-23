@@ -16,9 +16,9 @@ The ``invoice`` noun-group is *not* here: every invoice payload lives in
 :mod:`~entrypoints.cli._ledger_catalogue_invoice_payloads`, which projects the
 sole invoice aggregate.
 
-Each class is a strict :class:`~core.json_contract.OutputSchema`
-subclass, decorated with CommandSpec schema authority
-so the JSON-contract test suite can enumerate the surface. Re-imported into
+Each class is a strict :class:`~core.json_contract.OutputSchema` subclass and
+a deferred public schema target referenced by production-authored CommandSpec.
+Re-imported into
 :mod:`~entrypoints.cli._ledger_payloads` so existing ``from ._ledger_payloads import
 InventoryLedgerPayload`` (etc.) call sites keep resolving unchanged.
 """

@@ -2,7 +2,7 @@
 
 Each class declared here is a strict
 :class:`OutputSchema` subclass decorated with
-CommandSpec schema authority so the JSON-contract
+production-authored CommandSpec as a deferred public schema target so the JSON-contract
 test suite can enumerate every review-command surface. The typed result enters
 the shared :class:`SchemaEnvelope` through
 :func:`_emit_envelope`.

@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for registry CLI commands.
 
 Each class declared here is a strict
-:class:`OutputSchema` subclass and is decorated
-with CommandSpec schema authority so the
+:class:`OutputSchema` subclass and a deferred public schema target referenced
+by production-authored CommandSpec so the
 JSON-contract test suite can enumerate every registry command surface this
 module covers.
 

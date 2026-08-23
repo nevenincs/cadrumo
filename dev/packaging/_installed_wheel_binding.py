@@ -1,0 +1,77 @@
+"""Bind an installed CLI environment to the exact immutable root wheel payload."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import subprocess
+import zipfile
+from pathlib import Path, PurePosixPath
+
+from dev._paths import UTF_8
+
+_GENERATED_METADATA = frozenset({"INSTALLER", "RECORD", "direct_url.json", "REQUESTED"})
+
+
+def _projection_digest(rows: list[tuple[str, str]]) -> str:
+    payload = json.dumps(sorted(rows), ensure_ascii=False, separators=(",", ":")).encode(UTF_8)
+    return hashlib.sha256(payload).hexdigest()
+
+
+def sealed_wheel_payload_sha256(wheel: Path) -> str:
+    """Return the canonical digest of immutable install payload members."""
+    rows: list[tuple[str, str]] = []
+    with zipfile.ZipFile(wheel) as archive:
+        for info in archive.infolist():
+            path = PurePosixPath(info.filename)
+            if info.is_dir() or path.name in _GENERATED_METADATA:
+                continue
+            rows.append((path.as_posix(), hashlib.sha256(archive.read(info)).hexdigest()))
+    return _projection_digest(rows)
+
+
+def installed_python_for_cli(cli: Path) -> Path:
+    """Resolve the interpreter that owns an installed console entry point."""
+    resolved = cli.resolve(strict=True)
+    if resolved.suffix.lower() == ".exe":
+        candidate = resolved.parent / "python.exe"
+        return candidate.resolve(strict=True)
+    first_line = resolved.read_bytes().splitlines()[0].decode(UTF_8)
+    if not first_line.startswith("#!"):
+        raise RuntimeError(f"installed CLI has no absolute Python shebang: {resolved}")
+    interpreter = first_line[2:].strip().split(" ", 1)[0]
+    return Path(interpreter).resolve(strict=True)
+
+
+def installed_wheel_payload_sha256(cli: Path) -> str:
+    """Hash the installed ``cadrumo`` payload through the CLI-owning interpreter."""
+    python = installed_python_for_cli(cli)
+    script = r'''
+import hashlib, importlib.metadata, json
+generated = {"INSTALLER", "RECORD", "direct_url.json", "REQUESTED"}
+dist = importlib.metadata.distribution("cadrumo")
+rows = []
+for item in dist.files or ():
+    path = item.as_posix()
+    if item.name in generated or path.endswith(".pyc") or "/__pycache__/" in path:
+        continue
+    resolved = dist.locate_file(item).resolve(strict=True)
+    if resolved.is_file():
+        rows.append((path, hashlib.sha256(resolved.read_bytes()).hexdigest()))
+payload = json.dumps(sorted(rows), ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+print(hashlib.sha256(payload).hexdigest())
+'''
+    completed = subprocess.run(  # noqa: S603 - interpreter is resolved from the installed CLI.
+        [str(python), "-I", "-c", script],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding=UTF_8,
+        errors="strict",
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(f"could not attest installed cadrumo payload: {completed.stderr.strip()}")
+    digest = completed.stdout.strip()
+    if len(digest) != 64:
+        raise RuntimeError(f"installed payload returned invalid digest: {digest!r}")
+    return digest

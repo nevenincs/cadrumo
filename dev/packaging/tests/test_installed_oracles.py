@@ -371,6 +371,9 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
         cohort.cli,
         storage_root=cohort.work_dir / "cli-state",
         work_dir=execution_root / "cli",
+        cohort_source_commit=cohort.source_commit,
+        cohort_manifest_sha256=sha256_path(cohort.evidence_path),
+        cohort_root_wheel_sha256=cohort.artifact_sha256,
         timeout_seconds=240.0,
     )
     mcp_evidence = run_installed_mcp_oracle(

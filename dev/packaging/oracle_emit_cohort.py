@@ -148,6 +148,7 @@ def run_oracle_emit_cohort(
         mcp_server=mcp_server,
         storage_root=work / "oracle-state",
         work_dir=work / "oracle-work",
+        cohort=python_cohort,
         timeout_seconds=timeout_seconds,
     )
 

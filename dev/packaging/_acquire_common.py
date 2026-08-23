@@ -510,6 +510,7 @@ def run_installed_behavior_oracles(
     mcp_server: Path,
     storage_root: Path,
     work_dir: Path,
+    cohort: PythonCohort,
     timeout_seconds: float = 180.0,
 ) -> tuple[InstalledTaxEvidence, InstalledMcpEvidence]:
     """Repeat installed CLI and MCP tax work through the canonical oracles.
@@ -525,6 +526,7 @@ def run_installed_behavior_oracles(
         mcp_server: The acquired ``cadrumo-mcp`` executable to drive.
         storage_root: A fresh isolated storage root (both oracles get subdirs).
         work_dir: An execution cwd outside any source checkout.
+        cohort: The exact immutable Python cohort whose installed bytes are exercised.
         timeout_seconds: Per-command timeout for the oracle subprocesses.
 
     Returns:
@@ -540,6 +542,9 @@ def run_installed_behavior_oracles(
         cli,
         storage_root=storage_root / "tax-state",
         work_dir=work_dir / "tax-work",
+        cohort_source_commit=cohort.source_commit,
+        cohort_manifest_sha256=sha256_path(cohort.manifest),
+        cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
         timeout_seconds=timeout_seconds,
     )
     if tax_evidence.target_value != EXPECTED_ORACLE_TARGET_VALUE:

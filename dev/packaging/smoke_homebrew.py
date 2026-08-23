@@ -222,7 +222,7 @@ def run_homebrew_smoke(
     """
     formula_source = formula_path.resolve(strict=True)
     cohort = cohort_dir.resolve(strict=True)
-    load_python_cohort(cohort)
+    python_cohort = load_python_cohort(cohort)
     brew = brew_path.expanduser().absolute()
     if not brew.is_file():
         raise SystemExit(f"Homebrew executable is not a file: {brew}")
@@ -417,6 +417,12 @@ def run_homebrew_smoke(
                 str(run_root / "tax-state"),
                 "--work-dir",
                 str(run_root / "tax-work"),
+                "--cohort-source-commit",
+                python_cohort.source_commit,
+                "--cohort-manifest-sha256",
+                sha256_path(python_cohort.manifest),
+                "--cohort-root-wheel-sha256",
+                python_cohort.sha256["cadrumo"],
                 "--output",
                 str(tax_evidence),
             ],

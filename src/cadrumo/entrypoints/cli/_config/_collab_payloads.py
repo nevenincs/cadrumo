@@ -1,7 +1,8 @@
 """Typed ``--json`` payload schemas for the ``aeat config collab recipient`` CLI.
 
 Each class declared here is a strict :class:`~core.json_contract.OutputSchema`
-subclass and is decorated with CommandSpec schema authority so
+subclass and is referenced as a deferred public schema target by
+production-authored CommandSpec so
 the JSON-contract test suite can enumerate every collab-recipient command surface this
 module covers. Field sets mirror :class:`~application.modelo.RecipientFingerprintRecord`
 projected to plain JSON; the private key never appears anywhere in this module (the
@@ -13,8 +14,8 @@ See Also:
         Application record shape these output rows project.
     :class:`~core.json_contract.OutputSchema`
         Base class for typed CLI JSON result payloads.
-    CommandSpec schema authority
-        Registry hook that publishes each command envelope schema.
+    CommandSpec schema target
+        Deferred public target that owns each command envelope schema.
     :mod:`~entrypoints.cli._config._collab`
         Command handlers that emit these payloads.
     :func:`~entrypoints.cli._common._emit_envelope`

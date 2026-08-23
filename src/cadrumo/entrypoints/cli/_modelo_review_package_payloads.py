@@ -1,7 +1,7 @@
 """Review-package build/verify CLI payload schemas.
 
 Strict :class:`~core.json_contract.OutputSchema` subclasses registered
-through CommandSpec schema authority for the ``aeat app
+as deferred public schema targets through production-authored CommandSpec for the ``aeat app
 modelo review-package build`` and ``aeat app modelo review-package verify``
 verbs. Kept in its own module (mirroring the ``_modelo_aux_payloads`` split
 for the evidence-bundle audit payloads) so the review-package CLI surface has

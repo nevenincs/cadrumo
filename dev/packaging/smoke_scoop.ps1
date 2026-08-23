@@ -326,6 +326,7 @@ function Get-ScoopCommandPath {
 
 function Invoke-InstalledOracle {
     param(
+        [Parameter(Mandatory = $true)][string]$SourceCohort,
         [Parameter(Mandatory = $true)]
         [string]$Prefix,
 
@@ -340,6 +341,9 @@ function Invoke-InstalledOracle {
     $taxEvidence = Join-Path $OutputDir "tax-evidence.json"
     $taxState = Join-Path $OutputDir "tax-state"
     $taxWork = Join-Path $OutputDir "tax-work"
+    $cohortManifest = (Resolve-Path (Join-Path $SourceCohort "python-cohort.json")).Path
+    $cohort = Get-Content -LiteralPath $cohortManifest -Raw | ConvertFrom-Json
+    $cohortManifestSha256 = (Get-FileHash -LiteralPath $cohortManifest -Algorithm SHA256).Hash.ToLowerInvariant()
 
     # The Scoop manifest's pre_install pinned the transitive closure through
     # `uv pip install --constraint constraints.txt`; assert the venv it produced
@@ -359,6 +363,9 @@ function Invoke-InstalledOracle {
             "--cli", $AeatCommand,
             "--storage-root", $taxState,
             "--work-dir", $taxWork,
+            "--cohort-source-commit", $cohort.source_commit,
+            "--cohort-manifest-sha256", $cohortManifestSha256,
+            "--cohort-root-wheel-sha256", $cohort.sha256.cadrumo,
             "--output", $taxEvidence
         ) -OutputPath (Join-Path $OutputDir "tax-oracle.log")
     }
@@ -536,6 +543,7 @@ function Invoke-HostSmoke {
         $prefix = (Resolve-Path ([string]$prefixOutput[0])).Path
         $aeat = Get-ScoopCommandPath -CommandName "aeat" -ScoopRoot $scoopRoot
         $oracleEvidence = Invoke-InstalledOracle `
+            -SourceCohort $SourceCohort `
             -Prefix $prefix `
             -AeatCommand $aeat `
             -OutputDir $runEvidence

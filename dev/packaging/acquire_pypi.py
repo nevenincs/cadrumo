@@ -218,6 +218,7 @@ def run_pypi_acquisition(
         mcp_server=mcp,
         storage_root=run_root / "oracle-state",
         work_dir=run_root / "oracle-work",
+        cohort=cohort,
         timeout_seconds=timeout_seconds,
     )
 

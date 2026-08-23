@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for ``aeat app maintenance`` commands.
 
 Every declared payload is an :class:`OutputSchema` subclass registered with
-CommandSpec schema authority and carried by :class:`SchemaEnvelope` through
+production-authored CommandSpec as deferred public schema targets and carried by :class:`SchemaEnvelope` through
 :func:`_emit_envelope`. These schemas project
 :class:`~application.user_profile.ProfileBundleExportReconciliation` -- the
 outcome of one crash-recovery sweep over the portable profile-bundle export

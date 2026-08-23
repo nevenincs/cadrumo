@@ -2,7 +2,7 @@
 
 Each command result is a strict
 :class:`OutputSchema` subclass registered by
-CommandSpec schema authority for a stable command path
+production-authored CommandSpec as deferred public schema targets for a stable command path
 and wrapped at emit time in
 :class:`SchemaEnvelope` through
 :func:`_emit_envelope`. This file is the CLI-side
