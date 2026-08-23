@@ -8388,3 +8388,46 @@ at-risk helper that asserts the ABSENT refusal declares its own value so it woul
 overridden the default) but it demonstrably fixed nothing, and a shared test fixture
 consumed tree-wide is the wrong place to leave an unproven change while a dozen agents
 are working in the same worktree.
+
+## What a failure count in this worktree actually measures
+
+Chasing an all-green state surfaced something worth writing down: in this tree, a large
+share of any failure count is other agents' work-in-progress, and the number moves under
+you while you read it.
+
+Three separate times a cluster that looked like a defect was a peer mid-edit:
+
+- A whole-suite run reported 784 failures. It had collected only 23,584 tests because 112
+  collection errors suppressed entire modules -- one of them a peer's uncommitted
+  `_producer_snapshot.py` carrying a literal syntax error (`6_deduc_...` as an
+  identifier), which broke every import of `cadrumo.application.filing`. The next run
+  collected 35,432 and reported 1,568. The second number is not a regression against the
+  first; the two measure different populations.
+- Eighty-four failures in the CLI and ledger paths -- 42 `RegistryLoadError` plus 42
+  `modelo.work.create` -- were ONE transient break: modelo 296 failing to compile while a
+  peer authored its perceptor projection. Two commits from them, eleven and twenty
+  minutes later, fixed it. Nothing in that cluster was ever mine to fix.
+- A parallel run aborted with `Different tests were collected between gw0 and gw3`,
+  because the tree changed between worker collections.
+
+So the honest reading is that a single number is a snapshot of a moving tree, not a
+property of the code. Twelve commits landed in one hour while this was being measured,
+seven of them from peers. What survives re-measurement is a defect; what evaporates was
+someone's uncommitted afternoon.
+
+The practical rules that fell out of it: re-measure before attributing anything, never
+compare two runs whose collected totals differ, check `git log --since` before calling a
+cluster a regression, and run sequentially (`-n0`) when the tree is churning, because
+xdist collection races produce errors that look like failures and are not.
+
+### The 157-occurrence verb
+
+The one finding this method DID produce is worth the contrast. `aeat app ledger list`
+crashed on every invocation -- the command spec declared a positional `record_id` the
+handler has no parameter for, so the verb never reached its body. It surfaced as the
+generic "unexpected internal error" envelope, which is why it read as a hundred-odd
+unrelated test failures instead of one dead verb. It was not peer churn: it survived
+re-measurement, it reproduced in isolation, and the argument it declared carried the
+REVIEW command's help key on a LIST command, appearing exactly once in the whole spec
+file. That is the shape of a real defect -- reproducible, attributable, and still there
+after the tree settles.
