@@ -3837,3 +3837,63 @@ the count** — worth recognising the pattern rather than re-diagnosing it each 
 
 **10546 of 11605 slots remain** across 125 records; 1059 modelled. T22012A00 and T22012A10
 still held back for colliding label keys.
+
+## 2026-08-23 — T22009000, and making the same mistake a third time
+
+### What landed
+
+Record **T22009000** — the *liquidación del grupo*: 63 casillas running from cuota íntegra
+through bonificaciones, deducciones por doble imposición and otras deducciones to cuota
+líquida, cuota diferencial and líquido a ingresar. Revision 1142 → **1205 casillas**,
+thirteen of 137 records.
+
+Suite: 10 failures. The one new entry is the known `test_loader_cache_isolation`
+parallel flake (11 pass single-process); a peer's m210 continuidad failure cleared.
+
+### I made the truncation mistake a third time — and the note did not stop me
+
+Last iteration's entry says, having made it twice in one pass: *never build a matcher
+from truncated output.* This iteration I built the label table's **keys** by transcribing
+them from a 150-character-truncated listing. **Six were subtly wrong** — `Cap III Tit VII`
+became `Cap III Tit VI`, `art 30 RDLEG 4/2004` became `art 30 LIS RDLeg 4/2004`, and so
+on.
+
+**What caught it was not the written lesson but an assertion in the code.** The label
+table refuses to fall back to Spanish and reports every unmapped tail, so six casillas
+could not be labelled and the generator stopped. The fix was to **dump the exact strings
+from the data** rather than retype them from a display.
+
+**The durable finding: writing a lesson down did not prevent me repeating it three
+iterations running. Only a mechanical check did. Put the check in the code, not in the
+notes.**
+
+### And the correction introduced a quieter defect that no gate caught
+
+Renaming those six table keys left **three translations attached to their old law
+references** — one key read `arts 31 y 32 LIS` while its English still said
+`art. 100.11 LIS`. Found by reading the diff, not by any gate, and realigned.
+
+**A key rename moves the key, not the value under it**, and a translation table has no way
+to notice its value no longer matches its key. Worth a check of its own if this pattern
+recurs: assert that a translation mentioning an article number mentions the *same* one as
+its key.
+
+### T22009001 not shipped, deliberately
+
+Casillas **02796 and 02797 have byte-identical descriptions**, both ending "Estado.", at
+adjacent offsets. The pair above them is the same concept split Estado / D. Forales, so
+AEAT repeated the wrong suffix — but which one is the foral column is not something the
+design states. Guessing would put a jurisdiction on a filed box on a neighbour's shape.
+The record is fully extracted, tiles clean, and decomposes with a single collision at
+exactly that pair; it waits for a resolution.
+
+### Stated in the stamp, because a complete record is not a working one
+
+This record is a **settlement chain** — cuota íntegra less bonificaciones gives cuota
+líquida, less retenciones gives cuota diferencial, and so on. **Not one of those relations
+is modelled.** Every step is declared as a box and none is computed.
+
+### Scale
+
+**10483 of 11605 slots remain** across 124 records; 1122 modelled. T22012A00, T22012A10
+and now T22009001 are held back.
