@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:8e5cebf9d3feeedd926dddebd682bc2ea74f9512944b83742337e6820e37b9ca'
+body_hash: 'sha256:574fe8790f9e23046fac2ac1b84ed0b68f6ebade38b5d536b792fe49979bc32d'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -64,7 +64,7 @@ Correct the nonconforming generated-resource design before any further command-l
 
 - [x] `W02.P03a.S54` - Atomically hard-cut the complete root, group, and leaf surface to distributed production-authored CommandSpec as sole structural authority, project runtime assembly, help, completion, census, schema, operator, MCP/HITL, execution policy, and write routing from specs, make handlers behavior-only, and delete callback/decorator authority, lazy and path mirrors, both runtime JSON readers, both development generators, ignore entries, cache-parity tests, and stale prose with no fallback, shim, or partial coexistence; `repository CLI command-authority surface`.
 - [x] `W02.P03a.S11` - Correct the reopened S11 execution and review evidence, preserving its latency observations while re-proving schema and operator-help discovery exclusively from production CommandSpec after the atomic cutover; `.vault/exec/2026-08-22-secure-storage-performance-hardening/ and .vault/audit/`.
-- [ ] `W02.P03a.S14` - Correct the open S14 evidence by rejecting the app-manifest reader and generator as nonconforming, then re-prove demand-loaded modelo, registry, ledger, live, maintenance, overview, review, diagnostics, and quickfile descendants exclusively from production CommandSpec after the atomic cutover; `.vault/exec/2026-08-22-secure-storage-performance-hardening/ and .vault/audit/`.
+- [x] `W02.P03a.S14` - Correct the open S14 evidence by rejecting the app-manifest reader and generator as nonconforming, then re-prove demand-loaded modelo, registry, ledger, live, maintenance, overview, review, diagnostics, and quickfile descendants exclusively from production CommandSpec after the atomic cutover; `.vault/exec/2026-08-22-secure-storage-performance-hardening/ and .vault/audit/`.
 - [ ] `W02.P03a.S55` - Add dynamic CommandSpec exact-set, uniqueness, parent-edge, target, locale-key, schema, policy, side-effect, performance-class, and write-route gates for every current and future root, group, and leaf, forbid every former structural authority and runtime artifact edge, and prove each detector with independently constructed missing, duplicate, orphan, malformed, forbidden-import, and undeclared-node negatives; `src/cadrumo/entrypoints/cli/tests/ and dev/ci/tests/`.
 - [ ] `W02.P03a.S56` - Prove clean-checkout direct-source and editable-install CLI assembly, help, completion, census, schema, operator, MCP/HITL, and write-routing behavior from tracked CommandSpec modules without generation or development imports, including explicit absence of both command JSON names and generator paths; `src/cadrumo/entrypoints/cli/tests/ and dev/packaging/`.
 - [ ] `W02.P03a.S57` - Prove direct-wheel, direct-sdist, and sdist-to-wheel contents and installed behavior include every production CommandSpec module, exclude both command JSON names and development generators, and materialize the complete localized root, group, and leaf surface with resolvable public handler and schema targets; `src/cadrumo/tests/test_wheel_content_boundary.py and dev/packaging/`.
