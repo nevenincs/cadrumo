@@ -63,6 +63,15 @@ _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
 #: of trailing BLANCOS. Proved in
 #: test_modelo_347_designs_are_boundary_compatible.py, which supplies the
 #: pairing this split needs.
+#: AND THE ROW UNDERSTATES THE WORK: modelo 347 spans a SECOND boundary this
+#: module does not report. Between the 2010 and 2011 designs AEAT widened
+#: IMPORTE TOTAL ANUAL on the declarante from 15 bytes to 16 and shifted
+#: everything after it by one (NUMERO TOTAL DE INMUEBLES 160 -> 161); the
+#: declarado shifts the same way. Eleven fields straddle. The detector cannot
+#: see it because its signals key on box numbers moving -- and these designs
+#: print none -- and on the field SET changing, which a one-byte widening
+#: leaves identical. So this revision needs THREE revisions, not two.
+#: Measured in test_modelo_347_second_undetected_boundary.py.
 #:
 #: `("322", "2008-2025")` became `("322", "2008-2023")`: the LATER of its two
 #: boundaries was split -- the 2024 design adds nine fields and revives
