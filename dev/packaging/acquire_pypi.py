@@ -229,9 +229,6 @@ def run_pypi_acquisition(
             "version": cohort.version,
             "sha256": {name: cohort.sha256[name] for name in PYTHON_COHORT_WHEEL_NAMES},
         },
-        # Not a cohort member: recorded separately, pinned to its own declared
-        # version, never digest-verified against the cohort manifest.
-        "harness": {"distribution": HARNESS_DISTRIBUTION, "version": harness_pin},
         "verified_wheels": {name: str(path) for name, path in verified.items()},
         "installed_tax_oracle": tax_evidence.to_jsonable(),
         "installed_mcp_oracle": mcp_evidence.to_jsonable(),

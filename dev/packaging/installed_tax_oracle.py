@@ -155,18 +155,10 @@ def isolated_product_environment(storage_root: Path) -> dict[str, str]:
             "CADRUMO_LOCAL_STORAGE_ROOT": str(resolved_root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(32),
-            # Pin the passphrase-backed file custody backend (the serving
-            # benchmark's established headless posture). The default AUTO
-            # backend probes the OS keyring first, and macOS Keychain ACLs
-            # are per-binary: once one oracle's python binary has minted the
-            # login-keychain master-key item, a SECOND binary (the uvx-
-            # provisioned marketplace runtime) reading the same item blocks
-            # forever on an authorization dialog a headless runner can never
-            # show - the reproducible macOS mutate-ceiling breach diagnosed
-            # by the worker-stack capture (find_generic_password <-
-            # _read_stored_master_key). File backend also keeps oracle runs
-            # from writing real master keys into the host keychain at all.
-            "CADRUMO_SECRET_STORE_BACKEND": "file",
+            # Packaging oracles use an isolated disposable root and explicitly
+            # select the non-keychain test posture. This avoids host keyring
+            # prompts without reviving the retired file-backend contract.
+            "CADRUMO_SECRET_STORE_BACKEND": "unsecured",
             "PYTHONIOENCODING": _UTF_8,
         },
     )

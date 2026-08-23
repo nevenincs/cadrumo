@@ -268,7 +268,7 @@ env = {
     "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
     # Headless custody: no keyring exists in the container; pin the
     # passphrase-backed file backend like every other smoke lane.
-    "CADRUMO_SECRET_STORE_BACKEND": "file",
+    "CADRUMO_SECRET_STORE_BACKEND": "unsecured",
 }
 create = run(
     [

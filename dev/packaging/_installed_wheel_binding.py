@@ -46,6 +46,8 @@ def assert_archive_members_match_extraction(archive_path: Path, extracted_root: 
             if hashlib.sha256(target.read_bytes()).hexdigest() != expected:
                 raise RuntimeError(f"extracted archive member digest drifted: {member}")
             rows.append((member.as_posix(), expected))
+    if not rows:
+        raise RuntimeError("sealed archive has no immutable members to bind")
     return _projection_digest(rows)
 
 
@@ -65,7 +67,7 @@ def installed_python_for_cli(cli: Path) -> Path:
 def installed_distribution_payload_sha256(cli: Path, distribution: str) -> str:
     """Hash one installed distribution through the executable-owning interpreter."""
     python = installed_python_for_cli(cli)
-    script = r'''
+    script = r"""
 import hashlib, importlib.metadata, json
 generated = {"INSTALLER", "RECORD", "direct_url.json", "REQUESTED"}
 dist = importlib.metadata.distribution(__import__("sys").argv[1])
@@ -79,7 +81,7 @@ for item in dist.files or ():
         rows.append((path, hashlib.sha256(resolved.read_bytes()).hexdigest()))
 payload = json.dumps(sorted(rows), ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 print(hashlib.sha256(payload).hexdigest())
-'''
+"""
     completed = subprocess.run(  # noqa: S603 - interpreter is resolved from the installed CLI.
         [str(python), "-I", "-c", script, distribution],
         check=False,

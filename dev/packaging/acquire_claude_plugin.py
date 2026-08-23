@@ -2,7 +2,7 @@
 
 This post-publication check adds the PUBLIC Claude plugin marketplace source,
 installs the Cadrumo plugin through Claude Code, proves the plugin's retained
-three-wheel cohort matches the promoted cohort byte-for-byte, and repeats the
+closed-world cohort matches the promoted cohort byte-for-byte, and repeats the
 grounded MCP tax-work oracle against the plugin-declared ``uvx`` launch. It
 refuses instructively when Claude Code is unavailable or the public marketplace
 does not yet carry the plugin (implements post-release-distribution plan rows

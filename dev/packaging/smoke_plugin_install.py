@@ -1,7 +1,7 @@
 """Install the cohort-bound Claude plugin and prove its real MCP behavior.
 
 The marketplace plugin is the acquisition surface: it carries the exact tested
-three-wheel cohort and launches that cohort through ``uvx``. This smoke installs
+closed-world cohort and launches that cohort through ``uvx``. This smoke installs
 the generated marketplace through Claude Code, reads the installed declaration,
 then drives the declaration directly through the public MCP protocol. Tax truth
 comes from raw initialize/list/call results checked by the shared installed MCP

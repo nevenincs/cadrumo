@@ -36,7 +36,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 
 from dev._paths import UTF_8
 
@@ -273,10 +273,9 @@ def _assert_mcp_oracle_bound_to_cohort(
     ):
         raise EvidenceCohortBindingError("installed MCP server payload is not the exact sealed harness wheel")
     path_digest = hashlib.sha256(str(sibling_cli).encode(UTF_8)).hexdigest()
-    if (
-        frozenset(mcp_evidence.invoked_cli_sha256_by_command) != _MCP_ATTESTED_COMMAND_KEYS
-        or set(mcp_evidence.invoked_cli_sha256_by_command.values()) != {mcp_evidence.invoked_cli_sha256}
-    ):
+    if frozenset(mcp_evidence.invoked_cli_sha256_by_command) != _MCP_ATTESTED_COMMAND_KEYS or set(
+        mcp_evidence.invoked_cli_sha256_by_command.values()
+    ) != {mcp_evidence.invoked_cli_sha256}:
         raise EvidenceCohortBindingError("MCP command telemetry does not converge on one CLI identity")
     if mcp_evidence.invoked_cli_sha256 != path_digest:
         raise EvidenceCohortBindingError("MCP telemetry names a different installed CLI path")
@@ -341,6 +340,7 @@ def build_installed_oracle_evidence(
         "source_refs": list(tax_evidence.source_refs),
         "notice_codes": list(tax_evidence.notice_codes),
     }
+    observations: dict[str, JsonValue]
     if mcp_evidence is None:
         isolation = ExecutionIsolation(
             # Derived from what the oracle actually recorded, not asserted: if a
@@ -357,7 +357,7 @@ def build_installed_oracle_evidence(
             "the lane ships no MCP leg: cadrumo-mcp is not part of this distribution",
             "every persisted observation carried legal and source grounding",
         )
-        observations: dict[str, Any] = {"cli_oracle": cli_observations, "mcp_oracle": None}
+        observations = {"cli_oracle": cli_observations, "mcp_oracle": None}
     else:
         isolation = ExecutionIsolation(
             # Derived from what the oracles actually recorded, not asserted: if a future
@@ -476,7 +476,7 @@ def build_client_evidence(
         installed_executables=(_installed_executable(_MCP_EXECUTABLE_NAME, mcp_evidence.resolved_executable),),
     )
     _assert_mcp_oracle_bound_to_cohort(cohort=cohort, mcp_evidence=mcp_evidence, require_mcpb=True)
-    observations: dict[str, Any] = {"mcp_oracle": _mcp_observations(mcp_evidence)}
+    observations: dict[str, JsonValue] = {"mcp_oracle": _mcp_observations(mcp_evidence)}
     if validated_real_client_session is not None:
         observations["real_client_session"] = validated_real_client_session.model_dump(mode="json")
     result = ResultIdentity(

@@ -1,7 +1,7 @@
 """Bind the installed CLI and MCP tax oracles to one real wheel cohort.
 
-The test builds one committed three-wheel cohort plus the sibling
-``cadrumo-harness`` wheel that now carries the MCP server, installs them once
+The test builds one closed-world cohort including the exact
+``cadrumo-harness`` wheel that carries the MCP server, installs it once
 into a single environment, records the installed metadata origins and hashes,
 then runs both public tax-work oracles from that same environment. This closes
 the gap where independently passing probes could accidentally exercise
@@ -57,9 +57,8 @@ _DISTRIBUTIONS = (
     "cadrumo-data-manuals",
     "cadrumo-data-official",
 )
-#: The sibling agent-harness distribution. It is versioned independently of the
-#: command/data cohort, so it is probed on its own rather than folded into the
-#: one-version cohort assertions below.
+#: The independently versioned harness cohort member is probed separately from
+#: the root/data members' shared-version assertions below.
 _HARNESS_DISTRIBUTION = "cadrumo-harness"
 _HARNESS_WHEEL_GLOB = "cadrumo_harness-*.whl"
 _REQUIREMENT_NAME_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
@@ -159,24 +158,8 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         source_commit = supplied.source_commit
         root_wheel = supplied.root_wheel
         data_wheels = supplied.companion_wheels
-        artifact_sha256 = {
-            "cadrumo": supplied.sha256["cadrumo"],
-            "cadrumo-data-manuals": supplied.sha256["cadrumo-data-manuals"],
-            "cadrumo-data-official": supplied.sha256["cadrumo-data-official"],
-        }
-        # The harness is not a cohort member, so a supplied cohort directory may
-        # or may not carry its wheel. Prefer the supplied one; otherwise build it
-        # from the SAME source commit the supplied cohort was built from, never
-        # from the shared working tree.
-        prebuilt_harness = scan_directory(cohort_dir, pattern=_HARNESS_WHEEL_GLOB)
-        if len(prebuilt_harness) == 1:
-            harness_wheel = prebuilt_harness[0]
-        else:
-            harness_wheel = build_harness_wheel(
-                work_dir,
-                uv,
-                build_root=extract_source_commit(_REPO_ROOT, work_dir, source_commit),
-            )
+        artifact_sha256 = dict(supplied.sha256)
+        harness_wheel = supplied.harness_wheel
     else:
         source_commit_result = run_checked(["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT)
         source_commit = source_commit_result.stdout.strip()
@@ -189,7 +172,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         data_wheels = (built_data_wheels[0], built_data_wheels[1])
         cohort_dir = work_dir / "python-cohort"
         cohort_dir.mkdir()
-        for artifact in (root_wheel, *data_wheels):
+        for artifact in (root_wheel, harness_wheel, *data_wheels):
             shutil.copy2(artifact, cohort_dir / artifact.name)
         run_checked([uv, "build", "--sdist", "--out-dir", str(cohort_dir)], cwd=build_root)
         for project in ("cadrumo_data_manuals", "cadrumo_data_official"):
@@ -205,9 +188,25 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
                 ],
                 cwd=build_root,
             )
+        run_checked(
+            [
+                uv,
+                "build",
+                "--sdist",
+                "--project",
+                str(build_root / "packaging" / "cadrumo_harness"),
+                "--out-dir",
+                str(cohort_dir),
+            ],
+            cwd=build_root,
+        )
         artifacts = {
             "cadrumo": root_wheel.name,
             "cadrumo-sdist": next(iter_directory(cohort_dir, pattern="cadrumo-*.tar.gz")).name,
+            "cadrumo-harness": harness_wheel.name,
+            "cadrumo-harness-sdist": next(
+                iter_directory(cohort_dir, pattern="cadrumo_harness-*.tar.gz"),
+            ).name,
             "cadrumo-data-manuals": data_wheels[0].name,
             "cadrumo-data-manuals-sdist": next(
                 iter_directory(cohort_dir, pattern="cadrumo_data_manuals-*.tar.gz"),
@@ -226,6 +225,11 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         )
         version = project_metadata["project"]["version"]
         assert isinstance(version, str)
+        harness_metadata = tomllib.loads(
+            (build_root / "packaging" / "cadrumo_harness" / "pyproject.toml").read_text(encoding="utf-8"),
+        )
+        harness_version = harness_metadata["project"]["version"]
+        assert isinstance(harness_version, str)
         _write_evidence(
             cohort_dir / "python-cohort.json",
             {
@@ -233,6 +237,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
                 "sha256": {name: sha256_path(cohort_dir / filename) for name, filename in artifacts.items()},
                 "source_commit": source_commit,
                 "version": version,
+                "harness_version": harness_version,
                 "command_spec_attestation": _attest_installed_command_specs(
                     root_wheel,
                     cohort_dir / artifacts["cadrumo-sdist"],
@@ -246,11 +251,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         supplied = load_python_cohort(cohort_dir)
         root_wheel = supplied.root_wheel
         data_wheels = supplied.companion_wheels
-        artifact_sha256 = {
-            "cadrumo": supplied.sha256["cadrumo"],
-            "cadrumo-data-manuals": supplied.sha256["cadrumo-data-manuals"],
-            "cadrumo-data-official": supplied.sha256["cadrumo-data-official"],
-        }
+        artifact_sha256 = dict(supplied.sha256)
 
     venv = create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
     run_checked(
@@ -373,13 +374,17 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
         work_dir=execution_root / "cli",
         cohort_source_commit=cohort.source_commit,
         cohort_manifest_sha256=sha256_path(cohort.evidence_path),
-        cohort_root_wheel_sha256=cohort.artifact_sha256,
+        cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
         timeout_seconds=240.0,
     )
     mcp_evidence = run_installed_mcp_oracle(
         cohort.mcp_server,
         storage_root=cohort.work_dir / "mcp-state",
         work_dir=execution_root / "mcp",
+        cohort_source_commit=cohort.source_commit,
+        cohort_manifest_sha256=sha256_path(cohort.python_cohort.manifest),
+        cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
+        cohort_harness_wheel_sha256=cohort.artifact_sha256["cadrumo-harness"],
         timeout_seconds=240.0,
     )
 
@@ -440,7 +445,7 @@ def _as_plugin_cohort(cohort: PythonCohort) -> Any:
 def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
     installed_cohort: InstalledCohort,
 ) -> None:
-    """The generated marketplace launches its copied three-wheel cohort via uvx."""
+    """The generated marketplace launches its exact closed-world cohort via uvx."""
     cohort = installed_cohort
     marketplace = cohort.work_dir / "cohort-marketplace"
     manifest = materialise_marketplace(
@@ -485,6 +490,10 @@ def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
         environment_overrides=environment,
         storage_root=cohort.work_dir / "plugin-mcp-state",
         work_dir=cohort.work_dir / "plugin-outside-checkout",
+        cohort_source_commit=cohort.source_commit,
+        cohort_manifest_sha256=sha256_path(cohort.python_cohort.manifest),
+        cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
+        cohort_harness_wheel_sha256=cohort.artifact_sha256["cadrumo-harness"],
         timeout_seconds=420.0,
     )
     assert Path(evidence.resolved_executable) == Path(uvx).resolve()

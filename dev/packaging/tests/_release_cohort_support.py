@@ -35,6 +35,8 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
+from dev._paths import REPO_ROOT
+
 from ..cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     BuildIdentity,
@@ -87,8 +89,8 @@ def release_cohort(
                     package = "cadrumo" if name == "cadrumo-wheel" else "cadrumo_harness"
                     archive.writestr(f"{package}/_foreign_cohort_plant.py", payload_suffix)
         elif name == "mcpb":
-            with zipfile.ZipFile(path, "w"):
-                pass
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.write(REPO_ROOT / "pyproject.toml", "pyproject.toml")
         else:
             path.write_bytes(f"{index}:{name}:{payload_suffix}\n".encode())
         artifacts.append((name, kind, path))

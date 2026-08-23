@@ -9,10 +9,11 @@ values, and the produced record is validated by the tamper-evident
 
 from __future__ import annotations
 
+import hashlib
+import shutil
 import subprocess
 import sys
-import shutil
-import hashlib
+import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -22,7 +23,11 @@ from cadrumo.core import scan_directory
 
 from .._command import CommandResult, run_command
 from .._hashing import sha256_path
-from .._installed_wheel_binding import installed_distribution_payload_sha256, installed_wheel_payload_sha256
+from .._installed_wheel_binding import (
+    assert_archive_members_match_extraction,
+    installed_distribution_payload_sha256,
+    installed_wheel_payload_sha256,
+)
 from ..cohort_manifest import LoadedReleaseCohort
 from ..distribution_evidence_emit import (
     build_client_evidence,
@@ -151,9 +156,7 @@ def _mcp_evidence(cohort: LoadedReleaseCohort, *, client: bool = False) -> Insta
         runtime_server_executable=str(server),
         runtime_project_root=str(Path(__file__).resolve().parents[3]) if client else None,
         installed_cli_payload_sha256=installed_distribution_payload_sha256(cli, "cadrumo"),
-        installed_harness_payload_sha256=installed_distribution_payload_sha256(
-            server, "cadrumo-harness"
-        ),
+        installed_harness_payload_sha256=installed_distribution_payload_sha256(server, "cadrumo-harness"),
         checkout_imports_removed=True,
         ambient_product_executables_removed=True,
     )
@@ -169,6 +172,28 @@ def _destination(cohort: LoadedReleaseCohort) -> DestinationIdentity:
         locator="venv",
         version=cohort.manifest.version,
     )
+
+
+def test_mcpb_member_binding_rejects_empty_and_tampered_extractions(tmp_path: Path) -> None:
+    """An empty bundle or copied manifest with changed payload bytes cannot attest."""
+    extracted = tmp_path / "extracted"
+    extracted.mkdir()
+    empty = tmp_path / "empty.mcpb"
+    with zipfile.ZipFile(empty, "w"):
+        pass
+    with pytest.raises(RuntimeError, match="no immutable members"):
+        assert_archive_members_match_extraction(empty, extracted)
+
+    bundle = tmp_path / "sealed.mcpb"
+    with zipfile.ZipFile(bundle, "w") as archive:
+        archive.writestr("server/bootstrap.py", "sealed\n")
+    target = extracted / "server" / "bootstrap.py"
+    target.parent.mkdir(parents=True)
+    target.write_bytes(b"sealed\n")
+    assert len(assert_archive_members_match_extraction(bundle, extracted)) == 64
+    target.write_bytes(b"foreign\n")
+    with pytest.raises(RuntimeError, match="digest drifted"):
+        assert_archive_members_match_extraction(bundle, extracted)
 
 
 def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
@@ -190,20 +215,57 @@ def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
     assert evidence.result.status is EvidenceStatus.PASSED
     assert evidence.cohort.cohort_id == cohort.manifest.cohort_id
     assert evidence.destination.version == cohort.manifest.version
-    # Every captured CLI command became one transcript.
     assert len(evidence.commands) == len(tax.commands)
     assert all(transcript.exit_status == 0 for transcript in evidence.commands)
-    # Both installed executables are attested with a real on-disk digest.
     exe_names = {exe.name for exe in evidence.isolation.installed_executables}
     assert exe_names == {"aeat", "cadrumo-mcp"}
     assert all(len(exe.sha256) == 64 for exe in evidence.isolation.installed_executables)
-    # The MCP protocol proof is retained in observations, not fabricated as a command.
     mcp_oracle = evidence.result.observations["mcp_oracle"]
     cli_oracle = evidence.result.observations["cli_oracle"]
     assert isinstance(mcp_oracle, dict)
     assert isinstance(cli_oracle, dict)
     assert mcp_oracle["target_value"] == _TARGET_VALUE
     assert cli_oracle["target_value"] == _TARGET_VALUE
+
+
+def test_mcp_capture_with_swapped_harness_cohort_digest_is_refused(tmp_path: Path) -> None:
+    """Copied root fields cannot conceal a foreign harness artifact."""
+    from dataclasses import replace
+
+    from ..distribution_evidence_emit import EvidenceCohortBindingError
+
+    cohort = _release_cohort(tmp_path / "cohort")
+    forged = replace(_mcp_evidence(cohort), cohort_harness_wheel_sha256="0" * 64)
+    with pytest.raises(EvidenceCohortBindingError, match="provenance mismatch"):
+        build_installed_oracle_evidence(
+            row_id="python-linux-x86-64",
+            cohort=cohort,
+            tax_evidence=_tax_evidence(tmp_path, cohort),
+            mcp_evidence=forged,
+            acquisition=_acquisition(),
+            destination=_destination(cohort),
+        )
+
+
+def test_client_capture_with_foreign_bundle_root_is_refused(tmp_path: Path) -> None:
+    """A same-version server outside the extracted MCPB root cannot mint client evidence."""
+    from dataclasses import replace
+
+    from ..distribution_evidence_emit import EvidenceCohortBindingError
+
+    cohort = _release_cohort(tmp_path / "cohort")
+    forged = replace(_mcp_evidence(cohort, client=True), runtime_project_root=str(tmp_path / "cohort"))
+    with pytest.raises(EvidenceCohortBindingError, match="escapes the extracted MCPB root"):
+        build_client_evidence(
+            row_id="claude-desktop-mcpb",
+            cohort=cohort,
+            mcp_evidence=forged,
+            launch_transcript=_launch_transcript(tmp_path),
+            client=_client(),
+            acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
+            destination=_destination(cohort),
+            real_client_session=_real_client_session(),
+        )
 
 
 def test_cli_only_lane_records_an_absent_mcp_leg(tmp_path: Path) -> None:
@@ -344,7 +406,7 @@ def test_sdk_client_cannot_satisfy_a_required_claude_row(tmp_path: Path) -> None
         build_client_evidence(
             row_id="claude-desktop-mcpb",
             cohort=cohort,
-            mcp_evidence=_mcp_evidence(),
+            mcp_evidence=_mcp_evidence(cohort, client=True),
             launch_transcript=_launch_transcript(tmp_path),
             client=_sdk_client(),
             acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
@@ -358,7 +420,7 @@ def test_sdk_client_emits_under_a_distinct_artifact_serves_id(tmp_path: Path) ->
     evidence = build_client_evidence(
         row_id="claude-desktop-mcpb-artifact-serves",
         cohort=cohort,
-        mcp_evidence=_mcp_evidence(),
+        mcp_evidence=_mcp_evidence(cohort, client=True),
         launch_transcript=_launch_transcript(tmp_path),
         client=_sdk_client(),
         acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
@@ -375,7 +437,7 @@ def test_required_real_client_row_needs_a_real_session(tmp_path: Path) -> None:
         build_client_evidence(
             row_id="claude-desktop-mcpb",
             cohort=cohort,
-            mcp_evidence=_mcp_evidence(),
+            mcp_evidence=_mcp_evidence(cohort, client=True),
             launch_transcript=_launch_transcript(tmp_path),
             client=_client(),
             acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
@@ -400,7 +462,7 @@ def test_required_real_client_row_refuses_an_unsuccessful_session(tmp_path: Path
         build_client_evidence(
             row_id="claude-desktop-mcpb",
             cohort=cohort,
-            mcp_evidence=_mcp_evidence(),
+            mcp_evidence=_mcp_evidence(cohort, client=True),
             launch_transcript=_launch_transcript(tmp_path),
             client=_client(),
             acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
@@ -430,7 +492,7 @@ def test_client_row_uses_owned_launch_transcript_and_mcp_proof(tmp_path: Path) -
     evidence = build_client_evidence(
         row_id="claude-desktop-mcpb",
         cohort=cohort,
-        mcp_evidence=_mcp_evidence(),
+        mcp_evidence=_mcp_evidence(cohort, client=True),
         launch_transcript=_launch_transcript(tmp_path),
         client=_client(),
         acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
@@ -464,7 +526,7 @@ def test_emit_client_evidence_writes_flat_record(tmp_path: Path) -> None:
         directory=evidence_dir,
         row_id="claude-code-plugin",
         cohort=cohort,
-        mcp_evidence=_mcp_evidence(),
+        mcp_evidence=_mcp_evidence(cohort, client=True),
         launch_transcript=_launch_transcript(tmp_path),
         client=_client(),
         acquisition=AcquisitionIdentity(mechanism="claude-plugin", source="marketplace"),
@@ -492,7 +554,7 @@ def test_version_mismatched_capture_against_cohort_is_refused(tmp_path: Path) ->
             row_id="python-macos-arm64",
             cohort=cohort,
             tax_evidence=_tax_evidence(tmp_path, cohort, version="0.1.0"),
-            mcp_evidence=_mcp_evidence(),
+            mcp_evidence=_mcp_evidence(cohort),
             acquisition=_acquisition(),
             destination=_destination(cohort),
         )
@@ -517,7 +579,7 @@ def test_copied_cohort_fields_cannot_launder_a_foreign_same_version_install(tmp_
             row_id="python-windows-x86-64",
             cohort=cohort,
             tax_evidence=forged,
-            mcp_evidence=_mcp_evidence(),
+            mcp_evidence=_mcp_evidence(cohort),
             acquisition=_acquisition(),
             destination=_destination(cohort),
         )
@@ -539,7 +601,7 @@ def test_version_binding_matches_on_a_token_boundary_not_a_substring(tmp_path: P
                 row_id="python-macos-arm64",
                 cohort=cohort,
                 tax_evidence=_tax_evidence(tmp_path, cohort, version=foreign),
-                mcp_evidence=_mcp_evidence(),
+                mcp_evidence=_mcp_evidence(cohort),
                 acquisition=_acquisition(),
                 destination=_destination(cohort),
             )
@@ -566,7 +628,7 @@ def test_isolation_fields_missing_from_capture_is_an_instructive_refusal(tmp_pat
     with pytest.raises(EvidenceCohortBindingError, match="isolation field"):
         _tax_evidence_from_mapping(json.loads(json.dumps(tax_mapping)))
 
-    mcp_mapping = _mcp_evidence().to_jsonable()
+    mcp_mapping = _mcp_evidence(cohort).to_jsonable()
     del mcp_mapping["ambient_product_executables_removed"]
     with pytest.raises(EvidenceCohortBindingError, match="isolation field"):
         _mcp_evidence_from_mapping(json.loads(json.dumps(mcp_mapping)))
@@ -580,10 +642,8 @@ def test_cli_refuses_a_version_mismatched_capture_against_the_cohort(tmp_path: P
     cohort = _release_cohort(cohort_dir)
     tax_json = tmp_path / "tax-evidence.json"
     mcp_json = tmp_path / "mcp-evidence.json"
-    tax_json.write_text(
-        json.dumps(_tax_evidence(tmp_path, cohort, version="0.1.0").to_jsonable()), encoding="utf-8"
-    )
-    mcp_json.write_text(json.dumps(_mcp_evidence().to_jsonable()), encoding="utf-8")
+    tax_json.write_text(json.dumps(_tax_evidence(tmp_path, cohort, version="0.1.0").to_jsonable()), encoding="utf-8")
+    mcp_json.write_text(json.dumps(_mcp_evidence(cohort).to_jsonable()), encoding="utf-8")
     evidence_dir = tmp_path / "distribution-install-readiness"
 
     from ..distribution_evidence_emit import EvidenceCohortBindingError
@@ -622,7 +682,7 @@ def test_destination_version_mismatch_is_refused(tmp_path: Path) -> None:
             row_id="python-macos-arm64",
             cohort=cohort,
             tax_evidence=_tax_evidence(tmp_path, cohort),
-            mcp_evidence=_mcp_evidence(),
+            mcp_evidence=_mcp_evidence(cohort),
             acquisition=_acquisition(),
             destination=DestinationIdentity(kind="pypi-index-install", locator="venv", version="9.9.9"),
         )
