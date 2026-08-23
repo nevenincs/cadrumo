@@ -35,7 +35,6 @@ from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
-from .._machine_secret_contract import register_machine_secret_payload_model
 from ._secure_input import MachineSecretPayload
 
 if TYPE_CHECKING:
@@ -46,14 +45,11 @@ if TYPE_CHECKING:
     from ....application.user_profile import ProfileRecoveryEnrollment
 
 
-class _CreationSecrets(MachineSecretPayload):
+class ProfileCreationSecrets(MachineSecretPayload):
     """Strict machine-channel payload for profile creation."""
 
     passphrase: SecretStr
     passphrase_confirmation: SecretStr
-
-
-register_machine_secret_payload_model("config.profile.create", "passphrase", _CreationSecrets)
 
 
 def resolve_creation_passphrase(*, secrets_stdin: bool = False, secrets_fd: int | None = None) -> str:
@@ -72,7 +68,7 @@ def resolve_creation_passphrase(*, secrets_stdin: bool = False, secrets_fd: int 
 
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     if selection is not None:
-        secrets = read_machine_secret_payload(_CreationSecrets, selection=selection)
+        secrets = read_machine_secret_payload(ProfileCreationSecrets, selection=selection)
         first = secrets.passphrase.get_secret_value()
         if first != secrets.passphrase_confirmation.get_secret_value():
             raise CliRefusedBoundaryError(

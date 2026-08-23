@@ -1,9 +1,4 @@
-"""MCP projections of callback-attached CLI execution policy.
-
-The CLI callback is the sole command-risk authority. This module resolves a
-registry schema key to its declared CLI path, asks the live Click tree for the
-policy attached to that callback, and projects only the fields MCP needs.
-"""
+"""MCP projections of immutable, CommandSpec-owned execution policy."""
 
 from __future__ import annotations
 
@@ -15,7 +10,7 @@ _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, 
 
 
 class CommandPolicyProjection(BaseModel):
-    """SDK-independent MCP view of one live callback's execution policy."""
+    """SDK-independent MCP view of one spec-owned execution policy."""
 
     model_config = _STRICT_FROZEN
 
@@ -29,7 +24,7 @@ class CommandPolicyProjection(BaseModel):
 
 
 def project_command_policy(command_key: str, raw_policy: CommandExecutionPolicy) -> CommandPolicyProjection:
-    """Project one already-resolved live callback policy for MCP consumers."""
+    """Project one already-resolved CommandSpec policy for MCP consumers."""
     if not isinstance(raw_policy, CommandExecutionPolicy):
         raise TypeError("CLI policy resolver returned an invalid policy")
     classification = raw_policy.classification

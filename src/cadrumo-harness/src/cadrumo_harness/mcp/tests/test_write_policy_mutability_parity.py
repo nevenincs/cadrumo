@@ -8,7 +8,7 @@ declare risk-adjacent facts independently:
   is the one catastrophic-and-permanent mis-declaration, so it is cross-checked
   against the leaf as a TEST (not runtime code). Vacuously true today (no such
   verb is exposed), which is exactly the invariant it locks.
-- The write-policy parity: callback-attached policy owns both mutability and
+- The write-policy parity: CommandSpec policy owns both mutability and
   storage-route scope, so no read-only descriptor may declare a write route.
 """
 

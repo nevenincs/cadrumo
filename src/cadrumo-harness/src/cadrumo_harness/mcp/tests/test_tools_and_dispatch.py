@@ -165,7 +165,6 @@ _RETIRED_COMMAND_KEYS: tuple[str, ...] = (
     "config.rekey",
     "config.recovery",
     "config.recover",
-    "config.passphrase.change",
     "config.recovery.create",
     "config.recovery.rotate",
     "config.recovery.status",

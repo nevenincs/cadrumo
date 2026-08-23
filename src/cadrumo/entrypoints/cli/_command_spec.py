@@ -219,6 +219,13 @@ class DefaultKind(Enum):
     FACTORY = "factory"
 
 
+class MachineSecretChannelKind(Enum):
+    """Value-free semantic role of a canonical secret transport option."""
+
+    STDIN = "stdin"
+    FILE_DESCRIPTOR = "file-descriptor"
+
+
 @dataclass(frozen=True, slots=True)
 class ParameterDefault:
     """A required marker, immutable literal, or deferred default factory."""
@@ -289,6 +296,63 @@ class ParameterConstraint:
 
 
 @dataclass(frozen=True, slots=True)
+class MachineSecretFieldSpec:
+    """One value-free string field in a strict machine-secret payload."""
+
+    name: str
+    json_type: Literal["string"] = "string"
+
+    def __post_init__(self) -> None:
+        _require_identifier(self.name, field="machine-secret field name")
+
+
+@dataclass(frozen=True, slots=True)
+class MachineSecretConditionSpec:
+    """Public option-presence condition selecting a payload variant."""
+
+    option_name: str
+    presence: Literal["absent", "present"]
+
+    def __post_init__(self) -> None:
+        _require_identifier(self.option_name, field="machine-secret condition option")
+
+
+@dataclass(frozen=True, slots=True)
+class MachineSecretVariantSpec:
+    """One strict payload shape and its lazily resolved public model."""
+
+    key: str
+    fields: tuple[MachineSecretFieldSpec, ...]
+    model: DeferredTarget
+    condition: MachineSecretConditionSpec | None = None
+
+    def __post_init__(self) -> None:
+        _require_identifier(self.key, field="machine-secret variant key")
+        if not self.fields:
+            raise ValueError("machine-secret variant must declare at least one field")
+        names = tuple(field.name for field in self.fields)
+        if len(names) != len(set(names)):
+            raise ValueError("machine-secret variant fields must be unique")
+
+
+@dataclass(frozen=True, slots=True)
+class MachineSecretSpec:
+    """Complete immutable machine-secret authority for one command leaf."""
+
+    variants: tuple[MachineSecretVariantSpec, ...]
+
+    def __post_init__(self) -> None:
+        if not self.variants:
+            raise ValueError("machine-secret spec must declare at least one variant")
+        keys = tuple(variant.key for variant in self.variants)
+        if len(keys) != len(set(keys)):
+            raise ValueError("machine-secret variant keys must be unique")
+        targets = tuple(variant.model.identity for variant in self.variants)
+        if len(targets) != len(set(targets)):
+            raise ValueError("machine-secret payload model targets must be unique")
+
+
+@dataclass(frozen=True, slots=True)
 class ArgumentSpec:
     """One positional argument declaration, in command tuple order."""
 
@@ -330,6 +394,7 @@ class OptionSpec:
     envvar: tuple[str, ...] = ()
     eager: bool = False
     constraint: ParameterConstraint = ParameterConstraint()
+    machine_secret_channel: MachineSecretChannelKind | None = None
 
     kind: ParameterKind = "option"
 
@@ -353,6 +418,15 @@ class OptionSpec:
             raise ValueError("option environment variables must be unique")
         for variable in self.envvar:
             _require_token(variable, field="option environment variable")
+        if self.machine_secret_channel is MachineSecretChannelKind.STDIN and self.value.annotation != DeferredTarget(
+            "builtins", "bool"
+        ):
+            raise ValueError("stdin machine-secret channel must be boolean")
+        if (
+            self.machine_secret_channel is MachineSecretChannelKind.FILE_DESCRIPTOR
+            and self.value.annotation != DeferredTarget("builtins", "int")
+        ):
+            raise ValueError("file-descriptor machine-secret channel must be integer")
 
 
 type ParameterSpec = ArgumentSpec | OptionSpec
@@ -423,6 +497,7 @@ class CommandSpec:
     handler: LazyBinding | None
     result_schema: ResultSchemaSpec
     search_terms: tuple[str, ...] = ()
+    machine_secret: MachineSecretSpec | None = None
 
     def __post_init__(self) -> None:
         _require_identifier(self.key, field="command key")
@@ -458,6 +533,25 @@ class CommandSpec:
             raise ValueError("command option tokens must be unique")
         if any(not term.strip() for term in self.search_terms):
             raise ValueError("command search terms must be non-empty")
+        secret_channels = tuple(
+            parameter.machine_secret_channel
+            for parameter in self.parameters
+            if isinstance(parameter, OptionSpec) and parameter.machine_secret_channel is not None
+        )
+        if self.machine_secret is None and secret_channels:
+            raise ValueError("machine-secret channel parameters require a machine-secret spec")
+        if self.machine_secret is not None:
+            if self.kind != "leaf":
+                raise ValueError("machine-secret specs belong only to command leaves")
+            if (
+                secret_channels.count(MachineSecretChannelKind.STDIN) != 1
+                or secret_channels.count(MachineSecretChannelKind.FILE_DESCRIPTOR) != 1
+            ):
+                raise ValueError("machine-secret spec requires exactly one stdin and file-descriptor channel")
+            parameter_names = {parameter.name for parameter in self.parameters}
+            for variant in self.machine_secret.variants:
+                if variant.condition is not None and variant.condition.option_name not in parameter_names:
+                    raise ValueError("machine-secret condition must reference a command parameter")
 
 
 @dataclass(frozen=True, slots=True)

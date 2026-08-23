@@ -56,14 +56,14 @@ def annotations_for_command(
 ) -> McpAnnotations:
     """Build the MCP annotations for one command key.
 
-    Derived from the same callback-attached policy the HITL confirmation tier
+    Derived from the same CommandSpec-owned policy the HITL confirmation tier
     reads, so the client hint and server gate cannot drift.
 
     Args:
         command_key: The registry command key (e.g. ``"ledger.remove"``).
         mutability: The owning family's mutability from the manifest.
         title: A human-readable tool title.
-        policy: The callback-attached policy resolved from the live CLI path.
+        policy: The immutable policy resolved from the command specification.
 
     Returns:
         :class:`McpAnnotations` for the command's MCP descriptor.

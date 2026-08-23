@@ -8,6 +8,10 @@ from .._command_spec import (
     DeferredTarget,
     InvocationSpec,
     LazyBinding,
+    MachineSecretChannelKind,
+    MachineSecretFieldSpec,
+    MachineSecretSpec,
+    MachineSecretVariantSpec,
     OptionSpec,
     ParameterDefault,
     ResultSchemaSpec,
@@ -58,6 +62,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
                 help_key=TranslationKey("cli.config.custody.secrets_stdin_help"),
                 is_flag=True,
                 flag_value=True,
+                machine_secret_channel=MachineSecretChannelKind.STDIN,
             ),
             OptionSpec(
                 name="secrets_fd",
@@ -65,6 +70,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
                 value=ValueContract(DeferredTarget("builtins", "int")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.config.custody.secrets_fd_help"),
+                machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
             ),
             _OUTPUT_LANGUAGE,
         ),
@@ -73,6 +79,15 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
             DeferredTarget("cadrumo.entrypoints.cli._config._custody", "config_login")
         ),
         result_schema=_schema("ConfigLoginResult", "config.login"),
+        machine_secret=MachineSecretSpec(
+            (
+                MachineSecretVariantSpec(
+                    "passphrase",
+                    (MachineSecretFieldSpec("passphrase"),),
+                    DeferredTarget("cadrumo.entrypoints.cli._config._custody", "LoginSecrets"),
+                ),
+            )
+        ),
     ),
     CommandSpec(
         key="config_logout",

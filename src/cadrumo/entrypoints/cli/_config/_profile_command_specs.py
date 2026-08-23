@@ -10,6 +10,11 @@ from .._command_spec import (
     InvocationSpec,
     LazyBinding,
     LiteralValue,
+    MachineSecretChannelKind,
+    MachineSecretConditionSpec,
+    MachineSecretFieldSpec,
+    MachineSecretSpec,
+    MachineSecretVariantSpec,
     OptionSpec,
     ParameterConstraint,
     ParameterDefault,
@@ -62,6 +67,7 @@ def _option(
     flag: bool = False,
     multiple: bool = False,
     constraint: ParameterConstraint = ParameterConstraint(),
+    machine_secret_channel: MachineSecretChannelKind | None = None,
 ) -> OptionSpec:
     return OptionSpec(
         name,
@@ -73,6 +79,7 @@ def _option(
         flag_value=True if flag else None,
         multiple=multiple,
         constraint=constraint,
+        machine_secret_channel=machine_secret_channel,
     )
 
 
@@ -117,6 +124,7 @@ def _leaf(
     schema_name: str,
     policy: ExecutionPolicySpec,
     parameters: tuple[ArgumentSpec | OptionSpec, ...] = (),
+    machine_secret: MachineSecretSpec | None = None,
 ) -> CommandSpec:
     return CommandSpec(
         key,
@@ -130,6 +138,7 @@ def _leaf(
         policy,
         _handler(module, handler),
         _schema(schema_module, schema_name, key.replace("_", ".")),
+        machine_secret=machine_secret,
     )
 
 
@@ -216,12 +225,14 @@ _WIZARD_CREATE_PARAMETERS = (
         "cli.config.custody.secrets_stdin_help",
         default=False,
         flag=True,
+        machine_secret_channel=MachineSecretChannelKind.STDIN,
     ),
     _option(
         "secrets_fd",
         ("--secrets-fd",),
         _INT,
         "cli.config.custody.secrets_fd_help",
+        machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
     ),
 )
 
@@ -374,6 +385,21 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileCreateResult",
         BOOTSTRAP_WRITE,
         _WIZARD_CREATE_PARAMETERS,
+        MachineSecretSpec(
+            (
+                MachineSecretVariantSpec(
+                    "passphrase",
+                    (
+                        MachineSecretFieldSpec("passphrase"),
+                        MachineSecretFieldSpec("passphrase_confirmation"),
+                    ),
+                    DeferredTarget(
+                        "cadrumo.entrypoints.cli._config._scripted_registration",
+                        "ProfileCreationSecrets",
+                    ),
+                ),
+            )
+        ),
     ),
     _leaf(
         "config_profile_delete",
@@ -523,9 +549,32 @@ PROFILE_COMMAND_SPECS = (
                 "cli.config.custody.secrets_stdin_help",
                 default=False,
                 flag=True,
+                machine_secret_channel=MachineSecretChannelKind.STDIN,
             ),
-            _option("secrets_fd", ("--secrets-fd",), _INT, "cli.config.custody.secrets_fd_help"),
+            _option(
+                "secrets_fd",
+                ("--secrets-fd",),
+                _INT,
+                "cli.config.custody.secrets_fd_help",
+                machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
+            ),
             _LANGUAGE,
+        ),
+        MachineSecretSpec(
+            (
+                MachineSecretVariantSpec(
+                    "passphrase",
+                    (MachineSecretFieldSpec("passphrase"),),
+                    DeferredTarget("cadrumo.entrypoints.cli._config._restore_cli", "RestorePassphraseSecrets"),
+                    MachineSecretConditionSpec("artifact", "absent"),
+                ),
+                MachineSecretVariantSpec(
+                    "recovery",
+                    (MachineSecretFieldSpec("recovery_secret"),),
+                    DeferredTarget("cadrumo.entrypoints.cli._config._restore_cli", "RestoreRecoverySecrets"),
+                    MachineSecretConditionSpec("artifact", "present"),
+                ),
+            )
         ),
     ),
     _leaf(

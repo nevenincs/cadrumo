@@ -279,10 +279,14 @@ def preserve_requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
         canonical_path.append(command_name if isinstance(command_name, str) and command_name else token)
         command = child
         if not hasattr(command, "get_command"):
-            from ..schema_surface import normalise_cli_path_to_schema_key
+            from ._command_specs import COMMAND_GRAPH
 
+            spec = COMMAND_GRAPH.resolve_path(("aeat", *canonical_path))
+            identity = spec.result_schema.identity
+            if identity is None:
+                return None
             requested = RequestedCliLeaf(
-                subject_leaf_key=normalise_cli_path_to_schema_key(tuple(canonical_path)),
+                subject_leaf_key=identity,
                 canonical_cli_path=tuple(canonical_path),
             )
             ctx.meta[REQUESTED_CLI_LEAF_META_KEY] = requested
@@ -547,7 +551,7 @@ def emit_progress_line(line: str) -> None:
 
 @cache
 def _live_action_input_schema(command_key: str) -> VerbInputSchema:
-    """Resolve one action target through the live Click input-schema authority."""
+    """Resolve one action target through the command-spec input authority."""
     from ._verb_input_schema import build_verb_input_schemas
 
     return build_verb_input_schemas((command_key,))[command_key]
@@ -839,13 +843,15 @@ def _current_operator_surface_input_schemas() -> tuple[
 
 
 def _current_operator_surface_callback_aliases() -> dict[str, set[tuple[str, ...]]]:
-    """Index declared callback result-reuse paths by their canonical command identity."""
-    from ...entrypoints.schema_surface import CALLBACK_RESULT_REUSE_BY_CLI_PATH
+    """Return aliases derived from duplicate graph result identities."""
+    from ._command_specs import COMMAND_GRAPH
 
-    callback_aliases_by_key: dict[str, set[tuple[str, ...]]] = {}
-    for callback_path, command_key in CALLBACK_RESULT_REUSE_BY_CLI_PATH.items():
-        callback_aliases_by_key.setdefault(command_key, set()).add(callback_path)
-    return callback_aliases_by_key
+    paths: dict[str, list[tuple[str, ...]]] = {}
+    for node in COMMAND_GRAPH.nodes():
+        identity = node.spec.result_schema.identity
+        if identity is not None:
+            paths.setdefault(identity, []).append(node.path[1:])
+    return {identity: set(rows[1:]) for identity, rows in paths.items() if len(rows) > 1}
 
 
 def _current_operator_surface_primary_paths(
@@ -896,7 +902,7 @@ def _current_operator_surface_schema_rows(
                 subject_leaf_key=command_key,
                 canonical_cli_path=primary_paths[command_key],
                 alias_cli_paths=tuple(sorted(callback_aliases_by_key.get(command_key, set()))),
-                provenance="S05 live Click input-schema resolution with declared callback reuse",
+                provenance="CommandSpecGraph input-schema resolution",
             )
             for command_key in sorted(command_keys)
         ),

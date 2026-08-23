@@ -16,10 +16,9 @@ from pydantic_core import ValidationError
 from cadrumo.application import auth as auth_application
 
 from ..._errors import CliRefusedBoundaryError
-from ..._machine_secret_contract import registered_machine_secret_payload_models
 from .. import _certificate
 from .._auth_command_specs import AUTH_COMMAND_SPECS
-from .._certificate import _CertificateSecretSetSecrets, certificate_secret_set
+from .._certificate import CertificateSecretSetSecrets, certificate_secret_set
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -44,16 +43,13 @@ def _payload(field: str = "certificate_passphrase") -> bytes:
     return json.dumps({field: _SUPPLIED_VALUE}).encode()
 
 
-def test_certificate_payload_is_registered_with_the_hard_cut_field() -> None:
-    registered = registered_machine_secret_payload_models()
-
-    assert registered["config.auth.certificate.secret.set", "certificate"] is _CertificateSecretSetSecrets
-    assert tuple(_CertificateSecretSetSecrets.model_fields) == ("certificate_passphrase",)
-    payload = _CertificateSecretSetSecrets(certificate_passphrase=SecretStr("not-a-real-passphrase"))
+def test_certificate_payload_exposes_the_hard_cut_field() -> None:
+    assert tuple(CertificateSecretSetSecrets.model_fields) == ("certificate_passphrase",)
+    payload = CertificateSecretSetSecrets(certificate_passphrase=SecretStr("not-a-real-passphrase"))
     assert "not-a-real-passphrase" not in repr(payload)
 
     with pytest.raises(ValidationError):
-        _CertificateSecretSetSecrets.model_validate({"secret": "retired-field"})
+        CertificateSecretSetSecrets.model_validate({"secret": "retired-field"})
 
 
 def test_certificate_secret_set_declares_the_canonical_channel_pair_once() -> None:

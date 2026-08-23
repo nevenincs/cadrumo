@@ -15,7 +15,7 @@ the stdio transport. ``_server`` owns the per-session state instance and calls
 the decision function byte-identically on the direct call path and the
 ``execute`` meta path so the two cannot diverge.
 
-Mutability is read from callback-attached live command policy, never a keyed
+Mutability is read from immutable CommandSpec policy, never a keyed
 table or leaf-name heuristic: a call is mutating when its policy is not
 ``read_only``.
 """

@@ -9,6 +9,10 @@ from .._command_spec import (
     ExecutionPolicySpec,
     InvocationSpec,
     LazyBinding,
+    MachineSecretChannelKind,
+    MachineSecretFieldSpec,
+    MachineSecretSpec,
+    MachineSecretVariantSpec,
     OptionSpec,
     ParameterDefault,
     ResultSchemaSpec,
@@ -39,6 +43,7 @@ def _option(
     required: bool = False,
     flag: bool = False,
     multiple: bool = False,
+    machine_secret_channel: MachineSecretChannelKind | None = None,
 ) -> OptionSpec:
     return OptionSpec(
         name=name,
@@ -49,6 +54,7 @@ def _option(
         is_flag=flag,
         flag_value=True if flag else None,
         multiple=multiple,
+        machine_secret_channel=machine_secret_channel,
     )
 
 
@@ -98,6 +104,7 @@ def _leaf(
     schema: str,
     policy: ExecutionPolicySpec,
     parameters: tuple[ArgumentSpec | OptionSpec, ...] = (),
+    machine_secret: MachineSecretSpec | None = None,
 ) -> CommandSpec:
     return CommandSpec(
         key=key,
@@ -111,6 +118,7 @@ def _leaf(
         policy=policy,
         handler=_handler(module, handler),
         result_schema=_schema(schema, key.replace("_", ".")),
+        machine_secret=machine_secret,
     )
 
 
@@ -393,8 +401,33 @@ AUTH_COMMAND_SPECS = (
         ENCRYPTED_WRITE,
         (
             _option("name", ("--name",), _STR, "cli.config.auth.certificate.secret.set.name_help", required=True),
-            _option("secrets_stdin", ("--secrets-stdin",), _BOOL, "cli.config.custody.secrets_stdin_help", flag=True),
-            _option("secrets_fd", ("--secrets-fd",), _INT, "cli.config.custody.secrets_fd_help"),
+            _option(
+                "secrets_stdin",
+                ("--secrets-stdin",),
+                _BOOL,
+                "cli.config.custody.secrets_stdin_help",
+                flag=True,
+                machine_secret_channel=MachineSecretChannelKind.STDIN,
+            ),
+            _option(
+                "secrets_fd",
+                ("--secrets-fd",),
+                _INT,
+                "cli.config.custody.secrets_fd_help",
+                machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
+            ),
+        ),
+        MachineSecretSpec(
+            (
+                MachineSecretVariantSpec(
+                    "certificate",
+                    (MachineSecretFieldSpec("certificate_passphrase"),),
+                    DeferredTarget(
+                        "cadrumo.entrypoints.cli._config._certificate",
+                        "CertificateSecretSetSecrets",
+                    ),
+                ),
+            )
         ),
     ),
     _leaf(

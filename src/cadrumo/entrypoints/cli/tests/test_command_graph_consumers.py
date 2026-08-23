@@ -7,12 +7,25 @@ from pathlib import Path
 
 import pytest
 
+from ....core.config import override_settings
 from .._command_schema import command_registration_metadata, command_schema_refs
 from .._command_spec import OptionSpec
 from .._command_specs import COMMAND_GRAPH
 from .._verb_input_schema import build_verb_input_schemas, cli_path_for_command_key, is_exposable_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+@pytest.mark.parametrize("order", [("en", "es", "ca", "hu"), ("hu", "ca", "es", "en")])
+def test_command_metadata_locales_are_order_invariant(order: tuple[str, ...]) -> None:
+    observed: dict[str, tuple[object, object]] = {}
+    for language in order:
+        with override_settings(cadrumo_output_language=language):
+            row = next(item for item in command_registration_metadata() if item.command == "config.profile.create")
+        assert row.parameters_by_language[0][0] == language
+        assert row.help_by_language[0][0] == language
+        observed[language] = (row.parameters_by_language[0][1], row.help_by_language[0][1])
+    assert set(observed) == {"en", "es", "ca", "hu"}
 
 
 def test_schema_and_input_projections_are_exact_graph_sets() -> None:

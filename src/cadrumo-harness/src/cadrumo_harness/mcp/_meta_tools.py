@@ -243,7 +243,7 @@ class MetaDescribeResult(BaseModel):
     ``search`` returns a ranked page
     of decision hints, ``describe`` returns ONE command's whole shape by key - its
     per-verb ``input_schema``, its mutability annotations, its confirmation tier,
-    its callback-attached execution posture, its owning curated toolset, and exactly which
+    its CommandSpec-owned execution posture, its owning curated toolset, and exactly which
     personas may call it - so a model can inspect a verb fully before spending an
     ``execute`` round-trip on it.
     """
@@ -273,7 +273,7 @@ def describe_command(
     """Return one command's full descriptor by key, or ``None`` when unexposed.
 
     Resolves everything from the live descriptor set and the real classifiers -
-    the annotation hints and callback-attached execution policy from the
+    the annotation hints and CommandSpec-owned execution policy from the
     descriptor, the confirmation tier from the same policy, the owning toolset from
     :func:`~cadrumo_harness.mcp._toolsets.toolset_for_command`, and the reachable
     personas from the same scope + handoff-deny gates the call path enforces. A

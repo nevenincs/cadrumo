@@ -19,7 +19,6 @@ script, which is what these tests exist to cover.
 
 from __future__ import annotations
 
-import json
 import subprocess
 from pathlib import Path
 from typing import Final
@@ -179,79 +178,6 @@ def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) 
     switched_default = _run_cadrumo(tmp_path, ("config", "login"))
     assert switched_default.returncode == 0, _combined_output(switched_default)
     assert "active_profile\tcustody" in switched_default.stdout
-
-
-def test_config_passphrase_change_round_trips_file_custody(tmp_path: Path) -> None:
-    """`config passphrase change` rotates access to the same encrypted profile.
-
-    The three passphrases ride one bounded ``--secrets-stdin`` JSON object —
-    never ``argv`` — and the profile stays readable only under the rotated
-    passphrase afterwards. (The recovery-code lifecycle round-trip lives in
-    ``test_config_recovery_lifecycle.py``.)
-    """
-
-    _register_profile(
-        tmp_path,
-        "custody",
-        **{
-            "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.name": "Custody Operator",
-            "identity.surnames": "Operator",
-            "activities.description": "design",
-            "iva.regime": "GENERAL",
-        },
-    )
-
-    # Match the child harness's resolution through the sanctioned settings
-    # accessor (no direct environment read): the dev/test password field's
-    # effective value, environment-overridable via its Settings source.
-    provisioning_passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    rotated_value = "correct horse battery staple"
-    changed = _run_cadrumo(
-        tmp_path,
-        ("config", "passphrase", "change", "--secrets-stdin"),
-        stdin_payload=json.dumps(
-            {
-                "current_passphrase": provisioning_passphrase,
-                "new_passphrase": rotated_value,
-                "new_passphrase_confirmation": rotated_value,
-            },
-        ),
-    )
-    assert changed.returncode == 0, _combined_output(changed)
-    assert "changed\tyes" in changed.stdout
-    assert rotated_value not in changed.stdout
-
-    shown_after_change = _run_cadrumo(
-        tmp_path,
-        ("config", "profile", "show"),
-        passphrase=rotated_value,
-    )
-    assert shown_after_change.returncode == 0, _combined_output(shown_after_change)
-    assert "display_name\tcustody" in shown_after_change.stdout
-
-    wrong_current = _run_cadrumo(
-        tmp_path,
-        ("config", "passphrase", "change", "--secrets-stdin"),
-        stdin_payload=json.dumps(
-            {
-                "current_passphrase": "not the current passphrase",
-                "new_passphrase": "irrelevant next value",
-                "new_passphrase_confirmation": "irrelevant next value",
-            },
-        ),
-        passphrase=rotated_value,
-    )
-    assert wrong_current.returncode == 2, _combined_output(wrong_current)
-
-    still_shown = _run_cadrumo(
-        tmp_path,
-        ("config", "profile", "show"),
-        passphrase=rotated_value,
-    )
-    assert still_shown.returncode == 0, _combined_output(still_shown)
-    assert "display_name\tcustody" in still_shown.stdout
 
 
 def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:

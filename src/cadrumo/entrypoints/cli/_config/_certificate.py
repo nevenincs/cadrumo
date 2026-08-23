@@ -38,11 +38,10 @@ from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from .._machine_secret_contract import register_machine_secret_payload_model
 from ._secure_input import MachineSecretPayload
 
 
-class _CertificateSecretSetSecrets(MachineSecretPayload):
+class CertificateSecretSetSecrets(MachineSecretPayload):
     """Strict machine-channel payload for ``certificate secret set``.
 
     One bounded JSON object carrying only the PKCS#12 passphrase as a
@@ -51,13 +50,6 @@ class _CertificateSecretSetSecrets(MachineSecretPayload):
     """
 
     certificate_passphrase: SecretStr
-
-
-register_machine_secret_payload_model(
-    "config.auth.certificate.secret.set",
-    "certificate",
-    _CertificateSecretSetSecrets,
-)
 
 
 def certificate_register(
@@ -299,7 +291,7 @@ def certificate_secret_set(
     )
     if selection is not None:
         secret = read_machine_secret_payload(
-            _CertificateSecretSetSecrets,
+            CertificateSecretSetSecrets,
             selection=selection,
         ).certificate_passphrase.get_secret_value()
     else:
