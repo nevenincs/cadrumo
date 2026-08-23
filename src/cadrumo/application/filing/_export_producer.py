@@ -291,7 +291,10 @@ def m202_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingP
     202 filing without these facts is invalid.
     """
     profile = model_profile if isinstance(model_profile, Modelo202ProducerProfile) else None
-    return {key: (getattr(profile, field) if profile is not None else None) for key, field in _M202_FIELD_BY_KEY.items()}
+    return {
+        key: (getattr(profile, field) if profile is not None else None)
+        for key, field in _M202_FIELD_BY_KEY.items()
+    }
 
 
 def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
