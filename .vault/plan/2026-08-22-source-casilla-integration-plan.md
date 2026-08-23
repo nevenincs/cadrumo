@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:e35e2ad3c2eac7f926d65daf68f19f3ccac7150940f8b84038f956fb2d572804'
+body_hash: 'sha256:5ff2b1197b9436a1e76c82c6c7e762a12edf9b0e4d7a6f1d736c4dcb41ad503d'
 ---
 
 # `source-casilla-integration` plan
@@ -88,7 +88,7 @@ Join both inventories through reviewed evidence-backed records and establish the
 
 - [x] `W01.P04.S17` - define the canonical machine-readable census manifest; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [x] `W01.P04.S18` - load and validate the census against the closed contract; `src/cadrumo/application/registry/source_connectivity.py`.
-- [ ] `W01.P04.S19` - classify inventory as the first adjudication candidate with the obsolete 0155 hazard recorded; `src/cadrumo/_data/source_connectivity/census.toml`.
+- [x] `W01.P04.S19` - classify inventory as the first adjudication candidate with the obsolete 0155 hazard recorded; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W01.P04.S20` - classify amortization as the mandatory second adjudication candidate; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W01.P04.S21` - classify assets and fincas with separate evidence, grain, and substitutability questions; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W01.P04.S22` - classify each of the five deferred row sources as an independent candidate; `src/cadrumo/_data/source_connectivity/census.toml`.

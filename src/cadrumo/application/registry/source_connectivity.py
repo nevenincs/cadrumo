@@ -14,13 +14,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
     BindingSourceKind,
     CasillaId,
+    ModeloCalculationRouteId,
     SourceConnectivityCensusRow,
+    SourceConnectivityDisposition,
+    SourceConnectivityExecutableEvidenceRole,
+    SourceConnectivityGroundingLocatorKind,
     SourceConnectivityProofAuthority,
 )
 from ...core.resources import bundled_path
@@ -56,6 +60,7 @@ __all__ = [
     "RegistryFormulaRecord",
     "RegistryRelationRecord",
     "RegistrySourceDispositionRecord",
+    "SourceConnectivityCensusEntry",
     "SourceConnectivityCensusManifest",
     "derive_registry_binding_records",
     "derive_registry_destination_records",
@@ -68,6 +73,21 @@ __all__ = [
 type ManualCasillaRequirement = Literal["required", "optional"]
 
 
+class SourceConnectivityCensusEntry(SourceConnectivityCensusRow):
+    """Reviewed census row linked to generated capabilities and advisory destinations."""
+
+    capability_locators: tuple[str, ...] = Field(min_length=1)
+    advisory_destination_refs: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def _coverage_refs_are_unique(self) -> SourceConnectivityCensusEntry:
+        if len(set(self.capability_locators)) != len(self.capability_locators):
+            raise ValueError("connectivity census capability locators must be unique within one entry")
+        if len(set(self.advisory_destination_refs)) != len(self.advisory_destination_refs):
+            raise ValueError("connectivity census advisory destination refs must be unique within one entry")
+        return self
+
+
 class SourceConnectivityCensusManifest(BaseModel):
     """Versioned reviewed decisions over the generated connectivity inventories."""
 
@@ -75,7 +95,7 @@ class SourceConnectivityCensusManifest(BaseModel):
 
     schema_version: Literal[1]
     census_id: Literal["source-domain-to-casilla-connectivity"]
-    entries: tuple[SourceConnectivityCensusRow, ...] = ()
+    entries: tuple[SourceConnectivityCensusEntry, ...] = ()
 
     @model_validator(mode="after")
     def _candidate_ids_are_unique(self) -> SourceConnectivityCensusManifest:
@@ -92,7 +112,7 @@ def load_source_connectivity_census(
 ) -> SourceConnectivityCensusManifest:
     """Load the canonical TOML census and enforce its closed typed contract."""
     census_path = path or bundled_path("source_connectivity", "census.toml")
-    raw = _freeze_toml_arrays(tomllib.loads(census_path.read_text(encoding="utf-8")))
+    raw = _hydrate_census_tokens(_freeze_toml_arrays(tomllib.loads(census_path.read_text(encoding="utf-8"))))
     context = {} if proof_authority is None else {"source_connectivity_proof_authority": proof_authority}
     return SourceConnectivityCensusManifest.model_validate(raw, context=context)
 
@@ -103,6 +123,27 @@ def _freeze_toml_arrays(value: object) -> object:
         return tuple(_freeze_toml_arrays(item) for item in value)
     if isinstance(value, Mapping):
         return {key: _freeze_toml_arrays(item) for key, item in value.items()}
+    return value
+
+
+_CENSUS_TOKEN_TYPES = {
+    "disposition": SourceConnectivityDisposition,
+    "locator_kind": SourceConnectivityGroundingLocatorKind,
+    "role": SourceConnectivityExecutableEvidenceRole,
+    "route_id": ModeloCalculationRouteId,
+    "source_kind": BindingSourceKind,
+}
+
+
+def _hydrate_census_tokens(value: object, *, field_name: str | None = None) -> object:
+    """Hydrate TOML strings into the census contract's strict closed enums."""
+    token_type = _CENSUS_TOKEN_TYPES.get(field_name or "")
+    if token_type is not None and isinstance(value, str):
+        return token_type(value)
+    if isinstance(value, tuple):
+        return tuple(_hydrate_census_tokens(item) for item in value)
+    if isinstance(value, Mapping):
+        return {key: _hydrate_census_tokens(item, field_name=key) for key, item in value.items()}
     return value
 
 

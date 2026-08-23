@@ -5,3 +5,43 @@ census_id = "source-domain-to-casilla-connectivity"
 # inventories. Discovery facts remain owned by their source declarations and
 # are addressed from each entry by stable evidence locators; this manifest does
 # not copy repository, selector, resolver, or casilla schemas.
+
+[[entries]]
+candidate_id = "inventory.stock-valuation"
+disposition = "connect_candidate"
+owner = "source-connectivity-campaign"
+review_condition = "Official AEAT and BOE evidence must settle opening stock, purchases, closing stock, activity grain, sign, units, rounding, absence semantics, and override policy before any binding is authored. The dormant helper's Anexo D casilla 0155 wording is obsolete: current Modelo 100 uses 0155 for a different computed real-estate concept, while inventory-related presentation includes 0177, 0181, and 0182."
+capability_locators = [
+  "src/cadrumo/adapters/persistence/profile/inventory.py:108",
+  "src/cadrumo/application/inventory/_source_readiness.py:34",
+  "src/cadrumo/domain/contribuyente/inventory/__init__.py:322",
+  "src/cadrumo/domain/contribuyente/inventory/__init__.py:365",
+  "src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:102",
+  "src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:152",
+]
+advisory_destination_refs = [
+  "modelo:100:semantic:inventory-increase",
+  "modelo:100:semantic:inventory-purchases",
+  "modelo:100:semantic:inventory-decrease",
+]
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/adapters/persistence/profile/inventory.py:108"
+summary = "Encrypted FINANCIAL inventory ledger repository keyed by activity and year."
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/application/inventory/_source_readiness.py:34"
+summary = "Executable readiness declaration states that inventory does not yet cross the canonical calculation-revision boundary."
+
+[[entries.grounding]]
+locator_kind = "repository"
+reference = "src/cadrumo/domain/contribuyente/inventory/__init__.py:365"
+summary = "Dormant Anexo D helper carries the obsolete casilla 0155 wording that must not be treated as current mapping authority."
+
+[entries.bounded_follow_up]
+action_id = "source-casilla.inventory-grounding"
+owner = "source-connectivity-campaign"
+deadline = 2026-10-31
+completion_criterion = "Accepted official-source adjudication identifies or rejects each inventory destination and authorizes a bounded vertical slice without relying on the obsolete 0155 label."
