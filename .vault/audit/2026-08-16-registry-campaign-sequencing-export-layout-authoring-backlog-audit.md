@@ -19768,3 +19768,75 @@ own `aeat_type`, then the scripted revision surgery (291 drops, 3,171 repoints,
 60 emptied fragments removed, 185 casillas authored -- all reproducible), then
 two publish cycles. Modelo 347's earlier revisions remain blocked on a per-field
 reading.
+
+## Tick: the type-drift defect fixed, and the split's real blocker reached
+
+The render profile is solved. The split then stopped on a layer no earlier
+sizing had reached, and that layer is tax semantics rather than mechanism.
+
+### The profile, rebuilt rather than patched
+
+Last tick's defect was that anchors were carried under the rule that held them
+in 2025 while a field's `aeat_type` is not stable across designs. Patching the
+mis-filed ones would have chased symptoms, so the profile is now BUILT from the
+2024 design: every eligible field is partitioned by its OWN `(length,
+aeat_type)`, which removes the failure by construction.
+
+Result: 3,277 anchors on the width-17 `Num` rule, 2,206 on `N`, 132 singletons
+(123 carrying their 2025 reviewed representation, 9 authored). Coverage is exact
+-- **5,615 eligible, 5,615 covered, zero missing and zero extra** -- and the
+profile loads with its evidence resolving against the 2024 workbook.
+
+### Three drop rules, each wrong in a way the next measurement exposed
+
+The casilla surgery's rule went through three forms, and the sequence is the
+lesson:
+
+1. **"not routed by the 2024 map"** -- took 291 casillas. It also took
+   `DP200014:bin-aplicada-maxima` and `DP200014:SAL_RESERVA_DOTACION`, derived
+   casillas that have no wire position at all, so no map ever routes them.
+2. **"not routed, unless the id is not a plain box reference"** -- 289. Still
+   wrong: `DP200011:00417` IS a plain box reference and is routed by NO map in
+   either epoch, yet exists and is referenced by a construct. A casilla may
+   legitimately carry no wire position; modelo 322 has ten such.
+3. **"the BOX is absent from the 2024 diseno"** -- 243 dropped, 48 kept without
+   a wire position. This is the rule that matches the intent, and it is the one
+   that should have been written first: the question was always "does AEAT's
+   2024 form have this box", never "does our generator route it".
+
+`export_refs` also had to become a LIST: 812 of modelo 200's casillas are routed
+by more than one field, and naming only the last makes the reciprocal gate refuse.
+
+### Where it actually stops
+
+`construct 'modelo-200-2024-foundation' references unknown casilla '03405'` --
+and 03406, 03407, 03408, which are genuinely 2025-only boxes.
+
+The 2024 revision inherits the 2025 constructs, predicates and expectations, and
+seven fragments across five sections reference boxes the 2024 diseno does not
+carry. Fixing that is not a drop: deciding which members a 2024 construct should
+aggregate is a reading of what AEAT's 2024 form actually totalled, per construct.
+That is filing-grade tax semantics, and it is the stated reason for recording
+rather than guessing.
+
+It is also what the revision's own prose warned about before this campaign
+touched it -- that the identity refactor "changes ids the formulas, constructs,
+verification predicates and completeness manifest already reference, so it needs
+its own ruling before either starts". Reached independently, from the other end.
+
+### Verified
+
+* modelo 200 restored to its single `2024-y-siguientes` revision, 3,462
+  casillas; authority loads CLEAN.
+* the epoch-2024 semantic map AND the epoch-2024 render profile are both landed
+  and inert -- each validated (map joins; profile loads, evidence resolves,
+  coverage exact) against the revision built this tick, and neither is reachable
+  without that epoch being requested.
+
+### Still open
+
+Modelo 200's split, blocked on the coupled sections: seven fragments across
+constructs, formulas, verification predicates and expectations reference
+2025-only boxes and need a per-construct reading. Everything mechanical is now
+built and landed. Modelo 347's earlier revisions remain blocked on a per-field
+reading.
