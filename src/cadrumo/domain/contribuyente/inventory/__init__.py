@@ -76,7 +76,7 @@ class BasisCapExceededError(AmortizacionLedgerError):
     """Raised when cumulative amortization would exceed cost basis."""
 
 
-INVENTORY_SCHEMA_VERSION = "2"
+INVENTORY_SCHEMA_VERSION = "3"
 """Forward-compatible schema version stamped onto every record in this module."""
 
 _ZERO = Decimal("0.00")
@@ -660,6 +660,45 @@ class InventoryClosingResolution(BaseModel):
         return self
 
 
+class InventoryClosingAuthorityRecord(BaseModel):
+    """Ledger-owned immutable inputs for one closing-authority resolution."""
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    decision: InventoryClosingAuthorityDecision
+    physical_observation: PhysicalClosingObservation | None = None
+    prior_closing_link: PriorAuthoritativeClosingLink
+
+    @model_validator(mode="after")
+    def _coordinates_match(self) -> InventoryClosingAuthorityRecord:
+        coordinate = (self.decision.actividad_id, self.decision.filing_year)
+        if coordinate != (
+            self.prior_closing_link.actividad_id,
+            self.prior_closing_link.current_filing_year,
+        ):
+            raise InventoryValidationError("closing authority record inputs must share one activity/year coordinate")
+        if self.physical_observation is not None and coordinate != (
+            self.physical_observation.actividad_id,
+            self.physical_observation.filing_year,
+        ):
+            raise InventoryValidationError("closing authority record observation must share the decision coordinate")
+        return self
+
+    @property
+    def fingerprint(self) -> ContentDigest:
+        """Return canonical identity for the complete persisted authority input set."""
+        return _content_hash_hex(
+            {
+                "fingerprint_schema_version": "1",
+                "decision_fingerprint": self.decision.fingerprint,
+                "physical_observation_fingerprint": (
+                    self.physical_observation.fingerprint if self.physical_observation is not None else None
+                ),
+                "prior_closing_link_fingerprint": self.prior_closing_link.fingerprint,
+            },
+        )
+
+
 class MovementRecord(BaseModel):
     """One inventory movement for an activity/year.
 
@@ -677,7 +716,7 @@ class MovementRecord(BaseModel):
             ``taxable_base * iva_rate / 100``.
         deductible_iva_ratio: Fraction of input IVA the contribuyente
             may deduct (0-1).
-        schema_version: Forward-compatible schema version. ``"2"``.
+        schema_version: Forward-compatible schema version. ``"3"``.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -823,7 +862,9 @@ class InventoryLedger(BaseModel):
             non-empty must value-balance with ``opening_stock``.
         period_movements: Tuple of :class:`MovementRecord` rows
             covering the period.
-        schema_version: Forward-compatible schema version. ``"2"``.
+        closing_authority_record: Required nullable persisted authority bundle;
+            ``None`` states that no operator authority decision is recorded.
+        schema_version: Forward-compatible schema version. ``"3"``.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -834,6 +875,7 @@ class InventoryLedger(BaseModel):
     opening_stock: Decimal = Field(ge=Decimal("0"))
     opening_layers: tuple[StockLayer, ...] = ()
     period_movements: tuple[MovementRecord, ...] = ()
+    closing_authority_record: InventoryClosingAuthorityRecord | None
     schema_version: str = INVENTORY_SCHEMA_VERSION
 
     @field_validator("schema_version")
@@ -849,6 +891,16 @@ class InventoryLedger(BaseModel):
         """Enforce that ``opening_layers`` value-balances with ``opening_stock``."""
         if self.opening_layers and _quantize(_layers_value(self.opening_layers)) != _quantize(self.opening_stock):
             raise InventoryValidationError("opening_stock must equal the value of opening_layers")
+        if self.closing_authority_record is not None:
+            record = self.closing_authority_record
+            if (record.decision.actividad_id, record.decision.filing_year) != (self.actividad_id, self.year):
+                raise InventoryValidationError("closing authority record must match the inventory ledger coordinate")
+            resolve_inventory_authoritative_closing(
+                self,
+                decision=record.decision,
+                physical_observation=record.physical_observation,
+                prior_closing_link=record.prior_closing_link,
+            )
         return self
 
 
@@ -865,7 +917,7 @@ class InventoryLedgerDocument(BaseModel):
     every reader still assumed one.
 
     Attributes:
-        schema_version: Forward-compatible schema version. ``"2"``.
+        schema_version: Forward-compatible schema version. ``"3"``.
         ledgers: Tuple of :class:`InventoryLedger` rows, each with a distinct
             ``(actividad_id, year)`` pair.
     """
@@ -1381,6 +1433,7 @@ __all__ = [
     "InventoryAttributableCostKind",
     "InventoryClosingAuthority",
     "InventoryClosingAuthorityDecision",
+    "InventoryClosingAuthorityRecord",
     "InventoryClosingConflictDiagnostic",
     "InventoryClosingDecisionEvidence",
     "InventoryClosingDecisionEvidenceRole",

@@ -45,6 +45,7 @@ def test_inventory_persistence_and_real_movement_append() -> None:
         year=2025,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("150.00"),
+        closing_authority_record=None,
     )
     save_inventory((ledger,))
 
@@ -64,6 +65,7 @@ def test_inventory_duplicate_ledger_refusal_is_localized_and_structured() -> Non
         year=2025,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("0.00"),
+        closing_authority_record=None,
     )
     repository = InventoryLedgerRepository()
     repository.create(ledger)
@@ -84,6 +86,7 @@ def test_inventory_duplicate_movement_refusal_is_localized_and_structured() -> N
         year=2025,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("0.00"),
+        closing_authority_record=None,
     )
     movement = _movement(MovementKind.PURCHASE, "2", "10", 1)
     save_inventory((ledger.model_copy(update={"period_movements": (movement,)}),))
@@ -101,6 +104,7 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(_runtime_pro
         year=2025,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("0.00"),
+        closing_authority_record=None,
         period_movements=(
             MovementRecord(
                 movement_id="purchase-canary",

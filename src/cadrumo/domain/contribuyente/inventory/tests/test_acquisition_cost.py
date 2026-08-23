@@ -120,6 +120,7 @@ def test_complete_acquisition_is_the_sole_fifo_and_pmp_cost_authority() -> None:
                 year=2025,
                 valuation_method=method,
                 opening_stock=Decimal("0.00"),
+                closing_authority_record=None,
                 period_movements=(purchase, sale),
             ),
         )
@@ -201,6 +202,7 @@ def test_pmp_repeating_unit_cost_layers_reconcile_to_exact_closing_value() -> No
             year=2025,
             valuation_method=ValuationMethod.PMP,
             opening_stock=Decimal("0.00"),
+            closing_authority_record=None,
             period_movements=(purchase,),
         ),
     )
@@ -211,6 +213,7 @@ def test_pmp_repeating_unit_cost_layers_reconcile_to_exact_closing_value() -> No
         year=2026,
         valuation_method=ValuationMethod.PMP,
         opening_stock=result.closing_value,
+        closing_authority_record=None,
         opening_layers=result.closing_layers,
     )
     assert next_year.opening_stock == Decimal("100.00")

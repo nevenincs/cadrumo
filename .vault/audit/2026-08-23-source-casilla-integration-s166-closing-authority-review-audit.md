@@ -57,6 +57,18 @@ Closing resolutions and conflict diagnostics refuse sub-cent values, while physi
 
 Final independent review reported zero critical, high, medium, or low findings. Fifty focused domain tests, Ruff, and the type checker were clean.
 
+### s166-closing-authority-review | high | resolved authority inputs lacked a canonical persistence seam
+
+The first reviewed types were standalone and could not travel through the encrypted inventory repository without a parallel schema. The amended domain owns one strict immutable `InventoryClosingAuthorityRecord` on each ledger and revalidates it exclusively through the canonical resolution function.
+
+### s166-closing-authority-review | high | resolved persisted schema admitted silent old-shape tolerance
+
+The authority slot is nullable but required on wire, every constructor states absence explicitly, and inventory schema version 3 refuses both version 2 and a missing slot. Serialize, rehydrate, coordinate-substitution, and nested-fingerprint mutation tests prove the stored bundle remains authoritative rather than decorative.
+
+### s166-closing-authority-review | pass | ledger-owned amendment is complete
+
+The repeated independent review reported zero findings. Fifty-three focused domain tests, Ruff, the type checker, and the diff hygiene check were clean.
+
 ## Recommendations
 
 S167 must remove or refuse the legacy CLI `InventoryLedgerPayload.closing_stock` shape and carry the new authority inputs through secure ingress. S168 must compose the reviewed authority resolution into projection without rebuilding its invariants.

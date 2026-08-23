@@ -59,12 +59,16 @@ related:
 - Remove premature projection composition so S168 remains the sole projection owner.
 - Hard-cut the domain `closing_stock` field without compatibility defaults.
 - Add mutation, substitution, forgery, continuity, and provenance-retention tests.
+- Amend the persisted ledger schema to version 3 with a required nullable, ledger-owned authority record.
+- Revalidate the persisted decision, observation, and continuity bundle through the canonical resolver on every load.
 
 ## Outcome
 
 The inventory domain now exposes a provenance-complete closing-authority contract. A physical observation carries closed evidence roles and content digests; a decision binds the exact observation and reviewer provenance; prior continuity binds the immediately preceding authoritative closing; and the resolution retains every contributing fingerprint and any valuation conflict. Both physical-selected and movement-selected decisions fail closed when their decision predates the named observation.
 
 Focused verification completed with 50 passing inventory-domain tests, clean Ruff and type-checker runs, and an independent formal review reporting zero findings at every severity.
+
+The S167 grounding pass exposed that the first S166 contract had no canonical persistence slot. S166 was reopened and amended: `InventoryClosingAuthorityRecord` is now the sole ledger-owned bundle, its fingerprint binds all nested provenance, and schema version 3 refuses both version 2 and a missing authority slot. The amended gate completed with 53 passing domain tests, clean Ruff and type-checker runs, and a second independent review reporting zero findings.
 
 ## Notes
 

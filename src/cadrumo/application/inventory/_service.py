@@ -242,6 +242,7 @@ class InventoryService:
             year=year,
             valuation_method=method,
             opening_stock=opening_stock,
+            closing_authority_record=None,
         )
         # Delegated to the repository's guarded verb rather than repeating its
         # read, duplicate-check and write here. The document is a singleton row,

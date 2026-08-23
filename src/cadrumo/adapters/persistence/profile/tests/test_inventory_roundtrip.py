@@ -125,6 +125,7 @@ def _populated_ledger() -> InventoryLedger:
         year=2024,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("1500.00"),
+        closing_authority_record=None,
         opening_layers=(
             StockLayer(
                 sku="widget-blue",

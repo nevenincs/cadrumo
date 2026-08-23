@@ -49,6 +49,7 @@ def _ledger(actividad_id: str, *, opening: str) -> InventoryLedger:
         year=_YEAR,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal(opening),
+        closing_authority_record=None,
     )
 
 

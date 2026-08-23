@@ -11,12 +11,14 @@ from pydantic import ValidationError
 from cadrumo.domain.contribuyente.inventory import (
     InventoryClosingAuthority,
     InventoryClosingAuthorityDecision,
+    InventoryClosingAuthorityRecord,
     InventoryClosingConflictDiagnostic,
     InventoryClosingDecisionEvidence,
     InventoryClosingDecisionEvidenceRole,
     InventoryClosingResolution,
     InventoryClosingValuationBasis,
     InventoryLedger,
+    InventoryLedgerDocument,
     InventoryValidationError,
     PhysicalClosingEvidence,
     PhysicalClosingEvidenceRole,
@@ -131,6 +133,7 @@ def _ledger(method: ValuationMethod = ValuationMethod.FIFO) -> InventoryLedger:
         year=2025,
         valuation_method=method,
         opening_stock=Decimal("100.00"),
+        closing_authority_record=None,
     )
 
 
@@ -368,6 +371,87 @@ def test_resolution_refuses_forged_missing_conflict_and_legacy_bare_closing_stoc
             conflict=None,
             **provenance,
         )
+
+
+def test_ledger_owned_authority_record_serializes_rehydrates_and_resolves() -> None:
+    observation = _observation()
+    decision = _decision(authority=InventoryClosingAuthority.PHYSICAL_OBSERVATION, observation=observation)
+    record = InventoryClosingAuthorityRecord(
+        decision=decision,
+        physical_observation=observation,
+        prior_closing_link=_continuity(),
+    )
+    ledger = _ledger().model_copy(update={"closing_authority_record": record})
+    persisted = ledger.model_dump_json()
+    rehydrated = InventoryLedger.model_validate_json(persisted)
+
+    assert rehydrated == ledger
+    assert rehydrated.closing_authority_record is not None
+    assert rehydrated.closing_authority_record.fingerprint == record.fingerprint
+    assert resolve_inventory_authoritative_closing(
+        rehydrated,
+        decision=rehydrated.closing_authority_record.decision,
+        physical_observation=rehydrated.closing_authority_record.physical_observation,
+        prior_closing_link=rehydrated.closing_authority_record.prior_closing_link,
+    ).authoritative_value == Decimal("130.00")
+
+
+def test_ledger_owned_authority_record_refuses_coordinate_and_fingerprint_tampering() -> None:
+    observation = _observation()
+    record = InventoryClosingAuthorityRecord(
+        decision=_decision(authority=InventoryClosingAuthority.PHYSICAL_OBSERVATION, observation=observation),
+        physical_observation=observation,
+        prior_closing_link=_continuity(),
+    )
+    payload = record.model_dump()
+    payload["physical_observation"]["closing_value"] = Decimal("131.00")
+    with pytest.raises(ValidationError, match="fingerprint does not match"):
+        InventoryLedger.model_validate(
+            {
+                "actividad_id": "retail",
+                "year": 2025,
+                "valuation_method": ValuationMethod.FIFO,
+                "opening_stock": Decimal("100.00"),
+                "closing_authority_record": payload,
+            },
+        )
+
+    with pytest.raises(ValidationError, match="must match the inventory ledger coordinate"):
+        InventoryLedger(
+            actividad_id="other-activity",
+            year=2025,
+            valuation_method=ValuationMethod.FIFO,
+            opening_stock=Decimal("100.00"),
+            closing_authority_record=record,
+        )
+
+
+def test_inventory_schema_hard_cut_refuses_missing_authority_slot_and_version_two() -> None:
+    provenance = {
+        "decision_id": "decision-2025",
+        "decision_fingerprint": "d" * 64,
+        "prior_closing_link_fingerprint": "e" * 64,
+    }
+    with pytest.raises(ValidationError, match="closing_authority_record"):
+        InventoryLedger.model_validate(
+            {
+                "actividad_id": "retail",
+                "year": 2025,
+                "valuation_method": ValuationMethod.FIFO,
+                "opening_stock": Decimal("100.00"),
+            },
+        )
+    with pytest.raises(ValidationError, match="unsupported InventoryLedger schema_version '2'"):
+        InventoryLedger(
+            actividad_id="retail",
+            year=2025,
+            valuation_method=ValuationMethod.FIFO,
+            opening_stock=Decimal("100.00"),
+            closing_authority_record=None,
+            schema_version="2",
+        )
+    with pytest.raises(ValidationError, match="unsupported InventoryLedgerDocument schema_version '2'"):
+        InventoryLedgerDocument(schema_version="2", ledgers=())
     with pytest.raises(ValidationError, match="movement-derived authority value"):
         InventoryClosingResolution(
             actividad_id="retail",

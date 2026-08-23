@@ -701,6 +701,7 @@ def _inventory_ledger(label: str) -> InventoryLedger:
         year=2026,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("0.00"),
+        closing_authority_record=None,
     )
 
 

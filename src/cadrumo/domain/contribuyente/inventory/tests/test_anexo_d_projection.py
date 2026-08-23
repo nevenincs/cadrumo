@@ -84,6 +84,7 @@ def _ledger(*, opening: str, purchase: str | None = None) -> InventoryLedger:
         year=2025,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal(opening),
+        closing_authority_record=None,
         period_movements=movements,
     )
 
@@ -107,6 +108,7 @@ def test_opening_over_closing_populates_only_casilla_0182() -> None:
         year=2025,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("100.00"),
+        closing_authority_record=None,
         period_movements=(
             MovementRecord(
                 movement_id="sale-1",
