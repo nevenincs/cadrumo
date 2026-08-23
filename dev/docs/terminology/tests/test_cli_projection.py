@@ -1,16 +1,15 @@
 """Real-behaviour conformance for the CLI-surface search-record emitter.
 
-The emitter walks the LIVE materialised ``aeat`` command tree (the same
-``typer.main.get_command(app)`` house walk the CLI reference generator uses)
-four times, once per output language, and projects one
+The emitter projects the immutable ``aeat`` command graph four times, once
+per output language, and emits one
 :class:`~dev.docs.terminology._cli_projection.CliSurfaceRecord` per leaf
 command plus one
 :class:`~dev.docs.terminology._cli_projection.CliOptionRecord` per option.
-These gates assert the projection covers the live tree exactly (count parity
-against the independent house walk), carries four-language help, and that
+These gates assert the projection covers the graph exactly (independent path
+parity), carries four-language help, and that
 every target anchor resolves to the CLI-reference page shape.
 
-No mocks: the tree walk is real (it spawns the actual CLI), the anchor oracle
+No mocks: the projection uses clean subprocesses, the anchor oracle
 is ``docutils.nodes.make_id`` (the same slugger Sphinx uses to build the
 section ids in the generated CLI pages), so the gates are independent of the
 emitter's own slug logic.

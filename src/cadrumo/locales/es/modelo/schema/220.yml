@@ -148,6 +148,150 @@ modelo:
             x-agp34c1g6d0j0c1q60o3edhh:
               help: null
               label: Balance consolidado. Activo (pag. 3A hoja 00). Otros
+            x-agp34c1g6d0j0c9q60o32c1h:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Efectivo, saldos
+                en efectivo en bancos centrales y otros depositos a la vista
+            x-agp34c1g6d0j0c9q60o32c1i:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Activos financieros
+                mantenidos para negociar
+            x-agp34c1g6d0j0c9q60o32c1j:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Derivados
+            x-agp34c1g6d0j0c9q60o32c1k:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Instrumentos de
+                patrimonio
+            x-agp34c1g6d0j0c9q60o32c1l:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Valores representativos
+                de deuda
+            x-agp34c1g6d0j0c9q60o32c1m:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Prestamos y anticipos
+            x-agp34c1g6d0j0c9q60o32c1n:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Prestamos y anticipos.
+                Bancos centrales
+            x-agp34c1g6d0j0c9q60o32c1o:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Prestamos y anticipos.
+                Entidades de credito
+            x-agp34c1g6d0j0c9q60o32c1p:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Prestamos y anticipos.
+                Clientela
+            x-agp34c1g6d0j0c9q60o32c9g:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Activos financieros
+                designados a valor razonable con cambios en resultados
+            x-agp34c1g6d0j0c9q60o32c9i:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Valores representativos
+                de deuda
+            x-agp34c1g6d0j0c9q60o32c9j:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Prestamos y anticipos
+            x-agp34c1g6d0j0c9q60o32c9k:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Prestamos y anticipos.
+                Bancos centrales
+            x-agp34c1g6d0j0c9q60o32c9l:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Prestamos y anticipos.
+                Entidades de credito
+            x-agp34c1g6d0j0c9q60o32c9m:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Prestamos y anticipos.
+                Clientela
+            x-agp34c1g6d0j0c9q60o32chn:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Derivados - contabilidad
+                de coberturas
+            x-agp34c1g6d0j0c9q60o32cho:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Cambios del valor
+                razonable de los elementos cubiertos de una cartera con cobertura
+                del riesgo de tipo de interes
+            x-agp34c1g6d0j0c9q60o32chp:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Inversiones en
+                negocios conjuntos y asociadas
+            x-agp34c1g6d0j0c9q60o32cph:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Negocios conjuntos
+            x-agp34c1g6d0j0c9q60o32cpi:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Asociadas
+            x-agp34c1g6d0j0c9q60o32cpj:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Activos amparados
+                por contratos de seguro o reaseguro
+            x-agp34c1g6d0j0c9q60o32cpk:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Activos tangibles
+            x-agp34c1g6d0j0c9q60o32cpl:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Inmovilizado material
+            x-agp34c1g6d0j0c9q60o32cpm:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Inmovilizado material.
+                De uso propio
+            x-agp34c1g6d0j0c9q60o32cpn:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Inmovilizado material.
+                Cedido en arrendamiento operativo
+            x-agp34c1g6d0j0c9q60o32cpo:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Inmovilizado material.
+                Afecto a la obra social (cajas de ahorros y cooperativas de credito)
+            x-agp34c1g6d0j0c9q60o32cpp:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Inversiones inmobiliarias
+            x-agp34c1g6d0j0c9q60o32d1g:
+              label: 'Balance consolidado. Activo (pag. 3A hoja 01). Inversiones inmobiliarias.
+                De las cuales: cedido en arrendamiento operativo'
+            x-agp34c1g6d0j0c9q60o3cc9l:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Activos financieros
+                no destinados a negociacion valorados obligatoriamente a valor razonable
+                con cambios en resultados
+            x-agp34c1g6d0j0c9q60o3cc9m:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Instrumentos de
+                patrimonio
+            x-agp34c1g6d0j0c9q60o3cc9n:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Valores representativos
+                de deuda
+            x-agp34c1g6d0j0c9q60o3cc9o:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Prestamos y anticipos
+            x-agp34c1g6d0j0c9q60o3cc9p:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Bancos centrales
+            x-agp34c1g6d0j0c9q60o3cchg:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Entidades de credito
+            x-agp34c1g6d0j0c9q60o3cchh:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Clientela
+            x-agp34c1g6d0j0c9q60o3cchi:
+              label: 'Balance consolidado. Activo (pag. 3A hoja 01). Pro memoria:
+                prestados o entregados como garantia con derecho de venta o pignoracion'
+            x-agp34c1g6d0j0c9q60o3cchj:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Activos financieros
+                a valor razonable con cambios en otro resultado global
+            x-agp34c1g6d0j0c9q60o3cchk:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Instrumentos de
+                patrimonio
+            x-agp34c1g6d0j0c9q60o3cchl:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Valores representativos
+                de deuda
+            x-agp34c1g6d0j0c9q60o3cchm:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Prestamos y anticipos
+            x-agp34c1g6d0j0c9q60o3cchn:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Bancos centrales
+            x-agp34c1g6d0j0c9q60o3ccho:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Entidades de credito
+            x-agp34c1g6d0j0c9q60o3cchp:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Clientela
+            x-agp34c1g6d0j0c9q60o3ccpg:
+              label: 'Balance consolidado. Activo (pag. 3A hoja 01). Pro memoria:
+                prestados o entregados como garantia con derecho de venta o pignoracion'
+            x-agp34c1g6d0j0c9q60o3ccph:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Activos financieros
+                a coste amortizado
+            x-agp34c1g6d0j0c9q60o3ccpi:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Valores representativos
+                de deuda
+            x-agp34c1g6d0j0c9q60o3ccpj:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Prestamos y anticipos
+            x-agp34c1g6d0j0c9q60o3ccpk:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Bancos centrales
+            x-agp34c1g6d0j0c9q60o3ccpl:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Entidades de credito
+            x-agp34c1g6d0j0c9q60o3ccpm:
+              label: Balance consolidado. Activo (pag. 3A hoja 01). Clientela
+            x-agp34c1g6d0j0c9q60o3ccpn:
+              label: 'Balance consolidado. Activo (pag. 3A hoja 01). Pro memoria:
+                prestados o entregados como garantia con derecho de venta o pignoracion'
+            x-agp34c1g6d0j0c9q60o3ed9g:
+              label: 'Balance consolidado. Activo (pag. 3A hoja 01). Pro memoria:
+                prestados o entregados como garantia con derecho de venta o pignoracion'
+            x-agp34c1g6d0j0c9q60o3ed9h:
+              label: 'Balance consolidado. Activo (pag. 3A hoja 01). Pro memoria:
+                prestados o entregados como garantia con derecho de venta o pignoracion'
+            x-agp34c1g6d0j0c9q60o3ed9l:
+              label: 'Balance consolidado. Activo (pag. 3A hoja 01). Pro memoria:
+                adquirido en arrendamiento financiero'
             x-agp34c1g6d0j0chq60o32c1h:
               help: null
               label: Balance consolidado. Activo (pag. 3A hoja 02). Efectivo y otros
@@ -344,6 +488,37 @@ modelo:
               help: null
               label: Balance consolidado. Activo (pag. 3A hoja 02). Prestamos y partidas
                 a cobrar. Prestamos. Otros
+            x-agp34c1g6d0j2c9q60o32d1h:
+              label: Balance consolidado. Activo (pag. 3A hoja 11). Activos intangibles
+            x-agp34c1g6d0j2c9q60o32d1i:
+              label: Balance consolidado. Activo (pag. 3A hoja 11). Fondo de comercio
+            x-agp34c1g6d0j2c9q60o32d1j:
+              label: Balance consolidado. Activo (pag. 3A hoja 11). Otros activos
+                intangibles
+            x-agp34c1g6d0j2c9q60o32d1k:
+              label: Balance consolidado. Activo (pag. 3A hoja 11). Activos por impuestos
+            x-agp34c1g6d0j2c9q60o32d1l:
+              label: Balance consolidado. Activo (pag. 3A hoja 11). Activos por impuestos
+                corrientes
+            x-agp34c1g6d0j2c9q60o32d1m:
+              label: Balance consolidado. Activo (pag. 3A hoja 11). Activos por impuestos
+                diferidos
+            x-agp34c1g6d0j2c9q60o32d1n:
+              label: Balance consolidado. Activo (pag. 3A hoja 11). Otros activos
+            x-agp34c1g6d0j2c9q60o32d1o:
+              label: Balance consolidado. Activo (pag. 3A hoja 11). Contratos de seguros
+                vinculados a pensiones
+            x-agp34c1g6d0j2c9q60o32d1p:
+              label: Balance consolidado. Activo (pag. 3A hoja 11). Existencias
+            x-agp34c1g6d0j2c9q60o32d9g:
+              label: Balance consolidado. Activo (pag. 3A hoja 11). Resto de los otros
+                activos
+            x-agp34c1g6d0j2c9q60o32d9h:
+              label: Balance consolidado. Activo (pag. 3A hoja 11). Activos no corrientes
+                y grupos enajenables de elementos que se han clasificado como mantenidos
+                para la venta
+            x-agp34c1g6d0j2c9q60o32d9i:
+              label: Balance consolidado. Activo (pag. 3A hoja 11). Total activo
             x-agp34c1g6d130c1q60o30c1j:
               help: null
               label: Balance consolidado. Patrimonio neto y pasivo. Reserva legal

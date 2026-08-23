@@ -37,7 +37,8 @@
 # AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
 # intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is
 # derived as the common prefix of every numbered line and the remainder is stripped, so
-# both spellings land on the same heading. 0 parent-child separator repair(s)
+# both spellings land on the same heading. 0 parent-child separator
+# repair(s)
 # applied: none needed.
 #
 # THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is

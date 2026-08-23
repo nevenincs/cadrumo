@@ -2,7 +2,7 @@
 
 The projection is the build-time help catalogue the ``cli-sequence`` frontend
 widget consumes. These tests prove it generates, is byte-deterministic across
-two builds, covers every node the live Click tree yields, round-trips through
+two builds, covers every node the immutable command graph yields, round-trips through
 its serialised form, and that a documented command path absent from the
 projection fails loudly with nearest-candidate hints — a free conformance gate
 against CLI drift.
@@ -44,22 +44,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
 
 def _collect_all_path_keys_in_subprocess() -> set[str]:
-    """Return every command-path key by an independent materialisation.
-
-    Walks the tree via :func:`~dev.docs.cli_reference._collect_commands`
-    directly — NOT through the projection generator — so the coverage assertion
-    compares two independent walks rather than the projection against itself.
-    """
+    """Return every command path authored by the immutable graph."""
     code = textwrap.dedent(
         """
-        from typer.main import get_command as _typer_get_command
-        from cadrumo.entrypoints.cli import app
-        from dev.docs.cli_reference import _force_lazy_imports, _collect_commands
-        _force_lazy_imports(app)
-        root = _typer_get_command(app)
-        root.name = app.info.name or 'aeat'
-        for path in sorted(_collect_commands(root)):
-            print(' '.join(path))
+        from cadrumo.entrypoints.cli.command_api import command_spec_nodes
+        for node in command_spec_nodes():
+            print(' '.join(node.path))
         """,
     )
     with TemporaryDirectory(prefix="cadrumo-cli-tree-cov-") as storage_root:

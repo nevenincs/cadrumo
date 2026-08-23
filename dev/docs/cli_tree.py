@@ -8,12 +8,8 @@ live ``--help``. The projection is regenerated on every build and never
 committed — the same Pagefind commit-boundary discipline that governs the
 RST reference (``dev/docs/cli_reference.py``) extended to a JSON help asset.
 
-The generator reuses the reference machinery verbatim: the English-pinned
-subprocess environment, the lazy-subtree materialisation, the fallback-surface
-guard, and the tree walk (:func:`~dev.docs.cli_reference._force_lazy_imports`,
-:func:`~dev.docs.cli_reference._collect_commands`,
-:func:`~dev.docs.cli_reference._assert_no_fallback_surfaces`). It walks every
-reachable node — groups and leaves alike — so a group token and a leaf token
+The generator projects the same immutable command graph as the reference. It visits every
+authored node — groups and leaves alike — so a group token and a leaf token
 both resolve to help, and emits one typed :class:`CliCommandNode` per node.
 
 Language pinning
@@ -55,13 +51,7 @@ from pydantic import Field, RootModel, StringConstraints
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.external_constants import UTF_8_ENCODING
 
-from .cli_reference import (
-    _assert_no_fallback_surfaces,
-    _collect_commands,
-    _force_lazy_imports,
-    _is_click_argument,
-    _reference_subprocess_environment,
-)
+from .cli_reference import _reference_subprocess_environment
 
 if TYPE_CHECKING:
     import click
@@ -227,86 +217,42 @@ def _argument_metavar(param: click.Parameter) -> str:  # type: ignore[name-defin
 
 # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
 # Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _project_params(cmd: click.Command) -> tuple[list[CliParam], list[str]]:  # type: ignore[name-defined]
-    """Return the projected params and the argument-metavar list for ``cmd``.
-
-    The argument-metavar list preserves declaration order for the usage
-    synopsis; the :class:`CliParam` list preserves the Click ``params`` order.
-    """
-    params: list[CliParam] = []
-    arg_metavars: list[str] = []
-    for param in cmd.params:
-        if getattr(param, "param_type_name", "") not in {"argument", "option"}:
-            continue
-        if _is_click_argument(param):
-            names: tuple[str, ...] = tuple(getattr(param, "opts", None) or [param.name or "arg"])
-            kind = ParamKind.ARGUMENT
-            arg_metavars.append(_argument_metavar(param))
-        else:
-            names = tuple(getattr(param, "opts", None) or [param.name or ""])
-            kind = ParamKind.OPTION
-        help_text = (getattr(param, "help", None) or "").strip()
-        params.append(
-            CliParam(
-                names=names,
-                kind=kind,
-                required=bool(getattr(param, "required", False)),
-                help=help_text,
-            ),
-        )
-    return params, arg_metavars
-
-
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _synthesise_usage(path: tuple[str, ...], cmd: click.Command, arg_metavars: list[str]) -> str:  # type: ignore[name-defined]
-    """Return a deterministic single-line usage synopsis for ``cmd``.
-
-    Built locally rather than via ``click.Command.get_usage`` (which wraps to a
-    terminal-width-dependent line count) so the projection is byte-stable across
-    environments.
-    """
-    tokens = [_path_key(path)]
-    if _is_group(cmd):
-        tokens.append("[OPTIONS]")
-        tokens.append("COMMAND [ARGS]...")
-        return " ".join(tokens)
-    if any(getattr(p, "param_type_name", "") == "option" for p in cmd.params):
-        tokens.append("[OPTIONS]")
-    tokens.extend(arg_metavars)
-    return " ".join(tokens)
-
-
 def _build_cli_tree_loaded() -> CliTree:
-    """Materialise the live Click tree and project it to a :class:`CliTree`.
+    """Project the immutable command graph to a :class:`CliTree`.
 
     Assumes the caller has already pinned ``CADRUMO_OUTPUT_LANGUAGE=en`` (either
     via :func:`build_cli_tree`'s ``override_settings`` context or a subprocess
     environment) so ``tr()`` help strings resolve to English.
     """
-    from typer.main import get_command as _typer_get_command
-
-    from cadrumo.core.i18n import clear_output_language_cache
-    from cadrumo.entrypoints.cli import app
+    from cadrumo.core.i18n import clear_output_language_cache, tr
+    from cadrumo.entrypoints.cli.command_api import ArgumentSpec, DefaultKind, command_spec_nodes
 
     clear_output_language_cache()
 
-    _force_lazy_imports(app)
-    root_cmd = _typer_get_command(app)
-    root_cmd.name = app.info.name or "aeat"
-    _assert_no_fallback_surfaces(root_cmd)
-
-    all_nodes = _collect_commands(root_cmd)
-
     projection: dict[str, CliCommandNode] = {}
-    for path, cmd in all_nodes.items():
-        params, arg_metavars = _project_params(cmd)
-        projection[_path_key(path)] = CliCommandNode(
-            path=path,
-            kind="group" if _is_group(cmd) else "leaf",
-            help=(cmd.help or "").strip(),
-            usage=_synthesise_usage(path, cmd, arg_metavars),
-            params=tuple(params),
+    for node in command_spec_nodes():
+        params = tuple(
+            CliParam(
+                names=(parameter.name,)
+                if isinstance(parameter, ArgumentSpec)
+                else parameter.declarations,
+                kind=ParamKind.ARGUMENT if isinstance(parameter, ArgumentSpec) else ParamKind.OPTION,
+                required=parameter.default.kind is DefaultKind.REQUIRED,
+                help="" if parameter.help_key is None else tr(parameter.help_key.value),
+            )
+            for parameter in node.spec.parameters
+        )
+        usage = " ".join(node.path)
+        if any(p.kind is ParamKind.OPTION for p in params):
+            usage += " [OPTIONS]"
+        if node.spec.kind != "leaf":
+            usage += " COMMAND [ARGS]..."
+        projection[_path_key(node.path)] = CliCommandNode(
+            path=node.path,
+            kind="leaf" if node.spec.kind == "leaf" else "group",
+            help=tr(node.spec.help_key.value),
+            usage=usage,
+            params=params,
         )
     return CliTree(projection)
 

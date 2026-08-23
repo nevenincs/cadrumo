@@ -12,5 +12,3 @@ Submodules
 
 .. toctree::
    :maxdepth: 4
-
-   cadrumo.entrypoints.schema_surface

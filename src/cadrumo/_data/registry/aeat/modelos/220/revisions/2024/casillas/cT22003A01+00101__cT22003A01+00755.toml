@@ -1,0 +1,718 @@
+# Modelo 220 RECORD T22003A01 -- BALANCE CONSOLIDADO, ACTIVO, in the shape used by entidades de credito: the
+# financial-asset portfolios by measurement category, derivados de
+# cobertura, inversiones en negocios conjuntos y asociadas, and activos
+# tangibles.
+#
+# 54 casillas describe all 64 design fields -- 54 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position. Every box carries AEAT's own five-digit
+# number, so not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# THIRTY-THREE OF THESE FIFTY-FOUR BOXES SHARE A LABEL WITH A SIBLING, and that
+# is the honest cost of not inventing a hierarchy. This record is a PORTFOLIO x
+# INSTRUMENT matrix: AEAT prints the portfolio head on its own row -- [00102]
+# mantenidos para negociar, [00615] no destinados a negociacion, [00110]
+# designados a valor razonable, [00623] con cambios en otro resultado global,
+# [00631] a coste amortizado -- and then prints the instrument rows beneath it
+# WITHOUT the portfolio name. Five boxes read "Valores representativos de
+# deuda", five read "Prestamos y anticipos" and five read the same Pro memoria
+# line, each belonging to a different portfolio.
+#
+# THE PORTFOLIO IS NOT DERIVED FROM POSITION. On T22005A01 the obvious adjacency
+# rule -- parent is the nearest preceding unrepeated line -- was tried and proved
+# WRONG IN FOUR PLACES. Here a numbering-block rule would be PARTIAL: the 00615,
+# 00623 and 00631 runs are contiguous, while the 00102 and 00110 runs have gaps
+# and their Pro memoria lines carry out-of-run numbers [00750] and [00751]. A
+# rule that works for three blocks and not two is the "right most of the time"
+# case this campaign has already refused once.
+#
+# CONSEQUENCE, STATED PLAINLY: the box number is the only disambiguator this
+# data supports, and an operator surface that shows labels without numbers will
+# present five identical rows on this page. That is a real cost, recorded rather
+# than traded for an unverifiable tree.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
+# intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is
+# derived as the common prefix of every numbered line and the remainder is stripped, so
+# both spellings land on the same heading. 0 parent-child separator
+# repair(s)
+# applied: none needed.
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 0
+# rejoin(s) applied: none.
+
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22003A01 tiles
+# 1..1095 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 03, letra A, hoja 01. Sibling sector pages of this
+# family share every heading AEAT prints in the BODY -- two records both head their
+# lines "ACTIVO" and both declare a "Total activo" -- so the envelope is the ONLY
+# non-inferential way to tell them apart. The operator label carries it for exactly
+# that reason; it claims no sector, which the design does not state.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @934+150 RESERVADO PARA LA ADMINISTRACION; and
+# @1084+12 Fin de registro.
+#
+# NOT CLAIMED: THIS BALANCE SHEET DOES NOT BALANCE HERE. Every subtotal and the TOTAL are
+# DECLARED, not computed: no formula, construct or binding sums a group into its head or
+# the heads into the total, and nothing checks activo against patrimonio neto plus pasivo.
+# Every box is a manual input.
+
+# @16+17 N. ACTIVO. Efectivo, saldos en efectivo en bancos centrales y otros depósitos a la vista. [00101]
+[[revisions."2024".casillas]]
+id = "T22003A01:00101"
+number = "00101"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. ACTIVO. Activos financieros mantenidos para negociar. [00102]
+[[revisions."2024".casillas]]
+id = "T22003A01:00102"
+number = "00102"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. ACTIVO. Derivados. [00103]
+[[revisions."2024".casillas]]
+id = "T22003A01:00103"
+number = "00103"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. ACTIVO. Instrumentos de patrimonio. [00104]
+[[revisions."2024".casillas]]
+id = "T22003A01:00104"
+number = "00104"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. ACTIVO. Valores representativos de deuda. [00105]
+[[revisions."2024".casillas]]
+id = "T22003A01:00105"
+number = "00105"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. ACTIVO. Préstamos y anticipos. [00106]
+[[revisions."2024".casillas]]
+id = "T22003A01:00106"
+number = "00106"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. ACTIVO. Préstamos y anticipos. Bancos centrales. [00107]
+[[revisions."2024".casillas]]
+id = "T22003A01:00107"
+number = "00107"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. ACTIVO. Préstamos y anticipos. Entidades de crédito. [00108]
+[[revisions."2024".casillas]]
+id = "T22003A01:00108"
+number = "00108"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. ACTIVO. Préstamos y anticipos. Clientela. [00109]
+[[revisions."2024".casillas]]
+id = "T22003A01:00109"
+number = "00109"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. ACTIVO. Pro memoria: prestados o entregados como garantía con derecho de venta o pignoración. [00750]
+[[revisions."2024".casillas]]
+id = "T22003A01:00750"
+number = "00750"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. ACTIVO. Activos financieros no destinados a negociación valorados obligatoriamente a valor razonable con cambios en resultados. [00615]
+[[revisions."2024".casillas]]
+id = "T22003A01:00615"
+number = "00615"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. ACTIVO. Instrumentos de patrimonio. [00616]
+[[revisions."2024".casillas]]
+id = "T22003A01:00616"
+number = "00616"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. ACTIVO. Valores representativos de deuda. [00617]
+[[revisions."2024".casillas]]
+id = "T22003A01:00617"
+number = "00617"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. ACTIVO. Préstamos y anticipos. [00618]
+[[revisions."2024".casillas]]
+id = "T22003A01:00618"
+number = "00618"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. ACTIVO. Bancos centrales. [00619]
+[[revisions."2024".casillas]]
+id = "T22003A01:00619"
+number = "00619"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. ACTIVO. Entidades de crédito. [00620]
+[[revisions."2024".casillas]]
+id = "T22003A01:00620"
+number = "00620"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. ACTIVO. Clientela. [00621]
+[[revisions."2024".casillas]]
+id = "T22003A01:00621"
+number = "00621"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. ACTIVO. Pro memoria: prestados o entregados como garantía con derecho de venta o pignoración. [00622]
+[[revisions."2024".casillas]]
+id = "T22003A01:00622"
+number = "00622"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. ACTIVO. Activos financieros designados a valor razonable con cambios en resultados. [00110]
+[[revisions."2024".casillas]]
+id = "T22003A01:00110"
+number = "00110"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. ACTIVO. Valores representativos de deuda. [00112]
+[[revisions."2024".casillas]]
+id = "T22003A01:00112"
+number = "00112"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 N. ACTIVO. Préstamos y anticipos. [00113]
+[[revisions."2024".casillas]]
+id = "T22003A01:00113"
+number = "00113"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17 N. ACTIVO. Préstamos y anticipos. Bancos centrales.[00114]
+[[revisions."2024".casillas]]
+id = "T22003A01:00114"
+number = "00114"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17 N. ACTIVO. Préstamos y anticipos. Entidades de crédito. [00115]
+[[revisions."2024".casillas]]
+id = "T22003A01:00115"
+number = "00115"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17 N. ACTIVO. Préstamos y anticipos. Clientela. [00116]
+[[revisions."2024".casillas]]
+id = "T22003A01:00116"
+number = "00116"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17 N. ACTIVO. Pro memoria: prestados o entregados como garantía con derecho de venta o pignoración. [00751]
+[[revisions."2024".casillas]]
+id = "T22003A01:00751"
+number = "00751"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17 N. ACTIVO. Activos financieros a valor razonable con cambios en otro resultado global. [00623]
+[[revisions."2024".casillas]]
+id = "T22003A01:00623"
+number = "00623"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17 N. ACTIVO. Instrumentos de patrimonio. [00624]
+[[revisions."2024".casillas]]
+id = "T22003A01:00624"
+number = "00624"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @475+17 N. ACTIVO. Valores representativos de deuda. [00625]
+[[revisions."2024".casillas]]
+id = "T22003A01:00625"
+number = "00625"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @492+17 N. ACTIVO. Préstamos y anticipos. [00626]
+[[revisions."2024".casillas]]
+id = "T22003A01:00626"
+number = "00626"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @509+17 N. ACTIVO. Bancos centrales. [00627]
+[[revisions."2024".casillas]]
+id = "T22003A01:00627"
+number = "00627"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @526+17 N. ACTIVO. Entidades de crédito. [00628]
+[[revisions."2024".casillas]]
+id = "T22003A01:00628"
+number = "00628"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @543+17 N. ACTIVO. Clientela. [00629]
+[[revisions."2024".casillas]]
+id = "T22003A01:00629"
+number = "00629"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @560+17 N. ACTIVO. Pro memoria: prestados o entregados como garantía con derecho de venta o pignoración. [00630]
+[[revisions."2024".casillas]]
+id = "T22003A01:00630"
+number = "00630"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @577+17 N. ACTIVO. Activos financieros a coste amortizado. [00631]
+[[revisions."2024".casillas]]
+id = "T22003A01:00631"
+number = "00631"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @594+17 N. ACTIVO. Valores representativos de deuda. [00632]
+[[revisions."2024".casillas]]
+id = "T22003A01:00632"
+number = "00632"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @611+17 N. ACTIVO. Préstamos y anticipos. [00633]
+[[revisions."2024".casillas]]
+id = "T22003A01:00633"
+number = "00633"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @628+17 N. ACTIVO. Bancos centrales. [00634]
+[[revisions."2024".casillas]]
+id = "T22003A01:00634"
+number = "00634"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @645+17 N. ACTIVO. Entidades de crédito. [00635]
+[[revisions."2024".casillas]]
+id = "T22003A01:00635"
+number = "00635"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @662+17 N. ACTIVO. Clientela. [00636]
+[[revisions."2024".casillas]]
+id = "T22003A01:00636"
+number = "00636"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @679+17 N. ACTIVO. Pro memoria: prestados o entregados como garantía con derecho de venta o pignoración. [00637]
+[[revisions."2024".casillas]]
+id = "T22003A01:00637"
+number = "00637"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @696+17 N. ACTIVO. Derivados - contabilidad de coberturas. [00127]
+[[revisions."2024".casillas]]
+id = "T22003A01:00127"
+number = "00127"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @713+17 N. ACTIVO. Cambios del valor razonable de los elementos cubiertos de una cartera con cobertura del riesgo de tipo de interés. [00128]
+[[revisions."2024".casillas]]
+id = "T22003A01:00128"
+number = "00128"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @730+17 N. ACTIVO. Inversiones en negocios conjuntos y asociadas. [00129]
+[[revisions."2024".casillas]]
+id = "T22003A01:00129"
+number = "00129"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @747+17 N. ACTIVO. Negocios conjuntos. [00131]
+[[revisions."2024".casillas]]
+id = "T22003A01:00131"
+number = "00131"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @764+17 N. ACTIVO. Asociadas. [00132]
+[[revisions."2024".casillas]]
+id = "T22003A01:00132"
+number = "00132"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @781+17 N. ACTIVO. Activos amparados por contratos de seguro o reaseguro. [00133]
+[[revisions."2024".casillas]]
+id = "T22003A01:00133"
+number = "00133"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @798+17 N. ACTIVO. Activos tangibles. [00134]
+[[revisions."2024".casillas]]
+id = "T22003A01:00134"
+number = "00134"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @815+17 N. ACTIVO. Inmovilizado material. [00135]
+[[revisions."2024".casillas]]
+id = "T22003A01:00135"
+number = "00135"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @832+17 N. ACTIVO. Inmovilizado material. De uso propio. [00136]
+[[revisions."2024".casillas]]
+id = "T22003A01:00136"
+number = "00136"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @849+17 N. ACTIVO. Inmovilizado material. Cedido en arrendamiento operativo. [00137]
+[[revisions."2024".casillas]]
+id = "T22003A01:00137"
+number = "00137"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @866+17 N. ACTIVO. Inmovilizado material. Afecto a la obra social (cajas de ahorros y cooperativas de crédito). [00138]
+[[revisions."2024".casillas]]
+id = "T22003A01:00138"
+number = "00138"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @883+17 N. ACTIVO.Inversiones inmobiliarias. [00139]
+[[revisions."2024".casillas]]
+id = "T22003A01:00139"
+number = "00139"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @900+17 N. ACTIVO. Inversiones inmobiliarias. De las cuales: cedido en arrendamiento operativo. [00140]
+[[revisions."2024".casillas]]
+id = "T22003A01:00140"
+number = "00140"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @917+17 N. ACTIVO. Pro memoria: adquirido en arrendamiento financiero. [00755]
+[[revisions."2024".casillas]]
+id = "T22003A01:00755"
+number = "00755"
+segmento = "T22003A01"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

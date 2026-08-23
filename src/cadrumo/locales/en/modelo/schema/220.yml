@@ -152,6 +152,159 @@ modelo:
             x-agp34c1g6d0j0c1q60o3edhh:
               help: null
               label: Consolidated balance sheet. Assets (pag. 3A hoja 00). Other
+            x-agp34c1g6d0j0c9q60o32c1h:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Cash, cash
+                balances at central banks and other demand deposits
+            x-agp34c1g6d0j0c9q60o32c1i:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Financial
+                assets held for trading
+            x-agp34c1g6d0j0c9q60o32c1j:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Derivatives
+            x-agp34c1g6d0j0c9q60o32c1k:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Equity
+                instruments
+            x-agp34c1g6d0j0c9q60o32c1l:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Debt securities
+            x-agp34c1g6d0j0c9q60o32c1m:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Loans and
+                advances
+            x-agp34c1g6d0j0c9q60o32c1n:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Loans and
+                advances. Central banks
+            x-agp34c1g6d0j0c9q60o32c1o:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Loans and
+                advances. Credit institutions
+            x-agp34c1g6d0j0c9q60o32c1p:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Loans and
+                advances. Customers
+            x-agp34c1g6d0j0c9q60o32c9g:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Financial
+                assets designated at fair value through profit or loss
+            x-agp34c1g6d0j0c9q60o32c9i:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Debt securities
+            x-agp34c1g6d0j0c9q60o32c9j:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Loans and
+                advances
+            x-agp34c1g6d0j0c9q60o32c9k:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Loans and
+                advances. Central banks
+            x-agp34c1g6d0j0c9q60o32c9l:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Loans and
+                advances. Credit institutions
+            x-agp34c1g6d0j0c9q60o32c9m:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Loans and
+                advances. Customers
+            x-agp34c1g6d0j0c9q60o32chn:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Derivatives
+                - hedge accounting
+            x-agp34c1g6d0j0c9q60o32cho:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Fair value
+                changes of the hedged items in a portfolio hedge of interest rate
+                risk
+            x-agp34c1g6d0j0c9q60o32chp:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Investments
+                in joint ventures and associates
+            x-agp34c1g6d0j0c9q60o32cph:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Joint ventures
+            x-agp34c1g6d0j0c9q60o32cpi:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Associates
+            x-agp34c1g6d0j0c9q60o32cpj:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Assets
+                covered by insurance or reinsurance contracts
+            x-agp34c1g6d0j0c9q60o32cpk:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Tangible
+                assets
+            x-agp34c1g6d0j0c9q60o32cpl:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Property,
+                plant and equipment
+            x-agp34c1g6d0j0c9q60o32cpm:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Property,
+                plant and equipment. For own use
+            x-agp34c1g6d0j0c9q60o32cpn:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Property,
+                plant and equipment. Leased out under operating leases
+            x-agp34c1g6d0j0c9q60o32cpo:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Property,
+                plant and equipment. Assigned to welfare projects (savings banks and
+                credit cooperatives)
+            x-agp34c1g6d0j0c9q60o32cpp:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Investment
+                property
+            x-agp34c1g6d0j0c9q60o32d1g:
+              label: 'Consolidated balance sheet. Assets (pag. 3A hoja 01). Investment
+                property. Of which: leased out under operating leases'
+            x-agp34c1g6d0j0c9q60o3cc9l:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Non-trading
+                financial assets mandatorily at fair value through profit or loss
+            x-agp34c1g6d0j0c9q60o3cc9m:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Equity
+                instruments
+            x-agp34c1g6d0j0c9q60o3cc9n:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Debt securities
+            x-agp34c1g6d0j0c9q60o3cc9o:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Loans and
+                advances
+            x-agp34c1g6d0j0c9q60o3cc9p:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Central
+                banks
+            x-agp34c1g6d0j0c9q60o3cchg:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Credit
+                institutions
+            x-agp34c1g6d0j0c9q60o3cchh:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Customers
+            x-agp34c1g6d0j0c9q60o3cchi:
+              label: 'Consolidated balance sheet. Assets (pag. 3A hoja 01). Memorandum
+                item: lent or pledged as collateral with a right of sale or pledge'
+            x-agp34c1g6d0j0c9q60o3cchj:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Financial
+                assets at fair value through other comprehensive income
+            x-agp34c1g6d0j0c9q60o3cchk:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Equity
+                instruments
+            x-agp34c1g6d0j0c9q60o3cchl:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Debt securities
+            x-agp34c1g6d0j0c9q60o3cchm:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Loans and
+                advances
+            x-agp34c1g6d0j0c9q60o3cchn:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Central
+                banks
+            x-agp34c1g6d0j0c9q60o3ccho:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Credit
+                institutions
+            x-agp34c1g6d0j0c9q60o3cchp:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Customers
+            x-agp34c1g6d0j0c9q60o3ccpg:
+              label: 'Consolidated balance sheet. Assets (pag. 3A hoja 01). Memorandum
+                item: lent or pledged as collateral with a right of sale or pledge'
+            x-agp34c1g6d0j0c9q60o3ccph:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Financial
+                assets at amortised cost
+            x-agp34c1g6d0j0c9q60o3ccpi:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Debt securities
+            x-agp34c1g6d0j0c9q60o3ccpj:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Loans and
+                advances
+            x-agp34c1g6d0j0c9q60o3ccpk:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Central
+                banks
+            x-agp34c1g6d0j0c9q60o3ccpl:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Credit
+                institutions
+            x-agp34c1g6d0j0c9q60o3ccpm:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 01). Customers
+            x-agp34c1g6d0j0c9q60o3ccpn:
+              label: 'Consolidated balance sheet. Assets (pag. 3A hoja 01). Memorandum
+                item: lent or pledged as collateral with a right of sale or pledge'
+            x-agp34c1g6d0j0c9q60o3ed9g:
+              label: 'Consolidated balance sheet. Assets (pag. 3A hoja 01). Memorandum
+                item: lent or pledged as collateral with a right of sale or pledge'
+            x-agp34c1g6d0j0c9q60o3ed9h:
+              label: 'Consolidated balance sheet. Assets (pag. 3A hoja 01). Memorandum
+                item: lent or pledged as collateral with a right of sale or pledge'
+            x-agp34c1g6d0j0c9q60o3ed9l:
+              label: 'Consolidated balance sheet. Assets (pag. 3A hoja 01). Memorandum
+                item: acquired under finance leases'
             x-agp34c1g6d0j0chq60o32c1h:
               help: null
               label: Consolidated balance sheet. Assets (pag. 3A hoja 02). Cash and
@@ -342,6 +495,37 @@ modelo:
               help: null
               label: Consolidated balance sheet. Assets (pag. 3A hoja 02). Loans and
                 receivables. Loans. Other
+            x-agp34c1g6d0j2c9q60o32d1h:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 11). Intangible
+                assets
+            x-agp34c1g6d0j2c9q60o32d1i:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 11). Goodwill
+            x-agp34c1g6d0j2c9q60o32d1j:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 11). Other intangible
+                assets
+            x-agp34c1g6d0j2c9q60o32d1k:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 11). Tax assets
+            x-agp34c1g6d0j2c9q60o32d1l:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 11). Current
+                tax assets
+            x-agp34c1g6d0j2c9q60o32d1m:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 11). Deferred
+                tax assets
+            x-agp34c1g6d0j2c9q60o32d1n:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 11). Other assets
+            x-agp34c1g6d0j2c9q60o32d1o:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 11). Insurance
+                contracts linked to pensions
+            x-agp34c1g6d0j2c9q60o32d1p:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 11). Inventories
+            x-agp34c1g6d0j2c9q60o32d9g:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 11). Remaining
+                other assets
+            x-agp34c1g6d0j2c9q60o32d9h:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 11). Non-current
+                assets and disposal groups classified as held for sale
+            x-agp34c1g6d0j2c9q60o32d9i:
+              label: Consolidated balance sheet. Assets (pag. 3A hoja 11). Total assets
             x-agp34c1g6d130c1q60o30c1j:
               help: null
               label: Consolidated balance sheet. Equity and liabilities. Legal and

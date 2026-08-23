@@ -147,6 +147,147 @@ modelo:
             x-agp34c1g6d0j0c1q60o3edhh:
               help: null
               label: Balanc consolidat. Actiu (pag. 3A hoja 00). Altres
+            x-agp34c1g6d0j0c9q60o32c1h:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Efectiu, saldos en
+                efectiu en bancs centrals i altres diposits a la vista
+            x-agp34c1g6d0j0c9q60o32c1i:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Actius financers
+                mantinguts per negociar
+            x-agp34c1g6d0j0c9q60o32c1j:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Derivats
+            x-agp34c1g6d0j0c9q60o32c1k:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Instruments de patrimoni
+            x-agp34c1g6d0j0c9q60o32c1l:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Valors representatius
+                de deute
+            x-agp34c1g6d0j0c9q60o32c1m:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Prestecs i bestretes
+            x-agp34c1g6d0j0c9q60o32c1n:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Prestecs i bestretes.
+                Bancs centrals
+            x-agp34c1g6d0j0c9q60o32c1o:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Prestecs i bestretes.
+                Entitats de credit
+            x-agp34c1g6d0j0c9q60o32c1p:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Prestecs i bestretes.
+                Clientela
+            x-agp34c1g6d0j0c9q60o32c9g:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Actius financers
+                designats a valor raonable amb canvis en resultats
+            x-agp34c1g6d0j0c9q60o32c9i:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Valors representatius
+                de deute
+            x-agp34c1g6d0j0c9q60o32c9j:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Prestecs i bestretes
+            x-agp34c1g6d0j0c9q60o32c9k:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Prestecs i bestretes.
+                Bancs centrals
+            x-agp34c1g6d0j0c9q60o32c9l:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Prestecs i bestretes.
+                Entitats de credit
+            x-agp34c1g6d0j0c9q60o32c9m:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Prestecs i bestretes.
+                Clientela
+            x-agp34c1g6d0j0c9q60o32chn:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Derivats - comptabilitat
+                de cobertures
+            x-agp34c1g6d0j0c9q60o32cho:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Canvis del valor
+                raonable dels elements coberts d'una cartera amb cobertura del risc
+                de tipus d'interes
+            x-agp34c1g6d0j0c9q60o32chp:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Inversions en negocis
+                conjunts i associades
+            x-agp34c1g6d0j0c9q60o32cph:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Negocis conjunts
+            x-agp34c1g6d0j0c9q60o32cpi:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Associades
+            x-agp34c1g6d0j0c9q60o32cpj:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Actius emparats per
+                contractes d'asseguranca o reassegurament
+            x-agp34c1g6d0j0c9q60o32cpk:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Actius tangibles
+            x-agp34c1g6d0j0c9q60o32cpl:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Immobilitzat material
+            x-agp34c1g6d0j0c9q60o32cpm:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Immobilitzat material.
+                D'us propi
+            x-agp34c1g6d0j0c9q60o32cpn:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Immobilitzat material.
+                Cedit en arrendament operatiu
+            x-agp34c1g6d0j0c9q60o32cpo:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Immobilitzat material.
+                Afecte a l'obra social (caixes d'estalvis i cooperatives de credit)
+            x-agp34c1g6d0j0c9q60o32cpp:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Inversions immobiliaries
+            x-agp34c1g6d0j0c9q60o32d1g:
+              label: 'Balanc consolidat. Actiu (pag. 3A hoja 01). Inversions immobiliaries.
+                De les quals: cedit en arrendament operatiu'
+            x-agp34c1g6d0j0c9q60o3cc9l:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Actius financers
+                no destinats a negociacio valorats obligatoriament a valor raonable
+                amb canvis en resultats
+            x-agp34c1g6d0j0c9q60o3cc9m:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Instruments de patrimoni
+            x-agp34c1g6d0j0c9q60o3cc9n:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Valors representatius
+                de deute
+            x-agp34c1g6d0j0c9q60o3cc9o:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Prestecs i bestretes
+            x-agp34c1g6d0j0c9q60o3cc9p:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Bancs centrals
+            x-agp34c1g6d0j0c9q60o3cchg:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Entitats de credit
+            x-agp34c1g6d0j0c9q60o3cchh:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Clientela
+            x-agp34c1g6d0j0c9q60o3cchi:
+              label: 'Balanc consolidat. Actiu (pag. 3A hoja 01). Pro memoria: prestats
+                o lliurats com a garantia amb dret de venda o pignoracio'
+            x-agp34c1g6d0j0c9q60o3cchj:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Actius financers
+                a valor raonable amb canvis en altre resultat global
+            x-agp34c1g6d0j0c9q60o3cchk:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Instruments de patrimoni
+            x-agp34c1g6d0j0c9q60o3cchl:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Valors representatius
+                de deute
+            x-agp34c1g6d0j0c9q60o3cchm:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Prestecs i bestretes
+            x-agp34c1g6d0j0c9q60o3cchn:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Bancs centrals
+            x-agp34c1g6d0j0c9q60o3ccho:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Entitats de credit
+            x-agp34c1g6d0j0c9q60o3cchp:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Clientela
+            x-agp34c1g6d0j0c9q60o3ccpg:
+              label: 'Balanc consolidat. Actiu (pag. 3A hoja 01). Pro memoria: prestats
+                o lliurats com a garantia amb dret de venda o pignoracio'
+            x-agp34c1g6d0j0c9q60o3ccph:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Actius financers
+                a cost amortitzat
+            x-agp34c1g6d0j0c9q60o3ccpi:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Valors representatius
+                de deute
+            x-agp34c1g6d0j0c9q60o3ccpj:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Prestecs i bestretes
+            x-agp34c1g6d0j0c9q60o3ccpk:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Bancs centrals
+            x-agp34c1g6d0j0c9q60o3ccpl:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Entitats de credit
+            x-agp34c1g6d0j0c9q60o3ccpm:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 01). Clientela
+            x-agp34c1g6d0j0c9q60o3ccpn:
+              label: 'Balanc consolidat. Actiu (pag. 3A hoja 01). Pro memoria: prestats
+                o lliurats com a garantia amb dret de venda o pignoracio'
+            x-agp34c1g6d0j0c9q60o3ed9g:
+              label: 'Balanc consolidat. Actiu (pag. 3A hoja 01). Pro memoria: prestats
+                o lliurats com a garantia amb dret de venda o pignoracio'
+            x-agp34c1g6d0j0c9q60o3ed9h:
+              label: 'Balanc consolidat. Actiu (pag. 3A hoja 01). Pro memoria: prestats
+                o lliurats com a garantia amb dret de venda o pignoracio'
+            x-agp34c1g6d0j0c9q60o3ed9l:
+              label: 'Balanc consolidat. Actiu (pag. 3A hoja 01). Pro memoria: adquirit
+                en arrendament financer'
             x-agp34c1g6d0j0chq60o32c1h:
               help: null
               label: Balanc consolidat. Actiu (pag. 3A hoja 02). Efectiu i altres
@@ -340,6 +481,36 @@ modelo:
               help: null
               label: Balanc consolidat. Actiu (pag. 3A hoja 02). Prestecs i partides
                 a cobrar. Prestecs. Altres
+            x-agp34c1g6d0j2c9q60o32d1h:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 11). Actius intangibles
+            x-agp34c1g6d0j2c9q60o32d1i:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 11). Fons de comerc
+            x-agp34c1g6d0j2c9q60o32d1j:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 11). Altres actius intangibles
+            x-agp34c1g6d0j2c9q60o32d1k:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 11). Actius per impostos
+            x-agp34c1g6d0j2c9q60o32d1l:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 11). Actius per impostos
+                corrents
+            x-agp34c1g6d0j2c9q60o32d1m:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 11). Actius per impostos
+                diferits
+            x-agp34c1g6d0j2c9q60o32d1n:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 11). Altres actius
+            x-agp34c1g6d0j2c9q60o32d1o:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 11). Contractes d'assegurances
+                vinculats a pensions
+            x-agp34c1g6d0j2c9q60o32d1p:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 11). Existencies
+            x-agp34c1g6d0j2c9q60o32d9g:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 11). Resta dels altres
+                actius
+            x-agp34c1g6d0j2c9q60o32d9h:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 11). Actius no corrents
+                i grups alienables d'elements classificats com a mantinguts per a
+                la venda
+            x-agp34c1g6d0j2c9q60o32d9i:
+              label: Balanc consolidat. Actiu (pag. 3A hoja 11). Total actiu
             x-agp34c1g6d130c1q60o30c1j:
               help: null
               label: Balanc consolidat. Patrimoni net i passiu. Reserva legal i estatutaria

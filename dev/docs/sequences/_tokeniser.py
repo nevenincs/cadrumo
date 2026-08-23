@@ -2,17 +2,16 @@
 
 Highlighting a documented command is correct by construction only if it is
 classified against the real command tree, never by client-side bash guessing.
-This module tokenises one frame's ``argv`` against the materialised Click tree:
+This module tokenises one frame's ``argv`` against the immutable command graph:
 each token is classified as the executable, a group verb, a leaf verb, an
 option, an option value, a positional argument, or an interpolated ``{name}``
 placeholder, and every verb (and option) token carries the command-path key the
 frontend widget uses to open that path's live ``--help`` from the generated
 ``cli-tree.json`` projection.
 
-Tokenisation runs in Python at build time against the same tree the CLI
-reference is projected from (``dev/docs/cli_reference.py`` materialises it with
-the lazy subtrees forced): the classifier reuses that materialisation so the
-token grammar and the help catalogue cannot diverge. The output is a tuple of
+Tokenisation runs in Python at build time against the same immutable graph the
+CLI reference uses, so the token grammar and the help catalogue cannot diverge.
+The output is a tuple of
 strict :class:`CommandToken` records that the ``cli-sequence`` directive turns
 into HTML spans and inlines into its per-sequence JSON payload.
 """
@@ -107,50 +106,28 @@ def command_path_key(path: Sequence[str]) -> str:
 
 @cache
 def _command_tree() -> Mapping[tuple[str, ...], _NodeInfo]:
-    """Materialise the Click tree once and project it to a token-classification index.
-
-    Reuses the CLI-reference materialisation (lazy subtrees forced, root named)
-    so the tokeniser classifies against exactly the tree the help projection is
-    built from. Cached for the life of the build process.
-    """
-    from typing import cast
-
-    import click
-    from typer.main import get_command
-
-    from cadrumo.entrypoints.cli import app
-
-    # The materialisation helpers are the shared docs-tooling substrate; reusing
-    # them keeps the token grammar bound to the same tree the reference projects.
-    from ..cli_reference import _collect_commands, _force_lazy_imports
-
-    _force_lazy_imports(app)
-    # Typer vendors its own Click fork; get_command returns typer's Command type,
-    # bridged to the click.Command the walk consumes (the cli_runner pattern).
-    root = cast(click.Command, get_command(app))
-    root.name = app.info.name or _EXECUTABLE
-    nodes = _collect_commands(root)
+    """Project the command graph once to a token-classification index."""
+    from cadrumo.entrypoints.cli.command_api import OptionSpec, command_spec_nodes
 
     children: defaultdict[tuple[str, ...], set[str]] = defaultdict(set)
-    for path in nodes:
+    nodes = command_spec_nodes()
+    for node in nodes:
+        path = node.path
         if len(path) >= 2:
             children[path[:-1]].add(path[-1])
 
     index: dict[tuple[str, ...], _NodeInfo] = {}
-    for path, cmd in nodes.items():
-        is_group = isinstance(cmd, click.Group) or hasattr(cmd, "list_commands")
+    for node in nodes:
+        path = node.path
         options: dict[str, bool] = {}
-        for param in cmd.params:
-            # Duck-type on the Click param kind rather than isinstance: Typer
-            # vendors its own Click fork, so a TyperOption is not the installed
-            # click.Option and an isinstance check silently misses every option.
-            if getattr(param, "param_type_name", None) != "option":
+        for param in node.spec.parameters:
+            if not isinstance(param, OptionSpec):
                 continue
-            takes_value = not (getattr(param, "is_flag", False) or getattr(param, "count", False))
-            for opt in (*param.opts, *getattr(param, "secondary_opts", ())):
+            takes_value = not param.is_flag
+            for opt in param.declarations:
                 options[opt] = takes_value
         index[path] = _NodeInfo(
-            is_group=is_group,
+            is_group=node.spec.kind != "leaf",
             children=frozenset(children.get(path, frozenset())),
             options=options,
         )
@@ -163,7 +140,7 @@ def _is_option_token(token: str) -> bool:
 
 
 def tokenise_command(argv: Sequence[str]) -> tuple[CommandToken, ...]:
-    """Classify every token of a frame's ``argv`` against the materialised Click tree.
+    """Classify every token of a frame's ``argv`` against the command graph.
 
     ``argv`` leads with the ``aeat`` executable and may carry ``{name}``
     placeholder tokens (unresolved, as authored). Verb resolution walks the tree

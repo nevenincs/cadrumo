@@ -1,0 +1,200 @@
+# Modelo 220 RECORD T22003A11 -- BALANCE CONSOLIDADO, ACTIVO (continuation), in the shape used by entidades de
+# credito: activos intangibles, activos por impuestos, otros activos,
+# activos no corrientes mantenidos para la venta, and the closing TOTAL
+# ACTIVO.
+#
+# 12 casillas describe all 22 design fields -- 12 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position. Every box carries AEAT's own five-digit
+# number, so not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# THIS RECORD SPELLS ITS OWN HEADING TWO WAYS -- "ACTIVO (cont.)." on one line
+# and "ACTIVO (cont)." on the others. A common-prefix derivation stops mid-word
+# at "ACTIVO (cont" and finds no heading at all, so this sheet declares a
+# heading PATTERN instead; every numbered line is asserted to match it and the
+# spellings actually found are reported above. The variants are handled as
+# evidence, not papered over.
+#
+# IT CLOSES THE CREDITO ACTIVO on [00152] TOTAL ACTIVO, continuing T22003A01.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
+# intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is
+# derived as the common prefix of every numbered line and the remainder is stripped, so
+# both spellings land on the same heading. the record spells its own heading 2 way(s): ACTIVO (cont)., ACTIVO (cont.).. 0 parent-child separator
+# repair(s)
+# applied: none needed.
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 0
+# rejoin(s) applied: none.
+
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22003A11 tiles
+# 1..381 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 03, letra A, hoja 11. Sibling sector pages of this
+# family share every heading AEAT prints in the BODY -- two records both head their
+# lines "ACTIVO" and both declare a "Total activo" -- so the envelope is the ONLY
+# non-inferential way to tell them apart. The operator label carries it for exactly
+# that reason; it claims no sector, which the design does not state.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @220+150 RESERVADO PARA LA ADMINISTRACION; and
+# @370+12 Fin de registro.
+#
+# NOT CLAIMED: THIS BALANCE SHEET DOES NOT BALANCE HERE. Every subtotal and the TOTAL are
+# DECLARED, not computed: no formula, construct or binding sums a group into its head or
+# the heads into the total, and nothing checks activo against patrimonio neto plus pasivo.
+# Every box is a manual input.
+
+# @16+17 N. ACTIVO (cont.). Activos intangibles. [00141]
+[[revisions."2024".casillas]]
+id = "T22003A11:00141"
+number = "00141"
+segmento = "T22003A11"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. ACTIVO (cont). Fondo de comercio. [00142]
+[[revisions."2024".casillas]]
+id = "T22003A11:00142"
+number = "00142"
+segmento = "T22003A11"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. ACTIVO (cont). Otros activos intangibles. [00143]
+[[revisions."2024".casillas]]
+id = "T22003A11:00143"
+number = "00143"
+segmento = "T22003A11"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. ACTIVO (cont). Activos por impuestos. [00144]
+[[revisions."2024".casillas]]
+id = "T22003A11:00144"
+number = "00144"
+segmento = "T22003A11"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. ACTIVO (cont). Activos por impuestos corrientes. [00145]
+[[revisions."2024".casillas]]
+id = "T22003A11:00145"
+number = "00145"
+segmento = "T22003A11"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. ACTIVO (cont). Activos por impuestos diferidos. [00146]
+[[revisions."2024".casillas]]
+id = "T22003A11:00146"
+number = "00146"
+segmento = "T22003A11"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. ACTIVO (cont). Otros activos. [00147]
+[[revisions."2024".casillas]]
+id = "T22003A11:00147"
+number = "00147"
+segmento = "T22003A11"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. ACTIVO (cont). Contratos de seguros vinculados a pensiones. [00148]
+[[revisions."2024".casillas]]
+id = "T22003A11:00148"
+number = "00148"
+segmento = "T22003A11"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. ACTIVO (cont). Existencias. [00149]
+[[revisions."2024".casillas]]
+id = "T22003A11:00149"
+number = "00149"
+segmento = "T22003A11"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. ACTIVO (cont). Resto de los otros activos. [00150]
+[[revisions."2024".casillas]]
+id = "T22003A11:00150"
+number = "00150"
+segmento = "T22003A11"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. ACTIVO (cont). Activos no corrientes y grupos enajenables de elementos que se han clasificado como mantenidos para la venta [00151]
+[[revisions."2024".casillas]]
+id = "T22003A11:00151"
+number = "00151"
+segmento = "T22003A11"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. ACTIVO (cont). Total activo. [00152]
+[[revisions."2024".casillas]]
+id = "T22003A11:00152"
+number = "00152"
+segmento = "T22003A11"
+section = ["liquidacion", "balance_consolidado_activo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
