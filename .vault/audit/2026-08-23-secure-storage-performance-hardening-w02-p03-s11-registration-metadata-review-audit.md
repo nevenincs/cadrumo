@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:446355fc210a46b6bfe2c2645fba4b56f18fecdf58aab129cc03c4ef700951ce'
+body_hash: 'sha256:284619559bb0f2e1579b32f1b521105a9cd5c11a3468eeb11fa9f66170b0865e'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
 ---
@@ -65,6 +65,12 @@ Resolution: closed. The immutable ValueContract owns the `on` and `off` choices,
 Two unused private aliases retained the old materialized-schema names even though they delegated to the graph.
 
 Resolution: closed by physical deletion. Exact source scans find no generated resource reader, schema registry, materialized compatibility alias, or development generator.
+
+### competing-choice-authority | medium | Value contracts permitted contradictory choice mechanisms
+
+The first re-review found that a spec could combine authored choices with a Click type or parser, leaving one authority silently dead or deferring the conflict to runtime materialization.
+
+Resolution: closed. ValueContract construction rejects both combinations, and planted kernel tests cover each invalid form. Runtime and schema projection consume the same sole authored choice tuple.
 
 ## Recommendations
 

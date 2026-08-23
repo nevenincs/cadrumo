@@ -132,6 +132,14 @@ def test_kernel_is_immutable_import_light_and_derives_paths_from_edges() -> None
     assert probe.stdout.strip() == "0 0 0 0"
 
 
+@pytest.mark.parametrize("field", ["click_type", "parser"])
+def test_value_contract_refuses_competing_choice_authority(field: str) -> None:
+    target = DeferredTarget("builtins", "str")
+
+    with pytest.raises(ValueError, match="choices cannot be combined"):
+        ValueContract(target, choices=("on", "off"), **{field: target})  # type: ignore[arg-type]
+
+
 @pytest.mark.parametrize(
     ("specs", "message"),
     [

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:2132e112da35702021aed21a77aedd12da32fe0ecf928721fbd6e2cb3beed6e5'
+body_hash: 'sha256:ac7166e0229cbdf996e1df82a0bf1be4a03986f899934a3f04fda47e0f3ba43e'
 step_id: 'S11'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
@@ -23,6 +23,7 @@ related:
 - Re-prove result-schema identity, parameter, localized operator-help, policy, handler-target, and path discovery directly from the production CommandSpec graph.
 - Remove dormant materialized-schema compatibility aliases rather than preserving a fallback or re-export.
 - Move the remaining handler-owned toggle choices into immutable ValueContract data consumed by both runtime and schema projection, then delete the private behavior enum.
+- Reject authored choices combined with a parser or Click type so competing value authorities fail during spec construction.
 - Correct operator reconciliation provenance to identify production CommandSpec projections instead of a Click tree or schema registry.
 - Add fresh-process zero-handler-import and exact graph-set proofs over all 296 current result-schema identities.
 
