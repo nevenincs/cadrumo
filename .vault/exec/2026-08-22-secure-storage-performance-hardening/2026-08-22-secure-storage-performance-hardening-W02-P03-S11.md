@@ -19,59 +19,29 @@ related:
 
 ## Description
 
-- Generate one deterministic registration projection from the materialized
-  result-schema decorators and complete live Click tree in Spanish and English.
-- Project canonical paths, arguments, options, defaults, choices, localized
-  help, hidden and deprecated flags, callback execution policy, owners, and
-  normalized source fingerprints into cached immutable runtime records.
-- Route result-schema discovery, input-schema discovery, operator-surface
-  reconciliation, and MCP/HITL policy reads through metadata without loading
-  command handlers.
-- Preserve all result declarations for drift accounting while exposing only
-  callable identities through `command_schema_refs()`; exact-gate the four
-  declared-but-unimplemented identities rather than advertising or deleting
-  them.
-- Retain longest-prefix evidence for unknown command identities from the
-  generated complete-node projection.
-- Add exact-set, localized parity, deterministic generation, source binding,
-  packaging, fresh-process import, and planted-drift gates.
+- Retain the historical latency observation while rejecting its generated-resource mechanism as nonconforming evidence.
+- Re-prove result-schema identity, parameter, localized operator-help, policy, handler-target, and path discovery directly from the production CommandSpec graph.
+- Remove dormant materialized-schema compatibility aliases rather than preserving a fallback or re-export.
+- Move the remaining handler-owned toggle choices into immutable ValueContract data consumed by both runtime and schema projection, then delete the private behavior enum.
+- Correct operator reconciliation provenance to identify production CommandSpec projections instead of a Click tree or schema registry.
+- Add fresh-process zero-handler-import and exact graph-set proofs over all 296 current result-schema identities.
 
 ## Outcome
 
-Runtime discovery now consumes a single packaged metadata resource and imports
-none of its handler or payload owners after the projection is loaded. A
-fresh-process probe loaded no registry, persistence storage, user-profile,
-cryptography, or keyring family. Five metadata-only samples produced a median
-of 648.8 ms versus 5,216.0 ms for three materialized samples, an approximately
-eightfold reduction on the same host.
+Runtime schema and operator-help discovery now consumes only the tracked production CommandSpec graph. The exact result-schema, input-schema, and operator-help sets are derived dynamically; paths, localized help, parameters, policies, choices, and lazy public targets remain owned by their specs. A fresh-process probe projects every identity while loading zero newly imported behavior target modules.
 
-The projection retains 300 result-schema declarations and exactly reconciles
-the four stated absent verbs, while the callable input/operator/MCP surface
-contains 296 identities. These are evidence counts, not fixed pass thresholds:
-the gates derive both sets from the current generated and materialized sources.
-The complete root/group/leaf census is also generated and exact-gated, so a new
-node automatically requires metadata regeneration and parity.
+The original measurements remain useful historical latency observations: five metadata-oriented samples had a 648.8 ms median versus 5,216.0 ms for three materialized-tree samples on the same host, approximately eightfold lower. They do not validate the rejected generated JSON architecture, packaged-resource claim, old 300-row inventory, or former four-command gap. The post-S54 graph is the sole current authority and the retired passphrase path is absent.
 
 Verification passed:
 
 - scoped Ruff formatting and lint;
 - scoped `ty` analysis;
-- 15 focused unit tests;
-- 36 focused CLI/operator integration tests;
-- 8 focused MCP/HITL unit tests and 41 focused MCP/HITL integration tests;
-- 12 metadata-specific integration tests, including eight planted drift axes;
-- deterministic two-locale generator `--check`;
-- a real wheel build containing exactly one 1,932,220-byte metadata resource;
-- independent code review with both findings fixed and no open findings.
-
-Implementation landed through `2ced6e71f0`; the independent review record
-landed through `5fb055004d`; review fixes landed through `e3a40d1980`.
+- exact CommandSpec/result-schema/input-schema/operator-help parity;
+- fresh-process zero behavior-target import proof;
+- real operator action resolution from graph-owned paths and parameter contracts;
+- physical absence of both command JSON files, their readers, and their development generators;
+- independent code review with no open critical, high, medium, or low findings.
 
 ## Notes
 
-The reviewer found a HIGH callable-surface mismatch and a MEDIUM loss of
-unknown-path prefix evidence. Both are closed in the S11 audit and were rerun
-against the real operator and MCP/HITL consumers. Cross-platform source hashes
-normalize CRLF and LF before hashing; a semantic source change still changes
-the fingerprint. No S12 work was started. Unrelated shared-worktree locale
-changes were preserved and excluded from all commits.
+The former generated-resource commits and their review remain historical provenance only and are superseded by S54 plus this reproof. Neither the generated runtime resource nor its generator was restored. S14 was not started. Concurrent Modelo registry and locale work remained unstaged.

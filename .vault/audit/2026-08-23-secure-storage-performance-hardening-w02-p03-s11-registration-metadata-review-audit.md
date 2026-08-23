@@ -14,19 +14,11 @@ related:
 
 ## Scope
 
-Reviewed the W02.P03.S11 registration-metadata implementation against the
-accepted command-scoped-loading decision and the preceding S09/S10 contracts.
-The review covered the generated command and complete live-node projection,
-source identities, deterministic Spanish/English generation, options and
-arguments, help, hidden/deprecated flags, callback policy parity, the four
-explicitly unimplemented identities, metadata-only operator discovery,
-MCP/HITL reconciliation, tamper gates, and installed-package inclusion. The
-review inspected only the Step-owned implementation and tests; unrelated
-shared-worktree changes were excluded.
+Re-reviewed reopened W02.P03a.S11 after the S54 hard cut. The corrected scope is production CommandSpec-derived result-schema and operator-help discovery, exact input contracts, localized help, lazy target ownership, and fresh-process import behavior. Historical latency measurements were retained as observations only; generated-resource and materialized-tree claims were rejected. Concurrent registry work was excluded.
 
 ## Findings
 
-### operator-surface-gap-reconciliation | high | Explicitly unimplemented schemas break live operator-surface parity
+### operator-surface-gap-reconciliation | high | Historical generated-resource finding superseded by S54
 
 `test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_policy_by_identity`
 fails because `command_schema_refs()` publishes all 300 generated schema
@@ -41,13 +33,9 @@ callable. S11 therefore does not yet preserve the existing exact-set consumer
 contract or provide one coherent meaning for the public schema-reference
 projection.
 
-Resolution: closed in the reviewed tree. `command_schema_refs()` now projects
-only rows with a live CLI path, while the complete registration projection and
-generation parity retain all 300 result-schema identities and exact-gate the
-four stated gaps. The focused live operator-surface/MCP reconciliation and the
-broader S11 integration lane pass with 296 callable identities.
+Historical resolution: this described the pre-S54 generated projection and is no longer a current-state claim. S54 retired the generated inventory and the four-gap model. Current schema references derive the exact production CommandSpec identity set.
 
-### unresolved-prefix-evidence | medium | Metadata lookup drops the successfully resolved command prefix
+### unresolved-prefix-evidence | medium | Historical generated-node finding superseded by S54
 
 `test_unresolved_leaf_retains_key_and_click_path_evidence` fails for
 `app.not-a-real-command`: the former live resolver reported `resolved_cli_path`
@@ -58,26 +46,26 @@ path information to derive the longest recognized prefix without importing a
 handler subtree, so losing this evidence is not required by metadata-only
 discovery.
 
-Resolution: closed in the reviewed tree. Unknown identities now derive the
-longest recognized prefix from the complete generated live-node projection and
-name the first unresolved token. The existing `app.not-a-real-command` evidence
-test passes without materializing a handler subtree.
+Historical resolution: this described the deleted generated live-node projection and is not current evidence. Current unknown identities fail against the CommandSpec identity and path projection without a generated prefix oracle.
+
+### generated-resource-evidence | critical | Prior completion mechanism is nonconforming and superseded
+
+The former audit treated an ignored generated JSON resource, its development generator, and wheel inclusion as successful architecture. The accepted child ADR rejects that dependency inversion. S54 physically deleted the resource, reader, generator, ignore entry, parity tests, and adjacent mirrors. The historical latency numbers remain observations but provide no completion proof.
+
+Resolution: closed. Current schema and operator-help discovery projects the tracked production CommandSpec graph directly. No serialized intermediary, generation step, fallback, or second authority exists.
+
+### behavior-import-during-help | high | Toggle choices imported a behavior target during discovery
+
+Fresh-process proof found schema discovery importing `_capabilities_cli` because choices for `config.profile.capabilities.set` were inferred from the handler-owned `Toggle` enum.
+
+Resolution: closed. The immutable ValueContract owns the `on` and `off` choices, and the runtime compiler constructs its Click choice directly from that tuple. The behavior accepts the validated string and no private handler enum remains. All current result-schema and input-help identities project with zero newly imported behavior target modules.
+
+### dormant-materialized-aliases | medium | Compatibility aliases preserved rejected terminology and fallback surface
+
+Two unused private aliases retained the old materialized-schema names even though they delegated to the graph.
+
+Resolution: closed by physical deletion. Exact source scans find no generated resource reader, schema registry, materialized compatibility alias, or development generator.
 
 ## Recommendations
 
-Resolve `operator-surface-gap-reconciliation` by making the callable schema
-projection and its consumers agree explicitly on the 296 implemented versus
-four declared-gap identities, then rerun the real operator-surface and MCP/HITL
-reconciliation lanes. Do not silently advertise the four absent verbs or
-delete their stated-gap evidence merely to satisfy the equality.
-
-Resolve `unresolved-prefix-evidence` by deriving the longest known CLI prefix
-from the generated complete-node projection and retaining it in
-`VerbLeafResolutionFailure`; prove the unknown nested-key case remains
-metadata-only.
-
-Both recommendations are implemented and verified. Final review finds no open
-S11 findings. The scoped Ruff and `ty` gates pass; 36 focused integration tests
-and 14 command-schema unit tests pass. A real wheel build contains exactly one
-`command_registration_metadata.v1.json` resource (1,932,220 bytes), confirming
-the generated runtime projection is packaged.
+Preserve the latency observations only with their historical qualification. Maintain dynamic exact graph-set, runtime-choice parity, and newly imported behavior-target tests; never restore a generated artifact, registry, mirror, alias, or materialized-tree oracle.
