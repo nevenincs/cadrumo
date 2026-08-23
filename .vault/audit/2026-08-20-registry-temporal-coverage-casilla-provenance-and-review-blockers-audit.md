@@ -5077,3 +5077,79 @@ here). One AEAT box, three casillas, and nothing makes them agree.
 
 **9899 of 11603 slots remain** across 97 of 134 numbered records; 1704 modelled, zero
 orphaned. Corpus re-derivation after the record landed: **zero problems**.
+
+## 2026-08-23 — T22007G00, and an assertion that would have refused a correct record
+
+### What landed
+
+Record **T22007G00** — the GRUPOS DE COOPERATIVAS eliminations under R.D. 1345/1992:
+retornos intragrupo, ayudas económicas intragrupo and resultados distribuidos por la
+entidad cabeza del grupo, over 50 repeating per-operation rows closing on four totals.
+**10 casillas describing all 314 design fields**; revision 1871 → **1881**, thirty-six of
+137 record sheets.
+
+Suite: **8 failed, 5385 passed** — the same count as the previous run, and the arriving
+failure is not this work (below).
+
+### The generator asserted the shape it had seen, and this record is a different one
+
+The four siblings T22007D00, E00, F00 and H00 each close on **one** numbered total, and
+the generator that authored them asserted exactly that:
+
+    assert len(totals) == 1, "%s has %d totals" % (sheet, len(totals))
+
+T22007G00 closes on **four**. The assertion would have refused a perfectly well-formed
+record — the good failure mode, since the alternative was silently treating three of the
+four totals as detail rows and breaking the stride.
+
+Widening it needed care, because `len(totals) == 1` was carrying a second, unstated
+meaning: it is what made *"everything before the first numbered box"* a correct definition
+of the repeating run. Drop it to `>= 1` and that definition survives only if the totals are
+**contiguous at the tail**, which is now asserted separately. **An assertion can be load-
+bearing for something it does not mention**, and relaxing it means finding out what else
+it was holding up.
+
+This is the fourth consecutive record to exercise a different assumption baked into the
+generators — five-digit numbers, unnumbered fields, the vocabulary's contents, now the
+total count. The pattern is stable enough to state plainly: **each new record is the first
+honest test of what the last one's code took for granted.**
+
+### The correction reached its third site by policy, not by accident
+
+The 1-to-6-digit box pattern — established two iterations ago, and *already* found once to
+have missed a reader — was carried into this generator deliberately rather than when a
+record forced it. The four repeating-detail records already shipped were then re-scanned
+under the widened pattern: **none carries a box the narrow pattern would have missed**, so
+they are verified unaffected rather than assumed so. Verifying the old records was cheap;
+assuming would have been free and worth nothing.
+
+### Two sums on one grid, neither computed
+
+The block's own `Total eliminaciones` is the **row** sum of the three concept columns
+beside it. The closing `[00083]` is the **column** sum of that same field down the 50 rows.
+Different arithmetic on the same grid, both declared, neither expressed — and nothing
+connects either to the suma de bases imponibles del grupo that T22007000 declares, though
+the modelo's own structure places them there.
+
+### AEAT's own inconsistency, kept
+
+The design prints `cabeza del grupo` on the detail line and `cabeza de grupo` on the total.
+Both are kept as printed. A normaliser would have silently picked one, and nothing here
+knows which AEAT meant.
+
+### A peer's failure, diagnosed and handed back
+
+The new entry in the FAILED list is `test_casilla_label_spanish_source_coverage` reporting
+**322/2008-2022/73** — a peer's era split committed five hours before this iteration.
+Modelo 322's 2008-2022 revision declares a casilla `73` whose label key is absent from
+**all four** catalogues while 198 sibling keys are present in each.
+
+Diagnosed precisely and **left alone**. Authoring a Spanish label for a tax box on another
+hand's live revision would be invention, and the campaign's standing rule is that a
+reasoned absence is not a filter — but neither is someone else's in-flight work a place to
+guess. The useful contribution here is the precise locator, not a fix.
+
+### Scale
+
+**9889 of 11603 slots remain** across 96 of 134 numbered records; 1714 modelled, zero
+orphaned. Corpus re-derivation after the record landed: **zero problems**.
