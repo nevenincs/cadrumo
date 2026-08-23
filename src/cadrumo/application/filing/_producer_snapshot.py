@@ -487,6 +487,238 @@ class Modelo210ProfileFacts(BaseModel):
     representante: Modelo210RepresentanteFacts | None = None
     sin_ingreso_ni_devolucion: Modelo210SinIngresoNiDevolucionFacts | None = None
 
+class Modelo200AdministradorRow(BaseModel):
+    """One administrador row, projected into modelo 200's layout at slot 1..5."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+    forma_juridica: str | None = None
+    representante: str | None = None
+    apellidos_nombre_razon_social: str | None = None
+    domicilio_fiscal: str | None = None
+    codigo_provincia: str | None = None
+
+
+class Modelo200EntidadMenorDependienteRow(BaseModel):
+    """One entidad menor dependiente row, projected into modelo 200's layout at slot 1..10."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+    nombre_o_razon_social: str | None = None
+
+
+class Modelo200EntidadParticipadaRow(BaseModel):
+    """One entidad participada row, projected into modelo 200's layout at slot 1..3."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+    nombre_o_razon_social: str | None = None
+    codigo_provincia_pais: str | None = None
+    tipo_agrupacion_interes_economico_espanola: str | None = None
+    tipo_agrupacion_europea_interes_economico: str | None = None
+    tipo_union_temporal_empresas: str | None = None
+    tipo_colaboracion_extranjera_analoga: str | None = None
+    criterio_imputacion_fin_periodo: str | None = None
+    criterio_imputacion_siguiente_periodo: str | None = None
+    valoracion_participacion_inicio: str | None = None
+    valoracion_participacion_final: str | None = None
+    ingresos_financieros_participacion: str | None = None
+    resultado_contable_imputado: str | None = None
+    gastos_financieros_netos_imputados: str | None = None
+    reserva_capitalizacion_no_aplicada_imputada: str | None = None
+    base_imponible_imputada: str | None = None
+    deduccion_doble_imposicion_bases_imputadas: str | None = None
+    bonificacion_bases_imputadas: str | None = None
+    deduccion_activos_fijos_canarias: str | None = None
+    deduccion_idi_canarias: str | None = None
+    deduccion_produccion_espectaculos_canarias: str | None = None
+    deduccion_resto_inversion_canarias: str | None = None
+    deduccion_idi_bases_imputadas: str | None = None
+    deduccion_produccion_espectaculos_bases_imputadas: str | None = None
+    deduccion_resto_incentivar_actividades: str | None = None
+    deduccion_resto_no_mencionadas: str | None = None
+    retenciones_ingresos_a_cuenta_imputados: str | None = None
+    dividendos_ejercicios_anteriores: str | None = None
+    dividendos_ejercicios_posteriores: str | None = None
+
+
+class Modelo200EstablecimientoPermanenteRow(BaseModel):
+    """One establecimiento permanente row, projected into modelo 200's layout at slot 1..18."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    identificacion: str | None = None
+    pais_residencia_fiscal: str | None = None
+    volumen_operaciones: str | None = None
+    beneficio_o_perdida: str | None = None
+    suma_ajustes_resultado_contable: str | None = None
+    suma_deducciones_di_internacional_anteriores: str | None = None
+
+
+class Modelo200IncnGrupoSociedadRow(BaseModel):
+    """One incn grupo sociedad row, projected into modelo 200's layout at slot 1..12."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif_entidad_grupo: str | None = None
+    codigo_pais: str | None = None
+
+
+class Modelo200OperacionReestructuracionRow(BaseModel):
+    """One operacion reestructuracion row, projected into modelo 200's layout at slot 1..5."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    tipo_operacion: str | None = None
+    transmitente_nif: str | None = None
+    transmitente_denominacion_social: str | None = None
+    adquirente_nif: str | None = None
+    adquirente_denominacion_social: str | None = None
+    fecha_inscripcion_registro_mercantil: str | None = None
+    fecha_comunicacion_operacion: str | None = None
+    valor_acciones_entregadas: str | None = None
+    valor_acciones_recibidas: str | None = None
+    importe_rentas_no_integradas: str | None = None
+
+
+class Modelo200ParticipacionDirectaRow(BaseModel):
+    """One participacion directa row, projected into modelo 200's layout at slot 1..3."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+    nombre_o_razon_social: str | None = None
+    codigo_provincia_pais: str | None = None
+    porcentaje_participacion: str | None = None
+    valor_nominal_total: str | None = None
+    valor_en_libros: str | None = None
+    ingresos_por_dividendos: str | None = None
+    correccion_valor_perdidas_ganancias: str | None = None
+    reversion_perdidas_deterioro_valores: str | None = None
+    eliminacion_deterioro_contable: str | None = None
+    eliminacion_deterioro_valores_participacion: str | None = None
+    ajuste_valor_razonable: str | None = None
+    efecto_correccion_valorativa_base_imponible: str | None = None
+    saldo_correcciones_fiscales_pendientes: str | None = None
+    capital: str | None = None
+    reservas_y_otras_partidas_fondos_propios: str | None = None
+    otras_partidas_patrimonio_neto: str | None = None
+    resultado_ultimo_ejercicio: str | None = None
+
+
+class Modelo200ParticipacionSocioRow(BaseModel):
+    """One participacion socio row, projected into modelo 200's layout at slot 1..6."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+    representante: str | None = None
+    forma_juridica: str | None = None
+    apellidos_nombre_razon_social: str | None = None
+    codigo_provincia_pais: str | None = None
+    nominal: str | None = None
+    porcentaje_participacion: str | None = None
+
+
+class Modelo200ParticipeAieUteRow(BaseModel):
+    """One participe aie ute row, projected into modelo 200's layout at slot 1..10."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+    representante: str | None = None
+    forma_juridica: str | None = None
+    residencia: str | None = None
+    apellidos_nombre_razon_social: str | None = None
+    codigo_provincia_pais: str | None = None
+    base_imponible: str | None = None
+    porcentaje_participacion: str | None = None
+
+
+class Modelo200RepresentanteLegalRow(BaseModel):
+    """One representante legal row, projected into modelo 200's layout at slot 1..3."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apellidos_y_nombre: str | None = None
+    nif: str | None = None
+    fecha_poder: str | None = None
+    notaria_otros: str | None = None
+
+
+class Modelo200SecretarioConsejoRow(BaseModel):
+    """One secretario consejo row, projected into modelo 200's layout at slot 1..1."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    apellidos_y_nombre: str | None = None
+    nif: str | None = None
+
+
+class Modelo200SocioSicavDisolucionRow(BaseModel):
+    """One socio sicav disolucion row, projected into modelo 200's layout at slot 1..5."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif_sociedad_disuelta: str | None = None
+    nif_iic_reinversion: str | None = None
+
+
+class Modelo200TransparenciaFiscalInternacionalRow(BaseModel):
+    """One transparencia fiscal internacional row, projected into modelo 200's layout at slot 1..6."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nombre_o_razon_social: str | None = None
+    domicilio_social: str | None = None
+    clave_pais_territorio: str | None = None
+    importe_renta: str | None = None
+    administradores_linea_1: str | None = None
+    administradores_linea_2: str | None = None
+    administradores_linea_3: str | None = None
+    administradores_linea_4: str | None = None
+    administradores_linea_5: str | None = None
+
+
+class Modelo200ProjectionRows(BaseModel):
+    """The repeated party, holding and establishment rows modelo 200's layout projects.
+
+    Modelo 200's generated layout carries 578 projection-kind fields across fourteen
+    kinds, and ``_projection_plan_for_layout`` built a plan for M303 alone -- so every one
+    of them raised "requires a snapshot-owned render context" and the Impuesto sobre
+    Sociedades return could not export at all. It failed CLOSED, so no wrong bytes were
+    ever emitted, but it did not file.
+
+    Unlike modelo 296's perceptores, whose data already exists as
+    ``Withholding296Observation``, these rows are genuinely operator-supplied: the app
+    holds no administrador, representante or participada register anywhere else. So they
+    are declared here rather than projected from an existing substrate.
+
+    Every family defaults to empty. An absent family emits no record occurrence, which is
+    what AEAT expects of a page a filer has nothing to put on -- it is not the same as a
+    filer who has rows and supplied none, and only the caller knows which it is.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    administrador: tuple[Modelo200AdministradorRow, ...] = ()
+    entidad_menor_dependiente: tuple[Modelo200EntidadMenorDependienteRow, ...] = ()
+    entidad_participada: tuple[Modelo200EntidadParticipadaRow, ...] = ()
+    establecimiento_permanente: tuple[Modelo200EstablecimientoPermanenteRow, ...] = ()
+    incn_grupo_sociedad: tuple[Modelo200IncnGrupoSociedadRow, ...] = ()
+    operacion_reestructuracion: tuple[Modelo200OperacionReestructuracionRow, ...] = ()
+    participacion_directa: tuple[Modelo200ParticipacionDirectaRow, ...] = ()
+    participacion_socio: tuple[Modelo200ParticipacionSocioRow, ...] = ()
+    participe_aie_ute: tuple[Modelo200ParticipeAieUteRow, ...] = ()
+    representante_legal: tuple[Modelo200RepresentanteLegalRow, ...] = ()
+    secretario_consejo: tuple[Modelo200SecretarioConsejoRow, ...] = ()
+    socio_sicav_disolucion: tuple[Modelo200SocioSicavDisolucionRow, ...] = ()
+    transparencia_fiscal_internacional: tuple[Modelo200TransparenciaFiscalInternacionalRow, ...] = ()
+
+
 class Modelo200ProfileFacts(BaseModel):
     """The header facts modelo 200's export layout cites as operator-supplied.
 
@@ -510,6 +742,8 @@ class Modelo200ProfileFacts(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
+    #: The repeated rows modelo 200's layout projects; see Modelo200ProjectionRows.
+    projection_rows: Modelo200ProjectionRows = Modelo200ProjectionRows()
     apartado_6_deduc_evitar_doble_imposicion_participacio: str | None = None
     apartado_6_deduc_evitar_doble_imposicion_participacio_2: str | None = None
     apartado_6_deduc_evitar_doble_imposicion_participacio_3: str | None = None

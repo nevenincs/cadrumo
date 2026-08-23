@@ -103,6 +103,7 @@ from ._export_xml_dictionary import (
 from ._producer_snapshot import (
     FilingProducerSnapshot,
 )
+from ._m200_projection import build_m200_filing_projection_plan
 from ._projection import (
     FilingProjectionPlan,
     FilingProjectionValue,
@@ -1508,6 +1509,12 @@ def _projection_plan_for_layout(
 ) -> FilingProjectionPlan:
     if draft.modelo == Modelo.M303.value:
         return build_m303_filing_projection_plan(
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+            producer_snapshot=producer_snapshot,
+        )
+    if draft.modelo == Modelo.M200.value:
+        return build_m200_filing_projection_plan(
             registry_snapshot=registry_snapshot,
             layout=layout,
             producer_snapshot=producer_snapshot,
