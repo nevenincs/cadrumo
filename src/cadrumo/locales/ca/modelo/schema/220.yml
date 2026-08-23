@@ -102,6 +102,142 @@ modelo:
               label: Balanc consolidat. Actiu. Immobilitzat intangible. Investigacio
             x-agp34c1g6d0j0c1q60o3edhh:
               label: Balanc consolidat. Actiu. Altres
+            x-agp34c1g6d0j0chq60o32c1h:
+              label: Balanc consolidat. Actiu. Efectiu i altres actius liquids equivalents
+            x-agp34c1g6d0j0chq60o32c1i:
+              label: Balanc consolidat. Actiu. Actius financers mantinguts per negociar
+            x-agp34c1g6d0j0chq60o32c1j:
+              label: Balanc consolidat. Actiu. Actius financers mantinguts per negociar.
+                Instruments de patrimoni
+            x-agp34c1g6d0j0chq60o32c1k:
+              label: Balanc consolidat. Actiu. Actius financers mantinguts per negociar.
+                Valors representatius de deute
+            x-agp34c1g6d0j0chq60o32c1l:
+              label: Balanc consolidat. Actiu. Actius financers mantinguts per negociar.
+                Derivats
+            x-agp34c1g6d0j0chq60o32c1m:
+              label: Balanc consolidat. Actiu. Actius financers mantinguts per negociar.
+                Altres
+            x-agp34c1g6d0j0chq60o32c1n:
+              label: Balanc consolidat. Actiu. Altres actius financers a valor raonable
+                amb canvis en perdues i guanys
+            x-agp34c1g6d0j0chq60o32c1o:
+              label: Balanc consolidat. Actiu. Altres actius financers a valor raonable
+                amb canvis en perdues i guanys. Instruments de patrimoni
+            x-agp34c1g6d0j0chq60o32c1p:
+              label: Balanc consolidat. Actiu. Altres actius financers a valor raonable
+                amb canvis en perdues i guanys. Valors representatius de deute
+            x-agp34c1g6d0j0chq60o32c9g:
+              label: Balanc consolidat. Actiu. Altres actius financers a valor raonable
+                amb canvis en perdues i guanys. Instruments hibrids
+            x-agp34c1g6d0j0chq60o32c9h:
+              label: Balanc consolidat. Actiu. Altres actius financers a valor raonable
+                amb canvis en perdues i guanys. Inversions per compte dels prenedors
+                d'assegurances de vida que assumeixin el risc de la inversio
+            x-agp34c1g6d0j0chq60o32c9i:
+              label: Balanc consolidat. Actiu. Altres actius financers a valor raonable
+                amb canvis en perdues i guanys. Altres
+            x-agp34c1g6d0j0chq60o32c9j:
+              label: Balanc consolidat. Actiu. Actius financers disponibles per a
+                la venda
+            x-agp34c1g6d0j0chq60o32c9k:
+              label: Balanc consolidat. Actiu. Actius financers disponibles per a
+                la venda. Instruments de patrimoni
+            x-agp34c1g6d0j0chq60o32c9l:
+              label: Balanc consolidat. Actiu. Actius financers disponibles per a
+                la venda. Valors representatius de deute
+            x-agp34c1g6d0j0chq60o32c9m:
+              label: Balanc consolidat. Actiu. Actius financers disponibles per a
+                la venda. Inversions per compte dels prenedors d'assegurances de vida
+                que assumeixin el risc de la inversio
+            x-agp34c1g6d0j0chq60o32c9n:
+              label: Balanc consolidat. Actiu. Actius financers disponibles per a
+                la venda. Altres
+            x-agp34c1g6d0j0chq60o32c9o:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar
+            x-agp34c1g6d0j0chq60o32c9p:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Valors
+                representatius de deute
+            x-agp34c1g6d0j0chq60o32chg:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Prestecs
+            x-agp34c1g6d0j0chq60o32chh:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Bestretes
+                sobre polisses
+            x-agp34c1g6d0j0chq60o32chi:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Prestecs
+                a entitats del grup i associades
+            x-agp34c1g6d0j0chq60o32chj:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Prestecs
+                a altres parts vinculades
+            x-agp34c1g6d0j0chq60o32chk:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Diposits
+                en entitats de credit
+            x-agp34c1g6d0j0chq60o32chl:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Diposits
+                constituits per reassegurament acceptat
+            x-agp34c1g6d0j0chq60o32chm:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Credits
+                per operacions d'asseguranca directa
+            x-agp34c1g6d0j0chq60o32chn:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Prenedors
+                d'asseguranca
+            x-agp34c1g6d0j0chq60o32cho:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Mediadors
+            x-agp34c1g6d0j0chq60o32chp:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Credits
+                per operacions de reassegurament
+            x-agp34c1g6d0j0chq60o32cpg:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Credits
+                per operacions de coassegurament
+            x-agp34c1g6d0j0chq60o32cph:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Desemborsaments
+                exigits
+            x-agp34c1g6d0j0chq60o32cpi:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Altres
+                credits
+            x-agp34c1g6d0j0chq60o32cpj:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Credits
+                amb les Administracions Publiques
+            x-agp34c1g6d0j0chq60o32cpk:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Resta
+                de credits
+            x-agp34c1g6d0j0chq60o32cpl:
+              label: Balanc consolidat. Actiu. Cartera d'inversio a venciment
+            x-agp34c1g6d0j0chq60o32cpm:
+              label: Balanc consolidat. Actiu. Derivats de cobertura
+            x-agp34c1g6d0j0chq60o32cpn:
+              label: Balanc consolidat. Actiu. Participacio del reassegurament en
+                les provisions tecniques
+            x-agp34c1g6d0j0chq60o32cpo:
+              label: Balanc consolidat. Actiu. Participacio del reassegurament en
+                les provisions tecniques. Provisio per a primes no consumides
+            x-agp34c1g6d0j0chq60o32cpp:
+              label: Balanc consolidat. Actiu. Participacio del reassegurament en
+                les provisions tecniques. Provisio d'assegurances de vida
+            x-agp34c1g6d0j0chq60o32d1g:
+              label: Balanc consolidat. Actiu. Participacio del reassegurament en
+                les provisions tecniques. Provisio per a prestacions
+            x-agp34c1g6d0j0chq60o32d1h:
+              label: Balanc consolidat. Actiu. Participacio del reassegurament en
+                les provisions tecniques. Altres provisions tecniques
+            x-agp34c1g6d0j0chq60o32d1i:
+              label: Balanc consolidat. Actiu. Immobilitzat material i inversions
+                immobiliaries
+            x-agp34c1g6d0j0chq60o32d1j:
+              label: Balanc consolidat. Actiu. Immobilitzat material i inversions
+                immobiliaries. Immobilitzat material
+            x-agp34c1g6d0j0chq60o32d1k:
+              label: Balanc consolidat. Actiu. Immobilitzat material i inversions
+                immobiliaries. Inversions immobiliaries
+            x-agp34c1g6d0j0chq60o3ec1g:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Prestecs.
+                Entitats associades
+            x-agp34c1g6d0j0chq60o3ec1h:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Prestecs.
+                Entitats multigrup
+            x-agp34c1g6d0j0chq60o3ec1i:
+              label: Balanc consolidat. Actiu. Prestecs i partides a cobrar. Prestecs.
+                Altres
             x-agp34c1g6d130c1q60o30c1j:
               label: Balanc consolidat. Patrimoni net i passiu. Reserva legal i estatutaria
             x-agp34c1g6d130c1q60o32e1l:

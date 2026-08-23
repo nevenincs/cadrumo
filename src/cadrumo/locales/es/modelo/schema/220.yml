@@ -107,6 +107,145 @@ modelo:
               label: Balance consolidado. Activo. Inmovilizado intangible. Investigacion
             x-agp34c1g6d0j0c1q60o3edhh:
               label: Balance consolidado. Activo. Otros
+            x-agp34c1g6d0j0chq60o32c1h:
+              label: Balance consolidado. Activo. Efectivo y otros activos liquidos
+                equivalentes
+            x-agp34c1g6d0j0chq60o32c1i:
+              label: Balance consolidado. Activo. Activos financieros mantenidos para
+                negociar
+            x-agp34c1g6d0j0chq60o32c1j:
+              label: Balance consolidado. Activo. Activos financieros mantenidos para
+                negociar. Instrumentos de patrimonio
+            x-agp34c1g6d0j0chq60o32c1k:
+              label: Balance consolidado. Activo. Activos financieros mantenidos para
+                negociar. Valores representativos de deuda
+            x-agp34c1g6d0j0chq60o32c1l:
+              label: Balance consolidado. Activo. Activos financieros mantenidos para
+                negociar. Derivados
+            x-agp34c1g6d0j0chq60o32c1m:
+              label: Balance consolidado. Activo. Activos financieros mantenidos para
+                negociar. Otros
+            x-agp34c1g6d0j0chq60o32c1n:
+              label: Balance consolidado. Activo. Otros activos financieros a valor
+                razonable con cambios en perdidas y ganancias
+            x-agp34c1g6d0j0chq60o32c1o:
+              label: Balance consolidado. Activo. Otros activos financieros a valor
+                razonable con cambios en perdidas y ganancias. Instrumentos de patrimonio
+            x-agp34c1g6d0j0chq60o32c1p:
+              label: Balance consolidado. Activo. Otros activos financieros a valor
+                razonable con cambios en perdidas y ganancias. Valores representativos
+                de deuda
+            x-agp34c1g6d0j0chq60o32c9g:
+              label: Balance consolidado. Activo. Otros activos financieros a valor
+                razonable con cambios en perdidas y ganancias. Instrumentos hibridos
+            x-agp34c1g6d0j0chq60o32c9h:
+              label: Balance consolidado. Activo. Otros activos financieros a valor
+                razonable con cambios en perdidas y ganancias. Inversiones por cuenta
+                de los tomadores de seguros de vida que asuman el riesgo de la inversion
+            x-agp34c1g6d0j0chq60o32c9i:
+              label: Balance consolidado. Activo. Otros activos financieros a valor
+                razonable con cambios en perdidas y ganancias. Otros
+            x-agp34c1g6d0j0chq60o32c9j:
+              label: Balance consolidado. Activo. Activos financieros disponibles
+                para la venta
+            x-agp34c1g6d0j0chq60o32c9k:
+              label: Balance consolidado. Activo. Activos financieros disponibles
+                para la venta. Instrumentos de patrimonio
+            x-agp34c1g6d0j0chq60o32c9l:
+              label: Balance consolidado. Activo. Activos financieros disponibles
+                para la venta. Valores representativos de deuda
+            x-agp34c1g6d0j0chq60o32c9m:
+              label: Balance consolidado. Activo. Activos financieros disponibles
+                para la venta. Inversiones por cuenta de los tomadores de seguros
+                de vida que asuman el riesgo de la inversion
+            x-agp34c1g6d0j0chq60o32c9n:
+              label: Balance consolidado. Activo. Activos financieros disponibles
+                para la venta. Otros
+            x-agp34c1g6d0j0chq60o32c9o:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar
+            x-agp34c1g6d0j0chq60o32c9p:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Valores
+                representativos de deuda
+            x-agp34c1g6d0j0chq60o32chg:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Prestamos
+            x-agp34c1g6d0j0chq60o32chh:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Anticipos
+                sobre polizas
+            x-agp34c1g6d0j0chq60o32chi:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Prestamos
+                a entidades del grupo y asociadas
+            x-agp34c1g6d0j0chq60o32chj:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Prestamos
+                a otras partes vinculadas
+            x-agp34c1g6d0j0chq60o32chk:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Depositos
+                en entidades de credito
+            x-agp34c1g6d0j0chq60o32chl:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Depositos
+                constituidos por reaseguro aceptado
+            x-agp34c1g6d0j0chq60o32chm:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Creditos
+                por operaciones de seguro directo
+            x-agp34c1g6d0j0chq60o32chn:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Tomadores
+                de seguro
+            x-agp34c1g6d0j0chq60o32cho:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Mediadores
+            x-agp34c1g6d0j0chq60o32chp:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Creditos
+                por operaciones de reaseguro
+            x-agp34c1g6d0j0chq60o32cpg:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Creditos
+                por operaciones de coaseguro
+            x-agp34c1g6d0j0chq60o32cph:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Desembolsos
+                exigidos
+            x-agp34c1g6d0j0chq60o32cpi:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Otros
+                creditos
+            x-agp34c1g6d0j0chq60o32cpj:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Creditos
+                con las Administraciones Publicas
+            x-agp34c1g6d0j0chq60o32cpk:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Resto
+                de creditos
+            x-agp34c1g6d0j0chq60o32cpl:
+              label: Balance consolidado. Activo. Cartera de inversion a vencimiento
+            x-agp34c1g6d0j0chq60o32cpm:
+              label: Balance consolidado. Activo. Derivados de cobertura
+            x-agp34c1g6d0j0chq60o32cpn:
+              label: Balance consolidado. Activo. Participacion del reaseguro en las
+                provisiones tecnicas
+            x-agp34c1g6d0j0chq60o32cpo:
+              label: Balance consolidado. Activo. Participacion del reaseguro en las
+                provisiones tecnicas. Provision para primas no consumidas
+            x-agp34c1g6d0j0chq60o32cpp:
+              label: Balance consolidado. Activo. Participacion del reaseguro en las
+                provisiones tecnicas. Provision de seguros de vida
+            x-agp34c1g6d0j0chq60o32d1g:
+              label: Balance consolidado. Activo. Participacion del reaseguro en las
+                provisiones tecnicas. Provision para prestaciones
+            x-agp34c1g6d0j0chq60o32d1h:
+              label: Balance consolidado. Activo. Participacion del reaseguro en las
+                provisiones tecnicas. Otras provisiones tecnicas
+            x-agp34c1g6d0j0chq60o32d1i:
+              label: Balance consolidado. Activo. Inmovilizado material e inversiones
+                inmobiliarias
+            x-agp34c1g6d0j0chq60o32d1j:
+              label: Balance consolidado. Activo. Inmovilizado material e inversiones
+                inmobiliarias. Inmovilizado material
+            x-agp34c1g6d0j0chq60o32d1k:
+              label: Balance consolidado. Activo. Inmovilizado material e inversiones
+                inmobiliarias. Inversiones inmobiliarias
+            x-agp34c1g6d0j0chq60o3ec1g:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Prestamos.
+                Entidades asociadas
+            x-agp34c1g6d0j0chq60o3ec1h:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Prestamos.
+                Entidades multigrupo
+            x-agp34c1g6d0j0chq60o3ec1i:
+              label: Balance consolidado. Activo. Prestamos y partidas a cobrar. Prestamos.
+                Otros
             x-agp34c1g6d130c1q60o30c1j:
               label: Balance consolidado. Patrimonio neto y pasivo. Reserva legal
                 y estatutaria
