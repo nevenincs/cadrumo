@@ -39,5 +39,6 @@ def config_root(
         command="root.config",
         result=result,
         lines=render_help_text(document).splitlines(),
+        metadata_only=True,
     )
     raise typer.Exit()

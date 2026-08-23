@@ -3077,7 +3077,6 @@ cli:
       help: Show the event lineage for one ledger transaction
       transaction_id_help: Ledger transaction id to inspect
     update:
-      actor_help: Operator name recorded on the bucket event
       amount_help: New non-negative amount magnitude (full replace)
       counterparty_help: New counterparty descriptor
       currency_help: New three-letter ISO 4217 currency code

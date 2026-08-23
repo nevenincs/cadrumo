@@ -695,6 +695,7 @@ def _emit_envelope(
     result: object,
     lines: Iterable[str],
     notices: Sequence[Notice] | None = None,
+    metadata_only: bool = False,
 ) -> None:
     """Render a typed result through JSON or text output.
 
@@ -737,13 +738,16 @@ def _emit_envelope(
             notices into ``lines`` themselves so JSON and text cannot
             drift.
     """
-    metadata_invocation = _is_metadata_invocation(ctx)
+    metadata_invocation = metadata_only or _is_metadata_invocation(ctx)
     output_format = _format_of(ctx)
     supplied_notices = tuple(notices or ())
-    from ._profile_authentication_notice import drain_profile_authentication_notices
+    if metadata_invocation:
+        resolved_notices = supplied_notices
+    else:
+        from ._profile_authentication_notice import drain_profile_authentication_notices
 
-    supplied_notices = (*supplied_notices, *drain_profile_authentication_notices())
-    resolved_notices = _resolve_notice_actions(supplied_notices)
+        supplied_notices = (*supplied_notices, *drain_profile_authentication_notices())
+        resolved_notices = _resolve_notice_actions(supplied_notices)
     if output_format is OutputFormat.JSON:
         if metadata_invocation:
             # The ``--help`` / ``--version`` fast path stays off the
@@ -766,8 +770,10 @@ def _emit_envelope(
     # ``--format`` values (e.g. ``xml``) raise the shared refusal contract.
     # ``render_command_output``
     # ignores ``payload`` outside JSON mode and emits the line iterator.
-    rendered_lines = (*lines, *notice_lines(resolved_notices), *_action_text_lines(resolved_notices))
-    if not metadata_invocation:
+    if metadata_invocation:
+        rendered_lines = tuple(lines)
+    else:
+        rendered_lines = (*lines, *notice_lines(resolved_notices), *_action_text_lines(resolved_notices))
         from ...application.operator_output import sandbox_banner_line, sandbox_notice_for_active_bucket
 
         sandbox_notice = sandbox_notice_for_active_bucket()

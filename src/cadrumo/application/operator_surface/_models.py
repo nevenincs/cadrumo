@@ -61,14 +61,6 @@ class OperatorMutability(StrEnum):
     LOCAL_STATE_MUTATING = "local_state_mutating"
 
 
-class HelpSurface(StrEnum):
-    """Curated help surfaces accepted by :func:`build_help_document`."""
-
-    ROOT = "root"
-    CONFIG = "config"
-    APP = "app"
-
-
 class MountedCommandDomain(StrEnum):
     """Backend-owned command domains used to classify mounted command families."""
 
@@ -115,65 +107,6 @@ class RootSurface(BaseModel):
         if len(set(value)) != len(value):
             raise ValueError("root surface children must be unique")
         return value
-
-
-class HelpEntry(BaseModel):
-    """One localized command row in a curated :class:`HelpSection`."""
-
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-
-    command: str = Field(min_length=1, max_length=80)
-    description: str = Field(min_length=1, max_length=80)
-
-
-class HelpSection(BaseModel):
-    """One workflow-ordered section in a curated :class:`HelpDocument`."""
-
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-
-    title: str = Field(min_length=1, max_length=80)
-    entries: tuple[HelpEntry, ...] = Field(min_length=1)
-
-
-class HelpDocument(BaseModel):
-    """Curated help document built by :func:`build_help_document`.
-
-    The document owns contributor-facing command inventory and localized prose
-    shape for a :class:`HelpSurface`; renderers preserve the section and entry
-    ordering rather than rediscovering command rows.
-    """
-
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-
-    surface: HelpSurface
-    heading: str = Field(min_length=1, max_length=120)
-    paragraphs: tuple[str, ...] = Field(min_length=1)
-    sections: tuple[HelpSection, ...] = Field(min_length=1)
-    footer: str = Field(min_length=1, max_length=120)
-
-
-class RootLandingReport(BaseModel):
-    """Bare-root landing report built from caller-projected profile state.
-
-    :func:`~application.operator_surface.build_root_landing_report` creates
-    this record from active-selection state and an already-resolved profile
-    display label. The two fields remain distinct so an unavailable manifest
-    cannot be presented as no selection. The model does not perform discovery.
-    """
-
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-
-    profile_selected: bool = False
-    active_profile: str | None = None
-    command: str = Field(min_length=1, max_length=120)
-    message: str = Field(min_length=1, max_length=160)
-
-    @model_validator(mode="after")
-    def _selected_profile_owns_display_identity(self) -> RootLandingReport:
-        """Reject a display label that has no corresponding selected profile."""
-        if self.active_profile is not None and not self.profile_selected:
-            raise ValueError("active profile label requires a selected profile")
-        return self
 
 
 class LifecycleContract(BaseModel):

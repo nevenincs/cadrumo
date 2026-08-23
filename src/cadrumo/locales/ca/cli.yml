@@ -3282,7 +3282,6 @@ cli:
       help: Mostrar el llinatge d'esdeveniments d'un moviment del llibre
       transaction_id_help: Id del moviment del llibre a inspeccionar
     update:
-      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       amount_help: Nova magnitud d'import no negativa de la transacció
       counterparty_help: Nova descripció de la contrapart
       currency_help: Nou codi de moneda ISO 4217

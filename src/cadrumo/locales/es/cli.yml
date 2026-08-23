@@ -2813,7 +2813,6 @@ cli:
         uso profesional proporcional; la categoría debe tener una proporción de uso.
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
-      actor_help: Nombre del operador registrado en el evento del bucket
       business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;
         no uses ledger allocate para una fila totalmente BUSINESS.
       category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
@@ -3297,7 +3296,6 @@ cli:
         configurado.
       yes_help: Confirma la división de la transacción
     stash:
-      actor_help: Nombre del operador registrado en el evento del bucket
       help: Apartar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a apartar
       reason_help: Motivo registrado en el historial de ciclo de vida
@@ -3311,7 +3309,6 @@ cli:
       help: Mostrar el linaje de eventos de un movimiento del libro
       transaction_id_help: Id del movimiento del libro a inspeccionar
     update:
-      actor_help: Nombre del operador registrado en el evento del bucket
       amount_help: Nueva magnitud de importe no negativa de la transacción
       counterparty_help: Nueva descripción de la contraparte
       currency_help: Nuevo código de moneda ISO 4217
