@@ -195,8 +195,7 @@ def test_generated_manifest_binds_exact_cohort_and_the_cli_command(
     assert architecture["url"] == [f"{built_cohort.release_base}/{artifact.name}" for artifact in artifacts]
     assert architecture["hash"] == [sha256_path(artifact) for artifact in artifacts]
     assert manifest["depends"] == ["python", "uv"]
-    # The manifest is CLI-only: the agent-facing launcher ships in the separate
-    # cadrumo-harness distribution, so no cadrumo-mcp shim or wrapper is declared.
+    # The manifest exposes only the product CLI.
     assert manifest["bin"] == [["aeat.cmd", "aeat"]]
     assert manifest["persist"] == ["state"]
 

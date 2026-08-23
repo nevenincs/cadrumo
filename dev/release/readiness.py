@@ -45,7 +45,6 @@ import re
 import shutil
 import subprocess
 import tomllib
-import zipfile
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -167,15 +166,6 @@ def _read_manifest_version(repo_root: Path) -> str:
     return str(payload.get(".", ""))
 
 
-_MCPB_MANIFEST_PATH: Final = Path("packaging/mcpb/manifest.json")
-# The checked-in MCPB manifest version is a dead placeholder: packaging/mcpb/
-# build.py stamps the real cohort version over it at build time, so the tracked
-# literal carries a clearly-synthetic sentinel. The version gate requires the
-# sentinel exactly (a real-looking literal would masquerade as an authority),
-# and the built bundle's stamped version is bound to the cohort by
-# check_generated_surface_versions instead.
-_MCPB_MANIFEST_VERSION_SENTINEL: Final = "0.0.0"
-
 #: Every row any channel can produce, whether or not this release claims it.
 #: Derived from the channel descriptor so a channel's proof obligation is
 #: declared in exactly one place.
@@ -190,20 +180,6 @@ ALL_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = tuple(
 #: passing row, and flipping a channel to `available` in the descriptor
 #: immediately re-arms every row it owns.
 REQUIRED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = required_evidence_rows(load_descriptor())
-
-_CLIENT_DISTRIBUTION_ROWS: Final[frozenset[str]] = frozenset(
-    row for row in ALL_DISTRIBUTION_ROWS if row.startswith("claude-")
-)
-
-
-def _read_mcpb_manifest(repo_root: Path) -> tuple[str, tuple[str, ...]]:
-    """Return the ``.mcpb`` bundle's declared version and bootstrap args."""
-    payload = json.loads((repo_root / _MCPB_MANIFEST_PATH).read_text(encoding=_UTF_8))
-    version = str(payload.get("version", ""))
-    mcp_config = payload.get("server", {}).get("mcp_config", {})
-    args = tuple(str(arg) for arg in mcp_config.get("args", []))
-    return version, args
-
 
 def _require_json_object(payload: object, *, surface: str) -> dict[str, object]:
     """Return a decoded JSON object or refuse the named release surface."""
@@ -220,7 +196,6 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
     pyproject_version = project_versions[0][1]
     init_version = _read_init_version(repo_root)
     manifest_version = _read_manifest_version(repo_root)
-    mcpb_version, mcpb_args = _read_mcpb_manifest(repo_root)
     root_project = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
     observed_pins = tuple(
         str(requirement)
@@ -231,22 +206,15 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
         f"{distribution}=={pyproject_version}" for distribution in PRODUCT_IDENTITY.companion_distributions
     )
     versions = {version for _relative, version in project_versions} | {init_version, manifest_version}
-    # The checked-in MCPB manifest never carries the release version: build.py
-    # stamps the cohort version over it, so the tracked literal must be the
-    # synthetic sentinel. Anything else is a stale hand-stamped authority.
-    mcpb_sentinel_ok = mcpb_version == _MCPB_MANIFEST_VERSION_SENTINEL
-    passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins and mcpb_sentinel_ok
+    passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins
     surfaces = " ".join(f"{relative}={version!r}" for relative, version in project_versions)
     detail = (
-        f"{surfaces} init={init_version!r} manifest={manifest_version!r} "
-        f"mcpb={mcpb_version!r} (expected sentinel {_MCPB_MANIFEST_VERSION_SENTINEL!r}; "
-        "build.py stamps the real version) "
-        f"mcpb_args={mcpb_args!r} pins={observed_pins!r}"
+        f"{surfaces} init={init_version!r} manifest={manifest_version!r} pins={observed_pins!r}"
     )
     if passed:
         detail = (
             "all release authorities and mandatory exact companion dependencies agree on "
-            f"{pyproject_version!r}; the .mcpb manifest carries its build-stamped sentinel"
+            f"{pyproject_version!r}"
         )
     return ReadinessCheck("version-surfaces-agree", "blocking", passed, detail)
 
@@ -543,19 +511,6 @@ def check_distribution_evidence_set(
             f"missing passing distribution evidence rows: {missing!r}",
         )
 
-    clients_missing_identity = sorted(
-        row_id
-        for row_id, record in canonical_passing.items()
-        if row_id in _CLIENT_DISTRIBUTION_ROWS and record.client is None
-    )
-    if clients_missing_identity:
-        return ReadinessCheck(
-            "distribution-evidence-complete",
-            "blocking",
-            False,
-            f"client rows lack real client identity: {clients_missing_identity!r}",
-        )
-
     return ReadinessCheck(
         "distribution-evidence-complete",
         "blocking",
@@ -569,14 +524,12 @@ def check_generated_surface_versions(
     *,
     cohort_directory: Path | None = None,
 ) -> ReadinessCheck:
-    """Require the generated Scoop/Homebrew/marketplace surfaces to bind the cohort.
+    """Require the generated Scoop and Homebrew surfaces to bind the cohort.
 
     Each channel generator embeds the version (and, for Scoop/Homebrew, the exact
     artifact SHA-256s) at build time. A stale embedded value would ship an
     install surface pointing at the wrong release under the right tag, so this
-    parses the four real formats - the Scoop JSON manifest, the Homebrew Ruby
-    formula, the marketplace plugin JSON inside its zip, and the stamped
-    ``manifest.json`` inside the built ``.mcpb`` bundle - and refuses with a
+    parses the Scoop JSON manifest and Homebrew Ruby formula and refuses with a
     per-surface enumeration when any embedded value drifts from the cohort.
     """
     name = "generated-surface-versions"
@@ -631,51 +584,13 @@ def check_generated_surface_versions(
     except (OSError, KeyError) as exc:
         failures.append(f"homebrew formula unreadable: {exc}")
 
-    try:
-        market_zips = sorted(cohort_root.glob("claude/cadrumo-marketplace-*.zip"))
-        if not market_zips:
-            failures.append("marketplace zip is absent")
-        elif len(market_zips) > 1:
-            failures.append(f"multiple marketplace zips present, cannot bind one: {[z.name for z in market_zips]}")
-        else:
-            with zipfile.ZipFile(market_zips[0]) as archive:
-                plugin = _require_json_object(
-                    json.loads(archive.read("plugins/cadrumo/.claude-plugin/plugin.json")),
-                    surface="marketplace plugin manifest",
-                )
-            if str(plugin.get("version")) != version:
-                failures.append(f"marketplace plugin version {plugin.get('version')!r} != cohort {version!r}")
-    except (OSError, zipfile.BadZipFile, json.JSONDecodeError, KeyError, ValueError) as exc:
-        failures.append(f"marketplace plugin manifest unreadable: {exc}")
-
-    try:
-        # The tracked packaging/mcpb/manifest.json carries only the build-stamped
-        # sentinel; the BUILT bundle is where the real version lives, so bind it
-        # to the cohort here (the counterpart of the sentinel rule in
-        # check_version_surfaces_agree).
-        mcpb_bundles = sorted(cohort_root.glob("mcpb/cadrumo-*.mcpb"))
-        if not mcpb_bundles:
-            failures.append("mcpb bundle is absent")
-        elif len(mcpb_bundles) > 1:
-            failures.append(f"multiple mcpb bundles present, cannot bind one: {[b.name for b in mcpb_bundles]}")
-        else:
-            with zipfile.ZipFile(mcpb_bundles[0]) as archive:
-                mcpb_manifest = _require_json_object(
-                    json.loads(archive.read("manifest.json")),
-                    surface="mcpb bundle manifest",
-                )
-            if str(mcpb_manifest.get("version")) != version:
-                failures.append(f"mcpb stamped version {mcpb_manifest.get('version')!r} != cohort {version!r}")
-    except (OSError, zipfile.BadZipFile, json.JSONDecodeError, KeyError, ValueError) as exc:
-        failures.append(f"mcpb bundle manifest unreadable: {exc}")
-
     if failures:
         return ReadinessCheck(name, "blocking", False, "; ".join(failures))
     return ReadinessCheck(
         name,
         "blocking",
         True,
-        f"scoop, homebrew, marketplace, and mcpb all bind cohort version {version} and digests",
+        f"scoop and homebrew bind cohort version {version} and digests",
     )
 
 

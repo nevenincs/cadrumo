@@ -250,13 +250,7 @@ def _locked_resources(lock_path: Path) -> tuple[Resource, ...]:
     resolved: dict[str, Resource] = {}
     for platform, target in _TARGETS.items():
         # The formula installs the ``cadrumo`` distribution and its mandatory
-        # closure only. The agent harness (personas, skills, and the
-        # ``cadrumo-mcp`` server) is the separate ``cadrumo-harness``
-        # distribution, which depends on ``cadrumo`` rather than the reverse and
-        # publishes no cohort artifact a formula resource could pin. Homebrew
-        # installs one distribution per formula, so the harness is out of this
-        # formula's scope: it is obtained with ``pipx install cadrumo-harness``,
-        # through the MCP bundle, or through the Claude plugin.
+        # runtime closure only. Workspace-only packages are not formula resources.
         queue = list(root.get("dependencies", []))
         seen = {"cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-harness"}
         while queue:

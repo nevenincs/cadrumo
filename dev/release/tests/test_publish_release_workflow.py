@@ -57,7 +57,7 @@ _PUBLISHING_JOBS: Final[frozenset[str]] = frozenset({"publish"})
 # rather than legacy backtick substitution for real command expansion.
 #
 # SCOPE BOUNDARY, for anyone widening this scan beyond `publish-release.yml`:
-# the four packaging workflows (smoke, scoop, homebrew, claude) each call
+# the three packaging workflows (smoke, scoop, homebrew) each call
 # `gh release create` once, and every one of those is machine EVIDENCE TRANSPORT,
 # not publication -- it mints a per-run draft carrying rows, cohorts, and sealed
 # manifests, and never a release. They are benign and must be pinned as such
@@ -88,7 +88,7 @@ _PUBLISH_RUN_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
         rf"{_COMMAND_POSITION}gh\s+release\s+(?:create|upload|edit|delete)\b",
         re.IGNORECASE | re.MULTILINE,
     ),
-    # The Scoop bucket, Homebrew tap, and marketplace channels publish by pushing
+    # The Scoop bucket and Homebrew tap publish by pushing
     # a cloned working copy, so a push from any non-publish job is an egress too.
     re.compile(rf"{_COMMAND_POSITION}git\b[^\n]*?\bpush\b", re.IGNORECASE | re.MULTILINE),
 )
@@ -215,7 +215,6 @@ def test_workflow_shape_and_least_privilege_top_level() -> None:
         "packaging_run_id",
         "scoop_run_id",
         "homebrew_run_id",
-        "claude_evidence_release",
         "dry_run",
     }
     assert document["permissions"] == {"contents": "read"}
@@ -314,13 +313,11 @@ def test_validate_promotes_without_rebuild() -> None:
     assert "gh release create" not in surface
 
 
-def test_validate_aggregates_all_eleven_rows_from_authoritative_sources() -> None:
+def test_validate_aggregates_base_channel_rows_from_authoritative_sources() -> None:
     """Gate 2 pulls every channel's rows from its own run, no weakening.
 
-    Eleven is the full producible set: ``ALL_DISTRIBUTION_ROWS`` carries exactly
-    3 python + 1 scoop + 3 homebrew + 4 claude-* rows, and Gate 2 aggregates the
-    same partition (packaging smoke draft, scoop, homebrew, and the operator's
-    claude evidence release). How many of the eleven BLOCK is derived from the
+    Gate 2 aggregates the packaging smoke, Scoop, and Homebrew partitions.
+    How many rows BLOCK is derived from the
     claimed channels by the readiness gate, which this job still runs.
 
     Matching is whitespace-normalised: the property is that each tag is derived
@@ -341,10 +338,6 @@ def test_validate_aggregates_all_eleven_rows_from_authoritative_sources() -> Non
     ):
         paired = re.compile(rf'verify "{re.escape(run_id)}"\s*\\?\s*"{re.escape(workflow)}"')
         assert paired.search(surface), f"{run_id} must be verified against {workflow} at the same call site"
-    # The operator's own evidence release has no backing run, so it stays a
-    # release download rather than a run-artifact download.
-    assert 'gh release download "$CLAUDE_EVIDENCE_RELEASE"' in surface
-
     # Trusted-source predicate on the smoke run (ci-speed redesign): a
     # dispatch-event campaign run is accepted only when its commit is verified
     # on main history via the compare API; push stays accepted for historical
@@ -510,7 +503,7 @@ def test_acquisition_inputs_are_optional_at_the_form_and_derived_at_the_gate() -
     """
     document = _document()
     inputs = document[True]["workflow_dispatch"]["inputs"]
-    for name in ("scoop_run_id", "homebrew_run_id", "claude_evidence_release"):
+    for name in ("scoop_run_id", "homebrew_run_id"):
         assert inputs[name]["required"] is False, f"{name} must not deadlock the first publication"
         assert inputs[name]["default"] == "", f"{name} must default empty, not to a fabricated id"
     # The cohort itself is never optional: it carries the published bytes.
@@ -530,7 +523,7 @@ def test_acquisition_inputs_are_optional_at_the_form_and_derived_at_the_gate() -
 
 
 #: The dispatch inputs Gate 2 demands only when a channel claims them.
-_DERIVED_INPUTS: Final[tuple[str, ...]] = ("scoop_run_id", "homebrew_run_id", "claude_evidence_release")
+_DERIVED_INPUTS: Final[tuple[str, ...]] = ("scoop_run_id", "homebrew_run_id")
 
 #: Words that make a mention of a derived input conditional rather than flat.
 _CONDITIONAL_MARKERS: Final[tuple[str, ...]] = ("claim", "only", "empty", "deriv")
@@ -590,12 +583,10 @@ def test_operator_instructions_never_present_a_derived_input_as_unconditional() 
     "offending",
     [
         pytest.param(
-            "re-dispatch with the packaging_run_id, scoop_run_id, homebrew_run_id, and\n"
-            "claude_evidence_release inputs.",
+            "re-dispatch with the packaging_run_id, scoop_run_id, and homebrew_run_id inputs.",
             id="the-deadlocked-instruction-this-gate-retired",
         ),
         pytest.param("5. Note the scoop_run_id and homebrew_run_id.", id="flat-numbered-prerequisite"),
-        pytest.param("Supply claude_evidence_release before arming.", id="single-input-imperative"),
     ],
 )
 def test_the_instruction_predicate_flags_every_unconditional_shape(offending: str) -> None:
@@ -608,7 +599,7 @@ def test_the_instruction_predicate_flags_every_unconditional_shape(offending: st
     [
         pytest.param("scoop_run_id is required once the scoop channel is claimed.", id="claim-scoped"),
         pytest.param("Leave homebrew_run_id empty on a bootstrap dispatch.", id="empty-scoped"),
-        pytest.param("Gate 2 derives whether claude_evidence_release is needed.", id="derivation-scoped"),
+        pytest.param("Gate 2 derives whether scoop_run_id is needed.", id="derivation-scoped"),
     ],
 )
 def test_the_instruction_predicate_leaves_conditional_prose_alone(benign: str) -> None:
@@ -625,28 +616,24 @@ def test_absent_optional_sources_are_skipped_not_fabricated() -> None:
     document = _document()
     for job_name in ("validate", "publish"):
         surface = _collapse_spaces(_run_surface(document["jobs"][job_name]))
-        for variable in ("SCOOP_RUN_ID", "HOMEBREW_RUN_ID", "CLAUDE_EVIDENCE_RELEASE"):
+        for variable in ("SCOOP_RUN_ID", "HOMEBREW_RUN_ID"):
             assert f'if [ -n "${variable}" ]; then' in surface, (
                 f"{job_name} consumes ${variable} without a presence guard"
             )
 
 
-def test_workflow_row_count_prose_matches_the_full_distribution_set() -> None:
-    """Both Gate-2/Gate-3 row-count comments name the true ALL_DISTRIBUTION_ROWS size.
+def test_workflow_row_prose_names_only_base_channels() -> None:
+    """Both Gate-2/Gate-3 comments describe the base-channel evidence set.
 
     The workflow AGGREGATES every row the channels can produce -- that count is
     the full set, not the claimed subset -- and the readiness gate then requires
     the rows the claimed channels own. Anchoring this prose on the required set
     would make it drift every time a channel flips to available.
     """
-    from ..readiness import ALL_DISTRIBUTION_ROWS
-
-    assert len(ALL_DISTRIBUTION_ROWS) == 11
     text = _WORKFLOW.read_text(encoding="utf-8")
-    # The stale "twelve" drift is reconciled to the one true count everywhere.
-    assert "twelve" not in text
-    assert "Aggregate all eleven rows" in text
-    assert "eleven verified rows" in text
+    assert "claude" not in text.lower()
+    assert "marketplace" not in text.lower()
+    assert "mcpb" not in text.lower()
 
 
 def test_required_rows_derive_from_claimed_channels_and_never_collapse_to_nothing() -> None:
@@ -709,8 +696,6 @@ def test_pypi_ships_the_sealed_cohort_not_the_per_os_smoke_build() -> None:
     for artifact in (
         'cadrumo-"$VERSION"-py3-none-any.whl',
         'cadrumo-"$VERSION".tar.gz',
-        'cadrumo_harness-"$HARNESS_VERSION"-py3-none-any.whl',
-        'cadrumo_harness-"$HARNESS_VERSION".tar.gz',
         'cadrumo_data_manuals-"$VERSION"-py3-none-any.whl',
         'cadrumo_data_manuals-"$VERSION".tar.gz',
         'cadrumo_data_official-"$VERSION"-py3-none-any.whl',
@@ -840,9 +825,8 @@ def test_build_detector_leaves_publish_and_read_only_verbs_alone(benign: str) ->
 @pytest.mark.parametrize(
     "benign",
     [
-        # Documentation prose in the preflight refusal text, not an invocation.
-        "them to a release (`gh release create <tag> --draft <row json...>`);",
-        "(`python -m dev.packaging.emit_real_client_evidence ...`) and upload",
+        # Documentation prose, not an invocation.
+        "the lane uploads rows to a release (`gh release create <tag> --draft`);",
         # A whole-line comment naming a verb is not an invocation.
         "# gh release create flattens every asset to its basename",
         # Read-only channel reads and git operations that publish nothing.
@@ -851,7 +835,7 @@ def test_build_detector_leaves_publish_and_read_only_verbs_alone(benign: str) ->
         'git -c http.extraheader="$auth" clone "https://github.com/${TAP_REPO}.git" "$work"',
         'git -C "$work" add -- bucket/cadrumo.json',
         'git -C "$work" diff --cached --quiet',
-        'echo "marketplace already at cadrumo $VERSION; nothing to push"',
+        'echo "channel already at cadrumo $VERSION; nothing to push"',
         "uv sync --frozen",
     ],
 )
@@ -867,22 +851,18 @@ def test_publish_detector_leaves_prose_comments_and_read_only_verbs_alone(benign
 def test_external_channel_pushes_refuse_instructively_when_unconfigured() -> None:
     """Every externally-hosted channel fails closed with instructions when unconfigured.
 
-    All three channels are now externally hosted: the Scoop bucket and the
-    Homebrew formula both land in the shared account distribution repository, and
-    the plugin marketplace in the account marketplace. None of them can fall back
+    Both channels are externally hosted: the Scoop bucket and the
+    Homebrew formula land in the shared account distribution repository. Neither can fall back
     to the workflow's own repository, so each must refuse instructively rather
     than publish somewhere unintended.
     """
     surface = _run_surface(_document()["jobs"]["publish"])
     assert "REFUSED: shared distribution repository not configured" in surface
     assert "REFUSED: Homebrew tap not configured" in surface
-    assert "REFUSED: Claude marketplace not configured" in surface
     assert "HOMEBREW_TAP_TOKEN" in surface
-    assert "CLAUDE_MARKETPLACE_TOKEN" in surface
     # The channel credential names stay product-neutral so a sibling product
     # reuses the identical configuration.
     assert "CADRUMO_HOMEBREW_TAP_TOKEN" not in surface
-    assert "CADRUMO_MARKETPLACE_TOKEN" not in surface
     assert "CADRUMO_SCOOP_BUCKET_REPO" not in surface
 
 
@@ -1061,37 +1041,6 @@ def test_each_shared_repository_push_retries_a_lost_race_and_fails_closed() -> N
         assert "REFUSED" in surface, f"an exhausted {label} retry must refuse rather than pass silently"
 
 
-def test_the_marketplace_push_merges_rather_than_replacing_the_tree() -> None:
-    """The shared marketplace is updated through the merge module, never a tree wipe.
-
-    A wholesale replacement is correct only while exactly one product is served;
-    against the account-scoped marketplace it deletes every sibling product's
-    plugin. The push therefore delegates to the module that replaces only the
-    cohort's own plugin subtrees and merges the index by plugin name.
-    """
-    marketplace = _command_lines(_step_run("marketplace"))
-    assert "dev.packaging.marketplace_publish" in marketplace
-    assert "-maxdepth 1" not in marketplace, "marketplace push still wipes the tracked tree wholesale"
-
-
-def test_the_marketplace_push_retries_a_lost_race_and_fails_closed() -> None:
-    """Concurrent publication into the shared marketplace is a designed-in condition.
-
-    Several products releasing into one account marketplace can interleave clone
-    and push, making the later push a non-fast-forward. GitHub concurrency
-    groups are per-repository and cannot serialise across product repos, so the
-    push re-clones and re-applies. Exhausting the retries must fail the release
-    rather than report success on an unpublished marketplace.
-    """
-    marketplace = _command_lines(_step_run("marketplace"))
-    assert "for attempt in" in marketplace, "the marketplace push does not retry a lost race"
-    # The retry must re-clone inside the loop; re-pushing a stale checkout would
-    # simply be rejected again.
-    loop_body = marketplace.split("for attempt in", 1)[1]
-    assert "clone" in loop_body, "the retry does not re-clone, so it would re-push the same stale tree"
-    assert "REFUSED" in marketplace, "an exhausted retry must refuse rather than pass silently"
-
-
 def test_no_channel_push_writes_to_a_product_repository_default_branch() -> None:
     """No publication writes to any product repository's own default branch.
 
@@ -1101,7 +1050,7 @@ def test_no_channel_push_writes_to_a_product_repository_default_branch() -> None
     default branch at release time. Both costs are gone: every channel push now
     targets an account-scoped shared repository.
     """
-    for step in ("Scoop manifest", "Homebrew formula", "marketplace"):
+    for step in ("Scoop manifest", "Homebrew formula"):
         surface = _command_lines(_step_run(step))
         assert "${GITHUB_REPOSITORY}" not in surface, (
             f"the {step!r} push writes to the product repository; channel pushes are account-scoped"
@@ -1109,20 +1058,18 @@ def test_no_channel_push_writes_to_a_product_repository_default_branch() -> None
 
 
 def test_external_pushes_keep_the_token_out_of_the_persisted_remote() -> None:
-    """Scoop/Homebrew/marketplace push via an -c http.extraheader, never a token-in-URL clone."""
+    """Scoop/Homebrew push via an -c http.extraheader, never a token-in-URL clone."""
     surface = _run_surface(_document()["jobs"]["publish"])
     # No clone embeds the token in the URL (it would persist in .git/config).
     assert "x-access-token:${GH_TOKEN}@" not in surface
     assert "x-access-token:${TAP_TOKEN}@" not in surface
-    assert "x-access-token:${MARKETPLACE_TOKEN}@" not in surface
     # Each channel authenticates via a per-command HTTP header and scrubs its temp
     # dir right after the push.
-    assert surface.count('http.extraheader="$auth"') >= 6  # clone + push per channel
-    assert surface.count("printf 'x-access-token:%s'") == 3
+    assert surface.count('http.extraheader="$auth"') >= 4  # clone + push per channel
+    assert surface.count("printf 'x-access-token:%s'") == 2
     assert 'rm -rf "$work"' in surface
     # The refuse-when-empty guards survive for the two externally-hosted channels.
     assert "REFUSED: Homebrew tap not configured" in surface
-    assert "REFUSED: Claude marketplace not configured" in surface
 
 
 def test_leak_sweep_passes_a_non_empty_runner_token_set() -> None:
@@ -1240,7 +1187,6 @@ def test_the_irreversible_upload_runs_after_every_reversible_write() -> None:
         "download-latest.json",
         "Scoop manifest",
         "Homebrew formula",
-        "marketplace",
     )
     for fragment in reversible:
         position = next(index for index, name in enumerate(names) if fragment in name)

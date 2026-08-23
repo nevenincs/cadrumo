@@ -21,15 +21,12 @@ from dev._paths import REPO_ROOT
 from ...docs.download_matrix import Availability, DownloadDescriptor, claimed_channels, load_descriptor
 from ..publication_inputs import (
     COHORT_INPUT,
-    EMIT_REAL_CLIENT_EVIDENCE_COMMAND,
     LANE_WORKFLOW_BY_CHANNEL,
     SOURCE_INPUT_BY_CHANNEL,
     _emit_outputs,
     acquisition_lane_workflows,
     acquisition_lanes,
     demanded_inputs,
-    host_extension_precondition_refusal,
-    lane_output_name,
     main,
     missing_sources,
     refusals,
@@ -110,21 +107,6 @@ def test_claiming_a_channel_makes_its_source_mandatory(channel_id: str, expected
     (line,) = refusals(claimed, {COHORT_INPUT: "1"})
     assert expected_input in line
     assert channel_id in line
-
-
-def test_one_source_can_prove_several_claimed_channels_and_is_demanded_once() -> None:
-    """The two host-extension channels share one operator evidence release."""
-    descriptor = load_descriptor()
-    both = _with_availability(
-        _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE),
-        "mcpb",
-        Availability.AVAILABLE,
-    )
-    demanded = demanded_inputs(both)
-    assert demanded.count("claude_evidence_release") == 1
-    (line,) = refusals(both, {COHORT_INPUT: "1"})
-    assert "claude-plugin" in line
-    assert "mcpb" in line
 
 
 def test_a_claimed_channel_with_no_known_source_refuses_rather_than_passing() -> None:
@@ -217,74 +199,6 @@ def test_python_is_never_an_acquisition_lane_even_when_every_channel_is_claimed(
     assert "python" not in acquisition_lanes(fully_claimed)
 
 
-def test_unclaimed_host_extension_precondition_passes_regardless_of_evidence_release() -> None:
-    """No host-extension channel claimed: the precondition holds even with an empty release tag."""
-    descriptor = load_descriptor()
-    assert host_extension_precondition_refusal(descriptor, claude_evidence_release="") is None
-    assert host_extension_precondition_refusal(descriptor, claude_evidence_release="   ") is None
-
-
-def test_claimed_and_supplied_host_extension_precondition_passes() -> None:
-    """The positive control: a claimed host channel with a real evidence release raises no refusal.
-
-    Without this the refusal tests could pass against a precondition that
-    refuses unconditionally.
-    """
-    descriptor = load_descriptor()
-    claimed = _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE)
-    assert host_extension_precondition_refusal(claimed, claude_evidence_release="evidence-claude-123") is None
-
-
-def test_claimed_and_absent_host_extension_precondition_refuses_naming_the_capture_command() -> None:
-    """A claimed host channel with no evidence release refuses, and the refusal is actionable.
-
-    The refusal must carry the ``REFUSED:`` prefix, name the offending channel,
-    and name the capture command the operator runs -- and must describe that
-    capture as a local human step, never as something this module performs.
-    """
-    descriptor = load_descriptor()
-    claimed = _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE)
-
-    refusal = host_extension_precondition_refusal(claimed, claude_evidence_release="")
-
-    assert refusal is not None
-    assert refusal.startswith("REFUSED:")
-    assert EMIT_REAL_CLIENT_EVIDENCE_COMMAND in refusal
-    assert "claude-plugin" in refusal
-    # Never a step this module performs itself.
-    assert "capture them locally" in refusal
-
-
-def test_host_extension_precondition_treats_whitespace_only_evidence_release_as_absent() -> None:
-    """A blank/whitespace tag is not a supplied release; it must not satisfy the precondition."""
-    descriptor = load_descriptor()
-    claimed = _with_availability(descriptor, "mcpb", Availability.AVAILABLE)
-    refusal = host_extension_precondition_refusal(claimed, claude_evidence_release="   ")
-    assert refusal is not None
-    assert "mcpb" in refusal
-
-
-def test_host_extension_precondition_names_every_claimed_host_channel() -> None:
-    """With both host channels claimed the single refusal names both, not just the first found."""
-    descriptor = load_descriptor()
-    both = _with_availability(
-        _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE),
-        "mcpb",
-        Availability.AVAILABLE,
-    )
-    refusal = host_extension_precondition_refusal(both, claude_evidence_release="")
-    assert refusal is not None
-    assert "claude-plugin" in refusal
-    assert "mcpb" in refusal
-
-
-def test_host_extension_precondition_never_fires_for_a_non_host_extension_claim() -> None:
-    """Claiming scoop/homebrew must not trip the claude-specific precondition."""
-    descriptor = load_descriptor()
-    claimed = _with_availability(descriptor, "scoop", Availability.AVAILABLE)
-    assert host_extension_precondition_refusal(claimed, claude_evidence_release="") is None
-
-
 def test_every_mapped_lane_channel_resolves_to_an_existing_workflow_path_on_disk() -> None:
     """Every channel-to-workflow mapping points at a workflow file that really exists.
 
@@ -295,14 +209,6 @@ def test_every_mapped_lane_channel_resolves_to_an_existing_workflow_path_on_disk
     for channel_id, workflow_path in LANE_WORKFLOW_BY_CHANNEL.items():
         resolved = _REPO_ROOT / workflow_path
         assert resolved.is_file(), f"{channel_id!r} maps to {workflow_path!r}, which does not exist on disk"
-
-
-def test_the_claude_channels_carry_both_a_dispatchable_lane_and_a_human_evidence_precondition() -> None:
-    """The two must never collapse into one input: the workflow proves the mechanism, the human proves use."""
-    for channel_id in ("claude-plugin", "mcpb"):
-        assert channel_id in LANE_WORKFLOW_BY_CHANNEL
-        assert LANE_WORKFLOW_BY_CHANNEL[channel_id] == ".github/workflows/packaging-claude.yml"
-        assert SOURCE_INPUT_BY_CHANNEL[channel_id] == "claude_evidence_release"
 
 
 def test_todays_descriptor_needs_no_acquisition_lane_workflow() -> None:
@@ -320,8 +226,7 @@ def test_todays_descriptor_needs_no_acquisition_lane_workflow() -> None:
 def test_claiming_scoop_and_homebrew_resolves_to_their_distinct_workflows() -> None:
     """Two claims on separately-owned lanes resolve to two distinct workflow paths, sorted.
 
-    The counterpart to the claude dedupe case below: distinct owners must not
-    collapse the way two channels sharing one workflow do.
+    Distinct owners must not collapse into one workflow.
     """
     descriptor = load_descriptor()
     both = _with_availability(
@@ -333,17 +238,6 @@ def test_claiming_scoop_and_homebrew_resolves_to_their_distinct_workflows() -> N
         ".github/workflows/packaging-homebrew.yml",
         ".github/workflows/packaging-scoop.yml",
     )
-
-
-def test_claiming_both_claude_channels_dedupes_to_one_workflow() -> None:
-    """claude-plugin and mcpb are two channels but one acquisition run."""
-    descriptor = load_descriptor()
-    both = _with_availability(
-        _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE),
-        "mcpb",
-        Availability.AVAILABLE,
-    )
-    assert acquisition_lane_workflows(both) == (".github/workflows/packaging-claude.yml",)
 
 
 def test_every_source_mapped_non_cohort_channel_has_a_declared_lane_workflow() -> None:
@@ -382,7 +276,6 @@ def test_emitted_outputs_cover_every_known_input_in_both_states(tmp_path: Path) 
         "need_packaging_run_id": "true",
         "need_scoop_run_id": "false",
         "need_homebrew_run_id": "false",
-        "need_claude_evidence_release": "false",
     }
 
 
@@ -427,36 +320,3 @@ def test_main_accepts_a_registry_only_dispatch(tmp_path: Path) -> None:
     ):
         assert main(["--github-output", str(output)]) == 0
     assert "need_scoop_run_id=false" in output.read_text(encoding="utf-8")
-
-
-def test_a_claimed_claude_plugin_channel_keeps_its_lane_and_its_evidence_release_separate() -> None:
-    """The dispatchable lane and the human capture are two facts, never one.
-
-    A claimed `claude-plugin` channel demands BOTH: `packaging-claude.yml`
-    proves the plugin and MCPB install works, and an operator-minted evidence
-    release holds the four real-client rows proving a human actually ran it.
-    The publication authority consumes the second as a release tag.
-
-    Collapsing them fails the publication at its final leg after a full soak
-    and silently replaces operator-minted evidence with a machine-produced
-    value.
-    """
-    claimed = _with_availability(load_descriptor(), "claude-plugin", Availability.AVAILABLE)
-
-    # The lane is dispatched...
-    assert ".github/workflows/packaging-claude.yml" in acquisition_lane_workflows(claimed)
-    # ...and its run id has its own output name, distinct from the evidence input.
-    assert lane_output_name(".github/workflows/packaging-claude.yml") == "claude_plugin_run_id"
-    assert lane_output_name(".github/workflows/packaging-claude.yml") != SOURCE_INPUT_BY_CHANNEL["claude-plugin"]
-
-    # ...while the evidence release remains a SEPARATE demanded input, and its
-    # absence still refuses the whole chain rather than being satisfied by the
-    # lane having run.
-    assert SOURCE_INPUT_BY_CHANNEL["claude-plugin"] == "claude_evidence_release"
-    refusal = host_extension_precondition_refusal(claimed, claude_evidence_release="")
-    assert refusal is not None
-    assert "emit_real_client_evidence" in refusal
-
-    # A supplied evidence release satisfies it; a lane run id is not what this
-    # input means, and nothing here derives one from the other.
-    assert host_extension_precondition_refusal(claimed, claude_evidence_release="claude-evidence-2026-08-02") is None

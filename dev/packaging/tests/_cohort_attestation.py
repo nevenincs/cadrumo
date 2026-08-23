@@ -121,12 +121,12 @@ def make_minimal_test_python_cohort(
     directory.mkdir(parents=True, exist_ok=True)
     artifacts: dict[str, str] = {}
     digests: dict[str, str] = {}
-    for distribution in ("cadrumo", "cadrumo-harness", "cadrumo-data-manuals", "cadrumo-data-official"):
+    for distribution in ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official"):
         normalized = distribution.replace("-", "_")
         requires = (
             (f"cadrumo-data-manuals=={version}", f"cadrumo-data-official=={version}")
             if distribution == "cadrumo"
-            else ((f"cadrumo>={version}",) if distribution == "cadrumo-harness" else ())
+            else ()
         )
         metadata = "\n".join(
             (f"Name: {distribution}", f"Version: {version}", *(f"Requires-Dist: {item}" for item in requires), "")
@@ -153,7 +153,6 @@ def make_minimal_test_python_cohort(
         "sha256": digests,
         "source_commit": source_commit,
         "version": version,
-        "harness_version": version,
         "command_spec_attestation": make_test_command_spec_attestation(
             directory, artifacts, source_commit=source_commit
         ),

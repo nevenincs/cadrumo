@@ -168,7 +168,7 @@ def generate_manifest(
     return {
         "version": version,
         "description": (
-            "Cadrumo is a deterministic Spanish tax calculation CLI and MCP server "
+            "Cadrumo is a deterministic Spanish tax calculation CLI "
             "that turns local financial records into checked, exportable modelo filing "
             "artifacts. Independent software; not affiliated with AEAT."
         ),
@@ -189,7 +189,6 @@ def generate_manifest(
         "notes": [
             "Cadrumo state persists across Scoop updates.",
             "Verify with: aeat --version",
-            "The agent-facing MCP launcher ships in the separate cadrumo-harness distribution.",
         ],
     }
 

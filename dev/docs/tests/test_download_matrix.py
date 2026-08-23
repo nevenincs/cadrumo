@@ -64,6 +64,21 @@ def test_every_artifact_kind_has_a_documented_channel() -> None:
     assert not duplicated, f"artifact kind(s) claimed by more than one channel: {duplicated}"
 
 
+def test_runtime_wheelhouse_belongs_to_the_base_python_channel() -> None:
+    """The generic offline runtime closure is part of Python acquisition.
+
+    It must not recreate a host-extension or client-specific download channel.
+    """
+    descriptor = load_descriptor()
+    owners = [
+        channel.id
+        for channel in descriptor.channel
+        if ArtifactKind.PYTHON_WHEELHOUSE in channel.artifact_kinds
+    ]
+    assert owners == ["python"]
+    assert descriptor.matrix.extends_host_application is False
+
+
 def test_generated_zone_present_in_download_page() -> None:
     """docs/download.md carries the generated marker zone."""
     page_text = download_page_path().read_text(encoding="utf-8")

@@ -45,9 +45,7 @@ _DIGEST_FIELDS = (
     "import_budgets_sha256",
 )
 _SEALED_CONSUMERS = (
-    "dev/packaging/acquire_claude_plugin.py",
     "dev/packaging/acquire_homebrew.py",
-    "dev/packaging/acquire_mcpb.py",
     "dev/packaging/acquire_pypi.py",
     "dev/packaging/oracle_emit_cohort.py",
     "dev/packaging/smoke_absent_llm.py",
@@ -56,21 +54,17 @@ _SEALED_CONSUMERS = (
     "dev/packaging/smoke_docker.py",
     "dev/packaging/smoke_extras.py",
     "dev/packaging/smoke_homebrew.py",
-    "dev/packaging/smoke_mcpb.py",
     "dev/packaging/smoke_pip_core.py",
-    "dev/packaging/smoke_plugin_install.py",
     "dev/packaging/smoke_sdist_core.py",
     "dev/packaging/smoke_split_install.py",
     "dev/release/promote_python_cohort.py",
     "packaging/homebrew/generate.py",
-    "packaging/mcpb/build.py",
     "packaging/scoop/generate.py",
 )
 _SHIPPING_WORKFLOWS = (
     ".github/workflows/packaging-smoke.yml",
     ".github/workflows/packaging-scoop.yml",
     ".github/workflows/packaging-homebrew.yml",
-    ".github/workflows/packaging-claude.yml",
     ".github/workflows/publish-release.yml",
 )
 

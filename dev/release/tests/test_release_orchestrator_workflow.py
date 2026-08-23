@@ -15,7 +15,6 @@ from typing import Any, Final
 import pytest
 import yaml
 
-from cadrumo.tests.env_scope import scoped_env_var
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -232,7 +231,7 @@ def test_the_acquisition_lane_set_is_derived_not_hardcoded() -> None:
     assert "dev.packaging.publication_inputs --emit-lane-workflows" in surface
     # No lane workflow may be named literally here - naming one IS the
     # hardcoding this test forbids.
-    for lane in ("packaging-scoop.yml", "packaging-homebrew.yml", "packaging-claude.yml"):
+    for lane in ("packaging-scoop.yml", "packaging-homebrew.yml"):
         assert lane not in surface, f"{lane} is hardcoded; the lane set must be derived"
 
 
@@ -261,47 +260,6 @@ def test_todays_python_only_descriptor_dispatches_no_acquisition_lane() -> None:
     from ...packaging.publication_inputs import acquisition_lane_workflows
 
     assert acquisition_lane_workflows(load_descriptor()) == ()
-
-
-def test_the_evidence_precondition_runs_before_the_bump() -> None:
-    """A knowable refusal must not cost a burned version.
-
-    The needs graph is the assertion, not step order: a claimed host-extension
-    channel with no operator-minted evidence is knowable at entry, so refusing
-    after the bump would spend a version to discover it. Versions are burned
-    permanently by the identity ledger, so the cost is not recoverable.
-    """
-    jobs = _document()["jobs"]
-
-    assert "precondition" in jobs
-    assert "precondition" in jobs["bump"]["needs"], "the bump must not run before the precondition clears"
-    assert jobs["precondition"]["needs"] == "preflight", "the precondition is the first real gate in the chain"
-
-
-def test_the_precondition_refuses_and_never_produces_the_claude_rows() -> None:
-    """It gates on the four real-client rows; it must never attempt to mint them.
-
-    The rows assert that a real client installed real bytes. The emit honesty
-    guard refuses SDK-driven runs by design, so a workflow that produced them
-    would be asserting the same sentence about a different event.
-    """
-    surface = _run_surface(_document(), "precondition")
-
-    assert "--check-host-extension-precondition" in surface
-    assert "emit_real_client_evidence" not in surface, "the orchestrator must never mint real-client evidence"
-
-
-def test_the_precondition_holds_against_the_live_descriptor() -> None:
-    """Bound to the shipped descriptor: no host-extension channel is claimed today.
-
-    A positive control for the refusal path lives in the owning module's own
-    tests; what this pins is that the CURRENT tree passes, so a red here means
-    the descriptor changed rather than the code broke.
-    """
-    from ...docs.download_matrix import load_descriptor
-    from ...packaging.publication_inputs import host_extension_precondition_refusal
-
-    assert host_extension_precondition_refusal(load_descriptor(), claude_evidence_release="") is None
 
 
 def test_the_seal_job_is_terminal() -> None:
@@ -558,7 +516,7 @@ def test_the_campaign_is_skipped_on_resume_without_skipping_the_chain() -> None:
 def test_every_acquisition_run_id_reaches_the_seal_stage() -> None:
     """The ids were computed and then dropped at the job boundary.
 
-    `seal_candidate` reads three acquisition environment variables; the stage
+    `seal_candidate` reads two acquisition environment variables; the stage
     declared no outputs and the seal step set none, so a sealed candidate
     recorded empty acquisition sources and the promoter would dispatch the
     publication without its acquisition proofs. Vacuous only while the
@@ -568,25 +526,16 @@ def test_every_acquisition_run_id_reaches_the_seal_stage() -> None:
     jobs = _document()["jobs"]
     acquire_outputs = set(jobs["acquire"].get("outputs") or {})
 
-    assert acquire_outputs == {"scoop_run_id", "homebrew_run_id", "claude_plugin_run_id"}
+    assert acquire_outputs == {"scoop_run_id", "homebrew_run_id"}
 
     seal_env = str(jobs["seal"]["steps"][-1].get("env", {}))
-    # Only the two acquisition RUN IDs are fed from the acquisition stage.
-    # `CLAUDE_EVIDENCE_RELEASE` is deliberately absent from this list: it is a
-    # release TAG, not a run id, and its own tests below pin where it comes
-    # from. This assertion originally included it and thereby encoded the
-    # mis-wiring as correct - a test asserting a belief rather than a property.
+    # Both acquisition run ids are fed from the acquisition stage.
     for variable, output in (
         ("SCOOP_RUN_ID", "scoop_run_id"),
         ("HOMEBREW_RUN_ID", "homebrew_run_id"),
     ):
         assert variable in seal_env, f"the seal step does not set {variable}"
         assert f"needs.acquire.outputs.{output}" in seal_env, f"{variable} is not fed from the acquire stage"
-
-    # The claude lane still needs somewhere to put its run id, or the
-    # unmapped-lane refusal fires when that channel is claimed. It simply is
-    # not the evidence release.
-    assert "claude_plugin_run_id" in acquire_outputs
 
 
 def test_the_seal_reads_exactly_the_variables_the_module_consumes() -> None:
@@ -599,7 +548,7 @@ def test_the_seal_reads_exactly_the_variables_the_module_consumes() -> None:
     module = (_REPO_ROOT / "dev" / "release" / "seal_candidate.py").read_text(encoding="utf-8")
     seal_env = str(_document()["jobs"]["seal"]["steps"][-1].get("env", {}))
 
-    for variable in ("SCOOP_RUN_ID", "HOMEBREW_RUN_ID", "CLAUDE_EVIDENCE_RELEASE"):
+    for variable in ("SCOOP_RUN_ID", "HOMEBREW_RUN_ID"):
         assert f'"{variable}"' in module, f"{variable} is no longer read by the seal module"
         assert variable in seal_env, f"{variable} is read by the module but never set by the workflow"
 
@@ -615,84 +564,6 @@ def test_an_unmapped_acquisition_lane_refuses_rather_than_dropping_its_run_id() 
 
     assert "carries no output name" in surface
     assert "--output-name" in surface
-
-
-def test_the_evidence_release_is_never_sourced_from_a_lane_run_id() -> None:
-    """A NEGATIVE assertion, because the positive one sailed over this.
-
-    `CLAUDE_EVIDENCE_RELEASE` is consumed by the publication authority as a
-    release TAG (`gh release download "$CLAUDE_EVIDENCE_RELEASE"`), while an
-    acquisition lane produces a workflow RUN ID. They are different facts, and
-    the lane mapping's own contract states they must never collapse into one
-    input: the lane proves the install mechanism works, the operator-minted
-    release holds the four real-client rows proving a human actually ran it.
-
-    Feeding the lane's run id there fails the publication at its final leg
-    AFTER a full 48-72 hour soak, and silently discards the evidence the
-    precondition job verified - the evidence-integrity violation the decision
-    record's host-extension ruling exists to prevent.
-
-    `test_every_acquisition_run_id_reaches_the_seal_stage` asserts only that
-    ids are not DROPPED; it never asks what a field semantically IS, so it
-    passed throughout. This asks the question it could not.
-    """
-    jobs = _document()["jobs"]
-    seal_env = jobs["seal"]["steps"][-1]["env"]
-    evidence_source = str(seal_env["CLAUDE_EVIDENCE_RELEASE"])
-
-    lane_outputs = set(jobs["acquire"].get("outputs") or {})
-    for lane_output in lane_outputs:
-        assert f"outputs.{lane_output}" not in evidence_source, (
-            f"the evidence-release tag is sourced from the acquisition lane output {lane_output!r}; "
-            "a lane run id is not a release tag"
-        )
-    assert "needs.acquire" not in evidence_source, "the evidence tag must not come from the acquisition stage at all"
-
-
-def test_the_evidence_release_comes_from_the_job_that_verified_it() -> None:
-    """The tag recorded on the candidate is the one the precondition checked.
-
-    Sourcing it anywhere else would let the sealed candidate name a release
-    nobody verified, which is the same integrity gap one step removed.
-    """
-    jobs = _document()["jobs"]
-
-    assert "claude_evidence_release" in (jobs["precondition"].get("outputs") or {})
-    assert "precondition" in jobs["seal"]["needs"], "the seal must depend on the job that verified the evidence"
-    assert "needs.precondition.outputs.claude_evidence_release" in str(
-        jobs["seal"]["steps"][-1]["env"]["CLAUDE_EVIDENCE_RELEASE"]
-    )
-
-
-def test_the_seal_module_refuses_a_run_id_as_an_evidence_release() -> None:
-    """Defence in depth at the consuming module, not only in the wiring.
-
-    The workflow assertions above pin today's wiring; this makes the same
-    mistake unrepresentable from any caller, and it fails at seal time rather
-    than after the soak.
-    """
-    from .. import seal_candidate as seal_module
-    from .._asset_transport import ReleaseAssetTransportError
-    from ..release_candidate import ReleaseCandidateError
-
-    with (
-        scoped_env_var("CLAUDE_EVIDENCE_RELEASE", "1234567890"),
-        pytest.raises(ReleaseCandidateError, match="run id rather than a release tag"),
-    ):
-        seal_module.main(["--repository", "nevenincs/cadrumo", "--packaging-run-id", "42"])
-
-    # Control: a genuine tag is not refused by the same guard. Without this the
-    # assertion above would pass just as well against a guard that rejected
-    # every value. Past the guard, `main` reaches the real `gh` boundary
-    # (`resolve_gh`/`download_release_assets`, both raising
-    # ReleaseAssetTransportError) before any later ReleaseCandidateError site, so
-    # the two are the concrete failure modes this sandboxed run can hit.
-    with (
-        scoped_env_var("CLAUDE_EVIDENCE_RELEASE", "claude-evidence-2026-08-02"),
-        pytest.raises((ReleaseAssetTransportError, ReleaseCandidateError)) as caught,
-    ):
-        seal_module.main(["--repository", "nevenincs/cadrumo", "--packaging-run-id", "42"])
-    assert "run id rather than a release tag" not in str(caught.value)
 
 
 _RESUME_CHECK = re.compile(

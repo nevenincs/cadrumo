@@ -275,7 +275,7 @@ jobs:
         run: CADRUMO_PYTEST_WORKERS=8 just test-dev-tooling
         continue-on-error: true
 
-      - name: Channel artifact conformance (Homebrew formula, Scoop manifest, mcpb bundle)
+      - name: Channel artifact conformance (Homebrew formula and Scoop manifest)
         # These fourteen tests bind the generated formula and manifest to a real
         # built cohort, and until now NOTHING ran them: the per-push lanes scope
         # to dev/ paths AND exclude serial, the pathless invocations inherit

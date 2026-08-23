@@ -56,7 +56,6 @@ def _fully_populated() -> ReleaseCandidate:
         packaging_run_id="4242",
         scoop_run_id="4243",
         homebrew_run_id="4244",
-        claude_evidence_release="evidence-claude-manual-2026-08-02",
         claimed_channels=("python", "scoop", "homebrew"),
         dry_run=True,
         window=SoakWindow(minimum_hours=48, maximum_hours=72),
@@ -76,7 +75,6 @@ def test_the_candidate_round_trips_through_its_asset_file_exactly(tmp_path: Path
     # cannot re-derive, so a silent drop would surface as a failed dispatch.
     assert reloaded.scoop_run_id == "4243"
     assert reloaded.homebrew_run_id == "4244"
-    assert reloaded.claude_evidence_release == "evidence-claude-manual-2026-08-02"
     assert reloaded.claimed_channels == ("python", "scoop", "homebrew")
     assert reloaded.dry_run is True
 

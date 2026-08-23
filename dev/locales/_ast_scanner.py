@@ -131,9 +131,31 @@ against concrete locale entries. No additional static registration is needed.
 
 #: Keyword arguments whose dotted-literal value IS a translation key. The
 #: finding constructors use ``message_locale_key``; the error registry and the
-#: wizard verifiers use the other three.
+#: wizard verifiers use the other three; the CLI command-spec tables use
+#: ``help_key`` for every command, group and option help string they declare.
 _TRANSLATION_KEY_KWARGS: frozenset[str] = frozenset(
-    {"translated_message", "message_key", "translation_key", "message_locale_key"},
+    {"translated_message", "message_key", "translation_key", "message_locale_key", "help_key"},
+)
+
+#: Single-argument constructors and helpers that WRAP a translation key without
+#: changing it. The CLI command specs never pass a bare string: every help key is
+#: written ``help_key=TranslationKey("cli...")`` or ``help_key=_key("cli...")``, so
+#: reading only ``ast.Constant`` values made 690 live keys invisible to this scanner
+#: and reported them as catalogue-only extras — one strip away from deleting the
+#: entire ledger and live CLI help surface.
+_KEY_WRAPPER_CALLS: frozenset[str] = frozenset({"TranslationKey", "_key"})
+
+#: CLI command-spec factories that take their translation key as a POSITIONAL
+#: argument. The command-spec tables under ``entrypoints/cli/*_command_specs.py``
+#: build every verb, group, option and argument through these few helpers, passing
+#: the help key positionally rather than as ``help_key=``. Read as a declared table
+#: rather than by generalising to "any positional dotted literal", which would let a
+#: module path or a dotted identifier become a phantom catalogue key.
+#:
+#: Collection is additionally guarded by :func:`_is_dynamic_translation_prefix`, so
+#: only literals rooted in a real catalogue namespace are taken.
+_COMMAND_SPEC_KEY_FACTORIES: frozenset[str] = frozenset(
+    {"_option", "_leaf", "_required", "_group", "ArgumentSpec"},
 )
 
 
@@ -526,6 +548,8 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str], tr_names: frozen
     if name is None:
         return
     _collect_translation_key_kwargs(node, findings)
+    if name in _COMMAND_SPEC_KEY_FACTORIES:
+        _collect_command_spec_positional_keys(node, findings)
     if name in tr_names:
         _add_first_dotted_arg(node, findings)
         return
@@ -542,6 +566,21 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str], tr_names: frozen
         return
     if name.endswith("Error") or name.endswith("Exception"):
         _add_first_dotted_arg(node, findings)
+
+
+def _collect_command_spec_positional_keys(node: ast.Call, findings: set[str]) -> None:
+    """Collect catalogue-rooted dotted literals passed positionally to a spec factory.
+
+    Every positional argument is considered, because the key's index differs between
+    these helpers, and a spec's other positional arguments are handler names, result
+    model names and permission constants -- none of which are dotted, so none of which
+    can be mistaken for a key. The catalogue-root guard is what makes that safe rather
+    than merely true today.
+    """
+    for argument in node.args:
+        value = _dotted_literal_value(argument)
+        if value is not None and _is_dynamic_translation_prefix(value):
+            findings.add(value)
 
 
 def _collect_translation_key_kwargs(node: ast.Call, findings: set[str]) -> None:
@@ -604,6 +643,25 @@ def _dotted_literal_value(node: ast.expr | None) -> str | None:
     """
     if isinstance(node, ast.Constant) and isinstance(node.value, str) and _is_dotted_literal(node.value):
         return node.value
+    return _unwrapped_key_literal(node)
+
+
+def _unwrapped_key_literal(node: ast.expr | None) -> str | None:
+    """Return the key inside a single-argument key wrapper, else ``None``.
+
+    ``TranslationKey("cli.app.ledger.x_help")`` and ``_key("cli.app.live.y_help")``
+    denote exactly the string they wrap; the wrapper is a typing newtype and a local
+    shorthand, not a transformation. Restricted to a known callee set and to a lone
+    positional Constant argument, so a call that COMPUTES a key is still correctly
+    left to the dynamic-prefix machinery rather than being read as a literal.
+    """
+    if not isinstance(node, ast.Call) or node.keywords or len(node.args) != 1:
+        return None
+    if _callee_name(node.func) not in _KEY_WRAPPER_CALLS:
+        return None
+    argument = node.args[0]
+    if isinstance(argument, ast.Constant) and isinstance(argument.value, str) and _is_dotted_literal(argument.value):
+        return argument.value
     return None
 
 

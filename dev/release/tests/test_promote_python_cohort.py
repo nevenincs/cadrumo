@@ -42,6 +42,7 @@ from ...packaging.installed_tax_oracle import (
 )
 from ...packaging.python_cohort import PythonCohort, load_python_cohort
 from ...packaging.tests._cohort_attestation import (
+    add_test_runtime_wheelhouse,
     add_test_source_archive,
     make_test_command_spec_attestation,
 )
@@ -117,6 +118,7 @@ def _make_cohort_dir(
     """Create a minimal valid python-cohort directory and return its path.
 
     The directory contains six install archives plus the retained source archive
+    and runtime wheelhouse
     that satisfy ``load_python_cohort``'s metadata validation, plus a
     ``python-cohort.json`` manifest with correct SHA-256 digests.
     """
@@ -132,7 +134,6 @@ def _make_cohort_dir(
 
     for name, filename_stem, requires in (
         ("cadrumo", f"cadrumo-{version}-py3-none-any.whl", companion_requires),
-        ("cadrumo-harness", f"cadrumo_harness-{version}-py3-none-any.whl", (f"cadrumo>={version}",)),
         ("cadrumo-data-manuals", f"cadrumo_data_manuals-{version}-py3-none-any.whl", ()),
         ("cadrumo-data-official", f"cadrumo_data_official-{version}-py3-none-any.whl", ()),
     ):
@@ -145,7 +146,6 @@ def _make_cohort_dir(
 
     for name, filename_stem, requires in (
         ("cadrumo", f"cadrumo-{version}.tar.gz", companion_requires),
-        ("cadrumo-harness", f"cadrumo_harness-{version}.tar.gz", (f"cadrumo>={version}",)),
         ("cadrumo-data-manuals", f"cadrumo_data_manuals-{version}.tar.gz", ()),
         ("cadrumo-data-official", f"cadrumo_data_official-{version}.tar.gz", ()),
     ):
@@ -157,12 +157,12 @@ def _make_cohort_dir(
         sha256[sdist_key] = digest
 
     add_test_source_archive(cohort_dir, artifacts, sha256)
+    add_test_runtime_wheelhouse(cohort_dir, artifacts, sha256)
     manifest_data = {
         "artifacts": artifacts,
         "sha256": sha256,
         "source_commit": commit,
         "version": version,
-        "harness_version": version,
         "command_spec_attestation": make_test_command_spec_attestation(
             cohort_dir, artifacts, source_commit=commit
         ),
@@ -174,7 +174,7 @@ def _make_cohort_dir(
     return cohort_dir
 
 
-def _oracle(*, invoked_sha256: str | None = None) -> dict[str, object]:
+def _oracle() -> dict[str, object]:
     """Minimal oracle evidence payload satisfying ``_assert_oracle``."""
     oracle: dict[str, object] = {
         "target_casilla": TARGET_CASILLA,
@@ -183,9 +183,6 @@ def _oracle(*, invoked_sha256: str | None = None) -> dict[str, object]:
         "legal_refs": [EXPECTED_LEGAL_REF],
         "source_refs": [EXPECTED_SOURCE_REF],
     }
-    if invoked_sha256 is not None:
-        oracle["invoked_cli_sha256"] = invoked_sha256
-        oracle["invoked_cli_sha256_by_command"] = {"aeat": invoked_sha256}
     return oracle
 
 
@@ -200,17 +197,14 @@ def _write_evidence(
     *override* is shallow-merged into the document before writing so individual
     tests can corrupt or omit specific keys.
     """
-    invoked_sha256 = "b" * 64
     document: dict[str, object] = {
         "source_commit": cohort.source_commit,
         "artifact_sha256": {
             "cadrumo": cohort.sha256["cadrumo"],
-            "cadrumo-harness": cohort.sha256["cadrumo-harness"],
             "cadrumo-data-manuals": cohort.sha256["cadrumo-data-manuals"],
             "cadrumo-data-official": cohort.sha256["cadrumo-data-official"],
         },
         "cli_oracle": _oracle(),
-        "mcp_oracle": _oracle(invoked_sha256=invoked_sha256),
     }
     if override:
         document.update(override)
@@ -256,7 +250,6 @@ def test_tampered_artifact_digest_is_refused(tmp_path: Path) -> None:
         override={
             "artifact_sha256": {
                 "cadrumo": tampered_hashes["cadrumo"],
-                "cadrumo-harness": cohort.sha256["cadrumo-harness"],
                 "cadrumo-data-manuals": cohort.sha256["cadrumo-data-manuals"],
                 "cadrumo-data-official": cohort.sha256["cadrumo-data-official"],
             }
@@ -279,24 +272,6 @@ def test_missing_cli_oracle_is_refused(tmp_path: Path) -> None:
         tmp_path / "evidence",
         cohort,
         override={"cli_oracle": None},
-    )
-
-    with pytest.raises(SystemExit):
-        validate_promotion(
-            cohort_dir,
-            evidence_file,
-            expected_source_commit=cohort.source_commit,
-        )
-
-
-def test_missing_mcp_oracle_is_refused(tmp_path: Path) -> None:
-    """Evidence that omits ``mcp_oracle`` fails with ``SystemExit``."""
-    cohort_dir = _make_cohort_dir(tmp_path)
-    cohort = load_python_cohort(cohort_dir)
-    evidence_file = _write_evidence(
-        tmp_path / "evidence",
-        cohort,
-        override={"mcp_oracle": None},
     )
 
     with pytest.raises(SystemExit):
@@ -340,17 +315,14 @@ def test_evidence_from_different_artifact_bytes_is_refused(tmp_path: Path) -> No
     commit_dir = tmp_path / "evidence" / cohort.source_commit
     commit_dir.mkdir(parents=True, exist_ok=True)
     evidence_file = commit_dir / "evidence.json"
-    invoked_sha256 = "b" * 64
     document = {
         "source_commit": cohort.source_commit,
         "artifact_sha256": {
             "cadrumo": other_cohort.sha256["cadrumo"],
-            "cadrumo-harness": other_cohort.sha256["cadrumo-harness"],
             "cadrumo-data-manuals": other_cohort.sha256["cadrumo-data-manuals"],
             "cadrumo-data-official": other_cohort.sha256["cadrumo-data-official"],
         },
         "cli_oracle": _oracle(),
-        "mcp_oracle": _oracle(invoked_sha256=invoked_sha256),
     }
     evidence_file.write_text(json.dumps(document), encoding="utf-8")
 

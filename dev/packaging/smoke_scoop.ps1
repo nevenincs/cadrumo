@@ -581,8 +581,6 @@ function Invoke-HostSmoke {
             uninstall_preserved_persistence = $true
             reinstall_preserved_persistence = $true
             tax_evidence = $oracleEvidence.tax_evidence
-            # The manifest is CLI-only; cadrumo-mcp ships in the sibling
-            # cadrumo-harness distribution, which Scoop does not install.
             mcp_evidence = $null
         }
     }

@@ -2,7 +2,7 @@
 
 Every test drives the real verification and refusal functions against real
 on-disk fixtures — no network, and no mocks of first-party code. The heavy
-install flows (real venvs, brew, scoop, claude, uv) are exercised only by the
+install flows (real venvs, brew, scoop, uv) are exercised only by the
 live release pipeline; here we prove the fail-closed cores those flows depend
 on: digest verification accepts matching bytes and refuses tampered bytes, and
 an unpublished endpoint yields an instructive :class:`SystemExit` naming the
@@ -19,10 +19,8 @@ from typing import Any
 import pytest
 
 from .. import (
-    acquire_claude_plugin,
     acquire_github_release,
     acquire_homebrew,
-    acquire_mcpb,
     acquire_pypi,
 )
 from .._acquire_common import (
@@ -61,7 +59,6 @@ def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
     download.mkdir()
     wheel_payloads = {
         "cadrumo": (f"cadrumo-{_VERSION}-py3-none-any.whl", b"cadrumo wheel bytes"),
-        "cadrumo-harness": (f"cadrumo_harness-{_VERSION}-py3-none-any.whl", b"harness wheel bytes"),
         "cadrumo-data-manuals": (f"cadrumo_data_manuals-{_VERSION}-py3-none-any.whl", b"manuals wheel bytes"),
         "cadrumo-data-official": (f"cadrumo_data_official-{_VERSION}-py3-none-any.whl", b"official wheel bytes"),
     }
@@ -72,7 +69,6 @@ def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
     # Sdist digests are not backed by files here; the Homebrew formula check
     # compares declared checksums only, so deterministic placeholders suffice.
     sha256["cadrumo-sdist"] = hashlib.sha256(b"cadrumo sdist").hexdigest()
-    sha256["cadrumo-harness-sdist"] = hashlib.sha256(b"harness sdist").hexdigest()
     sha256["cadrumo-data-manuals-sdist"] = hashlib.sha256(b"manuals sdist").hexdigest()
     sha256["cadrumo-data-official-sdist"] = hashlib.sha256(b"official sdist").hexdigest()
 
@@ -81,12 +77,11 @@ def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
         manifest=tmp_path / "python-cohort.json",
         source_commit=_COMMIT,
         version=_VERSION,
-        harness_version=_VERSION,
         root_wheel=download / wheel_payloads["cadrumo"][0],
         root_sdist=tmp_path / f"cadrumo-{_VERSION}.tar.gz",
         source_archive=tmp_path / "cadrumo-source.zip",
-        harness_wheel=download / wheel_payloads["cadrumo-harness"][0],
-        harness_sdist=tmp_path / f"cadrumo_harness-{_VERSION}.tar.gz",
+        runtime_wheelhouse=tmp_path / "cadrumo-runtime-wheelhouse-py313.zip",
+        runtime_wheelhouse_manifest={},
         manuals_wheel=download / wheel_payloads["cadrumo-data-manuals"][0],
         manuals_sdist=tmp_path / f"cadrumo_data_manuals-{_VERSION}.tar.gz",
         official_wheel=download / wheel_payloads["cadrumo-data-official"][0],
@@ -100,23 +95,7 @@ def _make_release_cohort(tmp_path: Path) -> tuple[LoadedReleaseCohort, Path]:
     """Build and load a complete release cohort with real files."""
     root = tmp_path / "release-cohort"
     (root / "python").mkdir(parents=True)
-    filenames = {
-        "cadrumo-data-manuals-sdist": "python/cadrumo_data_manuals-0.99.0.tar.gz",
-        "cadrumo-data-manuals-wheel": "python/cadrumo_data_manuals-0.99.0-py3-none-any.whl",
-        "cadrumo-data-official-sdist": "python/cadrumo_data_official-0.99.0.tar.gz",
-        "cadrumo-data-official-wheel": "python/cadrumo_data_official-0.99.0-py3-none-any.whl",
-        "cadrumo-sdist": "python/cadrumo-0.99.0.tar.gz",
-        "cadrumo-wheel": "python/cadrumo-0.99.0-py3-none-any.whl",
-        "cadrumo-harness-sdist": "python/cadrumo_harness-0.99.0.tar.gz",
-        "cadrumo-harness-wheel": "python/cadrumo_harness-0.99.0-py3-none-any.whl",
-        "cadrumo-source-archive": "python/cadrumo-source.zip",
-        "claude-marketplace": "claude-marketplace.json",
-        "claude-plugin": "claude-plugin.zip",
-        "homebrew-formula": "cadrumo.rb",
-        "mcpb": "cadrumo-0.99.0.mcpb",
-        "python-cohort-manifest": "python/python-cohort.json",
-        "scoop-manifest": "cadrumo.json",
-    }
+    filenames = {name: f"artifacts/{name}.bin" for name in REQUIRED_ARTIFACT_KINDS}
     artifacts = []
     for name, relative in filenames.items():
         path = root / relative
@@ -215,9 +194,9 @@ def test_verify_artifact_digest_accepts_matching_bytes(tmp_path: Path) -> None:
     expected = hashlib.sha256(b"promoted bytes").hexdigest()
     assert (
         verify_artifact_digest(
-            mechanism="mcpb download",
-            endpoint="https://example/cadrumo.mcpb",
-            name="mcpb",
+            mechanism="release download",
+            endpoint="https://example/cadrumo.bin",
+            name="cadrumo",
             path=artifact,
             expected_sha256=expected,
         )
@@ -231,9 +210,9 @@ def test_verify_artifact_digest_refuses_tampered_bytes(tmp_path: Path) -> None:
     artifact.write_bytes(b"tampered bytes")
     with pytest.raises(AcquisitionError, match="digest mismatch"):
         verify_artifact_digest(
-            mechanism="mcpb download",
-            endpoint="https://example/cadrumo.mcpb",
-            name="mcpb",
+            mechanism="release download",
+            endpoint="https://example/cadrumo.bin",
+            name="cadrumo",
             path=artifact,
             expected_sha256="c" * 64,
         )
@@ -250,7 +229,6 @@ def test_verify_python_cohort_download_accepts_matching_wheels(tmp_path: Path) -
     )
     assert set(resolved) == {
         "cadrumo",
-        "cadrumo-harness",
         "cadrumo-data-manuals",
         "cadrumo-data-official",
     }
@@ -302,7 +280,8 @@ def test_verify_release_download_refuses_missing_asset(tmp_path: Path) -> None:
     """A release missing one asset is an instructive not-yet-published refusal."""
     cohort, _root = _make_release_cohort(tmp_path)
     download = _release_download_dir(cohort, tmp_path)
-    (download / "cadrumo-0.99.0.mcpb").unlink()
+    missing = next(iter(download.iterdir()))
+    missing.unlink()
     with pytest.raises(AcquisitionError) as caught:
         verify_release_download(
             cohort,
@@ -310,14 +289,14 @@ def test_verify_release_download_refuses_missing_asset(tmp_path: Path) -> None:
             mechanism="gh release download",
             endpoint="nevenincs/cadrumo@v0.99.0",
         )
-    assert "cadrumo-0.99.0.mcpb" in str(caught.value)
+    assert missing.name in str(caught.value)
 
 
 def test_verify_release_download_refuses_tampered_asset(tmp_path: Path) -> None:
     """A release asset served with drifted bytes fails closed."""
     cohort, _root = _make_release_cohort(tmp_path)
     download = _release_download_dir(cohort, tmp_path)
-    (download / "cadrumo-0.99.0.mcpb").write_bytes(b"tampered mcpb bytes of a different length")
+    next(iter(download.iterdir())).write_bytes(b"tampered release bytes of a different length")
     with pytest.raises(AcquisitionError):
         verify_release_download(
             cohort,
@@ -369,20 +348,6 @@ def test_verify_homebrew_formula_digests_refuses_missing_resource(tmp_path: Path
 
 
 # ---------------------------------------------------------------------------
-# MCPB expected-digest lookup
-# ---------------------------------------------------------------------------
-
-
-def test_expected_mcpb_digest_returns_release_authority(tmp_path: Path) -> None:
-    """The mcpb digest and version come from the release cohort authority."""
-    cohort, _root = _make_release_cohort(tmp_path)
-    sha256, version = acquire_mcpb.expected_mcpb_digest(cohort)
-    record = next(item for item in cohort.manifest.artifacts if item.name == "mcpb")
-    assert sha256 == record.sha256
-    assert version == "0.99.0"
-
-
-# ---------------------------------------------------------------------------
 # Argument contracts
 # ---------------------------------------------------------------------------
 
@@ -406,30 +371,12 @@ def test_homebrew_parser_defaults_to_public_tap() -> None:
     assert args.tap == "nevenincs/tap"
 
 
-def test_claude_plugin_parser_defaults() -> None:
-    """The plugin script exposes the public marketplace-source parameter."""
-    args = acquire_claude_plugin._parser().parse_args(["--cohort-dir", "c", "--evidence-dir", "e"])
-    assert args.marketplace_source == "nevenincs/neve-marketplace"
-    assert args.plugin_id == acquire_claude_plugin._PLUGIN_ID
-
-
-def test_mcpb_parser_accepts_url_and_repo() -> None:
-    """The MCPB script accepts an explicit bundle URL and a gh repo fallback."""
-    args = acquire_mcpb._parser().parse_args(
-        ["--cohort-dir", "c", "--evidence-dir", "e", "--mcpb-url", "https://example/cadrumo.mcpb"],
-    )
-    assert args.mcpb_url == "https://example/cadrumo.mcpb"
-    assert args.repo == "nevenincs/cadrumo"
-
-
 @pytest.mark.parametrize(
     "parser_factory",
     [
         acquire_pypi._parser,
         acquire_github_release._parser,
         acquire_homebrew._parser,
-        acquire_claude_plugin._parser,
-        acquire_mcpb._parser,
     ],
 )
 def test_parsers_require_cohort_and_evidence_dirs(parser_factory) -> None:

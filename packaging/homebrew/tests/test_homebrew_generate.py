@@ -192,9 +192,7 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     assert 'venv.pip_install resource("cryptography"), build_isolation: false' in formula
     assert "venv.pip_install_and_link buildpath" in formula
     assert 'assert_predicate bin/"aeat", :executable?' in formula
-    # The formula ships the CLI distribution only. The `cadrumo-mcp` server is
-    # an entry point of the separate `cadrumo-harness` distribution, which
-    # Homebrew does not install here, so the formula must NOT claim it.
+    # The formula exposes only the product CLI.
     assert "cadrumo-mcp" not in formula
     assert 'shell_output("#{bin}/aeat --version")' in formula
 
@@ -207,8 +205,7 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
         f"{built_cohort.release_base}/{built_cohort.official.name}",
         sha256_path(built_cohort.official),
     )
-    # The MCP SDK belongs to the `cadrumo-harness` distribution, which this
-    # formula does not install, so it must not appear in the CLI closure.
+    # No unrelated workspace dependency may leak into the formula closure.
     assert "mcp" not in resources
     assert "tzdata" not in resources
     # The three isolation-disabled build backends: setuptools -- the venv from
