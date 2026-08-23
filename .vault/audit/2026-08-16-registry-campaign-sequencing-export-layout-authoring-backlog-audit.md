@@ -18604,3 +18604,84 @@ on bindings for `Pag. 2` and the Anexo, not on casillas. Three relayout splits
 (200, 322, 347 -- the last needing three revisions), three other layouts on the
 filing-capability worklist, nine entries blocked on corpus or era, and two form
 diagrams needing AEAT acquisition.
+
+## Tick: queue item 6 disproved, the regression it caused undone, and the measure that caused it gated
+
+Queue item 6 -- modelo 390's "page-05 and page-07 unwritten Regimen Simplificado
+data fields" -- **does not reproduce as a defect.** Every numbered box on both
+sheets is already written, in all four revisions that ship a layout.
+
+### The false gap, and the control that was missing
+
+The premise came from a measurement that counted a design position covered only
+if an export field of `kind == "casilla"` covered it. On that measure page 05
+looked nine boxes short in every revision: boxes `[74]`-`[78]` and `[80]`-`[83]`
+declared a casilla, carried grounding, and appeared never to reach the file,
+while `[79]` alone was emitted.
+
+The measure was wrong. Page 05's record declares `binding_record = "page_5"`, so
+`derive_export_layouts_from_bindings` resolves most of its coordinates from the
+binding selectors at snapshot build -- `_snapshot.py:328` REPLACES the authored
+layouts with the derived ones. Measured by BYTE across all field kinds against
+the derived record, page 05 and page 07 are complete: 11 and 16 numbered boxes
+respectively, none unwritten, in 2022, 2023, 2024 and 2025. The nine "missing"
+boxes were present all along as `binding` fields at exactly the offsets the gap
+report named.
+
+### What the wrong measure cost, recorded because it is the lesson
+
+Acting on it, nine duplicate `casilla` export fields plus nine reciprocal
+`export_refs` were authored into each of the four revisions -- 72 additions onto
+offsets that were already occupied. The authority still loaded CLEAN, which is
+why it looked right; the snapshot did not, because `check_all_id_references`
+runs at snapshot build against the DERIVED layout, where hand-authored ids do
+not exist. The registry package went from 9 failures to 104.
+
+Two diagnostic mistakes are worth carrying forward:
+
+* The disproving control -- count coverage across every field kind, not the one
+  kind the report filtered on -- was never run before the change was authored.
+  The campaign's own rule names this: a narrowing that makes the output tidier
+  is suspect until shown to discard only false positives.
+* The oscillation was read as a contradiction between two gates and reported as
+  needing "a third shape". It was not. Both gates were correct and consistent;
+  the data being added was simply wrong.
+
+All 72 additions have been removed. `git diff` against the parent of the commit
+that carried them is empty for modelo 390, so the undo is exact rather than
+approximate.
+
+### What replaces it
+
+`test_modelo_390_numbered_boxes_reach_the_record.py` asserts that every box AEAT
+numbers on pages 5 and 7 is covered, BY BYTE and across every field kind, in the
+derived record of every revision shipping a layout. Its companion asserts that a
+casilla-only count would still miss at least five of those boxes -- so the walk
+cannot be quietly narrowed back to the measure that caused this, and the module
+announces its own retirement condition if page 05 ever becomes casilla-authored.
+
+Untagged positions stay out of scope, on evidence: AEAT numbers a box once and
+repeats the row (`[66]` heads Actividad 1 of five, `[114]`-`[118]` head Prorrata
+1 of five), so an untagged position is normally a further row of a numbered
+group rather than an unnumbered datum.
+
+### Verified
+
+* the new module: 2 passed, ruff clean; both assertions proved to bite from
+  OUTSIDE the repo -- a binding-derived box withheld reds the walk, and a
+  collapsed design read trips the vacuity guard.
+* `test_referential_integrity_part1` and `test_modelo_390_registry` are green
+  again: 89 passed across the three modules.
+* registry package: 10 failed, 5331 passed. Nine are the standing declared
+  inventories; the tenth, `test_public_api_boundaries`, passes in isolation and
+  is a concurrent-edit artifact of an eight-minute run, not a regression.
+* authority loads CLEAN.
+
+### Still open
+
+Queue items 1-6 are now all adjudicated; item 6 joins 1, 3, 4 and 5 as
+not-a-defect. The standing backlog is unchanged: three relayout splits (200,
+322, 347 -- the last needing three revisions), the filing-capability worklist,
+nine entries blocked on corpus or era, two form diagrams needing AEAT
+acquisition, and modelo 840's layout waiting on bindings for `Pag. 2` and the
+Anexo.
