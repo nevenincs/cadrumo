@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:ba19491912e0bb98653add8781baf31385663a72f5cce0112b0d704ad0702cbd'
+body_hash: 'sha256:bdeee4bb885bbd15a3bc82e4c074d260138468645161a296c698a309a89f2fe0'
 related:
   - "[[2026-08-23-inventory-casilla-grounding-research]]"
   - "[[2026-08-22-source-casilla-integration-adr]]"
@@ -16,13 +16,13 @@ related:
 
 ## Problem Statement
 
-The inventory domain has the correct activity-scoped ledger boundary but does not yet expose a legally complete, source-owned projection for Modelo 100 inventory casillas. The current signed helper and purchase subtotal cannot be bound safely. A registry selector containing one literal activity ID also cannot represent the taxpayer's runtime set of encrypted inventory ledgers. This decision defines the supported revision, output identities, source completeness, authority, absence, override, and typed runtime activity-row contracts for the first inventory connection grounded by `2026-08-23-inventory-casilla-grounding-research`.
+The inventory domain now exposes a legally complete, source-owned 2025 projection at activity grain, but immutable registry selectors still require a literal activity ID that cannot represent the taxpayer's runtime encrypted-ledger rows. The existing row-indexed binding carrier preserves position and value, not the canonical source-row identity needed to prove that row 1 still names the same activity after merge, persistence, and replay. This decision defines the typed runtime activity-row and identity-preservation contract grounded by `2026-08-23-inventory-casilla-grounding-research`.
 
 ## Considerations
 
 - The connection must extend the accepted resolver, registry, provenance, secure-persistence, and connectivity-proof architecture rather than create a parallel calculation path; `2026-08-22-source-casilla-integration-adr`.
 - Casilla meaning, sign, grain, source authority, absence behavior, and override policy must be explicit before a source becomes connected; `2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference`.
-- The current inventory purchase value is not a complete acquisition-cost fact, and the current signed variation helper does not represent the official output shape; `2026-08-23-inventory-casilla-grounding-research`.
+- Complete acquisition cost, split variation, physical-closing authority, resolver enrollment, and source ownership are implemented prerequisites rather than remaining blockers; `2026-08-23-inventory-casilla-grounding-research`.
 - The supported legal slice is ejercicio 2025 only; repeated identifiers in other revisions do not authorize continuity; `2026-08-23-inventory-casilla-grounding-research`.
 - Immutable registry declarations cannot know taxpayer-specific activity identities, while the accepted source mesh already carries row-indexed binding values and established M303, M349, and M720 precedents preserve runtime row identity; `2026-08-23-inventory-casilla-grounding-research` and `2026-07-05-modelo-720-row-carrier-adr`.
 
@@ -51,34 +51,36 @@ Let the registry own the three operation-to-casilla row-template semantics and l
 ## Constraints
 
 - The initial mapping is limited to Modelo 100 ejercicio 2025. Earlier or later revisions require separately grounded authority.
-- Resolution grain is exactly one taxpayer, filing year, and economic activity. Values must not be combined across activities before the registry-authorized filing aggregation stage.
+- Resolution grain is exactly one taxpayer, filing year, and economic activity. Values must not be combined across activities; any cross-activity combination requires a later accepted ADR and explicit registry aggregation contract.
 - The immutable registry owns operation, destination casilla, legal/source grounding, revision scope, and row-template semantics. It must not contain a taxpayer activity ID, wildcard, or fabricated static activity roster.
 - The encrypted runtime inventory ledger is the sole source of canonical `actividad_id` instances. Expansion must be deterministic, preserve exact activity identity and provenance, and refuse duplicate or ambiguous activity rows.
 - Source resolution carries each expanded operation value as a structured row-indexed binding coordinate compatible with `CalculationSourceResolution.row_binding_values`; a binding ID remains a real registry ID and the 1-based row index remains a separate typed coordinate.
-- Row indexes are transport/projection coordinates, not replacement activity identities. Replay and review must preserve the association between each row coordinate and its canonical `actividad_id`.
-- Inventory row values do not enter the scalar formula engine or taxpayer-wide aggregation merely because they use the row carrier. Any scalar formula consumption or cross-activity fold requires an explicit separately adjudicated registry aggregation contract.
+- Row indexes are transport/projection coordinates, not replacement activity identities. A generic typed row-source identity map keyed by `(BindingId, row_index)` accompanies `row_binding_values`; each member carries the canonical `BindingSourceKind`, an opaque stable source-row identity (`actividad_id` for inventory), and the source/projection fingerprint required to revalidate it.
+- Canonical activity identities sort lexically before 1-based row indexes are assigned. Exclusive merge unconditionally refuses every second claim to the same `(BindingId, row_index)` coordinate; identity, source-kind, fingerprint, or value differences are diagnostic mismatch dimensions, never prerequisites for refusal.
+- `ModeloBindingValue` and encrypted `CalculationRevision` review state persist the same typed identity association. The bijection is coordinate-to-coordinate: every `(BindingId, row_index)` row value has exactly one identity-map member at that same coordinate and vice versa. It does not require source-row identities to be globally unique, because one canonical activity intentionally appears once under each of the three operation bindings.
+- The three operation bindings form one atomic activity cohort. For each `row_index`, the 0177, 0181, and 0182 template members carry the same source-row identity and projection fingerprint; each canonical activity appears exactly once per operation; and all three operation row sets have identical membership and deterministic order. Merge and replay refuse the whole cohort for any missing, orphan, duplicate, substituted, or reordered member.
+- Raw opaque activity identity is encrypted revision state. Ordinary output exposes only the safe binding coordinate and fingerprint; it does not emit `actividad_id` or other source-row identifiers.
+- Inventory row values do not enter the scalar formula engine or any cross-activity fold. Such consumption requires a separate accepted ADR and registry aggregation contract; this decision does not pre-authorize it.
 - Casilla `0181` is complete acquisition cost: purchase consideration plus directly attributable acquisition costs and non-recoverable IVA, excluding recoverable IVA. The current IVA-exclusive subtotal is never an acceptable substitute.
 - Inventory source semantics must represent and validate that complete acquisition cost before `0181` is connected. A binding must not compensate for an incomplete source fact.
 - Casilla `0177` is `max(closing - opening, 0)` and casilla `0182` is `max(opening - closing, 0)`. They are mutually exclusive for a source projection; both may be zero.
 - An explicit physical closing valuation may be authoritative only when its provenance identifies the observation and valuation basis, continuity against the prior authoritative closing is checked, and any conflict with movement-derived closing is retained as an actionable diagnostic. An unexplained override is not authoritative.
 - Missing, incomplete, inconsistent, conflicting without adjudicated authority, or unreadable source state fails closed. It leaves the source outputs unresolved with actionable diagnostics and never supplies inferred zeroes.
-- The accepted source-casilla integration and calculation aggregation contracts are stable parent features. The inventory acquisition-cost and explicit-closing write semantics are not yet sufficient and are blocking prerequisites for source readiness.
+- The accepted source-casilla integration, calculation aggregation, acquisition-cost, explicit-closing, resolver, and ownership contracts are stable parent features. The remaining blocker is the row identity carrier and its encrypted replay contract.
 
 ## Implementation
 
 Replace the stale `0155` inventory helper with a typed 2025 inventory activity-row projection that produces `0181`, `0177`, and `0182` for each taxpayer-year-activity coordinate. No compatibility alias or alternate signed-output path remains.
 
-Author one immutable registry row-template family for the three inventory operations and their exact destination casillas. At resolution time, enumerate the canonical activity rows from the encrypted inventory document, order them deterministically, and expand every applicable operation template over each row. The registry declaration carries no literal `actividad_id`; the runtime row carries that identity alongside its source provenance and projection fingerprint.
+Author one immutable registry row-template family for the three inventory operations and their exact destination casillas. At resolution time, enumerate canonical activity rows from the encrypted inventory document, sort by canonical `actividad_id`, assign 1-based row indexes, and expand every applicable operation template over each row. The registry declaration carries no literal `actividad_id`; the generic typed row-source identity member carries the opaque runtime identity, canonical source kind, and source/projection fingerprint beside the corresponding row binding coordinate.
 
-Emit expanded values through the source mesh's row-indexed binding-value channel using the unchanged registry `BindingId` plus a 1-based row index. Preserve the row-to-`actividad_id` association in the source/revision review state so reordering or substitution cannot change meaning silently. Collision checks operate on the full structured coordinate and activity identity; no synthetic binding IDs, wildcard selectors, or taxpayer-wide sum path is introduced.
+Emit expanded values through the source mesh's row-indexed binding-value channel using the unchanged registry `BindingId` plus a 1-based row index, accompanied by the row-source identity map at the same coordinate. Merge validates value and identity atomically. Persist both on the encrypted calculation revision and project the identity association through `ModeloBindingValue` review state. Replay reconstructs neither identities nor indexes: it validates the coordinate-to-coordinate bijection, source kind, fingerprints, and the complete three-operation cohort before reuse. For every row index, all three operation bindings must name the same activity and projection fingerprint; the operation row sets and canonical ordering must be identical. Any missing, orphan, duplicate, substituted, or reordered cohort member refuses the cohort atomically. Ordinary display and export diagnostics use only safe coordinates and fingerprints. No synthetic binding IDs, wildcard selectors, taxpayer-wide sum, cross-activity combination, or scalar formula path is introduced.
 
-Correct the canonical inventory source model so each acquisition can prove its complete acquisition cost, including attributable costs and the recoverability treatment of IVA. Only after that source fact is validated may the resolver emit `0181`.
-
-Resolve opening and closing through the canonical inventory valuation path. A provenance-complete physical closing may supersede the derived closing under the authority conditions above; otherwise the derived valuation remains authoritative or resolution refuses. Emit continuity and closing-conflict diagnostics without discarding the competing observations.
+Consume the implemented canonical complete-acquisition-cost and closing-authority projections without recomputing their domain arithmetic or reopening their authority decisions.
 
 Enroll the projection through the existing registry binding, resolver mesh, provenance graph, encrypted calculation revision, connectivity proof, and operator paths. A complete authoritative ledger owns all three outputs and refuses caller replacement. When no complete authoritative ledger is connected, the casillas remain unresolved and deliberate manual input may be used through the existing manual path; manual input does not masquerade as inventory-source resolution.
 
-Validation enforces revision scope, coordinate identity, acquisition-cost completeness, mutual exclusion, continuity, source readability, provenance, collision refusal, and calculate/pull parity.
+Validation enforces revision scope, coordinate-to-identity-map bijection, three-operation cohort completeness and order equality, deterministic activity order, source-kind and fingerprint equality, acquisition-cost completeness, mutual exclusion, continuity, source readability, provenance, atomic collision/cohort refusal, safe-output redaction, and calculate/pull/replay parity.
 
 ## Rationale
 
@@ -89,6 +91,8 @@ The complete three-output runtime-row projection is the only option that preserv
 - Modelo 100 ejercicio 2025 gains one auditable inventory source contract at the correct activity grain.
 - One registry template family can serve any valid runtime activity roster without static IDs, wildcards, or synthetic binding identifiers.
 - Calculation revisions and review surfaces must preserve row-to-activity identity in addition to row-indexed binding values, increasing the strict replay and mutation-test surface.
+- The generic identity association can support other row-producing sources without teaching the carrier inventory-specific fields.
+- Operators lose raw activity identifiers in ordinary output; encrypted review/replay retains them and exposes stable fingerprints for safe correlation.
 - The scalar formula engine remains unchanged; inventory row folding stays refused until an explicit aggregation decision exists.
 - Positive and negative stock variation cannot populate both income and expense outputs for the same projection.
 - Acquisition-cost enrichment is mandatory before `0181` can become source-backed, so implementation cannot ship by forwarding the existing subtotal.
@@ -96,4 +100,3 @@ The complete three-output runtime-row projection is the only option that preserv
 - Complete source state prevents caller overrides; absent or defective state remains visibly unresolved and preserves manual fallback.
 - The stale inventory meaning attached to `0155` disappears with no compatibility path.
 - Supporting earlier revisions, production-cost composition, or new valuation authorities requires further grounding and decision work.
-

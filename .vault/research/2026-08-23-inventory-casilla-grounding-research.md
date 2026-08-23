@@ -5,15 +5,16 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:eeac5d05306e74a9343ae0787e368e88d8e833a472d0eeaef22536c3af671f45'
+body_hash: 'sha256:b67866e8030210696caf0faadc16c5d96572be8ffca20c8bc9f259db2184f4dc'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]"
+  - '[[2026-07-05-modelo-720-row-carrier-adr]]'
 ---
 
 # `inventory-casilla-grounding` research: `Modelo 100 stock valuation mapping`
 
-Official 2025 evidence supports a three-output inventory source for each economic activity in direct estimation: purchases go to 0181, a positive closing-minus-opening difference goes to income box 0177, and the magnitude of a negative difference goes to expense box 0182. It does not support forwarding the existing signed â€œAnexo D 0155â€� helper. The encrypted ledger has the right activity/year grain and can calculate the two variation branches, but its purchase total is not yet a complete tax acquisition-cost fact when indirect tax is non-recoverable. Runtime inspection further shows that a concrete activity identifier cannot live in immutable registry TOML: the registry can own the three operation-to-casilla templates, while encrypted ledger rows must supply the filing instance's activity identities through a repeating carrier. The mapping ADR must therefore also settle runtime activity-row expansion and whether those values use the existing row-indexed binding channel.
+Official 2025 evidence supports three inventory outputs for each direct-estimation economic activity: purchases in 0181, positive closing-minus-opening variation in 0177, and the magnitude of negative variation in 0182. The source-domain gaps found at the original adjudication baseline have since been implemented, but runtime inspection exposes a remaining activity-grain mismatch: immutable registry TOML cannot contain the filing instance's concrete activity identities. Existing row carriers can transport repeated binding values, while their positional key alone does not retain the canonical source-row identity. The mapping ADR must settle the runtime activity-row expansion and identity-preservation boundary.
 
 ## Findings
 
@@ -27,21 +28,21 @@ The alternatives are one signed output, three unsigned presentation facts, or a 
 
 The AEAT manual defines inventory purchases as current-goods acquisitions from third parties for earning income. Acquisition price includes directly attributable costs and indirect taxes that are not directly recoverable; deductible input IVA is excluded. Evidence: https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf, pages 424-426.
 
-`MovementRecord.value` and both valuation engines total `quantity * resolved_unit_cost` and describe it as IVA-exclusive. Although the record carries `iva_rate`, `iva_amount`, and `deductible_iva_ratio`, `purchase_value` does not add non-deductible IVA and has no field for freight, insurance, duties, or comparable attributable costs. Evidence: `src/cadrumo/domain/contribuyente/inventory/__init__.py:89-148`, `:406-433`, and `:436-476`. Binding current `purchase_value` directly to 0181 could under-declare acquisition cost. The ADR must choose either an enriched, validated purchase-cost fact or refusal whenever the ledger cannot prove complete acquisition cost; the IVA-exclusive subtotal cannot silently stand in for it.
+At the original decision baseline, the movement value was IVA-exclusive and the purchase subtotal omitted non-deductible IVA and attributable costs. Evidence: commit `159465372d`, `src/cadrumo/domain/contribuyente/inventory/__init__.py:89-148`, `:406-433`, and `:436-476`. Commits `3c22586e1b` through `bd182527db` subsequently implemented `InventoryAcquisitionCost`, `MovementRecord.acquisition_cost`, complete acquisition totals, and the casilla 0181 projection; current locators are `src/cadrumo/domain/contribuyente/inventory/__init__.py:203-245`, `:736-789`, `:1025-1097`, and `:1325-1356`. The runtime-row question does not reopen that settled source fact.
 
 ### Stock variation is closing value minus opening value, split by sign
 
 The AEAT manual defines variation as the difference between opening and closing stocks. Closing above opening is income; opening above closing produces an expense of the difference. It also requires the next period's opening value to equal the prior closing value and accepts acquisition price or production cost, with weighted-average cost and FIFO for homogeneous groups. Evidence: https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf, pages 422-425.
 
-`compute_inventory_variation` already returns cents-rounded `closing - opening`, deriving closing through FIFO or weighted average when no explicit closing value exists. But `compute_anexo_d_inventory_variation` mislabels that signed value as casilla 0155 and collapses the two official destinations. Evidence: `src/cadrumo/domain/contribuyente/inventory/__init__.py:322-386`. The 0155 intent should be replaced, not retained as an alias: current registry authority assigns 0155 to a real-estate calculation.
+At the original decision baseline, `compute_inventory_variation` returned cents-rounded `closing - opening`, while `compute_anexo_d_inventory_variation` mislabelled that signed value as casilla 0155 and collapsed the two official destinations. Evidence: commit `159465372d`, `src/cadrumo/domain/contribuyente/inventory/__init__.py:322-386`. Commit `900319dd7f` removed that stale destination; commits through `841e4444f8` implemented the split projection.
 
 ### Grain matches, but continuity and explicit closing authority remain unresolved
 
-`InventoryLedgerDocument` enforces one ledger per `(actividad_id, year)`, matching the form. It does not enforce prior-closing-to-next-opening continuity, and `closing_stock` may override movement-derived closing without recording why it is authoritative. Evidence: `src/cadrumo/domain/contribuyente/inventory/__init__.py:203-293` and `:322-339`. The ADR must settle whether explicit closing is an operator-confirmed physical count, whether it supersedes derived valuation, and how discontinuity is diagnosed. Duplicate, wrong-year, and unexplained conflicting state must fail closed.
+At the original decision baseline, `InventoryLedgerDocument` enforced one ledger per `(actividad_id, year)` but did not enforce prior-closing continuity, and bare `closing_stock` could override derived closing without an authority record. Evidence: commit `159465372d`, `src/cadrumo/domain/contribuyente/inventory/__init__.py:203-293` and `:322-339`. Commits `24a7718153` through `a8f6ab0769` subsequently implemented the grounded closing-authority contract. The remaining blocker is how those already authoritative activity rows are represented in registry resolution.
 
 ### Missing source state cannot become a zero declaration
 
-The official form distinguishes the three values; it does not establish that absence of an application ledger proves they are zero. The current readiness declaration says inventory is not yet a calculation source and emits no resolution diagnostics. Evidence: `src/cadrumo/application/inventory/_source_readiness.py:1-51` and `2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference`. The resolver should emit an actionable missing, incomplete, or unreadable diagnostic and leave values unresolved. A complete ledger owns its outputs against caller replacement; deliberate manual input remains the fallback when no source is connected.
+The official form distinguishes the three values; it does not establish that absence of an application ledger proves they are zero. At the original baseline, the readiness declaration said inventory was not yet a calculation source and emitted no resolution diagnostics. Evidence: commit `159465372d`, `src/cadrumo/application/inventory/_source_readiness.py:1-51`, and `2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference`. Commits through `8c1514031d` subsequently enrolled the resolver and ownership/refusal behavior; the activity-row carrier must preserve those failure semantics rather than infer zero.
 
 ### Official evidence currently authorizes only the 2025 slice
 
@@ -59,7 +60,7 @@ The source mesh already has a first-class row-indexed carrier keyed by `(Binding
 
 M303 provides a complementary typed-row precedent: runtime activity rows carry durable `activity_id` values, and projection selects an exact matching immutable calculation activity rather than consuming an undifferentiated scalar. M349 demonstrates immutable row-template semantics and runtime field suppression through the row's active binding set. Evidence: `src/cadrumo/domain/iva/_regimen_simplificado_rows.py:268-303`, `src/cadrumo/domain/calculations/registry/_m303_regimen_simplificado_projection.py:248-266`, `src/cadrumo/domain/prorrata_register/__init__.py:181-198`, `src/cadrumo/application/filing/_record_renderer.py:232-243`, and `src/cadrumo/application/filing/_record_field_renderer.py:157-162`.
 
-The alternatives are a literal binding per activity, a wildcard followed by a taxpayer-wide fold, a new inventory-only carrier, or registry templates expanded into the existing row-indexed channel from encrypted ledger activity rows. Literal bindings cannot know taxpayer activity identities at registry-authoring time; wildcard folding violates the official grain; and a separate carrier duplicates a source-mesh capability already accepted for M720. The evidence favors runtime row expansion through the compatible existing carrier. Scalar formula consumption remains a separate decision because the accepted M720 carrier deliberately limits row values to draft, replay, and export unless a later decision authorizes a row fold.
+The alternatives are a literal binding per activity, a wildcard followed by a taxpayer-wide fold, a new inventory-only carrier, or registry templates expanded into the existing row-indexed channel from encrypted ledger activity rows. Literal bindings cannot know taxpayer activity identities at registry-authoring time; wildcard folding violates the official grain; a separate carrier duplicates a source-mesh capability already accepted for M720; and the existing row carrier needs an additional identity association because position is not source identity. Scalar formula consumption is outside the present carrier evidence: the accepted M720 decision limits row values to draft, replay, and export pending separate adjudication.
 
 This research did not adjudicate production-cost composition, write-model changes, earlier annual revisions, estimation-objective activities, or accounting outside Modelo 100 direct estimation.
 
@@ -93,4 +94,3 @@ This research did not adjudicate production-cost composition, write-model change
 - `src/cadrumo/application/filing/_record_field_renderer.py:157-162`
 - `2026-07-05-modelo-720-row-carrier-adr`
 - `2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference`
-

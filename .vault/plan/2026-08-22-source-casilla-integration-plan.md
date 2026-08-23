@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-23'
-body_hash: 'sha256:a8d5e3ae204f0693acbd24f7ed35cc3471a2ca3abcfd6fee65a26e35782de6b0'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -14,6 +12,8 @@ related:
   - '[[2026-08-23-amortization-casilla-mapping-adr]]'
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
+modified: '2026-08-23'
+body_hash: 'sha256:bcf3785c4a6b6df6055f04f65e20154e75f5f7134e12d4019d2e0be92486cb8d'
 ---
 
 # `source-casilla-integration` plan
@@ -158,9 +158,17 @@ Add inventory to the canonical taxonomy and resolution mesh without bypassing se
 
 Declare only the revision-specific facts established by adjudication.
 
-- [ ] `W02.P08.S43` - add grounded inventory bindings for supported M100 revisions; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
-- [ ] `W02.P08.S44` - link inventory bindings to the adjudicated M100 casillas; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
-- [ ] `W02.P08.S45` - verify inventory selector shape, legal references, source references, and casilla linkage; `src/cadrumo/domain/calculations/registry/tests/test_inventory_bindings.py`.
+- [ ] `W02.P08.S170` - add typed row-source identity coordinates to the canonical source-resolution carrier and collision merge; `src/cadrumo/application/aggregation/_source_mesh.py`.
+- [ ] `W02.P08.S171` - persist typed row-source identity coordinates on encrypted CalculationRevision state; `src/cadrumo/domain/modelos/_calculation_revision.py`.
+- [ ] `W02.P08.S172` - define validated inventory operation row-template selectors without taxpayer activity identities; `src/cadrumo/domain/calculations/registry/_inventory_bindings.py`.
+- [ ] `W02.P08.S173` - carry typed row-source identity coordinates through ModeloBindingValue filing state; `src/cadrumo/domain/filing/_schema.py`.
+- [ ] `W02.P08.S174` - propagate row-source identities through calculation replay and review assembly; `src/cadrumo/application/modelo`.
+- [ ] `W02.P08.S175` - redact raw row-source identities while exposing safe cohort fingerprints in operator output; `src/cadrumo/entrypoints/cli`.
+- [ ] `W02.P08.S176` - enumerate canonical runtime inventory activities into deterministic atomic three-operation row cohorts; `src/cadrumo/application/aggregation/_inventory.py`.
+- [ ] `W02.P08.S43` - add grounded inventory operation row-template bindings for supported M100 revisions without taxpayer activity identities; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
+- [ ] `W02.P08.S44` - link each inventory operation row template to its adjudicated M100 activity-row casilla; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
+- [ ] `W02.P08.S45` - verify inventory template shape, legal grounding, runtime activity cohorts, typed row identities, and casilla linkage; `src/cadrumo/domain/calculations/registry/tests/test_inventory_bindings.py`.
+- [ ] `W02.P08.S177` - prove runtime inventory row identity bijection, cohort equality, deterministic order, and atomic malformed-cohort refusal; `src/cadrumo/application/aggregation/tests/test_inventory_source.py`.
 
 ### Phase `W02.P09` - prove the inventory vertical slice
 
@@ -168,10 +176,17 @@ Prove the real encrypted and operator-facing path, including negative and confli
 
 - [ ] `W02.P09.S46` - prove inventory values cross the real encrypted CalculationRevision boundary with strict equality; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
 - [ ] `W02.P09.S47` - prove deleting persisted inventory provenance is detected by the round-trip gate; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P09.S178` - prove encrypted calculation revisions refuse a missing inventory row-source identity; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P09.S180` - prove encrypted calculation revisions refuse an orphaned inventory row-source identity; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P09.S181` - prove encrypted calculation revisions refuse duplicate inventory activity identity within one operation row set; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P09.S182` - prove encrypted calculation revisions refuse a substituted inventory row-source identity; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P09.S183` - prove encrypted calculation revisions refuse reordered inventory row-source identities; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
 - [ ] `W02.P09.S48` - prove missing, incomplete, and unreadable inventory emit actionable diagnostics; `src/cadrumo/application/modelo/tests/test_inventory_source_mesh.py`.
 - [ ] `W02.P09.S49` - prove caller values cannot collide with or replace inventory-owned values; `src/cadrumo/application/modelo/tests/test_inventory_source_mesh.py`.
 - [ ] `W02.P09.S50` - prove the CLI create-to-calculate-to-review workflow reaches the inventory resolver; `src/cadrumo/entrypoints/cli/tests/test_inventory_modelo_workflow.py`.
 - [ ] `W02.P09.S51` - prove recalculation and review preserve source identity, fingerprint, and grounding; `src/cadrumo/application/modelo/tests/test_inventory_replay_review.py`.
+- [ ] `W02.P09.S179` - prove replay and review preserve inventory activity cohorts and safe cohort fingerprints; `src/cadrumo/application/modelo/tests/test_inventory_replay_review.py`.
+- [ ] `W02.P09.S184` - prove ordinary CLI output redacts raw inventory source-row identities; `src/cadrumo/entrypoints/cli/tests/test_output_surface_inventory.py`.
 - [ ] `W02.P09.S52` - prove supported export output consumes the frozen inventory-derived casillas; `src/cadrumo/application/filing/tests/test_inventory_export.py`.
 - [ ] `W02.P09.S53` - update inventory readiness to reflect only capabilities proven by the landed slice; `src/cadrumo/application/inventory/_source_readiness.py`.
 - [ ] `W02.P09.S54` - promote inventory to connected only after every connected proof passes; `src/cadrumo/_data/source_connectivity/census.toml`.
