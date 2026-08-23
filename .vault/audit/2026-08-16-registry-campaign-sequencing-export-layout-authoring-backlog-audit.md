@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:6e5bd3c046abe2e3a4e7f3598d286ef24b359b45132d0469aa8189567c59c6d3'
+body_hash: 'sha256:2c670b856b9f370bc49d163fc6a0b89eab986bf9cacbdef49f148186df37e6bd'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -17526,3 +17526,154 @@ is precisely what it cannot.
 Eight standing failures, unchanged in count this tick -- the work here made an
 invisible defect visible rather than closing a gate. Four splits now: modelo
 200, 322, 347 (three revisions, not two) and 210.
+
+## Tick: modelo 210's 2026 generator inputs authored -- the blocking piece of the smallest split
+
+Re-measured at tick start: authority CLEAN at `77957b99fb`.
+
+### Why this split and not another
+
+Modelo 210 was measured last tick as the fourth spanning revision and the
+smallest: its two designs differ in RECORD LENGTH only. Confirmed field by field
+this tick -- `Página 01` pairs **125 of 127** positions byte-identically, and the
+two that differ are exactly the tail `Reservado para la Administración`
+(532 -> 1832) and the `Indicador de fin de registro` (2692 -> 3992). `Página 02`
+is identical, 40 of 40.
+
+That correspondence is what makes the split tractable: no casilla changes, no
+formula changes, no binding changes. Only the emitted record length.
+
+### What was blocking it, and what was authored
+
+The export tree is generated, and the generator's inputs are per design epoch:
+`dev/registry/mappings/modelo_210/` and `render_profiles/modelo_210/` held
+**2022 only**. Without a 2026 epoch there is nothing to generate the second
+revision's tree from.
+
+Both now exist. They were DERIVED rather than hand-written, which is what makes
+2492 lines of new input defensible:
+
+* the mapping's 167 entries (127 + 40) were re-anchored one-to-one by field
+  index onto the 2026 design's own rows, ordinals and cells -- sound precisely
+  because the field correspondence above is 1:1;
+* `design_epoch`, `source_ref`, `source_refs` and every `export_field_id` prefix
+  were rewritten from 2022 to 2026;
+* `source_sha256` was computed from the 2026 file on disk and ASSERTED equal to
+  the catalogue's declared hash before anything was written. It matched.
+
+### Verified through the generator, not by reading
+
+* `load_semantic_map` loads both epochs: 167 entries each, `design_epoch`
+  reporting 2022 and 2026 respectively.
+* `join_record_design_semantics` joins the 2026 map against the 2026 design's
+  intermediate, using the existing revision's `RegistryRevisionInspection`,
+  and returns the same structure as 2022 -- 2 records of 127 and 40 fields. A
+  mapping entry that failed to resolve, an unclaimed design row or an invalid
+  casilla id would fail there.
+* authority loads CLEAN.
+
+The full `check_generated_export_tree` path was NOT run, and cannot be yet: it
+demands a target revision, and the 2026 revision is the next step rather than
+this one. Stated because a green join is a weaker claim than a green check and
+should not be read as the stronger one.
+
+### What remains for this split
+
+Create revision `2026-y-siguientes` from the 2025 tree (~30 files, unchanged
+casillas/bindings/formulas), narrow `2025` to `valid_to = 2025-12-31`, and
+generate the new export tree through the validate-then-publish path. The
+inputs it needs now exist.
+
+### Note on provenance
+
+The working tree finished this tick EMPTY: a peer had already committed the new
+files as `registry(modelo-210): author the 2026 mappings and render profile,
+with its span coverage`. Recorded so the next reader knows the 2026 epoch
+arrived here rather than from that commit's author.
+
+### Still open
+
+Eight standing failures, unchanged. Four splits: modelo 200, 322, 347 (three
+revisions) and 210 -- 210 now has its generator inputs and is the one to finish
+first.
+
+## Tick: the modelo 210 split attempted end to end, and REVERTED at the one missing step
+
+Re-measured at tick start: authority CLEAN at `3d75d7d5e6`.
+
+### The split is warranted by the revision's own criterion
+
+Revision '2025' states, in its own comment beside `valid_from`, that "a separate
+revision is authored only when a genuine statutory or FORM-STRUCTURE change
+takes effect", and separately records that it cites both designs and knowingly
+spans the boundary between them. A record lengthening from 2700 declared
+positions to 4000 is a form-structure change by that definition, so the split is
+the revision's own stated remedy rather than an outside judgement.
+
+### What was authored, and what it ran into
+
+The new revision `2026-y-siguientes` was built from the 2025 tree: 27 files
+copied with their table headers rewritten, the export directory deliberately
+EXCLUDED because a generated tree is produced by the generator and never copied.
+
+Its declaration was authored rather than inherited. Two dispositions stop being
+true on a later revision and were rewritten rather than carried:
+
+* `casilla_continuidad_evolutions` claimed the family is "empty by construction"
+  because revision '2025' has no strictly-earlier sibling. The 2026 revision
+  HAS one, so the reason was rewritten to the true one -- no evolution occurred
+  because no casilla moved, measured as 125 of 127 Pagina 01 positions and 40 of
+  40 on Pagina 02 being byte-identical;
+* `projection_endpoints` measured "Pagina 01 at 2700 declared positions" against
+  the 2022 design; re-measured to 4000 against the 2026 one.
+
+Revision '2025' was narrowed to `valid_to = 2025-12-31` with `year_to = 2025`,
+and each revision left citing exactly one design.
+
+Then the authority refused, correctly:
+
+    modelo 210 revision 2026-y-siguientes: casilla 'base_imponible_directa_i'
+    references unknown export field 'm210-2026.pagina01.f082'
+
+The casillas carry `export_refs` into their own revision's generated tree. The
+epoch prefix was rewritten 2022 -> 2026 across 29 references, which moved the
+refusal but could not resolve it: those fields exist only once the tree is
+RENDERED. A revision and its generated export tree cannot be landed separately.
+
+### The blocker, stated precisely because it is checkable
+
+`publish_validated_generated_export_tree` has NO functional caller anywhere.
+Outside its own module it appears exactly twice: a re-export in
+`dev/registry/pipeline/__init__.py`, and a STRING LITERAL in
+`test_generated_tree_check.py` asserting the package's exported names. Nothing
+drives it.
+
+Its sibling `check_generated_export_tree` is genuinely driven, by
+`test_generated_export_trees.py`. So the generator can VERIFY that a committed
+tree reproduces, and nothing can PRODUCE a new one.
+
+That is the blocker for all four splits -- 200, 322, 347 and 210 -- not for this
+one alone. Every one of them needs a tree its revision does not yet have.
+
+### Reverted, and why that was the right end
+
+The new revision directory was deleted and revision '2025' restored from git.
+Authority loads CLEAN and modelo 210 is back to its single revision; the working
+tree carries no registry change.
+
+The alternative considered and rejected: land the 2026 revision at
+`applicability` grade with no export layout and no casilla export_refs. It would
+load, and a 2026 filing would then REFUSE rather than emit 1300 bytes short --
+strictly safer than today. It was rejected because silently downgrading a
+filing-capable year is a filing-grade semantic decision, and making it
+unverified at the end of a tick is a bigger call than the evidence supports.
+
+Last tick's 2026 mappings and render profile remain in the tree and are
+unaffected; they are still the correct inputs for whenever the tree can be
+produced.
+
+### Still open
+
+Eight standing failures, unchanged. Four splits, all now blocked on the same
+missing piece: a driver for the publication path. Writing one is the next
+concrete step, and it unblocks every split at once rather than one modelo.
