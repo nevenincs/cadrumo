@@ -229,8 +229,8 @@ def test_config_login_against_locked_store_gives_passphrase_refusal_not_repair()
 
     The operator withheld the master-key passphrase (locked store); the
     profile record itself is healthy. ``config login`` must surface the
-    same instructive refusal every other verb gives — naming
-    ``CADRUMO_SECRET_PASSPHRASE`` and the interactive path — and must NOT
+    same instructive refusal every other verb gives — naming both explicit
+    machine channels and the interactive path — and must NOT
     report ``profile_record_unreadable`` nor prescribe the destructive
     ``config repair profile`` verb (prescribing a data-damaging repair for a
     merely-locked store is the defect under test).
@@ -243,7 +243,7 @@ def test_config_login_against_locked_store_gives_passphrase_refusal_not_repair()
     result = _login_against_locked_store("locked-store-probe")
 
     combined = (result.output or "") + ((result.stderr if hasattr(result, "stderr") else "") or "")
-    assert "CADRUMO_SECRET_PASSPHRASE" in combined, combined
+    assert "CADRUMO_SECRET_PASSPHRASE" not in combined, combined
     assert "profile_record_unreadable" not in combined, combined
     assert "repair profile" not in combined, combined
     # The no-passphrase condition is a REFUSAL (2): the operator can supply the
@@ -279,8 +279,9 @@ def test_config_login_against_locked_store_json_envelope_is_passphrase_refusal()
 
     assert result.exit_code == 2, result.output
     stderr_payload = (result.stderr if hasattr(result, "stderr") else "") or result.output
-    assert "CADRUMO_SECRET_PASSPHRASE" in stderr_payload, stderr_payload
+    assert "CADRUMO_SECRET_PASSPHRASE" not in stderr_payload, stderr_payload
     assert "--secrets-stdin" in stderr_payload, stderr_payload
+    assert "--secrets-fd" in stderr_payload, stderr_payload
     assert "profile_record_unreadable" not in stderr_payload, stderr_payload
     assert "repair profile" not in stderr_payload, stderr_payload
 
@@ -319,9 +320,9 @@ def test_secret_taking_verb_without_interactive_stdin_refuses_instructively() ->
     ``config auth certificate secret set`` is the carrier: it is the surviving
     verb that resolves its secret through the shared channel unconditionally,
     before touching the store, so the refusal fires ahead of any mutation.
-    ``config login`` deliberately does NOT hold this property — it supplies the
-    prompt callback only on a real console and otherwise defers to the storage
-    substrate's own env-var precedence and refusal.
+    ``config login`` now holds the same property: it supplies an explicit
+    machine value or a verified prompt callback and never delegates CLI secret
+    discovery to the storage substrate.
     """
     # The verb declares a ``profile-bound`` write route, so with no active
     # profile the CLI root refuses at the boundary before the secure-input
