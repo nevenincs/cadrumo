@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:319fcd8da8408dbe0562c63e8a1ffbe35b401ce191004301e13dde3c0472b37d'
+body_hash: 'sha256:a792c78b0e8877463e5c9968cf9a55368ef06bf7abef445ee52d06b6df703915'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -147,7 +147,7 @@ Add inventory to the canonical taxonomy and resolution mesh without bypassing se
 - [x] `W02.P07.S165` - prove complete acquisition-cost fields survive the encrypted inventory repository round trip; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_roundtrip.py`.
 - [x] `W02.P07.S166` - replace bare closing-stock authority with a provenance-bearing physical-closing observation and prior-closing continuity contract; `src/cadrumo/domain/contribuyente/inventory`.
 - [x] `W02.P07.S167` - propagate physical-closing authority and continuity evidence through secure inventory ingress; `src/cadrumo/application/inventory; src/cadrumo/entrypoints/cli`.
-- [ ] `W02.P07.S168` - produce the strict complete 0177, 0181, and 0182 inventory domain projection; `src/cadrumo/domain/contribuyente/inventory`.
+- [x] `W02.P07.S168` - produce the strict complete 0177, 0181, and 0182 inventory domain projection; `src/cadrumo/domain/contribuyente/inventory`.
 - [ ] `W02.P07.S169` - formally review the inventory source prerequisites before resolver implementation; `.vault/audit/2026-08-23-inventory-source-prerequisites-code-review.md`.
 - [ ] `W02.P07.S39` - implement inventory repository resolution, diagnostics, source identity, and fingerprint provenance; `src/cadrumo/application/aggregation/_inventory.py`.
 - [ ] `W02.P07.S40` - enroll the inventory resolver and explicit source disposition; `src/cadrumo/application/aggregation/_source_mesh.py`.

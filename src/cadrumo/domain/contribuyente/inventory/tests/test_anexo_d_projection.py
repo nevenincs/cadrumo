@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -12,6 +13,7 @@ from cadrumo.domain.contribuyente.inventory import (
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
     InventoryAcquisitionEvidenceKind,
+    InventoryAnexoDResult,
     InventoryAttributableCostComponent,
     InventoryAttributableCostKind,
     InventoryClosingAuthority,
@@ -115,6 +117,11 @@ def _ledger(*, opening: str = "100.00", movements: tuple[MovementRecord, ...] = 
     )
 
 
+def _projection_validation_payload(result: InventoryAnexoDResult) -> dict[str, object]:
+    payload = cast(dict[str, object], result.model_dump())
+    return payload | {"source_ledger": result.source_ledger}
+
+
 def test_complete_cost_owns_0181_and_increase() -> None:
     result = compute_inventory_anexo_d_projection(_ledger(movements=(_purchase(),)))
     assert result.casilla_0181 == result.complete_acquisition_total == Decimal("122.60")
@@ -167,6 +174,20 @@ def test_purchase_fingerprints_are_reorder_invariant() -> None:
     reversed_result = compute_inventory_anexo_d_projection(_ledger(movements=(second, first)))
     assert forward.acquisition_fingerprints == reversed_result.acquisition_fingerprints
     assert forward.projection_fingerprint == reversed_result.projection_fingerprint
+    acquisition = _acquisition()
+    reordered_acquisition = acquisition.model_copy(update={"evidence": tuple(reversed(acquisition.evidence))})
+    reordered_evidence = first.model_copy(update={"acquisition_cost": reordered_acquisition})
+    evidence_result = compute_inventory_anexo_d_projection(_ledger(movements=(reordered_evidence, second)))
+    assert evidence_result.projection_fingerprint == forward.projection_fingerprint
+    scale_equivalent = first.model_copy(
+        update={
+            "quantity": Decimal("2.0"), "unit_cost": Decimal("50.0"),
+            "taxable_base": Decimal("100.0"), "iva_rate": Decimal("21.0"),
+            "iva_amount": Decimal("21.0"), "deductible_iva_ratio": Decimal("0.5"),
+        }
+    )
+    scaled_result = compute_inventory_anexo_d_projection(_ledger(movements=(scale_equivalent, second)))
+    assert scaled_result.projection_fingerprint == forward.projection_fingerprint
     duplicate = _purchase("a", date(2025, 2, 1)).model_copy(update={"sku": "other"})
     with pytest.raises(ValidationError, match="movement_id values must be unique"):
         _ledger(movements=(first.model_copy(update={"movement_id": "a"}), duplicate))
@@ -185,7 +206,6 @@ def test_projection_refuses_output_override_and_result_forgery() -> None:
         {"acquisition_fingerprints": ("7" * 64,)},
         {"authority_record_fingerprint": "6" * 64}, {"decision_id": "forged-decision"},
         {"decision_fingerprint": "5" * 64}, {"prior_closing_link_fingerprint": "4" * 64},
-        {"prior_authoritative_source_fingerprint": "3" * 63 + "4"},
         {"issues": ()}, {"authoritative_closing_value": Decimal("100.00")},
         {"physical_observation_id": None}, {"physical_observation_fingerprint": "9" * 64},
         {
@@ -204,10 +224,14 @@ def test_projection_refuses_output_override_and_result_forgery() -> None:
         {"closing_conflict": result.closing_conflict.model_copy(update={"actividad_id": "other"})},
         {"closing_conflict": result.closing_conflict.model_copy(update={"physical_observed_value": Decimal("131.00")})},
     ):
-        with pytest.raises(ValidationError):
-            type(result).model_validate(result.model_copy(update=mutation).model_dump())
-    with pytest.raises(ValidationError):
-        type(movement_result).model_validate(movement_result.model_copy(update={"closing_conflict": None, "issues": ()}).model_dump())
+        with pytest.raises(ValidationError) as exc_info:
+            candidate = result.model_copy(update=mutation)
+            type(result).model_validate(_projection_validation_payload(candidate))
+        assert "source_ledger\n  Field required" not in str(exc_info.value)
+    with pytest.raises(ValidationError) as exc_info:
+        candidate = movement_result.model_copy(update={"closing_conflict": None, "issues": ()})
+        type(movement_result).model_validate(_projection_validation_payload(candidate))
+    assert "source_ledger\n  Field required" not in str(exc_info.value)
     correlated = result.model_copy(
         update={
             "selected_authority": InventoryClosingAuthority.MOVEMENT_DERIVED,
@@ -217,5 +241,44 @@ def test_projection_refuses_output_override_and_result_forgery() -> None:
     )
     reminted = correlated.model_copy(update={"projection_fingerprint": correlated.expected_projection_fingerprint})
     with pytest.raises(ValidationError, match="retained source authority"):
-        type(result).model_validate(reminted.model_dump())
-    assert type(result).model_validate(result.model_dump()) == result
+        type(result).model_validate(_projection_validation_payload(reminted))
+    serialized = result.model_dump_json()
+    for canary in (
+        "invoice-evidence", "freight-evidence", "cost-review-evidence", "iva-review-evidence",
+        "decision-evidence", "count-evidence", "value-evidence", "prior-evidence",
+        "1" * 64, "2" * 64, "3" * 64,
+        "a" * 64, "b" * 64, "c" * 64, "d" * 64, "e" * 64, "f" * 64,
+        "reviewer", "inventory.closing.authority.decide",
+    ):
+        assert canary not in serialized
+    with pytest.raises(ValidationError, match="source_ledger"):
+        type(result).model_validate(result.model_dump())
+    assert type(result).model_validate(_projection_validation_payload(result)) == result
+
+
+def test_reminted_substituted_sources_refuse_but_distinct_projection_succeeds() -> None:
+    baseline_ledger = _ledger(movements=(_purchase(),), physical="130.00", select_physical=True)
+    baseline = compute_inventory_anexo_d_projection(baseline_ledger)
+    assert baseline_ledger.closing_authority_record is not None
+    changed_decision = baseline_ledger.closing_authority_record.decision.model_copy(update={"reason": "Other review."})
+    changed_record = baseline_ledger.closing_authority_record.model_copy(update={"decision": changed_decision})
+    alternatives = (
+        _ledger(movements=(_purchase("other-purchase"),), physical="130.00", select_physical=True),
+        baseline_ledger.model_copy(update={"closing_authority_record": changed_record}),
+        _ledger(movements=(_purchase(),), physical="131.00", select_physical=True),
+        _ledger(opening="90.00", movements=(_purchase(),), physical="130.00", select_physical=True),
+    )
+    for alternative_ledger in alternatives:
+        alternative = compute_inventory_anexo_d_projection(alternative_ledger)
+        assert alternative.projection_fingerprint != baseline.projection_fingerprint
+        substituted = baseline.model_copy(
+            update={
+                "source_ledger": alternative.source_ledger,
+                "source_ledger_fingerprint": alternative.source_ledger_fingerprint,
+            }
+        )
+        reminted = substituted.model_copy(
+            update={"projection_fingerprint": substituted.expected_projection_fingerprint}
+        )
+        with pytest.raises(ValidationError, match="retained source authority"):
+            type(baseline).model_validate(_projection_validation_payload(reminted))

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:fa0804766420062f05a1a0245f350447903647e321bf5131bd227c225e3f7c06'
+body_hash: 'sha256:5eb0687c6502995c29d5b68787a707d2950333f2bf9b54719f982e35201cd09b'
 step_id: 'S168'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -62,11 +62,10 @@ related:
 
 The inventory ledger now produces one complete activity-scoped projection. Casilla 0181 equals the admitted complete acquisition cost; casillas 0177 and 0182 are the mutually exclusive positive split of authoritative closing against opening. The result carries the selected authority, decision, continuity, physical observation, conflict, and acquisition fingerprints needed by the downstream resolver without accepting caller-authored outputs.
 
-The projection revalidates the persisted ledger, requires the ledger-owned closing-authority record, calls the canonical authority resolver, and refuses incomplete purchase acquisition facts. Semantically equal movement orderings produce identical acquisition provenance. Nonzero acquisition totals require a nonempty unique fingerprint set.
+The projection revalidates the persisted ledger, requires the ledger-owned closing-authority record, calls the canonical authority resolver, and refuses incomplete purchase acquisition facts. It retains the canonical source only as excluded runtime state, re-derives every flattened field during validation, and emits safe source and envelope fingerprints without serializing financial or evidence facts. Semantically equal movement, evidence, and Decimal representations produce identical provenance. Nonzero acquisition totals require a nonempty unique fingerprint set.
 
-Verification completed with 52 passing inventory-domain tests, clean Ruff and type-checker runs, and an independent formal review reporting zero findings.
+Verification completed with 53 passing inventory-domain tests, clean Ruff and type-checker runs, and two independent final reviews reporting zero findings.
 
 ## Notes
 
-Semantic discovery was unavailable because the installed `vaultspec-rag` client was version 0.4.1 while the running service was 0.4.2; targeted ADR and source inspection supplied the required grounding. Review found and resolved result-provenance forgery gaps, insertion-order fingerprint drift, an accidental closing-decision field collision, divergent physical-value conflict omission, and empty or duplicate acquisition fingerprints for nonzero totals.
-
+Semantic discovery was unavailable because the installed `vaultspec-rag` client was version 0.4.1 while the running service was 0.4.2; targeted ADR and source inspection supplied the required grounding. Review found and resolved result-provenance forgery gaps, correlated checksum reminting, runtime-source serialization, untyped and unvalidated construction, movement and evidence ordering drift, Decimal-scale drift, an accidental closing-decision field collision, divergent physical-value conflict omission, and empty or duplicate acquisition fingerprints for nonzero totals.
