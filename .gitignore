@@ -488,3 +488,4 @@ dev/registry/scratch*/
 
 # Generated CLI registration cache: build/runtime artifact, never committed
 src/cadrumo/entrypoints/cli/command_registration_metadata.v1.json
+src/cadrumo/entrypoints/cli/app_lazy_manifest.v1.json
