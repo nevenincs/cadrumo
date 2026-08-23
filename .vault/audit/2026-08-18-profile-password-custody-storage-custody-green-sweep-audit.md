@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:204ae2f4a5a4af0a3d107f6a55531141cbcccd830962d475ede26a07b2510d9e'
+body_hash: 'sha256:748db1ddd48bbd38f71b92180ad7eac1c3d891f774ece17d7cea5d4af7ce1f3e'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7722,3 +7722,39 @@ What makes it worth recording rather than deferring silently: this is the first 
 campaign that the CLI breakage is verifiably in HEAD rather than in a working tree, so anyone
 cloning or running CI right now meets it. The exact sites are above; the fix is to drop the
 orphan family declaration and disambiguate the `descendiente` leaf against its group.
+
+### The orphan family is not a stale line: passphrase rotation lost its operator door
+
+Correcting an offer made one tick earlier. Having found HEAD refusing on
+`orphan mounted family declaration config passphrase`, this campaign offered to take the fix as
+"two lines" -- delete the declaration. Reading before cutting shows that would have been a
+guess, and possibly the wrong one.
+
+The declaration at `application/operator_surface/_contract.py:117` is not boilerplate. It
+declares a real capability with an operator question -- "rotate the profile custody passphrase
+after verifying the current one" -- and names `cadrumo.application.user_profile` as its service
+owner, which is THIS domain. Behind it: `_passphrase_rotation.py` exists, is exported from the
+application facade, and is tested. Its test invokes the CLI zero times, so the capability is
+proven below the operator surface only.
+
+And the door is gone. No typer group named `passphrase` exists at HEAD, and
+`command_execution_policy_for_cli_path` raises `LookupError` for `config.passphrase.rotate`,
+`config.profile.passphrase` and `config.custody.passphrase`. The peer's "remove obsolete secret
+input routes" commit took the verb with it.
+
+So the contract refusal is the surface reconciliation correctly noticing a capability that
+declares a door it no longer has -- the same shape as the profile-bundle import half recorded
+above, and the second instance in this domain of an application capability stranded without an
+operator route.
+
+**Which way the fix goes depends on intent this campaign does not hold.** Delete the
+declaration and passphrase rotation is retired from the operator surface, silently, while its
+implementation stays. Keep it and restore the verb, and the contract goes green with the
+capability reachable again. A recent peer commit reads "docs(cli): close passphrase rotation
+review", which suggests a deliberate decision was taken, but not which one. Guessing wrong
+either strips a real custody capability or leaves the contract broken.
+
+Cost of leaving it, stated so the choice is informed: the refusal accounts for TEN of the
+twenty-two current failures across this domain's two lanes (`OperatorSurfaceContractError`),
+and `config profile show` emits nothing on stdout for an operator. It is the single
+highest-impact defect in the domain right now, and it is in HEAD.
