@@ -1,13 +1,12 @@
 """Secure explicit operator-secret input helpers for custody commands.
 
-This module owns three explicit input helpers: a bounded strict-JSON object from
-standard input under ``--secrets-stdin``, the same object read exactly once from
-an inherited descriptor under ``--secrets-fd``, and an interactive no-echo
-prompt on the controlling terminal. Command-specific resolvers choose among
-these helpers and configured secret sources such as the sanctioned environment
-or keyring according to their own precedence. No secret value is accepted as an
-``argv`` option, so passphrases and recovery mnemonics do not appear in the
-process table or shell history.
+This module owns the canonical explicit machine-secret capability: reusable
+``--secrets-stdin`` and ``--secrets-fd`` declarations, conflict-before-read
+selection, bounded strict-JSON parsing, one-shot descriptor closure, and the
+strict frozen payload base. It also owns the interactive no-echo prompt used
+after a command has established that no explicit channel was selected. No
+secret value is accepted as an ``argv`` option, so passphrases and recovery
+mnemonics do not appear in the process table or shell history.
 
 Both machine channels read at most :data:`_MAX_SECRETS_BYTES` and validate the
 parsed object against a strict ``extra="forbid"`` pydantic model whose secret
@@ -47,10 +46,15 @@ import os
 import sys
 import warnings
 from contextlib import suppress
+from dataclasses import dataclass
+from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel, ValidationError
+import typer
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.i18n import tr
 from ....core.tty import stdin_is_tty
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
@@ -71,6 +75,53 @@ rather than fail. Standard input is deliberately NOT reserved: it is a legitimat
 readable descriptor, and refusing it would make ``--secrets-fd 0`` behave
 differently from the ``--secrets-stdin`` spelling of the same thing.
 """
+
+
+class MachineSecretPayload(BaseModel):
+    """Canonical strict base for every command-specific machine-secret payload."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+
+MachineSecretsStdinOption = Annotated[
+    bool,
+    typer.Option(
+        "--secrets-stdin",
+        help=tr("cli.config.custody.secrets_stdin_help"),
+    ),
+]
+"""Reusable declaration for the portable machine-secret stdin channel."""
+
+MachineSecretsFdOption = Annotated[
+    int | None,
+    typer.Option(
+        "--secrets-fd",
+        help=tr("cli.config.custody.secrets_fd_help"),
+    ),
+]
+"""Reusable declaration for the inherited-descriptor machine-secret channel."""
+
+
+class MachineSecretChannel(StrEnum):
+    """The two explicit machine-secret transport channels."""
+
+    STDIN = "stdin"
+    FILE_DESCRIPTOR = "fd"
+
+
+@dataclass(frozen=True, slots=True)
+class MachineSecretSelection:
+    """A validated channel choice that has not read any secret bytes yet."""
+
+    channel: MachineSecretChannel
+    descriptor: int | None = None
+
+    def __post_init__(self) -> None:
+        """Keep descriptor state impossible to misinterpret downstream."""
+        if self.channel is MachineSecretChannel.STDIN and self.descriptor is not None:
+            raise ValueError("stdin machine-secret selection cannot carry a descriptor")
+        if self.channel is MachineSecretChannel.FILE_DESCRIPTOR and self.descriptor is None:
+            raise ValueError("fd machine-secret selection requires a descriptor")
 
 
 def _reject_duplicate_object_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -245,18 +296,59 @@ def read_secrets_fd[SecretsModelT: BaseModel](model: type[SecretsModelT], *, des
     )
 
 
-def resolve_secrets_channel(*, secrets_stdin: bool, secrets_fd: int | None) -> None:
-    """Refuse an invocation naming both machine secret channels at once.
+def select_machine_secret_channel(
+    *,
+    secrets_stdin: bool,
+    secrets_fd: int | None,
+) -> MachineSecretSelection | None:
+    """Validate and return the explicit channel choice without reading it.
 
     Two channels supplying one passphrase is not a precedence question with a
     safe answer: whichever loses is a secret the caller staged and this process
     never consumed, left resident in a pipe the caller believes was drained.
-    The refusal names both flags so the caller knows which one to drop.
+    Selection therefore refuses the conflict before either source can be read.
+    Absence remains explicit so each command can decide whether its next valid
+    route is a verified terminal prompt or a refusal.
     """
     if secrets_stdin and secrets_fd is not None:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.secrets_channel_conflict",
         )
+    if secrets_stdin:
+        return MachineSecretSelection(channel=MachineSecretChannel.STDIN)
+    if secrets_fd is not None:
+        return MachineSecretSelection(
+            channel=MachineSecretChannel.FILE_DESCRIPTOR,
+            descriptor=secrets_fd,
+        )
+    return None
+
+
+def read_machine_secret_payload[SecretsModelT: BaseModel](
+    model: type[SecretsModelT],
+    *,
+    selection: MachineSecretSelection,
+) -> SecretsModelT:
+    """Read and validate one previously selected bounded machine channel."""
+    if selection.channel is MachineSecretChannel.STDIN:
+        return read_secrets_stdin(model)
+    descriptor = selection.descriptor
+    if descriptor is None:  # Defensive against construction outside the typed boundary.
+        raise ValueError("fd machine-secret selection requires a descriptor")
+    return read_secrets_fd(model, descriptor=descriptor)
+
+
+def resolve_secrets_channel(*, secrets_stdin: bool, secrets_fd: int | None) -> None:
+    """Compatibility wrapper for callers not yet migrated to typed selection.
+
+    The command migrations remove this wrapper atomically once every consumer
+    uses :func:`select_machine_secret_channel`. Until then it delegates conflict
+    validation to the canonical selector and deliberately performs no read.
+    """
+    select_machine_secret_channel(
+        secrets_stdin=secrets_stdin,
+        secrets_fd=secrets_fd,
+    )
 
 
 def _stdin_is_a_real_console() -> bool:
@@ -430,10 +522,17 @@ def prompt_secret_no_echo(prompt: str) -> str:
 
 
 __all__ = [
+    "MachineSecretChannel",
+    "MachineSecretPayload",
+    "MachineSecretSelection",
+    "MachineSecretsFdOption",
+    "MachineSecretsStdinOption",
     "prompt_secret_no_echo",
+    "read_machine_secret_payload",
     "read_secrets_fd",
     "read_secrets_stdin",
     "resolve_secrets_channel",
+    "select_machine_secret_channel",
     "terminal_can_prompt_for_secrets",
     "write_to_controlling_terminal",
 ]
