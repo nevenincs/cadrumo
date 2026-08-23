@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, SecretStr
+from pydantic import SecretStr
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
@@ -38,19 +38,26 @@ from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from .._machine_secret_contract import register_machine_secret_payload_model
+from ._secure_input import MachineSecretPayload
 
 
-class _CertificateSecretSetSecrets(BaseModel):
-    """Strict ``--secrets-stdin`` payload for ``certificate secret set``.
+class _CertificateSecretSetSecrets(MachineSecretPayload):
+    """Strict machine-channel payload for ``certificate secret set``.
 
     One bounded JSON object carrying only the PKCS#12 passphrase as a
     :class:`~pydantic.SecretStr`; ``extra="forbid"`` refuses an unexpected
     field. The passphrase is never accepted as an ``argv`` value.
     """
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    certificate_passphrase: SecretStr
 
-    secret: SecretStr
+
+register_machine_secret_payload_model(
+    "config.auth.certificate.secret.set",
+    "certificate",
+    _CertificateSecretSetSecrets,
+)
 
 
 def certificate_register(
@@ -270,20 +277,31 @@ def certificate_secret_set(
     ctx: object,
     name: str,
     secrets_stdin: bool = False,
+    secrets_fd: int | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Bind (or rotate) the passphrase for the named certificate source.
 
     The passphrase is never an ``argv`` value (the process table and shell
     history must not see it): it arrives via a hidden no-echo prompt or one
-    bounded strict-JSON ``--secrets-stdin`` object through the shared
-    secure-input channel.
+    bounded strict-JSON object through one canonical machine-secret channel.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ._secure_input import prompt_secret_no_echo, read_secrets_stdin
+    from ._secure_input import (
+        prompt_secret_no_echo,
+        read_machine_secret_payload,
+        select_machine_secret_channel,
+    )
 
-    if secrets_stdin:
-        secret = read_secrets_stdin(_CertificateSecretSetSecrets).secret.get_secret_value()
+    selection = select_machine_secret_channel(
+        secrets_stdin=secrets_stdin,
+        secrets_fd=secrets_fd,
+    )
+    if selection is not None:
+        secret = read_machine_secret_payload(
+            _CertificateSecretSetSecrets,
+            selection=selection,
+        ).certificate_passphrase.get_secret_value()
     else:
         secret = prompt_secret_no_echo(
             tr(
