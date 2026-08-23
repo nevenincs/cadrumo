@@ -1,0 +1,110 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00336"
+number = "00336"
+section = ["estado_de_cambios_patrimonio_neto_i", "ingresos_y_gastos_imputados_al_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_imputados_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0007", "m200-2025.dp200012.f0064", "m200-2025.dp200033.f0025", "m200-2025.dp200040.f0008"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00337"
+number = "00337"
+section = ["estado_de_cambios_patrimonio_neto_i", "ingresos_y_gastos_imputados_al_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_imputados_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0008", "m200-2025.dp200012.f0065", "m200-2025.dp200033.f0026", "m200-2025.dp200040.f0009"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00338"
+number = "00338"
+section = ["estado_de_cambios_patrimonio_neto_i", "ingresos_y_gastos_imputados_al_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_imputados_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0009", "m200-2025.dp200012.f0066", "m200-2025.dp200033.f0027", "m200-2025.dp200040.f0010"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00339"
+number = "00339"
+section = ["estado_de_cambios_patrimonio_neto_i", "ingresos_y_gastos_imputados_al_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_imputados_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0010", "m200-2025.dp200012.f0071", "m200-2025.dp200033.f0028", "m200-2025.dp200040.f0011"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00340"
+number = "00340"
+section = ["estado_de_cambios_patrimonio_neto_i", "ingresos_y_gastos_imputados_al_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_imputados_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0011", "m200-2025.dp200013.f0028", "m200-2025.dp200033.f0029", "m200-2025.dp200040.f0012"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00341"
+number = "00341"
+section = ["estado_de_cambios_patrimonio_neto_i", "ingresos_y_gastos_imputados_al_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_imputados_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0012", "m200-2025.dp200012.f0073", "m200-2025.dp200040.f0013"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00342"
+number = "00342"
+section = ["estado_de_cambios_patrimonio_neto_i", "ingresos_y_gastos_imputados_al_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_imputados_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0013", "m200-2025.dp200012.f0074", "m200-2025.dp200040.f0014"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00343"
+number = "00343"
+section = ["estado_de_cambios_patrimonio_neto_i", "ingresos_y_gastos_imputados_al_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_imputados_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0014", "m200-2025.dp200012.f0070", "m200-2025.dp200040.f0015"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00344"
+number = "00344"
+section = ["estado_de_cambios_patrimonio_neto_i", "ingresos_y_gastos_imputados_al_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_imputados_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0015", "m200-2025.dp200015.f0158", "m200-2025.dp200040.f0016"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00345"
+number = "00345"
+section = ["estado_de_cambios_patrimonio_neto_i", "ingresos_y_gastos_imputados_al_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_imputados_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0016", "m200-2025.dp200012.f0090", "m200-2025.dp200032.f0030", "m200-2025.dp200040.f0017"]

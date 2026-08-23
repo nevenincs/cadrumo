@@ -1,0 +1,55 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03276"
+number = "03276"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-49-2002:art-6", "ley-49-2002:art-7", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026f.f0103"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03277"
+number = "03277"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+data_type = "money"
+semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-49-2002:art-6", "ley-49-2002:art-7", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026f.f0104"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03278"
+number = "03278"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+data_type = "money"
+semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-49-2002:art-6", "ley-49-2002:art-7", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026f.f0105"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03279"
+number = "03279"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+data_type = "money"
+semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-49-2002:art-6", "ley-49-2002:art-7", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026f.f0102"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03280"
+number = "03280"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+data_type = "money"
+semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-49-2002:art-6", "ley-49-2002:art-7", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026f.f0106"]
