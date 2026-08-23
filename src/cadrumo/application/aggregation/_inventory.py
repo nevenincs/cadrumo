@@ -3,14 +3,22 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from decimal import Decimal
 from typing import Protocol, get_args
 
+from pydantic import ValidationError
+
 from ...core import BindingSourceKind, Modelo
+from ...domain.calculations import RowSourceIdentity
 from ...domain.calculations.registry import (
     DataBindingDefinition,
     InventorySelector,
 )
-from ...domain.contribuyente.inventory import InventoryLedgerDocument
+from ...domain.contribuyente.inventory import (
+    InventoryLedgerDocument,
+    InventoryLedgerError,
+    compute_inventory_anexo_d_projection,
+)
 from ._source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -72,7 +80,7 @@ class InventorySourceResolver:
         bindings = _inventory_bindings(context)
         if not bindings:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
-        binding_ids = tuple(sorted(binding.id for binding in bindings))
+        binding_ids = tuple(sorted({binding.id for binding in bindings}))
         if context.modelo != Modelo.M100 or context.filing_year != 2025 or context.period.filing_year != 2025:
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
@@ -99,16 +107,111 @@ class InventorySourceResolver:
                     ),
                 ),
             )
+        bindings_by_operation: dict[str, DataBindingDefinition] = {}
+        for binding in bindings:
+            assert isinstance(binding.selector, InventorySelector)
+            operation = binding.selector.row_field
+            if operation in bindings_by_operation:
+                return self._template_refusal(binding_ids, "duplicate inventory operation row template")
+            bindings_by_operation[operation] = binding
+        if set(bindings_by_operation) != set(_CANONICAL_OPERATIONS) or len(bindings) != len(_CANONICAL_OPERATIONS):
+            return self._template_refusal(binding_ids, "inventory row-template cohort must contain each operation once")
+        if self._inventory_repository is None:
+            return self._storage_refusal(binding_ids)
+        try:
+            document = self._inventory_repository.load()
+        except InventoryLedgerError:
+            return self._storage_refusal(binding_ids)
+        ledgers = tuple(
+            sorted(
+                (item for item in document.ledgers if item.year == 2025),
+                key=lambda item: item.actividad_id,
+            ),
+        )
+        if not ledgers:
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                unresolved_binding_ids=binding_ids,
+                diagnostics=(
+                    _diagnostic(
+                        reason="source_domain_not_ready",
+                        state="missing_activity_ledgers",
+                        message="no complete 2025 inventory activity ledger is available",
+                    ),
+                ),
+            )
+        row_values: dict[tuple[str, int], Decimal | str] = {}
+        row_identities: dict[tuple[str, int], RowSourceIdentity] = {}
+        diagnostics: list[CalculationSourceDiagnostic] = []
+        try:
+            for row_index, ledger in enumerate(ledgers, start=1):
+                projection = compute_inventory_anexo_d_projection(ledger)
+                for operation, binding in bindings_by_operation.items():
+                    key = (binding.id, row_index)
+                    row_values[key] = getattr(projection, _VALUE_ATTRIBUTE_BY_OPERATION[operation])
+                    row_identities[key] = RowSourceIdentity(
+                        source_kind=_SOURCE,
+                        source_row_identity=projection.actividad_id,
+                        fingerprint=projection.projection_fingerprint,
+                    )
+                if projection.closing_conflict is not None:
+                    diagnostics.append(
+                        _diagnostic(
+                            reason="source_issue",
+                            state="physical_closing_conflict",
+                            message="one inventory activity retains a reviewed physical closing conflict",
+                        ),
+                    )
+        except (InventoryLedgerError, ValidationError):
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                unresolved_binding_ids=binding_ids,
+                diagnostics=(
+                    _diagnostic(
+                        reason="unresolved_derived_binding",
+                        state="incomplete_or_tampered_projection",
+                        message="inventory activity projection is incomplete or inconsistent",
+                    ),
+                ),
+            )
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            row_binding_values=row_values,
+            row_source_identities=row_identities,
+            diagnostics=tuple(diagnostics),
+        )
+
+    def _template_refusal(
+        self,
+        binding_ids: tuple[str, ...],
+        message: str,
+    ) -> CalculationSourceResolution:
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             unresolved_binding_ids=binding_ids,
             diagnostics=(
                 _diagnostic(
-                    reason="source_domain_not_ready",
-                    state="row_template_not_expanded",
-                    message="runtime inventory activity-row expansion is not enrolled",
-                    remedy="complete the canonical inventory row-expansion integration before calculation",
+                    reason="unresolved_derived_binding",
+                    state="invalid_row_template_cohort",
+                    message=message,
+                ),
+            ),
+        )
+
+    def _storage_refusal(self, binding_ids: tuple[str, ...]) -> CalculationSourceResolution:
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            unresolved_binding_ids=binding_ids,
+            diagnostics=(
+                _diagnostic(
+                    reason="storage_degraded",
+                    state="repository_unreadable",
+                    message="encrypted inventory storage could not be read",
                 ),
             ),
         )

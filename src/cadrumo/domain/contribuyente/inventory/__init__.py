@@ -24,7 +24,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field, ValidationError, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, ValidationInfo, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.errors import CadrumoError as _CadrumoError
@@ -869,7 +869,7 @@ class InventoryLedger(BaseModel):
         schema_version: Forward-compatible schema version. ``"3"``.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = ConfigDict(**{**_STRICT_FROZEN_CONFIG, "hide_input_in_errors": True})
 
     actividad_id: str = Field(min_length=1)
     year: int = Field(ge=1900)
@@ -879,6 +879,13 @@ class InventoryLedger(BaseModel):
     period_movements: tuple[MovementRecord, ...] = ()
     closing_authority_record: InventoryClosingAuthorityRecord | None
     schema_version: str = INVENTORY_SCHEMA_VERSION
+
+    @field_validator("actividad_id")
+    @classmethod
+    def _actividad_id_is_canonical(cls, value: str) -> str:
+        if value != value.strip() or any(ord(character) < 32 for character in value):
+            raise InventoryValidationError("inventory actividad_id is not canonical")
+        return value
 
     @field_validator("schema_version")
     @classmethod

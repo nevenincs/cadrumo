@@ -1,0 +1,38 @@
+# Per-activity inventory projections for Anexo D. Runtime expansion supplies one
+# aligned row per complete encrypted activity ledger; the registry declares only
+# the three legal operations and never a taxpayer activity identity.
+[[revisions."2025".bindings]]
+id = "renta-2025-inventory-activity-closing-increase-0177"
+source = "inventory"
+selector = { modelo = "100", filing_year = 2025, projection_grain = "taxpayer_year_activity", fact = "row_field", record = "inventory_activity", grouping = "per_inventory_activity", row_field = "closing_minus_opening_positive", target_casilla_id = "0177" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Variación de existencias"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-inventory-activity-acquisition-cost-0181"
+source = "inventory"
+selector = { modelo = "100", filing_year = 2025, projection_grain = "taxpayer_year_activity", fact = "row_field", record = "inventory_activity", grouping = "per_inventory_activity", row_field = "complete_acquisition_cost", target_casilla_id = "0181" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Compra de mercaderías"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-inventory-activity-closing-decrease-0182"
+source = "inventory"
+selector = { modelo = "100", filing_year = 2025, projection_grain = "taxpayer_year_activity", fact = "row_field", record = "inventory_activity", grouping = "per_inventory_activity", row_field = "opening_minus_closing_positive", target_casilla_id = "0182" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Variación de existencias"]
