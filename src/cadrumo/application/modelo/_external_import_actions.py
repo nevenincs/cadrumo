@@ -248,6 +248,164 @@ def import_external_filing_source(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class ExternalFilingBaselineSource:
+    """One source-only, casilla-complete external filing observation."""
+
+    modelo: str
+    filing_year: int
+    period: Period
+    evidence_kind: ExternalEvidenceKind
+    evidence_reference_id: str
+    tax_id: str
+    casilla_lexicals: Mapping[CasillaId, str]
+    registry_revision_id: str | None = None
+
+
+def import_external_filing_source(
+    source: ExternalFilingBaselineSource,
+    *,
+    bucket_id: str,
+    actor: str = "aeat-import",
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    justificante_repository: JustificanteRepository | None = None,
+    clock: datetime | None = None,
+) -> ModeloRecord:
+    """Resolve or create the target work unit and persist an amendable baseline.
+
+    Source lexical tokens are retained verbatim on the revision input snapshot;
+    their independently parsed Decimal values feed the filing baseline.
+    """
+    if source.period.filing_year != source.filing_year:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_source_period_mismatch",
+        )
+    if not source.casilla_lexicals:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_filing_no_casilla_values",
+        )
+    lexical_values: dict[CasillaId, str] = {}
+    decimal_values: dict[CasillaId, Decimal] = {}
+    for raw_casilla_id, raw_lexical in source.casilla_lexicals.items():
+        casilla_id = validated_casilla_id(raw_casilla_id, surface="external filing source")
+        lexical = raw_lexical.strip()
+        if not lexical:
+            raise ExternalModeloImportError(
+                translated_message="application.modelo.errors.external_import_source_lexical_blank",
+                context={"casilla_id": casilla_id},
+            )
+        try:
+            decimal_value = Decimal(
+                normalize_decimal_separators(
+                    lexical,
+                    strip_thousands="." in lexical and "," in lexical,
+                ),
+            )
+        except (InvalidOperation, ValueError) as exc:
+            raise ExternalModeloImportError(
+                translated_message="application.modelo.errors.external_import_source_lexical_non_numeric",
+                context={"casilla_id": casilla_id},
+            ) from exc
+        lexical_values[casilla_id] = raw_lexical
+        decimal_values[casilla_id] = decimal_value
+
+    snapshot, canonical_values = _reject_unknown_import_casillas(
+        modelo=source.modelo,
+        filing_year=source.filing_year,
+        period=source.period,
+        casilla_values=decimal_values,
+    )
+    _validated_source_lexicals(
+        canonical_values=canonical_values,
+        source_lexicals=lexical_values,
+    )
+    required_numeric_ids = {
+        casilla.id
+        for casilla in snapshot.revision.casillas
+        if casilla.required and casilla.data_type in {"decimal", "money", "integer", "ratio", "boolean"}
+    }
+    missing_required = required_numeric_ids.difference(canonical_values)
+    if missing_required:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_source_incomplete",
+            context={"missing_casilla_ids": ",".join(sorted(missing_required))},
+        )
+    if source.modelo == Modelo.M303.value:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
+        )
+    if not actor.strip():
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_source_actor_blank",
+        )
+    _require_bound_justificante_artifact(
+        evidence_kind=source.evidence_kind,
+        evidence_reference_id=source.evidence_reference_id.strip(),
+        modelo=source.modelo,
+        filing_year=source.filing_year,
+        period=source.period,
+        expected_tax_id=source.tax_id,
+        justificante_repository=justificante_repository or JustificanteRepository(),
+    )
+
+    wu_repo = work_unit_repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
+    active_matches = tuple(
+        unit
+        for unit in wu_repo.load().values()
+        if unit.bucket_id == bucket_id
+        and unit.modelo == source.modelo
+        and unit.filing_year == source.filing_year
+        and unit.period == source.period
+        and unit.state is not WorkUnitState.DESCARTADO
+    )
+    if len(active_matches) > 1:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_source_work_unit_ambiguous",
+        )
+    if active_matches:
+        work_unit = active_matches[0]
+        if source.registry_revision_id is not None and work_unit.revision_id != source.registry_revision_id:
+            raise ExternalModeloImportError(
+                translated_message="application.modelo.errors.external_import_source_revision_mismatch",
+            )
+    else:
+        revision_id = resolve_registry_revision_for_work_target(
+            modelo=source.modelo,
+            filing_year=source.filing_year,
+            period=source.period,
+            registry_revision_id=source.registry_revision_id,
+        )
+        work_unit = create_work_unit(
+            bucket_id=bucket_id,
+            modelo=source.modelo,
+            filing_year=source.filing_year,
+            period=source.period,
+            revision_id=revision_id,
+            actor=actor,
+            repository=wu_repo,
+            bucket_event_repository=bucket_event_repository,
+            clock=clock,
+        )
+    return import_external_filing_evidence(
+        work_unit_id=work_unit.work_unit_id,
+        casilla_values=decimal_values,
+        source_lexical_values_by_casilla_id=lexical_values,
+        evidence_kind=source.evidence_kind,
+        evidence_reference_id=source.evidence_reference_id,
+        actor=actor,
+        work_unit_repository=wu_repo,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository,
+        bucket_event_repository=bucket_event_repository,
+        justificante_repository=justificante_repository,
+        expected_tax_id=source.tax_id,
+        clock=clock,
+    )
+
+
 def _load_external_import_target[CasillaKey](
     *,
     work_unit_id: str,
