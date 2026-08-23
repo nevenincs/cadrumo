@@ -61,70 +61,75 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the Impuesto sobre Sociedades grupo-fiscal \
-consolidated declaration. DISCLOSURE -- self-review: the same agent authored the labels \
-being repaired. THIS ITERATION AUTHORED NO NEW RECORD. It closed the diacritic defect this \
-campaign introduced, across the last two catalogues, and CORRECTED A FALSE CLAIM MADE BY \
-AN EARLIER STAMP. Revision unchanged at 1897 casillas over thirty-seven of the design's \
-137 record sheets. CORRECTED, AND THE PREVIOUS STAMP WAS WRONG -- it said English and \
-Hungarian \"compose no page reference for that record at all\". THEY DO: 473 labels each, \
-and 50 of those named page \"70\", the page that does not exist. That conclusion was \
-reached by GREPPING THE LOCALE YAML, whose long values are LINE-WRAPPED, so the pattern \
-never matched across the fold. The loaded authority was available and answers correctly. \
-Measuring a catalogue by grepping its serialised form is the error; every count in this \
-iteration is taken from the loaded labels. CORRECTED -- THE UNTRANSLATED RECORD PREFIX WAS \
-NOT A CATALAN SLIP BUT A SYSTEMATIC ONE. English and Hungarian carried BOTH Spanish words, \
-\"pag.\" and \"hoja\", on 473 labels each. An English label read \"Consolidated balance \
-sheet. Assets (pag. 3A hoja 00). Non-current assets\" -- English, English, Spanish, \
-Spanish, English. English now reads \"(page 3A sheet 00)\" and Hungarian \"(3A. oldal, 00. \
-lap)\", with the page token corrected in the same pass. NO SPANISH PAGE VOCABULARY REMAINS \
-IN ANY NON-SPANISH CATALOGUE, asserted. CORRECTED -- HUNGARIAN DIACRITICS ARE COMPLETE: \
-1848 labels without a diacritic down to ZERO, over 1879 labels rewritten, from a hand \
-table of 730 entries covering 18716 occurrences of an enumerated 1031-token inventory. \
-Hungarian is the least forgiving of the three languages: o against o-umlaut against \
-o-double-acute, and u against u-umlaut against u-double-acute, are three distinct letters \
-each and the long forms are not decorative. The same two properties as the Catalan pass \
-hold: the accent-only invariant is asserted for EVERY TABLE ENTRY BEFORE ANY LABEL IS \
-TOUCHED and again for every rewritten label, so an entry can add a diacritic and can never \
-respell a word; and every entry must FIRE or it is removed. Genuine ambiguity is refused \
--- \"meg\"/\"meg-with-accent\" and \"fel\"/\"fel-with-accent\" are different words and \
-neither is in the table. VERIFIED -- THE ACCENT-ONLY INVARIANT CAUGHT THREE REAL \
-MISSPELLINGS AND ONE ERROR IN THE REPAIR ITSELF, before a single label was written. It \
-refused a table entry where the agent had mistyped the Hungarian, and it refused three \
-entries whose SOURCE token was misspelled rather than merely unaccented: \"eloelegek\" and \
-\"eloezetes\" carry a stray letter, and \"rafordituskimutatasa\" carries a wrong stem \
-vowel while the CORRECTLY spelled form sits in the same catalogue. An invariant written to \
-constrain a repair identified a different defect class the repair was not looking for. All \
-three were then fixed as declared substitutions with their firing counts, 57 labels, and \
-the survivors are gated on the PROPERTY -- no misspelling in any casing -- rather than on \
-a second tally. VERIFIED -- ALL 1897 CASILLAS RESOLVE A NON-NULL LABEL IN es, en, ca AND \
-hu, counted by VALUE rather than by key, and NO label in any locale is identical to its \
-Spanish. NOT CLAIMED -- 142 Spanish and 87 Catalan labels still carry no diacritic; both \
-sets were read token by token in earlier iterations and contain no accent-bearing word. \
-English correctly carries none. NOT CLAIMED -- THE LOCALES ARE COMPLETE BUT STILL \
-UNAUDITED BY ANY SECOND PARTY. Every label in all four catalogues was written, and has now \
-been repaired, by the same agent. Three separate defect classes have been found in them by \
-enumeration -- lost diacritics, untranslated Spanish, and outright misspellings -- and \
-every parity and coverage gate in the tree was green throughout all three. A NON-NULL \
-VALUE UNDER THE RIGHT KEY IS NOT EVIDENCE OF THE RIGHT LANGUAGE, and nothing in this \
-repository checks language. RECORDED -- THIS WORK WAS LOST ONCE TO A CONCURRENT WRITER AND \
-RE-APPLIED. The English and Hungarian prefix translation was written through the locale \
-CLI and verified against the loaded authority, and while a twenty-minute suite run held \
-the iteration open a peer rewrote both catalogues from an older state; the English file \
-showed no commit of its own since the previous iteration. The Hungarian diacritics, \
-written later, survived. It was re-applied and committed IMMEDIATELY by pathspec, and the \
-state above was re-verified after the commit rather than before it. Suite, RUN \
-SEQUENTIALLY: 9 failed, 5406 passed, an IDENTICAL FAILED LIST to the previous run. NOT \
-CLAIMED -- THE .help KEYS REMAIN UNAUTHORED across this entire revision in all four \
-locales. NOT CLAIMED -- 9873 OF THE 11603 (record, number) SLOTS REMAIN UNMODELLED across \
-95 of the 134 records that carry numbers; 1730 slots are modelled, zero orphaned, \
-unchanged by this iteration. NOT CLAIMED -- NOTHING COMPUTES ANY OF IT. No formula, \
-construct or binding exists anywhere in this revision; two complete balance sheets sit in \
-it and neither balances. NOT CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT MEMBERSHIP \
-CHANGE. The modelo cannot be filed. model_law_authority_scope remains inspection_only, so \
-this stamp is made under the LOWER inspection bar and MUST be re-made if a layout lands. \
-NOT CLAIMED -- T22009001, T22012A00 and T22012A10 remain deliberately held back on \
-unresolved ambiguities. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not \
-zero."""
+consolidated declaration. DISCLOSURE -- self-review: the same agent authored the casillas \
+being reviewed. VERIFIED -- RECORD T22004D02 IS AUTHORED, 21 casillas describing all 31 \
+design fields: the CUENTA TECNICA DEL SEGURO DE VIDA, otros gastos tecnicos and gastos del \
+inmovilizado material y de las inversiones in the shape used by entidades aseguradoras, \
+down to the closing subtotal [00350]. Revision total 1918 casillas over THIRTY-EIGHT of \
+the design's 137 record sheets; 1757 numeric slots modelled. Suite, RUN SEQUENTIALLY: 8 \
+failed, 5418 passed. Against the previous trustworthy run TWO FAILURES CLEARED and ONE \
+ARRIVED, and the arrival is NOT this work: a modelo 100 renta scenario supplying a casilla \
+the registry now declares bound to an INVENTORY binding, from a peer's feature landing \
+during this iteration. The two that cleared were also that peer's, both reported here in \
+earlier stamps. VERIFIED -- A 558-FAILURE RUN WAS INVALID AND WAS NOT REPORTED AS A \
+RESULT. An earlier sequential run of the same suite returned 558 failed, and took 1 HOUR \
+50 MINUTES against a normal 20 to 28. It was NOT believed: the three largest failing \
+modules were re-run individually against the same tree and returned 48, 44 and 22 PASSES, \
+and the whole suite re-run returned 8 failed. The cause is this worktree's backing share \
+degrading under concurrent I/O while peers ran their own work, compounded by peer commits \
+landing INSIDE the run, one of them into a test fixtures package. A slow run is evidence \
+about the run, not about the code, and a failure list from a run whose wall time \
+quadrupled is not a baseline. VERIFIED -- THE TWO SIBLING SEGURO RECORDS DO NOT NEST THE \
+SAME CONCEPT THE SAME WAY, and neither was harmonised. \"Participacion en perdidas de \
+entidades puestas en equivalencia\" hangs off \"Gastos del inmovilizado\" on the no-vida \
+page T22004B02 ([00710]) and off \"Gastos de entidades incluidas en la consolidacion\" \
+here ([00716]); AEAT also drops the article, printing \"Perdidas por enajenacion\" here \
+against \"Perdidas por la enajenacion\" there. Each record's labels follow ITS OWN printed \
+text. Harmonising them would assert that two lines AEAT wrote differently mean the same \
+thing, which the design does not state. VERIFIED -- THIRTEEN OF THE TWENTY-ONE PARTS ARE \
+PRINTED WORD FOR WORD ON THE SIBLING RECORD, and this record's locale manifest IMPORTS \
+their translations from that record's table rather than retyping them. Two records \
+printing the same Spanish must not drift into two different Catalans, and a single source \
+is the only thing that guarantees it; retyping is how a truncation-derived key entered \
+this campaign three times. VERIFIED -- THE HELP STRINGS FOLLOW THE REVISION'S OWN \
+CONVENTION, INFERRED AND THEN CHECKED. A peer authored `help` across this modelo while \
+this iteration ran; the locale CLI scaffolded TERSE placeholders for the new record, which \
+would have left one record of thirty-eight spelling its help differently from the other \
+thirty-seven. The convention was derived from the peer's entries and required to reproduce \
+them EXACTLY: it reproduced 1260 committed strings across four locales before any of the \
+84 new ones were written. An inference about another hand's convention is worth nothing \
+until it is tested against their output. RECORDED -- A PEER'S UNCOMMITTED WORK WAS \
+COMMITTED UNDER THIS AGENT'S MESSAGE. The commit carrying this record's labels also \
+carried 315 `help` strings per locale that a peer had authored and not yet committed: a \
+pathspec commit consumes the NAMED WORKING-TREE FILES, not only one's own edits. Nothing \
+was lost and nothing reverted, but the attribution is wrong and the commit message \
+describes half of what it contains. Recorded here because the message cannot be corrected \
+without a history rewrite. RECORDED -- A STALE LOADER CACHE PRODUCED A CONFIDENT WRONG \
+DIAGNOSIS mid-iteration: the authority reported all 21 of this record's labels in a \
+different convention, and the conclusion drawn was that a peer had overwritten them. The \
+file on disk was correct the whole time and git diff showed it. That is the second wrong \
+conclusion of this campaign drawn from an instrument rather than the data, after grepping \
+a line-wrapped YAML. When the finding is \"someone else changed my work\", the bytes must \
+be checked before acting; the cost of being wrong there is an edit war. VERIFIED -- THE \
+WHOLE CORPUS WAS RE-DERIVED FROM THE DESIGN: 1918 casillas across 45 fragments and 38 \
+sheets, every segmento a real sheet, 1745 numeric box numbers PRINTED BY AEAT and none \
+minted, 4 letter numbers, 74 byte spans resolving to a design field at exactly that offset \
+and length, 38 sheets tiling once with no gap and no partial overlap, no repeated id and \
+no repeated (segmento, number). ZERO PROBLEMS. VERIFIED -- EVERY MODELO 220 LOCALE KEY IS \
+NOW PRESENT IN ALL FOUR CATALOGUES, label AND help, with zero missing reported by the \
+scaffold check. NOTED -- FOUR LABELS CARRY AEAT'S SIGN MARKER \"(+ o -)\" with the \
+accented o AEAT uses for \"or\". Kept verbatim; NOTHING here acts on the convention, and a \
+consumer treating these as unsigned will be wrong. NOT CLAIMED -- 9846 OF THE 11603 \
+(record, number) SLOTS REMAIN UNMODELLED; 1757 are modelled, zero orphaned. NOT CLAIMED -- \
+NOTHING COMPUTES ANY OF IT. [00350] closes the cuenta tecnica and is DECLARED, not \
+computed; nothing carries it into the cuenta no tecnica or the consolidated result, and no \
+formula, construct or binding exists anywhere in this revision. NOT CLAIMED -- NO EXPORT \
+LAYOUT AND NO CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be filed. \
+model_law_authority_scope remains inspection_only, so this stamp is made under the LOWER \
+inspection bar and MUST be re-made if a layout lands. NOT CLAIMED -- T22009001, T22012A00 \
+and T22012A10 remain deliberately held back on unresolved ambiguities. NOT CLAIMED -- \
+LOCALES COMPLETE BUT UNAUDITED BY ANY SECOND PARTY: written and repaired throughout by the \
+same agent. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero."""
 reviewed_at = 2026-08-23
 
 [revisions."2024".family_dispositions.casilla_continuidad_evolutions]

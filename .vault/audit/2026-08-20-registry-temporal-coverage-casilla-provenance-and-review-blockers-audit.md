@@ -5469,3 +5469,95 @@ accent-bearing word. English correctly carries none.
 
 The locales are complete and **still unaudited by any second party**: written and repaired
 by the same agent throughout.
+
+## 2026-08-23 — T22004D02, a stale cache that produced a confident wrong diagnosis, and a peer's work committed under my message
+
+### What landed
+
+Record **T22004D02** — the *cuenta técnica del seguro de vida*: otros gastos técnicos and
+gastos del inmovilizado material y de las inversiones in the aseguradoras shape, down to
+subtotal `[00350]`. **21 casillas describing all 31 design fields**; revision 1897 →
+**1918**, thirty-eight of 137 record sheets.
+
+### Two sibling records that nest the same concept differently
+
+This is the seguro de vida counterpart of T22004B02, and they do **not** agree.
+*Participación en pérdidas de entidades puestas en equivalencia* hangs off *Gastos del
+inmovilizado* on the no-vida page (`[00710]`) and off *Gastos de entidades incluidas en la
+consolidación* here (`[00716]`). AEAT also drops the article — "Pérdidas por enajenación"
+here against "Pérdidas por la enajenación" there.
+
+Each record follows **its own** printed text. Harmonising them would assert that two lines
+AEAT wrote differently mean the same thing, which the design does not say.
+
+### Thirteen shared parts, one source
+
+Thirteen of the twenty-one parts are printed word for word on the sibling, and this
+manifest **imports their translations** from that record's table rather than retyping them.
+Two records printing the same Spanish must not drift into two different Catalans, and one
+source is the only way to guarantee that. Retyping is how a truncation-derived key got into
+this campaign three times.
+
+### A stale cache produced a confident, wrong diagnosis
+
+Mid-iteration the loaded authority reported all 21 of this record's labels in a *different
+convention* — raw design text with the bracket number embedded. The conclusion drawn was
+that a peer had overwritten the work, and the next step would have been to overwrite theirs
+back.
+
+**It was a cached loader snapshot.** The file on disk had the correct labels the whole time,
+and `git diff` — reading the file, not the authority — showed it plainly.
+
+That is the **second** wrong conclusion this session from an instrument rather than the
+data: first grepping a line-wrapped YAML and concluding a page reference was absent, now
+reading a cached authority and concluding a peer had clobbered a record. Both were
+confident, both were about *absence or difference*, and both would have caused a real edit
+had they not been checked against a second source.
+
+The rule worth keeping: **when the finding is "someone else changed my work", check the
+bytes before acting.** The cost of being wrong there is not a bad measurement, it is an
+edit war over a file.
+
+### A peer's work was committed under my message
+
+The commit that carried this record's labels also carried **315 `help` strings per locale
+that a peer had authored and not yet committed**. A pathspec commit consumes the *named
+working-tree files*, not only one's own edits — the documented hazard, met.
+
+Nothing was lost and nothing was reverted; the attribution is simply wrong, and the commit
+message describes only half of what it contains. Recorded here because the commit message
+cannot be corrected without a rewrite, and this document is what survives.
+
+### Adopting the peer's convention rather than leaving an outlier
+
+Running the locale CLI for the new record scaffolded 21 **terse** help placeholders, which
+would have left one record of thirty-eight spelling its help differently from the other
+thirty-seven.
+
+The peer's convention is `<per-locale prefix>: <label>.`. It was **inferred and then
+checked**: the derived string had to reproduce the committed help exactly for every casilla
+that already had one. It reproduced **1260** across four locales, and only then were the 84
+new strings written. An inference about someone else's convention is worth nothing until it
+is tested against their output.
+
+### A 558-failure run that meant nothing
+
+A sequential run of this suite returned **558 failed** and took **1 hour 50 minutes**
+against a normal 20 to 28.
+
+It was not believed, and it should not have been. The three largest failing modules were
+re-run individually against the same tree and returned **48, 44 and 22 passes**; the full
+suite re-run returned **8 failed, 5418 passed**. The cause was this worktree's backing
+share degrading under concurrent I/O while peers ran their own work, compounded by peer
+commits landing *inside* the run — one of them into a test fixtures package.
+
+**A slow run is evidence about the run, not about the code.** The wall time was the tell
+before any failure name was read: when a suite's duration quadruples, its failure list is
+not a baseline and diffing against it would have manufactured dozens of phantom
+regressions. Cheapest confirmation is to re-run the biggest failing module alone — seconds,
+against hours.
+
+### Scale
+
+Revision 1918 casillas; **9846 of 11603 slots remain**; 1757 modelled, zero orphaned. Corpus re-derivation: **zero problems**. Every modelo 220
+locale key — label *and* help — is now present in all four catalogues.
