@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:00531aeff3e1cebb505f85b155b17d0c063418146195a41f46d93ca7f9631fd9'
+body_hash: 'sha256:393fe53987280c5977db5748a21715912883b04eb18fe5708d73999c4ee5f0a8'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7460,3 +7460,37 @@ with fixtures -- and a gate that can never pass while the team works is precisel
 stops being read. That is a policy question for its owner (retry with backoff, generate from a
 committed tree snapshot, or scope the watched universe to the fixture roots it actually cares
 about), not a defect to patch from here, and not this campaign's to decide.
+
+### Re-checking a deferred attribution turned it into a finding
+
+Last iteration deferred three `dev/ci/tests/test_lazy_command_tree.py` failures as "peer
+mid-edit, re-check later" -- `_app_lazy_registration.py` was modified with an 18-minute-old
+mtime. The re-check is what matters, and it changed the answer: the file is now COMMITTED and
+the three still fail. Deferred-because-dirty is not the same as benign, and without the
+re-check this would have sat unreported behind a correct-at-the-time attribution.
+
+The cause is one unswept consumer. `_LAZY_COMMAND_REGISTRATIONS` grew a fourth field, a
+`help_key` locale key, and every production consumer was swept to unpack four -- but this gate
+still unpacked three and died on `ValueError: too many values to unpack (expected 3)` inside
+its child-process script. Widened to the 4-tuple; that case passes again. The pre-fix state is
+its own break-proof, since the failure was observed before the change and not after.
+
+Two remain, and neither is this campaign's to decide.
+
+`test_dispatching_a_subcommand_loads_its_module` is stale in TWO ways at once, both caused by
+a deliberate and sensible design change rather than a defect. It dispatches `app modelo --help`
+and asserts `cadrumo.entrypoints.cli._modelo` is then in `sys.modules`. But `app modelo` no
+longer maps to `._modelo` -- the registration now names `._app_lazy_families`, the peer having
+consolidated the families -- AND the new `help_key` exists precisely so `--help` renders from
+the locale catalogue WITHOUT importing the module. So help legitimately imports nothing now.
+The property the case protects is still worth keeping ("no command silently becomes
+unreachable"), but restoring it means choosing a dispatch path that genuinely requires the
+module and deriving the expected module from the registrations rather than hardcoding it --
+a contract decision belonging to the campaign actively reshaping this surface.
+
+`test_state_free_surface_does_not_import_registry[argv2]` is PRE-EXISTING, present in this
+document's earlier dev/ci baseline, not a consequence of the refactor. It reports a bare
+`cadrumo` invocation eagerly importing 177 heavy modules, the whole
+`domain.calculations.registry` and `application.workflow` trees. Worth flagging to its owner
+with some force: the campaign that owns this surface is named for performance hardening, and
+this is the cold-start property they are optimising for, failing.
