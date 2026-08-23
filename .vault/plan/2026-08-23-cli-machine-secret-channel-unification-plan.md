@@ -4,7 +4,7 @@ tags:
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
 modified: '2026-08-23'
-body_hash: 'sha256:eb62bdefc541292446d6e4f3bd5d52468042459b0d8f0f71ebe33033ed054936'
+body_hash: 'sha256:c0d987c6e4e25b8caa2c0bf69005ee4e36bc4989a8e927449bcdd0468ede7efe'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
@@ -91,7 +91,7 @@ Exercise both transport channels and refusal behavior through actual processes.
 Regenerate machine metadata and document the uniform contract.
 
 - [x] `W03.P07.S15` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and project and regenerate safe conditional leaf machine-secret metadata and root profile_authentication posture across registration metadata, command schemas, CLI tree artifacts, and their tests; `dev/quality/generate_command_registration_metadata.py and generated CLI metadata artifacts`.
-- [ ] `W03.P07.S16` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and update operator documentation and sequence sources through canonical generators to describe both leaf channels, the distinct root profile-authentication pair, cross-scope collision rules, caller-owned descriptors, Windows HANDLE bootstrap, repeated keychain-free Argon2 work, bounded-lifetime cleanup, and removed CLI environment fallback; `docs/how-to and docs/reference CLI secret-input documentation and sequences`.
+- [x] `W03.P07.S16` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and update operator documentation and sequence sources through canonical generators to describe both leaf channels, the distinct root profile-authentication pair, cross-scope collision rules, caller-owned descriptors, Windows HANDLE bootstrap, repeated keychain-free Argon2 work, bounded-lifetime cleanup, and removed CLI environment fallback; `docs/how-to and docs/reference CLI secret-input documentation and sequences`.
 
 ## Wave `W04` - Closure
 

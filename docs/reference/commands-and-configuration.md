@@ -28,8 +28,14 @@ separate and [the how-to guides](../how-to/index.md) for task sequences.
 | `AEAT_*` / `aeat_*` | AEAT integration | Authority endpoints, authority credentials, live-read controls, and preserved authority terminology |
 
 Examples of product controls include `CADRUMO_LOCAL_STORAGE_ROOT`,
-`CADRUMO_SECRET_STORE_BACKEND`, `CADRUMO_SECRET_STORE_DIR`,
-`CADRUMO_SECRET_PASSPHRASE`, and `CADRUMO_OUTPUT_LANGUAGE`. Live
+`CADRUMO_SECRET_STORE_BACKEND`, `CADRUMO_SECRET_STORE_DIR`, and
+`CADRUMO_OUTPUT_LANGUAGE`. `CADRUMO_SECRET_PASSPHRASE` remains a separately
+governed programmatic-substrate setting; the CLI does not read it as an
+operator secret-input fallback. Use the explicit leaf `--secrets-stdin` /
+`--secrets-fd` pair or root `--profile-secrets-stdin` /
+`--profile-secrets-fd` pair described in
+[Protect access to your data](../how-to/protect-data-access.md#run-without-a-passphrase-prompt).
+Live
 `aeat config --help` and its leaf help define operator-facing configuration.
 The [configuration map](../cli/config.rst) groups those commands. Python fields
 are listed in the generated Cadrumo application programming interface

@@ -80,12 +80,14 @@ the new one is too short, or the two copies do not match, it refuses and leaves
 the existing passphrase working.
 
 To change the passphrase without an interactive prompt, pass the three values as
-one JSON object on standard input:
+one JSON object through a leaf secret channel:
 
 ```{cli-sequence} protect-data-access-passphrase-change-stdin
 ```
 
-Send `{"current_passphrase": "...", "new_passphrase": "...",
+Use `--secrets-stdin` when standard input is free. Use `--secrets-fd FD` with
+the same object when another input owns standard input. Send
+`{"current_passphrase": "...", "new_passphrase": "...",
 "new_passphrase_confirmation": "..."}`. Never pass a passphrase as a
 command-line argument: arguments are visible in the process list and in shell
 history.
@@ -93,25 +95,129 @@ history.
 (run-without-a-passphrase-prompt)=
 ## Run without a passphrase prompt
 
-Automation cannot answer an interactive passphrase prompt. For an agent server,
-scheduled job, or script, set `CADRUMO_SECRET_PASSPHRASE` for that process.
-Treat the value like the passphrase itself. Never put it in a shared shell
-profile, committed script, or log.
+Automation cannot answer an interactive passphrase prompt. Supply a bounded
+UTF-8 JSON object through an explicit input channel. Do not put a profile
+passphrase, recovery phrase, or certificate passphrase in an environment
+variable or command-line argument. The CLI does not use
+`CADRUMO_SECRET_PASSPHRASE` as a secret-input fallback.
 
-Interactive commands prompt when they need the passphrase.
+There are two separate option pairs:
+
+- Use leaf `--secrets-stdin` or `--secrets-fd FD` when the command itself owns
+  the secret. The five leaf commands and their exact objects are listed below.
+- Use root `--profile-secrets-stdin` or `--profile-secrets-fd FD` before
+  `config` when a profile-bound command needs to authenticate a selected
+  profile after its persisted session cannot resume. Its object is
+  `{"profile_passphrase": "..."}`.
+
+The root options do not replace leaf options. For example, certificate-secret
+storage may need a root profile passphrase and a certificate passphrase in the
+same invocation. Supply them through two non-colliding channels.
+
+### Supply a secret owned by a leaf command
+
+Use the same two leaf flags on each scalar-secret command:
+
+| Command | Strict JSON object |
+| --- | --- |
+| `aeat config login` | `{"passphrase": "..."}` |
+| `aeat config profile create` | `{"passphrase": "...", "passphrase_confirmation": "..."}` |
+| `aeat config passphrase change` | `{"current_passphrase": "...", "new_passphrase": "...", "new_passphrase_confirmation": "..."}` |
+| `aeat config profile restore` without `--artifact` | `{"passphrase": "..."}` |
+| `aeat config profile restore` with `--artifact` | `{"recovery_secret": "..."}` |
+| `aeat config auth certificate secret set` | `{"certificate_passphrase": "..."}` |
+
+The object must contain exactly the fields shown. Duplicate, missing, extra,
+oversized, malformed, or non-UTF-8 input is refused. The former restore field
+`password` and certificate field `secret` are not accepted.
+
+Inspect the current flags without supplying a secret:
+
+```{cli-sequence} protect-data-access-machine-secret-help
+:verify: Confirm every scalar-secret leaf exposes both explicit channels.
+```
+
+### Authenticate a profile for one command
+
+Place a root option before the command path. Name the exact profile on the
+target command when it accepts a profile target. For example:
+
+```text
+aeat --profile-secrets-stdin config profile show PROFILE
+```
+
+This source is used only after the exact profile is known, the command requires
+a profile session, no matching live session exists, and persisted-session
+resume has failed. It is refused without being read when the command does not
+need profile authentication, when the exact target already has a live or
+resumed session, or when the command is self-authenticating. Login, create,
+restore, logout, and passphrase change do not accept this root proof.
+
+On a host without usable keychain persistence, successful root authentication
+continues only the current process. The command emits a Notice that the
+passphrase must be supplied again in the next process. Each new process repeats
+the Argon2 password derivation; this deliberate cost is not cached in a weaker
+credential or transferable bearer token.
+
+### Keep two secret sources distinct
+
+Choose sources before either is read:
+
+- Do not select both stdin and a descriptor for the same option pair.
+- Do not assign stdin to both the root and leaf scopes.
+- Do not assign the same descriptor number to both scopes.
+- Use root fd plus leaf stdin, root stdin plus leaf fd, or two different
+  descriptors when one invocation needs both objects.
+
+A selected source that does not apply to the resolved command or exact profile
+is refused as unused. This protects scripts from sending a credential to the
+wrong target after a command-line mistake.
+
+### Pass an inherited descriptor safely
+
+Use an anonymous pipe when standard input already carries another value. The
+caller owns the descriptor's backing object and lifetime. Cadrumo performs one
+bounded read and closes the descriptor locally after reading begins, including
+on refusal. Descriptor `0` is allowed as a stdin-equivalent; descriptors `1`
+and `2`, negative descriptors, closed descriptors, and unreadable descriptors
+are refused.
+
+On POSIX, start the process with the pipe's read descriptor in the child
+process's `pass_fds` allowlist, then pass that number to `--secrets-fd` or
+`--profile-secrets-fd`. On Windows, do not assume a numeric CRT descriptor is
+inherited directly. Allowlist an inheritable Windows HANDLE and use the
+supported bootstrap wrapper to convert it with `msvcrt.open_osfhandle`:
+
+```text
+python -m cadrumo.entrypoints.cli._windows_profile_secret_bootstrap --profile-handle ROOT_HANDLE --secrets-handle LEAF_HANDLE -- config auth certificate secret set --name SOURCE
+```
+
+Omit `--profile-handle` or `--secrets-handle` when the invocation needs only
+one scope. The wrapper inserts the matching canonical descriptor option; do not
+also add it to the command tail. Prefer the stdin channel for a directly
+launched portable command.
+
+Cadrumo bounds the input, wipes mutable read buffers on a best-effort basis,
+and releases secret-bearing references promptly. Python may create immutable
+strings while decoding JSON and validating secret fields, so the application
+does not claim guaranteed memory erasure. Never reuse the pipe, redirect it to
+a regular file, or log the JSON object.
+
+Interactive commands may prompt only on a verified terminal. A redirected or
+non-interactive invocation without the required explicit channel is refused.
 
 ## Log out of the active profile
 
 Run `aeat config logout` when you finish working with a profile. Logout
 closes the active storage session, discards in-memory key material, disposes the
-bucket engines, and clears the active-profile selection:
+bucket engines, and keeps the profile selected for the next exact login:
 
 ```{cli-sequence} protect-data-access-logout
 :verify: Confirm logout closes the active session without deleting the profile.
 ```
 
-Nothing in the profile is deleted. Log in again with
-`aeat config login <name>` when you return.
+Nothing in the profile is deleted. Log in again with `aeat config login` to use
+the selected profile, or name another exact profile when you return.
 
 ## Reset local state (last resort)
 
