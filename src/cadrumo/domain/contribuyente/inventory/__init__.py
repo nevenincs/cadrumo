@@ -352,6 +352,33 @@ class PriorClosingContinuityEvidence(BaseModel):
     content_digest: ContentDigest
 
 
+def fingerprint_prior_authoritative_closing(
+    *,
+    actividad_id: str,
+    filing_year: int,
+    authoritative_closing_value: Decimal,
+    authoritative_source_fingerprint: ContentDigest,
+    evidence: tuple[PriorClosingContinuityEvidence, ...],
+) -> ContentDigest:
+    """Derive immutable identity for one prior authoritative closing fact."""
+    return _content_hash_hex(
+        {
+            "fingerprint_schema_version": "1",
+            "actividad_id": actividad_id,
+            "filing_year": filing_year,
+            "authoritative_closing_value": _canonical_decimal_string(authoritative_closing_value),
+            "authoritative_source_fingerprint": authoritative_source_fingerprint,
+            "evidence": [
+                {
+                    "reference": item.reference.reference,
+                    "content_digest": item.content_digest,
+                }
+                for item in sorted(evidence, key=lambda item: item.reference.reference)
+            ],
+        },
+    )
+
+
 class PhysicalClosingObservation(BaseModel):
     """Immutable evidenced physical closing valuation for one activity and year."""
 
@@ -387,6 +414,8 @@ class PhysicalClosingObservation(BaseModel):
         }
         if not required.issubset(roles):
             raise InventoryValidationError("physical closing requires count and acquisition-price valuation evidence")
+        if len(roles) != len(value):
+            raise InventoryValidationError("physical closing evidence roles must be unique")
         return value
 
     @model_validator(mode="after")
@@ -471,6 +500,33 @@ class InventoryClosingAuthorityDecision(BaseModel):
             )
         return self
 
+    @property
+    def fingerprint(self) -> ContentDigest:
+        """Return canonical tamper-sensitive decision identity."""
+        return _content_hash_hex(
+            {
+                "fingerprint_schema_version": "1",
+                "decision_id": self.decision_id,
+                "actividad_id": self.actividad_id,
+                "filing_year": self.filing_year,
+                "authority": self.authority.value,
+                "physical_observation_id": self.physical_observation_id,
+                "physical_observation_fingerprint": self.physical_observation_fingerprint,
+                "reason": self.reason,
+                "actor": self.actor,
+                "source_command": self.source_command,
+                "decided_at": self.decided_at.isoformat(),
+                "evidence": [
+                    {
+                        "reference": item.reference.reference,
+                        "role": item.role.value,
+                        "content_digest": item.content_digest,
+                    }
+                    for item in sorted(self.evidence, key=lambda evidence: evidence.reference.reference)
+                ],
+            },
+        )
+
 
 class PriorAuthoritativeClosingLink(BaseModel):
     """Continuity link from the immediately prior authoritative closing."""
@@ -483,6 +539,7 @@ class PriorAuthoritativeClosingLink(BaseModel):
     prior_authoritative_closing_value: Decimal = Field(ge=_ZERO)
     current_opening_value: Decimal = Field(ge=_ZERO)
     prior_authoritative_source_fingerprint: ContentDigest
+    prior_authoritative_closing_fingerprint: ContentDigest
     evidence: tuple[PriorClosingContinuityEvidence, ...] = Field(min_length=1)
 
     @field_validator("prior_authoritative_closing_value", "current_opening_value")
@@ -507,7 +564,32 @@ class PriorAuthoritativeClosingLink(BaseModel):
             raise InventoryValidationError("prior authoritative closing must be the immediate prior filing year")
         if self.prior_authoritative_closing_value != self.current_opening_value:
             raise InventoryValidationError("prior authoritative closing must equal current opening value")
+        if self.prior_authoritative_closing_fingerprint != self.expected_prior_closing_fingerprint:
+            raise InventoryValidationError("prior authoritative closing fingerprint does not bind the claimed source")
         return self
+
+    @property
+    def expected_prior_closing_fingerprint(self) -> ContentDigest:
+        """Derive the fingerprint binding the claimed prior authoritative closing."""
+        return fingerprint_prior_authoritative_closing(
+            actividad_id=self.actividad_id,
+            filing_year=self.prior_filing_year,
+            authoritative_closing_value=self.prior_authoritative_closing_value,
+            authoritative_source_fingerprint=self.prior_authoritative_source_fingerprint,
+            evidence=self.evidence,
+        )
+
+    @property
+    def fingerprint(self) -> ContentDigest:
+        """Return current-link identity including the opening-side coordinate."""
+        return _content_hash_hex(
+            {
+                "fingerprint_schema_version": "1",
+                "prior_authoritative_closing_fingerprint": self.prior_authoritative_closing_fingerprint,
+                "current_filing_year": self.current_filing_year,
+                "current_opening_value": _canonical_decimal_string(self.current_opening_value),
+            },
+        )
 
 
 class InventoryClosingConflictDiagnostic(BaseModel):
@@ -520,6 +602,11 @@ class InventoryClosingConflictDiagnostic(BaseModel):
     movement_derived_value: Decimal = Field(ge=_ZERO)
     physical_observed_value: Decimal = Field(ge=_ZERO)
     physical_observation_fingerprint: ContentDigest
+
+    @field_validator("movement_derived_value", "physical_observed_value")
+    @classmethod
+    def _values_are_cents(cls, value: Decimal, info: ValidationInfo) -> Decimal:
+        return _require_cents(value, field_name=info.field_name or "closing conflict value")
 
 
 class InventoryClosingResolution(BaseModel):
@@ -534,13 +621,26 @@ class InventoryClosingResolution(BaseModel):
     movement_derived_value: Decimal = Field(ge=_ZERO)
     physical_observed_value: Decimal | None = Field(default=None, ge=_ZERO)
     physical_observation_fingerprint: ContentDigest | None = None
+    decision_id: str = Field(min_length=1, max_length=128)
+    decision_fingerprint: ContentDigest
+    physical_observation_id: str | None = Field(default=None, min_length=1, max_length=128)
+    prior_closing_link_fingerprint: ContentDigest
     conflict: InventoryClosingConflictDiagnostic | None = None
+
+    @field_validator("authoritative_value", "movement_derived_value", "physical_observed_value")
+    @classmethod
+    def _values_are_cents(cls, value: Decimal | None, info: ValidationInfo) -> Decimal | None:
+        if value is None:
+            return None
+        return _require_cents(value, field_name=info.field_name or "closing resolution value")
 
     @model_validator(mode="after")
     def _conflict_is_retained(self) -> InventoryClosingResolution:
         has_physical = self.physical_observed_value is not None and self.physical_observation_fingerprint is not None
         if (self.physical_observed_value is None) != (self.physical_observation_fingerprint is None):
             raise InventoryValidationError("physical observed value and fingerprint must travel together")
+        if has_physical != (self.physical_observation_id is not None):
+            raise InventoryValidationError("physical observation identity must travel with physical resolution state")
         if self.authority is InventoryClosingAuthority.PHYSICAL_OBSERVATION:
             if not has_physical or self.authoritative_value != self.physical_observed_value:
                 raise InventoryValidationError("physical authority value must equal the physical observation")
@@ -867,8 +967,6 @@ class InventoryAnexoDResult(BaseModel):
     closing_value: Decimal = Field(ge=_ZERO)
     casilla_0177: Decimal = Field(ge=_ZERO)
     casilla_0182: Decimal = Field(ge=_ZERO)
-    closing_authority: InventoryClosingAuthority
-    closing_conflict: InventoryClosingConflictDiagnostic | None = None
 
     @model_validator(mode="after")
     def _variation_split_matches_audited_values(self) -> InventoryAnexoDResult:
@@ -918,11 +1016,16 @@ def resolve_inventory_authoritative_closing(
             authority=decision.authority,
             authoritative_value=derived,
             movement_derived_value=derived,
+            decision_id=decision.decision_id,
+            decision_fingerprint=decision.fingerprint,
+            prior_closing_link_fingerprint=prior_closing_link.fingerprint,
         )
     if decision.physical_observation_id != physical_observation.observation_id:
         raise InventoryValidationError("closing authority decision names a different physical observation")
     if decision.physical_observation_fingerprint != physical_observation.fingerprint:
         raise InventoryValidationError("closing authority decision fingerprint does not match physical observation")
+    if decision.decided_at.date() < physical_observation.observed_on:
+        raise InventoryValidationError("closing authority decision cannot predate the physical observation")
     if physical_observation.actividad_id != ledger.actividad_id or physical_observation.filing_year != ledger.year:
         raise InventoryValidationError("physical closing observation does not match the inventory ledger coordinate")
     expected_basis = {
@@ -952,29 +1055,24 @@ def resolve_inventory_authoritative_closing(
         movement_derived_value=derived,
         physical_observed_value=observed,
         physical_observation_fingerprint=physical_observation.fingerprint,
+        decision_id=decision.decision_id,
+        decision_fingerprint=decision.fingerprint,
+        physical_observation_id=physical_observation.observation_id,
+        prior_closing_link_fingerprint=prior_closing_link.fingerprint,
         conflict=conflict,
     )
 
 
 def compute_inventory_anexo_d_projection(
     ledger: InventoryLedger,
-    *,
-    closing_decision: InventoryClosingAuthorityDecision,
-    physical_observation: PhysicalClosingObservation | None = None,
-    prior_closing_link: PriorAuthoritativeClosingLink | None = None,
 ) -> InventoryAnexoDResult:
     """Project one 2025 activity ledger to inventory variation casillas.
 
-    The canonical valuation engine supplies closing value. An explicit
-    physical closing value may confirm that result, but this pre-authority
-    projection refuses a conflict because the current ledger carries no
-    provenance capable of adjudicating an override.
+    The canonical valuation engine supplies closing value. Authority
+    reconciliation is deliberately composed by the later projection step.
 
     Args:
         ledger: The single activity/year inventory coordinate to project.
-        closing_decision: Explicit evidenced authority selection.
-        physical_observation: Optional competing or selected physical closing.
-        prior_closing_link: Complete immediate-prior-year opening continuity.
 
     Returns:
         Audited values split between casillas ``0177`` and ``0182``.
@@ -1000,24 +1098,16 @@ def compute_inventory_anexo_d_projection(
                 "movement_ids": out_of_period_movements,
             },
         )
-    closing_resolution = resolve_inventory_authoritative_closing(
-        ledger,
-        decision=closing_decision,
-        physical_observation=physical_observation,
-        prior_closing_link=prior_closing_link,
-    )
-    authoritative_closing = closing_resolution.authoritative_value
+    derived_closing = compute_inventory_valuation(ledger).closing_value
     opening = _quantize(ledger.opening_stock)
-    signed_variation = _quantize(authoritative_closing - opening)
+    signed_variation = _quantize(derived_closing - opening)
     return InventoryAnexoDResult(
         actividad_id=ledger.actividad_id,
         filing_year=2025,
         opening_value=opening,
-        closing_value=authoritative_closing,
+        closing_value=derived_closing,
         casilla_0177=max(signed_variation, _ZERO),
         casilla_0182=max(-signed_variation, _ZERO),
-        closing_authority=closing_resolution.authority,
-        closing_conflict=closing_resolution.conflict,
     )
 
 
@@ -1311,6 +1401,7 @@ __all__ = [
     "ValuationMethod",
     "compute_inventory_anexo_d_projection",
     "compute_inventory_valuation",
+    "fingerprint_prior_authoritative_closing",
     "inventory_acquisition_fingerprint",
     "parse_valuation_method",
     "resolve_inventory_authoritative_closing",
