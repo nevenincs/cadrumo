@@ -13,7 +13,7 @@ import tempfile
 import uuid
 import zipfile
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Final
 
 from dev._paths import UTF_8
@@ -44,6 +44,7 @@ from .python_cohort import (  # noqa: E402
     build_python_cohort,
     source_snapshot_drift,
 )
+from .runtime_wheelhouse import extract_runtime_wheelhouse  # noqa: E402
 
 _UTF_8: Final[str] = UTF_8
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
@@ -129,13 +130,164 @@ def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort
     return load_python_cohort(destination)
 
 
+_SEALED_MATERIALIZER_SOURCE: Final[str] = r'''
+import json
+import os
+import sys
+import sysconfig
+import zipfile
+from pathlib import Path
+from types import SimpleNamespace
+
+site = Path(os.environ["CADRUMO_MATERIALIZER_SITE"]).resolve(strict=True)
+sys.path.insert(0, str(site))
+
+import cadrumo
+import cadrumo_harness
+from cadrumo_harness import materialise_marketplace
+
+def confined(module):
+    origin = Path(module.__file__).resolve(strict=True)
+    try:
+        origin.relative_to(site)
+    except ValueError as exc:
+        raise SystemExit(
+            f"materializer module origin escaped sealed site: {module.__name__}={origin}"
+        ) from exc
+
+confined(cadrumo)
+confined(cadrumo_harness)
+cohort_dir = Path(os.environ["CADRUMO_MATERIALIZER_COHORT"]).resolve(strict=True)
+manifest = json.loads((cohort_dir / "python-cohort.json").read_text(encoding="utf-8"))
+artifacts = manifest["artifacts"]
+with zipfile.ZipFile(cohort_dir / artifacts["runtime-wheelhouse"]) as archive:
+    wheelhouse_manifest = json.loads(archive.read("runtime-wheelhouse.json"))
+cohort = SimpleNamespace(
+    directory=cohort_dir,
+    harness_version=manifest["harness_version"],
+    root_wheel=cohort_dir / artifacts["cadrumo"],
+    harness_wheel=cohort_dir / artifacts["cadrumo-harness"],
+    runtime_wheelhouse=cohort_dir / artifacts["runtime-wheelhouse"],
+    runtime_wheelhouse_manifest=wheelhouse_manifest,
+    manuals_wheel=cohort_dir / artifacts["cadrumo-data-manuals"],
+    official_wheel=cohort_dir / artifacts["cadrumo-data-official"],
+    sha256=manifest["sha256"],
+    source_commit=manifest["source_commit"],
+    version=manifest["version"],
+)
+result = materialise_marketplace(
+    Path(os.environ["CADRUMO_MATERIALIZER_OUTPUT"]),
+    cohort=cohort,
+)
+stdlib = Path(sysconfig.get_paths()["stdlib"]).resolve(strict=True)
+for name, module in tuple(sys.modules.items()):
+    raw_origin = getattr(module, "__file__", None)
+    if not raw_origin:
+        continue
+    origin = Path(raw_origin).resolve(strict=True)
+    try:
+        origin.relative_to(site)
+        continue
+    except ValueError:
+        pass
+    try:
+        origin.relative_to(stdlib)
+    except ValueError as exc:
+        raise SystemExit(
+            f"materializer module origin escaped sealed site/stdlib: {name}={origin}"
+        ) from exc
+print(json.dumps({"plugin_source": result.plugin_source}, sort_keys=True))
+'''
+
+
+def _materialise_claude_artifacts(
+    *,
+    cohort: PythonCohort,
+    output: Path,
+    work_root: Path,
+) -> tuple[Path, Path]:
+    """Materialize Claude bytes from the sealed wheelhouse in an isolated child."""
+    marketplace_tree = work_root / "marketplace"
+    materializer_site = work_root / "sealed-materializer"
+    wheelhouse = work_root / "sealed-wheelhouse"
+    extract_runtime_wheelhouse(cohort.runtime_wheelhouse, wheelhouse)
+    uv = shutil.which("uv")
+    if uv is None:
+        raise SystemExit("uv is required to provision the sealed release materializer")
+    environment = {
+        key: value
+        for key, value in os.environ.items()
+        if key not in {"PYTHONHOME", "PYTHONPATH"}
+    }
+    environment.update(
+        {
+            "CADRUMO_MATERIALIZER_COHORT": str(cohort.directory),
+            "CADRUMO_MATERIALIZER_OUTPUT": str(marketplace_tree),
+            "CADRUMO_MATERIALIZER_SITE": str(materializer_site),
+            "UV_CACHE_DIR": str(work_root / "empty-materializer-cache"),
+            "UV_NO_INDEX": "1",
+            "UV_OFFLINE": "1",
+        }
+    )
+    _run(
+        [
+            uv,
+            "--no-config",
+            "pip",
+            "install",
+            "--python",
+            sys.executable,
+            "--target",
+            str(materializer_site),
+            "--offline",
+            "--no-index",
+            "--no-build",
+            "--find-links",
+            str(wheelhouse),
+            str(cohort.root_wheel),
+            str(cohort.harness_wheel),
+            str(cohort.manuals_wheel),
+            str(cohort.official_wheel),
+        ],
+        cwd=work_root,
+        env=environment,
+    )
+    result = _run(
+        [sys.executable, "-I", "-S", "-c", _SEALED_MATERIALIZER_SOURCE],
+        cwd=work_root,
+        env=environment,
+    )
+    try:
+        evidence = json.loads(result.stdout)
+        plugin_source = PurePosixPath(str(evidence["plugin_source"]).removeprefix("./"))
+    except (json.JSONDecodeError, KeyError, TypeError) as exc:
+        raise SystemExit(
+            f"sealed marketplace materializer returned invalid evidence: {result.stdout!r}"
+        ) from exc
+    if plugin_source.is_absolute() or ".." in plugin_source.parts:
+        raise SystemExit(f"sealed marketplace declared an unsafe plugin source: {plugin_source}")
+    plugin_tree = marketplace_tree.joinpath(*plugin_source.parts)
+    if not plugin_tree.is_dir():
+        raise SystemExit(
+            f"marketplace did not materialise its declared plugin source: {plugin_source}",
+        )
+    claude_dir = output / "claude"
+    return (
+        deterministic_zip_tree(plugin_tree, claude_dir / f"cadrumo-plugin-{cohort.version}.zip"),
+        deterministic_zip_tree(
+            marketplace_tree,
+            claude_dir / f"cadrumo-marketplace-{cohort.version}.zip",
+        ),
+    )
+
+
 def _generate_channel_artifacts(
     *,
     clean_root: Path,
     cohort: PythonCohort,
     output: Path,
     env: dict[str, str],
-) -> tuple[Path, Path]:
+) -> tuple[Path, Path, Path]:
     release_base_url = f"{_RELEASE_BASE}/v{cohort.version}"
     scoop = output / "scoop" / "cadrumo.json"
     _run(
@@ -173,9 +325,23 @@ def _generate_channel_artifacts(
         cwd=clean_root,
         env=env,
     )
+    mcpb_dir = output / "mcpb"
+    _run(
+        [
+            sys.executable,
+            str(clean_root / "packaging" / "mcpb" / "build.py"),
+            "--cohort-dir",
+            str(cohort.directory),
+            "--dist-dir",
+            str(mcpb_dir),
+        ],
+        cwd=clean_root,
+        env=env,
+    )
     return (
         scoop.resolve(strict=True),
         (homebrew_dir / "Formula" / "cadrumo.rb").resolve(strict=True),
+        (mcpb_dir / f"cadrumo-{cohort.version}.mcpb").resolve(strict=True),
     )
 
 
@@ -265,9 +431,16 @@ def build_from_clean_source(
     env["PYTHONPATH"] = os.pathsep.join((str(root / "src"), str(root)))
 
     python_work = root / "var" / f"release-python-{uuid.uuid4().hex}"
+    work_root = root / "var" / f"release-claude-{uuid.uuid4().hex}"
     python_cohort = build_python_cohort(root, python_work)
     cohort = _copy_python_cohort(python_cohort, output / "python")
-    scoop, homebrew = _generate_channel_artifacts(
+    work_root.mkdir(parents=True)
+    plugin, marketplace = _materialise_claude_artifacts(
+        cohort=cohort,
+        output=output,
+        work_root=work_root,
+    )
+    scoop, homebrew, mcpb = _generate_channel_artifacts(
         clean_root=root,
         cohort=cohort,
         output=output,
@@ -288,6 +461,8 @@ def build_from_clean_source(
         artifacts=(
             ("cadrumo-wheel", ArtifactKind.PYTHON_WHEEL, cohort.root_wheel),
             ("cadrumo-sdist", ArtifactKind.PYTHON_SDIST, cohort.root_sdist),
+            ("cadrumo-harness-wheel", ArtifactKind.PYTHON_WHEEL, cohort.harness_wheel),
+            ("cadrumo-harness-sdist", ArtifactKind.PYTHON_SDIST, cohort.harness_sdist),
             (
                 "cadrumo-source-archive",
                 ArtifactKind.PYTHON_SOURCE_ARCHIVE,
@@ -323,8 +498,11 @@ def build_from_clean_source(
                 ArtifactKind.PYTHON_MANIFEST,
                 cohort.manifest,
             ),
+            ("claude-plugin", ArtifactKind.CLAUDE_PLUGIN, plugin),
+            ("claude-marketplace", ArtifactKind.CLAUDE_MARKETPLACE, marketplace),
             ("scoop-manifest", ArtifactKind.SCOOP_MANIFEST, scoop),
             ("homebrew-formula", ArtifactKind.HOMEBREW_FORMULA, homebrew),
+            ("mcpb", ArtifactKind.MCPB, mcpb),
         ),
     )
     write_manifest(output, manifest)
