@@ -5,7 +5,7 @@ tags:
 date: '2026-08-20'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:a8e681a13a8a2b6a61bfa526b8a9fce7056c05206d76e49bebaa4a18531930a1'
+body_hash: 'sha256:8023946d30429673060492fa088e04e5d5b0820c2d1adfebeb88761828a5db98'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -3770,3 +3770,70 @@ red is more often another hand mid-authoring than a regression in the change und
 
 **10622 of 11605 slots remain** across 127 records; 983 modelled. 1066 casillas describe
 ten records. T22012A00 and T22012A10 are still held back for colliding label keys.
+
+## 2026-08-23 — modelo 220 family 08, and a correction to my own targeting proxy
+
+### What landed
+
+Family 08 authored, both records — **76 casillas** across T22008A00 and T22008B00, the
+*consolidación de resultados contables y de bases imponibles*. Revision 1066 → **1142
+casillas**, twelve of 137 records.
+
+### The proxy I recommended last iteration was wrong
+
+The previous entry named **T22004** as a tractable next target because it has only **8
+distinct headings**. Measured properly, T22004 has 315 numbered fields over **212 distinct
+concepts**. Heading count measures *families*; it says nothing about label vocabulary, and
+the two are unrelated.
+
+**Concept count is the right proxy**, because it is exactly what has to be translated into
+four languages. Re-measured:
+
+| family | records | numbers | headings | **concepts** |
+|---|---|---|---|---|
+| T22008 | 2 | 76 | 11 | **47** |
+| T22009 | 2 | 99 | 12 | **68** |
+| T22004 | 8 | 315 | **8** | **212** |
+| T22012 (rest) | 2 | 279 | 8 | 225 |
+| T22003 | 10 | 394 | 41 | 322 |
+| T22005 | 9 | 702 | 14 | 507 |
+| T22013 | 18 | 1644 | 12 | 836 |
+| T22014 | 33 | 3959 | 22 | 1025 |
+| T22007 | 36 | 3139 | 80 | 1223 |
+
+T22004 has the *fewest* headings and the third-*most* concepts. **T22009 (68) is the next
+tractable target.**
+
+### Two records, two shapes — and neither was assumed
+
+**T22008B00 is a grid**: eight concept groups × seven settlement columns, plus two
+standalone lines. The arithmetic closes exactly — the SALDO group carries four columns
+rather than seven, so 4 + 7×7 + 2 = 55, the numbered-field count.
+
+**T22008A00 is not a grid**: its twenty-one lettered lines A–G2 are each a distinct
+concept with no repeating axis, so each label comes from the design's own line. Forcing a
+decomposition would have invented an axis the design lacks — and the arithmetic would not
+have closed, which is how you can tell the difference.
+
+**Column matching is order-dependent, and the table now says so.** `Cuenta de Pérdidas y
+Ganancias` is a *prefix* of `…Aumentos (A)`, so the variants must be tested first. Same
+shape as the family-12 defect where a lowercase fragment shadowed its own superstring.
+
+### AEAT prints arithmetic that this registry does not implement
+
+Line C reads `Diferencia por consolidación de resultados (= A - B)`, line F `(= D - E)`,
+and line E carries a formula over other casillas. Those relations are in the labels
+exactly as AEAT prints them, and **nothing here computes or checks them**. A label that
+states an equation is not an implementation of it.
+
+### Suite: two new failures, neither mine
+
+Both are modelo 210 `2026-y-siguientes` — a peer's in-flight revision whose labels are not
+yet in the Spanish catalogue. Confirmed by reading the output: 34 modelo 210 entries, zero
+modelo 220. **Second consecutive iteration where that peer's half-authored m210 work moved
+the count** — worth recognising the pattern rather than re-diagnosing it each time.
+
+### Scale
+
+**10546 of 11605 slots remain** across 125 records; 1059 modelled. T22012A00 and T22012A10
+still held back for colliding label keys.

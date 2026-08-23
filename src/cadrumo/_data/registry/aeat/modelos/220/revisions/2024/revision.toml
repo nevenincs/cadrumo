@@ -62,63 +62,62 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the Impuesto sobre Sociedades grupo-fiscal \
 consolidated declaration. DISCLOSURE -- self-review: the same agent authored the casillas \
-being reviewed. VERIFIED -- FAMILY 16 IS AUTHORED, both records: 140 casillas across \
-T22016000 and T22016001, the reparto entre Administraciones forales. Revision total 1066 \
-casillas, TEN of the design's 137 records. Every casilla carries a real AEAT box number \
-and a `segmento`. VERIFIED -- THE FAMILY IS A PERFECTLY REGULAR GRID of 28 concepts by 5 \
-territories, and that regularity was VERIFIED rather than assumed: every concept occurs \
-exactly five times, once per territory, and 28 times 5 equals 140, the numbered-field \
-count exactly. VERIFIED -- THE CONCEPT AXIS IS DERIVED, NOT MATCHED, and a real defect \
-forced the change. The first attempt hand-wrote matcher fragments taken from a survey that \
-had TRUNCATED the descriptions at 104 characters, so fragments such as \"Abono de de\" and \
-\"Complementa\" collapsed several genuinely distinct concepts into one and produced \
-TWENTY-FOUR key collisions. Deriving the concept as the REMAINDER -- what is left once the \
-family heading, the territory name and the row index are removed -- cannot mis-match, \
-because nothing is being guessed at. NEVER BUILD A MATCHER FROM TRUNCATED OUTPUT. A SECOND \
-VERSION OF THE SAME MISTAKE WAS CAUGHT BEFORE SHIPPING: the derived concept was then \
-slugged to 34 characters for use as a key, which collapsed the 28 concepts into 22 and \
-would have given SIX PAIRS of casillas identical labels -- exactly the defect that caused \
-two records to be held back from the previous iteration. Keyed by full text instead. \
-Truncation is acceptable for reading and never for keying, and the same error appearing \
-twice in one iteration is the reason it is written down here rather than merely fixed. \
-VERIFIED -- TWO OF THE 140 ROWS NAME NO TERRITORY. They sit fifth in a run of five. \
-Measuring the other runs showed FIFTEEN end in \"Total territorios forales\" against only \
-TWO in \"Territorio comun\", so the majority pattern points at the former. That is an \
-inference from position rather than something the design states, so the territory is \
-recorded as UNNAMED and the label says so. The measurement is what makes this honest: \
-before checking, the obvious reading was \"Territorio comun\", and it would have been \
-WRONG. VERIFIED -- AEAT USES BOTH THE BASQUE AND THE SPANISH TERRITORY NAMES within the \
-same design: Araba and Alava, Gipuzkoa and Guipuzcoa, Bizkaia and Vizcaya. Both spellings \
-are matched. The labels use the Basque form, which the design itself uses in the majority \
-of its rows; that is a presentation choice and is recorded as one. AEAT also breaks a word \
-across a space, printing \"insufi ciencia de cuota\"; transcribed as printed in the \
-fragment comment and corrected in the operator-facing label, the same treatment given to \
-its other typos on this modelo. VERIFIED -- 110 and 30 design numbers respectively, ALL \
-authored, ZERO missing and ZERO invented; both records tile exactly once with NO gap and \
-NO PARTIAL OVERLAP, both checked; label keys unique; duplicate Spanish labels across the \
-entire revision ZERO; all 1066 label keys non-null across es/en/ca/hu, verified by \
-counting VALUES. Year-clean: aeat-dr-220-2024 applies exactly the single ejercicio this \
-revision claims. NOTED, ABOUT THE SUITE RATHER THAN THE REGISTRY: an intermediate suite \
-run during this iteration reported 183 failures. The cause was a peer's UNTRACKED, \
-half-authored modelo 210 revision directory whose casillas referenced export fields that \
-did not yet exist, which fails registry validation globally and therefore fails almost \
-every test. It settled within the iteration and the re-run returned 8 failures with zero \
-new. Recorded because a tree-wide failure count is not evidence about the change under \
-review when another hand is mid-authoring in the same worktree. NOT CLAIMED -- 10622 OF \
-THE 11605 (record, number) SLOTS REMAIN UNMODELLED across 127 of the design's 137 records; \
-983 slots are modelled. 1066 casillas describe ten records. Progress on this modelo must \
-not be read from the casilla count. NOT CLAIMED -- THESE CASILLAS DECLARE THE FORAL \
-ALLOCATION; NONE OF THEM COMPUTES IT. Nothing here checks that the five territory shares \
-sum to the total, no formula, construct or binding is attached, and the percentages are \
-declared rather than derived from the volumes of operations that sit beside them. NOT \
+being reviewed. VERIFIED -- FAMILY 08 IS AUTHORED, both records: 76 casillas across \
+T22008A00 and T22008B00, the consolidacion de resultados contables y de bases imponibles. \
+Revision total 1142 casillas, TWELVE of the design's 137 records. Every casilla carries a \
+real AEAT box number and a `segmento`. THIS REVIEW CORRECTS THE TARGETING ADVICE THE \
+PREVIOUS STAMP GAVE. That stamp named T22004 as a tractable next target on the strength of \
+its carrying only 8 distinct headings. Measured properly, T22004 has 315 numbered fields \
+over 212 DISTINCT CONCEPTS. Heading count measures FAMILIES; it says nothing about the \
+label vocabulary, and the two are unrelated. Re-measured by concept count -- which is \
+exactly what has to be translated into four languages -- the remaining families rank very \
+differently: T22008 47, T22009 68, T22004 212, T22012 225, T22003 322, T22005 507, T22013 \
+836, T22014 1025, T22007 1223. The proxy is corrected here so the next iteration does not \
+inherit the wrong one. VERIFIED -- TWO RECORDS, TWO SHAPES, HANDLED DIFFERENTLY BECAUSE \
+THE DESIGN DIFFERS, and neither shape was assumed. T22008B00 IS a group-by-column grid: \
+eight concept groups against seven settlement columns, plus two standalone lines, and the \
+arithmetic closes exactly -- the SALDO group carries four columns rather than seven, so 4 \
+plus 7 times 7 plus 2 equals 55, the numbered-field count. T22008A00 is NOT a grid: its \
+twenty-one lettered lines A through G2 are each a distinct concept with no repeating axis, \
+so each label is taken from the design's own line. Forcing a decomposition there would \
+have invented an axis the design does not have, and the arithmetic would not have closed. \
+VERIFIED -- COLUMN MATCHING IS ORDER-DEPENDENT AND THE FRAGMENT SAYS SO. \"Cuenta de \
+Perdidas y Ganancias\" is a PREFIX of \"Cuenta de Perdidas y Ganancias. Aumentos (A)\", so \
+the aumentos and disminuciones variants must be tested BEFORE the bare column or every \
+aumentos cell reads as the bare one. That is the same shape which caused a real defect on \
+this modelo's family 12, where a lowercase fragment shadowed its own superstring and would \
+have mislabelled every 2024 cell; the ordering constraint is now written into the table \
+rather than left implicit. NOT CLAIMED, AND EXPLICITLY SO -- AEAT PRINTS ARITHMETIC IN \
+T22008A00. Line C is labelled \"Diferencia por consolidacion de resultados (= A - B)\", \
+line F \"(= D - E)\", and line E carries a formula over other casillas. Those relations \
+are recorded in the casilla labels exactly as AEAT prints them, and NOTHING in this \
+registry computes or checks them: no formula, construct or binding is attached to any \
+casilla on either record. A label that states an equation is not an implementation of it, \
+and a reader should not mistake one for the other. VERIFIED -- 21 and 55 design numbers \
+respectively, ALL authored, ZERO missing and ZERO invented; every field of both records is \
+either authored or explicitly excluded; both tile exactly once with NO gap and NO PARTIAL \
+OVERLAP, both checked; the grid decomposition is collision-free, asserted in the generator \
+rather than inspected by eye; duplicate Spanish labels across the whole revision ZERO; all \
+1142 label keys non-null across es/en/ca/hu, verified by counting VALUES. Year-clean: \
+aeat-dr-220-2024 applies exactly the single ejercicio this revision claims. NOTED, ABOUT \
+THE SUITE -- two new failures appeared in this iteration's run and NEITHER IS FROM THIS \
+CHANGE: both are modelo 210 revision 2026-y-siguientes, a peer's in-flight revision whose \
+casilla labels are not yet in the Spanish catalogue, reported by \
+test_casilla_label_spanish_source_coverage and test_continuidad_completeness_ratchet. \
+Confirmed by reading the failure output, which lists 34 modelo 210 entries and ZERO modelo \
+220 entries. This is the second iteration running in which a peer's half-authored modelo \
+210 work has moved the suite count; recorded so the number is not read as evidence about \
+this change. NOT CLAIMED -- 10546 OF THE 11605 (record, number) SLOTS REMAIN UNMODELLED \
+across 125 of the design's 137 records; 1059 slots are modelled. 1142 casillas describe \
+twelve records. Progress on this modelo must not be read from the casilla count. NOT \
 CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be \
 filed. model_law_authority_scope remains inspection_only, so this stamp is made under the \
 LOWER inspection bar and MUST be re-made if a layout lands and lifts the derived scope to \
-filing. NOT CLAIMED -- T22012A00 and T22012A10 remain held back from the previous \
-iteration, still unshipped, because their label keys collide and would leave an operator \
-with identical labels inside one record. NOT CLAIMED -- LOCALES COMPLETE BUT UNAUDITED: \
-the 28 concept translations and 7 territory names were authored by the same agent and \
-reviewed by nobody else; the Spanish is unaccented ASCII. NOT CLAIMED -- \
+filing. NOT CLAIMED -- T22012A00 and T22012A10 remain held back, still unshipped, because \
+their label keys collide and would leave an operator with identical labels inside one \
+record. NOT CLAIMED -- LOCALES COMPLETE BUT UNAUDITED: the twenty-one lettered lines and \
+the group and column vocabularies were translated by the same agent that authored the \
+casillas and reviewed by nobody else; the Spanish is unaccented ASCII. NOT CLAIMED -- \
 independent_check_coverage is n/a: NO CLAIM, not zero."""
 reviewed_at = 2026-08-23
 
