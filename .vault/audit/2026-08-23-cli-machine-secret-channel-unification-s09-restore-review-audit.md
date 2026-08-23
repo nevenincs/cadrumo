@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:a6501ee22416d0fc7765e3c53d0678750dbe1f04856a6431453f1c55c14a148e'
+body_hash: 'sha256:6d6798b07b4ec715e31a21d800ed18bbd1c3fad4485762e8723bd4b9fc83e0a1'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
 ---

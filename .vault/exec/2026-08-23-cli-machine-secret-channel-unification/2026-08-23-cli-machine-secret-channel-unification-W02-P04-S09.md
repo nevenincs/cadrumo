@@ -5,44 +5,14 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:59d2a5309f6c8c5c462c608f4e9ed38d2bbfca1912752c9dbcdc46358f73e866'
+body_hash: 'sha256:365c0057074546fd5ede40eb01fff74b41cbb2f5bcc10c1199b64fe426d87b4f'
 step_id: 'S09'
 related:
   - "[[2026-08-23-cli-machine-secret-channel-unification-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cli-machine-secret-channel-unification with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
 
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S09 and 2026-08-23-cli-machine-secret-channel-unification-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and migrate restore to two conditional canonical payload variants and hard-cut the legacy password field in favor of passphrase and ## Scope
-
-- `src/cadrumo/entrypoints/cli/_config/_restore_cli.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and migrate restore to two conditional canonical payload variants and hard-cut the legacy password field in favor of passphrase
 
@@ -75,5 +45,8 @@ application restore authorities still perform proof before publication.
 ## Notes
 
 Focused lint, unit contract, metadata, and real password/recovery restore tests
-passed. The campaign-wide real inherited-descriptor subprocess matrix remains
-in S13 and S14 by plan design. Unrelated shared-worktree changes were preserved.
+passed. Import Linter analyzed 5,117 files: nine contracts were kept and the
+repository-wide application-to-adapters contract remained broken on existing
+application custody and export edges; S09 adds no import edge in that contract.
+The campaign-wide real inherited-descriptor subprocess matrix remains in S13
+and S14 by plan design. Unrelated shared-worktree changes were preserved.
