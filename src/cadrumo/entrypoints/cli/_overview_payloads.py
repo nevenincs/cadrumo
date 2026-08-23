@@ -39,7 +39,7 @@ from ._decimal_wire import NonNegativeDecimalWireText
 from ._ledger_payloads import LedgerStatusResult
 
 # ---------------------------------------------------------------------------
-# Shared sub-models (not registered — used as nested types)
+# Shared nested models (not direct CommandSpec schema targets)
 # ---------------------------------------------------------------------------
 
 

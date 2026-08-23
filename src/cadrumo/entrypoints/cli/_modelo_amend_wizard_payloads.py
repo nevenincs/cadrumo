@@ -1,4 +1,4 @@
-"""Registered payload for the guided ``aeat app modelo work amend-wizard`` command.
+"""Graph-declared payload for the guided ``aeat app modelo work amend-wizard`` command.
 
 The amendment wizard walks an operator through correcting an already-filed
 return in plain language, then calls the same

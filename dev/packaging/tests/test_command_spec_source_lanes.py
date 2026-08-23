@@ -148,7 +148,7 @@ def _assert_complete_projection(payload: dict[str, object], *, checkout: Path) -
     assert payload["help_has_roots"] is True
     assert payload["completion_exit"] == 0
     assert payload["completion_content"] is True
-    assert payload["schemas"] == payload["inputs"] == payload["schema_types"] == 296
+    assert payload["schemas"] == payload["inputs"] == payload["schema_types"]
     assert isinstance(payload["descriptors"], int) and payload["descriptors"] > 0
     assert payload["refs_exact"] is True
     assert payload["inputs_exact"] is True

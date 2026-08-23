@@ -68,7 +68,7 @@ JustificantePeriodToken = Annotated[str, AfterValidator(_is_a_registry_period_to
 """A bare registry period code, validated through the canonical period grammar."""
 
 # ---------------------------------------------------------------------------
-# Shared sub-models (not registered — used as nested types)
+# Shared nested models (not direct CommandSpec schema targets)
 # ---------------------------------------------------------------------------
 
 

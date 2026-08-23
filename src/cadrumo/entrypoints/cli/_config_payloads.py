@@ -62,7 +62,7 @@ if TYPE_CHECKING:
     from ...application.auth import AuthConfigureResult
     from ...application.config_reset import ConfigResetOperation
 
-# Shared sub-models (not registered — used as nested types)
+# Shared nested models (not direct CommandSpec schema targets)
 
 
 class QuarantineNamespacePayload(OutputSchema):
@@ -348,7 +348,7 @@ class RepairConnectivityResult(OutputSchema):
 class ConfigListResult(OutputSchema):
     """JSON envelope for ``aeat config profile list``.
 
-    Note: ``config_list`` is registered on the ``profile list`` sub-command
+    Note: ``config_list`` is declared for the ``profile list`` sub-command
     which maps to the CLI path ``config.list`` (the profile sub-app carries
     the list verb). Each
     :class:`ProfilePointerPayload` row
@@ -1308,7 +1308,7 @@ class CertificateSourcePayloadEntry(OutputSchema):
     """One registered certificate source row.
 
     Mirrors :class:`application.auth.CertificateSourcePayload`; nested in
-    :class:`CertificateSourceListPayload`, not registered independently.
+    :class:`CertificateSourceListPayload`, not a direct CommandSpec schema target.
     """
 
     name: str
@@ -1348,8 +1348,7 @@ class CertificateSourceCheckEntryPayload(OutputSchema):
     """One certificate source's expiry/rotation verdict row.
 
     Mirrors :class:`application.auth.CertificateSourceCheckEntry`; nested
-    in :class:`CertificateSourceCheckPayload`, not registered
-    independently.
+    in :class:`CertificateSourceCheckPayload`, not a direct CommandSpec schema target.
     """
 
     name: str

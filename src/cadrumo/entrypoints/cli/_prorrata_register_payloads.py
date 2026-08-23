@@ -59,7 +59,7 @@ class SectorDefinitionPayload(OutputSchema):
 
 
 class ProrrataElectResult(OutputSchema):
-    """Shared shape for the regime-election verbs; the two verbs register distinct keys."""
+    """Shared shape referenced by the two regime-election verbs under distinct keys."""
 
     bucket_id: BucketId
     entry: ProrrataEntryPayload

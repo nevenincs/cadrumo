@@ -4,8 +4,8 @@ The command is the workstation doctor: it reports every
 :class:`ServiceCapability` resolved for the active profile beside the
 external dependency probes that must be provisioned for opted-in capabilities.
 These strict :class:`OutputSchema` subclasses
-document only the transport shape registered with
-production-authored CommandSpec as deferred public schema targets and emitted through
+document only the transport shape referenced by production-authored CommandSpec
+as deferred public schema targets and emitted through
 :class:`SchemaEnvelope` by
 :func:`_emit_envelope`. Capability semantics live
 in :mod:`user_profile`, and provisioning semantics live in

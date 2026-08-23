@@ -13,7 +13,7 @@ aggregate, carrying ``linked_transaction_ids`` and the identity
 :func:`link_invoice_transaction_repositories`. The
 ``Catalogue`` prefix on these classes names that aggregate, not a CLI
 subgroup: the operator surface is the bare ``invoice`` noun, so the
-registered command identifiers are ``ledger.invoice.<verb>``.
+graph-declared command identifiers are ``ledger.invoice.<verb>``.
 """
 
 from __future__ import annotations

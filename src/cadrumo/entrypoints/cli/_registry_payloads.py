@@ -69,7 +69,7 @@ class RegistryInspectResult(OutputSchema):
     Both commands project the same :class:`RegistryTreeReport` shape in
     full -- ``inspect`` from :func:`inspect_registry_tree`, ``verify`` from
     the validated result of :func:`verify_registry_tree` -- so one schema is
-    registered under both command paths (the pattern
+    referenced under both command paths (the pattern
     :class:`~cadrumo.entrypoints.cli._payloads_modelo_reconcile.ModeloReconcileResult`
     already established for ``modelo reconcile pull``/``file``). Carries the
     registry/source roots, every inventory count (bounded non-negative -- a

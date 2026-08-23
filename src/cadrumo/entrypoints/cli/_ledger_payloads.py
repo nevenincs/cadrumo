@@ -137,7 +137,7 @@ if TYPE_CHECKING:
     from ...application.ledger import LedgerSourceImportResult as _AppLedgerSourceImportResult
 
 # ---------------------------------------------------------------------------
-# Shared sub-models (not registered — used as nested types)
+# Shared nested models (not direct CommandSpec schema targets)
 # ---------------------------------------------------------------------------
 
 
@@ -388,8 +388,8 @@ class _LedgerMutationResult(OutputSchema):
 
     The uniform mutation quintet: every verb that mutates exactly one ledger
     transaction returns ``{bucket_id, transaction_id, bucket_event_ids,
-    review_status, transaction}``. Subclassed per verb so each registers its
-    own schema path.
+    review_status, transaction}``. Subclassed per verb so each CommandSpec can
+    reference its own schema target.
     """
 
     bucket_id: BucketId
