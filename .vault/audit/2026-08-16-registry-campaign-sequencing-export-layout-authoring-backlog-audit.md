@@ -19441,3 +19441,70 @@ Modelo 200's split, sized last tick and unchanged: 142 fields whose boxes exist
 only in 2024, each needing its own grounded casilla, plus 87 ambiguous. It
 remains the only entry on the spanning set. Modelo 347's 2008-2009 and 2010
 revisions remain unauthored.
+
+## Tick: the parity gate extended from two modelos to thirteen, and two more false leads killed
+
+### Modelo 200's split, re-sized on the correct key and still not started
+
+The previous sizing used the 5-digit key since proved wrong, so it was redone on
+brackets. It barely moved: 142 fields whose box exists only in 2024, 86
+ambiguous, 198 box-resolvable, 5 untagged, out of 431 unaligned.
+
+One real unblocking result: those 142 casillas ARE mechanically groundable. Every
+affected record -- DP200018, DP200024, DP200018C, DP200020B, DP200022,
+DP200020C, DP200016B, DP200020, DP200012 -- carries exactly ONE legal_ref set
+across all its casilla entries, and it is the SAME set in all nine, so a new
+casilla inherits its block's grounding the way modelo 322's box [73] did. The
+2024-only boxes are dominated by DP200018's *acontecimientos de excepcional
+interes publico* (60 of them: "2024 Alicante 2021. Salida Vuelta al Mundo",
+"Andalucia Valderrama Masters") and year-indexed Canarias carry-forwards -- so
+they looked like per-event tax research and are not.
+
+Still not started: 86 ambiguous and 5 untagged fields remain undecided, and 200
+is the highest-stakes modelo.
+
+### Two leads that dissolved under their controls
+
+**Modelo 303's one unclaimed box and modelo 390's eleven** looked like slots
+nothing can fill -- and 390's included five computed TOTALS ([47], [49], [53],
+[64], [65]), which would be serious. Measured against the DERIVED layout, every
+one is WRITTEN by a binding field. "Unclaimed by a casilla" is not "unwritten",
+which is the same distinction that produced a phantom nine-box gap on modelo 390
+earlier in this campaign.
+
+**Modelo 123's stray casilla 06.** Its 2019-2023 design yields boxes 1-5, 7, 8
+while the revision declares 1-8, which is the era-bleed shape exactly. It is not:
+AEAT labels that slot with its FORMULA rather than its number --
+`Suma de retenciones e ingresos a cuenta y regularizacion. [03] + [05]` -- so box
+06 is printed nowhere and operands 03 and 05 appear away from their own fields.
+The casilla is right and the reading was wrong.
+
+That is a genuine limit of the bracket key and is now documented in the gate: a
+bracketed number is not always the field's OWN box. The enrolled modelos are
+unaffected because an operand is itself a real box elsewhere in the same design
+and is already in the set; the failure only appears where a field's own number is
+printed nowhere. Modelo 123 is deliberately NOT enrolled, and the bite proof
+confirms enrolling it would fire on box 6.
+
+### The gate
+
+`test_declared_casillas_match_design_boxes` now covers THIRTEEN modelos -- 117,
+130, 131, 200, 202, 210, 222, 322, 341, 353, 490, 604, 714 -- every one measured
+exact on every revision carrying a layout before enrolment.
+
+Its vacuity guard was wrong and was replaced rather than tuned: a
+`len(boxes) >= 100` floor is the hardcoded-count anti-pattern, and it failed
+modelo 117 for honestly having 11 boxes while passing vacuously for anything
+large. Non-emptiness is the property that separates "unread" from "small"; the
+partially-read case is already covered by the extraction's own `skipped` check.
+
+### Verified
+
+* the module: 3 passed, ruff clean; four conditions bite from outside the repo,
+  including the modelo 123 exclusion.
+* registry package: 9 failed, 5349 passed -- the standing declared inventories,
+  unchanged. Authority loads CLEAN.
+
+### Still open
+
+Modelo 200's split. Modelo 347's 2008-2009 and 2010 revisions. Both unchanged.
