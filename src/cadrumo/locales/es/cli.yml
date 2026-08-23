@@ -2249,7 +2249,7 @@ cli:
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
       manager_closed: Los cambios en '{profile}' están guardados.
-      manager_closed_created: Perfil '{profile}' creado y listo. Vuelve a abrirlo
+      manager_closed_created: Perfil '{profile}' creado. Declara que la configuración está completa con `aeat config profile complete-setup` antes de trabajar con modelos. Vuelve a abrirlo
         cuando quieras con 'aeat config profile edit'.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
