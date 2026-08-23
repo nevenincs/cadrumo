@@ -13,9 +13,7 @@ import json
 from pathlib import Path
 
 import pytest
-import typer
 from click.testing import Result
-from typer.core import TyperGroup
 
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....application.ledger import get_transaction_participation
@@ -28,30 +26,17 @@ from ....domain.modelos import (
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
 from .._ledger_payloads import LedgerTrackResult, LedgerTransactionParticipationPayload
-from .._participation_cli import register_participation_commands
+from ..command_api import ArgumentSpec, OptionSpec, command_spec_for_path, command_spec_nodes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _participation_group() -> TyperGroup:
-    def _resolve(_repo: object, transaction_id: str) -> str:
-        return transaction_id
-
-    app = typer.Typer()
-    register_participation_commands(app, resolve_transaction_id=_resolve)
-    command = typer.main.get_command(app)
-    assert isinstance(command, TyperGroup)
-    participation = command.commands["participation"]
-    assert isinstance(participation, TyperGroup)
-    return participation
-
-
 def test_participation_verb_declares_subject_argument() -> None:
     """The participation group declares the transaction-id subject argument."""
-    group = _participation_group()
-
-    param_names = {param.name for param in group.params}
-    assert "transaction_id" in param_names
+    spec = command_spec_for_path(("aeat", "app", "ledger", "participation"))
+    assert any(
+        isinstance(parameter, ArgumentSpec) and parameter.name == "transaction_id" for parameter in spec.parameters
+    )
 
 
 def test_participation_verb_carries_no_dead_borradores_flag() -> None:
@@ -62,17 +47,20 @@ def test_participation_verb_carries_no_dead_borradores_flag() -> None:
     flag whose help admitted "no effect yet" was removed rather than shipped, so
     this guards against its re-introduction.
     """
-    group = _participation_group()
-
-    declared_opts = {opt for param in group.params for opt in getattr(param, "opts", [])}
+    spec = command_spec_for_path(("aeat", "app", "ledger", "participation"))
+    declared_opts = {
+        declaration
+        for parameter in spec.parameters
+        if isinstance(parameter, OptionSpec)
+        for declaration in parameter.declarations
+    }
     assert "--include-borradores" not in declared_opts
 
 
 def test_participation_rebuild_subcommand_is_registered() -> None:
     """The participation group exposes the ``rebuild`` subcommand."""
-    group = _participation_group()
-
-    assert "rebuild" in group.commands
+    children = {node.spec.token for node in command_spec_nodes() if node.spec.parent_key == "app_ledger_participation"}
+    assert "rebuild" in children
 
 
 def _invoke_participation(*args: str) -> Result:

@@ -2665,6 +2665,10 @@ cli:
     try_for_help: 'Súgóért futtassa: [blue]''{command_path} {help_option}''[/].'
     usage_prefix: 'Használat: '
   ledger:
+    participation:
+      help: Annak ellenőrzése, hogy mely véglegesített modelo-revíziók és benyújtások használtak fel egy főkönyvi tranzakciót.
+      rebuild_help: Az aktív bucket részvételi indexének újraépítése.
+      transaction_id_help: A főkönyvi tranzakció azonosítója, amelynek véglegesített revíziós részvételeit listázni kell.
     add:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       amount_help: Tranzakciós összeg a tranzakció pénznemében (tizedes, pl. 1200.50).

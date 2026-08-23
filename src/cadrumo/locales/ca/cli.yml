@@ -2669,6 +2669,10 @@ cli:
     try_for_help: Proveu [blue]'{command_path} {help_option}'[/] per obtenir ajuda.
     usage_prefix: 'Ús: '
   ledger:
+    participation:
+      help: Audita quines revisions finalitzades de models i presentacions van consumir una transacció del llibre.
+      rebuild_help: Reconstrueix l'índex de participació del bucket actiu.
+      transaction_id_help: Id de la transacció del llibre les participacions de la qual en revisions finalitzades es llisten.
     add:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       amount_help: Import de la transacció en la moneda de la transacció (decimal,

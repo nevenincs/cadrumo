@@ -296,7 +296,12 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     _leaf(
         "revision",
         "cadrumo.entrypoints.cli._modelo_work_revision_cli",
-        (_a("calculation_revision_id"), *_REVISION_ADDRESS, _o("verbose", "--verbose", _BOOL, flag=True), _LANG),
+        (
+            _a("calculation_revision_id"),
+            *_REVISION_ADDRESS,
+            _o("verbose", "--verbose", _BOOL, help_name="revision_verbose", flag=True),
+            _LANG,
+        ),
         _MODEL_READ,
         "cadrumo.entrypoints.cli._modelo_work_revision_payloads",
         "WorkRevisionResult",
@@ -321,9 +326,9 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "resume",
         "cadrumo.entrypoints.cli._modelo_work_runs_cli",
         (
-            _a("target"),
+            _a("target", help_name="resume_target"),
             *_ADDRESS[:4],
-            _o("select", "--select"),
+            _o("select", "--select", help_name="revision_selector"),
             _o("work_unit_id", "--work-unit-id"),
             _o("calculation_revision_id", "--calculation-revision-id"),
             _o("bucket_id", "--bucket-id"),

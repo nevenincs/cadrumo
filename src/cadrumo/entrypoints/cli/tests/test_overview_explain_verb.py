@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
-from .._overview import app as overview_app
+from ..command_api import command_spec_nodes
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -23,7 +23,7 @@ def test_overview_verb_roster_locks_five_verb_tree() -> None:
     explain / prepare / pipeline. Adding or removing one without
     updating the reviewed surface contract is drift."""
 
-    registered = frozenset(cmd.name for cmd in overview_app.registered_commands if cmd.name is not None)
+    registered = frozenset(node.spec.token for node in command_spec_nodes() if node.spec.parent_key == "app_overview")
     missing = EXPECTED_OVERVIEW_VERBS - registered
     extras = registered - EXPECTED_OVERVIEW_VERBS
     assert not missing, f"overview verbs disappeared: {sorted(missing)}"

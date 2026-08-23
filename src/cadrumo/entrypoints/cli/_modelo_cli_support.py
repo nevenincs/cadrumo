@@ -12,7 +12,7 @@ import re
 import shlex
 from collections.abc import Callable, Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, cast
+from typing import TYPE_CHECKING, cast
 
 import typer
 from pydantic import TypeAdapter, ValidationError
@@ -51,7 +51,6 @@ from ...core import (
 )
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError, resolve_error_message
-from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.identity import CalculationRevisionId
 from ...core.logging import get_logger
@@ -82,14 +81,6 @@ MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
         "errors.calc.relation_value_missing",
     },
 )
-
-# Shared ``--output-language`` / ``--language`` option for all modelo work
-# commands. Centralised here so the five-line block does not repeat across
-# every command function in the _modelo_work_*_cli modules.
-OutputLanguageOpt = Annotated[
-    OutputLanguage | None,
-    typer.Option("--output-language", "--language", help=tr("cli.config.auth.output_language_help")),
-]
 
 _BINDING_MAX_LEN = 128
 _CASILLA_MAX_LEN = 64
@@ -792,7 +783,6 @@ def resolve_default_actor() -> str:
 
 __all__ = [
     "MISSING_INPUT_TRANSLATED_MESSAGES",
-    "OutputLanguageOpt",
     "bad_parameter_from_error",
     "bad_parameter_from_localized_context",
     "optional_decimal_option",
