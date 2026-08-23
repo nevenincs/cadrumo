@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:d98ba921976d3ad3f718d7c74c5bfe1e34a819bc359b5bebbb8a3cad5d2ef08d'
+body_hash: 'sha256:d6dabd0e8d9968d5e967f503137f5e397eccf800f79f596ce905baf2df75cebf'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7212,3 +7212,38 @@ would pin the test to today's rule attribution for no gain in what it guarantees
 
 No change was made this iteration. The prior fix stands as correctly scoped rather than as the
 first of a family, which is what the sweep was for.
+
+### The operator-facing refusal surface, measured: 89 codes clean, one soft gap
+
+"Easy to operate from the CLI" is the least-examined quarter of this campaign's goal, and the
+refusal surface is the part of it that can be checked objectively rather than argued about.
+Every error class this domain owns was enumerated from the live registry -- 89 codes across
+storage, custody and user_profile -- and each rendered in all four catalogues.
+
+*Nothing renders as a key.* All 89 resolve to real prose in `es`, `en`, `ca` and `hu`. A
+missing translation would put a raw dotted key in front of an operator, and none does.
+
+*Nothing leaks internals.* 356 renderings scanned for module paths, source filenames, absolute
+host paths, traceback text and literal `None`: none present.
+
+*The two placeholder-bearing messages interpolate.* The scan flagged 8 apparent unsubstituted
+placeholders, and all 8 were the instrument's fault: `tr(key)` called with no interpolation
+arguments naturally leaves `%{seconds}` standing. Verified rather than assumed -- building a
+real `ProfileLoginThrottledError(remaining_seconds=42)` envelope renders "Espera 42 segundos",
+and all three raise sites of `ProfileBucketMismatchError` were read and each supplies
+`profile_id` and `bucket_id` in context. The risk this checks for is real even though the
+answer was clean: a raiser that forgets the context leaves `%{profile_id}` in front of the
+operator, and only the raise sites can answer that.
+
+**The one soft gap, recorded rather than fixed.** The KDF refusals state a condition and no
+next step: "Key-derivation supervision is unavailable on this host", and the resource variant
+likewise. Compare the neighbours, which are exemplary -- the no-active-profile refusal says
+"run `aeat config login NAME`", and the master-key path names the same command and explains
+why. An operator meeting the KDF pair is told what failed and nothing about what to do.
+
+It is deliberately not fixed here, because honest guidance depends on the taxonomy question
+this document already parked: the refusal covers BOTH a host that can never supervise a worker
+and a host momentarily out of memory, and those want opposite advice ("run from an interactive
+desktop session" versus "retry when the machine is quieter"). Writing one sentence that covers
+both would either mislead or say nothing. The message and the `retryable` value are the same
+decision wearing two hats, and both belong to the owner ruling already requested.
