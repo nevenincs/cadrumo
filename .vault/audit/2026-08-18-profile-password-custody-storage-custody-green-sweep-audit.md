@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:b85017fea8c4e159105adaa676464f357db25f3718018c0aa3553292e7e032f9'
+body_hash: 'sha256:08a68c35f4774a90f67eefefd70277e83c0ec41660ba658cadc78a95187d22e2'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -8171,3 +8171,58 @@ Durable lesson: before calling two rules in conflict, check whether the artifact
 population already answers it. Two hundred and twenty-seven neighbours were doing the thing
 that satisfies both rules at once, and the "conflict" survived two write-ups only because the
 comparison was never made.
+
+## Closing reconciliation
+
+### The storage domain is stable, and this document's own reporting obscured that
+
+Measured on isolation rather than asserted: `adapters/persistence/storage` plus
+`application/user_profile`, with no CLI paths, run **172 integration and 1,545 unit, zero
+failures**. Storage is green.
+
+The instability reported across many entries here was NOT storage. Commits over the last six
+hours: `entrypoints/cli` 36, `locales` 19, `_data/registry` 18, against
+`adapters/persistence/storage` 5 and `application/user_profile` 2 -- one of those two being
+this campaign's own. Nobody is reworking storage.
+
+The error was in this campaign's unit of measurement. The prescribed lanes include
+`entrypoints/cli/_config`, so every CLI refactor landed in "the domain lanes", and entries here
+described the DOMAIN as red when the storage code underneath was green throughout. The lanes
+were the right regression net and the wrong instrument for answering "is storage stable" --
+those are different questions, and this document repeatedly answered the second with the first.
+
+### Every open contradiction, resolved
+
+- **"14 session-resume failures" vs 26.** Measured: 26 `os_keychain` cases fail here, in three
+  signatures, all traced to the credential store on a network logon. The standing "14" was a
+  subset. No defect hides behind the exemption -- the four `AssertionError`s, the class most
+  able to conceal one, all trace to keyring absence.
+- **`master_key` as "retired residue".** Closed on evidence: `MasterKeyProvider` has four
+  production consumers; `UnsecuredMasterKeyProvider` is the live discriminator inside
+  `open_bucket`, invisible to an import-based sweep because an `isinstance` check in its own
+  module keeps it alive. Nothing there is deletable.
+- **KDF `retryable`.** A `retryable=True` subclass was built and reverted. Final: stays `False`
+  -- 38 raise sites with mixed causes including attestation failures, and `True` on a permanent
+  cause hands an autonomous agent an unbounded loop. Reasoning now lives at the `ErrorCode`
+  entry, not only here. The separable half -- absent operator guidance -- shipped in all four
+  catalogues, keyed on recurrence.
+- **`runbook_id`.** Delete on merits (636/636 null, no corpus, no docstring); BLOCKED because
+  `cadrumo-harness` constructs `ErrorEnvelope` with it and publishes its `model_json_schema()`
+  to MCP clients. A cross-distribution commit, handover recorded with every site.
+- **Profile-bundle import half.** Keep, per the in-tree register, which this campaign confirmed
+  rather than overturned. Decryption is roundtrip-proven; only the record importers are
+  untested. What remains is feature scope needing an ADR on collision policy, create-versus-
+  merge, the idempotency key, and an export-import equality roundtrip.
+- **doc-privacy "rule conflict".** Dissolved: 227 sibling entries already satisfy both rules
+  with a role token. Normalised; offenders 7 to 6, the rest other campaigns' vault documents.
+- **"Committed and still failing means a finding".** Refined: the test is whether the OWNER'S
+  OWN tests pass. A feature landing is a sequence of commits, and the window between the
+  production change and the test sweep is indistinguishable from an abandoned regression.
+
+### What is left, and where it lives
+
+Nothing in storage. The 28 `os_keychain` cases need one `just test-os-keychain` run from an
+interactive desktop session -- an operator action, not a code gap. Two handovers belong to
+other trees: `runbook_id` (harness) and the import-hygiene ratchet plus the five unreachable
+`dev/packaging` cases (their campaigns). The CLI secret-channel landing is mid-flight and owns
+the 44 `_config` failures.
