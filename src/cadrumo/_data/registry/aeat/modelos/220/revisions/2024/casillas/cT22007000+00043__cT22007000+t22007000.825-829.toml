@@ -65,7 +65,7 @@
 #
 # NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
 # pagina-complementaria mechanics; @830+150 RESERVADO PARA LA ADMINISTRACION; and
-# @980+12 Fin de registro.
+# @980+12 the record terminator, which this design words 'Fin de registro'.
 #
 # NOT CLAIMED: THIS SETTLEMENT CHAIN IS NOT COMPUTED. It runs from the suma de bases
 # imponibles individuales through the correcciones, the reservas and the compensacion de
