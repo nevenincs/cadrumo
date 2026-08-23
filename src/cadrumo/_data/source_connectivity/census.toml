@@ -1,0 +1,7 @@
+schema_version = 1
+census_id = "source-domain-to-casilla-connectivity"
+
+# Entries are reviewed decisions over generated capability and registry
+# inventories. Discovery facts remain owned by their source declarations and
+# are addressed from each entry by stable evidence locators; this manifest does
+# not copy repository, selector, resolver, or casilla schemas.
