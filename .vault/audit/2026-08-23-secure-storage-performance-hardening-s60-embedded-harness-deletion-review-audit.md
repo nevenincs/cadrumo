@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:8e32841f9d50b876341fe0461303719fdc2b0fa2926722e02ce7ddeb4f601146'
+body_hash: 'sha256:0b162b59211647c078ec7687c341508790a450161c0bdbafc59e58965614cb0d'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-23-external-client-boundary-adr]]"
@@ -66,7 +66,7 @@ one Homebrew dependency token is assigned to S70. Neither later-step file is
 part of the S60 staged diff, and there is no surviving Python import of
 `cadrumo_harness`.
 
-### final-tranche-attribution | high | corrected provenance is not yet committed
+### final-tranche-attribution | high | resolved: exact lifecycle commit anchors the corrected provenance
 
 Mixed HEAD commit `2a77bbb4cc` contains exactly nine paths with 95 insertions
 and 144 deletions. The S60 partition is exactly six paths with 12 insertions
@@ -90,6 +90,16 @@ corrected Step record and this audit together without consuming concurrent
 changes. Until that exact lifecycle-only commit exists, HEAD under-declares
 the second mixed-commit provenance and S60 closure is not fully anchored.
 
+Resolved by exact guarded commit `fa1f4455d8`, which contains only the S60
+Step record and this S60 audit with 37 insertions and three deletions. The
+committed Step record carries the verified `2a77bbb4cc` partition, claims only
+the six-path S60 slice, and leaves S61 through S77, S58, and S59 open. Current
+HEAD retains the checked S60 plan row and both feature-index links; the deleted
+package remains absent from the filesystem, HEAD tree, and index, while
+`pyproject.toml` and `uv.lock` retain zero harness references. No S60
+implementation, membership, lock, attribution, or lifecycle finding remains
+open.
+
 ## Recommendations
 
 Close S60 only for its path-scoped deletion and two-file membership cutover.
@@ -100,3 +110,6 @@ completion.
 Commit only the corrected S60 Step record and this audit amendment through a
 guarded exact-path lifecycle commit, then verify that no other path entered
 the commit and that the remaining correction steps stay open.
+
+Satisfied by `fa1f4455d8`; its exact two-path set and the remaining open plan
+rows were independently re-verified against committed HEAD.
