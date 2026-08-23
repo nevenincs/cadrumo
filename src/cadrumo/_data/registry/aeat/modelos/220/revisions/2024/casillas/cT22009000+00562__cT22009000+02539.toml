@@ -10,18 +10,15 @@
 # removed. Deriving the remainder cannot mis-match; hand-written fragments taken from
 # truncated output have twice produced silent key collisions on this modelo.
 #
-# AEAT PRINTS THE SAME LABEL ON TWO DIFFERENT BOXES. Casillas 02796 and 02797 carry
-# BYTE-IDENTICAL descriptions, both ending "Estado.", at adjacent offsets @220 and @237.
-# The pair immediately above them -- 02794 and 02795 -- is the same concept split
-# "Estado" and "D. Forales / Navarra (totales)", so the pattern says one of 02796/02797
-# should be the foral column and AEAT has repeated the wrong suffix.
-#
-# THAT READING IS NOT ADOPTED. Which of the two is the foral column is not something the
-# design states, and guessing would put a jurisdiction on a filed box on the strength of
-# a neighbouring row's shape. Both casillas therefore carry the label AEAT prints, with
-# the box number appended so an operator can still tell them apart and a note that the
-# duplication is AEAT's. If AEAT's instructions or a later design resolve it, the labels
-# can be corrected with a recorded reason.
+# ITS SIBLING RECORD T22009001 IS NOT SHIPPED YET, and the reason is recorded here
+# because it is a finding rather than a scheduling note. That record contains casillas
+# 02796 and 02797, whose descriptions are BYTE-IDENTICAL -- both ending "Estado." -- at
+# adjacent offsets. The pair immediately above them, 02794 and 02795, is the same concept
+# split "Estado" and "D. Forales / Navarra (totales)", so the pattern says one of
+# 02796/02797 should be the foral column and AEAT has repeated the wrong suffix. Which
+# one is not something the design states, and guessing would put a jurisdiction on a
+# filed box on the strength of a neighbouring row's shape. That record waits for a
+# resolution rather than shipping a guess.
 #
 # AEAT ALSO BREAKS THE "fi" LIGATURE ACROSS A SPACE in several places on this family --
 # "Bonifi caciones", "Transparencia fi scal", "especifi cas". Transcribed as printed in

@@ -264,6 +264,212 @@ modelo:
             x-agp34c1g71130c1q60o3ie9h:
               label: Szamviteli eredmenyek es adoalapok konszolidacioja. Adoalap (adozasi
                 eredmeny)
+            x-agp34c1g74o30c1q60o32e1m:
+              label: Egyeb levonasok. Nettó adotartozas. A LIS 39.2. cikk szerinti
+                korlat alol kivont K+F+I levonasok
+            x-agp34c1g74o30c1q60o36e9p:
+              label: Egyeb levonasok. Nettó adotartozas. A helyi szabalyok ala tartozo
+                szervezetek egyedi levonasai
+            x-agp34c1g74o30c1q60o38cpm:
+              label: 'Az onadozas eredmenye. Kifizetes: K+F+I levonasok elegtelen
+                adotartozas miatt (LIS 39.2. cikk szerinti valasztas), osszesen. Kulon
+                jogallasu tartomanyi tanacsok es Navarra'
+            x-agp34c1g74o30c1q60o3adhi:
+              label: Teljes adotartozas
+            x-agp34c1g74o30c1q60o3adhj:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. A Kanari-szigeteken eloallitott targyi termekek
+                ertekesitesenek kedvezmenye (19/1994. torveny 26. cikk)
+            x-agp34c1g74o30c1q60o3adhl:
+              label: Egyeb levonasok. Nettó adotartozas. Nonprofit szervezeteknek
+                nyujtott adomanyok levonasa (49/2002. torveny)
+            x-agp34c1g74o30c1q60o3adhm:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Szovetkezeti tarsasagok kedvezmenyei (20/1990.
+                torveny)
+            x-agp34c1g74o30c1q60o3adhn:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Ceutaban es Melillaban szerzett jovedelem kedvezmenye
+                (LIS 33. cikk)
+            x-agp34c1g74o30c1q60o3adho:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Szolgaltatasnyujtasi kedvezmenyek (LIS 34. cikk)
+            x-agp34c1g74o30c1q60o3adhp:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Egyeb kedvezmenyek
+            x-agp34c1g74o30c1q60o3adpg:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Korabbi idoszakok belfoldi kettos adoztatasa a
+                targyevben ervenyesitve (RDLeg 4/2004 30. cikk)
+            x-agp34c1g74o30c1q60o3adph:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Az idoszakban keletkezett es ervenyesitett belfoldi
+                kettos adoztatas (LIS 23.1. atmeneti rendelkezes)
+            x-agp34c1g74o30c1q60o3adpi:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Korabbi idoszakok nemzetkozi kettos adoztatasa
+                az idoszakban ervenyesitve (RDLeg 4/2004 31. es 32. cikk)
+            x-agp34c1g74o30c1q60o3adpl:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Nemzetkozi adoatlathatosag (LIS 100.10. cikk)
+            x-agp34c1g74o30c1q60o3adpm:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Lakasberbeadassal foglalkozo szervezetek kedvezmenyei
+                (LIS VII. cim III. fejezet)
+            x-agp34c1g74o30c1q60o3adpn:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Tarsasagok kozotti belfoldi kettos adoztatas 5/10
+                szazalekon (szovetkezetek)
+            x-agp34c1g74o30c1q60o3ae1h:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Kanari-szigeteki hajozasi tarsasagok kedvezmenyei
+                (19/1994. torveny 76. cikk)
+            x-agp34c1g74o30c1q60o3ae1i:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas
+            x-agp34c1g74o30c1q60o3ae1j:
+              label: Egyeb levonasok. Nettó adotartozas. Beruhazasi adotamogatas es
+                egyeb levonasok
+            x-agp34c1g74o30c1q60o3ae1k:
+              label: Egyeb levonasok. Nettó adotartozas. Levonasok a LIS 24.1. atmeneti
+                rendelkezese alapjan
+            x-agp34c1g74o30c1q60o3ae1l:
+              label: Egyeb levonasok. Nettó adotartozas. Levonas a LIS 24.7. atmeneti
+                rendelkezese es az RDLeg 4/2004 42. cikke alapjan
+            x-agp34c1g74o30c1q60o3ae1o:
+              label: Egyeb levonasok. Nettó adotartozas. Egyes tevekenysegek osztonzesere
+                szolgalo levonasok (LIS VI. cim IV. fejezet, 24.3. atmeneti rendelkezes
+                es a 49/2002. torveny 27.3. cikke)
+            x-agp34c1g74o30c1q60o3ae9g:
+              label: Egyeb levonasok. Nettó adotartozas. Kanari-szigeteki beruhazasi
+                levonasok
+            x-agp34c1g74o30c1q60o3ae9i:
+              label: Egyeb levonasok. Nettó adotartozas. Nettó adotartozas
+            x-agp34c1g74o30c1q60o3ae9l:
+              label: Az uzleti ev fizetendo vagy visszajaro adoja. Levonasok es szamlara
+                torteno befizetesek, valamint kollektiv befektetesi reszesedesek eloleget
+            x-agp34c1g74o30c1q60o3ae9m:
+              label: Az uzleti ev fizetendo vagy visszajaro adoja. Gazdasagi erdekcsoportok
+                es ideiglenes vallalati tarsulasok altal hozzarendelt levonasok
+            x-agp34c1g74o30c1q60o3ae9n:
+              label: Az uzleti ev fizetendo vagy visszajaro adoja. Egyes sorsjatek-
+                es fogadasi nyeremenyek levonasai
+            x-agp34c1g74o30c1q60o3ae9p:
+              label: Az uzleti ev fizetendo vagy visszajaro adoja. Az idoszak fizetendo
+                vagy visszajaro adoja. Allam
+            x-agp34c1g74o30c1q60o3cc1g:
+              label: Az uzleti ev fizetendo vagy visszajaro adoja. Az idoszak fizetendo
+                vagy visszajaro adoja. Kulon jogallasu tartomanyi tanacsok es Navarra
+            x-agp34c1g74o30c1q60o3cc1h:
+              label: Reszletfizetesek. Kulonbozeti adotartozas. Elso reszletfizetes.
+                Allam
+            x-agp34c1g74o30c1q60o3cc1i:
+              label: Reszletfizetesek. Kulonbozeti adotartozas. Elso reszletfizetes.
+                Kulon jogallasu tartomanyi tanacsok es Navarra
+            x-agp34c1g74o30c1q60o3cc1j:
+              label: Reszletfizetesek. Kulonbozeti adotartozas. Masodik reszletfizetes.
+                Allam
+            x-agp34c1g74o30c1q60o3cc1k:
+              label: Reszletfizetesek. Kulonbozeti adotartozas. Masodik reszletfizetes.
+                Kulon jogallasu tartomanyi tanacsok es Navarra
+            x-agp34c1g74o30c1q60o3cc1l:
+              label: Reszletfizetesek. Kulonbozeti adotartozas. Harmadik reszletfizetes.
+                Allam
+            x-agp34c1g74o30c1q60o3cc1m:
+              label: Reszletfizetesek. Kulonbozeti adotartozas. Harmadik reszletfizetes.
+                Kulon jogallasu tartomanyi tanacsok es Navarra
+            x-agp34c1g74o30c1q60o3cc9h:
+              label: Reszletfizetesek. Kulonbozeti adotartozas. Kulonbozeti adotartozas.
+                Allam
+            x-agp34c1g74o30c1q60o3cc9i:
+              label: Kulonbozeti adotartozas. Kulon jogallasu tartomanyi tanacsok
+                es Navarra
+            x-agp34c1g74o30c1q60o3cc9l:
+              label: Az onadozas eredmenye. Korabbi idoszaki adokedvezmenyek elvesztese
+                miatti novekmeny. Allam
+            x-agp34c1g74o30c1q60o3cc9m:
+              label: Az onadozas eredmenye. Korabbi idoszaki adokedvezmenyek elvesztese
+                miatti novekmeny. Kulon jogallasu tartomanyi tanacsok es Navarra
+            x-agp34c1g74o30c1q60o3cc9n:
+              label: Az onadozas eredmenye. Kesedelmi kamat. Allam
+            x-agp34c1g74o30c1q60o3cc9o:
+              label: Az onadozas eredmenye. Kesedelmi kamat. Kulon jogallasu tartomanyi
+                tanacsok es Navarra
+            x-agp34c1g74o30c1q60oj6dpl:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. A Baleari-szigeteken eloallitott targyi termekek
+                ertekesitesenek kedvezmenye (31/2022. torveny 70. kiegeszito rendelkezese)
+            x-agp34c1g74o30c1q60ojcchp:
+              label: Egyeb levonasok. Nettó adotartozas. Minimalis nettó adotartozas
+                (LIS 30. bis cikk)
+            x-agp34c1g74o30c1q60ojccph:
+              label: 'Az onadozas eredmenye. Kifizetes: kanari-szigeteki kulfoldi
+                filmgyartasi levonasok (LIS 39.3. cikk es a 19/1994. torveny 14. kiegeszito
+                rendelkezese), Allam'
+            x-agp34c1g74o30c1q60ojccpi:
+              label: 'Az onadozas eredmenye. Kifizetes: kanari-szigeteki kulfoldi
+                filmgyartasi levonasok (LIS 39.3. cikk es a 19/1994. torveny 14. kiegeszito
+                rendelkezese), Kulon jogallasu tartomanyi tanacsok es Navarra'
+            x-agp34c1g74o30c1q60ojecpn:
+              label: 'Az onadozas eredmenye. Kifizetes: kanari-szigeteki kulfoldi
+                filmgyartasi levonasok (LIS 39.3. cikk es a 19/1994. torveny 14. kiegeszito
+                rendelkezese), osszesen. Kulon jogallasu tartomanyi tanacsok es Navarra'
+            x-agp34c1g74o30c1q60ojidhl:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Korabbi idoszakok belfoldi kettos adoztatasa az
+                idoszakban ervenyesitve (LIS 23.1. atmeneti rendelkezes)
+            x-agp34c1g74o30c1q60p32e1o:
+              label: Az idoszak fizetendo vagy visszajaro adoja. Levonasok es szamlara
+                torteno befizetesek osszesen
+            x-agp34c1g74o30c1q60p36d9j:
+              label: Egyeb levonasok. Nettó adotartozas. Kanari-szigeteki kulfoldi
+                filmgyartasi levonas (LIS 36.2. cikk es a 14/1994. torveny 14. kiegeszito
+                rendelkezese)
+            x-agp34c1g74o30c1q60p36d9k:
+              label: Egyeb levonasok. Nettó adotartozas. Kikotoi hatosagok beruhazasai
+                es koltsegei utani levonasok (LIS 38. bis cikk)
+            x-agp34c1g74o30c1q60p3acpo:
+              label: Elszamolas. Az onadozas eredmenye. Allam
+            x-agp34c1g74o30c1q60p3acpp:
+              label: Elszamolas. Az onadozas eredmenye. Kulon jogallasu tartomanyi
+                tanacsok es Navarra
+            x-agp34c1g74o30c1q60pj4d9h:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Korabbi idoszakok nemzetkozi kettos adoztatasa
+                az idoszakban ervenyesitve (LIS 31. es 32. cikk)
+            x-agp34c1g74o30c1q60pj4dhh:
+              label: Kedvezmenyek es kettos adoztatasi levonasok. Kiigazitott pozitiv
+                teljes adotartozas. Az idoszakban keletkezett es ervenyesitett nemzetkozi
+                kettos adoztatas (LIS 31. es 32. cikk)
+            x-agp34c1g74o30c1q60pj6d1k:
+              label: Egyeb levonasok. Nettó adotartozas. Az atmeneti intezkedesek
+                visszaforditasa miatti levonas (LIS 37.1. atmeneti rendelkezes)
+            x-agp34c1g74o30c1q60pj6d9m:
+              label: Egyeb levonasok. Nettó adotartozas. Az atmeneti intezkedesek
+                visszaforditasa miatti levonas (LIS 37.2. atmeneti rendelkezes)
+            x-agp34c1g74o30c1q60pj6d9o:
+              label: Teljes adotartozas. A kiegyenlito tartalek korrekcioja (LIS 105.6.
+                cikk)
+            x-agp34c1g74o30c1q60pj6d9p:
+              label: Egyeb levonasok. Nettó adotartozas. Kulfoldi filmgyartasi levonas
+                (LIS 36.2. cikk)
+            x-agp34c1g74o30c1q60pj6dhg:
+              label: 'Az onadozas eredmenye. Kifizetes: kulfoldi filmgyartasi levonasok
+                (LIS 39.3. cikk), osszesen. Kulon jogallasu tartomanyi tanacsok es
+                Navarra'
+            x-agp34c1g74o30c1q60pj6e9j:
+              label: 'Az onadozas eredmenye. Kifizetes: K+F+I levonasok elegtelen
+                adotartozas miatt (LIS 39.2. cikk szerinti valasztas), Kulon jogallasu
+                tartomanyi tanacsok es Navarra'
+            x-agp34c1g74o30c1q60pj6e9o:
+              label: 'Az onadozas eredmenye. Kifizetes: kulfoldi filmgyartasi levonasok
+                (LIS 39.3. cikk), Kulon jogallasu tartomanyi tanacsok es Navarra'
+            x-agp34c1g74o30c1q60pj6e9p:
+              label: 'Az onadozas eredmenye. Kifizetes: K+F+I levonasok elegtelen
+                adotartozas miatt (LIS 39.2. cikk szerinti valasztas), Allam'
+            x-agp34c1g74o30c1q60pj8c1g:
+              label: 'Az onadozas eredmenye. Kifizetes: kulfoldi filmgyartasi levonasok
+                (LIS 39.3. cikk), Allam'
             x-agp34c1h68o30c1q60o30c1h:
               label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
                 keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)

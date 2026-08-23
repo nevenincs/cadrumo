@@ -269,6 +269,212 @@ modelo:
             x-agp34c1g71130c1q60o3ie9h:
               label: Consolidacion de resultados y bases imponibles. Base imponible
                 (resultado fiscal)
+            x-agp34c1g74o30c1q60o32e1m:
+              label: Otras deducciones. Cuota liquida. Deducciones I + D + i excluídas
+                del límite art 39 2 LIS (pág 14 quinquies)
+            x-agp34c1g74o30c1q60o36e9p:
+              label: Otras deducciones. Cuota liquida. Deducciones específicas de
+                las entidades sometidas a normativa foral
+            x-agp34c1g74o30c1q60o38cpm:
+              label: Resultado de la autoliquidacion. Abono de deducciones I+D+i por
+                insuficiencia de cuota (opción art 39 2 LIS) (pág 14 quinquies), total.
+                Diputaciones Forales y Navarra
+            x-agp34c1g74o30c1q60o3adhi:
+              label: Cuota integra
+            x-agp34c1g74o30c1q60o3adhj:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. Bonificación de rendimientos por venta bienes corporales
+                producidos en Canarias (art 26 Ley 19/1994) (pág 11)
+            x-agp34c1g74o30c1q60o3adhl:
+              label: Otras deducciones. Cuota liquida. Deducción donaciones a entidades
+                sin fines de lucro (Ley 49/2002) (pág 14 quater)
+            x-agp34c1g74o30c1q60o3adhm:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. Bonificaciones sociedades cooperativas (Ley 20/1990)
+                (pag 11)
+            x-agp34c1g74o30c1q60o3adhn:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. Bonificación por rentas obtenidas en Ceuta y Melilla
+                (art 33 LIS) (pág 11)
+            x-agp34c1g74o30c1q60o3adho:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. Bonificaciones por prestación de servicios (art
+                34 LIS) (pág 11)
+            x-agp34c1g74o30c1q60o3adhp:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. Otras bonificaciones (pág 11)
+            x-agp34c1g74o30c1q60o3adpg:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. D I DI interna de períodos anteriores aplicada
+                en el ejercicio (art 30 RDLEG 4/2004) (pág 12)
+            x-agp34c1g74o30c1q60o3adph:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. DI interna generada y aplicada en el período (DT
+                23ª 1 LIS) (pág 12)
+            x-agp34c1g74o30c1q60o3adpi:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. DI internacional de períodos anteriores aplicada
+                en el período (arts 31 y 32 RDLEG 4/2004) (pág 12)
+            x-agp34c1g74o30c1q60o3adpl:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. Transparencia fiscal internacional (art 100 10
+                LIS) (pág 10)
+            x-agp34c1g74o30c1q60o3adpm:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. Bonificaciones entidades dedicadas al arrendamiento
+                de viviendas (Cap III Tit VII LIS) (pág 11)
+            x-agp34c1g74o30c1q60o3adpn:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. D I Interna intersocietaria al 5/10% (cooperativas)
+                (pág 10)
+            x-agp34c1g74o30c1q60o3ae1h:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. Bonificaciones empresas navieras en Canarias (art
+                76 Ley 19/1994) (pág 11)
+            x-agp34c1g74o30c1q60o3ae1i:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva
+            x-agp34c1g74o30c1q60o3ae1j:
+              label: Otras deducciones. Cuota liquida. Apoyo fiscal a la inversión
+                y otras deducciones
+            x-agp34c1g74o30c1q60o3ae1k:
+              label: Otras deducciones. Cuota liquida. Deducciones DT 24ª 1 LIS (pág
+                13)
+            x-agp34c1g74o30c1q60o3ae1l:
+              label: Otras deducciones. Cuota liquida. Deducción DT 24ª 7 LIS, art
+                42 RDLeg 4/2004 (pág 13)
+            x-agp34c1g74o30c1q60o3ae1o:
+              label: Otras deducciones. Cuota liquida. Deducciones para incentivar
+                det Actividades (Cap IV Tit VI, DT 24ª 3 LIS y art 27 3 primero Ley
+                49/2002) (pág 14, 14 bis)
+            x-agp34c1g74o30c1q60o3ae9g:
+              label: Otras deducciones. Cuota liquida. Deducciones Inversión Canarias
+                (pág 13 bis)
+            x-agp34c1g74o30c1q60o3ae9i:
+              label: Otras deducciones. Cuota liquida. Cuota liquida
+            x-agp34c1g74o30c1q60o3ae9l:
+              label: Cuota del ejercicio a ingresar o a devolver. Retenciones e ingresos
+                a cuenta/pagos a cuenta participaciones I I C
+            x-agp34c1g74o30c1q60o3ae9m:
+              label: Cuota del ejercicio a ingresar o a devolver. Retenciones e ingresos
+                a cuenta /pagos a cuenta participaciones I I C Imputados por agrupaciones
+                de interés económico y uniones temporales de empresas
+            x-agp34c1g74o30c1q60o3ae9n:
+              label: Cuota del ejercicio a ingresar o a devolver. Retenciones sobre
+                los premios de determinadas loterías y apuestas
+            x-agp34c1g74o30c1q60o3ae9p:
+              label: Cuota del ejercicio a ingresar o a devolver. Cuota del periodo
+                a ingresar o devolver. Estado
+            x-agp34c1g74o30c1q60o3cc1g:
+              label: Cuota del ejercicio a ingresar o a devolver. Cuota del periodo
+                a ingresar o devolver. Diputaciones Forales y Navarra
+            x-agp34c1g74o30c1q60o3cc1h:
+              label: Pagos fraccionados. Cuota diferencial. Pago fracionado 1. Estado
+            x-agp34c1g74o30c1q60o3cc1i:
+              label: Pagos fraccionados. Cuota diferencial. Pago fracionado 1. Diputaciones
+                Forales y Navarra
+            x-agp34c1g74o30c1q60o3cc1j:
+              label: Pagos fraccionados. Cuota diferencial. Pago fracionado 2. Estado
+            x-agp34c1g74o30c1q60o3cc1k:
+              label: Pagos fraccionados. Cuota diferencial. Pago fracionado 2. Diputaciones
+                Forales y Navarra
+            x-agp34c1g74o30c1q60o3cc1l:
+              label: Pagos fraccionados. Cuota diferencial. Pago fracionado 3. Estado
+            x-agp34c1g74o30c1q60o3cc1m:
+              label: Pagos fraccionados. Cuota diferencial. Pago fracionado 3. Diputaciones
+                Forales y Navarra
+            x-agp34c1g74o30c1q60o3cc9h:
+              label: Pagos fraccionados. Cuota diferencial. Cuota diferencial. Estado
+            x-agp34c1g74o30c1q60o3cc9i:
+              label: Cuota diferencial. Diputaciones Forales y Navarra
+            x-agp34c1g74o30c1q60o3cc9l:
+              label: Resultado de la autoliquidacion. Incremento por pérdida beneficios
+                fiscales periodos anteriores. Estado
+            x-agp34c1g74o30c1q60o3cc9m:
+              label: Resultado de la autoliquidacion. Incremento por pérdida beneficios
+                fiscales periodos anteriores. Diputaciones Forales y Navarra
+            x-agp34c1g74o30c1q60o3cc9n:
+              label: Resultado de la autoliquidacion. Intereses de demora. Estado
+            x-agp34c1g74o30c1q60o3cc9o:
+              label: Resultado de la autoliquidacion. Intereses de demora. Diputaciones
+                Forales y Navarra
+            x-agp34c1g74o30c1q60oj6dpl:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. Bonificación rendimientos por venta bienes corporales
+                producidos en Illes Balears (DA 70 Cinco Ley 31/2022) (pág 11)
+            x-agp34c1g74o30c1q60ojcchp:
+              label: Otras deducciones. Cuota liquida. Cuota líquida mínima (art 30
+                bis LIS)
+            x-agp34c1g74o30c1q60ojccph:
+              label: Resultado de la autoliquidacion. Abono de deducciones por producciones
+                cinematográficas extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley
+                19/1994), Estado
+            x-agp34c1g74o30c1q60ojccpi:
+              label: Resultado de la autoliquidacion. Abono de deducciones por producciones
+                cinematográficas extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley
+                19/1994), Diputaciones Forales y Navarra
+            x-agp34c1g74o30c1q60ojecpn:
+              label: Resultado de la autoliquidacion. Abono de deducciones por producciones
+                cinematográficas extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley
+                19/1994), total. Diputaciones Forales y Navarra
+            x-agp34c1g74o30c1q60ojidhl:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. DI interna de períodos anteriores aplicada en el
+                periodo (DT 23ª 1 LIS) (pág 12)
+            x-agp34c1g74o30c1q60p32e1o:
+              label: Cuota del periodo a ingresar o a devolver. Total retenciones
+                e ingresos a cuenta
+            x-agp34c1g74o30c1q60p36d9j:
+              label: Otras deducciones. Cuota liquida. Deducción por producciones
+                cinematográficas extranjeras en Canarias (art 36 2 LIS y DA 14ª Ley
+                14/1994) pág 13 ter)
+            x-agp34c1g74o30c1q60p36d9k:
+              label: Otras deducciones. Cuota liquida. Deducciones por inversiones
+                y gastos realizados por las autoridades portuarias (art 38 bis LIS)
+                (pág 14 ter)
+            x-agp34c1g74o30c1q60p3acpo:
+              label: Liquidacion. Resultado de la autoliquidación. Estado
+            x-agp34c1g74o30c1q60p3acpp:
+              label: Liquidacion. Resultado de la autoliquidación. Diputaciones Forales
+                y Navarra
+            x-agp34c1g74o30c1q60pj4d9h:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. DI internacional de periodos anteriores aplicada
+                en el periodo (art 31 y 32 LIS) (pág 12)
+            x-agp34c1g74o30c1q60pj4dhh:
+              label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+                ajustada positiva. DI internacional generada y aplicada en el periodo
+                (art 31 y 32 LIS) (pág 12)
+            x-agp34c1g74o30c1q60pj6d1k:
+              label: Otras deducciones. Cuota liquida. Deducción por reversión de
+                medidas temporales DT 37ª 1 LIS (pág 14 sexies)
+            x-agp34c1g74o30c1q60pj6d9m:
+              label: Otras deducciones. Cuota liquida. Deducción por reversión de
+                medidas temporales DT 37ª 2 LIS (pág 14 sexies)
+            x-agp34c1g74o30c1q60pj6d9o:
+              label: Cuota integra. Regularización reserva de nivelación (Art 105
+                6 LIS)
+            x-agp34c1g74o30c1q60pj6d9p:
+              label: Otras deducciones. Cuota liquida. Deducción por producciones
+                cinematográficas extranjeras (art 36 2 LIS) (pág 14 ter)
+            x-agp34c1g74o30c1q60pj6dhg:
+              label: Resultado de la autoliquidacion. Abono de deducciones por producciones
+                cinematográficas extranjeras (art 39 3 LIS) (pág 14 ter), total. Diputaciones
+                Forales y Navarra
+            x-agp34c1g74o30c1q60pj6e9j:
+              label: Resultado de la autoliquidacion. Abono de deducciones I+D+i por
+                insuficiencia de cuota (opción art 39 2 LIS) (pág 14 quinquies), Diputaciones
+                Forales y Navarra
+            x-agp34c1g74o30c1q60pj6e9o:
+              label: Resultado de la autoliquidacion. Abono de deducciones por producciones
+                cinematográficas extranjeras (art 39 3 LIS) (pág 14 ter), Diputaciones
+                Forales y Navarra
+            x-agp34c1g74o30c1q60pj6e9p:
+              label: Resultado de la autoliquidacion. Abono de deducciones I+D+i por
+                insuficiencia de cuota (opción art 39 2 LIS) (pág 14 quinquies), Estado
+            x-agp34c1g74o30c1q60pj8c1g:
+              label: Resultado de la autoliquidacion. Abono de deducciones por producciones
+                cinematográficas extranjeras (art 39 3 LIS) (pág 14 ter), Estado
             x-agp34c1h68o30c1q60o30c1h:
               label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
                 ejercicio de generacion 2009. deduccion pendiente en 2024 (registro

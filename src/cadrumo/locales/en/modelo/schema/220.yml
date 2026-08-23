@@ -269,6 +269,213 @@ modelo:
             x-agp34c1g71130c1q60o3ie9h:
               label: Consolidation of accounting results and taxable bases. Taxable
                 base (tax result)
+            x-agp34c1g74o30c1q60o32e1m:
+              label: Other deductions. Net tax liability. R&D&i deductions excluded
+                from the limit of art. 39.2 LIS
+            x-agp34c1g74o30c1q60o36e9p:
+              label: Other deductions. Net tax liability. Specific deductions for
+                entities subject to chartered rules
+            x-agp34c1g74o30c1q60o38cpm:
+              label: Self-assessment result. Payment of R&D&i deductions for insufficient
+                tax liability (election art. 39.2 LIS), total. Chartered provincial
+                councils and Navarre
+            x-agp34c1g74o30c1q60o3adhi:
+              label: Gross tax liability
+            x-agp34c1g74o30c1q60o3adhj:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. Relief for income from the sale of tangible goods produced
+                in the Canary Islands (art. 26 Law 19/1994)
+            x-agp34c1g74o30c1q60o3adhl:
+              label: Other deductions. Net tax liability. Deduction for donations
+                to non-profit entities (Law 49/2002)
+            x-agp34c1g74o30c1q60o3adhm:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. Reliefs for cooperative societies (Law 20/1990)
+            x-agp34c1g74o30c1q60o3adhn:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. Relief for income obtained in Ceuta and Melilla (art.
+                33 LIS)
+            x-agp34c1g74o30c1q60o3adho:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. Reliefs for the provision of services (art. 34 LIS)
+            x-agp34c1g74o30c1q60o3adhp:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. Other reliefs
+            x-agp34c1g74o30c1q60o3adpg:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. Internal double taxation from prior periods applied
+                in the year (art. 30 RDLeg 4/2004)
+            x-agp34c1g74o30c1q60o3adph:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. Internal double taxation generated and applied in the
+                period (transitional provision 23.1 LIS)
+            x-agp34c1g74o30c1q60o3adpi:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. International double taxation from prior periods applied
+                in the period (arts. 31 and 32 RDLeg 4/2004)
+            x-agp34c1g74o30c1q60o3adpl:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. International tax transparency (art. 100.10 LIS)
+            x-agp34c1g74o30c1q60o3adpm:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. Reliefs for entities engaged in residential letting
+                (Chapter III, Title VII LIS)
+            x-agp34c1g74o30c1q60o3adpn:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. Inter-company internal double taxation at 5/10 per
+                cent (cooperatives)
+            x-agp34c1g74o30c1q60o3ae1h:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. Reliefs for shipping companies in the Canary Islands
+                (art. 76 Law 19/1994)
+            x-agp34c1g74o30c1q60o3ae1i:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability
+            x-agp34c1g74o30c1q60o3ae1j:
+              label: Other deductions. Net tax liability. Tax support for investment
+                and other deductions
+            x-agp34c1g74o30c1q60o3ae1k:
+              label: Other deductions. Net tax liability. Deductions under transitional
+                provision 24.1 LIS
+            x-agp34c1g74o30c1q60o3ae1l:
+              label: Other deductions. Net tax liability. Deduction under transitional
+                provision 24.7 LIS, art. 42 RDLeg 4/2004
+            x-agp34c1g74o30c1q60o3ae1o:
+              label: Other deductions. Net tax liability. Deductions to encourage
+                certain activities (Chapter IV Title VI, transitional provision 24.3
+                LIS and art. 27.3 first, Law 49/2002)
+            x-agp34c1g74o30c1q60o3ae9g:
+              label: Other deductions. Net tax liability. Canary Islands investment
+                deductions
+            x-agp34c1g74o30c1q60o3ae9i:
+              label: Other deductions. Net tax liability. Net tax liability
+            x-agp34c1g74o30c1q60o3ae9l:
+              label: Tax for the year, payable or refundable. Withholdings and payments
+                on account, and payments on account for collective investment holdings
+            x-agp34c1g74o30c1q60o3ae9m:
+              label: Tax for the year, payable or refundable. Withholdings and payments
+                on account attributed by economic interest groupings and temporary
+                business consortia
+            x-agp34c1g74o30c1q60o3ae9n:
+              label: Tax for the year, payable or refundable. Withholdings on prizes
+                from certain lotteries and betting
+            x-agp34c1g74o30c1q60o3ae9p:
+              label: Tax for the year, payable or refundable. Tax for the period,
+                payable or refundable. State
+            x-agp34c1g74o30c1q60o3cc1g:
+              label: Tax for the year, payable or refundable. Tax for the period,
+                payable or refundable. Chartered provincial councils and Navarre
+            x-agp34c1g74o30c1q60o3cc1h:
+              label: Instalment payments. Differential tax liability. First instalment
+                payment. State
+            x-agp34c1g74o30c1q60o3cc1i:
+              label: Instalment payments. Differential tax liability. First instalment
+                payment. Chartered provincial councils and Navarre
+            x-agp34c1g74o30c1q60o3cc1j:
+              label: Instalment payments. Differential tax liability. Second instalment
+                payment. State
+            x-agp34c1g74o30c1q60o3cc1k:
+              label: Instalment payments. Differential tax liability. Second instalment
+                payment. Chartered provincial councils and Navarre
+            x-agp34c1g74o30c1q60o3cc1l:
+              label: Instalment payments. Differential tax liability. Third instalment
+                payment. State
+            x-agp34c1g74o30c1q60o3cc1m:
+              label: Instalment payments. Differential tax liability. Third instalment
+                payment. Chartered provincial councils and Navarre
+            x-agp34c1g74o30c1q60o3cc9h:
+              label: Instalment payments. Differential tax liability. Differential
+                tax liability. State
+            x-agp34c1g74o30c1q60o3cc9i:
+              label: Differential tax liability. Chartered provincial councils and
+                Navarre
+            x-agp34c1g74o30c1q60o3cc9l:
+              label: Self-assessment result. Increase for loss of tax benefits from
+                prior periods. State
+            x-agp34c1g74o30c1q60o3cc9m:
+              label: Self-assessment result. Increase for loss of tax benefits from
+                prior periods. Chartered provincial councils and Navarre
+            x-agp34c1g74o30c1q60o3cc9n:
+              label: Self-assessment result. Late-payment interest. State
+            x-agp34c1g74o30c1q60o3cc9o:
+              label: Self-assessment result. Late-payment interest. Chartered provincial
+                councils and Navarre
+            x-agp34c1g74o30c1q60oj6dpl:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. Relief for income from the sale of tangible goods produced
+                in the Balearic Islands (70th additional provision, Law 31/2022)
+            x-agp34c1g74o30c1q60ojcchp:
+              label: Other deductions. Net tax liability. Minimum net tax liability
+                (art. 30 bis LIS)
+            x-agp34c1g74o30c1q60ojccph:
+              label: Self-assessment result. Payment of deductions for foreign film
+                productions in the Canary Islands (art. 39.3 LIS and 14th additional
+                provision, Law 19/1994), State
+            x-agp34c1g74o30c1q60ojccpi:
+              label: Self-assessment result. Payment of deductions for foreign film
+                productions in the Canary Islands (art. 39.3 LIS and 14th additional
+                provision, Law 19/1994), Chartered provincial councils and Navarre
+            x-agp34c1g74o30c1q60ojecpn:
+              label: Self-assessment result. Payment of deductions for foreign film
+                productions in the Canary Islands (art. 39.3 LIS and 14th additional
+                provision, Law 19/1994), total. Chartered provincial councils and
+                Navarre
+            x-agp34c1g74o30c1q60ojidhl:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. Internal double taxation from prior periods applied
+                in the period (transitional provision 23.1 LIS)
+            x-agp34c1g74o30c1q60p32e1o:
+              label: Tax for the period, payable or refundable. Total withholdings
+                and payments on account
+            x-agp34c1g74o30c1q60p36d9j:
+              label: Other deductions. Net tax liability. Deduction for foreign film
+                productions in the Canary Islands (art. 36.2 LIS and 14th additional
+                provision, Law 14/1994)
+            x-agp34c1g74o30c1q60p36d9k:
+              label: Other deductions. Net tax liability. Deductions for investments
+                and expenses made by port authorities (art. 38 bis LIS)
+            x-agp34c1g74o30c1q60p3acpo:
+              label: Settlement. Self-assessment result. State
+            x-agp34c1g74o30c1q60p3acpp:
+              label: Settlement. Self-assessment result. Chartered provincial councils
+                and Navarre
+            x-agp34c1g74o30c1q60pj4d9h:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. International double taxation from prior periods applied
+                in the period (arts. 31 and 32 LIS)
+            x-agp34c1g74o30c1q60pj4dhh:
+              label: Reliefs and double-taxation deductions. Adjusted positive gross
+                tax liability. International double taxation generated and applied
+                in the period (arts. 31 and 32 LIS)
+            x-agp34c1g74o30c1q60pj6d1k:
+              label: Other deductions. Net tax liability. Deduction for reversal of
+                temporary measures, transitional provision 37.1 LIS
+            x-agp34c1g74o30c1q60pj6d9m:
+              label: Other deductions. Net tax liability. Deduction for reversal of
+                temporary measures, transitional provision 37.2 LIS
+            x-agp34c1g74o30c1q60pj6d9o:
+              label: Gross tax liability. Adjustment of the levelling reserve (art.
+                105.6 LIS)
+            x-agp34c1g74o30c1q60pj6d9p:
+              label: Other deductions. Net tax liability. Deduction for foreign film
+                productions (art. 36.2 LIS)
+            x-agp34c1g74o30c1q60pj6dhg:
+              label: Self-assessment result. Payment of deductions for foreign film
+                productions (art. 39.3 LIS), total. Chartered provincial councils
+                and Navarre
+            x-agp34c1g74o30c1q60pj6e9j:
+              label: Self-assessment result. Payment of R&D&i deductions for insufficient
+                tax liability (election art. 39.2 LIS), Chartered provincial councils
+                and Navarre
+            x-agp34c1g74o30c1q60pj6e9o:
+              label: Self-assessment result. Payment of deductions for foreign film
+                productions (art. 39.3 LIS), Chartered provincial councils and Navarre
+            x-agp34c1g74o30c1q60pj6e9p:
+              label: Self-assessment result. Payment of R&D&i deductions for insufficient
+                tax liability (election art. 39.2 LIS), State
+            x-agp34c1g74o30c1q60pj8c1g:
+              label: Self-assessment result. Payment of deductions for foreign film
+                productions (art. 39.3 LIS), State
             x-agp34c1h68o30c1q60o30c1h:
               label: Deductions for international double taxation, RDLEG 4/2004. year
                 of generation 2009. deduction outstanding in 2024 (record T22012000)

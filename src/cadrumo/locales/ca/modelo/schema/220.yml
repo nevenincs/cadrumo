@@ -260,6 +260,209 @@ modelo:
             x-agp34c1g71130c1q60o3ie9h:
               label: Consolidacio de resultats i bases imposables. Base imposable
                 (resultat fiscal)
+            x-agp34c1g74o30c1q60o32e1m:
+              label: Altres deduccions. Quota liquida. Deduccions R+D+i excloses del
+                limit de l'art. 39.2 LIS
+            x-agp34c1g74o30c1q60o36e9p:
+              label: Altres deduccions. Quota liquida. Deduccions especifiques de
+                les entitats sotmeses a normativa foral
+            x-agp34c1g74o30c1q60o38cpm:
+              label: Resultat de l'autoliquidacio. Abonament de deduccions R+D+i per
+                insuficiencia de quota (opcio art. 39.2 LIS), total. Diputacions Forals
+                i Navarra
+            x-agp34c1g74o30c1q60o3adhi:
+              label: Quota integra
+            x-agp34c1g74o30c1q60o3adhj:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. Bonificacio de rendiments per venda de bens corporals
+                produits a Canaries (art. 26 Llei 19/1994)
+            x-agp34c1g74o30c1q60o3adhl:
+              label: Altres deduccions. Quota liquida. Deduccio per donacions a entitats
+                sense finalitat de lucre (Llei 49/2002)
+            x-agp34c1g74o30c1q60o3adhm:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. Bonificacions societats cooperatives (Llei 20/1990)
+            x-agp34c1g74o30c1q60o3adhn:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. Bonificacio per rendes obtingudes a Ceuta i Melilla
+                (art. 33 LIS)
+            x-agp34c1g74o30c1q60o3adho:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. Bonificacions per prestacio de serveis (art. 34
+                LIS)
+            x-agp34c1g74o30c1q60o3adhp:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. Altres bonificacions
+            x-agp34c1g74o30c1q60o3adpg:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. DI interna de periodes anteriors aplicada a l'exercici
+                (art. 30 RDLeg 4/2004)
+            x-agp34c1g74o30c1q60o3adph:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. DI interna generada i aplicada al periode (DT 23a.1
+                LIS)
+            x-agp34c1g74o30c1q60o3adpi:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. DI internacional de periodes anteriors aplicada
+                al periode (arts. 31 i 32 RDLeg 4/2004)
+            x-agp34c1g74o30c1q60o3adpl:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. Transparencia fiscal internacional (art. 100.10
+                LIS)
+            x-agp34c1g74o30c1q60o3adpm:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. Bonificacions entitats dedicades a l'arrendament
+                d'habitatges (Cap. III Tit. VII LIS)
+            x-agp34c1g74o30c1q60o3adpn:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. DI interna intersocietaria al 5/10 per cent (cooperatives)
+            x-agp34c1g74o30c1q60o3ae1h:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. Bonificacions empreses navilieres a Canaries (art.
+                76 Llei 19/1994)
+            x-agp34c1g74o30c1q60o3ae1i:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva
+            x-agp34c1g74o30c1q60o3ae1j:
+              label: Altres deduccions. Quota liquida. Suport fiscal a la inversio
+                i altres deduccions
+            x-agp34c1g74o30c1q60o3ae1k:
+              label: Altres deduccions. Quota liquida. Deduccions DT 24a.1 LIS
+            x-agp34c1g74o30c1q60o3ae1l:
+              label: Altres deduccions. Quota liquida. Deduccio DT 24a.7 LIS, art.
+                42 RDLeg 4/2004
+            x-agp34c1g74o30c1q60o3ae1o:
+              label: Altres deduccions. Quota liquida. Deduccions per incentivar determinades
+                activitats (Cap. IV Tit. VI, DT 24a.3 LIS i art. 27.3 primer, Llei
+                49/2002)
+            x-agp34c1g74o30c1q60o3ae9g:
+              label: Altres deduccions. Quota liquida. Deduccions d'inversio a Canaries
+            x-agp34c1g74o30c1q60o3ae9i:
+              label: Altres deduccions. Quota liquida. Quota liquida
+            x-agp34c1g74o30c1q60o3ae9l:
+              label: Quota de l'exercici a ingressar o a retornar. Retencions i ingressos
+                a compte, i pagaments a compte de participacions IIC
+            x-agp34c1g74o30c1q60o3ae9m:
+              label: Quota de l'exercici a ingressar o a retornar. Retencions i ingressos
+                a compte imputats per agrupacions d'interes economic i UTE
+            x-agp34c1g74o30c1q60o3ae9n:
+              label: Quota de l'exercici a ingressar o a retornar. Retencions sobre
+                els premis de determinades loteries i apostes
+            x-agp34c1g74o30c1q60o3ae9p:
+              label: Quota de l'exercici a ingressar o a retornar. Quota del periode
+                a ingressar o retornar. Estat
+            x-agp34c1g74o30c1q60o3cc1g:
+              label: Quota de l'exercici a ingressar o a retornar. Quota del periode
+                a ingressar o retornar. Diputacions Forals i Navarra
+            x-agp34c1g74o30c1q60o3cc1h:
+              label: Pagaments fraccionats. Quota diferencial. Primer pagament fraccionat.
+                Estat
+            x-agp34c1g74o30c1q60o3cc1i:
+              label: Pagaments fraccionats. Quota diferencial. Primer pagament fraccionat.
+                Diputacions Forals i Navarra
+            x-agp34c1g74o30c1q60o3cc1j:
+              label: Pagaments fraccionats. Quota diferencial. Segon pagament fraccionat.
+                Estat
+            x-agp34c1g74o30c1q60o3cc1k:
+              label: Pagaments fraccionats. Quota diferencial. Segon pagament fraccionat.
+                Diputacions Forals i Navarra
+            x-agp34c1g74o30c1q60o3cc1l:
+              label: Pagaments fraccionats. Quota diferencial. Tercer pagament fraccionat.
+                Estat
+            x-agp34c1g74o30c1q60o3cc1m:
+              label: Pagaments fraccionats. Quota diferencial. Tercer pagament fraccionat.
+                Diputacions Forals i Navarra
+            x-agp34c1g74o30c1q60o3cc9h:
+              label: Pagaments fraccionats. Quota diferencial. Quota diferencial.
+                Estat
+            x-agp34c1g74o30c1q60o3cc9i:
+              label: Quota diferencial. Diputacions Forals i Navarra
+            x-agp34c1g74o30c1q60o3cc9l:
+              label: Resultat de l'autoliquidacio. Increment per perdua de beneficis
+                fiscals de periodes anteriors. Estat
+            x-agp34c1g74o30c1q60o3cc9m:
+              label: Resultat de l'autoliquidacio. Increment per perdua de beneficis
+                fiscals de periodes anteriors. Diputacions Forals i Navarra
+            x-agp34c1g74o30c1q60o3cc9n:
+              label: Resultat de l'autoliquidacio. Interessos de demora. Estat
+            x-agp34c1g74o30c1q60o3cc9o:
+              label: Resultat de l'autoliquidacio. Interessos de demora. Diputacions
+                Forals i Navarra
+            x-agp34c1g74o30c1q60oj6dpl:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. Bonificacio de rendiments per venda de bens corporals
+                produits a les Illes Balears (DA 70 Llei 31/2022)
+            x-agp34c1g74o30c1q60ojcchp:
+              label: Altres deduccions. Quota liquida. Quota liquida minima (art.
+                30 bis LIS)
+            x-agp34c1g74o30c1q60ojccph:
+              label: Resultat de l'autoliquidacio. Abonament de deduccions per produccions
+                cinematografiques estrangeres a Canaries (art. 39.3 LIS i DA 14a Llei
+                19/1994), Estat
+            x-agp34c1g74o30c1q60ojccpi:
+              label: Resultat de l'autoliquidacio. Abonament de deduccions per produccions
+                cinematografiques estrangeres a Canaries (art. 39.3 LIS i DA 14a Llei
+                19/1994), Diputacions Forals i Navarra
+            x-agp34c1g74o30c1q60ojecpn:
+              label: Resultat de l'autoliquidacio. Abonament de deduccions per produccions
+                cinematografiques estrangeres a Canaries (art. 39.3 LIS i DA 14a Llei
+                19/1994), total. Diputacions Forals i Navarra
+            x-agp34c1g74o30c1q60ojidhl:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. DI interna de periodes anteriors aplicada al periode
+                (DT 23a.1 LIS)
+            x-agp34c1g74o30c1q60p32e1o:
+              label: Quota del periode a ingressar o a retornar. Total retencions
+                i ingressos a compte
+            x-agp34c1g74o30c1q60p36d9j:
+              label: Altres deduccions. Quota liquida. Deduccio per produccions cinematografiques
+                estrangeres a Canaries (art. 36.2 LIS i DA 14a Llei 14/1994)
+            x-agp34c1g74o30c1q60p36d9k:
+              label: Altres deduccions. Quota liquida. Deduccions per inversions i
+                despeses realitzades per les autoritats portuaries (art. 38 bis LIS)
+            x-agp34c1g74o30c1q60p3acpo:
+              label: Liquidacio. Resultat de l'autoliquidacio. Estat
+            x-agp34c1g74o30c1q60p3acpp:
+              label: Liquidacio. Resultat de l'autoliquidacio. Diputacions Forals
+                i Navarra
+            x-agp34c1g74o30c1q60pj4d9h:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. DI internacional de periodes anteriors aplicada
+                al periode (arts. 31 i 32 LIS)
+            x-agp34c1g74o30c1q60pj4dhh:
+              label: Bonificacions i deduccions per doble imposicio. Quota integra
+                ajustada positiva. DI internacional generada i aplicada al periode
+                (arts. 31 i 32 LIS)
+            x-agp34c1g74o30c1q60pj6d1k:
+              label: Altres deduccions. Quota liquida. Deduccio per reversio de mesures
+                temporals, DT 37a.1 LIS
+            x-agp34c1g74o30c1q60pj6d9m:
+              label: Altres deduccions. Quota liquida. Deduccio per reversio de mesures
+                temporals, DT 37a.2 LIS
+            x-agp34c1g74o30c1q60pj6d9o:
+              label: Quota integra. Regularitzacio de la reserva d'anivellament (art.
+                105.6 LIS)
+            x-agp34c1g74o30c1q60pj6d9p:
+              label: Altres deduccions. Quota liquida. Deduccio per produccions cinematografiques
+                estrangeres (art. 36.2 LIS)
+            x-agp34c1g74o30c1q60pj6dhg:
+              label: Resultat de l'autoliquidacio. Abonament de deduccions per produccions
+                cinematografiques estrangeres (art. 39.3 LIS), total. Diputacions
+                Forals i Navarra
+            x-agp34c1g74o30c1q60pj6e9j:
+              label: Resultat de l'autoliquidacio. Abonament de deduccions R+D+i per
+                insuficiencia de quota (opcio art. 39.2 LIS), Diputacions Forals i
+                Navarra
+            x-agp34c1g74o30c1q60pj6e9o:
+              label: Resultat de l'autoliquidacio. Abonament de deduccions per produccions
+                cinematografiques estrangeres (art. 39.3 LIS), Diputacions Forals
+                i Navarra
+            x-agp34c1g74o30c1q60pj6e9p:
+              label: Resultat de l'autoliquidacio. Abonament de deduccions R+D+i per
+                insuficiencia de quota (opcio art. 39.2 LIS), Estat
+            x-agp34c1g74o30c1q60pj8c1g:
+              label: Resultat de l'autoliquidacio. Abonament de deduccions per produccions
+                cinematografiques estrangeres (art. 39.3 LIS), Estat
             x-agp34c1h68o30c1q60o30c1h:
               label: Deduccions per doble imposicio internacional, RDLEG 4/2004. exercici
                 de generacio 2009. deduccio pendent el 2024 (registre T22012000)
