@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:ee407d8d9593734ce3573b3742d64c63b3828eb216d70ceb6a5d7616e6d020ac'
+body_hash: 'sha256:70b7f9e780edc9c804108b07a654b7db3beefd54211b260c1db0af86fdcc9bbf'
 ---
 
 # `source-casilla-integration` plan
@@ -177,7 +177,7 @@ Settle filing destination identity, substitutability, grain, precedence, absence
 
 - [x] `W03.P10.S56` - ground amortization destinations, revision windows, eligible basis, rates, limits, and asset grain; `.vault/research/2026-08-23-amortization-casilla-grounding-research.md`.
 - [x] `W03.P10.S57` - determine whether asset amortization is a direct filing source or a duplicate of transaction-ledger expenses; `.vault/adr/2026-08-23-amortization-casilla-mapping-adr.md`.
-- [ ] `W03.P10.S58` - determine whether finca amortization shares or requires a distinct source contract; `.vault/adr/2026-08-23-amortization-casilla-mapping-adr.md`.
+- [x] `W03.P10.S58` - determine whether finca amortization shares or requires a distinct source contract; `.vault/adr/2026-08-23-amortization-casilla-mapping-adr.md`.
 - [ ] `W03.P10.S59` - decide grain, precedence, absence semantics, rounding, and override policy; `.vault/adr/2026-08-23-amortization-casilla-mapping-adr.md`.
 - [ ] `W03.P10.S60` - record separate asset-amortization and finca-amortization dispositions; `src/cadrumo/_data/source_connectivity/census.toml`.
 
