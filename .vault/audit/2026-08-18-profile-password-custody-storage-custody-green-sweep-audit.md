@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:3acf63c5e701c1fd5d3f6ab45a7e1beae3b9680ff2a78a7ae1f6e5adb2627ed8'
+body_hash: 'sha256:3bc60594310f5df44d883aae2ec89c094e9cd83ee280d6da3baa396e08ead59b'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7069,3 +7069,35 @@ This closes the verification question for the domain with an exact split: 2,049 
 2,021 verified by the three lanes + 2 os_keychain cases that genuinely pass here + 26 that
 cannot, each with a named environmental cause. The residual risk is unchanged in size but no
 longer unexamined, and the standing context's "14" is superseded by a measured 26.
+
+### An anti-tautology guard that could pass for the wrong reason, fixed
+
+Running the held-out cases last iteration exposed a weakness that only shows up in a degraded
+environment. `test_crash_at_each_durable_handover_phase_recovers_selected_b` probes, for each
+crash phase, whether profile A's session is still resumable; for the terminal `a_retired`
+phase it asserted only `crashed["resumed"] is False`. That is satisfied by ANY refusal. On a
+host whose credential store is unreachable nothing is resumable at all, so the branch held for
+a reason unrelated to retirement -- the very tautology the comment above it claims to prevent.
+
+The failure was invisible in the ordinary way: the case went on to fail further down on the
+operation journal, with a message about recovery leaving a journal behind. Anyone triaging
+read a recovery problem, when the true cause was that the probe never had a receipt to lose.
+
+The fix names the refusal rather than counting it: the phase now also asserts
+`dek_length == 0` and `refusal == ProfileSessionRefusalReason.ABSENT.value`. The expectation
+is not invented -- `_assert_no_resumable_material` in this same module already discriminates
+exactly that way for a retired profile, so this applies the module's own established contract
+to the one guard that had drifted from it.
+
+Proven on real behaviour rather than a synthetic break, because this host supplies the
+degraded case for free: the guard now fails AT the guard with "the retired profile refused for
+a reason other than absence ('keyring_unavailable')", where before it passed and blamed the
+journal. On an interactive desktop session the refusal is `absent`, the guard passes, and
+nothing about the intended environment changes -- it simply can no longer pass for the wrong
+reason.
+
+Lane state at commit time: six failures across both lanes, none of them this change and none
+of them this domain. A peer is mid-authoring modelo 210 revision `2026-y-siguientes` -- an
+UNTRACKED revision directory beside a modified `revision.toml` -- and every failure names that
+revision with unknown export fields. Registry work in flight, another campaign's, and the same
+in-flight pattern this document has now recorded four times.
