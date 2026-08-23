@@ -28,15 +28,13 @@ import filecmp
 import json
 import shutil
 from collections.abc import Mapping, Sequence
-from importlib import metadata as _metadata
 from importlib.resources.abc import Traversable  # nosem
 from pathlib import Path
 from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo import __version__
-from cadrumo.core import PRODUCT_IDENTITY, iter_directory
+from cadrumo.core import PRODUCT_IDENTITY
 from cadrumo.core.hashing import sha256_hex
 
 from . import harness_root, iter_operator_rules, iter_personas
@@ -63,8 +61,6 @@ _CLAUDE_MEMORY_FILE = "CLAUDE.md"
 _PLUGIN_DIR = ".claude-plugin"
 _PLUGIN_MANIFEST = "plugin.json"
 _PLUGIN_NAME = PRODUCT_IDENTITY.plugin_identifier
-_PYPI_DISTRIBUTION = PRODUCT_IDENTITY.distribution
-_HARNESS_DISTRIBUTION = "cadrumo-harness"
 _PLUGIN_DISPLAY_NAME = f"{PRODUCT_IDENTITY.display_name} Spanish tax assistant"
 # Bilingual (English + Spanish) product copy, approved through this project's
 # docs-authority process. The labeled sections (English: / Español:) satisfy
@@ -101,9 +97,9 @@ _PLUGIN_LICENSE = "Apache-2.0"
 _PLUGIN_KEYWORDS = (PRODUCT_IDENTITY.plugin_identifier, "tax", "aeat", "spain", "irpf", "iva", "modelo")
 _PLUGIN_SCHEMA = "https://anthropic.com/claude-code/plugin.schema.json"
 
-# ``uvx`` launches either the exact published version or the root wheel and both
-# mandatory companions embedded beneath ``${CLAUDE_PLUGIN_ROOT}``. Neither path
-# resolves an ambient product executable. The plugin supplies its release
+# ``uvx`` launches the exact harness, root, and mandatory companion wheels
+# embedded beneath ``${CLAUDE_PLUGIN_ROOT}``. There is no index-backed or
+# source-checkout form. The plugin supplies its release
 # version through ``CADRUMO_MCP_REQUIRED_VERSION`` so a stale, incomplete, or
 # mixed installed cohort refuses before opening the protocol transport.
 _MCP_CONFIG = ".mcp.json"
@@ -124,9 +120,11 @@ _PLUGIN_ARTIFACTS_SUBDIR = Path("artifacts") / "python"
 _PLUGIN_COHORT_MANIFEST = "plugin-python-cohort.json"
 _PYTHON_COHORT_WHEELS = (
     "cadrumo",
+    "cadrumo-harness",
     "cadrumo-data-manuals",
     "cadrumo-data-official",
 )
+_PLUGIN_COHORT_SCHEMA = "cadrumo.plugin-python-cohort.v1"
 
 # --- Claude marketplace layout --------------------------------------------
 #
@@ -184,19 +182,6 @@ _MARKETPLACE_SUPERSEDES_MANIFEST = "supersedes.json"
 _MARKETPLACE_SUPERSEDED_PLUGINS = ("aeat",)
 
 
-def _plugin_version() -> str:
-    """Resolve the plugin version from installed package metadata.
-
-    Reads the Cadrumo distribution version through :mod:`importlib.metadata`,
-    falling back to the in-package ``__version__`` when the distribution is not
-    installed (an editable checkout run straight from the source tree).
-    """
-    try:
-        return _metadata.version(_PYPI_DISTRIBUTION)
-    except _metadata.PackageNotFoundError:
-        return __version__
-
-
 class PluginManifest(BaseModel):
     """Result of materialising a Claude plugin from the shipped harness source.
 
@@ -239,7 +224,9 @@ class _PluginPythonCohort(Protocol):
     directory: Path
     source_commit: str
     version: str
+    harness_version: str
     root_wheel: Path
+    harness_wheel: Path
     manuals_wheel: Path
     official_wheel: Path
     sha256: Mapping[str, str]
@@ -426,24 +413,27 @@ def _emit_plugin_agents(output_dir: Path) -> int:
 def _cohort_wheels(cohort: _PluginPythonCohort) -> dict[str, Path]:
     return {
         "cadrumo": cohort.root_wheel,
+        "cadrumo-harness": cohort.harness_wheel,
         "cadrumo-data-manuals": cohort.manuals_wheel,
         "cadrumo-data-official": cohort.official_wheel,
     }
 
 
-def _mcp_args(version: str, cohort: _PluginPythonCohort | None) -> list[str]:
-    if cohort is None:
-        # The harness distribution is versioned independently of the cohort and
-        # pins itself: ``uvx`` resolves the harness's own published version.
-        return ["--from", f"{_HARNESS_DISTRIBUTION}=={_metadata.version(_HARNESS_DISTRIBUTION)}", _MCP_CONSOLE_SCRIPT]
-    # The harness wheel is deliberately NOT a cohort member (independent
-    # version line); the cohort form pins the harness by its own published
-    # version and layers the cohort data wheels beside it.
+def _mcp_args(cohort: _PluginPythonCohort) -> list[str]:
+    """Return an index-free launch over only the plugin-retained wheel cohort."""
     root = f"{_CLAUDE_PLUGIN_ROOT}/{_PLUGIN_ARTIFACTS_SUBDIR.as_posix()}"
     wheels = _cohort_wheels(cohort)
     return [
+        "--isolated",
+        "--no-config",
+        "--no-sources",
+        "--offline",
+        "--no-index",
+        "--no-python-downloads",
         "--from",
-        f"{_HARNESS_DISTRIBUTION}=={_metadata.version(_HARNESS_DISTRIBUTION)}",
+        f"{root}/{wheels['cadrumo-harness'].name}",
+        "--with",
+        f"{root}/{wheels['cadrumo'].name}",
         "--with",
         f"{root}/{wheels['cadrumo-data-manuals'].name}",
         "--with",
@@ -452,13 +442,13 @@ def _mcp_args(version: str, cohort: _PluginPythonCohort | None) -> list[str]:
     ]
 
 
-def _mcp_config_document(version: str, cohort: _PluginPythonCohort | None) -> dict[str, object]:
+def _mcp_config_document(version: str, cohort: _PluginPythonCohort) -> dict[str, object]:
     """Build the plugin's ``.mcp.json`` declaring the stdio ``cadrumo-mcp`` server."""
     return {
         "mcpServers": {
             _MCP_SERVER_NAME: {
                 "command": _MCP_LAUNCHER,
-                "args": _mcp_args(version, cohort),
+                "args": _mcp_args(cohort),
                 "env": {
                     _MCP_REQUIRED_VERSION_ENV: version,
                     _MCP_PERSONA_ENV: _MCP_PERSONA_INTERPOLATION,
@@ -471,15 +461,11 @@ def _mcp_config_document(version: str, cohort: _PluginPythonCohort | None) -> di
 
 def _materialise_plugin_python_cohort(
     output_dir: Path,
-    cohort: _PluginPythonCohort | None,
+    cohort: _PluginPythonCohort,
 ) -> None:
     artifact_dir = output_dir / _PLUGIN_ARTIFACTS_SUBDIR
     if artifact_dir.exists():
         shutil.rmtree(artifact_dir)
-    if cohort is None:
-        if artifact_dir.parent.exists() and not any(iter_directory(artifact_dir.parent)):
-            artifact_dir.parent.rmdir()
-        return
     resolved = artifact_dir.resolve()
     if cohort.directory == resolved or cohort.directory in resolved.parents or resolved in cohort.directory.parents:
         raise ValueError("plugin output artifact directory must not overlap the source cohort")
@@ -490,6 +476,8 @@ def _materialise_plugin_python_cohort(
         _PLUGIN_COHORT_MANIFEST,
         {
             "artifacts": retained,
+            "harness_version": cohort.harness_version,
+            "schema": _PLUGIN_COHORT_SCHEMA,
             "sha256": {distribution: cohort.sha256[distribution] for distribution in _PYTHON_COHORT_WHEELS},
             "source_commit": cohort.source_commit,
             "version": cohort.version,
@@ -524,9 +512,8 @@ def _verify_and_copy_cohort_wheels(cohort: _PluginPythonCohort, artifact_dir: Pa
 def materialise_plugin(
     output_dir: Path,
     *,
-    version: str | None = None,
     persona_default: str = "",
-    cohort: _PluginPythonCohort | None = None,
+    cohort: _PluginPythonCohort,
 ) -> PluginManifest:
     """Write the shipped harness under ``output_dir`` as a Claude plugin.
 
@@ -534,22 +521,16 @@ def materialise_plugin(
     the ``userConfig`` persona option), the top-level ``skills/<name>/SKILL.md``
     tree (plus each skill's ``reference/`` material), the ``agents/<persona>.md``
     tree with Claude-native frontmatter, and the ``.mcp.json`` stdio server
-    declaration, all from the single authored harness source. The ``version`` is
-    resolved from installed package metadata when no cohort is supplied;
-    ``persona_default`` seeds the ``userConfig`` persona default. With a
-    validated ``cohort``, the plugin embeds and launches the canonical immutable
-    root wheel plus both mandatory companions. Otherwise it resolves the
-    published distribution at the exact plugin version. Neither path uses an
-    ambient product executable or project checkout.
+    declaration, all from the single authored harness source. The validated
+    ``cohort`` supplies the plugin version and every exact product wheel; the
+    plugin embeds and launches that closed set without an index, installed
+    package metadata, ambient executable, or project checkout. ``persona_default``
+    seeds the ``userConfig`` persona default.
 
     Returns:
         :class:`PluginManifest` describing the plugin written.
     """
-    if cohort is not None and version is not None and version != cohort.version:
-        raise ValueError(
-            f"plugin version {version!r} does not match Python cohort version {cohort.version!r}",
-        )
-    resolved_version = cohort.version if cohort is not None else (version or _plugin_version())
+    resolved_version = cohort.version
 
     _write_json(
         output_dir / _PLUGIN_DIR,
@@ -597,17 +578,16 @@ def _marketplace_manifest_document() -> dict[str, object]:
 def materialise_marketplace(
     output_dir: Path,
     *,
-    version: str | None = None,
     persona_default: str = "",
-    cohort: _PluginPythonCohort | None = None,
+    cohort: _PluginPythonCohort,
 ) -> MarketplaceManifest:
     """Write the marketplace-served tree under ``output_dir`` from the harness source.
 
     Emits ``.claude-plugin/marketplace.json`` listing the Cadrumo plugin and, under
     the relative ``plugins/cadrumo`` source it points at, the full plugin tree via
     :func:`materialise_plugin`. Because both come from one call, the marketplace
-    manifest and the plugin it serves cannot drift. ``version`` and
-    ``persona_default`` pass straight through to the plugin emission.
+    manifest and the plugin it serves cannot drift. The required validated
+    ``cohort`` and ``persona_default`` pass straight through to plugin emission.
 
     Also emits the ``.claude-plugin/supersedes.json`` sidecar naming the prior
     plugin identities this product retires, which the publisher reads at merge
@@ -626,7 +606,6 @@ def materialise_marketplace(
     )
     plugin = materialise_plugin(
         output_dir / _MARKETPLACE_PLUGINS_SUBDIR / _PLUGIN_NAME,
-        version=version,
         persona_default=persona_default,
         cohort=cohort,
     )

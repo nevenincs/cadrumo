@@ -43,7 +43,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.i18n import tr
-from ...core.identity import BucketId, SnapshotId, WorkUnitId
+from ...core.identity import BucketId, ContentDigest, SnapshotId, WorkUnitId
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
     BindingId,
@@ -62,7 +62,36 @@ RowBindingValue = str | Decimal
 _ROW_BINDING_VALUES = TypeAdapter(dict[RowBindingKey, RowBindingValue])
 
 
+class RowSourceIdentity(BaseModel):
+    """Opaque source identity bound to one row-binding coordinate.
+
+    The raw identity is encrypted persistence state and is deliberately omitted
+    from ordinary model representations.  The fingerprint remains visible as
+    the safe correlation handle for diagnostics and review surfaces.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    source_kind: BindingSourceKind
+    source_row_identity: str = Field(min_length=1, max_length=256, repr=False)
+    fingerprint: ContentDigest
+
+    @field_validator("source_row_identity")
+    @classmethod
+    def _source_row_identity_is_canonical(cls, value: str) -> str:
+        if value != value.strip() or any(ord(character) < 32 for character in value):
+            raise SourceMeshError("aggregation.source_mesh.errors.row_source_identity_invalid")
+        return value
+
+
+_ROW_SOURCE_IDENTITIES = TypeAdapter(dict[RowBindingKey, RowSourceIdentity])
+
+
 def _empty_row_binding_values() -> dict[RowBindingKey, RowBindingValue]:
+    return {}
+
+
+def _empty_row_source_identities() -> dict[RowBindingKey, RowSourceIdentity]:
     return {}
 
 
@@ -847,6 +876,10 @@ class CalculationSourceResolution(BaseModel):
     enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
     date_binding_values: Mapping[BindingId, date] = Field(default_factory=dict)
     row_binding_values: Mapping[RowBindingKey, RowBindingValue] = Field(default_factory=_empty_row_binding_values)
+    row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] = Field(
+        default_factory=_empty_row_source_identities,
+        repr=False,
+    )
     relation_values: Mapping[RelationId, Decimal] = Field(default_factory=dict)
     unresolved_relation_ids: tuple[RelationId, ...] = Field(default_factory=tuple)
     unresolved_binding_ids: tuple[BindingId, ...] = Field(default_factory=tuple)
@@ -961,6 +994,39 @@ class CalculationSourceResolution(BaseModel):
             normalized[(binding_id, row_index)] = row_value
         return MappingProxyType(dict(sorted(normalized.items(), key=lambda item: (item[0][0], item[0][1]))))
 
+    @field_validator("row_source_identities", mode="before")
+    @classmethod
+    def _coerce_row_source_identities(cls, value: object) -> object:
+        if isinstance(value, Mapping):
+            return _ROW_SOURCE_IDENTITIES.validate_python(value)
+        if not isinstance(value, (list, tuple)):
+            return value
+        items = OBJECT_TUPLE_ADAPTER.validate_python(value)
+        normalized: dict[tuple[object, object], object] = {}
+        for item in items:
+            if not isinstance(item, Mapping):
+                return items
+            row = STR_KEYED_MAPPING_ADAPTER.validate_python(item)
+            normalized[(row.get("binding_id"), row.get("row_index"))] = {
+                "source_kind": row.get("source_kind"),
+                "source_row_identity": row.get("source_row_identity"),
+                "fingerprint": row.get("fingerprint"),
+            }
+        return normalized
+
+    @field_validator("row_source_identities")
+    @classmethod
+    def _freeze_row_source_identities(
+        cls,
+        value: Mapping[RowBindingKey, RowSourceIdentity],
+    ) -> Mapping[RowBindingKey, RowSourceIdentity]:
+        normalized: dict[RowBindingKey, RowSourceIdentity] = {}
+        for (binding_id, row_index), identity in value.items():
+            if row_index < 1:
+                raise SourceMeshError("aggregation.source_mesh.errors.row_binding_index_invalid")
+            normalized[(binding_id, row_index)] = identity
+        return MappingProxyType(dict(sorted(normalized.items(), key=lambda item: (item[0][0], item[0][1]))))
+
     @field_validator("relation_values")
     @classmethod
     def _freeze_relation_values(cls, value: Mapping[RelationId, Decimal]) -> Mapping[RelationId, Decimal]:
@@ -1000,6 +1066,19 @@ class CalculationSourceResolution(BaseModel):
         if len(normalized) != len(set(normalized)):
             raise SourceMeshError("aggregation.source_mesh.errors.source_transaction_ids_duplicate")
         return tuple(sorted(normalized))
+
+    @model_validator(mode="after")
+    def _row_source_identities_are_coordinate_bijective(self) -> CalculationSourceResolution:
+        """Require exact coordinates once a resolver opts into row identity.
+
+        Existing row producers remain outside this new identity-bearing contract
+        until their own source-specific migration is adjudicated.  An opted-in
+        resolution, identified by a non-empty identity map, cannot carry a
+        missing or orphan identity at any row coordinate.
+        """
+        if self.row_source_identities and set(self.row_source_identities) != set(self.row_binding_values):
+            raise SourceMeshError("aggregation.source_mesh.errors.row_source_identity_coordinate_mismatch")
+        return self
 
     @model_validator(mode="after")
     def _provenance_names_its_producing_resolver(self) -> CalculationSourceResolution:
@@ -1049,6 +1128,22 @@ class CalculationSourceResolution(BaseModel):
                 "value_kind": "decimal" if isinstance(row_value, Decimal) else "text",
             }
             for (binding_id, row_index), row_value in value.items()
+        )
+
+    @field_serializer("row_source_identities")
+    def _serialize_row_source_identities(
+        self,
+        value: Mapping[RowBindingKey, RowSourceIdentity],
+    ) -> tuple[dict[str, object], ...]:
+        return tuple(
+            {
+                "binding_id": binding_id,
+                "row_index": row_index,
+                "source_kind": identity.source_kind.value,
+                "source_row_identity": identity.source_row_identity,
+                "fingerprint": identity.fingerprint,
+            }
+            for (binding_id, row_index), identity in value.items()
         )
 
     @field_serializer("relation_values")
@@ -1109,6 +1204,7 @@ class _SourceResolutionMergeState:
     enum_binding_values: dict[BindingId, str] = field(default_factory=dict)
     date_binding_values: dict[BindingId, date] = field(default_factory=dict)
     row_binding_values: dict[RowBindingKey, RowBindingValue] = field(default_factory=dict)
+    row_source_identities: dict[RowBindingKey, RowSourceIdentity] = field(default_factory=dict)
     relation_values: dict[RelationId, Decimal] = field(default_factory=dict)
     unresolved_relation_ids: set[RelationId] = field(default_factory=set)
     unresolved_binding_ids: set[BindingId] = field(default_factory=set)
@@ -1169,6 +1265,9 @@ class _SourceResolutionMergeState:
         for row_binding_key, value in resolution.row_binding_values.items():
             _claim_row_binding(self.row_binding_owners, row_binding_key, resolution.resolver_id)
             self.row_binding_values[row_binding_key] = value
+            identity = resolution.row_source_identities.get(row_binding_key)
+            if identity is not None:
+                self.row_source_identities[row_binding_key] = identity
             self.unresolved_binding_ids.discard(row_binding_key[0])
 
     def _absorb_relation_values(self, resolution: CalculationSourceResolution) -> None:
@@ -1203,6 +1302,7 @@ class _SourceResolutionMergeState:
             enum_binding_values=self.enum_binding_values,
             date_binding_values=self.date_binding_values,
             row_binding_values=self.row_binding_values,
+            row_source_identities=self.row_source_identities,
             relation_values=self.relation_values,
             unresolved_relation_ids=tuple(sorted(self.unresolved_relation_ids.difference(self.relation_values))),
             unresolved_binding_ids=self._unresolved_binding_ids(),
@@ -1257,6 +1357,7 @@ def merge_source_resolutions_by_precedence(
     enum_binding_values: dict[BindingId, str] = {}
     date_binding_values: dict[BindingId, date] = {}
     row_binding_values: dict[RowBindingKey, RowBindingValue] = {}
+    row_source_identities: dict[RowBindingKey, RowSourceIdentity] = {}
     relation_values: dict[RelationId, Decimal] = {}
     unresolved_relation_ids: set[RelationId] = set()
     unresolved_binding_ids: set[BindingId] = set()
@@ -1294,6 +1395,9 @@ def merge_source_resolutions_by_precedence(
         enum_binding_values.update(tier.enum_binding_values)
         date_binding_values.update(tier.date_binding_values)
         row_binding_values.update(tier.row_binding_values)
+        for row_binding_key in tier.row_binding_values:
+            row_source_identities.pop(row_binding_key, None)
+        row_source_identities.update(tier.row_source_identities)
         for binding_id, _row_index in tier.row_binding_values:
             unresolved_binding_ids.discard(binding_id)
         bound_inputs_by_casilla_id.update(tier.bound_inputs_by_casilla_id)
@@ -1308,6 +1412,7 @@ def merge_source_resolutions_by_precedence(
         enum_binding_values=enum_binding_values,
         date_binding_values=date_binding_values,
         row_binding_values=row_binding_values,
+        row_source_identities=row_source_identities,
         relation_values=relation_values,
         unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
         unresolved_binding_ids=tuple(
@@ -1456,6 +1561,7 @@ __all__ = [
     "ModeloSourceResolver",
     "RowBindingKey",
     "RowBindingValue",
+    "RowSourceIdentity",
     "build_binding_source_dispositions",
     "collect_unhandled_source_diagnostics",
     "merge_source_resolutions",
