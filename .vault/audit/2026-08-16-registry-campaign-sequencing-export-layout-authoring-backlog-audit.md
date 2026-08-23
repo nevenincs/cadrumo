@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:e8eed1568cb63e5929abecad63ffad7906f28e5ec9cd18c0fdc468d62763b089'
+body_hash: 'sha256:84db417b43ed42b1fd10717f35618b7fa845428fffddc1c9676482a47ec247ba'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -18438,3 +18438,82 @@ concepts each, and modelo 220 far larger still.
 
 Three splits, nine worklist entries blocked on corpus or era, and two form
 diagrams needing AEAT acquisition remain as before.
+
+## Tick: last tick's coverage finding WITHDRAWN -- the join under-counted by construction
+
+Re-measured at tick start: authority CLEAN at `ce9b80ae4b`. Modelo 840 was
+picked to author, being the tick's own recommendation.
+
+### The withdrawal
+
+Last tick concluded that the four revisions awaiting a layout have hundreds of
+design data fields no casilla covers -- 177, 419, 376 and 13106 -- and that
+casilla authoring is therefore a precondition of the map. **That is withdrawn.**
+
+The measure counted a design field as covered when ITS OWN text carried a
+bracketed number matching some casilla's `number`. AEAT does not number that
+way. It tags a logical GROUP once and leaves the group's other positions bare,
+which modelo 840's `Pag. 1` shows exactly::
+
+    @213+2   [11]  Apart. I: ... Provincia. [11]
+    @215+5   [10]  Apart. I: ... Municipio. [10]
+    @220+30        Apart. I: ... Municipio          <- same concept, NO tag
+    @250+6         Reservado ... Cod. M
+    @256+5   [12]  Apart. I: ... Cod. Postal. [12]
+
+The number sits on the CODE field; the adjacent NAME field carries none. The
+registry declares `sujeto.domicilio-municipio` numbered 10 all the same, so
+@220 scored as uncovered while being modelled.
+
+Checked rather than assumed: of the seven non-structural fields the join flagged
+on that sheet, at least FOUR correspond to casillas that already exist --
+`sujeto.domicilio-municipio`, `representante.domicilio-municipio`,
+`local-indirecto.municipio` and `act.codigo-provincia`.
+
+### What the modelo itself already said
+
+The casilla files carry detailed authoring notes that should have been read
+first: collapsed box numbers given descriptive SLUGS, a composite date kept as
+ONE casilla rather than three integers, box `[56]` explicitly NOT invented where
+a gap falls, and the header claim that "Pag. 1 tiles 1..1132 exactly once with
+no gap and no overlap". Thirteen of the 121 casillas are slug-numbered and were
+invisible to a digit-keyed join.
+
+### The measure that does not exist
+
+Which physical position a casilla occupies is recorded only by an export layout,
+and these revisions have none -- which is precisely why they are on the worklist.
+So there is NO mechanical field-to-casilla coverage measure for them, and a tag
+join must not be substituted for one. The gap may be real, but its size is
+unknown and last tick's numbers should not be quoted.
+
+### What was landed and unlanded
+
+`test_layout_needs_casillas_before_it_needs_a_map.py` is DELETED. Its assertions
+were literally true -- fields exist whose text carries no matching tag -- while
+its docstring read that as "no casilla covers", which is the unsound step. A
+green test carrying a false explanation is worse than none.
+
+`test_box_numbers_tag_groups_not_fields.py` replaces it with the evidence: the
+sheet reads whole, the untagged municipio NAME sits beside the tagged municipio
+CODE describing the same concept, and the registry models it with a casilla
+regardless. A fourth assertion was drafted claiming untagged fields are a large
+share of the sheet; the data refused it -- 15 of 106 -- and it was removed rather
+than loosened, because tests 2 and 3 already carry the point.
+
+The sibling `test_casilla_number_is_printed_by_its_design` is UNAFFECTED and
+stays: it runs casilla-to-design, asking only whether a declared number appears
+anywhere, which needs no per-field attribution.
+
+### Verified
+
+* the replacement: 3 passed; it bites -- giving every field its own tag reds the
+  untagged-neighbour assertion by name;
+* the two sound sibling modules: 8 passed;
+* authority loads CLEAN, ruff clean.
+
+### Still open
+
+The four layouts, three splits, nine blocked worklist entries and two form
+diagrams, unchanged -- but the four layouts are no longer characterised as
+casilla-authoring jobs, because that characterisation was not established.
