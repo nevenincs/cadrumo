@@ -210,7 +210,14 @@ def test_no_lane_verifies_a_website_this_repository_does_not_contain() -> None:
     mean the split half-reverted, with two repositories both believing they own
     the site.
     """
-    assert not (REPO_ROOT / "frontend").exists(), "the website was rehomed; this repository must not carry one"
+    # Keyed on the source marker, not on the bare directory: `frontend/` is in
+    # .gitignore's history and a stale checkout can still hold an orphaned
+    # node_modules/dist tree, which is regenerable residue rather than a
+    # returned surface. A tracked package.json is the thing that would mean the
+    # site came back.
+    assert not (REPO_ROOT / "frontend" / "package.json").exists(), (
+        "the website was rehomed to cadrumo-marketing; this repository must not carry one"
+    )
     assert not (_WORKFLOWS_DIR / "frontend.yml").exists(), "a website lane returned to the product repository"
 
 
