@@ -84,7 +84,8 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     # fields and revives DR32201 offset 1311 out of reserved space. The
     # earlier 2022/2023 boundary is NOT split: no key pairs those two
     # designs totally, so 2008-2022 still emits the 2023 layout.
-    _GeneratedTree("322", "2008-2023", "aeat-dr-322-2023", "2023", 2023, "01"),
+    _GeneratedTree("322", "2008-2022", "aeat-dr-322-2022", "2022", 2022, "01"),
+    _GeneratedTree("322", "2023", "aeat-dr-322-2023", "2023", 2023, "01"),
     _GeneratedTree("322", "2024-2025", "aeat-dr-322-2024-2025", "2024", 2024, "01"),
     _GeneratedTree("202", "2019-2022", "aeat-dr-202-2019", "2019", 2019, "1P"),
     _GeneratedTree("202", "2023-2024", "aeat-dr-202-2023", "2023", 2023, "1P"),

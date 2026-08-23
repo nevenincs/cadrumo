@@ -6,24 +6,13 @@ import typer
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._common import activate_subcommand_output_language as _activate_output_language
-from ._execution_policies import CALCULATION_READ
-
-app = typer.Typer()
 
 
-@app.command("status", help=tr("cli.config.status.help"))
-@command_execution_policy(CALCULATION_READ)
 def config_status(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Show the readiness of the current configuration profile."""
     _activate_output_language(ctx, output_language)

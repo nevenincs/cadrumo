@@ -7,22 +7,16 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import typer
-
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import strict_round_trip
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from ._execution_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, declare_metadata_group
 from ._status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
     from ....application.auth import AuthConfigureResult
-
-auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
 
 
 def _auth_configure_lines(configure_result: AuthConfigureResult) -> list[str]:
@@ -104,16 +98,9 @@ def _run_provider_auth_operation[AuthResultT](
         ) from exc
 
 
-@auth_app.command("providers", help=tr("cli.config.auth.providers_help"))
-@command_execution_policy(ENCRYPTED_READ)
 def auth_providers(
-    ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    ctx: object,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """List supported authentication providers from the backend catalogue."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -135,22 +122,11 @@ def auth_providers(
     _emit_envelope(ctx, command="config.auth.providers", result=result, lines=tuple(rows))
 
 
-@auth_app.command("configure", help=tr("cli.config.auth.configure_help"))
-@command_execution_policy(ENCRYPTED_WRITE)
 def auth_configure(
-    ctx: typer.Context,
-    provider: str = typer.Option(
-        ...,
-        "--provider",
-        help=tr("cli.config.auth.provider_help"),
-    ),
-    file: Path | None = typer.Option(None, "--file", help=tr("cli.config.auth.file_help")),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    ctx: object,
+    provider: str,
+    file: Path | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Configure the active authentication provider."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -193,17 +169,10 @@ def auth_configure(
     _emit_envelope(ctx, command="config.auth.configure", result=auth_configure_payload, lines=lines)
 
 
-@auth_app.command("status", help=tr("cli.config.auth.status_help"))
-@command_execution_policy(ENCRYPTED_READ)
 def auth_status(
-    ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider"),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    ctx: object,
+    provider: str | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Show the configured local authentication state."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -262,17 +231,10 @@ def _auth_status_summary_line(payload: dict[str, object]) -> str:
     )
 
 
-@auth_app.command("test", help=tr("cli.config.auth.test_help"))
-@command_execution_policy(ENCRYPTED_READ)
 def auth_test(
-    ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider"),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    ctx: object,
+    provider: str | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Render auth readiness through the application-owned auth state."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -312,19 +274,12 @@ def auth_test(
     )
 
 
-@auth_app.command("login", help=tr("cli.config.auth.login_help"))
-@command_execution_policy(ENCRYPTED_WRITE)
 def auth_login(
-    ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider"),
-    fresh: bool = typer.Option(False, "--fresh", help=tr("cli.config.auth.login_fresh_help")),
-    reset_lock: bool = typer.Option(False, "--reset-lock", help=tr("cli.config.auth.login_reset_lock_help")),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    ctx: object,
+    provider: str | None = None,
+    fresh: bool = False,
+    reset_lock: bool = False,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Acquire or verify a live AEAT session through the configured provider."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -356,22 +311,11 @@ def auth_login(
     )
 
 
-@auth_app.command("logout", help=tr("cli.config.auth.logout_help"))
-@command_execution_policy(ENCRYPTED_WRITE)
 def auth_logout(
-    ctx: typer.Context,
-    provider: str | None = typer.Option(
-        None,
-        "--provider",
-        help=tr("cli.config.auth.provider_help"),
-    ),
-    all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.logout_all_help")),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    ctx: object,
+    provider: str | None = None,
+    all_providers: bool = False,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Terminate local auth sessions without removing provider configuration."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -398,23 +342,12 @@ def auth_logout(
     )
 
 
-@auth_app.command("reset", help=tr("cli.config.auth.reset_help"))
-@command_execution_policy(ENCRYPTED_DESTRUCTIVE)
 def auth_reset(
-    ctx: typer.Context,
-    provider: str | None = typer.Option(
-        None,
-        "--provider",
-        help=tr("cli.config.auth.provider_help"),
-    ),
-    all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.reset_all_help")),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.auth.reset_yes_help")),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    ctx: object,
+    provider: str | None = None,
+    all_providers: bool = False,
+    yes: bool = False,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Remove local auth configuration and persisted provider state."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -440,4 +373,12 @@ def auth_reset(
     )
 
 
-declare_metadata_group(auth_app)
+__all__ = [
+    "auth_configure",
+    "auth_login",
+    "auth_logout",
+    "auth_providers",
+    "auth_reset",
+    "auth_status",
+    "auth_test",
+]

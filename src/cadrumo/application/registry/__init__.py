@@ -170,6 +170,7 @@ from ._source_connectivity_authority import (
 from .source_connectivity import (
     ManualCasillaRequirement,
     RegistryBindingRecord,
+    RegistryDestinationCandidate,
     RegistryDestinationRecord,
     RegistryFormulaRecord,
     RegistryRelationRecord,
@@ -182,6 +183,7 @@ from .source_connectivity import (
     derive_registry_relation_records,
     derive_registry_source_disposition_records,
     load_source_connectivity_census,
+    validate_census_destination_candidates,
 )
 
 _import_module("cadrumo.domain.renta")
@@ -594,6 +596,7 @@ __all__ = [
     "RegistryCitationsVerificationReport",
     "RegistryConformanceProfile",
     "RegistryCorpusIssueProjection",
+    "RegistryDestinationCandidate",
     "RegistryDestinationRecord",
     "RegistryFormulaRecord",
     "RegistryManualId",
@@ -643,6 +646,7 @@ __all__ = [
     "registry_manual_id",
     "show_registry_citation",
     "show_registry_manual",
+    "validate_census_destination_candidates",
     "verify_filed_state",
     "verify_registry_citations",
     "verify_registry_manual",

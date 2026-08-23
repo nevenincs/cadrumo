@@ -11,10 +11,8 @@ from pydantic import BaseModel, ConfigDict, SecretStr
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, active_profile_label
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from ._execution_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfileLoginOutcome
@@ -286,130 +284,94 @@ def _login_through_the_prompt(
         raise
 
 
-def _register_login_command(app: typer.Typer) -> None:
-    """Register the profile-session login door."""
+def config_login(
+    ctx: typer.Context,
+    name: str | None = None,
+    secrets_stdin: bool = False,
+    secrets_fd: int | None = None,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Authenticate one profile and mint its resumable session."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from ._login_frontend import login_screen_is_available
+    from ._secure_input import resolve_secrets_channel
 
-    @app.command("login", help=tr("cli.config.login.help"))
-    @command_execution_policy(BOOTSTRAP_WRITE)
-    def config_login(
-        ctx: typer.Context,
-        name: str | None = typer.Argument(None, help=tr("cli.config.login.name_help")),
-        secrets_stdin: bool = typer.Option(
-            False,
-            "--secrets-stdin",
-            help=tr("cli.config.custody.secrets_stdin_help"),
-        ),
-        secrets_fd: int | None = typer.Option(
-            None,
-            "--secrets-fd",
-            help=tr("cli.config.custody.secrets_fd_help"),
-        ),
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """Authenticate one profile and mint its resumable session."""
-        _activate_subcommand_output_language(ctx, output_language)
-        from ._login_frontend import login_screen_is_available
-        from ._secure_input import resolve_secrets_channel
-
-        resolve_secrets_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-        if login_screen_is_available(ctx, secrets_stdin=secrets_stdin, secrets_fd=secrets_fd):
-            outcome = _login_through_the_screen(name=name)
-        else:
-            outcome = _login_through_the_prompt(
-                ctx,
-                name=name,
-                secrets_stdin=secrets_stdin,
-                secrets_fd=secrets_fd,
-            )
-
-        from .._config_payloads import ConfigLoginResult
-
-        result = ConfigLoginResult(
-            profile_id=outcome.bucket_id,
-            active_profile=outcome.label,
-            authenticated_at=outcome.authenticated_at,
-            idle_deadline=outcome.idle_deadline,
-            absolute_deadline=outcome.absolute_deadline,
-            session_persisted=outcome.session_persisted,
-            already_authenticated=outcome.already_authenticated,
-            closed_previous_profile=outcome.closed_previous_bucket_id,
-        )
-        notices = _login_notices(outcome)
-        _emit_envelope(
+    resolve_secrets_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+    if login_screen_is_available(ctx, secrets_stdin=secrets_stdin, secrets_fd=secrets_fd):
+        outcome = _login_through_the_screen(name=name)
+    else:
+        outcome = _login_through_the_prompt(
             ctx,
-            command="config.login",
-            result=result,
-            lines=(
-                f"active_profile\t{outcome.label}",
-                f"profile_id\t{outcome.bucket_id}",
-                f"idle_deadline\t{outcome.idle_deadline.isoformat()}",
-                f"absolute_deadline\t{outcome.absolute_deadline.isoformat()}",
-                *(notice.message for notice in notices),
-            ),
-            notices=notices,
+            name=name,
+            secrets_stdin=secrets_stdin,
+            secrets_fd=secrets_fd,
         )
 
+    from .._config_payloads import ConfigLoginResult
 
-def _register_logout_command(app: typer.Typer) -> None:
-    """Register the profile-session strong-close door."""
-
-    @app.command("logout", help=tr("cli.config.logout.help"))
-    @command_execution_policy(BOOTSTRAP_DESTRUCTIVE)
-    def config_logout(
-        ctx: typer.Context,
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
+    result = ConfigLoginResult(
+        profile_id=outcome.bucket_id,
+        active_profile=outcome.label,
+        authenticated_at=outcome.authenticated_at,
+        idle_deadline=outcome.idle_deadline,
+        absolute_deadline=outcome.absolute_deadline,
+        session_persisted=outcome.session_persisted,
+        already_authenticated=outcome.already_authenticated,
+        closed_previous_profile=outcome.closed_previous_bucket_id,
+    )
+    notices = _login_notices(outcome)
+    _emit_envelope(
+        ctx,
+        command="config.login",
+        result=result,
+        lines=(
+            f"active_profile\t{outcome.label}",
+            f"profile_id\t{outcome.bucket_id}",
+            f"idle_deadline\t{outcome.idle_deadline.isoformat()}",
+            f"absolute_deadline\t{outcome.absolute_deadline.isoformat()}",
+            *(notice.message for notice in notices),
         ),
-    ) -> None:
-        """Strong-close the profile session: seal, delete both halves, clear the pointer."""
-        _activate_subcommand_output_language(ctx, output_language)
-        from ....application.user_profile import logout_active_profile
+        notices=notices,
+    )
 
-        signed_out_label = active_profile_label()
-        signed_out = logout_active_profile()
-        logged_out_profile = signed_out_label or signed_out
 
-        from .._config_payloads import ConfigLogoutResult
+def config_logout(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Strong-close the profile session: seal, delete both halves, clear the pointer."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile import logout_active_profile
 
-        result = ConfigLogoutResult(
-            logged_out_profile=logged_out_profile,
-            already_logged_out=signed_out is None,
-        )
-        notices: tuple[Notice, ...] = ()
-        if signed_out is None:
-            notices = (
-                Notice(
-                    severity=NoticeSeverity.INFO,
-                    code="config.logout.already_logged_out",
-                    message=tr("cli.config.logout.notices.already_logged_out"),
-                ),
-            )
-        _emit_envelope(
-            ctx,
-            command="config.logout",
-            result=result,
-            lines=(
-                f"logged_out_profile\t{logged_out_profile or '<none>'}",
-                *(notice.message for notice in notices),
+    signed_out_label = active_profile_label()
+    signed_out = logout_active_profile()
+    logged_out_profile = signed_out_label or signed_out
+
+    from .._config_payloads import ConfigLogoutResult
+
+    result = ConfigLogoutResult(
+        logged_out_profile=logged_out_profile,
+        already_logged_out=signed_out is None,
+    )
+    notices: tuple[Notice, ...] = ()
+    if signed_out is None:
+        notices = (
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="config.logout.already_logged_out",
+                message=tr("cli.config.logout.notices.already_logged_out"),
             ),
-            notices=notices,
         )
+    _emit_envelope(
+        ctx,
+        command="config.logout",
+        result=result,
+        lines=(
+            f"logged_out_profile\t{logged_out_profile or '<none>'}",
+            *(notice.message for notice in notices),
+        ),
+        notices=notices,
+    )
 
 
-def register_custody_commands(app: typer.Typer) -> None:
-    """Register the current root-level profile session commands.
-
-    ``login`` owns profile selection end to end (UUID or exact label)
-    through the application resolver, so no pointer or label resolver is
-    injected here any more.
-    """
-    _register_login_command(app)
-    _register_logout_command(app)
+__all__ = ["config_login", "config_logout"]

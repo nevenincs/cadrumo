@@ -251,7 +251,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2022"]
-export_refs = ["m322-2022.page-01.f096"]
+export_refs = ["m322-2022.page-01.f081"]
 
 [[revisions."2008-2022".casillas]]
 id = "decl.grupo-numero"
@@ -317,7 +317,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2022"]
-export_refs = ["m322-2022.page-01.f095"]
+export_refs = ["m322-2022.page-01.f080"]
 
 [[revisions."2008-2022".casillas]]
 id = "decl.volumen-anual-no-cero"
@@ -328,4 +328,4 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-121"]
 source_refs = ["aeat-dr-322-2022"]
-export_refs = ["m322-2022.page-01.f094"]
+export_refs = ["m322-2022.page-01.f079"]

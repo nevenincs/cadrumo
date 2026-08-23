@@ -2,13 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Annotated
-
 import typer
 
-from ....core.i18n import tr
-from .._command_policy import command_execution_policy
-from .._command_suggestions import CadrumoTyperGroup
 from .._common import _emit_envelope
 from .._config_payloads import (
     ConfigResetOperationPayload,
@@ -17,16 +12,6 @@ from .._config_payloads import (
     ConfigResetStatusResult,
 )
 from .._errors import CliRefusedBoundaryError
-from ._execution_policies import BOOTSTRAP_DESTRUCTIVE, PROFILE_READ, declare_metadata_group
-
-reset_app = typer.Typer(
-    name="reset",
-    help=tr(
-        "cli.config.reset.help",
-    ),
-    no_args_is_help=True,
-    cls=CadrumoTyperGroup,
-)
 
 
 def _retention_override(
@@ -46,27 +31,6 @@ def _retention_override(
             context={"option": "--override-retention"},
         )
     return enabled, normalized_reason
-
-
-_YesOpt = Annotated[bool, typer.Option("--yes", help=tr("cli.config.reset.yes_help"))]
-_OverrideRetentionOpt = Annotated[
-    bool,
-    typer.Option(
-        "--override-retention",
-        help=tr(
-            "cli.config.reset.override_retention_help",
-        ),
-    ),
-]
-_ReasonOpt = Annotated[
-    str | None,
-    typer.Option(
-        "--reason",
-        help=tr(
-            "cli.config.reset.reason_help",
-        ),
-    ),
-]
 
 
 def _require_yes_and_override(
@@ -110,18 +74,11 @@ def _operation_lines(operation: ConfigResetOperationPayload) -> tuple[str, ...]:
     return tuple(lines)
 
 
-@reset_app.command(
-    "start",
-    help=tr(
-        "cli.config.reset.start_help",
-    ),
-)
-@command_execution_policy(BOOTSTRAP_DESTRUCTIVE)
 def config_reset_start(
     ctx: typer.Context,
-    yes: _YesOpt = False,
-    override_retention: _OverrideRetentionOpt = False,
-    reason: _ReasonOpt = None,
+    yes: bool = False,
+    override_retention: bool = False,
+    reason: str | None = None,
 ) -> None:
     """Start and execute one new reset operation."""
     override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
@@ -141,22 +98,9 @@ def config_reset_start(
     )
 
 
-@reset_app.command(
-    "status",
-    help=tr(
-        "cli.config.reset.status_help",
-    ),
-)
-@command_execution_policy(PROFILE_READ)
 def config_reset_status_command(
     ctx: typer.Context,
-    operation_id: str | None = typer.Option(
-        None,
-        "--operation-id",
-        help=tr(
-            "cli.config.reset.operation_id_help",
-        ),
-    ),
+    operation_id: str | None = None,
 ) -> None:
     """Read one reset journal without resuming it."""
     from ....application.config_reset import config_reset_status
@@ -171,25 +115,12 @@ def config_reset_status_command(
     )
 
 
-@reset_app.command(
-    "resume",
-    help=tr(
-        "cli.config.reset.resume_help",
-    ),
-)
-@command_execution_policy(BOOTSTRAP_DESTRUCTIVE)
 def config_reset_resume(
     ctx: typer.Context,
-    operation_id: str | None = typer.Option(
-        None,
-        "--operation-id",
-        help=tr(
-            "cli.config.reset.operation_id_help",
-        ),
-    ),
-    yes: _YesOpt = False,
-    override_retention: _OverrideRetentionOpt = False,
-    reason: _ReasonOpt = None,
+    operation_id: str | None = None,
+    yes: bool = False,
+    override_retention: bool = False,
+    reason: str | None = None,
 ) -> None:
     """Roll one exact incomplete journal forward."""
     override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
@@ -221,11 +152,4 @@ def config_reset_resume(
     )
 
 
-def register_reset_commands(config_app: typer.Typer) -> None:
-    """Mount the durable reset lifecycle under ``aeat config reset``."""
-    config_app.add_typer(reset_app, name="reset")
-
-
-declare_metadata_group(reset_app)
-
-__all__ = ["register_reset_commands", "reset_app"]
+__all__ = ["config_reset_resume", "config_reset_start", "config_reset_status_command"]

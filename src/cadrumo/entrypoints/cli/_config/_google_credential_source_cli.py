@@ -56,9 +56,7 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TypedDict
-
-import typer
+from typing import TYPE_CHECKING, TypedDict
 
 from ....adapters.outbound.google import (
     GoogleAuthError,
@@ -69,21 +67,15 @@ from ....adapters.outbound.google import (
     save_credential_source_selection,
 )
 from ....core import GoogleCredentialSourceKind
-from ....core.i18n import tr
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
-from ._execution_policies import GOOGLE_READ, GOOGLE_WRITE, declare_metadata_group
 from ._google_credential_source_payloads import (
     GoogleCredentialSourceSetResult,
     GoogleCredentialSourceShowResult,
 )
 from ._google_errors import _google_refusal
 
-credential_source_app = typer.Typer(
-    name="credential-source",
-    help=tr("cli.config.google.credential_source.help"),
-    no_args_is_help=True,
-)
+if TYPE_CHECKING:
+    import typer
 
 
 class _ImpersonationKwargs(TypedDict, total=False):
@@ -108,40 +100,14 @@ def _default_scopes(selection: GoogleCredentialSourceSelection) -> list[str]:
     return list(selection.impersonation.target_scopes)
 
 
-@credential_source_app.command("set", help=tr("cli.config.google.credential_source.set_help"))
-@command_execution_policy(GOOGLE_WRITE)
 def google_credential_source_set(
     ctx: typer.Context,
-    kind: GoogleCredentialSourceKind = typer.Option(
-        ...,
-        "--kind",
-        help=tr("cli.config.google.credential_source.kind_help"),
-    ),
-    target_principal: str | None = typer.Option(
-        None,
-        "--target-principal",
-        help=tr("cli.config.google.credential_source.target_principal_help"),
-    ),
-    scopes: list[str] = typer.Option(
-        [],
-        "--scope",
-        help=tr("cli.config.google.credential_source.scope_help"),
-    ),
-    delegates: list[str] = typer.Option(
-        [],
-        "--delegate",
-        help=tr("cli.config.google.credential_source.delegate_help"),
-    ),
-    subject: str | None = typer.Option(
-        None,
-        "--subject",
-        help=tr("cli.config.google.credential_source.subject_help"),
-    ),
-    lifetime_seconds: int | None = typer.Option(
-        None,
-        "--lifetime-seconds",
-        help=tr("cli.config.google.credential_source.lifetime_help"),
-    ),
+    kind: GoogleCredentialSourceKind,
+    target_principal: str | None = None,
+    scopes: list[str] | None = None,
+    delegates: list[str] | None = None,
+    subject: str | None = None,
+    lifetime_seconds: int | None = None,
 ) -> None:
     """Persist the active profile's Google credential-source selection.
 
@@ -153,6 +119,8 @@ def google_credential_source_set(
     :func:`~adapters.outbound.storage.build_google_credentials` builds
     credentials for this profile.
     """
+    scopes = scopes or []
+    delegates = delegates or []
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
@@ -224,8 +192,6 @@ def google_credential_source_set(
     _emit_envelope(ctx, command="config.google.credential_source.set", result=typed, lines=tuple(lines))
 
 
-@credential_source_app.command("show", help=tr("cli.config.google.credential_source.show_help"))
-@command_execution_policy(GOOGLE_READ)
 def google_credential_source_show(
     ctx: typer.Context,
 ) -> None:
@@ -272,11 +238,4 @@ def google_credential_source_show(
     _emit_envelope(ctx, command="config.google.credential_source.show", result=typed, lines=tuple(lines))
 
 
-def register_google_credential_source_commands(google_app: typer.Typer) -> None:
-    """Mount the ``credential-source`` command group on ``aeat config google``."""
-    google_app.add_typer(credential_source_app, name="credential-source")
-
-
-declare_metadata_group(credential_source_app)
-
-__all__ = ["register_google_credential_source_commands"]
+__all__ = ["google_credential_source_set", "google_credential_source_show"]

@@ -56,7 +56,6 @@ _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
         # and still await their split. Each is recorded in the export-layout
         # authoring backlog audit with the boundary it crosses.
         ("200", "2024-y-siguientes"),
-        ("322", "2008-2023"),
         ("347", "2008-2024"),
     },
 )
@@ -89,23 +88,24 @@ _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
 #: design is a hole in detection rather than only a ledger entry.
 #: Measured in test_modelo_347_second_undetected_boundary.py.
 #:
-#: `("322", "2008-2025")` became `("322", "2008-2023")`: the LATER of its two
-#: boundaries was split -- the 2024 design adds nine fields and revives
-#: DR32201 offset 1311 out of reserved space -- and the revision keeps
-#: reporting for the earlier 2022/2023 boundary, which is the honest state.
-#: That boundary is not split because no key pairs the two designs totally:
-#: the printed ordinal is a contiguous 1..N sequence (pairing on it maps the
-#: Nth field of one design onto the Nth of another), offset pairs only 163 of
-#: 217, and box-number-plus-description leaves seven unpaired while colliding
-#: six times per design.
-#: Re-examined on BYTES, the way modelo 347's blocker was, and unlike 347 this
-#: one SURVIVES: the 2022 and 2023 designs straddle. AEAT inserted fields into
-#: DR32201 (84 -> 99) and displaced the survivors five bytes, so 267-283 in
-#: 2022 sits at 272-288 in 2023 -- overlapping with neither containing the
-#: other, 82 times on that sheet and 3 more on DR32202. Position therefore
-#: carries no semantics across this boundary and the split needs a per-box
-#: reading. The re-layout is localised: DR32200, DR32203 and DR32204 nest
-#: cleanly. Measured in test_modelo_322_designs_straddle.py.
+#: `("322", "2008-2023")` removed: the revision was partitioned into `2008-2022`
+#: and `2023` at the boundary between the two designs it straddled. Position
+#: carries no semantics across it -- AEAT inserted fields into DR32201 (84 -> 99)
+#: and displaced the survivors five bytes, so 267-283 in 2022 sits at 272-288 in
+#: 2023, overlapping without containing, 82 times on that sheet and 3 more on
+#: DR32202 (measured in test_modelo_322_designs_straddle.py). The re-layout is
+#: localised: DR32200 and DR32204 are identical and DR32203 keeps its geometry.
+#:
+#: The pairing the split needed was neither offset nor box number but
+#: (length, normalized description), which aligns 216 of the 2022 design's 217
+#: fields onto their 2023 counterparts. The one field it does not align is the
+#: whole point: box [73], carried by 2022 and dropped by 2023, which had no
+#: casilla at all and is now authored on the earlier revision.
+#:
+#: Verified in the direction that would catch a silenced detector rather than a
+#: real split: both revisions publish their own generated tree through
+#: `publish_validated_generated_export_tree`, each cites ONE design, and the
+#: box-set equality gate holds for both.
 #:
 #: `("184", "2015-y-siguientes")` removed: the revision was partitioned into
 #: `2015-2024` and `2025-y-siguientes` at the boundary Orden HAC/1430/2025 sets

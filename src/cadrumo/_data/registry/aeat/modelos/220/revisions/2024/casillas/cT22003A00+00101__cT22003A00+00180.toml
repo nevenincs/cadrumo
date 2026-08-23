@@ -27,10 +27,11 @@
 # only those tokens seen where they CANNOT be the left half of a split. 0
 # rejoin(s) applied: none.
 #
-# 7 of this record's 37 numbered lines carry the real ligature CODEPOINT (U+FB01 in
-# "Inversiones fi-nancieras", "Periodifi-caciones"), unsplit. It is expanded in the labels and
-# kept as emitted in the verbatim comments. The design carries 309 such codepoints in all,
-# so a plain-text search of this workbook for a Spanish word silently misses them.
+# 7 of this record's 37 numbered lines carry the real ligature CODEPOINT, unsplit,
+# expanded in the labels and kept as emitted in the verbatim comments. The design carries
+# 309 such codepoints in all, so a plain-text search of this workbook for a Spanish
+# word silently misses them.
+
 #
 # Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
 # 2024-12-31 -- exactly the single ejercicio this revision claims. T22003A00 tiles

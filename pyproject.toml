@@ -973,7 +973,14 @@ reportUnnecessaryTypeIgnoreComment = "error"
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-testpaths = ["src/cadrumo", "src/cadrumo-harness", "dev/packaging/tests/test_installed_oracles.py"]
+# Canonical source-capability discovery and census ratchet is explicit here so
+# the default unit gate fails on drift instead of relying on manual CLI use.
+testpaths = [
+  "src/cadrumo",
+  "src/cadrumo-harness",
+  "dev/packaging/tests/test_installed_oracles.py",
+  "dev/source_connectivity/tests",
+]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
 addopts = "-n auto --dist=loadfile --tb=short -m 'unit and not external_tool and not os_keychain' --strict-markers --max-worker-restart=0"
