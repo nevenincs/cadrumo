@@ -7,6 +7,268 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g710j0c1q60o34chl:
+              label: Consolidation of accounting results and taxable bases. D. Preliminary
+                taxable base of the group
+            x-agp34c1g710j0c1q60o34e9j:
+              label: Consolidation of accounting results and taxable bases. A. Consolidated
+                results of the tax group for the year, before tax
+            x-agp34c1g710j0c1q60o36c1h:
+              label: Consolidation of accounting results and taxable bases. B. Sum
+                of the results of the companies in the tax group for the year
+            x-agp34c1g710j0c1q60o36c1i:
+              label: Consolidation of accounting results and taxable bases. C. Difference
+                from consolidation of results (= A - B)
+            x-agp34c1g710j0c1q60o36c1j:
+              label: Consolidation of accounting results and taxable bases. E. Sum
+                of individual taxable bases
+            x-agp34c1g710j0c1q60o36c1k:
+              label: Consolidation of accounting results and taxable bases. F. Difference
+                from consolidation of taxable bases (= D - E)
+            x-agp34c1g710j0c1q60o36c1l:
+              label: Consolidation of accounting results and taxable bases. G. Differences
+                between the consolidation of results and that of taxable bases
+            x-agp34c1g710j0c1q60o36c1m:
+              label: Consolidation of accounting results and taxable bases. From internal
+                transactions in capitalised goods and services (first)
+            x-agp34c1g710j0c1q60o36c1n:
+              label: Consolidation of accounting results and taxable bases. From internal
+                transactions in capitalised goods and services (second)
+            x-agp34c1g710j0c1q60o36c1o:
+              label: Consolidation of accounting results and taxable bases. From internal
+                transactions in capitalised goods and services (third)
+            x-agp34c1g710j0c1q60o36c1p:
+              label: Consolidation of accounting results and taxable bases. From internal
+                transfers of credit rights
+            x-agp34c1g710j0c1q60o36c9g:
+              label: Consolidation of accounting results and taxable bases. From internal
+                transfers of derivatives (options and futures)
+            x-agp34c1g710j0c1q60o36c9h:
+              label: Consolidation of accounting results and taxable bases. From internal
+                transfers of financial assets
+            x-agp34c1g710j0c1q60o36c9i:
+              label: Consolidation of accounting results and taxable bases. From internal
+                transactions not covered by the preceding items
+            x-agp34c1g710j0c1q60o36c9j:
+              label: Consolidation of accounting results and taxable bases. G1. Total
+                differences from deferral of internal results
+            x-agp34c1g710j0c1q60o36c9k:
+              label: Consolidation of accounting results and taxable bases. From elimination
+                of internal dividends within the tax group
+            x-agp34c1g710j0c1q60o36c9l:
+              label: Consolidation of accounting results and taxable bases. From elimination
+                of impairments of holdings in equity
+            x-agp34c1g710j0c1q60o36c9m:
+              label: Consolidation of accounting results and taxable bases. From incorporation
+                of impairments of holdings in equity
+            x-agp34c1g710j0c1q60o36c9n:
+              label: Consolidation of accounting results and taxable bases. From consolidation
+                goodwill and negative consolidation difference
+            x-agp34c1g710j0c1q60o36c9o:
+              label: Consolidation of accounting results and taxable bases. From other
+                items not covered by the preceding ones
+            x-agp34c1g710j0c1q60o36c9p:
+              label: Consolidation of accounting results and taxable bases. G2. Total
+                differences from other items
+            x-agp34c1g71130c1q60o3ac9j:
+              label: Consolidation of accounting results and taxable bases. Balance
+                of income and expenses for the year. profit and loss account
+            x-agp34c1g71130c1q60o3ac9n:
+              label: Consolidation of accounting results and taxable bases. Balance
+                of income and expenses for the year. income and expenses recognised
+                directly in equity
+            x-agp34c1g71130c1q60o3ac9o:
+              label: Consolidation of accounting results and taxable bases. Balance
+                of income and expenses for the year. reserves
+            x-agp34c1g71130c1q60o3ac9p:
+              label: Consolidation of accounting results and taxable bases. Balance
+                of income and expenses for the year. total
+            x-agp34c1g71130c1q60o3achg:
+              label: Consolidation of accounting results and taxable bases. Corporate
+                income tax. profit and loss account, increases
+            x-agp34c1g71130c1q60o3achh:
+              label: Consolidation of accounting results and taxable bases. Corporate
+                income tax. profit and loss account, decreases
+            x-agp34c1g71130c1q60o3achi:
+              label: Consolidation of accounting results and taxable bases. Corporate
+                income tax. income and expenses recognised in equity, increases
+            x-agp34c1g71130c1q60o3achj:
+              label: Consolidation of accounting results and taxable bases. Corporate
+                income tax. income and expenses recognised in equity, decreases
+            x-agp34c1g71130c1q60o3achk:
+              label: Consolidation of accounting results and taxable bases. Corporate
+                income tax. reserves, increases
+            x-agp34c1g71130c1q60o3achl:
+              label: Consolidation of accounting results and taxable bases. Corporate
+                income tax. reserves, decreases
+            x-agp34c1g71130c1q60o3achm:
+              label: Consolidation of accounting results and taxable bases. Corporate
+                income tax. total
+            x-agp34c1g71130c1q60o3achn:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences of the individual companies. profit and loss account,
+                increases
+            x-agp34c1g71130c1q60o3ae9h:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences of the individual companies. profit and loss account,
+                decreases
+            x-agp34c1g71130c1q60o3cc1n:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences of the individual companies. income and expenses recognised
+                in equity, increases
+            x-agp34c1g71130c1q60o3ec1p:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences of the individual companies. income and expenses recognised
+                in equity, decreases
+            x-agp34c1g71130c1q60o3ec9g:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences of the individual companies. reserves, increases
+            x-agp34c1g71130c1q60o3ee1j:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences of the individual companies. reserves, decreases
+            x-agp34c1g71130c1q60o3ee1k:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences of the individual companies. total
+            x-agp34c1g71130c1q60o3ee1l:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences from consolidation adjustments. profit and loss account,
+                increases
+            x-agp34c1g71130c1q60o3ee1p:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences from consolidation adjustments. profit and loss account,
+                decreases
+            x-agp34c1g71130c1q60o3gc1h:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences from consolidation adjustments. income and expenses recognised
+                in equity, increases
+            x-agp34c1g71130c1q60o3gc1i:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences from consolidation adjustments. income and expenses recognised
+                in equity, decreases
+            x-agp34c1g71130c1q60o3gc1j:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences from consolidation adjustments. reserves, increases
+            x-agp34c1g71130c1q60o3gc1k:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences from consolidation adjustments. reserves, decreases
+            x-agp34c1g71130c1q60o3gc1l:
+              label: Consolidation of accounting results and taxable bases. Permanent
+                differences from consolidation adjustments. total
+            x-agp34c1g71130c1q60o3gc1m:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in the year. profit
+                and loss account, increases
+            x-agp34c1g71130c1q60o3gc9j:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in the year. profit
+                and loss account, decreases
+            x-agp34c1g71130c1q60o3gc9k:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in the year. income
+                and expenses recognised in equity, increases
+            x-agp34c1g71130c1q60o3gc9l:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in the year. income
+                and expenses recognised in equity, decreases
+            x-agp34c1g71130c1q60o3gd9g:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in the year. reserves,
+                increases
+            x-agp34c1g71130c1q60o3gd9h:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in the year. reserves,
+                decreases
+            x-agp34c1g71130c1q60o3ge1o:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in the year. total
+            x-agp34c1g71130c1q60o3ge1p:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in prior years. profit
+                and loss account, increases
+            x-agp34c1g71130c1q60o3ge9g:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in prior years. profit
+                and loss account, decreases
+            x-agp34c1g71130c1q60o3ge9o:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in prior years. income
+                and expenses recognised in equity, increases
+            x-agp34c1g71130c1q60o3ge9p:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in prior years. income
+                and expenses recognised in equity, decreases
+            x-agp34c1g71130c1q60o3icpl:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in prior years. reserves,
+                increases
+            x-agp34c1g71130c1q60o3icpm:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in prior years. reserves,
+                decreases
+            x-agp34c1g71130c1q60o3icpn:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences of the individual companies arising in prior years. total
+            x-agp34c1g71130c1q60o3icpo:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in the year. profit
+                and loss account, increases
+            x-agp34c1g71130c1q60o3idhh:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in the year. profit
+                and loss account, decreases
+            x-agp34c1g71130c1q60o3idhi:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in the year. income
+                and expenses recognised in equity, increases
+            x-agp34c1g71130c1q60o3idpp:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in the year. income
+                and expenses recognised in equity, decreases
+            x-agp34c1g71130c1q60o3ie1g:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in the year. reserves,
+                increases
+            x-agp34c1g71130c1q60o3ie1h:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in the year. reserves,
+                decreases
+            x-agp34c1g71130c1q60o3ie1i:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in the year. total
+            x-agp34c1g71130c1q60o3ie1j:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in prior years.
+                profit and loss account, increases
+            x-agp34c1g71130c1q60o3ie1k:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in prior years.
+                profit and loss account, decreases
+            x-agp34c1g71130c1q60o3ie1l:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in prior years.
+                income and expenses recognised in equity, increases
+            x-agp34c1g71130c1q60o3ie1m:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in prior years.
+                income and expenses recognised in equity, decreases
+            x-agp34c1g71130c1q60o3ie1n:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in prior years.
+                reserves, increases
+            x-agp34c1g71130c1q60o3ie1o:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in prior years.
+                reserves, decreases
+            x-agp34c1g71130c1q60o3ie1p:
+              label: Consolidation of accounting results and taxable bases. Temporary
+                differences from consolidation adjustments arising in prior years.
+                total
+            x-agp34c1g71130c1q60o3ie9g:
+              label: Consolidation of accounting results and taxable bases. Offset
+                of negative taxable bases from prior years
+            x-agp34c1g71130c1q60o3ie9h:
+              label: Consolidation of accounting results and taxable bases. Taxable
+                base (tax result)
             x-agp34c1h68o30c1q60o30c1h:
               label: Deductions for international double taxation, RDLEG 4/2004. year
                 of generation 2009. deduction outstanding in 2024 (record T22012000)

@@ -7,6 +7,259 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g710j0c1q60o34chl:
+              label: Consolidacio de resultats i bases imposables. D. Base imposable
+                previa del grup
+            x-agp34c1g710j0c1q60o34e9j:
+              label: Consolidacio de resultats i bases imposables. A. Resultats consolidats
+                del grup fiscal a l'exercici, abans d'impostos
+            x-agp34c1g710j0c1q60o36c1h:
+              label: Consolidacio de resultats i bases imposables. B. Suma dels resultats
+                de les societats del grup fiscal a l'exercici
+            x-agp34c1g710j0c1q60o36c1i:
+              label: Consolidacio de resultats i bases imposables. C. Diferencia per
+                consolidacio de resultats (= A - B)
+            x-agp34c1g710j0c1q60o36c1j:
+              label: Consolidacio de resultats i bases imposables. E. Suma de bases
+                imposables individuals
+            x-agp34c1g710j0c1q60o36c1k:
+              label: Consolidacio de resultats i bases imposables. F. Diferencia per
+                consolidacio de bases imposables (= D - E)
+            x-agp34c1g710j0c1q60o36c1l:
+              label: Consolidacio de resultats i bases imposables. G. Diferencies
+                entre les consolidacions de resultats i la de bases imposables
+            x-agp34c1g710j0c1q60o36c1m:
+              label: Consolidacio de resultats i bases imposables. Per operacions
+                internes de bens i serveis activats (primera)
+            x-agp34c1g710j0c1q60o36c1n:
+              label: Consolidacio de resultats i bases imposables. Per operacions
+                internes de bens i serveis activats (segona)
+            x-agp34c1g710j0c1q60o36c1o:
+              label: Consolidacio de resultats i bases imposables. Per operacions
+                internes de bens i serveis activats (tercera)
+            x-agp34c1g710j0c1q60o36c1p:
+              label: Consolidacio de resultats i bases imposables. Per transmissions
+                internes de drets de credit
+            x-agp34c1g710j0c1q60o36c9g:
+              label: Consolidacio de resultats i bases imposables. Per transmissions
+                internes de derivats (opcions i futurs)
+            x-agp34c1g710j0c1q60o36c9h:
+              label: Consolidacio de resultats i bases imposables. Per transmissions
+                internes d'actius financers
+            x-agp34c1g710j0c1q60o36c9i:
+              label: Consolidacio de resultats i bases imposables. Per operacions
+                internes no compreses als apartats anteriors
+            x-agp34c1g710j0c1q60o36c9j:
+              label: Consolidacio de resultats i bases imposables. G1. Total diferencies
+                per diferiment de resultats interns
+            x-agp34c1g710j0c1q60o36c9k:
+              label: Consolidacio de resultats i bases imposables. Per eliminacio
+                dels dividends interns del grup fiscal
+            x-agp34c1g710j0c1q60o36c9l:
+              label: Consolidacio de resultats i bases imposables. Per eliminacio
+                de deterioraments de valor de participacions en fons propis
+            x-agp34c1g710j0c1q60o36c9m:
+              label: Consolidacio de resultats i bases imposables. Per incorporacio
+                de deterioraments de valor de participacions en fons propis
+            x-agp34c1g710j0c1q60o36c9n:
+              label: Consolidacio de resultats i bases imposables. Per fons de comerc
+                de consolidacio i diferencia negativa de consolidacio
+            x-agp34c1g710j0c1q60o36c9o:
+              label: Consolidacio de resultats i bases imposables. Per altres conceptes
+                no compresos als apartats anteriors
+            x-agp34c1g710j0c1q60o36c9p:
+              label: Consolidacio de resultats i bases imposables. G2. Total diferencies
+                per altres conceptes
+            x-agp34c1g71130c1q60o3ac9j:
+              label: Consolidacio de resultats i bases imposables. Saldo d'ingressos
+                i despeses de l'exercici. compte de perdues i guanys
+            x-agp34c1g71130c1q60o3ac9n:
+              label: Consolidacio de resultats i bases imposables. Saldo d'ingressos
+                i despeses de l'exercici. ingressos i despeses imputats directament
+                al patrimoni net
+            x-agp34c1g71130c1q60o3ac9o:
+              label: Consolidacio de resultats i bases imposables. Saldo d'ingressos
+                i despeses de l'exercici. reserves
+            x-agp34c1g71130c1q60o3ac9p:
+              label: Consolidacio de resultats i bases imposables. Saldo d'ingressos
+                i despeses de l'exercici. total
+            x-agp34c1g71130c1q60o3achg:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                compte de perdues i guanys, augments
+            x-agp34c1g71130c1q60o3achh:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                compte de perdues i guanys, disminucions
+            x-agp34c1g71130c1q60o3achi:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                ingressos i despeses imputats al patrimoni net, augments
+            x-agp34c1g71130c1q60o3achj:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                ingressos i despeses imputats al patrimoni net, disminucions
+            x-agp34c1g71130c1q60o3achk:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                reserves, augments
+            x-agp34c1g71130c1q60o3achl:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                reserves, disminucions
+            x-agp34c1g71130c1q60o3achm:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                total
+            x-agp34c1g71130c1q60o3achn:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. compte de perdues i guanys, augments
+            x-agp34c1g71130c1q60o3ae9h:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. compte de perdues i guanys, disminucions
+            x-agp34c1g71130c1q60o3cc1n:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. ingressos i despeses imputats al patrimoni
+                net, augments
+            x-agp34c1g71130c1q60o3ec1p:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. ingressos i despeses imputats al patrimoni
+                net, disminucions
+            x-agp34c1g71130c1q60o3ec9g:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. reserves, augments
+            x-agp34c1g71130c1q60o3ee1j:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. reserves, disminucions
+            x-agp34c1g71130c1q60o3ee1k:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. total
+            x-agp34c1g71130c1q60o3ee1l:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. compte de perdues i guanys, augments
+            x-agp34c1g71130c1q60o3ee1p:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. compte de perdues i guanys, disminucions
+            x-agp34c1g71130c1q60o3gc1h:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. ingressos i despeses imputats al patrimoni
+                net, augments
+            x-agp34c1g71130c1q60o3gc1i:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. ingressos i despeses imputats al patrimoni
+                net, disminucions
+            x-agp34c1g71130c1q60o3gc1j:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. reserves, augments
+            x-agp34c1g71130c1q60o3gc1k:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. reserves, disminucions
+            x-agp34c1g71130c1q60o3gc1l:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. total
+            x-agp34c1g71130c1q60o3gc1m:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. compte de perdues
+                i guanys, augments
+            x-agp34c1g71130c1q60o3gc9j:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. compte de perdues
+                i guanys, disminucions
+            x-agp34c1g71130c1q60o3gc9k:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. ingressos i
+                despeses imputats al patrimoni net, augments
+            x-agp34c1g71130c1q60o3gc9l:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. ingressos i
+                despeses imputats al patrimoni net, disminucions
+            x-agp34c1g71130c1q60o3gd9g:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. reserves, augments
+            x-agp34c1g71130c1q60o3gd9h:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. reserves, disminucions
+            x-agp34c1g71130c1q60o3ge1o:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. total
+            x-agp34c1g71130c1q60o3ge1p:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. compte
+                de perdues i guanys, augments
+            x-agp34c1g71130c1q60o3ge9g:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. compte
+                de perdues i guanys, disminucions
+            x-agp34c1g71130c1q60o3ge9o:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. ingressos
+                i despeses imputats al patrimoni net, augments
+            x-agp34c1g71130c1q60o3ge9p:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. ingressos
+                i despeses imputats al patrimoni net, disminucions
+            x-agp34c1g71130c1q60o3icpl:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. reserves,
+                augments
+            x-agp34c1g71130c1q60o3icpm:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. reserves,
+                disminucions
+            x-agp34c1g71130c1q60o3icpn:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. total
+            x-agp34c1g71130c1q60o3icpo:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. compte de perdues
+                i guanys, augments
+            x-agp34c1g71130c1q60o3idhh:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. compte de perdues
+                i guanys, disminucions
+            x-agp34c1g71130c1q60o3idhi:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. ingressos i
+                despeses imputats al patrimoni net, augments
+            x-agp34c1g71130c1q60o3idpp:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. ingressos i
+                despeses imputats al patrimoni net, disminucions
+            x-agp34c1g71130c1q60o3ie1g:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. reserves, augments
+            x-agp34c1g71130c1q60o3ie1h:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. reserves, disminucions
+            x-agp34c1g71130c1q60o3ie1i:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. total
+            x-agp34c1g71130c1q60o3ie1j:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. compte
+                de perdues i guanys, augments
+            x-agp34c1g71130c1q60o3ie1k:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. compte
+                de perdues i guanys, disminucions
+            x-agp34c1g71130c1q60o3ie1l:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. ingressos
+                i despeses imputats al patrimoni net, augments
+            x-agp34c1g71130c1q60o3ie1m:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. ingressos
+                i despeses imputats al patrimoni net, disminucions
+            x-agp34c1g71130c1q60o3ie1n:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. reserves,
+                augments
+            x-agp34c1g71130c1q60o3ie1o:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. reserves,
+                disminucions
+            x-agp34c1g71130c1q60o3ie1p:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. total
+            x-agp34c1g71130c1q60o3ie9g:
+              label: Consolidacio de resultats i bases imposables. Compensacio de
+                bases imposables negatives d'exercicis anteriors
+            x-agp34c1g71130c1q60o3ie9h:
+              label: Consolidacio de resultats i bases imposables. Base imposable
+                (resultat fiscal)
             x-agp34c1h68o30c1q60o30c1h:
               label: Deduccions per doble imposicio internacional, RDLEG 4/2004. exercici
                 de generacio 2009. deduccio pendent el 2024 (registre T22012000)

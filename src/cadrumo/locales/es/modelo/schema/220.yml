@@ -8,6 +8,267 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g710j0c1q60o34chl:
+              label: Consolidacion de resultados y bases imponibles. D. Base imponible
+                previa del grupo
+            x-agp34c1g710j0c1q60o34e9j:
+              label: Consolidacion de resultados y bases imponibles. A. Resultados
+                consolidados del grupo fiscal en el ejercicio, antes de impuestos
+            x-agp34c1g710j0c1q60o36c1h:
+              label: Consolidacion de resultados y bases imponibles. B. Suma de los
+                resultados de las sociedades del grupo fiscal en el ejercicio
+            x-agp34c1g710j0c1q60o36c1i:
+              label: Consolidacion de resultados y bases imponibles. C. Diferencia
+                por consolidacion de resultados (= A - B)
+            x-agp34c1g710j0c1q60o36c1j:
+              label: Consolidacion de resultados y bases imponibles. E. Suma de bases
+                imponibles individuales
+            x-agp34c1g710j0c1q60o36c1k:
+              label: Consolidacion de resultados y bases imponibles. F. Diferencia
+                por consolidacion de bases imponibles (= D - E)
+            x-agp34c1g710j0c1q60o36c1l:
+              label: Consolidacion de resultados y bases imponibles. G. Diferencias
+                entre las consolidaciones de resultados y la de bases imponibles
+            x-agp34c1g710j0c1q60o36c1m:
+              label: Consolidacion de resultados y bases imponibles. Por operaciones
+                internas de bienes y servicios activados (primera)
+            x-agp34c1g710j0c1q60o36c1n:
+              label: Consolidacion de resultados y bases imponibles. Por operaciones
+                internas de bienes y servicios activados (segunda)
+            x-agp34c1g710j0c1q60o36c1o:
+              label: Consolidacion de resultados y bases imponibles. Por operaciones
+                internas de bienes y servicios activados (tercera)
+            x-agp34c1g710j0c1q60o36c1p:
+              label: Consolidacion de resultados y bases imponibles. Por transmisiones
+                internas de derechos de credito
+            x-agp34c1g710j0c1q60o36c9g:
+              label: Consolidacion de resultados y bases imponibles. Por transmisiones
+                internas de derivados (opciones y futuros)
+            x-agp34c1g710j0c1q60o36c9h:
+              label: Consolidacion de resultados y bases imponibles. Por transmisiones
+                internas de activos financieros
+            x-agp34c1g710j0c1q60o36c9i:
+              label: Consolidacion de resultados y bases imponibles. Por operaciones
+                internas no comprendidas en los apartados anteriores
+            x-agp34c1g710j0c1q60o36c9j:
+              label: Consolidacion de resultados y bases imponibles. G1. Total diferencias
+                por diferimiento de resultados internos
+            x-agp34c1g710j0c1q60o36c9k:
+              label: Consolidacion de resultados y bases imponibles. Por eliminacion
+                de los dividendos internos del grupo fiscal
+            x-agp34c1g710j0c1q60o36c9l:
+              label: Consolidacion de resultados y bases imponibles. Por eliminacion
+                de deterioros de valor de participaciones en fondos propios
+            x-agp34c1g710j0c1q60o36c9m:
+              label: Consolidacion de resultados y bases imponibles. Por incorporacion
+                de deterioros de valor de participaciones en fondos propios
+            x-agp34c1g710j0c1q60o36c9n:
+              label: Consolidacion de resultados y bases imponibles. Por fondos de
+                comercio de consolidacion y diferencia negativa de consolidacion
+            x-agp34c1g710j0c1q60o36c9o:
+              label: Consolidacion de resultados y bases imponibles. Por otros conceptos
+                no comprendidos en los apartados anteriores
+            x-agp34c1g710j0c1q60o36c9p:
+              label: Consolidacion de resultados y bases imponibles. G2. Total diferencias
+                por otros conceptos
+            x-agp34c1g71130c1q60o3ac9j:
+              label: Consolidacion de resultados y bases imponibles. Saldo de ingresos
+                y gastos del ejercicio. cuenta de perdidas y ganancias
+            x-agp34c1g71130c1q60o3ac9n:
+              label: Consolidacion de resultados y bases imponibles. Saldo de ingresos
+                y gastos del ejercicio. ingresos y gastos imputados directamente al
+                patrimonio neto
+            x-agp34c1g71130c1q60o3ac9o:
+              label: Consolidacion de resultados y bases imponibles. Saldo de ingresos
+                y gastos del ejercicio. reservas
+            x-agp34c1g71130c1q60o3ac9p:
+              label: Consolidacion de resultados y bases imponibles. Saldo de ingresos
+                y gastos del ejercicio. total
+            x-agp34c1g71130c1q60o3achg:
+              label: Consolidacion de resultados y bases imponibles. Impuesto sobre
+                Sociedades. cuenta de perdidas y ganancias, aumentos
+            x-agp34c1g71130c1q60o3achh:
+              label: Consolidacion de resultados y bases imponibles. Impuesto sobre
+                Sociedades. cuenta de perdidas y ganancias, disminuciones
+            x-agp34c1g71130c1q60o3achi:
+              label: Consolidacion de resultados y bases imponibles. Impuesto sobre
+                Sociedades. ingresos y gastos imputados al patrimonio neto, aumentos
+            x-agp34c1g71130c1q60o3achj:
+              label: Consolidacion de resultados y bases imponibles. Impuesto sobre
+                Sociedades. ingresos y gastos imputados al patrimonio neto, disminuciones
+            x-agp34c1g71130c1q60o3achk:
+              label: Consolidacion de resultados y bases imponibles. Impuesto sobre
+                Sociedades. reservas, aumentos
+            x-agp34c1g71130c1q60o3achl:
+              label: Consolidacion de resultados y bases imponibles. Impuesto sobre
+                Sociedades. reservas, disminuciones
+            x-agp34c1g71130c1q60o3achm:
+              label: Consolidacion de resultados y bases imponibles. Impuesto sobre
+                Sociedades. total
+            x-agp34c1g71130c1q60o3achn:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de las sociedades individuales. cuenta de perdidas y ganancias, aumentos
+            x-agp34c1g71130c1q60o3ae9h:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de las sociedades individuales. cuenta de perdidas y ganancias, disminuciones
+            x-agp34c1g71130c1q60o3cc1n:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de las sociedades individuales. ingresos y gastos imputados al patrimonio
+                neto, aumentos
+            x-agp34c1g71130c1q60o3ec1p:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de las sociedades individuales. ingresos y gastos imputados al patrimonio
+                neto, disminuciones
+            x-agp34c1g71130c1q60o3ec9g:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de las sociedades individuales. reservas, aumentos
+            x-agp34c1g71130c1q60o3ee1j:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de las sociedades individuales. reservas, disminuciones
+            x-agp34c1g71130c1q60o3ee1k:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de las sociedades individuales. total
+            x-agp34c1g71130c1q60o3ee1l:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de los ajustes por consolidacion. cuenta de perdidas y ganancias,
+                aumentos
+            x-agp34c1g71130c1q60o3ee1p:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de los ajustes por consolidacion. cuenta de perdidas y ganancias,
+                disminuciones
+            x-agp34c1g71130c1q60o3gc1h:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de los ajustes por consolidacion. ingresos y gastos imputados al patrimonio
+                neto, aumentos
+            x-agp34c1g71130c1q60o3gc1i:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de los ajustes por consolidacion. ingresos y gastos imputados al patrimonio
+                neto, disminuciones
+            x-agp34c1g71130c1q60o3gc1j:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de los ajustes por consolidacion. reservas, aumentos
+            x-agp34c1g71130c1q60o3gc1k:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de los ajustes por consolidacion. reservas, disminuciones
+            x-agp34c1g71130c1q60o3gc1l:
+              label: Consolidacion de resultados y bases imponibles. Diferencias permanentes
+                de los ajustes por consolidacion. total
+            x-agp34c1g71130c1q60o3gc1m:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en el ejercicio. cuenta
+                de perdidas y ganancias, aumentos
+            x-agp34c1g71130c1q60o3gc9j:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en el ejercicio. cuenta
+                de perdidas y ganancias, disminuciones
+            x-agp34c1g71130c1q60o3gc9k:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en el ejercicio. ingresos
+                y gastos imputados al patrimonio neto, aumentos
+            x-agp34c1g71130c1q60o3gc9l:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en el ejercicio. ingresos
+                y gastos imputados al patrimonio neto, disminuciones
+            x-agp34c1g71130c1q60o3gd9g:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en el ejercicio. reservas,
+                aumentos
+            x-agp34c1g71130c1q60o3gd9h:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en el ejercicio. reservas,
+                disminuciones
+            x-agp34c1g71130c1q60o3ge1o:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en el ejercicio. total
+            x-agp34c1g71130c1q60o3ge1p:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en ejercicios anteriores.
+                cuenta de perdidas y ganancias, aumentos
+            x-agp34c1g71130c1q60o3ge9g:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en ejercicios anteriores.
+                cuenta de perdidas y ganancias, disminuciones
+            x-agp34c1g71130c1q60o3ge9o:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en ejercicios anteriores.
+                ingresos y gastos imputados al patrimonio neto, aumentos
+            x-agp34c1g71130c1q60o3ge9p:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en ejercicios anteriores.
+                ingresos y gastos imputados al patrimonio neto, disminuciones
+            x-agp34c1g71130c1q60o3icpl:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en ejercicios anteriores.
+                reservas, aumentos
+            x-agp34c1g71130c1q60o3icpm:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en ejercicios anteriores.
+                reservas, disminuciones
+            x-agp34c1g71130c1q60o3icpn:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de las sociedades individuales con origen en ejercicios anteriores.
+                total
+            x-agp34c1g71130c1q60o3icpo:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en el ejercicio. cuenta
+                de perdidas y ganancias, aumentos
+            x-agp34c1g71130c1q60o3idhh:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en el ejercicio. cuenta
+                de perdidas y ganancias, disminuciones
+            x-agp34c1g71130c1q60o3idhi:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en el ejercicio. ingresos
+                y gastos imputados al patrimonio neto, aumentos
+            x-agp34c1g71130c1q60o3idpp:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en el ejercicio. ingresos
+                y gastos imputados al patrimonio neto, disminuciones
+            x-agp34c1g71130c1q60o3ie1g:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en el ejercicio. reservas,
+                aumentos
+            x-agp34c1g71130c1q60o3ie1h:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en el ejercicio. reservas,
+                disminuciones
+            x-agp34c1g71130c1q60o3ie1i:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en el ejercicio. total
+            x-agp34c1g71130c1q60o3ie1j:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en ejercicios anteriores.
+                cuenta de perdidas y ganancias, aumentos
+            x-agp34c1g71130c1q60o3ie1k:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en ejercicios anteriores.
+                cuenta de perdidas y ganancias, disminuciones
+            x-agp34c1g71130c1q60o3ie1l:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en ejercicios anteriores.
+                ingresos y gastos imputados al patrimonio neto, aumentos
+            x-agp34c1g71130c1q60o3ie1m:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en ejercicios anteriores.
+                ingresos y gastos imputados al patrimonio neto, disminuciones
+            x-agp34c1g71130c1q60o3ie1n:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en ejercicios anteriores.
+                reservas, aumentos
+            x-agp34c1g71130c1q60o3ie1o:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en ejercicios anteriores.
+                reservas, disminuciones
+            x-agp34c1g71130c1q60o3ie1p:
+              label: Consolidacion de resultados y bases imponibles. Diferencias temporarias
+                de los ajustes por consolidacion con origen en ejercicios anteriores.
+                total
+            x-agp34c1g71130c1q60o3ie9g:
+              label: Consolidacion de resultados y bases imponibles. Compensacion
+                de bases imponibles negativas de ejercicios anteriores
+            x-agp34c1g71130c1q60o3ie9h:
+              label: Consolidacion de resultados y bases imponibles. Base imponible
+                (resultado fiscal)
             x-agp34c1h68o30c1q60o30c1h:
               label: Deducciones por doble imposicion internacional, RDLEG 4/2004.
                 ejercicio de generacion 2009. deduccion pendiente en 2024 (registro

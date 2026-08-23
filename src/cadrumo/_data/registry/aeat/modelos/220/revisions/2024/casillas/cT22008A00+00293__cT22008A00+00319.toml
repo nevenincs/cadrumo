@@ -1,0 +1,276 @@
+# Modelo 220 RECORD T22008A00 -- consolidacion de resultados contables y de bases
+# imponibles: the lettered lines A to G2 that reconcile the group's consolidated
+# accounting result against the sum of its members' individual results, and the
+# corresponding reconciliation of bases imponibles.
+#
+# 21 casillas, every one carrying a real AEAT box number and a `segmento`.
+#
+# THIS RECORD IS NOT A GRID and is deliberately not treated as one. Its twenty-one
+# lines are each a distinct lettered concept -- A, B, C = A - B, D, E, F = D - E, G,
+# then the G1 and G2 subtotals -- so there is no group-by-column axis to decompose and
+# each label is taken from the design's own line. Forcing a decomposition here would
+# invent an axis the design does not have.
+#
+# THE ARITHMETIC IS PRINTED IN THE DESIGN AND IS NOT MODELLED. AEAT states "C. Diferencia
+# por consolidacion de resultados (= A - B)" and "F. Diferencia por consolidacion de
+# bases imponibles ( = D - E)", and line E even carries a formula over other casillas.
+# Those relations are recorded in the labels as AEAT prints them, but NOTHING in this
+# registry computes or checks them: no formula is attached to any casilla here.
+#
+# Grounded in aeat-dr-220-2024. The record tiles 1..534 exactly once with NO gap
+# and NO PARTIAL OVERLAP, both checked.
+#
+# NOT MODELLED, deliberately: the identifier envelope, the pagina-complementaria
+# mechanics, the reservado run and the end-of-record marker.
+
+# @16+17. Consolidación de resultados contables. A. Resultados consolidados del grupo fiscal en el ejercicio, antes de impuestos
+[[revisions."2024".casillas]]
+id = "T22008A00:00293"
+number = "00293"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17. Consolidación de resultados contables. B. Suma de los resultados de las sociedades del grupo fiscal en el ejercicio, antes de impuestos
+[[revisions."2024".casillas]]
+id = "T22008A00:00301"
+number = "00301"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17. Consolidación de bases imponibles. C. Diferencia por consolidacion de resultados (= A - B)
+[[revisions."2024".casillas]]
+id = "T22008A00:00302"
+number = "00302"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17. Consolidación de bases imponibles. D. Base imponible previa del grupo
+[[revisions."2024".casillas]]
+id = "T22008A00:00225"
+number = "00225"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17. Consolidación de bases imponibles.E. Suma de bases imponibles individuales ( = 043 - 01263 - 01264 + 01021 + 01935)
+[[revisions."2024".casillas]]
+id = "T22008A00:00303"
+number = "00303"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17. Consolidación de bases imponibles. F. Diferencia por consolidación de bases imponibles ( = D - E)
+[[revisions."2024".casillas]]
+id = "T22008A00:00304"
+number = "00304"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17. Consolidación de bases imponibles. G. DIFERENCIAS ENTRE LAS CONSOLIDACIONES DE RESULTADOS Y LA DE BASES IMPONIBLES (= F - C = G1 + G2)
+[[revisions."2024".casillas]]
+id = "T22008A00:00305"
+number = "00305"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17. Diferencias en el diferimiento de resultados internos. Por op. Internas de bienes y servicios activados en existencias en la entidad adquiriente
+[[revisions."2024".casillas]]
+id = "T22008A00:00306"
+number = "00306"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17. Diferencias en el diferimiento de resultados internos. Por op. Internas de bienes y servicios activados en inmovilizado amortizante en la entidad adquiriente
+[[revisions."2024".casillas]]
+id = "T22008A00:00307"
+number = "00307"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17. Diferencias en el diferimiento de resultados internos. Por op. Internas de bienes y servicios activados en terrenos en la entidad adquiriente
+[[revisions."2024".casillas]]
+id = "T22008A00:00308"
+number = "00308"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17. Diferencias en el diferimiento de resultados internos. Por transmisiones internas de drchos. De crédito y activos financieros representativos de deuda
+[[revisions."2024".casillas]]
+id = "T22008A00:00309"
+number = "00309"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17. Diferencias en el diferimiento de resultados internos. Por transmisiones internas de derivados (opciones, futuros, ...)
+[[revisions."2024".casillas]]
+id = "T22008A00:00310"
+number = "00310"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17. Diferencias en el diferimiento de resultados internos. Por transmisiones internas de activos financieros representativos de fondos propios
+[[revisions."2024".casillas]]
+id = "T22008A00:00311"
+number = "00311"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17. Diferencias en el diferimiento de resultados internos. Por operaciones internas no comprendidas en los epígrafes anteriores
+[[revisions."2024".casillas]]
+id = "T22008A00:00312"
+number = "00312"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17. Diferencias en el diferimiento de resultados internos. G1. Total diferencias por diferimiento de resultados internos.
+[[revisions."2024".casillas]]
+id = "T22008A00:00313"
+number = "00313"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17. Diferencias por otros conceptos. Por eliminación de los dividendos internos del grupo fiscal.
+[[revisions."2024".casillas]]
+id = "T22008A00:00314"
+number = "00314"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17. Diferencias por otros conceptos. Por eliminación dedeterioros de valor de participaciones en fondos propios de entidades del grupo fiscal.
+[[revisions."2024".casillas]]
+id = "T22008A00:00315"
+number = "00315"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17. Diferencias por otros conceptos. Por incorporación de deterioros de valor de participaciones en fondos propios de entidades del grupo fiscal.
+[[revisions."2024".casillas]]
+id = "T22008A00:00316"
+number = "00316"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17. Diferencias por otros conceptos. Por fondos de comercio de consolidación y diferencia negativa de consolidación.
+[[revisions."2024".casillas]]
+id = "T22008A00:00317"
+number = "00317"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17. Diferencias por otros conceptos. Por otros conceptos no comprendidos en los apartados anteriores. (especificar).
+[[revisions."2024".casillas]]
+id = "T22008A00:00318"
+number = "00318"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17. Diferencias por otros conceptos. G2. Total diferencias por otros conceptos.
+[[revisions."2024".casillas]]
+id = "T22008A00:00319"
+number = "00319"
+segmento = "T22008A00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

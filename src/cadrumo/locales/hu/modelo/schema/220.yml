@@ -7,6 +7,263 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g710j0c1q60o34chl:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. D. A csoport
+                elozetes adoalapja
+            x-agp34c1g710j0c1q60o34e9j:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A. Az adocsoport
+                konszolidalt eredmenye a targyevben, ado elott
+            x-agp34c1g710j0c1q60o36c1h:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. B. Az adocsoport
+                tarsasagai eredmenyeinek osszege a targyevben
+            x-agp34c1g710j0c1q60o36c1i:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. C. Az eredmenykonszolidaciobol
+                eredo kulonbozet (= A - B)
+            x-agp34c1g710j0c1q60o36c1j:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. E. Az egyedi
+                adoalapok osszege
+            x-agp34c1g710j0c1q60o36c1k:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. F. Az adoalap-konszolidaciobol
+                eredo kulonbozet (= D - E)
+            x-agp34c1g710j0c1q60o36c1l:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. G. Az eredmeny-
+                es az adoalap-konszolidacio kozotti kulonbozetek
+            x-agp34c1g710j0c1q60o36c1m:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Aktivalt
+                termekek es szolgaltatasok belso ugyleteibol (elso)
+            x-agp34c1g710j0c1q60o36c1n:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Aktivalt
+                termekek es szolgaltatasok belso ugyleteibol (masodik)
+            x-agp34c1g710j0c1q60o36c1o:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Aktivalt
+                termekek es szolgaltatasok belso ugyleteibol (harmadik)
+            x-agp34c1g710j0c1q60o36c1p:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Kovetelesek
+                belso atruhazasabol
+            x-agp34c1g710j0c1q60o36c9g:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Szarmaztatott
+                ugyletek belso atruhazasabol (opciok es hatarido
+            x-agp34c1g710j0c1q60o36c9h:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Penzugyi
+                eszkozok belso atruhazasabol
+            x-agp34c1g710j0c1q60o36c9i:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az elozo
+                pontokban nem szereplo belso ugyletekbol
+            x-agp34c1g710j0c1q60o36c9j:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. G1. A belso
+                eredmenyek halasztasabol eredo kulonbozetek osszesen
+            x-agp34c1g710j0c1q60o36c9k:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az adocsoporton
+                beluli osztalekok kiszurésebol
+            x-agp34c1g710j0c1q60o36c9l:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A sajat tokeben
+                levo reszesedesek ertekvesztesenek kiszurésebol
+            x-agp34c1g710j0c1q60o36c9m:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A sajat tokeben
+                levo reszesedesek ertekvesztesenek beszamitasabol
+            x-agp34c1g710j0c1q60o36c9n:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Konszolidacios
+                uzleti vagy cegertekbol es negativ konszolidacios kulonbozetbol
+            x-agp34c1g710j0c1q60o36c9o:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az elozo
+                pontokban nem szereplo egyeb tetelekbol
+            x-agp34c1g710j0c1q60o36c9p:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. G2. Az egyeb
+                tetelekbol eredo kulonbozetek osszesen
+            x-agp34c1g71130c1q60o3ac9j:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az uzleti
+                ev bevetel- es koltsegegyenlege. eredmenykimutatas
+            x-agp34c1g71130c1q60o3ac9n:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az uzleti
+                ev bevetel- es koltsegegyenlege. kozvetlenul a sajat tokeben elszamolt
+                bevetelek es koltsegek
+            x-agp34c1g71130c1q60o3ac9o:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az uzleti
+                ev bevetel- es koltsegegyenlege. tartalekok
+            x-agp34c1g71130c1q60o3ac9p:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az uzleti
+                ev bevetel- es koltsegegyenlege. osszesen
+            x-agp34c1g71130c1q60o3achg:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Tarsasagi
+                ado. eredmenykimutatas, novekedesek
+            x-agp34c1g71130c1q60o3achh:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Tarsasagi
+                ado. eredmenykimutatas, csokkenesek
+            x-agp34c1g71130c1q60o3achi:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Tarsasagi
+                ado. a sajat tokeben elszamolt tetelek, novekedesek
+            x-agp34c1g71130c1q60o3achj:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Tarsasagi
+                ado. a sajat tokeben elszamolt tetelek, csokkenesek
+            x-agp34c1g71130c1q60o3achk:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Tarsasagi
+                ado. tartalekok, novekedesek
+            x-agp34c1g71130c1q60o3achl:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Tarsasagi
+                ado. tartalekok, csokkenesek
+            x-agp34c1g71130c1q60o3achm:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Tarsasagi
+                ado. osszesen
+            x-agp34c1g71130c1q60o3achn:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok allando kulonbozetei. eredmenykimutatas, novekedesek
+            x-agp34c1g71130c1q60o3ae9h:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok allando kulonbozetei. eredmenykimutatas, csokkenesek
+            x-agp34c1g71130c1q60o3cc1n:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok allando kulonbozetei. a sajat tokeben elszamolt tetelek,
+                novekedesek
+            x-agp34c1g71130c1q60o3ec1p:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok allando kulonbozetei. a sajat tokeben elszamolt tetelek,
+                csokkenesek
+            x-agp34c1g71130c1q60o3ec9g:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok allando kulonbozetei. tartalekok, novekedesek
+            x-agp34c1g71130c1q60o3ee1j:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok allando kulonbozetei. tartalekok, csokkenesek
+            x-agp34c1g71130c1q60o3ee1k:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok allando kulonbozetei. osszesen
+            x-agp34c1g71130c1q60o3ee1l:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok allando kulonbozetei. eredmenykimutatas, novekedesek
+            x-agp34c1g71130c1q60o3ee1p:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok allando kulonbozetei. eredmenykimutatas, csokkenesek
+            x-agp34c1g71130c1q60o3gc1h:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok allando kulonbozetei. a sajat tokeben elszamolt tetelek,
+                novekedesek
+            x-agp34c1g71130c1q60o3gc1i:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok allando kulonbozetei. a sajat tokeben elszamolt tetelek,
+                csokkenesek
+            x-agp34c1g71130c1q60o3gc1j:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok allando kulonbozetei. tartalekok, novekedesek
+            x-agp34c1g71130c1q60o3gc1k:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok allando kulonbozetei. tartalekok, csokkenesek
+            x-agp34c1g71130c1q60o3gc1l:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok allando kulonbozetei. osszesen
+            x-agp34c1g71130c1q60o3gc1m:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok targyevben keletkezett atmeneti kulonbozetei. eredmenykimutatas,
+                novekedesek
+            x-agp34c1g71130c1q60o3gc9j:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok targyevben keletkezett atmeneti kulonbozetei. eredmenykimutatas,
+                csokkenesek
+            x-agp34c1g71130c1q60o3gc9k:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok targyevben keletkezett atmeneti kulonbozetei. a sajat tokeben
+                elszamolt tetelek, novekedesek
+            x-agp34c1g71130c1q60o3gc9l:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok targyevben keletkezett atmeneti kulonbozetei. a sajat tokeben
+                elszamolt tetelek, csokkenesek
+            x-agp34c1g71130c1q60o3gd9g:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok targyevben keletkezett atmeneti kulonbozetei. tartalekok,
+                novekedesek
+            x-agp34c1g71130c1q60o3gd9h:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok targyevben keletkezett atmeneti kulonbozetei. tartalekok,
+                csokkenesek
+            x-agp34c1g71130c1q60o3ge1o:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok targyevben keletkezett atmeneti kulonbozetei. osszesen
+            x-agp34c1g71130c1q60o3ge1p:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok korabbi evekben keletkezett atmeneti kulonbozetei. eredmenykimutatas,
+                novekedesek
+            x-agp34c1g71130c1q60o3ge9g:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok korabbi evekben keletkezett atmeneti kulonbozetei. eredmenykimutatas,
+                csokkenesek
+            x-agp34c1g71130c1q60o3ge9o:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok korabbi evekben keletkezett atmeneti kulonbozetei. a sajat
+                tokeben elszamolt tetelek, novekedesek
+            x-agp34c1g71130c1q60o3ge9p:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok korabbi evekben keletkezett atmeneti kulonbozetei. a sajat
+                tokeben elszamolt tetelek, csokkenesek
+            x-agp34c1g71130c1q60o3icpl:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok korabbi evekben keletkezett atmeneti kulonbozetei. tartalekok,
+                novekedesek
+            x-agp34c1g71130c1q60o3icpm:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok korabbi evekben keletkezett atmeneti kulonbozetei. tartalekok,
+                csokkenesek
+            x-agp34c1g71130c1q60o3icpn:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Az egyes
+                tarsasagok korabbi evekben keletkezett atmeneti kulonbozetei. osszesen
+            x-agp34c1g71130c1q60o3icpo:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok targyevben keletkezett atmeneti kulonbozetei. eredmenykimutatas,
+                novekedesek
+            x-agp34c1g71130c1q60o3idhh:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok targyevben keletkezett atmeneti kulonbozetei. eredmenykimutatas,
+                csokkenesek
+            x-agp34c1g71130c1q60o3idhi:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok targyevben keletkezett atmeneti kulonbozetei. a sajat tokeben
+                elszamolt tetelek, novekedesek
+            x-agp34c1g71130c1q60o3idpp:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok targyevben keletkezett atmeneti kulonbozetei. a sajat tokeben
+                elszamolt tetelek, csokkenesek
+            x-agp34c1g71130c1q60o3ie1g:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok targyevben keletkezett atmeneti kulonbozetei. tartalekok,
+                novekedesek
+            x-agp34c1g71130c1q60o3ie1h:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok targyevben keletkezett atmeneti kulonbozetei. tartalekok,
+                csokkenesek
+            x-agp34c1g71130c1q60o3ie1i:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok targyevben keletkezett atmeneti kulonbozetei. osszesen
+            x-agp34c1g71130c1q60o3ie1j:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok korabbi evekben keletkezett atmeneti kulonbozetei. eredmenykimutatas,
+                novekedesek
+            x-agp34c1g71130c1q60o3ie1k:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok korabbi evekben keletkezett atmeneti kulonbozetei. eredmenykimutatas,
+                csokkenesek
+            x-agp34c1g71130c1q60o3ie1l:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok korabbi evekben keletkezett atmeneti kulonbozetei. a sajat
+                tokeben elszamolt tetelek, novekedesek
+            x-agp34c1g71130c1q60o3ie1m:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok korabbi evekben keletkezett atmeneti kulonbozetei. a sajat
+                tokeben elszamolt tetelek, csokkenesek
+            x-agp34c1g71130c1q60o3ie1n:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok korabbi evekben keletkezett atmeneti kulonbozetei. tartalekok,
+                novekedesek
+            x-agp34c1g71130c1q60o3ie1o:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok korabbi evekben keletkezett atmeneti kulonbozetei. tartalekok,
+                csokkenesek
+            x-agp34c1g71130c1q60o3ie1p:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. A konszolidacios
+                korrekciok korabbi evekben keletkezett atmeneti kulonbozetei. osszesen
+            x-agp34c1g71130c1q60o3ie9g:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Korabbi evek
+                negativ adoalapjainak beszamitasa
+            x-agp34c1g71130c1q60o3ie9h:
+              label: Szamviteli eredmenyek es adoalapok konszolidacioja. Adoalap (adozasi
+                eredmeny)
             x-agp34c1h68o30c1q60o30c1h:
               label: Nemzetkozi kettos adoztatas miatti levonasok, RDLEG 4/2004. 2009.
                 keletkezesi ev. 2024-ben fennallo levonas (rekord T22012000)
