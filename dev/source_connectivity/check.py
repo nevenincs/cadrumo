@@ -6,8 +6,14 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
-from cadrumo.core import SourceConnectivityDisposition, SourceConnectivityExpiryPosture
+from cadrumo.core import (
+    SourceConnectivityDisposition,
+    SourceConnectivityExpiryPosture,
+    SourceConnectivityProofAuthority,
+)
 
 from .discovery import assign_capabilities_to_census, discovered_source_capability_ids
 
@@ -54,10 +60,14 @@ def check_capability_census(
     repo_root: Path,
     *,
     as_of: date | None = None,
+    proof_authority: SourceConnectivityProofAuthority | None = None,
 ) -> SourceConnectivityCheckResult:
-    """Reject any live capability addition or unexplained reviewed disappearance."""
+    """Reject capability drift, stale governance, and unsupported connections."""
     capability_ids = discovered_source_capability_ids(repo_root)
-    manifest = load_source_connectivity_census()
+    try:
+        manifest = load_source_connectivity_census(proof_authority=proof_authority)
+    except ValidationError as error:
+        raise SourceConnectivityCheckError(f"census claim failed live proof validation: {error}") from error
     check_census_governance(manifest, as_of=as_of or date.today())
     try:
         assignments = assign_capabilities_to_census(capability_ids, manifest)
