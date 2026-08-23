@@ -104,6 +104,17 @@ class MachineSecretPayloadMetadata:
     condition: MachineSecretVariantConditionMetadata | None
 
 
+@dataclass(frozen=True, slots=True)
+class ProfileAuthenticationContractMetadata:
+    """Value-free public shape and collision rules for the root capability."""
+
+    fields: tuple[MachineSecretFieldMetadata, ...]
+    maximum_bytes: int
+    same_scope_exclusive: bool
+    stdin_exclusive_across_scopes: bool
+    descriptors_must_differ_across_scopes: bool
+
+
 def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPayloadMetadata, ...]:
     """Project value-free secret shapes directly from their owning command spec."""
     contract = spec.machine_secret
@@ -174,6 +185,7 @@ class LiveNodeRegistrationMetadata:
 class CommandRegistrationProjection:
     commands: tuple[CommandRegistrationMetadata, ...]
     nodes: tuple[LiveNodeRegistrationMetadata, ...]
+    profile_authentication_contract: ProfileAuthenticationContractMetadata
 
 
 def _policy(spec: CommandSpec) -> CommandPolicyMetadata:
@@ -251,6 +263,12 @@ def command_registration_projection() -> CommandRegistrationProjection:
 @cache
 def _command_registration_projection(language: str) -> CommandRegistrationProjection:
     from ._command_specs import COMMAND_GRAPH
+    from ._config._secure_input import MACHINE_SECRET_MAX_BYTES
+    from ._profile_authentication_contract import profile_authentication_posture
+
+    root_profile_secret = COMMAND_GRAPH.by_key()["root"].profile_secret
+    if root_profile_secret is None:
+        raise RuntimeError("root command spec must declare profile-secret metadata authority")
 
     commands: list[CommandRegistrationMetadata] = []
     nodes: list[LiveNodeRegistrationMetadata] = []
@@ -279,10 +297,23 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
                 owner,
                 None,
                 machine_secret_payload_metadata(spec),
-                spec.profile_authentication.value,
+                profile_authentication_posture(node).value,
             )
         )
-    return CommandRegistrationProjection(tuple(sorted(commands, key=lambda row: row.command)), tuple(nodes))
+    return CommandRegistrationProjection(
+        tuple(sorted(commands, key=lambda row: row.command)),
+        tuple(nodes),
+        ProfileAuthenticationContractMetadata(
+            fields=tuple(
+                MachineSecretFieldMetadata(field.name, field.json_type)
+                for field in root_profile_secret.fields
+            ),
+            maximum_bytes=MACHINE_SECRET_MAX_BYTES,
+            same_scope_exclusive=True,
+            stdin_exclusive_across_scopes=True,
+            descriptors_must_differ_across_scopes=True,
+        ),
+    )
 
 
 def command_registration_metadata() -> tuple[CommandRegistrationMetadata, ...]:
@@ -358,6 +389,7 @@ __all__ = [
     "MachineSecretFieldMetadata",
     "MachineSecretPayloadMetadata",
     "MachineSecretVariantConditionMetadata",
+    "ProfileAuthenticationContractMetadata",
     "SchemaModuleLoadFailure",
     "command_registration_metadata",
     "command_registration_policy",

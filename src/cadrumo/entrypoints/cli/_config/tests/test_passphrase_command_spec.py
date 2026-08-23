@@ -10,6 +10,7 @@ from ..._command_schema import command_registration_metadata
 from ..._command_spec import MachineSecretChannelKind, ProfileAuthenticationPosture
 from ..._command_specs import COMMAND_GRAPH
 from .._passphrase import PassphraseChangeSecrets, passphrase_change
+from .._spec_policies import ENCRYPTED_DESTRUCTIVE, STATE_FREE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -25,6 +26,9 @@ def test_passphrase_change_is_the_sole_public_rotation_leaf() -> None:
 
 def test_passphrase_change_declares_exact_channels_payload_and_exemption() -> None:
     spec = COMMAND_GRAPH.by_schema_identity()["config.passphrase.change"]
+    group = COMMAND_GRAPH.resolve_path(("aeat", "config", "passphrase"))
+    assert group.policy == STATE_FREE
+    assert spec.policy == ENCRYPTED_DESTRUCTIVE
     assert spec.profile_authentication is ProfileAuthenticationPosture.SELF_AUTHENTICATING
     assert tuple(parameter.name for parameter in spec.parameters) == (
         "secrets_stdin",

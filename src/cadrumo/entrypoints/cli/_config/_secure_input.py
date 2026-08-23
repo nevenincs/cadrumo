@@ -54,7 +54,8 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.tty import stdin_is_tty
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
-_MAX_SECRETS_BYTES = 8192
+MACHINE_SECRET_MAX_BYTES = 8192
+_MAX_SECRETS_BYTES = MACHINE_SECRET_MAX_BYTES
 """Upper bound on a machine-channel secrets payload; a larger read refuses.
 
 A recovery-key + passphrase JSON object is a few hundred bytes; the cap keeps a
@@ -86,6 +87,13 @@ class MachineSecretChannel(StrEnum):
     FILE_DESCRIPTOR = "fd"
 
 
+class ProfileSecretChannel(StrEnum):
+    """The distinct root profile-authentication transport channels."""
+
+    STDIN = "stdin"
+    FILE_DESCRIPTOR = "fd"
+
+
 @dataclass(frozen=True, slots=True)
 class MachineSecretSelection:
     """A validated channel choice that has not read any secret bytes yet."""
@@ -101,6 +109,22 @@ class MachineSecretSelection:
             raise ValueError("stdin machine-secret selection cannot carry a descriptor")
         if self.channel is MachineSecretChannel.FILE_DESCRIPTOR and self.descriptor is None:
             raise ValueError("fd machine-secret selection requires a descriptor")
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileSecretSelection:
+    """A validated root profile-secret choice that has not read any bytes."""
+
+    channel: ProfileSecretChannel
+    descriptor: int | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.channel, ProfileSecretChannel):
+            raise TypeError("profile-secret selection requires a known channel")
+        if self.channel is ProfileSecretChannel.STDIN and self.descriptor is not None:
+            raise ValueError("stdin profile-secret selection cannot carry a descriptor")
+        if self.channel is ProfileSecretChannel.FILE_DESCRIPTOR and self.descriptor is None:
+            raise ValueError("fd profile-secret selection requires a descriptor")
 
 
 def _reject_duplicate_object_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -168,7 +192,9 @@ def _validate_secrets_payload[SecretsModelT: BaseModel](
         ) from exc
 
 
-def _read_secrets_stdin[SecretsModelT: BaseModel](model: type[SecretsModelT]) -> SecretsModelT:
+def _read_secrets_stdin[SecretsModelT: BaseModel](
+    model: type[SecretsModelT], *, diagnostic_prefix: str = "secrets"
+) -> SecretsModelT:
     """Read one bounded strict-JSON object from stdin and validate it against ``model``.
 
     The payload must be a single JSON object carrying exactly the fields ``model``
@@ -182,13 +208,13 @@ def _read_secrets_stdin[SecretsModelT: BaseModel](model: type[SecretsModelT]) ->
     raw = sys.stdin.buffer.read(_MAX_SECRETS_BYTES + 1)
     if len(raw) > _MAX_SECRETS_BYTES:
         raise _CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.secrets_stdin_too_large",
+            translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_stdin_too_large",
         )
     return _validate_secrets_payload(
         raw,
         model,
-        invalid_json_key="cli.config.custody.errors.secrets_stdin_invalid_json",
-        missing_fields_key="cli.config.custody.errors.secrets_stdin_missing_fields",
+        invalid_json_key=f"cli.config.custody.errors.{diagnostic_prefix}_stdin_invalid_json",
+        missing_fields_key=f"cli.config.custody.errors.{diagnostic_prefix}_stdin_missing_fields",
     )
 
 
@@ -222,7 +248,9 @@ def _read_descriptor_to_bound(descriptor: int, *, maximum_bytes: int) -> bytes:
     return b"".join(chunks)
 
 
-def _read_secrets_fd[SecretsModelT: BaseModel](model: type[SecretsModelT], *, descriptor: int) -> SecretsModelT:
+def _read_secrets_fd[SecretsModelT: BaseModel](
+    model: type[SecretsModelT], *, descriptor: int, diagnostic_prefix: str = "secrets"
+) -> SecretsModelT:
     """Read one bounded strict-JSON secrets object from ``descriptor``, exactly once.
 
     The one-shot contract is the reason this exists as its own channel rather
@@ -253,25 +281,25 @@ def _read_secrets_fd[SecretsModelT: BaseModel](model: type[SecretsModelT], *, de
     """
     if descriptor < 0 or descriptor in _RESERVED_OUTPUT_DESCRIPTORS:
         raise _CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.secrets_fd_reserved_stream",
+            translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_fd_reserved_stream",
             context={"descriptor": str(descriptor)},
         )
     try:
         raw = _read_descriptor_to_bound(descriptor, maximum_bytes=_MAX_SECRETS_BYTES)
     except OSError as exc:
         raise _CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.secrets_fd_unreadable",
+            translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_fd_unreadable",
             context={"descriptor": str(descriptor)},
         ) from exc
     if len(raw) > _MAX_SECRETS_BYTES:
         raise _CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.secrets_fd_too_large",
+            translated_message=f"cli.config.custody.errors.{diagnostic_prefix}_fd_too_large",
         )
     return _validate_secrets_payload(
         raw,
         model,
-        invalid_json_key="cli.config.custody.errors.secrets_fd_invalid_json",
-        missing_fields_key="cli.config.custody.errors.secrets_fd_missing_fields",
+        invalid_json_key=f"cli.config.custody.errors.{diagnostic_prefix}_fd_invalid_json",
+        missing_fields_key=f"cli.config.custody.errors.{diagnostic_prefix}_fd_missing_fields",
     )
 
 
@@ -303,6 +331,24 @@ def select_machine_secret_channel(
     return None
 
 
+def select_profile_secret_channel(
+    *, profile_secrets_stdin: bool, profile_secrets_fd: int | None
+) -> ProfileSecretSelection | None:
+    """Validate the root-scope choice without reading or authenticating."""
+    if profile_secrets_stdin and profile_secrets_fd is not None:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.profile_secrets_channel_conflict",
+        )
+    if profile_secrets_stdin:
+        return ProfileSecretSelection(channel=ProfileSecretChannel.STDIN)
+    if profile_secrets_fd is not None:
+        return ProfileSecretSelection(
+            channel=ProfileSecretChannel.FILE_DESCRIPTOR,
+            descriptor=profile_secrets_fd,
+        )
+    return None
+
+
 def read_machine_secret_payload[SecretsModelT: MachineSecretPayload](
     model: type[SecretsModelT],
     *,
@@ -317,6 +363,20 @@ def read_machine_secret_payload[SecretsModelT: MachineSecretPayload](
     if descriptor is None:  # Defensive against construction outside the typed boundary.
         raise ValueError("fd machine-secret selection requires a descriptor")
     return _read_secrets_fd(model, descriptor=descriptor)
+
+
+def read_profile_secret_payload[SecretsModelT: MachineSecretPayload](
+    model: type[SecretsModelT], *, selection: ProfileSecretSelection
+) -> SecretsModelT:
+    """Read a root profile payload with canonical mechanics and distinct diagnostics."""
+    if not issubclass(model, MachineSecretPayload):
+        raise TypeError("profile-secret payloads must inherit MachineSecretPayload")
+    if selection.channel is ProfileSecretChannel.STDIN:
+        return _read_secrets_stdin(model, diagnostic_prefix="profile_secrets")
+    descriptor = selection.descriptor
+    if descriptor is None:
+        raise ValueError("fd profile-secret selection requires a descriptor")
+    return _read_secrets_fd(model, descriptor=descriptor, diagnostic_prefix="profile_secrets")
 
 
 def _stdin_is_a_real_console() -> bool:
@@ -490,12 +550,17 @@ def prompt_secret_no_echo(prompt: str) -> str:
 
 
 __all__ = [
+    "MACHINE_SECRET_MAX_BYTES",
     "MachineSecretChannel",
     "MachineSecretPayload",
     "MachineSecretSelection",
+    "ProfileSecretChannel",
+    "ProfileSecretSelection",
     "prompt_secret_no_echo",
     "read_machine_secret_payload",
+    "read_profile_secret_payload",
     "select_machine_secret_channel",
+    "select_profile_secret_channel",
     "terminal_can_prompt_for_secrets",
     "write_to_controlling_terminal",
 ]

@@ -110,6 +110,8 @@ def root_command(
     ctx: typer.Context,
     language: str | None = None,
     profile: str | None = None,
+    profile_secrets_stdin: bool = False,
+    profile_secrets_fd: int | None = None,
     version: bool = False,
     detail: bool = False,
     help_: bool = False,
@@ -124,7 +126,7 @@ def root_command(
 
         ctx.with_resource(override_settings(cadrumo_output_language=language))
     _apply_to_root_logger(_resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
-    state = ctx.ensure_object(dict)
+    state = cast("dict[str, object]", ctx.ensure_object(dict))
     state["format"] = format_
     if version:
         _emit_version_report_and_exit(detail=detail)
@@ -144,6 +146,12 @@ def root_command(
         _normalize_root_active_profile(ctx)
     if ctx.invoked_subcommand is None:
         _emit_bare_invocation_and_exit(ctx)
+    from ._profile_authentication_contract import ProfileSecretSourceOptions
+
+    state["profile_secret_source"] = ProfileSecretSourceOptions(
+        stdin=profile_secrets_stdin,
+        descriptor=profile_secrets_fd,
+    )
     # A subcommand is being invoked, so the state tree is about to be written
     # to. Build it once here rather than leaving each consumer to create its
     # own corner on first write: that left a fresh machine holding whichever

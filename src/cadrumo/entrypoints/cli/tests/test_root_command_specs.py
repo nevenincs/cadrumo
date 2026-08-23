@@ -24,6 +24,8 @@ def test_root_specs_own_the_executable_namespace_and_parameter_contracts() -> No
     assert tuple(parameter.name for parameter in root.parameters) == (
         "language",
         "profile",
+        "profile_secrets_stdin",
+        "profile_secrets_fd",
         "version",
         "detail",
         "help_",
@@ -42,7 +44,11 @@ def test_root_specs_own_the_executable_namespace_and_parameter_contracts() -> No
 
 def test_root_executable_targets_are_public_behavior_only_functions() -> None:
     executable = [spec for spec in ROOT_COMMAND_SPECS if spec.handler is not None]
-    assert {spec.handler.target.qualname for spec in executable if spec.handler.target is not None} == {
+    assert {
+        spec.handler.target.qualname
+        for spec in executable
+        if spec.handler is not None and spec.handler.target is not None
+    } == {
         "app_root",
         "config_root",
         "root_command",

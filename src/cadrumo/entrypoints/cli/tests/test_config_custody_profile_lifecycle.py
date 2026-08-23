@@ -19,6 +19,7 @@ script, which is what these tests exist to cover.
 
 from __future__ import annotations
 
+import json
 import subprocess
 from pathlib import Path
 from typing import Final
@@ -180,6 +181,89 @@ def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) 
     assert "active_profile\tcustody" in switched_default.stdout
 
 
+def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path: Path) -> None:
+    """The rotation leaf proves custody itself and survives a failing keychain.
+
+    This is the root-gate regression for `W02.P11.S21`: the command's current
+    passphrase is already the exact active profile's proof, so a keychain-free
+    process must reach the leaf rather than demand a separate root credential.
+    """
+    _register_profile(
+        tmp_path,
+        "custody",
+        **{
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Custody Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+        },
+    )
+    provisioning_passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    rotated_value = "correct horse battery staple"
+    failing_keychain = {"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"}
+
+    changed = _run_cadrumo(
+        tmp_path,
+        ("config", "passphrase", "change", "--secrets-stdin"),
+        extra_env=failing_keychain,
+        stdin_payload=json.dumps(
+            {
+                "current_passphrase": provisioning_passphrase,
+                "new_passphrase": rotated_value,
+                "new_passphrase_confirmation": rotated_value,
+            }
+        ),
+    )
+    assert changed.returncode == 0, _combined_output(changed)
+    assert "changed\tyes" in changed.stdout
+    assert provisioning_passphrase not in _combined_output(changed)
+    assert rotated_value not in _combined_output(changed)
+
+    refused_old_proof = _run_cadrumo(
+        tmp_path,
+        ("config", "passphrase", "change", "--secrets-stdin"),
+        extra_env=failing_keychain,
+        stdin_payload=json.dumps(
+            {
+                "current_passphrase": provisioning_passphrase,
+                "new_passphrase": "irrelevant replacement value",
+                "new_passphrase_confirmation": "irrelevant replacement value",
+            }
+        ),
+    )
+    assert refused_old_proof.returncode == 2, _combined_output(refused_old_proof)
+
+    rotated_again = _run_cadrumo(
+        tmp_path,
+        ("config", "passphrase", "change", "--secrets-stdin"),
+        extra_env=failing_keychain,
+        stdin_payload=json.dumps(
+            {
+                "current_passphrase": rotated_value,
+                "new_passphrase": "second rotated passphrase value",
+                "new_passphrase_confirmation": "second rotated passphrase value",
+            }
+        ),
+    )
+    assert rotated_again.returncode == 0, _combined_output(rotated_again)
+
+
+def test_passphrase_change_resolves_target_before_reading_machine_secrets(tmp_path: Path) -> None:
+    """An absent active target refuses without parsing the supplied payload."""
+    result = _run_cadrumo(
+        tmp_path,
+        ("config", "passphrase", "change", "--secrets-stdin"),
+        extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
+        stdin_payload="not-json-and-must-remain-unread",
+    )
+    output = _combined_output(result)
+    assert result.returncode == 2, output
+    assert "No active profile" in output or "active profile" in output
+    assert "JSON" not in output
+
+
 def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
     """The accepted custody verbs are mounted, and the retired ones are not.
 
@@ -195,24 +279,11 @@ def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
     absent. They are now checked in the retired direction, which is the claim
     that is actually true and which still catches a silent reinstatement.
 
-    ``passphrase`` is asserted mounted and CURRENTLY FAILS. That is deliberate
-    and the test is not broken: the verb does not resolve, and unlike the
-    retired spellings its absence is not a ruling. There is no
-    passphrase-change surface anywhere below the command line either -- no
-    application-layer rotation function, only unorchestrated primitives in the
-    custody package -- so what is missing is the capability to rotate a profile
-    credential, not one spelling of a verb.
-
-    Leave this assertion failing until that is decided. Asserting the verb
-    retired would encode a product decision nobody has taken, and deleting the
-    assertion would turn a missing capability into a green module that has
-    forgotten it. A red test naming the gap is the honest state while the
-    question is open.
+    ``passphrase change`` is the sole credential-rotation door. Its presence is
+    asserted beside login/logout while the older ambiguous custody spellings
+    remain physically absent.
     """
 
-    # ``passphrase`` is expected to FAIL here. See the docstring: credential
-    # rotation is absent from every layer, not retired by any decision, and
-    # this assertion is what keeps that visible until someone rules on it.
     for verb in ("login", "logout", "passphrase"):
         help_result = _run_cadrumo(tmp_path, ("config", verb, "--help"))
         assert help_result.returncode == 0, _combined_output(help_result)

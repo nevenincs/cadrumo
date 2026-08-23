@@ -63,13 +63,18 @@ def passphrase_change(
     from ....application.user_profile import rotate_profile_passphrase
     from .._config_payloads import ConfigPassphraseChangeResult
 
-    secrets = _collect_passphrases(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     active = _resolve_active_bucket_id()
     if active is None:
         raise CliRefusedBoundaryError(translated_message="cli.config.passphrase.no_active_profile")
+    profile_id = UUID(active)
+
+    # Resolve the exact mutation target before consuming any secret source.
+    # The application authority still owns proof, policy, transaction entry,
+    # and the custody-envelope swap after the bounded payload is collected.
+    secrets = _collect_passphrases(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
 
     outcome = rotate_profile_passphrase(
-        profile_id=UUID(active),
+        profile_id=profile_id,
         current_passphrase=secrets.current_passphrase.get_secret_value(),
         new_passphrase=secrets.new_passphrase.get_secret_value(),
         new_passphrase_confirmation=secrets.new_passphrase_confirmation.get_secret_value(),

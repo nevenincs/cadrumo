@@ -11,12 +11,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_complete_command_authority_has_the_exact_shipped_shape() -> None:
-    assert len(COMMAND_SPECS) == 361
-    assert len(COMMAND_GRAPH.nodes()) == 361
+    assert len(COMMAND_SPECS) == 363
+    assert len(COMMAND_GRAPH.nodes()) == 363
     assert sum(spec.kind == "root" for spec in COMMAND_SPECS) == 1
-    assert sum(spec.kind == "group" for spec in COMMAND_SPECS) == 71
-    assert sum(spec.kind == "leaf" for spec in COMMAND_SPECS) == 289
-    assert len({node.path for node in COMMAND_GRAPH.nodes()}) == 361
+    assert sum(spec.kind == "group" for spec in COMMAND_SPECS) == 72
+    assert sum(spec.kind == "leaf" for spec in COMMAND_SPECS) == 290
+    assert len({node.path for node in COMMAND_GRAPH.nodes()}) == 363
 
 
 def test_every_executable_target_is_public_and_every_schema_identity_is_unique() -> None:
@@ -54,5 +54,5 @@ def test_complete_authority_import_does_not_import_behavior_modules() -> None:
         text=True,
     )
     lines = completed.stdout.splitlines()
-    assert lines[0] == "361"
+    assert lines[0] == "363"
     assert lines[1:] == []

@@ -226,6 +226,13 @@ class MachineSecretChannelKind(Enum):
     FILE_DESCRIPTOR = "file-descriptor"
 
 
+class ProfileSecretChannelKind(Enum):
+    """Semantic role of a root profile-authentication transport option."""
+
+    STDIN = "stdin"
+    FILE_DESCRIPTOR = "file-descriptor"
+
+
 class ProfileAuthenticationPosture(Enum):
     """How the root profile-session gate applies to one parsed command."""
 
@@ -366,6 +373,21 @@ class MachineSecretSpec:
 
 
 @dataclass(frozen=True, slots=True)
+class ProfileSecretSpec:
+    """Strict value-free payload authority for root profile authentication."""
+
+    fields: tuple[MachineSecretFieldSpec, ...]
+    model: DeferredTarget
+
+    def __post_init__(self) -> None:
+        if not self.fields:
+            raise ValueError("profile-secret spec must declare at least one field")
+        names = tuple(field.name for field in self.fields)
+        if len(names) != len(set(names)):
+            raise ValueError("profile-secret fields must be unique")
+
+
+@dataclass(frozen=True, slots=True)
 class ArgumentSpec:
     """One positional argument declaration, in command tuple order."""
 
@@ -408,6 +430,7 @@ class OptionSpec:
     eager: bool = False
     constraint: ParameterConstraint = ParameterConstraint()
     machine_secret_channel: MachineSecretChannelKind | None = None
+    profile_secret_channel: ProfileSecretChannelKind | None = None
 
     kind: ParameterKind = "option"
 
@@ -440,6 +463,17 @@ class OptionSpec:
             and self.value.annotation != DeferredTarget("builtins", "int")
         ):
             raise ValueError("file-descriptor machine-secret channel must be integer")
+        if self.machine_secret_channel is not None and self.profile_secret_channel is not None:
+            raise ValueError("one option cannot belong to both secret-channel scopes")
+        if self.profile_secret_channel is ProfileSecretChannelKind.STDIN and self.value.annotation != DeferredTarget(
+            "builtins", "bool"
+        ):
+            raise ValueError("stdin profile-secret channel must be boolean")
+        if (
+            self.profile_secret_channel is ProfileSecretChannelKind.FILE_DESCRIPTOR
+            and self.value.annotation != DeferredTarget("builtins", "int")
+        ):
+            raise ValueError("file-descriptor profile-secret channel must be integer")
 
 
 type ParameterSpec = ArgumentSpec | OptionSpec
@@ -511,6 +545,7 @@ class CommandSpec:
     result_schema: ResultSchemaSpec
     search_terms: tuple[str, ...] = ()
     machine_secret: MachineSecretSpec | None = None
+    profile_secret: ProfileSecretSpec | None = None
     profile_authentication: ProfileAuthenticationPosture = ProfileAuthenticationPosture.NOT_APPLICABLE
 
     def __post_init__(self) -> None:
@@ -552,6 +587,11 @@ class CommandSpec:
             for parameter in self.parameters
             if isinstance(parameter, OptionSpec) and parameter.machine_secret_channel is not None
         )
+        profile_secret_channels = tuple(
+            parameter.profile_secret_channel
+            for parameter in self.parameters
+            if isinstance(parameter, OptionSpec) and parameter.profile_secret_channel is not None
+        )
         if self.machine_secret is None and secret_channels:
             raise ValueError("machine-secret channel parameters require a machine-secret spec")
         if self.machine_secret is not None:
@@ -566,6 +606,18 @@ class CommandSpec:
             for variant in self.machine_secret.variants:
                 if variant.condition is not None and variant.condition.option_name not in parameter_names:
                     raise ValueError("machine-secret condition must reference a command parameter")
+        if self.profile_secret is None and profile_secret_channels:
+            raise ValueError("profile-secret channel parameters require a profile-secret spec")
+        if self.profile_secret is not None:
+            if self.kind != "root":
+                raise ValueError("profile-secret specs belong only to the executable root")
+            if self.machine_secret is not None:
+                raise ValueError("root profile-secret channels cannot own a leaf machine-secret spec")
+            if (
+                profile_secret_channels.count(ProfileSecretChannelKind.STDIN) != 1
+                or profile_secret_channels.count(ProfileSecretChannelKind.FILE_DESCRIPTOR) != 1
+            ):
+                raise ValueError("root profile-secret contract requires exactly one stdin and file-descriptor channel")
 
 
 @dataclass(frozen=True, slots=True)
@@ -679,6 +731,8 @@ __all__ = [
     "ParameterKind",
     "ParameterSpec",
     "ProfileAuthenticationPosture",
+    "ProfileSecretChannelKind",
+    "ProfileSecretSpec",
     "ResultSchemaSpec",
     "SchemaState",
     "TranslationKey",

@@ -20,7 +20,7 @@ from .._command_spec import (
     TranslationKey,
     ValueContract,
 )
-from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE
+from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, ENCRYPTED_DESTRUCTIVE, STATE_FREE
 
 _OUTPUT_LANGUAGE = OptionSpec(
     name="output_language",
@@ -49,7 +49,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(no_args_is_help=True),
         parameters=(),
-        policy=BOOTSTRAP_WRITE,
+        policy=STATE_FREE,
         handler=None,
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
@@ -82,7 +82,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
             ),
             _OUTPUT_LANGUAGE,
         ),
-        policy=BOOTSTRAP_WRITE,
+        policy=ENCRYPTED_DESTRUCTIVE,
         handler=LazyBinding.available(
             DeferredTarget("cadrumo.entrypoints.cli._config._passphrase", "passphrase_change")
         ),

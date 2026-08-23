@@ -87,7 +87,7 @@ def test_operator_help_is_resolved_from_each_owning_spec_translation_key() -> No
 def test_non_leaf_retirement_boolean_pairs_and_modelo_choices_are_truthful() -> None:
     assert cli_path_for_command_key("root.status") == ()
     assert not is_exposable_command("root.status")
-    assert "config.passphrase.change" not in COMMAND_GRAPH.by_schema_identity()
+    assert "config.passphrase.change" in COMMAND_GRAPH.by_schema_identity()
     create = COMMAND_GRAPH.by_schema_identity()["config.profile.create"]
     boolean_pair = next(p for p in create.parameters if p.name == "new_entity_first_two_profit_periods")
     assert isinstance(boolean_pair, OptionSpec)
