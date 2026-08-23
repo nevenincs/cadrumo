@@ -8355,3 +8355,36 @@ And a near-miss: HEAD read as the same short hash and subject the session began 
 which looks exactly like a reset that would have orphaned everything. `merge-base
 --is-ancestor` disproved it. The subject belongs to a recurring vault step. A familiar
 hash is not evidence; ancestry is.
+
+## The filer-postcode cluster: 61 tests, two weeks red, and a deeper gap behind it
+
+Sixty-one failures across six modules share ONE message: the profile declares no
+`contact.postcode`, so the taxpayer's own IVA territory cannot be established. The reader
+(`application/ledger/_filer_establishment.py`) separates peninsula from Canarias and from
+Ceuta y Melilla off that fact alone and refuses outright when it is absent. The refusal
+landed two weeks ago; the test profiles were never given a postcode. This is settled
+breakage, not in-flight work.
+
+It looks like a one-line fixture fix. It is not, and the attempt is worth recording so
+the next person does not spend the same hour.
+
+Adding `contact.postcode` to `_REQUIRED_PLACEHOLDERS` -- the canonical seeding door in
+`tests/user_profile.py` -- fixes none of the six. Every one of them seeds its profile
+DIRECTLY through `seed_test_profile_record` rather than through that door, so the default
+never reaches them. Seeding a full `register_minimal_profile` per module does clear the
+postcode refusal, and then nine of the ten cases in `test_evidence_draft` fail on
+`ConfirmationBlockedError: refused_ledger_confirmation_blocked` instead: a COMPLETE
+profile raises confirmation blockers the cases never answer. Narrowing the seed to just
+tax_id plus postcode lands back at exactly ten failures. Net zero.
+
+So the postcode refusal is MASKING a second gap in the confirmation gate, and clearing it
+only moves the failure. Whoever fixes this needs to decide what profile shape each of
+those cases should have and answer the blockers -- domain judgement, not fixture
+plumbing.
+
+Both experiments were reverted rather than left in the tree. The canonical-door change
+was defensible on its own terms (a realistic profile does declare a postcode, and the
+at-risk helper that asserts the ABSENT refusal declares its own value so it would have
+overridden the default) but it demonstrably fixed nothing, and a shared test fixture
+consumed tree-wide is the wrong place to leave an unproven change while a dozen agents
+are working in the same worktree.
