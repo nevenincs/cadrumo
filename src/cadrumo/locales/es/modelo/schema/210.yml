@@ -118,3 +118,75 @@ modelo:
                 title: Modelo 210 IRNR calculation
           field:
             label: Ejercicio 2025 y siguientes
+        2026-y-siguientes:
+          casilla:
+            base_imponible:
+              label: Base imponible
+            base_imponible_directa_g:
+              label: Base imponible (210 G)
+            base_imponible_directa_i:
+              label: Base imponible (210 I)
+            base_imponible_ganancias_h:
+              label: Base imponible ([12]+[16]) (210 H)
+            coeficiente_imputacion_inmobiliaria:
+              label: Coeficiente de imputación inmobiliaria
+            convenio_indicador:
+              label: Convenio
+            cuota_diferencial:
+              label: Cuota diferencial
+            cuota_integra:
+              label: Cuota íntegra
+            cuota_integra_reducida:
+              label: Cuota íntegra reducida ([24]-[27])
+            cuota_ley_irnr:
+              label: Cuota Ley IRNR ([22]-[23])
+            deduccion_donativos:
+              label: Deducción por donativos
+            dias_imputacion:
+              label: Días de imputación
+            exencion_dividendos:
+              label: Exención aplicada dividendos (límite anual 1.500 euros) (210
+                R)
+            exenciones_ley_irnr_indicador:
+              label: Exenciones Ley IRNR, excepto dividendos (límite anual 1.500 euros)
+            ganancia_diferencia:
+              label: Adquisición. Diferencia (210 H)
+            ganancia_importe:
+              label: Adquisición. Ganancia (210 H)
+            ganancia_valor_adquisicion:
+              label: Adquisición. Valor de adquisición (actualizado) (210 H)
+            ganancia_valor_transmision:
+              label: Adquisición. Valor de transmisión (210 H)
+            gastos_deducibles:
+              label: Gastos deducibles
+            ingreso_devolucion_anterior:
+              label: Ingreso/Devolución anterior (exclusivamente autoliquidación complementaria)
+            limite_convenio:
+              label: Límite Convenio
+            mejora_diferencia:
+              label: Mejora o 2ª adquisición. Diferencia (210 H)
+            mejora_ganancia:
+              label: Mejora o 2ª adquisición. Ganancia (210 H)
+            mejora_valor_adquisicion:
+              label: Mejora o 2ª adquisición. Valor de adquisición (actualizado) (210
+                H)
+            mejora_valor_transmision:
+              label: Mejora o 2ª adquisición. Valor de transmisión (210 H)
+            porcentaje_convenio:
+              label: Porcentaje Convenio (%)
+            reduccion_convenio:
+              label: Reducción por Convenio ([24]-[26])
+            rendimientos_integros:
+              label: Rendimientos íntegros
+            retencion_practicada:
+              label: Retención practicada
+            tipo_gravamen:
+              label: Tipo de gravamen
+            tipo_renta:
+              label: Tipo de renta
+            valor_adquisicion:
+              label: Valor de adquisición
+            valor_catastral:
+              label: Valor catastral
+            valor_comprobado_administracion:
+              label: Valor comprobado por la Administración

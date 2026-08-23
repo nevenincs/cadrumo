@@ -698,6 +698,118 @@ modelo:
               help: null
               label: Balanc consolidat. Patrimoni net i passiu. Fons de reserva obligatori
                 de cooperatives
+            x-agp34c1g6d130c9q60o32d9j:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Passius financers
+                mantinguts per negociar
+            x-agp34c1g6d130c9q60o32d9k:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Derivats
+            x-agp34c1g6d130c9q60o32d9l:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Posicions curtes
+            x-agp34c1g6d130c9q60o32d9m:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Diposits
+            x-agp34c1g6d130c9q60o32d9n:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Diposits. Bancs
+                centrals
+            x-agp34c1g6d130c9q60o32d9o:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Diposits. Entitats
+                de credit
+            x-agp34c1g6d130c9q60o32d9p:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Diposits. Clientela
+            x-agp34c1g6d130c9q60o32dhg:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Valors representatius
+                de deute emesos
+            x-agp34c1g6d130c9q60o32dhh:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Altres passius financers
+            x-agp34c1g6d130c9q60o32dhi:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Passius financers
+                designats a valor raonable amb canvis en resultats
+            x-agp34c1g6d130c9q60o32dhj:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Diposits
+            x-agp34c1g6d130c9q60o32dhk:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Diposits. Bancs
+                centrals
+            x-agp34c1g6d130c9q60o32dhl:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Diposits. Entitats
+                de credit
+            x-agp34c1g6d130c9q60o32dhm:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Diposits. Clientela
+            x-agp34c1g6d130c9q60o32dhn:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Valors representatius
+                de deute emesos
+            x-agp34c1g6d130c9q60o32dho:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Altres passius financers
+            x-agp34c1g6d130c9q60o32dhp:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Passius financers
+                a cost amortitzat
+            x-agp34c1g6d130c9q60o32dpg:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Diposits
+            x-agp34c1g6d130c9q60o32dph:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Diposits. Bancs
+                centrals
+            x-agp34c1g6d130c9q60o32dpi:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Diposits. Entitats
+                de credit
+            x-agp34c1g6d130c9q60o32dpj:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Diposits. Clientela
+            x-agp34c1g6d130c9q60o32dpk:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Valors representatius
+                de deute emesos
+            x-agp34c1g6d130c9q60o32dpl:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Altres passius financers
+            x-agp34c1g6d130c9q60o32dpm:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Derivats - comptabilitat
+                de cobertures
+            x-agp34c1g6d130c9q60o32dpn:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Canvis del valor
+                raonable dels elements coberts d'una cartera amb cobertura del risc
+                de tipus d'interes
+            x-agp34c1g6d130c9q60o32dpo:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Passius emparats
+                per contractes d'asseguranca o reassegurament
+            x-agp34c1g6d130c9q60o32dpp:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Provisions
+            x-agp34c1g6d130c9q60o32e1g:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Pensions i altres
+                obligacions de prestacions definides post-ocupacio
+            x-agp34c1g6d130c9q60o32e1h:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Altres retribucions
+                als empleats a llarg termini
+            x-agp34c1g6d130c9q60o32e1i:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Questions processals
+                i litigis per impostos pendents
+            x-agp34c1g6d130c9q60o32e1j:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Compromisos i garanties
+                concedits
+            x-agp34c1g6d130c9q60o32e1k:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Restants provisions
+            x-agp34c1g6d130c9q60o32e1l:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Passius per impostos
+            x-agp34c1g6d130c9q60o32e1m:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Passius per impostos
+                corrents
+            x-agp34c1g6d130c9q60o32e1n:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Passius per impostos
+                diferits
+            x-agp34c1g6d130c9q60o32e1o:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Capital social reemborsable
+                a la vista
+            x-agp34c1g6d130c9q60o32e1p:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Altres passius
+            x-agp34c1g6d130c9q60o32e9g:
+              label: 'Balanc consolidat. Passiu (pag. 3B hoja 01). De les quals: fons
+                de l''obra social (nomes caixes d''estalvis i cooperatives de credit)'
+            x-agp34c1g6d130c9q60o32e9h:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Passius inclosos
+                en grups alienables d'elements classificats com a mantinguts per a
+                la venda
+            x-agp34c1g6d130c9q60o32e9i:
+              label: Balanc consolidat. Passiu (pag. 3B hoja 01). Total passiu
+            x-agp34c1g6d130c9q60o3ed9m:
+              label: 'Balanc consolidat. Passiu (pag. 3B hoja 01). Pro memoria: passius
+                subordinats'
+            x-agp34c1g6d130c9q60o3ed9n:
+              label: 'Balanc consolidat. Passiu (pag. 3B hoja 01). Pro memoria: passius
+                subordinats'
             x-agp34c1g6d130chq60o32d1l:
               help: null
               label: Balanc consolidat. Actiu (pag. 3B hoja 02). Immobilitzat intangible

@@ -724,6 +724,128 @@ modelo:
               help: null
               label: Consolidated balance sheet. Equity and liabilities. Compulsory
                 reserve fund of cooperatives
+            x-agp34c1g6d130c9q60o32d9j:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Financial
+                liabilities held for trading
+            x-agp34c1g6d130c9q60o32d9k:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Derivatives
+            x-agp34c1g6d130c9q60o32d9l:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Short
+                positions
+            x-agp34c1g6d130c9q60o32d9m:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deposits
+            x-agp34c1g6d130c9q60o32d9n:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deposits.
+                Central banks
+            x-agp34c1g6d130c9q60o32d9o:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deposits.
+                Credit institutions
+            x-agp34c1g6d130c9q60o32d9p:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deposits.
+                Customers
+            x-agp34c1g6d130c9q60o32dhg:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Debt
+                securities issued
+            x-agp34c1g6d130c9q60o32dhh:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Other
+                financial liabilities
+            x-agp34c1g6d130c9q60o32dhi:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Financial
+                liabilities designated at fair value through profit or loss
+            x-agp34c1g6d130c9q60o32dhj:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deposits
+            x-agp34c1g6d130c9q60o32dhk:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deposits.
+                Central banks
+            x-agp34c1g6d130c9q60o32dhl:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deposits.
+                Credit institutions
+            x-agp34c1g6d130c9q60o32dhm:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deposits.
+                Customers
+            x-agp34c1g6d130c9q60o32dhn:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Debt
+                securities issued
+            x-agp34c1g6d130c9q60o32dho:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Other
+                financial liabilities
+            x-agp34c1g6d130c9q60o32dhp:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Financial
+                liabilities at amortised cost
+            x-agp34c1g6d130c9q60o32dpg:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deposits
+            x-agp34c1g6d130c9q60o32dph:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deposits.
+                Central banks
+            x-agp34c1g6d130c9q60o32dpi:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deposits.
+                Credit institutions
+            x-agp34c1g6d130c9q60o32dpj:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deposits.
+                Customers
+            x-agp34c1g6d130c9q60o32dpk:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Debt
+                securities issued
+            x-agp34c1g6d130c9q60o32dpl:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Other
+                financial liabilities
+            x-agp34c1g6d130c9q60o32dpm:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Derivatives
+                - hedge accounting
+            x-agp34c1g6d130c9q60o32dpn:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Fair
+                value changes of the hedged items in a portfolio hedge of interest
+                rate risk
+            x-agp34c1g6d130c9q60o32dpo:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Liabilities
+                covered by insurance or reinsurance contracts
+            x-agp34c1g6d130c9q60o32dpp:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Provisions
+            x-agp34c1g6d130c9q60o32e1g:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Pensions
+                and other post-employment defined benefit obligations
+            x-agp34c1g6d130c9q60o32e1h:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Other
+                long-term employee benefits
+            x-agp34c1g6d130c9q60o32e1i:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Pending
+                legal proceedings and tax litigation
+            x-agp34c1g6d130c9q60o32e1j:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Commitments
+                and guarantees given
+            x-agp34c1g6d130c9q60o32e1k:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Remaining
+                provisions
+            x-agp34c1g6d130c9q60o32e1l:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Tax
+                liabilities
+            x-agp34c1g6d130c9q60o32e1m:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Current
+                tax liabilities
+            x-agp34c1g6d130c9q60o32e1n:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Deferred
+                tax liabilities
+            x-agp34c1g6d130c9q60o32e1o:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Share
+                capital repayable on demand
+            x-agp34c1g6d130c9q60o32e1p:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Other
+                liabilities
+            x-agp34c1g6d130c9q60o32e9g:
+              label: 'Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Of
+                which: welfare fund (savings banks and credit cooperatives only)'
+            x-agp34c1g6d130c9q60o32e9h:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Liabilities
+                included in disposal groups classified as held for sale
+            x-agp34c1g6d130c9q60o32e9i:
+              label: Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Total
+                liabilities
+            x-agp34c1g6d130c9q60o3ed9m:
+              label: 'Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Memorandum
+                item: subordinated liabilities'
+            x-agp34c1g6d130c9q60o3ed9n:
+              label: 'Consolidated balance sheet. Liabilities (pag. 3B hoja 01). Memorandum
+                item: subordinated liabilities'
             x-agp34c1g6d130chq60o32d1l:
               help: null
               label: Consolidated balance sheet. Assets (pag. 3B hoja 02). Intangible

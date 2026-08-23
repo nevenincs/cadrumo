@@ -714,6 +714,126 @@ modelo:
               help: null
               label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Szovetkezetek
                 kotelezo tartalekalapja
+            x-agp34c1g6d130c9q60o32d9j:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Kereskedesi
+                celu penzugyi kotelezettsegek
+            x-agp34c1g6d130c9q60o32d9k:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Derivativak
+            x-agp34c1g6d130c9q60o32d9l:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Rovid
+                poziciok
+            x-agp34c1g6d130c9q60o32d9m:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Betetek
+            x-agp34c1g6d130c9q60o32d9n:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Betetek.
+                Jegybankok
+            x-agp34c1g6d130c9q60o32d9o:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Betetek.
+                Hitelintezetek
+            x-agp34c1g6d130c9q60o32d9p:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Betetek.
+                Ugyfelek
+            x-agp34c1g6d130c9q60o32dhg:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Kibocsatott
+                hitelviszonyt megtestesito ertekpapirok
+            x-agp34c1g6d130c9q60o32dhh:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Egyeb
+                penzugyi kotelezettsegek
+            x-agp34c1g6d130c9q60o32dhi:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Az eredmennyel
+                szemben valos erteken ertekeltnek megjelolt penzugyi kotelezettsegek
+            x-agp34c1g6d130c9q60o32dhj:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Betetek
+            x-agp34c1g6d130c9q60o32dhk:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Betetek.
+                Jegybankok
+            x-agp34c1g6d130c9q60o32dhl:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Betetek.
+                Hitelintezetek
+            x-agp34c1g6d130c9q60o32dhm:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Betetek.
+                Ugyfelek
+            x-agp34c1g6d130c9q60o32dhn:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Kibocsatott
+                hitelviszonyt megtestesito ertekpapirok
+            x-agp34c1g6d130c9q60o32dho:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Egyeb
+                penzugyi kotelezettsegek
+            x-agp34c1g6d130c9q60o32dhp:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Amortizalt
+                bekerulesi erteken ertekelt penzugyi kotelezettsegek
+            x-agp34c1g6d130c9q60o32dpg:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Betetek
+            x-agp34c1g6d130c9q60o32dph:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Betetek.
+                Jegybankok
+            x-agp34c1g6d130c9q60o32dpi:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Betetek.
+                Hitelintezetek
+            x-agp34c1g6d130c9q60o32dpj:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Betetek.
+                Ugyfelek
+            x-agp34c1g6d130c9q60o32dpk:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Kibocsatott
+                hitelviszonyt megtestesito ertekpapirok
+            x-agp34c1g6d130c9q60o32dpl:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Egyeb
+                penzugyi kotelezettsegek
+            x-agp34c1g6d130c9q60o32dpm:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Derivativak
+                - fedezeti elszamolas
+            x-agp34c1g6d130c9q60o32dpn:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Kamatlabkockazat
+                portfoliofedezete soran a fedezett tetelek valos ertekenek valtozasa
+            x-agp34c1g6d130c9q60o32dpo:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Biztositasi
+                vagy viszontbiztositasi szerzodesekkel fedezett kotelezettsegek
+            x-agp34c1g6d130c9q60o32dpp:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Celtartalekok
+            x-agp34c1g6d130c9q60o32e1g:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Nyugdijak
+                es egyeb, munkaviszony utani meghatarozott juttatasi kotelezettsegek
+            x-agp34c1g6d130c9q60o32e1h:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Egyeb
+                hosszu tavu munkavallaloi juttatasok
+            x-agp34c1g6d130c9q60o32e1i:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Folyamatban
+                levo jogi eljarasok es adoperek
+            x-agp34c1g6d130c9q60o32e1j:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Vallalt
+                kotelezettsegek es garanciak
+            x-agp34c1g6d130c9q60o32e1k:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Tovabbi
+                celtartalekok
+            x-agp34c1g6d130c9q60o32e1l:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Adokotelezettsegek
+            x-agp34c1g6d130c9q60o32e1m:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Tenyleges
+                adokotelezettsegek
+            x-agp34c1g6d130c9q60o32e1n:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Halasztott
+                adokotelezettsegek
+            x-agp34c1g6d130c9q60o32e1o:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Latra
+                visszafizetendo jegyzett toke
+            x-agp34c1g6d130c9q60o32e1p:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Egyeb
+                kotelezettsegek
+            x-agp34c1g6d130c9q60o32e9g:
+              label: 'Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Ebbol:
+                jolet celu alap (csak takarekpenztarak es hitelszovetkezetek)'
+            x-agp34c1g6d130c9q60o32e9h:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Ertekesitesre
+                tartottnak minositett elidegenitesi csoportokba tartozo kotelezettsegek
+            x-agp34c1g6d130c9q60o32e9i:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Kotelezettsegek
+                osszesen
+            x-agp34c1g6d130c9q60o3ed9m:
+              label: 'Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Emlekezteto
+                tetel: alarendelt kotelezettsegek'
+            x-agp34c1g6d130c9q60o3ed9n:
+              label: 'Konszolidalt merleg. Kotelezettsegek (pag. 3B hoja 01). Emlekezteto
+                tetel: alarendelt kotelezettsegek'
             x-agp34c1g6d130chq60o32d1l:
               help: null
               label: Konszolidalt merleg. Eszkozok (pag. 3B hoja 02). Immaterialis
