@@ -62,62 +62,65 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: applicability-grade review of the Impuesto sobre Sociedades grupo-fiscal \
 consolidated declaration. DISCLOSURE -- self-review: the same agent authored the casillas \
-being reviewed. VERIFIED -- FAMILY 08 IS AUTHORED, both records: 76 casillas across \
-T22008A00 and T22008B00, the consolidacion de resultados contables y de bases imponibles. \
-Revision total 1142 casillas, TWELVE of the design's 137 records. Every casilla carries a \
-real AEAT box number and a `segmento`. THIS REVIEW CORRECTS THE TARGETING ADVICE THE \
-PREVIOUS STAMP GAVE. That stamp named T22004 as a tractable next target on the strength of \
-its carrying only 8 distinct headings. Measured properly, T22004 has 315 numbered fields \
-over 212 DISTINCT CONCEPTS. Heading count measures FAMILIES; it says nothing about the \
-label vocabulary, and the two are unrelated. Re-measured by concept count -- which is \
-exactly what has to be translated into four languages -- the remaining families rank very \
-differently: T22008 47, T22009 68, T22004 212, T22012 225, T22003 322, T22005 507, T22013 \
-836, T22014 1025, T22007 1223. The proxy is corrected here so the next iteration does not \
-inherit the wrong one. VERIFIED -- TWO RECORDS, TWO SHAPES, HANDLED DIFFERENTLY BECAUSE \
-THE DESIGN DIFFERS, and neither shape was assumed. T22008B00 IS a group-by-column grid: \
-eight concept groups against seven settlement columns, plus two standalone lines, and the \
-arithmetic closes exactly -- the SALDO group carries four columns rather than seven, so 4 \
-plus 7 times 7 plus 2 equals 55, the numbered-field count. T22008A00 is NOT a grid: its \
-twenty-one lettered lines A through G2 are each a distinct concept with no repeating axis, \
-so each label is taken from the design's own line. Forcing a decomposition there would \
-have invented an axis the design does not have, and the arithmetic would not have closed. \
-VERIFIED -- COLUMN MATCHING IS ORDER-DEPENDENT AND THE FRAGMENT SAYS SO. \"Cuenta de \
-Perdidas y Ganancias\" is a PREFIX of \"Cuenta de Perdidas y Ganancias. Aumentos (A)\", so \
-the aumentos and disminuciones variants must be tested BEFORE the bare column or every \
-aumentos cell reads as the bare one. That is the same shape which caused a real defect on \
-this modelo's family 12, where a lowercase fragment shadowed its own superstring and would \
-have mislabelled every 2024 cell; the ordering constraint is now written into the table \
-rather than left implicit. NOT CLAIMED, AND EXPLICITLY SO -- AEAT PRINTS ARITHMETIC IN \
-T22008A00. Line C is labelled \"Diferencia por consolidacion de resultados (= A - B)\", \
-line F \"(= D - E)\", and line E carries a formula over other casillas. Those relations \
-are recorded in the casilla labels exactly as AEAT prints them, and NOTHING in this \
-registry computes or checks them: no formula, construct or binding is attached to any \
-casilla on either record. A label that states an equation is not an implementation of it, \
-and a reader should not mistake one for the other. VERIFIED -- 21 and 55 design numbers \
-respectively, ALL authored, ZERO missing and ZERO invented; every field of both records is \
-either authored or explicitly excluded; both tile exactly once with NO gap and NO PARTIAL \
-OVERLAP, both checked; the grid decomposition is collision-free, asserted in the generator \
-rather than inspected by eye; duplicate Spanish labels across the whole revision ZERO; all \
-1142 label keys non-null across es/en/ca/hu, verified by counting VALUES. Year-clean: \
-aeat-dr-220-2024 applies exactly the single ejercicio this revision claims. NOTED, ABOUT \
-THE SUITE -- two new failures appeared in this iteration's run and NEITHER IS FROM THIS \
-CHANGE: both are modelo 210 revision 2026-y-siguientes, a peer's in-flight revision whose \
-casilla labels are not yet in the Spanish catalogue, reported by \
-test_casilla_label_spanish_source_coverage and test_continuidad_completeness_ratchet. \
-Confirmed by reading the failure output, which lists 34 modelo 210 entries and ZERO modelo \
-220 entries. This is the second iteration running in which a peer's half-authored modelo \
-210 work has moved the suite count; recorded so the number is not read as evidence about \
-this change. NOT CLAIMED -- 10546 OF THE 11605 (record, number) SLOTS REMAIN UNMODELLED \
-across 125 of the design's 137 records; 1059 slots are modelled. 1142 casillas describe \
-twelve records. Progress on this modelo must not be read from the casilla count. NOT \
+being reviewed. VERIFIED -- RECORDS T22007D00, T22007E00, T22007F00 AND T22007H00 ARE \
+AUTHORED, 20 casillas, the four sibling per-operation detail records under OTRAS \
+CORRECCIONES A LA SUMA DE BASES IMPONIBLES: eliminacion de dividendos internos no exentos \
+del grupo fiscal; incorporacion de deterioros de valor de participaciones en fondos \
+propios de entidades del grupo fiscal eliminados en periodos anteriores; those same \
+deterioros pendientes de incorporar al termino del periodo; and otras correcciones no \
+comprendidas en los apartados anteriores. Revision total 1299 casillas over TWENTY-TWO of \
+the design's 137 records. THE NUMBER SET DECIDED THE CASILLA SET, NOT THE SHAPE: each \
+record is 50 detail blocks carrying NO box number plus ONE numbered total, so ONE row is \
+declared per record and a layout repeat writes the rest. Declaring every block would have \
+minted 200 casillas per record for 4 declared values. THE STRIDE IS PROVEN in each: 16 + \
+39x50 lands exactly on @1966 in three of them and 16 + 95x50 on @4766 in T22007H00, where \
+the total begins. VERIFIED -- THE ROW INDEX IS PRINTED IN TWO DIFFERENT FORMS ACROSS FOUR \
+SIBLING RECORDS OF ONE FAMILY, and that is the finding of this iteration. T22007D00 and \
+T22007H00 print a parenthesised ordinal after the concept; T22007E00 and T22007F00 print a \
+TRAILING DIGIT. Four records, one family, one purpose, two notations. The generator \
+therefore TRIES BOTH FORMS on every record and requires exactly one to explain every line \
+of the run -- an ambiguous or unexplained record refuses rather than being read under the \
+form its neighbour used. The ordinals found are then asserted to be exactly 1..50 with \
+each appearing once per block field, which is what rules out a description that merely \
+ends in a number. CORRECTED BEFORE SHIPPING -- THE PERIOD-SPACING RULE REWROTE \"N.I.F.\" \
+AS \"N. I. F.\" on eight labels. It is the SAME defect as last iteration's, where the same \
+rule rewrote the legal reference \"DT 24.5 LIS\" as \"DT 24. 5 LIS\": a normalisation \
+written to make two strings compare equal reaching a third string that was already \
+correct. It now requires two letters before the period, so it cannot enter an \
+abbreviation. The previous iteration's records were re-generated under the sharper rule \
+and are BYTE-IDENTICAL, so nothing already shipped carried the defect. VERIFIED -- AEAT \
+MISSPELLS \"Deterioro\" AS \"Deteriorio\" on every detail line of T22007E00, and breaks \
+the \"fi\" ligature in \"grupo fi scal\" in its total -- the same ligature defect already \
+transcribed on families 09 and 16. Corrected in the operator labels, kept as printed in \
+the fragment comments, and every correction applied is listed on the fragment's own face. \
+VERIFIED -- THE RECORD SUBJECT IS DERIVED FROM THE TOTAL'S OWN TEXT, not retyped: \
+T22007E00 and T22007F00 share two detail lines WORD FOR WORD, and only the subject tells \
+them apart. Both the detail heading and the total heading are derived as the common prefix \
+of their own group. VERIFIED -- COMPLETENESS COMPLEMENT ASSERTED IN THE GENERATOR: all \
+211, 211, 211 and 211 design fields are authored, covered by the repeat, or named as \
+excluded, with an empty difference; the type table is asserted to cover exactly the \
+authored offsets. All four tile 1..2144, 1..2144, 1..2144 and 1..4944 exactly once with NO \
+gap and NO PARTIAL OVERLAP. Year-clean: aeat-dr-220-2024 applies exactly the single \
+ejercicio this revision claims. NOT CLAIMED -- 10437 OF THE 11570 (record, number) SLOTS \
+REMAIN UNMODELLED across 111 of the 133 records that carry numbers; 1133 slots are \
+modelled, zero orphaned. A coverage figure is only true against the extractor of the day \
+it was measured. NOT CLAIMED -- THE TOTALS ARE DECLARED, NOT COMPUTED, and nothing \
+expresses that these four corrections FEED the suma de bases imponibles they are named \
+for. Each total is the sum of its own correccion column down 50 detail rows and NO \
+formula, construct or binding says so. NOT CLAIMED -- THE STANDING CROSS-RECORD HAZARD IS \
+UNCHANGED. Box 00562 is declared twice, as T22009000:00562 and T220DID00:00562, and the \
+design prints some numbers in as many as seven records. A layout must bind such casillas \
+to the SAME value rather than collect them twice, and NOTHING ENFORCES THAT TODAY. NOT \
 CLAIMED -- NO EXPORT LAYOUT AND NO CONSTRUCT MEMBERSHIP CHANGE. The modelo cannot be \
 filed. model_law_authority_scope remains inspection_only, so this stamp is made under the \
-LOWER inspection bar and MUST be re-made if a layout lands and lifts the derived scope to \
-filing. NOT CLAIMED -- T22012A00 and T22012A10 remain held back, still unshipped, because \
-their label keys collide and would leave an operator with identical labels inside one \
-record. NOT CLAIMED -- LOCALES COMPLETE BUT UNAUDITED: the twenty-one lettered lines and \
-the group and column vocabularies were translated by the same agent that authored the \
-casillas and reviewed by nobody else; the Spanish is unaccented ASCII. NOT CLAIMED -- \
+LOWER inspection bar and MUST be re-made if a layout lands. NOT CLAIMED -- T22009001, \
+T22012A00 and T22012A10 remain deliberately held back, the first for two byte-identical \
+descriptions whose jurisdiction the design does not state, the others for colliding label \
+keys. NOT CLAIMED -- LOCALES COMPLETE BUT UNAUDITED: the 20 labels were translated by the \
+same agent that authored the casillas and reviewed by nobody else; the catalogues are \
+unaccented ASCII, asserted, which caught one accented Catalan string in this batch. All \
+1299 casillas resolve a non-null label in es, en, ca and hu, counted by VALUE rather than \
+by key, and duplicate Spanish labels across the revision are ZERO. NOT CLAIMED -- \
 independent_check_coverage is n/a: NO CLAIM, not zero."""
 reviewed_at = 2026-08-23
 

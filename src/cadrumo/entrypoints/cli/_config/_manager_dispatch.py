@@ -37,16 +37,18 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict, cast
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 import typer
 from typer._click.core import Context as _TyperClickContext
 
+from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice as _Notice
 from ....core.json_contract import NoticeSeverity as _NoticeSeverity
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_policy import command_execution_policy as _command_execution_policy
+from .._command_suggestions import LazyFactoryTarget as _LazyFactoryTarget
 from .._command_suggestions import LazySubcommand as _LazySubcommand
 from .._command_suggestions import register_lazy_subcommand as _register_lazy_subcommand
 from .._common import _emit_envelope, activate_subcommand_output_language, active_profile_label
@@ -119,7 +121,10 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
             if mode == "create" and isinstance(scripted_ctx, _TyperClickContext):
                 from ._scripted_registration import register_profile_from_scripted_invocation
 
-                activate_subcommand_output_language(scripted_ctx, kwargs.get("output_language"))
+                activate_subcommand_output_language(
+                    cast(typer.Context, scripted_ctx),
+                    cast(OutputLanguage | None, kwargs.get("output_language")),
+                )
                 return register_profile_from_scripted_invocation(scripted_ctx, kwargs)
             return wizard_command(*args, **kwargs)
 
@@ -171,7 +176,7 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
                 default=typer.Option(False, "--secrets-stdin", help=tr("cli.config.custody.secrets_stdin_help")),
             )
         )
-        _dispatch.__signature__ = signature.replace(parameters=parameters)
+        cast(Any, _dispatch).__signature__ = signature.replace(parameters=parameters)
     return _dispatch
 
 
@@ -369,4 +374,7 @@ def register_lazy_wizard_leaf(
         )
         return leaf
 
-    _register_lazy_subcommand("profile", _LazySubcommand(name, _factory, decorate=_decorate_typer_app))
+    _register_lazy_subcommand(
+        "profile",
+        _LazySubcommand(name, _LazyFactoryTarget(_factory), decorate=_decorate_typer_app),
+    )

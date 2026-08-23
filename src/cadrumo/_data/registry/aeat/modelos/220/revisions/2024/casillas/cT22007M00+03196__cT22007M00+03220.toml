@@ -1,0 +1,360 @@
+# Modelo 220 RECORD T22007M00 -- LIMITACION EN LA DEDUCIBILIDAD DE GASTOS FINANCIEROS
+# of the grupo fiscal: the two successive limits of art. 16 LIS, the first for gastos
+# financieros derived from debt taken on to acquire participaciones (art. 16.5, 67 b) and
+# 83 LIS), the second the general 30% del beneficio operativo limit of art. 16.1 and 16.2.
+#
+# 27 casillas describe all 37 design fields -- 27 authored and
+# 10 excluded -- and the difference of those sets against the design is empty,
+# asserted in the generator. This is a FLAT lettered record: no repeating block, no stride,
+# and EVERY box carries AEAT's own five-digit number, so not one number here is minted.
+#
+# THE SECTION IS DERIVED FROM THE HEADING AEAT PRINTS ON EACH LINE, cut at its first
+# "LIS.", and the two headings found are asserted to be exactly the two this fragment
+# knows. They partition the record contiguously at @118. Note AEAT writes the first
+# as "art.16.5" with no space and the second as "art. 16.1" with one; both are transcribed
+# as printed.
+#
+# AEAT EMITS THE REAL U+FB01 LIGATURE CHARACTER in 21 of these descriptions -- not the
+# broken "fi " spacing seen on families 07, 09 and 16 but the single codepoint -- and
+# is INCONSISTENT about it inside this one record: "gastos \ufb01nancieros" on some lines,
+# plain "gastos financieros" on others. Expanded to "fi" in the labels, kept as emitted
+# in the verbatim comments below.
+#
+# THE DESCRIPTIONS CARRY AEAT'S OWN ARITHMETIC, in square brackets that are NOT box
+# numbers: "(= [c1+f])", "(<= [b], [a=c1+c2], >= 0)", "(= 30% * [j1-j2-j3-j4+j5-j6])".
+# Those letters name OTHER LINES OF THIS RECORD. The number extractor takes only the
+# five-digit bracket, and the letter brackets are left in the label exactly as printed --
+# they are what makes the record readable. NOTHING HERE COMPUTES ANY OF IT: every one of
+# these relations is prose on a label, and no formula, construct or binding expresses one.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22007M00 tiles
+# 1..636 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @475+150 RESERVADO PARA LA ADMINISTRACION; and
+# @625+12 Fin de registro.
+
+# @16+17 Num. Límite art.16.5, 67 b) o 83 LIS. a) Gastos ﬁnancieros del período impositivo derivados de deudas por adquisición de participaciones afectados por art. 16.5, 67 b) o 83 LIS (sin signo) [03196]
+[[revisions."2024".casillas]]
+id = "T22007M00:03196"
+number = "03196"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_5_67b_83"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 Num. Límite art.16.5, 67 b) o 83 LIS. b) Límite adicional a la deducción de gastos ﬁnancieros (art. 16.5, 67 b) o 83 LIS (sin signo) [03197]
+[[revisions."2024".casillas]]
+id = "T22007M00:03197"
+number = "03197"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_5_67b_83"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 Num. Límite art.16.5, 67 b) o 83 LIS. c1) Gastos ﬁnancieros del período impositivo deducibles tras aplicación límite art. 16.5, 67 b) o 83 LIS (≤ [b], [a=c1+c2], ≥ 0) [03198]
+[[revisions."2024".casillas]]
+id = "T22007M00:03198"
+number = "03198"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_5_67b_83"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 Num. Límite art.16.5, 67 b) o 83 LIS. c2) Gastos ﬁnancieros del período impositivo no deducibles tras aplicación límite art. 16.5, 67 b) y/o 83 LIS (=[a- c1], ≥ 0) [03199]
+[[revisions."2024".casillas]]
+id = "T22007M00:03199"
+number = "03199"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_5_67b_83"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 Num. Límite art.16.5, 67 b) o 83 LIS. d) Gastos ﬁnancieros del grupo pendientes de deducir en periodos anteriores afectados por art. 16.5, 67 b) y/o 83, deducibles tras este límite ([b≥c1+d+e], ≥ 0] [03200]
+[[revisions."2024".casillas]]
+id = "T22007M00:03200"
+number = "03200"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_5_67b_83"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 Num. Límite art.16.5, 67 b) o 83 LIS. e) Gastos ﬁnancieros pendientes de deducir en periodos anteriores afectados por art. 16.5, 67 b) y/o 83 LIS , deducibles tras este límite, generados o asumidos por las entidades previamente a su incorporación al grupo (art. 67 b) y 74.3 b) LIS ([b≥c1+d+e], ≥ 0)] [03201]
+[[revisions."2024".casillas]]
+id = "T22007M00:03201"
+number = "03201"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_5_67b_83"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 Num. Límite art. 16.1 y 16.2 LIS. f) Gastos ﬁnancieros del periodo impositivo no afectados por art. 16.5, 67 b) y/o 83 LIS (sin signo) [03202]
+[[revisions."2024".casillas]]
+id = "T22007M00:03202"
+number = "03202"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 Num. Límite art. 16.1 y 16.2 LIS. g) Gastos financieros del grupo del período impositivo (= [c1+f]) [03203]
+[[revisions."2024".casillas]]
+id = "T22007M00:03203"
+number = "03203"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 Num. Límite art. 16.1 y 16.2 LIS. h) Ingresos ﬁnancieros del grupo del período impositivo derivados de la cesión a terceros de capitales propios [03204]
+[[revisions."2024".casillas]]
+id = "T22007M00:03204"
+number = "03204"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 Num. Límite art. 16.1 y 16.2 LIS. i) Gastos ﬁnancieros netos del grupo del período impositivo (= [g-h]) [03205]
+[[revisions."2024".casillas]]
+id = "T22007M00:03205"
+number = "03205"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 Num. Límite art. 16.1 y 16.2 LIS. j) Límite a la deducción de gastos ﬁnancieros netos (= 30%* [j1-j2-j3-j4+j5-j6] [03206]
+[[revisions."2024".casillas]]
+id = "T22007M00:03206"
+number = "03206"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. Límite art. 16.1 y 16.2 LIS. j1) Resultado de explotación (signo igual a Cuenta de Pérd. y Gan.) [03207]
+[[revisions."2024".casillas]]
+id = "T22007M00:03207"
+number = "03207"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. Límite art. 16.1 y 16.2 LIS. j2) Amortización del inmovilizado (signo igual a Cuenta de Pérd. y Gan.) [03208]
+[[revisions."2024".casillas]]
+id = "T22007M00:03208"
+number = "03208"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. Límite art. 16.1 y 16.2 LIS. j3) Imputación de subvenciones de inmovilizado no ﬁnanciero y otras (signo igual a Cuenta de Pérd. y Gan.)[03209]
+[[revisions."2024".casillas]]
+id = "T22007M00:03209"
+number = "03209"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. Límite art. 16.1 y 16.2 LIS. j4) Deterioro y resultado por enajenaciones del inmovilizado (signo igual a Cuenta de Pérd. y Gan.) [03210]
+[[revisions."2024".casillas]]
+id = "T22007M00:03210"
+number = "03210"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. Límite art. 16.1 y 16.2 LIS. j5) Ingresos ﬁnancieros de participaciones en instrumentos de patrimonio (signo igual a Cuenta de Pérd. y Gan.) [03211]
+[[revisions."2024".casillas]]
+id = "T22007M00:03211"
+number = "03211"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. Límite art. 16.1 y 16.2 LIS. j6) Ingresos, gastos o rentas que forman parte del beneficio operativo que no se integran en la base imponible [02219]
+[[revisions."2024".casillas]]
+id = "T22007M00:02219"
+number = "02219"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 Num. Límite art. 16.1 y 16.2 LIS. k) Adición por límite beneﬁcio operativo no aplicado en los cinco ejercicios anteriores generado en el grupo [03212]
+[[revisions."2024".casillas]]
+id = "T22007M00:03212"
+number = "03212"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 Num. Límite art. 16.1 y 16.2 LIS. l) Adición por límite beneﬁcio operativo no aplicado en los cinco ejercicios anteriores, generado o asumido por las entidades previamente a su incorporación al grupo (art. 67 a) y 74.3 b) LIS [03213]
+[[revisions."2024".casillas]]
+id = "T22007M00:03213"
+number = "03213"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 Num. Límite art. 16.1 y 16.2 LIS. m) Límite total a la deducción de gastos financieros netos, en todo caso, 1 millón de euros si el límite a la deducción de gastos financieros netos más la adición de límite consignado en las letras k y l sea inferior a 1 millón [02220]
+[[revisions."2024".casillas]]
+id = "T22007M00:02220"
+number = "02220"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 Num. Límite art. 16.1 y 16.2 LIS. n1)Gastos ﬁnancieros netos del período impositivo deducibles ( [i=n1+n2], ≥ 0) [03214]
+[[revisions."2024".casillas]]
+id = "T22007M00:03214"
+number = "03214"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17 Num. Límite art. 16.1 y 16.2 LIS. n2)Gastos ﬁnancieros netos del período impositivo no deducibles (=[i- n1], ≥ 0) [03215]
+[[revisions."2024".casillas]]
+id = "T22007M00:03215"
+number = "03215"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17 Num. Límite art. 16.1 y 16.2 LIS. o) Gastos ﬁnancieros del grupo pendientes de deducir en periodos impositivos anteriores afectados por art. 16.5, 67 b) y/o 83 LIS deducibles tras aplicar los 2 límites (≤ [d], ≥ 0) [03216]
+[[revisions."2024".casillas]]
+id = "T22007M00:03216"
+number = "03216"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17 Num. Límite art. 16.1 y 16.2 LIS. p) Gastos ﬁnancieros pendientes de deducir en períodos anteriores afectados por art. 16.5, 67 b) y/o 83 LIS deducibles tras aplicar los 2 límites, generados o asumidos por las entidades previamente a su incorporación al grupo (art. 67 b) y 74.3 b) LIS) (≤ [e], ≥ 0) [03217]
+[[revisions."2024".casillas]]
+id = "T22007M00:03217"
+number = "03217"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17 Num. Límite art. 16.1 y 16.2 LIS. q) Gastos ﬁnancieros netos del grupo pendientes de deducir de periodos impositivos anteriores no afectados por art. 16.5, 67 b) y/o 83 LIS aplicados [03218]
+[[revisions."2024".casillas]]
+id = "T22007M00:03218"
+number = "03218"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17 Num. Límite art. 16.1 y 16.2 LIS. r) Gastos ﬁnancieros netos pendientes de deducir de periodos anteriores aplicados no afectados por art. 16.5, 67 b) y/o 83 LIS, generados o asumidos por las entidades previamente a su incorporación al grupo (art. 67 b) y 74.3 b) LIS [03219]
+[[revisions."2024".casillas]]
+id = "T22007M00:03219"
+number = "03219"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17 Num. Límite art. 16.1 y 16.2 LIS. Total gastos ﬁnancieros del período impositivo no deducibles (= [c2+n2]) [03220]
+[[revisions."2024".casillas]]
+id = "T22007M00:03220"
+number = "03220"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

@@ -48,16 +48,17 @@ def _sheet_named(extraction, suffix: str):
 def test_the_recovered_record_is_no_longer_skipped() -> None:
     """The hole this closes, stated as the record it costs.
 
-    The two records that remain skipped are the position-10 pair, whose rows
-    arrive carrying no numbers at all -- a separate and unrecovered defect this
-    does not claim to address.
+    This assertion once carried a second half naming the two records that were
+    STILL skipped -- the position-10 pair on ``Pag. 21`` and ``Pag. 22`` -- and
+    described them as carrying no numbers at all. That reading was wrong and
+    both have since been recovered by their own repairs: the numbers were there,
+    split across lines in three different ways. The design now reads whole, so
+    the honest assertion is that nothing is skipped rather than that a
+    particular remainder is.
     """
     extraction = extract_record_design(_MODELO_200 / _REPAIRED_DESIGN)
 
-    still_skipped = {sheet.name.strip()[-2:] for sheet in extraction.skipped}
-
-    assert "31" not in still_skipped, [(s.name, s.reason) for s in extraction.skipped]
-    assert still_skipped == {"21", "22"}, [(s.name, s.reason) for s in extraction.skipped]
+    assert not extraction.skipped, [(s.name, s.reason) for s in extraction.skipped]
 
 
 def test_the_recovered_record_tiles_its_run_without_a_hole() -> None:

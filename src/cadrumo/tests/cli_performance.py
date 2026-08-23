@@ -51,7 +51,10 @@ __all__ = [
 _CHILD_FLAG = "--cadrumo-cli-performance-child"
 _STORAGE_MODULE_PREFIX = "cadrumo.adapters.persistence.storage"
 _IMPORT_FAMILY_PREFIXES: dict[str, tuple[str, ...]] = {
-    "registry": ("cadrumo.domain.registry", "cadrumo.adapters.registry"),
+    "registry": (
+        "cadrumo.application.registry",
+        "cadrumo.domain.calculations.registry",
+    ),
     "crypto": ("cryptography", "argon2", "cadrumo.core.crypto"),
     "custody": (f"{_STORAGE_MODULE_PREFIX}.custody",),
     "keyring": ("keyring", "cadrumo.adapters.persistence.storage.secret_store"),

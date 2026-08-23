@@ -24,6 +24,7 @@ from .._app_execution_policies import METADATA, declare_metadata_group
 from .._command_policy import CommandExecutionPolicy, command_execution_policy
 from .._command_suggestions import (
     CadrumoTyperGroup,
+    LazyFactoryTarget,
     LazySubcommand,
     LiveCommandNode,
     register_lazy_subcommand,
@@ -134,7 +135,7 @@ def test_callback_and_policy_identity_survive_fresh_lazy_materialisation() -> No
 
     register_lazy_subcommand(
         "lazy-policy-identity-probe",
-        LazySubcommand("lazy", load_lazy),
+        LazySubcommand("lazy", LazyFactoryTarget(load_lazy)),
     )
     root = typer_get_command(probe)
     context = TyContext(root, info_name="lazy-policy-identity-probe")

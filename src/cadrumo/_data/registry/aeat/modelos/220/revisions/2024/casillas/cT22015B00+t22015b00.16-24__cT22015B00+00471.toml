@@ -1,0 +1,167 @@
+# Modelo 220 RECORD T22015B00 -- a PER-ENTITY DETAIL record for la deduccion por inversion de beneficios, each row a
+# block of 7 fields, followed by 3 TOTAL columns carrying AEAT's own box
+# numbers.
+#
+# 10 casillas describe all 244 design fields. THE NUMBER SET DECIDES THE
+# CASILLA SET, NOT THE SHAPE: the 33 detail blocks carry NO box number and differ
+# only by a parenthesised row ordinal, so ONE row is declared and a layout repeat writes
+# the rest. Declaring every block would mint 231 casillas for 7 declared
+# values.
+#
+# THE ROW ORDINAL IS PARENTHESISED HERE, unlike T22010000 and T22011000 where it is a
+# trailing digit, and it sits in a DIFFERENT PLACE in each of the two records -- after the
+# concept in T22015A00, at the end of the line in T22015B00. It is matched as a one-or-two digit
+# parenthesised group, the ordinals seen are asserted to be exactly 1..33, and no
+# field may carry two of them. The bracketed law references in these headings
+# ("(Art. 37 TRLIS)", "(AAAAMMDD)") carry no bare digits and cannot be mistaken for it.
+#
+# THE STRIDE IS PROVEN: the run starts at @16, the stride is 81, and
+# 16 + 81 x 33 lands exactly on @2689 where the first total
+# begins. Every block was compared field-for-field against the first.
+#
+
+# COMPLETENESS COMPLEMENT, asserted in the generator: every one of the 244 fields
+# is authored, covered by the repeat, or named below as excluded, and the difference of
+# those sets against the design is empty. The type table is asserted to cover exactly the
+# authored offsets, so a field added or removed cannot pass untyped.
+#
+# THE DETAIL LINES AND THE TOTAL LINES CARRY DIFFERENT HEADINGS, both derived from the
+# design as the common prefix of their own group rather than retyped. The detail heading
+# is stripped from the detail labels; the totals keep their printed text whole, because
+# what they share may be nothing at all:
+#   detail heading  DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS).
+#   total heading  DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (Art. 37 LIS).
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22015B00 tiles
+# 1..2901 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @2740+150 RESERVADO PARA LA ADMINISTRACION; and
+# @2890+12 Fin de registro.
+#
+# NOT CLAIMED: the totals are DECLARED, not computed. Each is the sum of its own column
+# down the 33 detail rows, and NO formula, construct or binding expresses that
+# here. Nor does anything here express that a deduccion pendiente al inicio less the
+# deduccion aplicada gives the deduccion pendiente de aplicacion, which is what the three
+# money columns mean.
+
+# @16+9 An. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). NIF de la entidad que invierte (1)
+[[revisions."2024".casillas]]
+id = "T22015B00:t22015b00.16-24"
+number = "t22015b00.16-24"
+segmento = "T22015B00"
+section = ["liquidacion", "detalle_deduccion_inversion_beneficios"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @25+9 An. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). NIF de la entidad que dota la reserva (1)
+[[revisions."2024".casillas]]
+id = "T22015B00:t22015b00.25-33"
+number = "t22015b00.25-33"
+segmento = "T22015B00"
+section = ["liquidacion", "detalle_deduccion_inversion_beneficios"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @34+8 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). Fecha de la inversión(1)
+[[revisions."2024".casillas]]
+id = "T22015B00:t22015b00.34-41"
+number = "t22015b00.34-41"
+segmento = "T22015B00"
+section = ["liquidacion", "detalle_deduccion_inversion_beneficios"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @42+4 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). Ejercicio de la generación de la deducción (1)
+[[revisions."2024".casillas]]
+id = "T22015B00:t22015b00.42-45"
+number = "t22015b00.42-45"
+segmento = "T22015B00"
+section = ["liquidacion", "detalle_deduccion_inversion_beneficios"]
+data_type = "year"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @46+17 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). Deducción pendiente de aplicar al inicio del período o Deducción generada en el período (1)
+[[revisions."2024".casillas]]
+id = "T22015B00:t22015b00.46-62"
+number = "t22015b00.46-62"
+segmento = "T22015B00"
+section = ["liquidacion", "detalle_deduccion_inversion_beneficios"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @63+17 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). Deducción aplicada en el período (1)
+[[revisions."2024".casillas]]
+id = "T22015B00:t22015b00.63-79"
+number = "t22015b00.63-79"
+segmento = "T22015B00"
+section = ["liquidacion", "detalle_deduccion_inversion_beneficios"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @80+17 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). Deducción pendiente de aplicación (1)
+[[revisions."2024".casillas]]
+id = "T22015B00:t22015b00.80-96"
+number = "t22015b00.80-96"
+segmento = "T22015B00"
+section = ["liquidacion", "detalle_deduccion_inversion_beneficios"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2689+17 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (Art. 37 LIS). Deducción pendiente de aplicar al inicio del ejercicio o Deducción generada en el ejercicio. Total [00469]
+[[revisions."2024".casillas]]
+id = "T22015B00:00469"
+number = "00469"
+segmento = "T22015B00"
+section = ["liquidacion", "detalle_deduccion_inversion_beneficios"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2706+17 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (Art. 37 LIS). Deducción aplicada en el ejercicio. Total [00470]
+[[revisions."2024".casillas]]
+id = "T22015B00:00470"
+number = "00470"
+segmento = "T22015B00"
+section = ["liquidacion", "detalle_deduccion_inversion_beneficios"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @2723+17 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (Art. 37 LIS). Deducción pendiente de aplicación. Total [00471]
+[[revisions."2024".casillas]]
+id = "T22015B00:00471"
+number = "00471"
+segmento = "T22015B00"
+section = ["liquidacion", "detalle_deduccion_inversion_beneficios"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

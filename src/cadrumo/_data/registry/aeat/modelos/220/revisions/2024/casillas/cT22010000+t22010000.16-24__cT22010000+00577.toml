@@ -1,0 +1,99 @@
+# Modelo 220 RECORD T22010000 -- a PER-ENTITY DETAIL record: transparencia fiscal internacional y doble imposicion interna
+# declared entity by entity, each row a NIF plus 2 amount columns, followed by one
+# TOTAL per column carrying AEAT's own box number.
+#
+# 5 casillas describe all 144 design fields. THE NUMBER SET DECIDES THE
+# CASILLA SET, NOT THE SHAPE. The 44 detail blocks carry NO number and differ only
+# by a printed row index, so ONE row is declared and a layout repeat writes the rest --
+# the mechanism modelo 720's binding_record already uses. Declaring every block instead
+# would mint 132 casillas for 3 declared values.
+#
+# THE STRIDE IS PROVEN, NOT ASSUMED. The detail run starts at @16, the second block
+# starts at @59 so the stride is 43, and 16 + 43 x 44
+# lands exactly on @1908 where the first total begins. Every block was compared
+# field-for-field against the first with its row index removed: 1 distinct shape.
+#
+# COMPLETENESS COMPLEMENT, asserted in the generator rather than claimed here: every one
+# of the 144 fields is authored, covered by the repeat, or named below as excluded,
+# and the difference of those sets against the design is empty.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22010000 tiles
+# 1..2103 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT'S OWN TEXT DIFFERS BETWEEN A DETAIL ROW AND ITS TOTAL in some columns, and both are
+# transcribed as printed rather than quietly reconciled:
+#   detail  D.I. Interna intersocietaria al 5/10% (cooperativas)
+#   total   D.I. Interna societaria al 5/10% (cooperativas)
+#
+# THE FAMILY WORDING "detalle por entidad" IS DESCRIPTIVE AND MINE. The design gives this
+# sheet no heading of its own -- only a column of NIFs beside the amounts -- so the
+# per-entity reading is taken from that shape and is not an AEAT phrase.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @1942+150 RESERVADO PARA LA ADMINISTRACION; and
+# @2092+12 Fin de registro.
+#
+# NOT CLAIMED: the totals are DECLARED, not computed. Each is the sum of its own column
+# down the 44 detail rows, and NO formula, construct or binding expresses that
+# here. A reader should not mistake a declared total for a computed one.
+
+# @16+9. Nif. 1  <-- ONE declared row; the layout repeats it 44 times at stride 43
+[[revisions."2024".casillas]]
+id = "T22010000:t22010000.16-24"
+number = "t22010000.16-24"
+segmento = "T22010000"
+section = ["liquidacion", "detalle_tfi_y_doble_imposicion_interna"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @25+17. Transparencia fiscal internacional (art. 100.10 LIS). 1  <-- ONE declared row; the layout repeats it 44 times at stride 43
+[[revisions."2024".casillas]]
+id = "T22010000:t22010000.25-41"
+number = "t22010000.25-41"
+segmento = "T22010000"
+section = ["liquidacion", "detalle_tfi_y_doble_imposicion_interna"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @42+17. D.I. Interna intersocietaria al 5/10% (cooperativas). 1  <-- ONE declared row; the layout repeats it 44 times at stride 43
+[[revisions."2024".casillas]]
+id = "T22010000:t22010000.42-58"
+number = "t22010000.42-58"
+segmento = "T22010000"
+section = ["liquidacion", "detalle_tfi_y_doble_imposicion_interna"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1908+17. Transparencia fiscal internacional (art. 100.10 LIS). Total [00575]
+[[revisions."2024".casillas]]
+id = "T22010000:00575"
+number = "00575"
+segmento = "T22010000"
+section = ["liquidacion", "detalle_tfi_y_doble_imposicion_interna"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1925+17. D.I. Interna societaria al 5/10% (cooperativas). Total [00577]
+[[revisions."2024".casillas]]
+id = "T22010000:00577"
+number = "00577"
+segmento = "T22010000"
+section = ["liquidacion", "detalle_tfi_y_doble_imposicion_interna"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

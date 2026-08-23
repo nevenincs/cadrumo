@@ -1,0 +1,104 @@
+# Modelo 220 RECORD T22007D00 -- one of FOUR sibling per-operation detail records under
+# "OTRAS CORRECCIONES A LA SUMA DE BASES IMPONIBLES". This one carries:
+#   Eliminación de dividendos internos no exentos del grupo fiscal(*)
+#
+# 5 casillas describe all 211 design fields. THE NUMBER SET DECIDES THE
+# CASILLA SET, NOT THE SHAPE: the 50 detail blocks carry NO box number and differ
+# only by a printed row index, so ONE row is declared and a layout repeat writes the rest.
+# Declaring every block would mint 200 casillas for 4 declared values.
+#
+# THE ROW INDEX IS PRINTED IN TWO DIFFERENT FORMS ACROSS THESE FOUR SIBLINGS -- a
+# parenthesised ordinal after the concept in T22007D00 and T22007H00, a TRAILING DIGIT in
+# T22007E00 and T22007F00. This record uses the parenthesised form. The form is detected per
+# record rather than assumed, and the ordinals found are asserted to be exactly 1..50
+# with each appearing once per block field -- which is what rules out a description that
+# merely ends in a number.
+#
+# THE STRIDE IS PROVEN: the run starts at @16, the stride is 39, and
+# 16 + 39 x 50 lands exactly on @1966 where the total begins.
+# Every block was compared field-for-field against the first, on letters and digits only:
+# 1 distinct shape.
+#
+# THE DETAIL LINES AND THE TOTAL CARRY DIFFERENT HEADINGS, both derived as the common
+# prefix of their own group rather than read off one line:
+#   detail heading  Eliminación de dividendos internos.
+#   total heading   OTRAS CORRECCIONES A LA SUMA DE BASES IMPONIBLES: Eliminación de dividendos internos no exentos del grupo fiscal(*). Total
+#
+# COMPLETENESS COMPLEMENT, asserted in the generator: every one of the 211 fields is
+# authored, covered by the repeat, or named below as excluded, and the difference of those
+# sets against the design is empty. The type table is asserted to cover exactly the
+# authored offsets.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22007D00 tiles
+# 1..2144 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @1983+150 RESERVADO PARA LA ADMINISTRACION; and
+# @2133+12 Fin de registro.
+#
+# NOT CLAIMED: the total is DECLARED, not computed. It is the sum of the correccion column
+# down the 50 detail rows, and NO formula, construct or binding expresses that. Nor
+# does anything express that these four corrections feed the suma de bases imponibles they
+# are named for.
+
+# @16+9 An. Eliminación de dividendos internos (1).N.I.F. de la Entidad que distribuyó el dividendo
+[[revisions."2024".casillas]]
+id = "T22007D00:t22007d00.16-24"
+number = "t22007d00.16-24"
+segmento = "T22007D00"
+section = ["liquidacion", "otras_correcciones_suma_bases_imponibles"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @25+9 An. Eliminación de dividendos internos (1).N.I.F. de la Entidad que percibió el dividendo
+[[revisions."2024".casillas]]
+id = "T22007D00:t22007d00.25-33"
+number = "t22007d00.25-33"
+segmento = "T22007D00"
+section = ["liquidacion", "otras_correcciones_suma_bases_imponibles"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @34+4 Num. Eliminación de dividendos internos (1).Ejercicio de cuyo beneficio procede el dividendo
+[[revisions."2024".casillas]]
+id = "T22007D00:t22007d00.34-37"
+number = "t22007d00.34-37"
+segmento = "T22007D00"
+section = ["liquidacion", "otras_correcciones_suma_bases_imponibles"]
+data_type = "year"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @38+17 N. Eliminación de dividendos internos (1).Dividendo eliminado
+[[revisions."2024".casillas]]
+id = "T22007D00:t22007d00.38-54"
+number = "t22007d00.38-54"
+segmento = "T22007D00"
+section = ["liquidacion", "otras_correcciones_suma_bases_imponibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @1966+17 N. OTRAS CORRECCIONES A LA SUMA DE BASES IMPONIBLES: Eliminación de dividendos internos no exentos del grupo fiscal(*). Total [00080]
+[[revisions."2024".casillas]]
+id = "T22007D00:00080"
+number = "00080"
+segmento = "T22007D00"
+section = ["liquidacion", "otras_correcciones_suma_bases_imponibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

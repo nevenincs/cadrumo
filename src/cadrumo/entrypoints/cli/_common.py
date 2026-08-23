@@ -470,9 +470,18 @@ def attach_cli_policy_verdict[ExceptionT: Exception](
 
 
 def _is_metadata_invocation(ctx: typer.Context) -> bool:
-    """Read metadata posture from the invocation captured on ``ctx``."""
+    """Read metadata posture from captured tokens and eager callback flags.
+
+    Click consumes eager ``--help`` / ``--version`` options before group
+    :meth:`invoke` runs, so the captured remainder is intentionally not the
+    only authority.  The callback parameters are the lossless observation for
+    those root and curated-group flags; consulting them keeps metadata output
+    off profile, custody, and sandbox discovery even after parsing.
+    """
     arguments = tuple(str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
-    return is_metadata_invocation(arguments)
+    if is_metadata_invocation(arguments):
+        return True
+    return any(ctx.params.get(name) is True for name in ("help_", "version"))
 
 
 def _format_of(ctx: typer.Context) -> OutputFormat:
@@ -872,7 +881,7 @@ def _current_operator_surface_schema_rows(
         get_operator_surface_contract,
     )
     from ...entrypoints.schema_surface import ROOT_LANDING_SCHEMA_KEYS
-    from . import command_execution_policy_for_cli_path
+    from ._command_schema import command_registration_policy
 
     return _CurrentOperatorSurfaceSchemaInventory(
         command_keys=command_keys,
@@ -918,8 +927,7 @@ def _current_operator_surface_schema_rows(
                     if command_key in ROOT_LANDING_SCHEMA_KEYS
                     else (
                         "profile_bound_write"
-                        if command_execution_policy_for_cli_path(primary_paths[command_key]).write_route
-                        == "profile-bound"
+                        if command_registration_policy(command_key).write_route == "profile-bound"
                         else "non_profile_bound"
                     )
                 ),

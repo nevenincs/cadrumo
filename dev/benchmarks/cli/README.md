@@ -1,7 +1,8 @@
 # Complete CLI cold-process baseline
 
-`baseline.json` is execution evidence for every root, group, and leaf returned
-by the live command walker. It is generated rather than hand-maintained:
+`baseline.json` is the compact index for every root, group, and leaf returned
+by the command walker in one immutable pre-optimization source snapshot. It is
+generated rather than hand-maintained:
 
 ```powershell
 uv run --no-sync python -m dev.benchmarks.cli.capture_baseline --warmups 1 --samples 3 --workers 4
@@ -30,16 +31,23 @@ open a browser, or submit a filing. Later execution-specific gates must provisio
 purpose-built fixtures for handlers; this evidence never pretends help rendering
 is handler execution.
 
-`--check` compares the artifact with the live census as an exact set and also
-checks kind, loader and handler ownership, execution policy, sample sufficiency,
-safe invocation mode, failure index, and the exact order of both rankings.
-Adding, removing, re-owning, or reclassifying any CLI node makes the check fail;
-there is no fixed command count to update.
+`--check` proves source-bound internal integrity: it authenticates and decompresses
+`baseline.raw.json.gz`, recomputes every distribution, control ratio, failure
+index, and ranking, and requires the compact index to be an exact derivation of
+the lossless observations. It independently authenticates `baseline.census.json`,
+which binds the frozen source digest to every path, kind, owner, and execution
+policy, then requires exact observation-set and metadata equality. `--check-fresh` adds current-source manifest and
+dynamic census/metadata comparison. Once development moves beyond the frozen
+snapshot, freshness must fail; that is a useful staleness signal, not a waiver.
+There is no fixed command count to update.
 
-To keep the checked-in JSON reviewable, each observation stores exact import and
-storage-call counts, stable digests of module families and storage call maps,
-and the twenty highest-count storage symbols instead of repeating thousands of
-symbol names in every sample. Latency samples, model constructions, filesystem
-effects, exit status, and failure kind remain unaggregated. The rejected first
-attempt is documented separately; none of its mutable-tree samples appear in
-the accepted baseline.
+The compact index remains reviewable while the content-addressed deterministic
+gzip retains every imported module, import-family member, and storage symbol and
+call count. Latency samples, model constructions, filesystem effects, exit status,
+and failure kind are also unaggregated. The rejected first attempt is documented
+separately; none of its mutable-tree samples appear in the accepted baseline.
+
+`current-source-delta.md` records nodes added after this pre-optimization freeze.
+Post-optimization capture and performance gates must dynamically enroll those
+nodes (and any later additions); this historical baseline must not be described
+as current-tree complete.

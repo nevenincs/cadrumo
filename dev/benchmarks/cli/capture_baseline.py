@@ -173,6 +173,16 @@ def _policy_payload(node: LiveCommandNode) -> dict[str, Any]:
     }
 
 
+def _frozen_census_entry(node: LiveCommandNode) -> dict[str, Any]:
+    """Retain command identity independently from measured observations."""
+    return {
+        "kind": node.kind,
+        "loader_owner": node.loader_owner,
+        "handler_owner": node.handler_owner,
+        "policy": _policy_payload(node),
+    }
+
+
 def _measure(
     node: LiveCommandNode,
     *,
@@ -366,7 +376,24 @@ def _write_bytes_atomic(path: Path, payload: bytes) -> None:
     os.replace(temporary, path)
 
 
+def _reject_unexpected_checkpoint_commands(
+    commands: Mapping[str, Any], expected_paths: Sequence[str]
+) -> None:
+    unexpected = sorted(set(commands) - set(expected_paths))
+    if unexpected:
+        raise RuntimeError(f"CLI baseline checkpoint contains unexpected commands: {unexpected}")
+
+
 def _publish_raw_and_summary(output: Path, raw_payload: dict[str, Any]) -> dict[str, Any]:
+    census = raw_payload.pop("frozen_census")
+    census_payload = {
+        "schema": f"{SCHEMA}-frozen-census",
+        "source_snapshot_digest": raw_payload["environment"]["source_snapshot_digest"],
+        "commands": census,
+    }
+    canonical_census = json.dumps(census_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    census_path = output.with_name(f"{output.stem}.census.json")
+    _write_bytes_atomic(census_path, canonical_census)
     canonical_raw = json.dumps(raw_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     compressed = gzip.compress(canonical_raw, compresslevel=9, mtime=0)
     raw_path = output.with_name(f"{output.stem}.raw.json.gz")
@@ -379,7 +406,33 @@ def _publish_raw_and_summary(output: Path, raw_payload: dict[str, Any]) -> dict[
         "uncompressed_sha256": hashlib.sha256(canonical_raw).hexdigest(),
         "uncompressed_bytes": len(canonical_raw),
     }
+    summary["frozen_census_evidence"] = {
+        "filename": census_path.name,
+        "sha256": hashlib.sha256(canonical_census).hexdigest(),
+        "bytes": len(canonical_census),
+    }
     return summary
+
+
+def _load_frozen_census(payload: Mapping[str, Any], *, baseline_path: Path) -> dict[str, Any]:
+    declaration = payload.get("frozen_census_evidence", {})
+    filename = declaration.get("filename")
+    if not isinstance(filename, str) or Path(filename).name != filename:
+        raise RuntimeError("invalid frozen-census filename")
+    encoded = baseline_path.with_name(filename).read_bytes()
+    if hashlib.sha256(encoded).hexdigest() != declaration.get("sha256"):
+        raise RuntimeError("frozen-census digest mismatch")
+    if len(encoded) != declaration.get("bytes"):
+        raise RuntimeError("frozen-census byte count mismatch")
+    census: object = json.loads(encoded)
+    if not isinstance(census, dict) or census.get("schema") != f"{SCHEMA}-frozen-census":
+        raise RuntimeError("invalid frozen-census evidence")
+    if census.get("source_snapshot_digest") != payload["environment"]["source_snapshot_digest"]:
+        raise RuntimeError("frozen census belongs to a different source snapshot")
+    commands = census.get("commands")
+    if not isinstance(commands, dict) or not commands:
+        raise RuntimeError("frozen census contains no commands")
+    return cast("dict[str, Any]", commands)
 
 
 def _load_raw_evidence(payload: Mapping[str, Any], *, baseline_path: Path) -> dict[str, Any]:
@@ -427,7 +480,8 @@ def capture(
         raise RuntimeError("live command census is empty")
     if len({node.path for node in nodes}) != len(nodes):
         raise RuntimeError("live command census contains duplicate paths")
-    expected_paths = [" ".join(node.path) for node in nodes]
+    frozen_census = {" ".join(node.path): _frozen_census_entry(node) for node in nodes}
+    expected_paths = list(frozen_census)
     run_config = {
         "warmups": warmups,
         "samples": samples,
@@ -451,6 +505,7 @@ def capture(
         if checkpoint.get("expected_paths") != expected_paths:
             raise RuntimeError("CLI baseline checkpoint census changed")
         commands = dict(checkpoint.get("commands", {}))
+        _reject_unexpected_checkpoint_commands(commands, expected_paths)
         controls = list(checkpoint.get("controls", []))
 
     def checkpoint() -> None:
@@ -497,6 +552,10 @@ def capture(
         )
     controls.extend(_measure_controls(samples=control_lane_samples, timeout=timeout, workers=workers))
     trailing_samples = control_lane_samples
+    if set(commands) != set(frozen_census):
+        missing = sorted(set(frozen_census) - set(commands))
+        extra = sorted(set(commands) - set(frozen_census))
+        raise RuntimeError(f"captured CLI census is incomplete: missing={missing}, extra={extra}")
     control_summary = {
         "resolution": _distribution(controls, "resolution"),
         "invocation": _distribution(controls, "invocation"),
@@ -531,6 +590,7 @@ def capture(
         "schema": SCHEMA,
         "environment": _environment_payload(),
         "source_snapshot_manifest": _source_manifest(Path(os.environ[_SNAPSHOT_ROOT_ENV]) / "cadrumo"),
+        "frozen_census": frozen_census,
         "method": {
             "samples_per_node": samples,
             "warmups_per_node": warmups,
@@ -587,14 +647,22 @@ def check_baseline(
         raise RuntimeError("missing baseline source manifest")
     if _manifest_digest(manifest) != environment["source_snapshot_digest"]:
         raise RuntimeError("baseline source manifest disagrees with its digest")
+    actual: dict[str, Any] | None = None
     if require_current_source:
         repository_root = Path(__file__).resolve().parents[3]
         current_manifest = _source_manifest(repository_root / "src" / "cadrumo")
         if current_manifest != manifest:
             raise RuntimeError("baseline source snapshot is stale against the current source tree")
-    actual = {" ".join(node.path): node for node in walk_live_command_tree(app)}
+        actual = {" ".join(node.path): node for node in walk_live_command_tree(app)}
     recorded = dict(payload.get("commands", {}))
-    if set(recorded) != set(actual):
+    if not recorded:
+        raise RuntimeError("CLI baseline contains no dynamically enrolled commands")
+    frozen_census = _load_frozen_census(payload, baseline_path=baseline_path)
+    if set(recorded) != set(frozen_census):
+        missing = sorted(set(frozen_census) - set(recorded))
+        extra = sorted(set(recorded) - set(frozen_census))
+        raise RuntimeError(f"frozen CLI baseline exact-set mismatch: missing={missing}, extra={extra}")
+    if actual is not None and set(recorded) != set(actual):
         missing = sorted(set(actual) - set(recorded))
         stale = sorted(set(recorded) - set(actual))
         raise RuntimeError(f"stale CLI baseline: missing={missing}, removed={stale}")
@@ -621,9 +689,15 @@ def check_baseline(
     if resolution_control <= 0 or invocation_control <= 0:
         raise RuntimeError("baseline control median must be positive")
 
-    for path, node in actual.items():
-        entry = recorded[path]
-        if (
+    for path, entry in recorded.items():
+        node = actual[path] if actual is not None else None
+        identity = frozen_census[path]
+        if not isinstance(identity, dict) or any(
+            entry.get(key) != identity.get(key)
+            for key in ("kind", "loader_owner", "handler_owner", "policy")
+        ):
+            raise RuntimeError(f"frozen CLI baseline metadata mismatch: {path}")
+        if node is not None and (
             entry["kind"] != node.kind
             or entry["loader_owner"] != node.loader_owner
             or entry["handler_owner"] != node.handler_owner
@@ -668,6 +742,7 @@ def check_baseline(
     expected_summary = copy.deepcopy(raw)
     compact_existing_baseline(expected_summary)
     expected_summary["raw_evidence"] = payload["raw_evidence"]
+    expected_summary["frozen_census_evidence"] = payload["frozen_census_evidence"]
     if expected_summary != payload:
         raise RuntimeError("compact baseline disagrees with content-addressed raw evidence")
 

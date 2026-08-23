@@ -21,6 +21,7 @@ from .._command_schema import (
     CommandPerformanceClass,
     CommandSideEffectClass,
 )
+from .._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -58,7 +59,12 @@ def test_declared_schema_modules_reconcile_exactly_to_registry_projection() -> N
 
     references = _command_schema.command_schema_refs()
     registry_references = {(command, schema.__name__) for command, schema in SCHEMA_REGISTRY.items()}
-    assert {(reference.command, reference.schema_name) for reference in references} == registry_references
+    assert {(reference.command, reference.schema_name) for reference in references} == {
+        reference for reference in registry_references if reference[0] not in DECLARED_UNIMPLEMENTED_SURFACES
+    }
+    assert {row.command for row in _command_schema.command_registration_metadata() if row.cli_path is None} == set(
+        DECLARED_UNIMPLEMENTED_SURFACES
+    )
     assert {schema.__module__ for schema in SCHEMA_REGISTRY.values()} == set(RESULT_SCHEMA_MODULES)
 
 

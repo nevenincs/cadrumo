@@ -31,7 +31,12 @@ AFFECTED_GROUP = "modelo"
 EXPECTED_ERROR_CODE = "FAIL_CLI_COMMAND_GROUP_UNAVAILABLE"
 
 
-def run_cli_with_blocked_package(package: str, argv: list[str]) -> subprocess.CompletedProcess[str]:
+def run_cli_with_blocked_package(
+    package: str,
+    argv: list[str],
+    *,
+    language: str = "en",
+) -> subprocess.CompletedProcess[str]:
     """Run the real ``aeat`` entry point with ``package`` made unimportable.
 
     The meta-path finder is installed before :mod:`cadrumo.entrypoints.cli` is
@@ -47,7 +52,7 @@ def run_cli_with_blocked_package(package: str, argv: list[str]) -> subprocess.Co
     code = textwrap.dedent(
         f"""
         import os, sys
-        os.environ["CADRUMO_OUTPUT_LANGUAGE"] = "en"
+        os.environ["CADRUMO_OUTPUT_LANGUAGE"] = {language!r}
 
         class _Blocked:
             def find_spec(self, fullname, path=None, target=None):
