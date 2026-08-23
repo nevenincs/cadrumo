@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:620807e2a0a56cb1db0993f6e1f8c61674e3ece4039346f1a98774df5f256120'
+body_hash: 'sha256:96e6a32ddc553d74527f864575c92c8152063f83eacc622decb9994fb64a1406'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -17744,3 +17744,160 @@ no authority.
 Eight standing failures, unchanged. Four splits. What this tick removes is the
 unknown: the cutover recipe above is the specification a driver needs, and every
 step of it has now been executed once rather than read.
+
+## Tick: the modelo 210 split LANDED -- first split of the four, and the cutover path proven
+
+Re-measured at tick start: authority CLEAN at `1db8c33ef7`.
+
+### What is now in the tree
+
+    210/2025:              2025-01-01..2025-12-31  filing  autoliquidacion extent 2700
+    210/2026-y-siguientes: 2026-01-01..open        filing  autoliquidacion extent 4000
+
+The filing-grade defect is closed. A 2026 devengo previously emitted 2700
+positions against AEAT's declared 4000 -- 1300 bytes short, with the
+end-of-record marker 1300 positions early. It now emits 4000.
+
+Modelo 210 has dropped out of `test_every_claimed_filing_year_is_covered_by_its
+_declared_layout_design` entirely: it appeared once at tick start and appears
+zero times now.
+
+### The cutover, executed rather than described
+
+Last tick mapped the preconditions; this tick ran all four steps in ONE
+transaction, which is what they needed:
+
+1. build a candidate registry holding both revisions, render the 2026 tree off
+   revision 2025's inspection (legitimate because the casillas are identical),
+   and VALIDATE the candidate through the real authority -- the pre-cutover
+   proof;
+2. copy that candidate, prune the sibling revision, empty the export directory,
+   and render again for publication;
+3. promote the revision content into `src/` without its export tree;
+4. `publish_validated_generated_export_tree` validates, journals, swaps,
+   verifies and finalises.
+
+Three further preconditions surfaced only by running it, and are recorded
+because nothing else documents them:
+
+* a blanket source retarget produces DUPLICATE source references where a list
+  already held both designs -- `revision.toml` does -- and the inspection
+  refuses duplicates. The pair must be collapsed before the retarget;
+* the atomic swap is a rename, so the candidate must sit on the SAME DRIVE as
+  the repository. A scratch root on another volume fails with "cannot move the
+  file to a different disk drive" AFTER the content has been promoted;
+* a failed run leaves `.generated-export-transaction-<modelo>-<revision>.json`
+  in the registry root, and the next attempt refuses because the journal records
+  the previous candidate path. It must be cleared before retrying. After a
+  SUCCESSFUL publication only the `.lock` remains, matching every other
+  published modelo.
+
+### The regression, rewritten rather than kept
+
+`test_modelo_210_spans_a_record_length_change.py` existed to pin the evidence
+for this split; it asserted a single revision declaring both designs and would
+now be false. It was DELETED and replaced by
+`test_modelo_210_record_length_split.py`, which pins the post-split property:
+two revisions tiling at the boundary, each citing exactly one design, each
+emitting exactly the positions its OWN design declares.
+
+Asserted against the design rather than against 2700 and 4000 written into the
+test, so a future AEAT re-issue moves both sides together instead of turning a
+corrected registry red. A non-vacuity check keeps the two geometries provably
+different.
+
+### Verified
+
+* authority loads CLEAN with both revisions at filing grade and the extents
+  above;
+* the generated-tree gates -- export trees, tree check, tree publication -- 71
+  passed;
+* the new regression plus the modelo 210 party-key coverage gate: 8 passed;
+* split-progress: 3 passed; modelo 210 gone from the layout-applies list.
+
+### Still open
+
+Three splits, not four: modelo 200, 322 and 347 (three revisions). Each is
+larger than 210 was -- 210's data fields were identical across its boundary,
+which none of the others enjoy -- but the cutover path is no longer unknown for
+any of them.
+
+Eight standing failures at tick start; the layout-applies inventory is one entry
+shorter.
+
+## Tick: a wrong verdict of mine overturned, a parser repair reverted, and the split's own regression absorbed
+
+Re-measured at tick start: authority CLEAN at `516c70bebe`, modelo 210 carrying
+both revisions from last tick.
+
+### The regression my own split caused, and how it was closed
+
+The modelo 210 split put 34 casilla ids into a second revision, so the
+continuity ratchet diverged: "modelo 210: 34 ungrounded groups, baseline 0".
+That is mine, not a peer's, and it was absorbed rather than left.
+
+The gate offers two remedies and the choice matters. Two ticks ago, for modelo
+390, STAMPING was right because four sibling revisions already carried an
+identical `continuidad_id` per chain -- the value was established and only had
+to be read. Here it is not: modelo 210 had ONE revision before the split, so no
+sibling carries a stamp and nothing establishes a chain identity. Stamping would
+mean inventing one.
+
+Raising the baseline is the remedy the gate names for exactly this case, and the
+mapping already carries the precedent verbatim on modelo 184: "Split at
+ejercicio 2025 ... the later half repeats the earlier half's casilla ids,
+un-reviewed." Modelo 210's entry states the same, plus why no stamp was
+available.
+
+### A verdict of mine, overturned
+
+The partly-read inventory holds three modelo 200 designs, all skipping their
+`Pág. 21` and `Pág. 22` for a hole at position 10. An earlier tick closed that
+class as UNRECOVERABLE, on the stated ground that "those rows arrive with no
+numbers at all".
+
+That is wrong, and it was wrong because it was concluded from one file and
+generalised. Read on the design that had never been examined, the row is not
+missing its numbers -- it is split four ways, with the coordinates LAST::
+
+    An C Indicador de página complementaria.
+    Blanco (No
+    complementaria) o
+    5 10 1 "C" (Complementaria)
+
+Ordinal 5, position 10, one byte, naturaleza `An`. Every part is present. All
+SIX occurrences -- two in each of the three designs, and exactly the six skipped
+sheets -- share this shape byte for byte.
+
+### The repair, written and REVERTED
+
+A `_rejoin_trailing_coordinate_rows` pass was implemented, admitted only on the
+same over-determination `_continues` applies everywhere (ordinal follows by one
+AND position resumes) and requiring both halves. It was reverted unlanded for
+two measured reasons:
+
+* it was wired into the page-record path, and `_uses_page_record_layout` returns
+  FALSE for these designs -- the path never runs for them. The shape has to be
+  repaired on the plain extraction instead, where it may not look the same;
+* where it did run it produced FORTY rebuilds instead of two, including
+  degenerate ones like `5 10 1 An C`. The naturaleza-half matcher is far too
+  loose: `An|Num|N|A` followed by any text matches ordinary description
+  continuation lines.
+
+Landing it would have traded five reported partial reads for a parser that
+fabricates rows. The finding stands and the implementation does not.
+
+### Still open
+
+Ten standing failures, two more than the eight carried in: modelo 220's label
+gap re-opened by its author's in-flight work, and the continuity baseline closed
+here. The other eight are unchanged.
+
+The position-10 class is now a KNOWN-RECOVERABLE parser gap rather than a closed
+one -- three designs, six occurrences, one shape, and a repair that needs to sit
+on the plain path with a much narrower head matcher.
+
+Three splits remain: modelo 200, 322 and 347. All three need a semantic mapping
+authored against a design that does not correspond 1:1 to an existing one --
+for modelo 322 that is 126 of 231 entries on its two straddling sheets -- which
+is per-box tax review rather than mechanical re-anchoring.
