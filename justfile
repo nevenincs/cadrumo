@@ -996,17 +996,10 @@ docs-stack-deploy:
 docs-deploy:
     uv run --no-sync python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs
 
-# Build and publish the Cadrumo landing page to the site root. Operator-only,
-# absolutely: `_require_human_publish_environment` refuses under CI at three
-# call sites, because no workflow publishes the landing page and no deploy role
-# is scoped to it. This is NOT the docs guard awaiting provisioning — the two
-# publishers are deliberately independent verbs, and one shared authority would
-# silently extend the docs site's automated permission to a surface that was
-# never granted any. Named in no release document.
-[doc('Build and publish the Cadrumo landing page to the site root (operator-only, refused under CI).')]
-[group('deploy')]
-frontend-deploy:
-    uv run --no-sync python -m dev.deploy.frontend_static_site publish --confirm publish-cadrumo-frontend
+# The landing-page publish verb (`frontend-deploy`) lived here until the website
+# was rehomed to the cadrumo-marketing repository. It is `just deploy` there now.
+# This repository declares the CLI and harness and publishes documentation only;
+# it carries no website work and no verb that reaches the site root.
 
 # ── Release ──────────────────────────────────────────────────────────────────
 

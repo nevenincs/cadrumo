@@ -95,7 +95,6 @@ on the `ci-speed-redesign` ADR (2026-07-20).
 | --- | --- | --- | --- |
 | T0 | vault / agent-config / loose markdown churn | `paths-ignore` carve-out, byte-identical on `ci.yml` and `packaging-quick.yml` | Nothing per-push. The dispatch-only full lane (`ci-full.yml`) is the backstop for vault drift and the slow conformance surface. |
 | T1-docs | documentation surface | `docs.yml` `paths` filter (`docs/**`, `dev/docs/**`, `src/cadrumo/_data/terminology/**`) | `docs.yml` alone: the nitpicky Sphinx build, stub correspondence, CLI-reference drift, doc8, interrogate. The Python lanes carve these paths out, so a docs edit no longer starts the unit suite. |
-| T1-frontend | `frontend/` subproject | `frontend.yml` `paths` filter (`frontend/**`) | `frontend.yml` alone: `npm ci`, typecheck + build, vitest. The Python lanes carve it out. |
 | T1 | ordinary code change | any push to `main` outside the T0 carve-out | `ci.yml` (static checks ∥ full unit suite) + `packaging-quick.yml` (one cohort build + one core install probe per OS, proof-cache memoized). Ten-minute wall. |
 | T2 | release-artifact-shaping change | `packaging-campaign-trigger.yml` paths filter (`pyproject.toml`, `uv.lock`, `packaging/**`, `dev/packaging/**`, `packaging-smoke.yml`) | Everything in T1, **plus** an auto-dispatched full packaging campaign (`packaging-smoke.yml`), whose run is promotable evidence. |
 | T3 | RELEASE | operator dispatch of `publish-release.yml` | Every gate: full-campaign evidence + acquisition-lane rows + the 12-row readiness aggregation + operator preflight + the protected `release` environment. Nothing here is weakened by the tier system — T3 binds to the existing Gate 1/2/3 topology. |
@@ -153,7 +152,6 @@ the GROI oracle), `code-health-report.yml` (informational dashboard).
 | `workflows/ci.yml` | T1 per-push: static checks ∥ unit suite |
 | `workflows/ci-full.yml` | Dispatch-only full conformance: integration suite, dev tooling gates, docs, CVE, hooks, vault drift, roundtrips |
 | `workflows/docs.yml` | T1-docs per-push documentation verification (never delivery — see `docs-publish.yml`) |
-| `workflows/frontend.yml` | T1-frontend per-push typecheck / build / vitest for the `frontend/` subproject |
 | `workflows/docs-publish.yml` | Documentation DELIVERY, on `release: published` only; downstream of publication, never a gate |
 | `workflows/packaging-quick.yml` | T1 per-push install probe (no evidence) |
 | `workflows/packaging-campaign-trigger.yml` | T2 detector: auto-dispatches the full campaign |

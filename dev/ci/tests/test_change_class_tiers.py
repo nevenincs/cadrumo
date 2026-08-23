@@ -28,23 +28,26 @@ _CI: Final = _WORKFLOWS_DIR / "ci.yml"
 _QUICK: Final = _WORKFLOWS_DIR / "packaging-quick.yml"
 _FULL: Final = _WORKFLOWS_DIR / "ci-full.yml"
 _DOCS: Final = _WORKFLOWS_DIR / "docs.yml"
-_FRONTEND: Final = _WORKFLOWS_DIR / "frontend.yml"
 
 # The carve-out on the PYTHON code lanes: everything that never reaches the
 # Python code or artifact surface those lanes gate. Shared verbatim by every
 # per-push T1 Python workflow so a path cannot be carved out for one lane and
 # not the other.
 #
-# `docs/**` and `frontend/**` joined the set when each gained its own lane. They
-# are not "runs nothing" paths — that is the point. Before the split the
-# carve-out was keyed on file SUFFIX rather than on role, so `**.md` held
-# `docs/index.md` out while `docs/**.rst` (1384 files) started the full Python
-# unit suite and still produced no documentation verdict; a `frontend/`
-# dependency bump did the same to both Python lanes. A path belongs here when
-# the PYTHON lanes cannot observe its regressions, and a path that belongs here
-# needs a lane of its own — which is what docs.yml and frontend.yml are, and
-# what `test_every_code_lane_carve_out_path_has_a_lane_of_its_own` enforces so
-# the set cannot become a silent dumping ground.
+# `docs/**` joined the set when it gained its own lane. It is not a "runs
+# nothing" path — that is the point. Before the split the carve-out was keyed on
+# file SUFFIX rather than on role, so `**.md` held `docs/index.md` out while
+# `docs/**.rst` (1384 files) started the full Python unit suite and still
+# produced no documentation verdict. A path belongs here when the PYTHON lanes
+# cannot observe its regressions, and a path that belongs here needs a lane of
+# its own — which is what docs.yml is, and what
+# `test_every_code_lane_carve_out_path_has_a_lane_of_its_own` enforces so the
+# set cannot become a silent dumping ground.
+#
+# `frontend/**` was a second lane-owned member, paired with frontend.yml, until
+# the website was rehomed to the cadrumo-marketing repository. Both left
+# together: a carve-out for a surface this repository no longer contains would
+# carve out nothing, and the lane that owned it has no subproject to verify.
 _CODE_LANE_CARVE_OUT: Final = frozenset(
     {
         ".vault/**",
@@ -54,7 +57,6 @@ _CODE_LANE_CARVE_OUT: Final = frozenset(
         ".gemini/**",
         ".agents/**",
         "docs/**",
-        "frontend/**",
         "**.md",
     }
 )
@@ -141,11 +143,11 @@ def test_every_code_lane_carve_out_path_has_a_lane_of_its_own() -> None:
     adding a path is a one-line way to make a lane green. So every carved-out
     path must be either genuinely inert (agent config, vault records, loose
     markdown — development scaffolding that ships nothing) or covered by a lane
-    that names it. `docs/**` and `frontend/**` are product surfaces, so they
-    are held to the second standard.
+    that names it. `docs/**` is a product surface, so it is held to the second
+    standard.
     """
     inert = {".vault/**", ".vaultspec/**", ".claude/**", ".codex/**", ".gemini/**", ".agents/**", "**.md"}
-    owned = {"docs/**": _DOCS, "frontend/**": _FRONTEND}
+    owned = {"docs/**": _DOCS}
     assert inert | set(owned) == set(_CODE_LANE_CARVE_OUT), "a carve-out path is neither inert nor lane-owned"
 
     for carved, workflow in owned.items():
@@ -197,18 +199,19 @@ def test_the_docs_verification_lane_never_publishes() -> None:
     assert set(delivery) == {"release", "workflow_dispatch"}
 
 
-def test_the_frontend_lane_verifies_the_subproject_it_claims() -> None:
-    """The frontend lane typechecks, builds, and tests the frontend subproject."""
-    document = _document(_FRONTEND)
-    job = document["jobs"]["cadrumo-frontend"]
-    assert job["defaults"]["run"]["working-directory"] == "frontend"
-    commands = "\n".join(str(step.get("run", "")) for step in job["steps"])
-    # `npm ci` (locked) rather than `npm install`, the frontend analogue of
-    # `uv sync --frozen`.
-    assert "npm ci" in commands
-    assert "npm install" not in commands
-    assert "npm run build" in commands
-    assert "npm run test" in commands
+def test_no_lane_verifies_a_website_this_repository_does_not_contain() -> None:
+    """The website is gone; nothing here may claim to verify it.
+
+    `test_the_frontend_lane_verifies_the_subproject_it_claims` stood here and
+    asserted that frontend.yml typechecked, built, and tested `frontend/`. The
+    website was rehomed to the cadrumo-marketing repository, which runs that
+    lane now. This replaces the assertion with its inverse so the surface
+    cannot quietly come back: a `frontend/` tree or a lane claiming one would
+    mean the split half-reverted, with two repositories both believing they own
+    the site.
+    """
+    assert not (REPO_ROOT / "frontend").exists(), "the website was rehomed; this repository must not carry one"
+    assert not (_WORKFLOWS_DIR / "frontend.yml").exists(), "a website lane returned to the product repository"
 
 
 def test_no_workflow_installs_python_dependencies_unfrozen() -> None:

@@ -456,12 +456,6 @@ cache/
 .qdrant-initialized
 .agents/mcp_config.json.lock
 
-# React/Vite frontend build artefacts
-/frontend/node_modules/
-/frontend/dist/
-/frontend/build/
-/frontend/output/
-/frontend/*.tsbuildinfo
 /.playwright-cli/
 
 # Operator-run probe and continuation scratch. These are working artefacts, not

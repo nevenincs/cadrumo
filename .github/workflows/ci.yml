@@ -18,15 +18,19 @@ name: Cadrumo CI
 # reaches the lint/type/test surface this workflow gates, so those paths never
 # start the suite.
 #
-# `docs/**` and `frontend/**` are carved out because neither reaches the Python
-# code or artifact surface this workflow gates, and each now has its own lane
-# (docs.yml, frontend.yml). Before that split the carve-out was suffix-keyed
-# rather than role-keyed: `**.md` held out `docs/index.md` while `docs/**.rst`
-# — 1384 files, the bulk of the surface — started the full unit suite and still
-# produced no documentation verdict, because `docs-check` runs only in the
-# dispatch-only full lane. A `frontend/` dependency bump did the same (measured:
-# an undici bump ran both Python lanes). The carve-out set is byte-identical to
-# packaging-quick.yml's and pinned equal by test_change_class_tiers.py.
+# `docs/**` is carved out because it does not reach the Python code or artifact
+# surface this workflow gates, and it has its own lane (docs.yml). Before that
+# split the carve-out was suffix-keyed rather than role-keyed: `**.md` held out
+# `docs/index.md` while `docs/**.rst` — 1384 files, the bulk of the surface —
+# started the full unit suite and still produced no documentation verdict,
+# because `docs-check` runs only in the dispatch-only full lane. The carve-out
+# set is byte-identical to packaging-quick.yml's and pinned equal by
+# test_change_class_tiers.py.
+#
+# `frontend/**` was a third carved-out surface with its own lane (frontend.yml)
+# until the website was rehomed to the cadrumo-marketing repository. There is
+# nothing left here to carve out: this repository holds no website source, so
+# the tier, the lane, and the filter all went with it.
 on:
   workflow_dispatch:
   push:
@@ -39,7 +43,6 @@ on:
       - ".gemini/**"
       - ".agents/**"
       - "docs/**"
-      - "frontend/**"
       - "**.md"
   # SAME-REPO pull_request only: these jobs run on self-hosted runners, and a
   # fork PR would execute untrusted PR-head code on the operator's machines
@@ -58,7 +61,6 @@ on:
       - ".gemini/**"
       - ".agents/**"
       - "docs/**"
-      - "frontend/**"
       - "**.md"
 
 # Push runs QUEUE; pull-request runs supersede. The two events want opposite

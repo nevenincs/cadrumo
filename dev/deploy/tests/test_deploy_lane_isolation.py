@@ -46,8 +46,10 @@ _JUSTFILE = _REPO_ROOT / "justfile"
 _WORKFLOWS = _REPO_ROOT / ".github" / "workflows"
 
 #: The publishing verbs. Membership is asserted below rather than trusted, so a
-#: fourth verb cannot join the file without joining this set.
-_DEPLOY_RECIPES = frozenset({"docs-deploy", "docs-stack-deploy", "frontend-deploy"})
+#: third verb cannot join the file without joining this set. `frontend-deploy`
+#: was a member until the website was rehomed to the cadrumo-marketing
+#: repository; this repository no longer publishes to the site root at all.
+_DEPLOY_RECIPES = frozenset({"docs-deploy", "docs-stack-deploy"})
 
 #: The prefixes that name a development check surface. Deliberately broad: the
 #: question is "can verification reach publication", so over-including a recipe
@@ -62,8 +64,8 @@ _JUST_INVOCATION = re.compile(r"\bjust\s+((?:--?[\w-]+(?:\s+\S+)?\s+)*)([a-z][\w
 #: The three ways a workflow step can reach a publisher: the verb, the module,
 #: or the confirmation phrase that authorises it.
 _DEPLOY_IN_WORKFLOW = (
-    re.compile(r"just\s+(?:docs-deploy|docs-stack-deploy|frontend-deploy)\b"),
-    re.compile(r"dev\.deploy\.(?:docs_static_site|frontend_static_site)"),
+    re.compile(r"just\s+(?:docs-deploy|docs-stack-deploy)\b"),
+    re.compile(r"dev\.deploy\.docs_static_site"),
     re.compile(r"--confirm\s+(?:publish|provision)-cadrumo-\w+"),
 )
 
@@ -198,10 +200,10 @@ def test_the_traversal_fires_on_a_planted_edge(tmp_path: Path) -> None:
         "a planted prerequisite edge was not detected; the traversal is blind"
     )
 
-    invocation = source.replace(b"\naudit-all:", b"\naudit-all:\n    just frontend-deploy", 1)
+    invocation = source.replace(b"\naudit-all:", b"\naudit-all:\n    just docs-stack-deploy", 1)
     assert invocation != source, "could not plant a body invocation; audit-all was not found"
     planted.write_bytes(invocation)
-    assert "frontend-deploy" in _reachable(_recipe_graph(planted), "audit-all"), (
+    assert "docs-stack-deploy" in _reachable(_recipe_graph(planted), "audit-all"), (
         "a planted body invocation was not detected; the traversal is blind"
     )
 
@@ -261,14 +263,20 @@ def test_only_the_delivery_workflow_runs_a_publisher() -> None:
         )
 
 
-def test_the_landing_publisher_has_no_automated_caller_anywhere() -> None:
-    """The posture asymmetry, asserted structurally rather than as prose.
+def test_no_publisher_here_reaches_the_site_root() -> None:
+    """The site root belongs to another repository now.
 
-    ``frontend_static_site`` refuses every automated run absolutely while
-    ``docs_static_site`` accepts a provisioned authority. The observable
-    consequence is that one publisher has a workflow caller and the other has
-    none, and it is that consequence -- not the guard's wording -- that would
-    change first if the two were ever quietly merged into one authority.
+    `test_the_landing_publisher_has_no_automated_caller_anywhere` stood here
+    and asserted the posture asymmetry between the two publishers: the landing
+    publisher refused every automated run absolutely, the docs publisher
+    accepted a provisioned authority, and the observable consequence was that
+    one had a workflow caller and the other had none.
+
+    That asymmetry is no longer expressible in one repository: the landing
+    publisher left with the website. What survives is the half this repository
+    can still be wrong about — publishing to the site root from here would now
+    race the cadrumo-marketing publisher over the same bucket, so no module and
+    no workflow step may reach it.
     """
     text = "\n".join(path.read_text(encoding="utf-8") for path in scan_directory(_WORKFLOWS, pattern="*.yml"))
     invoked = {
@@ -277,5 +285,10 @@ def test_the_landing_publisher_has_no_automated_caller_anywhere() -> None:
         if re.search(rf"^\s*(?!#).*dev\.deploy\.{module}", text, re.MULTILINE)
     }
     assert invoked == {"docs_static_site"}, (
-        f"workflow-invoked publishers: {sorted(invoked)}; the landing publisher must have no automated caller"
+        f"workflow-invoked publishers: {sorted(invoked)}; only the documentation publisher lives here"
     )
+    assert not (_REPO_ROOT / "dev" / "deploy" / "frontend_static_site.py").exists(), (
+        "the site publisher returned to the product repository; it belongs to cadrumo-marketing"
+    )
+
+
