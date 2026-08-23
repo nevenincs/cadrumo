@@ -258,7 +258,6 @@ cli:
           authority
         create_help: Create an inventory ledger for one activity and tax year
         group_help: Inventory ledgers by activity, movements, and valuation
-        iva_rate_help: IVA rate as a percentage
         list_help: List inventory ledgers in the active profile
         movement_add_help: Add a purchase, sale, or adjustment movement to the ledger
         movement_date_help: Movement date (YYYY-MM-DD)
@@ -2808,7 +2807,6 @@ cli:
         {providers}.'
     exclude:
       help: Mark one reviewed ledger transaction as deliberately excluded from filing.
-      id_help: Ledger transaction id.
       reason_help: Optional note recording why the row is excluded.
       yes_help: Confirm the reviewed-excluded decision.
     export:
@@ -3145,7 +3143,6 @@ cli:
           and CADRUMO_SECRET_STORE_DIR. Pass profile secrets through --profile-secrets-stdin
           or --profile-secrets-fd, and command secrets through --secrets-stdin or
           --secrets-fd.
-        passphrase_change: Change the passphrase that protects the active profile.
         profile_delete: Delete a locally stored profile.
         profile_history: Inspect the append-only profile event history.
         profile_list: List profile facts.
@@ -3551,8 +3548,6 @@ cli:
     language_help: Language for output and help text (en, es, ca, hu).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
-    unavailable_optional_extra_help: 'Unavailable: %{feature} requires the optional
-      ''%{extra}'' extra. Run the command to see how to install it.'
     verbose_help: Enable detailed output.
     version_help: Show the version number and exit.
   topic:

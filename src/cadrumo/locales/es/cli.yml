@@ -283,7 +283,6 @@ cli:
           del cierre de existencias
         create_help: Crea un libro de existencias para una actividad y ejercicio
         group_help: Libros de existencias por actividad, movimientos y valoración
-        iva_rate_help: Tipo de IVA en porcentaje
         list_help: Lista los libros de existencias del perfil activo
         movement_add_help: Añade un movimiento de compra, venta o ajuste al libro
         movement_date_help: Fecha del movimiento (AAAA-MM-DD)
@@ -3035,7 +3034,6 @@ cli:
     exclude:
       help: Marca una transacción de libro revisada como excluida deliberadamente
         de la declaración.
-      id_help: Id de transacción del libro.
       reason_help: Nota opcional que registra por que la fila esta excluida.
       yes_help: Confirma la decisión de exclusión revisada.
     export:
@@ -3387,7 +3385,6 @@ cli:
         paragraph_storage_isolation: Para aislar el estado, defina CADRUMO_LOCAL_STORAGE_ROOT
           y CADRUMO_SECRET_STORE_DIR. Pase secretos de perfil con --profile-secrets-stdin
           o --profile-secrets-fd, y secretos del comando con --secrets-stdin o --secrets-fd.
-        passphrase_change: Cambia la contraseña que protege el perfil activo.
         profile_delete: Elimina un perfil almacenado localmente.
         profile_history: Inspecciona el historial append-only de eventos del perfil.
         profile_list: Listar los perfiles de contribuyente disponibles.
@@ -3814,8 +3811,6 @@ cli:
     language_help: Idioma de la salida y del texto de ayuda (en, es, ca, hu).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
-    unavailable_optional_extra_help: 'No disponible: %{feature} requiere el extra
-      opcional ''%{extra}''. Ejecuta el comando para ver cómo instalarlo.'
     verbose_help: Habilitar salida detallada.
     version_help: Mostrar el número de versión y salir.
   topic:

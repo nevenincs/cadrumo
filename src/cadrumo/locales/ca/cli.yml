@@ -281,7 +281,6 @@ cli:
           del tancament d'existències
         create_help: Crea un llibre d'existències per a una activitat i exercici
         group_help: Llibres d'existències per activitat, moviments i valoració
-        iva_rate_help: Tipus d'IVA en percentatge
         list_help: Llista els llibres d'existències del perfil actiu
         movement_add_help: Afegeix un moviment de compra, venda o ajust al llibre
         movement_date_help: Data del moviment (AAAA-MM-DD)
@@ -3007,7 +3006,6 @@ cli:
     exclude:
       help: Marca una transacció del llibre revisada com a exclosa deliberadament
         de la declaració.
-      id_help: Id de transacció del llibre.
       reason_help: Nota opcional que registra per que la fila queda exclosa.
       yes_help: Confirma la decisió d'exclusió revisada.
     export:
@@ -3355,7 +3353,6 @@ cli:
         paragraph_storage_isolation: Per aïllar l'estat, definiu CADRUMO_LOCAL_STORAGE_ROOT
           i CADRUMO_SECRET_STORE_DIR. Passeu secrets de perfil amb --profile-secrets-stdin
           o --profile-secrets-fd, i secrets de l'ordre amb --secrets-stdin o --secrets-fd.
-        passphrase_change: Canvia la contrasenya que protegeix el perfil actiu.
         profile_delete: Elimina un perfil emmagatzemat localment.
         profile_history: Inspecciona l'historial append-only d'esdeveniments del perfil.
         profile_list: Llistar els perfils de contribuent disponibles.
@@ -3776,8 +3773,6 @@ cli:
     language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
-    unavailable_optional_extra_help: 'No disponible: %{feature} requereix l''extra
-      opcional ''%{extra}''. Executa l''ordre per veure com instal·lar-lo.'
     verbose_help: Habilita la sortida detallada.
     version_help: Mostra el número de versió i surt.
   topic:

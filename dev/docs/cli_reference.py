@@ -491,8 +491,24 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
         family_nodes = tuple(node for node in leaves if node.path[1] == family)
         groups = sorted({node.path[2] for node in family_nodes if len(node.path) > 3})
         direct = tuple(node for node in family_nodes if len(node.path) == 3)
-        family_parts = [_rst_heading(family, "="), "\n"]
+        # The family landing page is the reader's entry into a whole command family,
+        # and it rendered as a bare bullet list of links: the raw family token as its
+        # title, no orientation, no heading over the direct commands, and no way back
+        # to the index. Every string below already existed, authored in four locales,
+        # and went unused -- which is also why it kept being pruned as an unused key.
+        family_parts = [
+            _rst_heading(docs_chrome("docs.cli.family.title", language, command=family), "="),
+            "\n",
+            docs_chrome("docs.cli.family.intro", language, family=family) + "\n\n",
+        ]
+        if direct:
+            family_parts.append(
+                _rst_heading(docs_chrome("docs.cli.family.direct_commands_heading", language), "-") + "\n"
+            )
+            family_parts.append(docs_chrome("docs.cli.family.direct_commands_intro", language, family=family) + "\n\n")
         family_parts.extend(_render_graph_command(language, node.path, node.spec) for node in direct)
+        if groups:
+            family_parts.append(_rst_heading(docs_chrome("docs.cli.family.choose_group_heading", language), "-") + "\n")
         for group in groups:
             group_nodes = tuple(node for node in family_nodes if len(node.path) > 3 and node.path[2] == group)
             content = (
@@ -504,7 +520,19 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
             rendered[rel] = content
             (output_dir / family).mkdir(parents=True, exist_ok=True)
             _write_text_if_changed(output_dir / family / f"{group}.rst", content)
-            family_parts.append(f"* :doc:`{group} <{family}/{group}>`\n")
+            family_parts.append(
+                "* "
+                + docs_chrome(
+                    "docs.cli.family.group_link_line",
+                    language,
+                    target=f"{family}/{group}",
+                    family=family,
+                    group=group,
+                )
+                + "\n"
+            )
+        if groups or direct:
+            family_parts.append("\n" + docs_chrome("docs.cli.family.index_link_line", language) + "\n")
         family_content = "".join(family_parts)
         rel = f"cli/{family}.rst"
         rendered[rel] = family_content

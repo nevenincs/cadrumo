@@ -141,18 +141,8 @@ docs:
       table_meaning_header: Significat
       title: Codis de sortida i contracte de sortida
     command:
-      bare_payload_note: Aquesta ordre emet una càrrega simple (encara sense embolcall).
-        L'estructura de la sortida és pròpia de cada ordre; consulteu ``--help`` per
-        a més detalls.
-      group_fallback: Grup d'ordres.
       no_description: Sense descripció.
-      no_description_available: No hi ha cap descripció disponible.
-      output_schema_heading: Esquema de sortida
       parameters_heading: Paràmetres
-      path_label: Ruta de l'ordre
-      registry_key_label: Clau del registre
-      schema_envelope_note: Aquesta ordre emet un ``SchemaEnvelope`` el camp ``result``
-        del qual es valida contra ``{schema}``.
     env:
       default_empty: buit
       default_unset: sense definir
@@ -171,7 +161,6 @@ docs:
       intro: '``aeat {family}`` s''organitza per grup de verbs principal. La pàgina
         de cada grup comença amb la seva sortida real de ``--help``, seguida de totes
         les ordres finals que conté.'
-      open_group_link: Obrir la referència d'``aeat {family} {group}``
       title: '{command}: referència d''ordres'
     index:
       app_card: 'Ordres del flux de treball operatiu: llibre de moviments, models,

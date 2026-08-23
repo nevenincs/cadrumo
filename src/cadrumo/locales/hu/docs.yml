@@ -141,18 +141,8 @@ docs:
       table_meaning_header: Jelentés
       title: Kilépési kódok és kimeneti szerződés
     command:
-      bare_payload_note: Ez a parancs csupasz adatot ad vissza (még nincs burkolatba
-        csomagolva). A kimenet szerkezete parancsonként eltér; a részletekért lásd
-        a ``--help`` kimenetét.
-      group_fallback: Parancscsoport.
       no_description: Nincs leírás.
-      no_description_available: Nem érhető el leírás.
-      output_schema_heading: Kimeneti séma
       parameters_heading: Paraméterek
-      path_label: Parancs útvonala
-      registry_key_label: Registry-kulcs
-      schema_envelope_note: Ez a parancs ``SchemaEnvelope`` szerkezetet ad vissza,
-        amelynek ``result`` mezőjét a ``{schema}`` séma ellenőrzi.
     env:
       default_empty: üres
       default_unset: nincs beállítva
@@ -170,7 +160,6 @@ docs:
       intro: Az ``aeat {family}`` fő igecsoportok szerint rendeződik. Minden csoport
         saját oldala a csoport valódi ``--help`` kimenetével kezdődik, majd az összes
         hozzá tartozó végponti parancs következik.
-      open_group_link: Az ``aeat {family} {group}`` referenciájának megnyitása
       title: '{command}: parancsreferencia'
     index:
       app_card: 'Operatív munkafolyamat-parancsok: főkönyvi munka, modelók, bevallási

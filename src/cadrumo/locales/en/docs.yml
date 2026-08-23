@@ -142,17 +142,8 @@ docs:
       table_meaning_header: Meaning
       title: Exit codes and output contract
     command:
-      bare_payload_note: This command emits a bare payload (not yet envelope-wrapped).
-        Output structure is command-specific; consult ``--help`` for details.
-      group_fallback: Command group.
       no_description: No description.
-      no_description_available: No description available.
-      output_schema_heading: Output schema
       parameters_heading: Parameters
-      path_label: Command path
-      registry_key_label: Registry key
-      schema_envelope_note: This command emits a ``SchemaEnvelope`` whose ``result``
-        field is validated against ``{schema}``.
     env:
       default_empty: empty
       default_unset: unset
@@ -169,7 +160,6 @@ docs:
       intro: '``aeat {family}`` is organised by major verb group. Each group''s own
         page leads with that group''s real ``--help`` output, followed by every leaf
         command it carries.'
-      open_group_link: Open the ``aeat {family} {group}`` reference
       title: '{command}: command reference'
     index:
       app_card: 'Operational workflow commands: ledger work, modelos, filing calendars,

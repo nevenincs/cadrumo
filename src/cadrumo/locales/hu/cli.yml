@@ -276,7 +276,6 @@ cli:
         closing_authority_record_help: A bizonyított zárókészlet-hatóság atomi rögzítése
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
         group_help: Készlet-főkönyvek tevékenységek, mozgások és értékelés szerint.
-        iva_rate_help: IVA-kulcs százalékban.
         list_help: Készlet-főkönyvek listázása az aktív profilban.
         movement_add_help: Vásárlási, értékesítési vagy helyesbítési mozgás hozzáadása
           a főkönyvhöz.
@@ -2995,7 +2994,6 @@ cli:
         szolgáltatók: {providers}.'
     exclude:
       help: Egy átnézett főkönyvi tranzakciót szándékosan kizártként jelöl a bevallásból.
-      id_help: Főkönyvi tranzakció azonosítója.
       reason_help: Opcionális megjegyzés arról, miért van kizárva a sor.
       yes_help: Erősítse meg az átnézett-kizárt döntést.
     export:
@@ -3355,7 +3353,6 @@ cli:
           és CADRUMO_SECRET_STORE_DIR értékét. A profil titkát --profile-secrets-stdin
           vagy --profile-secrets-fd, a parancs titkát --secrets-stdin vagy --secrets-fd
           kapcsolóval adja át.
-        passphrase_change: Az aktív profilt védő jelszó módosítása.
         profile_delete: Helyileg tárolt profil törlése.
         profile_history: Az append-only profil eseménytörténet megtekintése.
         profile_list: Profiladatok listázása.
@@ -3770,8 +3767,6 @@ cli:
     language_help: A kimenet és a súgószöveg nyelve (en, es, ca, hu).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
-    unavailable_optional_extra_help: 'Nem érhető el: %{feature} a(z) ''%{extra}''
-      opcionális kiegészítőt igényli. Futtasd a parancsot a telepítés módjáért.'
     verbose_help: Részletes kimenet engedélyezése.
     version_help: A verziószám megjelenítése és kilépés.
   topic:

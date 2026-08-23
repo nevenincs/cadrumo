@@ -3016,6 +3016,144 @@ modelo:
                 digits, two decimals).'
               label: Taxable base and gross tax liability of the group (page 7 sheet
                 00). Tax rate bracket 2 (three integer digits, two decimals)
+            x-agp34c1g6t0j0c9q60oj0c1n:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Original amount of individual negative taxable
+                bases not incorporated. DA 19 LIS (**). Generation period 2023
+            x-agp34c1g6t0j0c9q60oj0c1o:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Amount pending incorporation at the start of
+                the period. Generation period 2023
+            x-agp34c1g6t0j0c9q60oj0c1p:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Amount incorporated in the period. Generation
+                period 2023
+            x-agp34c1g6t0j0c9q60oj0c9g:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Amount pending incorporation at the end of the
+                period. Generation period 2023
+            x-agp34c1g6t0j0c9q60oj0c9h:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Original amount of individual negative taxable
+                bases not incorporated. DA 19 LIS (**). Generation period 2024(*)
+            x-agp34c1g6t0j0c9q60oj0c9i:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Amount pending incorporation at the start of
+                the period. Generation period 2024(*)
+            x-agp34c1g6t0j0c9q60oj0c9j:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Amount incorporated in the period. Generation
+                period 2024(*)
+            x-agp34c1g6t0j0c9q60oj0c9k:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Amount pending incorporation at the end of the
+                period. Generation period 2024(*)
+            x-agp34c1g6t0j0c9q60oj0c9l:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Original amount of individual negative taxable
+                bases not incorporated. DA 19 LIS (**). Generation period 2024
+            x-agp34c1g6t0j0c9q60oj0c9m:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Amount pending incorporation at the start of
+                the period. Generation period 2024
+            x-agp34c1g6t0j0c9q60oj0c9n:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Amount incorporated in the period. Generation
+                period 2024
+            x-agp34c1g6t0j0c9q60oj0c9o:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Amount pending incorporation at the end of the
+                period. Generation period 2024
+            x-agp34c1g6t0j0c9q60oj0c9p:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Original amount of individual negative taxable
+                bases not incorporated. DA 19 LIS (**). Total
+            x-agp34c1g6t0j0c9q60oj0chg:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Amount pending incorporation at the start of
+                the period. Total
+            x-agp34c1g6t0j0c9q60oj0chh:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Amount incorporated in the period. Total
+            x-agp34c1g6t0j0c9q60oj0chi:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). General regime. Amount pending incorporation at the end of the
+                period. Total
+            x-agp34c1g6t0j0c9q60oj0chj:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Original amount of individual negative taxable bases not
+                incorporated. DA 19 LIS (**). Generation period 2023
+            x-agp34c1g6t0j0c9q60oj0chk:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Amount pending incorporation at the start of the period.
+                Generation period 2023
+            x-agp34c1g6t0j0c9q60oj0chl:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Amount incorporated in the period. Generation period 2023
+            x-agp34c1g6t0j0c9q60oj0chm:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Amount pending incorporation at the end of the period. Generation
+                period 2023
+            x-agp34c1g6t0j0c9q60oj0chn:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Original amount of individual negative taxable bases not
+                incorporated. DA 19 LIS (**). Generation period 2024(*)
+            x-agp34c1g6t0j0c9q60oj0cho:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Amount pending incorporation at the start of the period.
+                Generation period 2024(*)
+            x-agp34c1g6t0j0c9q60oj0chp:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Amount incorporated in the period. Generation period 2024(*)
+            x-agp34c1g6t0j0c9q60oj0cpg:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Amount pending incorporation at the end of the period. Generation
+                period 2024(*)
+            x-agp34c1g6t0j0c9q60oj0cph:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Original amount of individual negative taxable bases not
+                incorporated. DA 19 LIS (**). Generation period 2024
+            x-agp34c1g6t0j0c9q60oj0cpi:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Amount pending incorporation at the start of the period.
+                Generation period 2024
+            x-agp34c1g6t0j0c9q60oj0cpj:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Amount incorporated in the period. Generation period 2024
+            x-agp34c1g6t0j0c9q60oj0cpk:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Amount pending incorporation at the end of the period. Generation
+                period 2024
+            x-agp34c1g6t0j0c9q60oj0cpl:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Original amount of individual negative taxable bases not
+                incorporated. DA 19 LIS (**). Total
+            x-agp34c1g6t0j0c9q60oj0cpm:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Amount pending incorporation at the start of the period.
+                Total
+            x-agp34c1g6t0j0c9q60ojicpl:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Amount incorporated in the period. Total
+            x-agp34c1g6t0j0c9q60ojicpm:
+              label: Individual negative taxable bases (DA 19ª LIS) (page 7A sheet
+                01). Special regime for ships and shipping companies of the Canary
+                Islands. Amount pending incorporation at the end of the period. Total
             x-agp34c1g6t230c1q60o30e1g:
               help: null
               label: 'Other corrections to the sum of taxable bases: elimination of

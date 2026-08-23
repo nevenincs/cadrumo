@@ -2970,6 +2970,146 @@ modelo:
                 dos decimales).'
               label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Tramo
                 de tipo de gravamen 2 (tres enteros, dos decimales)
+            x-agp34c1g6t0j0c9q60oj0c1n:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe original de bases imponibles negativas
+                individuales no integradas. DA 19 LIS (**). Período de generación
+                2023
+            x-agp34c1g6t0j0c9q60oj0c1o:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe pendiente de integración a inicio
+                de período. Período de generación 2023
+            x-agp34c1g6t0j0c9q60oj0c1p:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe integrado en el periodo. Período
+                de generación 2023
+            x-agp34c1g6t0j0c9q60oj0c9g:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe pendiente de integración a final
+                de período. Período de generación 2023
+            x-agp34c1g6t0j0c9q60oj0c9h:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe original de bases imponibles negativas
+                individuales no integradas. DA 19 LIS (**). Período de generación
+                2024(*)
+            x-agp34c1g6t0j0c9q60oj0c9i:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe pendiente de integración a inicio
+                de período. Período de generación 2024(*)
+            x-agp34c1g6t0j0c9q60oj0c9j:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe integrado en el periodo. Período
+                de generación 2024(*)
+            x-agp34c1g6t0j0c9q60oj0c9k:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe pendiente de integración a final
+                de período. Período de generación 2024(*)
+            x-agp34c1g6t0j0c9q60oj0c9l:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe original de bases imponibles negativas
+                individuales no integradas. DA 19 LIS (**). Período de generación
+                2024
+            x-agp34c1g6t0j0c9q60oj0c9m:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe pendiente de integración a inicio
+                de período. Período de generación 2024
+            x-agp34c1g6t0j0c9q60oj0c9n:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe integrado en el periodo. Período
+                de generación 2024
+            x-agp34c1g6t0j0c9q60oj0c9o:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe pendiente de integración a final
+                de período. Período de generación 2024
+            x-agp34c1g6t0j0c9q60oj0c9p:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe original de bases imponibles negativas
+                individuales no integradas. DA 19 LIS (**). Total
+            x-agp34c1g6t0j0c9q60oj0chg:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe pendiente de integración a inicio
+                de período. Total
+            x-agp34c1g6t0j0c9q60oj0chh:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe integrado en el periodo. Total
+            x-agp34c1g6t0j0c9q60oj0chi:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen general. Importe pendiente de integración a final
+                de período. Total
+            x-agp34c1g6t0j0c9q60oj0chj:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe original de bases imponibles negativas individuales no integradas.
+                DA 19 LIS (**). Período de generación 2023
+            x-agp34c1g6t0j0c9q60oj0chk:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe pendiente de integración a inicio de período. Período de generación
+                2023
+            x-agp34c1g6t0j0c9q60oj0chl:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe integrado en el periodo. Período de generación 2023
+            x-agp34c1g6t0j0c9q60oj0chm:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe pendiente de integración a final de período. Período de generación
+                2023
+            x-agp34c1g6t0j0c9q60oj0chn:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe original de bases imponibles negativas individuales no integradas.
+                DA 19 LIS (**). Período de generación 2024(*)
+            x-agp34c1g6t0j0c9q60oj0cho:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe pendiente de integración a inicio de período. Período de generación
+                2024(*)
+            x-agp34c1g6t0j0c9q60oj0chp:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe integrado en el periodo. Período de generación 2024(*)
+            x-agp34c1g6t0j0c9q60oj0cpg:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe pendiente de integración a final de período. Período de generación
+                2024(*)
+            x-agp34c1g6t0j0c9q60oj0cph:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe original de bases imponibles negativas individuales no integradas.
+                DA 19 LIS (**). Período de generación 2024
+            x-agp34c1g6t0j0c9q60oj0cpi:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe pendiente de integración a inicio de período. Período de generación
+                2024
+            x-agp34c1g6t0j0c9q60oj0cpj:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe integrado en el periodo. Período de generación 2024
+            x-agp34c1g6t0j0c9q60oj0cpk:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe pendiente de integración a final de período. Período de generación
+                2024
+            x-agp34c1g6t0j0c9q60oj0cpl:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe original de bases imponibles negativas individuales no integradas.
+                DA 19 LIS (**). Total
+            x-agp34c1g6t0j0c9q60oj0cpm:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe pendiente de integración a inicio de período. Total
+            x-agp34c1g6t0j0c9q60ojicpl:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe integrado en el periodo. Total
+            x-agp34c1g6t0j0c9q60ojicpm:
+              label: Bases imponibles negativas individuales (DA 19ª LIS) (pág. 7A
+                hoja 01). Régimen especial de buques y empresas navieras de Canarias.
+                Importe pendiente de integración a final de período. Total
             x-agp34c1g6t230c1q60o30e1g:
               help: null
               label: 'Otras correcciones a la suma de bases imponibles: eliminación
