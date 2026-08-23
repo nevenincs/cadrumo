@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:610b0a15b21154a7e284b39311f65413fc3c1e8bb7f4f975d3015ccc0c7312d0'
+body_hash: 'sha256:a089d8e5ba98840d8fa5413c3b7333c6d188153b4eda73574552ca4f66a889a5'
 ---
 
 # `source-casilla-integration` plan
@@ -78,7 +78,7 @@ Enumerate typed secure domains, repositories, ingress, assemblers, helpers, and 
 - [x] `W01.P03.S11` - enumerate secure typed repositories and their aggregate grains; `dev/source_connectivity/discovery.py`.
 - [x] `W01.P03.S12` - enumerate supported CLI and worksheet ingress surfaces; `dev/source_connectivity/discovery.py`.
 - [x] `W01.P03.S13` - enumerate exported calculation helpers and explicit readiness declarations; `dev/source_connectivity/discovery.py`.
-- [ ] `W01.P03.S14` - enumerate typed row assemblers and declared source-disposition ownership; `dev/source_connectivity/discovery.py`.
+- [x] `W01.P03.S14` - enumerate typed row assemblers and declared source-disposition ownership; `dev/source_connectivity/discovery.py`.
 - [ ] `W01.P03.S15` - emit lexical destination matches as advisory findings only; `dev/source_connectivity/discovery.py`.
 - [ ] `W01.P03.S16` - verify discovery detects a new repository, assembler, helper, and readiness declaration independently; `dev/source_connectivity/tests/test_discovery.py`.
 

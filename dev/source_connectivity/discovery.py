@@ -94,6 +94,28 @@ class SourceReadinessCapability:
         return f"{self.module}:{self.line}"
 
 
+@dataclass(frozen=True, slots=True)
+class RowAssemblerCapability:
+    """One registry row grouping and its typed application assembler."""
+
+    module: str
+    grouping: str
+    source_kind: str
+    assembler_name: str
+    observation_return_type: str
+    line: int
+
+
+@dataclass(frozen=True, slots=True)
+class SourceOwnershipCapability:
+    """One source kind owned by the canonical production calculation route."""
+
+    source_kind: str
+    resolver_id: str
+    resolver_type: str | None
+    stage: str
+
+
 def _production_python_files(source_root: Path) -> tuple[Path, ...]:
     return tuple(
         path
@@ -379,15 +401,92 @@ def discover_source_readiness(repo_root: Path) -> tuple[SourceReadinessCapabilit
     return tuple(sorted(capabilities, key=lambda item: (item.module, item.line, item.function_name)))
 
 
+def discover_row_assemblers(repo_root: Path) -> tuple[RowAssemblerCapability, ...]:
+    """Derive row-grouping dispatch to typed assembler records from its canonical module."""
+    path = repo_root / "src" / "cadrumo" / "application" / "calculations" / "_row_set_assembly.py"
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    dispatch_assignment = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.AnnAssign)
+        and isinstance(node.target, ast.Name)
+        and node.target.id == "_GROUPING_DISPATCH"
+        and isinstance(node.value, ast.Dict)
+    )
+    grouping_members = [
+        (key.value, ast.unparse(value))
+        for key, value in zip(dispatch_assignment.value.keys, dispatch_assignment.value.values, strict=True)
+        if isinstance(key, ast.Constant) and isinstance(key.value, str)
+    ]
+    dispatcher = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "assemble_observations_for_grouping"
+    )
+    assemblers_by_member: dict[str, tuple[str, int]] = {}
+    for child in ast.walk(dispatcher):
+        if not isinstance(child, ast.If) or not isinstance(child.test, ast.Compare) or len(child.test.comparators) != 1:
+            continue
+        member = ast.unparse(child.test.comparators[0])
+        returned_call = next(
+            (
+                nested
+                for nested in ast.walk(child)
+                if isinstance(nested, ast.Call)
+                and _dotted_name(nested.func).rsplit(".", maxsplit=1)[-1].startswith("assemble_")
+                and _dotted_name(nested.func).rsplit(".", maxsplit=1)[-1] != "assemble_observations_for_grouping"
+            ),
+            None,
+        )
+        if returned_call is not None:
+            assemblers_by_member[member] = (_dotted_name(returned_call.func).rsplit(".", maxsplit=1)[-1], child.lineno)
+    functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
+    records: list[RowAssemblerCapability] = []
+    for grouping, member in grouping_members:
+        assembler_name, line = assemblers_by_member[member]
+        assembler = functions[assembler_name]
+        records.append(
+            RowAssemblerCapability(
+                module=path.relative_to(repo_root).as_posix(),
+                grouping=grouping,
+                source_kind=member,
+                assembler_name=assembler_name,
+                observation_return_type=ast.unparse(assembler.returns) if assembler.returns is not None else "",
+                line=line,
+            )
+        )
+    return tuple(sorted(records, key=lambda item: (item.grouping, item.source_kind)))
+
+
+def discover_source_ownership() -> tuple[SourceOwnershipCapability, ...]:
+    """Project source ownership from the canonical live calculation route."""
+    from cadrumo.application.modelo import CALCULATION_ROUTE_RESOLVER_OWNERSHIP
+
+    return tuple(
+        SourceOwnershipCapability(
+            source_kind=source.value,
+            resolver_id=row.resolver_id,
+            resolver_type=None if row.resolver_type is None else row.resolver_type.__name__,
+            stage=row.stage,
+        )
+        for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP
+        for source in row.owned_sources
+    )
+
+
 __all__ = [
     "CalculationHelperCapability",
     "IngressCapability",
     "IngressChannel",
+    "RowAssemblerCapability",
     "SecureRepositoryCapability",
     "SecureRepositoryMechanism",
+    "SourceOwnershipCapability",
     "SourceReadinessCapability",
     "discover_calculation_helpers",
     "discover_ingress_surfaces",
+    "discover_row_assemblers",
     "discover_secure_repositories",
+    "discover_source_ownership",
     "discover_source_readiness",
 ]
