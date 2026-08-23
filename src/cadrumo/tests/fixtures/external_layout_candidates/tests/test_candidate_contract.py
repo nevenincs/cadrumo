@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from copy import deepcopy
 from pathlib import Path
 from shutil import copyfile
@@ -40,37 +41,7 @@ _SIDECARS = tuple(
 
 def _adjudicated_payload() -> dict[str, object]:
     candidate = load_external_layout_candidate(_ROOT / "130" / "plain.json")
-    counterpart = load_external_layout_candidate(_ROOT / "130" / "fillable.json")
-    payload = candidate.model_dump(mode="python")
-    payload["authority_adjudication"] = {
-        "artifact_authenticity": {
-            "verdict": "third_party_sample",
-            "evidence_summary": "FiscalBot sample disclaimer and placeholder receipt are present.",
-        },
-        "official_base_derivation": {
-            "verdict": "verified_official_base_derivative",
-            "official_source": {
-                "authority": "aeat",
-                "document_id": "AEAT Modelo 130",
-                "source_url": "https://sede.agenciatributaria.gob.es/example.pdf",
-                "sha256": "a" * 64,
-                "page_mapping": ({"candidate_page": 1, "official_page": 1},),
-            },
-            "comparison_method": "pdf_text_geometry_and_normalized_render",
-            "comparison_summary": "Ordered text and geometry agree with the pinned source.",
-            "pair_render": {
-                "counterpart_kind": "fillable",
-                "counterpart_sha256": counterpart.content.sha256,
-                "comparison_method": "exact_96_dpi_render_match",
-                "comparison_summary": "Plain and fillable members render identically at 96 dpi.",
-            },
-        },
-        "registry_applicability": {
-            "verdict": "current_authored_revision",
-            "revision_id": "2019-y-siguientes",
-        },
-    }
-    return payload
+    return candidate.model_dump(mode="python")
 
 
 def test_candidate_inventory_is_exactly_five_modelos_by_two_variants() -> None:
@@ -186,7 +157,7 @@ def test_registry_applicability_requires_a_revision_exactly_for_authored_verdict
         (
             ("official_source", "source_url"),
             "https://www.boe.es/example.pdf",
-            "aeat official source URL must use an official host",
+            "official source evidence must match its reviewed coordinate",
         ),
         (("official_source", "sha256"), "not-a-digest", "String should match pattern"),
         (("pair_render", "counterpart_kind"), "plain", "counterpart_kind must be 'fillable'"),
@@ -210,18 +181,47 @@ def test_official_source_and_pair_evidence_fail_closed(
         ExternalLayoutCandidate.model_validate(payload)
 
 
-@pytest.mark.parametrize("host", ["boe.es", "www.boe.es"])
-def test_official_source_accepts_both_boe_host_spellings(host: str) -> None:
-    """The official BOE publishes first-party links with and without ``www``."""
-    payload = _adjudicated_payload()
+@pytest.mark.parametrize(
+    ("field", "replacement"),
+    [
+        ("document_id", "BOE-A-2015-1656 Annex II"),
+        ("source_url", "https://www.boe.es/boe/dias/2015/02/19/pdfs/other.pdf"),
+        ("sha256", "0" * 64),
+        ("page_mapping", ({"candidate_page": 1, "official_page": 7},)),
+    ],
+)
+def test_reviewed_official_evidence_coordinate_rejects_valid_looking_drift(
+    field: str,
+    replacement: object,
+) -> None:
+    """Well-formed substitutions cannot silently replace the reviewed official anchor."""
+    payload = deepcopy(_adjudicated_payload())
     adjudication = payload["authority_adjudication"]
     assert isinstance(adjudication, dict)
     derivation = adjudication["official_base_derivation"]
     assert isinstance(derivation, dict)
     official_source = derivation["official_source"]
     assert isinstance(official_source, dict)
-    official_source.update(authority="boe", source_url=f"https://{host}/example.pdf")
-    ExternalLayoutCandidate.model_validate(payload)
+    official_source[field] = replacement
+    with pytest.raises(ValidationError, match="official source evidence must match its reviewed coordinate"):
+        ExternalLayoutCandidate.model_validate(payload)
+
+
+def test_reviewed_official_evidence_coordinate_rejects_valid_wrong_authority_pair() -> None:
+    """A host-valid AEAT coordinate cannot replace the reviewed BOE coordinate."""
+    payload = deepcopy(_adjudicated_payload())
+    adjudication = payload["authority_adjudication"]
+    assert isinstance(adjudication, dict)
+    derivation = adjudication["official_base_derivation"]
+    assert isinstance(derivation, dict)
+    official_source = derivation["official_source"]
+    assert isinstance(official_source, dict)
+    official_source.update(
+        authority="aeat",
+        source_url="https://sede.agenciatributaria.gob.es/example.pdf",
+    )
+    with pytest.raises(ValidationError, match="official source evidence must match its reviewed coordinate"):
+        ExternalLayoutCandidate.model_validate(payload)
 
 
 def test_strict_contract_rejects_an_unknown_sidecar_field() -> None:
@@ -243,6 +243,25 @@ def test_physical_gate_bites_when_candidate_bytes_change(tmp_path: Path) -> None
     copied_pdf = candidate_dir / "plain.pdf"
     copyfile(source_sidecar, copied_sidecar)
     copyfile(source_pdf, copied_pdf)
+    copyfile(_ROOT / "130" / "fillable.pdf", candidate_dir / "fillable.pdf")
     copied_pdf.write_bytes(copied_pdf.read_bytes() + b"\n% changed-after-inventory\n")
 
     assert "content digest or size" in physical_candidate_mismatches(copied_sidecar)
+
+
+def test_physical_gate_bites_when_counterpart_digest_is_valid_but_wrong(tmp_path: Path) -> None:
+    """Pair evidence is recomputed from the actual adjacent opposite PDF bytes."""
+    source_dir = _ROOT / "130"
+    candidate_dir = tmp_path / "130"
+    candidate_dir.mkdir()
+    for filename in _EXPECTED_CANDIDATE_FILENAMES:
+        copyfile(source_dir / filename, candidate_dir / filename)
+
+    copied_sidecar = candidate_dir / "plain.json"
+    payload = json.loads(copied_sidecar.read_text(encoding="utf-8"))
+    payload["authority_adjudication"]["official_base_derivation"]["pair_render"][
+        "counterpart_sha256"
+    ] = "0" * 64
+    copied_sidecar.write_text(json.dumps(payload), encoding="utf-8")
+
+    assert "counterpart content digest" in physical_candidate_mismatches(copied_sidecar)

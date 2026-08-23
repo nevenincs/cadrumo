@@ -100,6 +100,49 @@ class ExternalLayoutOfficialSourceEvidence(_FrozenStrictModel):
         return self
 
 
+_EXPECTED_OFFICIAL_EVIDENCE_COORDINATES: Mapping[
+    str,
+    tuple[str, str, str, str, tuple[tuple[int, int], ...]],
+] = {
+    "036": (
+        "boe",
+        "BOE-A-2023-26632 Annex I",
+        "https://www.boe.es/boe/dias/2023/12/29/pdfs/BOE-A-2023-26632.pdf",
+        "97069814b634a6b87966e0b486956639b5a4dda36f0401c5c7f51fe12726cea3",
+        ((1, 19), (2, 24), (3, 25), (4, 26)),
+    ),
+    "130": (
+        "boe",
+        "BOE-A-2015-1656 Annex I",
+        "https://www.boe.es/boe/dias/2015/02/19/pdfs/BOE-A-2015-1656.pdf",
+        "f62a61854eac561e96f689ebf11b8b2c75d418a6146a7f972e6e6a404a8063a0",
+        ((1, 6),),
+    ),
+    "131": (
+        "boe",
+        "BOE-A-2015-1656 Annex II",
+        "https://www.boe.es/boe/dias/2015/02/19/pdfs/BOE-A-2015-1656.pdf",
+        "f62a61854eac561e96f689ebf11b8b2c75d418a6146a7f972e6e6a404a8063a0",
+        ((1, 8),),
+    ),
+    "303": (
+        "aeat",
+        "AEAT IVA 2024 Manual, Chapter 9 Modelo 303 annex",
+        "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/"
+        "IVA_2024/Imagenes/Cap_9_303_es_es.pdf",
+        "fd42e40bd4ddb6f737ce8007e6e72b101465292abcf76a9d2ba01c791539491d",
+        ((1, 1), (2, 3), (3, 6)),
+    ),
+    "349": (
+        "boe",
+        "BOE-A-2010-5098 Annex I",
+        "https://boe.es/boe/dias/2010/03/29/pdfs/BOE-A-2010-5098.pdf",
+        "3e194f09e71174b115ccdd6627656259cbbfd2f18fd44147d9091527a3909c69",
+        ((1, 13), (2, 15)),
+    ),
+}
+
+
 class ExternalLayoutPairRenderEvidence(_FrozenStrictModel):
     """Digest-bound render relationship to the other member of a candidate pair."""
 
@@ -223,6 +266,21 @@ class ExternalLayoutCandidate(_FrozenStrictModel):
         expected_pages = frozenset(range(1, self.pdf.page_count + 1))
         if mapped_pages != expected_pages:
             raise ValueError("official page mapping must cover every candidate page exactly once")
+        official_source = derivation.official_source
+        observed_coordinate = (
+            official_source.authority,
+            official_source.document_id,
+            official_source.source_url,
+            official_source.sha256,
+            tuple(
+                (mapping.candidate_page, mapping.official_page)
+                for mapping in official_source.page_mapping
+            ),
+        )
+        if observed_coordinate != _EXPECTED_OFFICIAL_EVIDENCE_COORDINATES[self.modelo]:
+            raise ValueError(
+                f"modelo {self.modelo} official source evidence must match its reviewed coordinate",
+            )
         pair_render = derivation.pair_render
         expected_counterpart = "fillable" if self.candidate_kind == "plain" else "plain"
         if pair_render.counterpart_kind != expected_counterpart:
@@ -346,6 +404,11 @@ def physical_candidate_mismatches(sidecar_path: Path) -> tuple[str, ...]:
     declared_counts = candidate.observations.model_dump(exclude={"value_observation"})
     if observed_counts != declared_counts:
         mismatches.append("text or identity observations")
+    pair_render = candidate.authority_adjudication.official_base_derivation.pair_render
+    counterpart_path = sidecar_path.parent / f"{pair_render.counterpart_kind}.pdf"
+    observed_counterpart_sha256 = hashlib.sha256(counterpart_path.read_bytes()).hexdigest()
+    if observed_counterpart_sha256 != pair_render.counterpart_sha256:
+        mismatches.append("counterpart content digest")
     return tuple(mismatches)
 
 

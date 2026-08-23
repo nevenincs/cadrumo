@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:ee8996719cfdb6591b9b0a008587c55658aea44f9ef93748c9d6392ed0d461e5'
+body_hash: 'sha256:9a079e3fd82b7d444cd313a38d867a526587e8d02741216b39094dd86a2bd66b'
 related:
   - '[[2026-08-23-issue-620-external-pdf-signal-S01]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S02]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-08-23-issue-620-external-pdf-signal-S12]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S13]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S14]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-S16]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-adr]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-final-review-audit]]'
@@ -63,6 +64,7 @@ Auto-generated index of all documents tagged with `#issue-620-external-pdf-signa
 - `2026-08-23-issue-620-external-pdf-signal-S12` - Adjudicate all ten candidates against pinned official bases and registry applicability
 - `2026-08-23-issue-620-external-pdf-signal-S13` - Correct cross-model outcomes to select applicable revisions or refuse current-form alignment
 - `2026-08-23-issue-620-external-pdf-signal-S14` - Verify authority adjudication through only the affected registry and parser unit modules
+- `2026-08-23-issue-620-external-pdf-signal-S16` - Resolve review findings by locking official evidence coordinates and physical counterpart digests
 
 ### plan
 
