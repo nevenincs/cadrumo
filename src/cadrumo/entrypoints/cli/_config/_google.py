@@ -94,9 +94,7 @@ from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._execution_policies import GOOGLE_DESTRUCTIVE, GOOGLE_READ, GOOGLE_WRITE, declare_metadata_group
-from ._google_credential_source_cli import register_google_credential_source_commands
 from ._google_errors import _google_refusal
-from ._google_folder import register_google_folder_commands
 from ._google_payloads import (
     GoogleLoginResult,
     GoogleLogoutResult,
@@ -107,12 +105,6 @@ from ._google_payloads import (
     GoogleSyncFailedObjectPayload,
     GoogleSyncProbeResult,
     GoogleSyncPushResult,
-)
-from ._google_sync_calc import (
-    google_sync_calc_export,
-    google_sync_calc_pull,
-    google_sync_calc_verify,
-    register_google_sync_calc_commands,
 )
 
 google_app = typer.Typer(
@@ -386,10 +378,6 @@ def google_logout(
             "client_preserved\tTrue",
         ),
     )
-
-
-register_google_folder_commands(google_app, google_refusal=_google_refusal)
-register_google_credential_source_commands(google_app)
 
 
 sync_app = typer.Typer(
@@ -1163,10 +1151,6 @@ def google_sync_push(
     _emit_envelope(ctx, command="config.google.sync.push", result=push_result, lines=tuple(lines), notices=notices)
 
 
-register_google_sync_calc_commands(sync_app)
-google_app.add_typer(sync_app, name="sync")
-
-
 # Suppress unused-import false positive for `load_token` and `REQUIRED_SCOPES`;
 # both are part of the public surface the sync sub-commands consume.
 _ = (load_token, REQUIRED_SCOPES)
@@ -1175,4 +1159,20 @@ _ = (load_token, REQUIRED_SCOPES)
 declare_metadata_group(google_app)
 declare_metadata_group(sync_app)
 
-__all__ = ["google_app", "google_sync_calc_export", "google_sync_calc_pull", "google_sync_calc_verify"]
+_SYNC_CALC_EXPORTS = frozenset(
+    {"google_sync_calc_export", "google_sync_calc_pull", "google_sync_calc_verify"}
+)
+
+
+def __getattr__(name: str) -> object:
+    """Resolve the retained calc command exports only when explicitly selected."""
+    if name in _SYNC_CALC_EXPORTS:
+        from . import _google_sync_calc
+
+        value = getattr(_google_sync_calc, name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+__all__ = ["google_app", "sync_app", *_SYNC_CALC_EXPORTS]

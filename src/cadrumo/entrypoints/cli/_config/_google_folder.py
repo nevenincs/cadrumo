@@ -18,7 +18,7 @@ from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._execution_policies import GOOGLE_READ, GOOGLE_WRITE, declare_metadata_group
-from ._google_payloads import GoogleFolderGetResult, GoogleFolderSetResult
+from ._google_folder_payloads import GoogleFolderGetResult, GoogleFolderSetResult
 
 _GoogleRefusal = Callable[[GoogleAuthError], CliRefusedBoundaryError]
 

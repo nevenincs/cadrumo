@@ -573,9 +573,12 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
     source_provenance = tuple(
         SourceProvenancePayload(
             resolver_id=ref.resolver_id,
-            source_kind=ref.source_kind,
-            binding_source=ref.binding_source,
+            resolved_binding_source=ref.resolved_binding_source,
+            contributor_source_kind=ref.contributor_source_kind,
+            contributor_binding_source=ref.contributor_binding_source,
+            lineage_role=ref.lineage_role,
             source_ref=ref.source_ref,
+            parent_source_ref=ref.parent_source_ref,
             fingerprint=ref.fingerprint,
             dependency_treatment=ref.dependency_treatment,
         )

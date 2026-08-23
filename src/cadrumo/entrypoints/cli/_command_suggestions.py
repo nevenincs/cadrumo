@@ -516,6 +516,12 @@ def register_lazy_subcommand(group_key: str, lazy: LazySubcommand) -> None:
     table[lazy.name] = lazy
 
 
+def lazy_subcommand_target(group_key: str, name: str) -> LazyNodeTarget | None:
+    """Inspect one immutable target without exposing registration lifecycle state."""
+    registration = _LAZY_REGISTRY.get(group_key, {}).get(name)
+    return None if registration is None else registration.target
+
+
 def materialise_lazy_subcommands(app: typer.Typer) -> None:
     """Load every lazily-registered subcommand reachable from ``app``.
 
@@ -768,6 +774,7 @@ __all__ = [
     "LazySubcommand",
     "LiveCommandNode",
     "execution_policy_for_cli_path",
+    "lazy_subcommand_target",
     "materialise_lazy_subcommands",
     "register_lazy_subcommand",
     "resolve_command_path",

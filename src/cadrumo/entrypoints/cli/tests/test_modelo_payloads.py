@@ -19,7 +19,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....core import BindingSourceKind, CasillaId, validated_casilla_id
+from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, validated_casilla_id
 from ....domain.calculations.registry import (
     CasillaObservation,
     RelationId,
@@ -472,16 +472,22 @@ def test_calculation_revision_projection_carries_dependency_treatment_without_di
     source_provenance = (
         CalculationSourceRef(
             resolver_id="previous_filing",
-            binding_source=BindingSourceKind.PREVIOUS_FILING,
-            source_kind="previous_filing",
+            resolved_binding_source=BindingSourceKind.PREVIOUS_FILING,
+            contributor_source_kind="previous_filing",
+            contributor_binding_source=BindingSourceKind.PREVIOUS_FILING,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref="193:2024:0A:withholding-total",
+            parent_source_ref=None,
             dependency_treatment="factual_evidence",
         ),
         CalculationSourceRef(
             resolver_id="relation_prefill",
-            binding_source=BindingSourceKind.RELATION_PREFILL,
-            source_kind="relation_prefill",
+            resolved_binding_source=BindingSourceKind.RELATION_PREFILL,
+            contributor_source_kind="relation_prefill",
+            contributor_binding_source=BindingSourceKind.RELATION_PREFILL,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref="modelo-130-rel-100-previous-year:100:2024:0A",
+            parent_source_ref=None,
             dependency_treatment="direct_annual_settlement",
         ),
     )

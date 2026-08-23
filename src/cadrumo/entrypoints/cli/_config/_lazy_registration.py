@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
+from functools import cache
 from typing import Literal
 
 import typer
@@ -22,16 +24,25 @@ from ._root_cli import config_root
 type ConfigPath = tuple[str, ...]
 
 
-def _target_factory(path: ConfigPath, kind: str) -> Callable[[], typer.Typer]:
-    """Bind one stable, path-specific target owner for census attribution."""
+@dataclass(frozen=True)
+class ConfigCommandTarget:
+    """One immutable, inspectable config path-to-source target binding."""
 
-    def _load_config_target() -> typer.Typer:
-        return _group_target(path) if kind == "group" else _leaf_target(path)
+    path: ConfigPath
+    kind: Literal["group", "leaf"]
 
-    slug = "__".join(path).replace("-", "_")
-    _load_config_target.__name__ = f"load_{slug}"
-    _load_config_target.__qualname__ = f"config_targets.load_{slug}"
-    return _load_config_target
+    def __post_init__(self) -> None:
+        if not self.path:
+            raise ValueError("a config target requires a descendant path")
+        slug = "__".join(self.path).replace("-", "_")
+        object.__setattr__(self, "__module__", __name__)
+        object.__setattr__(self, "__qualname__", f"config_targets.load_{slug}")
+
+    def __call__(self) -> typer.Typer:
+        return _group_target(self.path) if self.kind == "group" else _leaf_target(self.path)
+
+
+_CONFIG_TARGETS: dict[ConfigPath, ConfigCommandTarget] = {}
 
 
 _GROUP_HELP_KEYS: dict[ConfigPath, str] = {
@@ -178,15 +189,19 @@ def _leaf_help(path: ConfigPath) -> str:
     return tr(_LEAF_HELP_KEYS[path])
 
 
-def _register(path: ConfigPath, kind: str, help_text: str) -> None:
+def _register(path: ConfigPath, kind: Literal["group", "leaf"], help_text: str) -> None:
     parent = path[:-1]
     name = path[-1]
+    target = ConfigCommandTarget(path, kind)
+    if path in _CONFIG_TARGETS:
+        raise ValueError(f"duplicate config target: {' '.join(path)!r}")
+    _CONFIG_TARGETS[path] = target
     register_lazy_subcommand(
         _registry_key(parent),
         LazySubcommand(
             name,
             LazyFactoryTarget(
-                _target_factory(path, kind),
+                target,
                 optional_dependencies=LazyOptionalDependencyProvider(_optional_dependencies),
             ),
             child_registry_key=_registry_key(path),
@@ -268,14 +283,50 @@ def _temporary_app(registrar: Callable[[typer.Typer], None]) -> typer.Typer:
     return target
 
 
+@cache
+def _apoderado_source() -> typer.Typer:
+    from ._apoderado import apoderado_app, register_apoderado_commands
+    from ._profile_support import resolve_active_profile_pointer
+
+    register_apoderado_commands(
+        typer.Typer(),
+        resolve_active_profile_pointer=resolve_active_profile_pointer,
+    )
+    return apoderado_app
+
+
+@cache
+def _collab_source() -> typer.Typer:
+    from ._collab import collab_app, register_collab_commands
+
+    register_collab_commands(typer.Typer())
+    return collab_app
+
+
+@cache
+def _google_folder_source() -> typer.Typer:
+    from ._google_errors import _google_refusal
+    from ._google_folder import folder_app, register_google_folder_commands
+
+    register_google_folder_commands(typer.Typer(), google_refusal=_google_refusal)
+    return folder_app
+
+
+@cache
+def _descendiente_source() -> typer.Typer:
+    from ._descendiente import descendiente_app, register_descendiente_commands
+    from ._profile_support import resolve_active_profile_pointer
+
+    register_descendiente_commands(
+        typer.Typer(),
+        resolve_active_profile_pointer=resolve_active_profile_pointer,
+    )
+    return descendiente_app
+
+
 def _source_app(path: ConfigPath) -> tuple[typer.Typer, ConfigPath]:
     if path[:2] == ("auth", "apoderado"):
-        from ._apoderado import apoderado_app, register_apoderado_commands
-        from ._profile_support import resolve_active_profile_pointer
-
-        host = typer.Typer()
-        register_apoderado_commands(host, resolve_active_profile_pointer=resolve_active_profile_pointer)
-        return apoderado_app, path[2:]
+        return _apoderado_source(), path[2:]
     if path[:2] == ("auth", "certificate"):
         from ._certificate import certificate_app
 
@@ -293,14 +344,21 @@ def _source_app(path: ConfigPath) -> tuple[typer.Typer, ConfigPath]:
 
         return _temporary_app(register), path
     if path[:1] == ("collab",):
-        from ._collab import collab_app, register_collab_commands
-
-        register_collab_commands(typer.Typer())
-        return collab_app, path[1:]
+        return _collab_source(), path[1:]
     if path[:1] == ("google",):
-        from ._google import google_app
+        if path[:2] == ("google", "credential-source"):
+            from ._google_credential_source_cli import credential_source_app
 
-        return google_app, path[1:]
+            return credential_source_app, path[2:]
+        if path[:2] == ("google", "folder"):
+            return _google_folder_source(), path[2:]
+        if path[:3] == ("google", "sync", "calc"):
+            from ._google_sync_calc import calc_app
+
+            return calc_app, path[3:]
+        from ._google import google_app, sync_app
+
+        return (sync_app, path[2:]) if path[:2] == ("google", "sync") else (google_app, path[1:])
     if path in {("login",), ("logout",)}:
         from ._custody import register_custody_commands
 
@@ -333,14 +391,7 @@ def _source_app(path: ConfigPath) -> tuple[typer.Typer, ConfigPath]:
 
         return censo_app, path[2:]
     if path[:2] == ("profile", "descendiente"):
-        from ._descendiente import descendiente_app, register_descendiente_commands
-        from ._profile_support import resolve_active_profile_pointer
-
-        register_descendiente_commands(
-            typer.Typer(),
-            resolve_active_profile_pointer=resolve_active_profile_pointer,
-        )
-        return descendiente_app, path[2:]
+        return _descendiente_source(), path[2:]
     if path == ("profile", "complete-setup"):
         from ._complete_setup_cli import register
 
