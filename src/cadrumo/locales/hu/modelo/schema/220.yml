@@ -1918,6 +1918,251 @@ modelo:
                 tartalék.'
               label: Konszolidált mérleg. Saját tőke (3D. oldal, 02. lap). Saját források.
                 Eredménytartalékok. Kiegyenlítési tartalék
+            x-agp34c1g6h130c1q60o30cpg6g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                bevételek. Pénzügyi jellegű támogatások, adományok és hagyatékok elszámolása.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi bevételek. Pénzügyi jellegű támogatások,
+                adományok és hagyatékok elszámolása
+            x-agp34c1g6h130c1q60o34d1n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Az üzleti év konszolidált eredménye. Az anyavállalatnak
+                tulajdonított eredmény.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Az üzleti
+                év konszolidált eredménye. Az anyavállalatnak tulajdonított eredmény
+            x-agp34c1g6h130c1q60o34d1o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Az üzleti év konszolidált eredménye. A külső
+                tagoknak tulajdonított eredmény.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Az üzleti
+                év konszolidált eredménye. A külső tagoknak tulajdonított eredmény
+            x-agp34c1g6h130c1q60o34e9n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                bevételek.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi bevételek
+            x-agp34c1g6h130c1q60o34e9o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                bevételek. Tőkeinstrumentumokban levő részesedésekből.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi bevételek. Tőkeinstrumentumokban
+                levő részesedésekből
+            x-agp34c1g6h130c1q60o36c1h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                bevételek. Forgalomképes értékpapírokból és egyéb pénzügyi instrumentumokból.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi bevételek. Forgalomképes értékpapírokból
+                és egyéb pénzügyi instrumentumokból
+            x-agp34c1g6h130c1q60o36c1l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                ráfordítások.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi ráfordítások
+            x-agp34c1g6h130c1q60o36c1m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                ráfordítások. Csoporttag és társult vállalkozásokkal szembeni tartozásokra.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi ráfordítások. Csoporttag és társult
+                vállalkozásokkal szembeni tartozásokra
+            x-agp34c1g6h130c1q60o36c1n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                ráfordítások. Harmadik felekkel szembeni tartozásokra.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi ráfordítások. Harmadik felekkel szembeni
+                tartozásokra
+            x-agp34c1g6h130c1q60o36c1o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                ráfordítások. Céltartalékok felhasználására.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi ráfordítások. Céltartalékok felhasználására
+            x-agp34c1g6h130c1q60o36c1p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                instrumentumok valós értékének változása.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi instrumentumok valós értékének változása
+            x-agp34c1g6h130c1q60o36c9g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                instrumentumok valós értékének változása. Valós érték az eredménnyel
+                szemben.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi instrumentumok valós értékének változása.
+                Valós érték az eredménnyel szemben
+            x-agp34c1g6h130c1q60o36c9h:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                instrumentumok valós értékének változása. A saját tőkében elszámolt
+                valósérték-korrekciók átvezetései.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi instrumentumok valós értékének változása.
+                A saját tőkében elszámolt valósérték-korrekciók átvezetései
+            x-agp34c1g6h130c1q60o36c9i:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Árfolyam-különbözetek.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Árfolyam-különbözetek
+            x-agp34c1g6h130c1q60o36c9j:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                instrumentumok értékvesztése és elidegenítési eredménye.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi instrumentumok értékvesztése és elidegenítési
+                eredménye
+            x-agp34c1g6h130c1q60o36c9k:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                instrumentumok értékvesztése és elidegenítési eredménye. Értékvesztések
+                és veszteségek.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi instrumentumok értékvesztése és elidegenítési
+                eredménye. Értékvesztések és veszteségek
+            x-agp34c1g6h130c1q60o36c9l:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                instrumentumok értékvesztése és elidegenítési eredménye. Értékvesztések
+                és veszteségek. Értékvesztések, csoporttag, társult és kapcsolt vállalkozások.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi instrumentumok értékvesztése és elidegenítési
+                eredménye. Értékvesztések és veszteségek. Értékvesztések, csoporttag,
+                társult és kapcsolt vállalkozások
+            x-agp34c1g6h130c1q60o36c9m:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                instrumentumok értékvesztése és elidegenítési eredménye. Értékvesztések
+                és veszteségek. Értékvesztések, egyéb vállalkozások.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi instrumentumok értékvesztése és elidegenítési
+                eredménye. Értékvesztések és veszteségek. Értékvesztések, egyéb vállalkozások
+            x-agp34c1g6h130c1q60o36c9n:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                instrumentumok értékvesztése és elidegenítési eredménye. Értékvesztések
+                és veszteségek. Értékvesztések visszaírása, csoporttag, társult és
+                kapcsolt vállalkozások.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi instrumentumok értékvesztése és elidegenítési
+                eredménye. Értékvesztések és veszteségek. Értékvesztések visszaírása,
+                csoporttag, társult és kapcsolt vállalkozások
+            x-agp34c1g6h130c1q60o36c9o:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                instrumentumok értékvesztése és elidegenítési eredménye. Értékvesztések
+                és veszteségek. Értékvesztések visszaírása, egyéb vállalkozások.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi instrumentumok értékvesztése és elidegenítési
+                eredménye. Értékvesztések és veszteségek. Értékvesztések visszaírása,
+                egyéb vállalkozások
+            x-agp34c1g6h130c1q60o36c9p:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                instrumentumok értékvesztése és elidegenítési eredménye. Elidegenítési
+                és egyéb eredmények.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi instrumentumok értékvesztése és elidegenítési
+                eredménye. Elidegenítési és egyéb eredmények
+            x-agp34c1g6h130c1q60o36chg:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Elidegenítési
+                és egyéb eredmények. Nyereségek, csoporttag, társult és kapcsolt vállalkozások.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Elidegenítési és egyéb eredmények. Nyereségek,
+                csoporttag, társult és kapcsolt vállalkozások
+            x-agp34c1g6h130c1q60o36chh:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Elidegenítési
+                és egyéb eredmények. Nyereségek, egyéb vállalkozások.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Elidegenítési és egyéb eredmények. Nyereségek,
+                egyéb vállalkozások
+            x-agp34c1g6h130c1q60o36chi:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Elidegenítési
+                és egyéb eredmények. Veszteségek, csoporttag, társult és kapcsolt
+                vállalkozások.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Elidegenítési és egyéb eredmények. Veszteségek,
+                csoporttag, társult és kapcsolt vállalkozások
+            x-agp34c1g6h130c1q60o36chj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Elidegenítési
+                és egyéb eredmények. Veszteségek, egyéb vállalkozások.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Elidegenítési és egyéb eredmények. Veszteségek,
+                egyéb vállalkozások
+            x-agp34c1g6h130c1q60o36chk:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Pénzügyi
+                eredmény.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Pénzügyi eredmény
+            x-agp34c1g6h130c1q60o36chl:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Adózás előtti
+                eredmény.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Adózás előtti eredmény
+            x-agp34c1g6h130c1q60o36chm:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Nyereségadók.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Nyereségadók
+            x-agp34c1g6h130c1q60o36chn:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Az üzleti
+                év folytatódó tevékenységekből származó eredménye.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Az üzleti év folytatódó tevékenységekből származó
+                eredménye
+            x-agp34c1g6h130c1q60o36cho:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Megszűnt tevékenységek. Az üzleti év megszűnt
+                tevékenységekből származó adózott eredménye.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Megszűnt
+                tevékenységek. Az üzleti év megszűnt tevékenységekből származó adózott
+                eredménye
+            x-agp34c1g6h130c1q60o36dhg:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Egyéb pénzügyi
+                jellegű bevételek és ráfordítások.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Egyéb pénzügyi jellegű bevételek és ráfordítások
+            x-agp34c1g6h130c1q60o36dhh:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Egyéb pénzügyi
+                jellegű bevételek és ráfordítások. Pénzügyi ráfordítások eszközök
+                közé sorolása.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Egyéb pénzügyi jellegű bevételek és ráfordítások.
+                Pénzügyi ráfordítások eszközök közé sorolása
+            x-agp34c1g6h130c1q60o36dhi:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Egyéb pénzügyi
+                jellegű bevételek és ráfordítások. Hitelezői egyezségekből származó
+                pénzügyi bevételek.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Egyéb pénzügyi jellegű bevételek és ráfordítások.
+                Hitelezői egyezségekből származó pénzügyi bevételek
+            x-agp34c1g6h130c1q60o36dhj:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Folytatódó tevékenységek (folyt.). Egyéb pénzügyi
+                jellegű bevételek és ráfordítások. Egyéb bevételek és ráfordítások.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
+                tevékenységek (folyt.). Egyéb pénzügyi jellegű bevételek és ráfordítások.
+                Egyéb bevételek és ráfordítások
+            x-agp34c1g6h130c1q60o3ac1g:
+              help: 'A 220-es modelo adata, 2024. adóév: Konszolidált eredménykimutatás
+                (4B. oldal, 00. lap). Az üzleti év konszolidált eredménye.'
+              label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Az üzleti
+                év konszolidált eredménye
             x-agp34c1g6h130chq60o34dpn:
               help: 'A 220-es modelo adata, 2024. adóév: Nem-életbiztosítási technikai
                 számla. A tárgyi eszközök és a befektetések ráfordításai.'

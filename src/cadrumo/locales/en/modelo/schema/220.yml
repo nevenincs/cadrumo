@@ -1913,6 +1913,246 @@ modelo:
                 reserve.'
               label: Consolidated balance sheet. Equity (page 3D sheet 02). Shareholders'
                 funds. Reserves. Levelling reserve
+            x-agp34c1g6h130c1q60o30cpg6g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Financial
+                income. Recognition of grants, donations and bequests of a financial
+                nature.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Financial income. Recognition of grants, donations
+                and bequests of a financial nature
+            x-agp34c1g6h130c1q60o34d1n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Consolidated result for the year. Result
+                attributed to the parent company.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Consolidated
+                result for the year. Result attributed to the parent company
+            x-agp34c1g6h130c1q60o34d1o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Consolidated result for the year. Result
+                attributed to non-controlling interests.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Consolidated
+                result for the year. Result attributed to non-controlling interests
+            x-agp34c1g6h130c1q60o34e9n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Financial
+                income.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Financial income
+            x-agp34c1g6h130c1q60o34e9o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Financial
+                income. From holdings in equity instruments.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Financial income. From holdings in equity instruments
+            x-agp34c1g6h130c1q60o36c1h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Financial
+                income. From negotiable securities and other financial instruments.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Financial income. From negotiable securities and
+                other financial instruments
+            x-agp34c1g6h130c1q60o36c1l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Financial
+                expenses.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Financial expenses
+            x-agp34c1g6h130c1q60o36c1m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Financial
+                expenses. On debts with group and associated companies.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Financial expenses. On debts with group and associated
+                companies
+            x-agp34c1g6h130c1q60o36c1n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Financial
+                expenses. On debts with third parties.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Financial expenses. On debts with third parties
+            x-agp34c1g6h130c1q60o36c1o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Financial
+                expenses. On the unwinding of provisions.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Financial expenses. On the unwinding of provisions
+            x-agp34c1g6h130c1q60o36c1p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Change
+                in fair value of financial instruments.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Change in fair value of financial instruments
+            x-agp34c1g6h130c1q60o36c9g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Change
+                in fair value of financial instruments. Fair value through profit
+                or loss.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Change in fair value of financial instruments.
+                Fair value through profit or loss
+            x-agp34c1g6h130c1q60o36c9h:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Change
+                in fair value of financial instruments. Transfers of fair value adjustments
+                recognised in equity.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Change in fair value of financial instruments.
+                Transfers of fair value adjustments recognised in equity
+            x-agp34c1g6h130c1q60o36c9i:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Exchange
+                differences.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Exchange differences
+            x-agp34c1g6h130c1q60o36c9j:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Impairment
+                and result on disposal of financial instruments.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Impairment and result on disposal of financial
+                instruments
+            x-agp34c1g6h130c1q60o36c9k:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Impairment
+                and result on disposal of financial instruments. Impairments and losses.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Impairment and result on disposal of financial
+                instruments. Impairments and losses
+            x-agp34c1g6h130c1q60o36c9l:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Impairment
+                and result on disposal of financial instruments. Impairments and losses.
+                Impairments, group, associated and related companies.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Impairment and result on disposal of financial
+                instruments. Impairments and losses. Impairments, group, associated
+                and related companies
+            x-agp34c1g6h130c1q60o36c9m:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Impairment
+                and result on disposal of financial instruments. Impairments and losses.
+                Impairments, other companies.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Impairment and result on disposal of financial
+                instruments. Impairments and losses. Impairments, other companies
+            x-agp34c1g6h130c1q60o36c9n:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Impairment
+                and result on disposal of financial instruments. Impairments and losses.
+                Reversal of impairments, group, associated and related companies.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Impairment and result on disposal of financial
+                instruments. Impairments and losses. Reversal of impairments, group,
+                associated and related companies
+            x-agp34c1g6h130c1q60o36c9o:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Impairment
+                and result on disposal of financial instruments. Impairments and losses.
+                Reversal of impairments, other companies.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Impairment and result on disposal of financial
+                instruments. Impairments and losses. Reversal of impairments, other
+                companies
+            x-agp34c1g6h130c1q60o36c9p:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Impairment
+                and result on disposal of financial instruments. Results on disposals
+                and other.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Impairment and result on disposal of financial
+                instruments. Results on disposals and other
+            x-agp34c1g6h130c1q60o36chg:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Results
+                on disposals and other. Gains, group, associated and related companies.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Results on disposals and other. Gains, group,
+                associated and related companies
+            x-agp34c1g6h130c1q60o36chh:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Results
+                on disposals and other. Gains, other companies.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Results on disposals and other. Gains, other companies
+            x-agp34c1g6h130c1q60o36chi:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Results
+                on disposals and other. Losses, group, associated and related companies.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Results on disposals and other. Losses, group,
+                associated and related companies
+            x-agp34c1g6h130c1q60o36chj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Results
+                on disposals and other. Losses, other companies.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Results on disposals and other. Losses, other
+                companies
+            x-agp34c1g6h130c1q60o36chk:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Financial
+                result.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Financial result
+            x-agp34c1g6h130c1q60o36chl:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Result
+                before taxes.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Result before taxes
+            x-agp34c1g6h130c1q60o36chm:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Taxes on
+                profits.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Taxes on profits
+            x-agp34c1g6h130c1q60o36chn:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Result
+                for the year from continuing operations.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Result for the year from continuing operations
+            x-agp34c1g6h130c1q60o36cho:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Discontinued operations. Result for the
+                year from discontinued operations, net of taxes.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Discontinued
+                operations. Result for the year from discontinued operations, net
+                of taxes
+            x-agp34c1g6h130c1q60o36dhg:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Other income
+                and expenses of a financial nature.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Other income and expenses of a financial nature
+            x-agp34c1g6h130c1q60o36dhh:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Other income
+                and expenses of a financial nature. Capitalisation of financial expenses.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Other income and expenses of a financial nature.
+                Capitalisation of financial expenses
+            x-agp34c1g6h130c1q60o36dhi:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Other income
+                and expenses of a financial nature. Financial income arising from
+                creditor arrangements.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Other income and expenses of a financial nature.
+                Financial income arising from creditor arrangements
+            x-agp34c1g6h130c1q60o36dhj:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Continuing operations (cont.). Other income
+                and expenses of a financial nature. Remaining income and expenses.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Continuing
+                operations (cont.). Other income and expenses of a financial nature.
+                Remaining income and expenses
+            x-agp34c1g6h130c1q60o3ac1g:
+              help: 'Modelo 220 entry, tax year 2024: Consolidated profit and loss
+                account (page 4B sheet 00). Consolidated result for the year.'
+              label: Consolidated profit and loss account (page 4B sheet 00). Consolidated
+                result for the year
             x-agp34c1g6h130chq60o34dpn:
               help: 'Modelo 220 entry, tax year 2024: Non-life insurance technical
                 account. Expenses of property, plant and equipment and of investments.'

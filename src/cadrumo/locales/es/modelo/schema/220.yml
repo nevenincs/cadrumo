@@ -1874,6 +1874,262 @@ modelo:
                 neto (pág. 3D hoja 02). Fondos propios. Reservas. Reserva de nivelación.'
               label: Balance consolidado. Patrimonio neto (pág. 3D hoja 02). Fondos
                 propios. Reservas. Reserva de nivelación
+            x-agp34c1g6h130c1q60o30cpg6g:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Ingresos
+                financieros. Imputación de subvenciones, donaciones y legados de carácter
+                financiero.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Ingresos financieros. Imputación
+                de subvenciones, donaciones y legados de carácter financiero
+            x-agp34c1g6h130c1q60o34d1n:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). RESULTADO CONSOLIDADO DEL EJERCICIO.
+                Resultado atribuido a la sociedad dominante.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                RESULTADO CONSOLIDADO DEL EJERCICIO. Resultado atribuido a la sociedad
+                dominante
+            x-agp34c1g6h130c1q60o34d1o:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). RESULTADO CONSOLIDADO DEL EJERCICIO.
+                Resultado atribuido a socios externos.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                RESULTADO CONSOLIDADO DEL EJERCICIO. Resultado atribuido a socios
+                externos
+            x-agp34c1g6h130c1q60o34e9n:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Ingresos
+                financieros.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Ingresos financieros
+            x-agp34c1g6h130c1q60o34e9o:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Ingresos
+                financieros. De participaciones en instrumentos de patrimonio.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Ingresos financieros. De participaciones
+                en instrumentos de patrimonio
+            x-agp34c1g6h130c1q60o36c1h:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Ingresos
+                financieros. De valores negociables y otros instrumentos financieros.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Ingresos financieros. De valores
+                negociables y otros instrumentos financieros
+            x-agp34c1g6h130c1q60o36c1l:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Gastos
+                financieros.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Gastos financieros
+            x-agp34c1g6h130c1q60o36c1m:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Gastos
+                financieros. Por deudas con empresas del grupo asociadas.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Gastos financieros. Por deudas con
+                empresas del grupo asociadas
+            x-agp34c1g6h130c1q60o36c1n:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Gastos
+                financieros. Por deudas con terceros.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Gastos financieros. Por deudas con
+                terceros
+            x-agp34c1g6h130c1q60o36c1o:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Gastos
+                financieros. Por actuación de provisiones.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Gastos financieros. Por actuación
+                de provisiones
+            x-agp34c1g6h130c1q60o36c1p:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Variación
+                de valor razonable en instrumentos financieros.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Variación de valor razonable en instrumentos
+                financieros
+            x-agp34c1g6h130c1q60o36c9g:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Variación
+                de valor razonable en instrumentos financieros. Valor razonable con
+                cambios en pérdidas y ganancias.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Variación de valor razonable en instrumentos
+                financieros. Valor razonable con cambios en pérdidas y ganancias
+            x-agp34c1g6h130c1q60o36c9h:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Variación
+                de valor razonable en instrumentos financieros. Transferencias de
+                ajustes de valor razonable con cambios en el patrimonio neto.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Variación de valor razonable en instrumentos
+                financieros. Transferencias de ajustes de valor razonable con cambios
+                en el patrimonio neto
+            x-agp34c1g6h130c1q60o36c9i:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Diferencias
+                de cambio.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Diferencias de cambio
+            x-agp34c1g6h130c1q60o36c9j:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Deterioro
+                y resultado por enajenaciones de instrumentos financieros.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones
+                de instrumentos financieros
+            x-agp34c1g6h130c1q60o36c9k:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Deterioro
+                y resultado por enajenaciones de instrumentos financieros. Deterioros
+                y pérdidas.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones
+                de instrumentos financieros. Deterioros y pérdidas
+            x-agp34c1g6h130c1q60o36c9l:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Deterioro
+                y resultado por enajenaciones de instrumentos financieros. Deterioros
+                y pérdidas. Deterioros, empresas del grupo, asociadas y vinculadas.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones
+                de instrumentos financieros. Deterioros y pérdidas. Deterioros, empresas
+                del grupo, asociadas y vinculadas
+            x-agp34c1g6h130c1q60o36c9m:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Deterioro
+                y resultado por enajenaciones de instrumentos financieros. Deterioros
+                y pérdidas. Deterioros, otras empresas.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones
+                de instrumentos financieros. Deterioros y pérdidas. Deterioros, otras
+                empresas
+            x-agp34c1g6h130c1q60o36c9n:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Deterioro
+                y resultado por enajenaciones de instrumentos financieros. Deterioros
+                y pérdidas. Reversión de deterioros, empresas del grupo, asociadas
+                y vinculadas.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones
+                de instrumentos financieros. Deterioros y pérdidas. Reversión de deterioros,
+                empresas del grupo, asociadas y vinculadas
+            x-agp34c1g6h130c1q60o36c9o:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Deterioro
+                y resultado por enajenaciones de instrumentos financieros. Deterioros
+                y pérdidas. Reversión de deterioros, otras empresas.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones
+                de instrumentos financieros. Deterioros y pérdidas. Reversión de deterioros,
+                otras empresas
+            x-agp34c1g6h130c1q60o36c9p:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Deterioro
+                y resultado por enajenaciones de instrumentos financieros. Resultados
+                por enajenaciones y otras.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Deterioro y resultado por enajenaciones
+                de instrumentos financieros. Resultados por enajenaciones y otras
+            x-agp34c1g6h130c1q60o36chg:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Resultados
+                por enajenaciones y otras. Beneficios, empresas del grupo asociadas
+                y vinculadas.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Resultados por enajenaciones y otras.
+                Beneficios, empresas del grupo asociadas y vinculadas
+            x-agp34c1g6h130c1q60o36chh:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Resultados
+                por enajenaciones y otras. Beneficios, otras empresas.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Resultados por enajenaciones y otras.
+                Beneficios, otras empresas
+            x-agp34c1g6h130c1q60o36chi:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Resultados
+                por enajenaciones y otras. Pérdidas, empresas del grupo asociadas
+                y vinculadas.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Resultados por enajenaciones y otras.
+                Pérdidas, empresas del grupo asociadas y vinculadas
+            x-agp34c1g6h130c1q60o36chj:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Resultados
+                por enajenaciones y otras. Pérdidas, otras empresas.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Resultados por enajenaciones y otras.
+                Pérdidas, otras empresas
+            x-agp34c1g6h130c1q60o36chk:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). RESULTADO
+                FINANCIERO.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). RESULTADO FINANCIERO
+            x-agp34c1g6h130c1q60o36chl:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). RESULTADO
+                ANTES DE IMPUESTOS.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). RESULTADO ANTES DE IMPUESTOS
+            x-agp34c1g6h130c1q60o36chm:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Impuestos
+                sobre beneficios.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Impuestos sobre beneficios
+            x-agp34c1g6h130c1q60o36chn:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). RESULTADO
+                DEL EJERCICIO PROCEDENTE DE OPERACIONES CONTINUADAS.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). RESULTADO DEL EJERCICIO PROCEDENTE
+                DE OPERACIONES CONTINUADAS
+            x-agp34c1g6h130c1q60o36cho:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES INTERRUMPIDAS. RESULTADO
+                DEL EJERCICIO PROCEDENTE DE OPERACIONES INTERRUMPIDAS NETO DE IMPUESTOS.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES INTERRUMPIDAS. RESULTADO DEL EJERCICIO PROCEDENTE DE OPERACIONES
+                INTERRUMPIDAS NETO DE IMPUESTOS
+            x-agp34c1g6h130c1q60o36dhg:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Otros
+                ingresos y gastos de carácter financiero.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Otros ingresos y gastos de carácter
+                financiero
+            x-agp34c1g6h130c1q60o36dhh:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Otros
+                ingresos y gastos de carácter financiero. Incorporación al activo
+                de gastos financieros.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Otros ingresos y gastos de carácter
+                financiero. Incorporación al activo de gastos financieros
+            x-agp34c1g6h130c1q60o36dhi:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Otros
+                ingresos y gastos de carácter financiero. Ingresos financieros derivados
+                de convenios de acreedores.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Otros ingresos y gastos de carácter
+                financiero. Ingresos financieros derivados de convenios de acreedores
+            x-agp34c1g6h130c1q60o36dhj:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). OPERACIONES CONTINUADAS (cont.). Otros
+                ingresos y gastos de carácter financiero. Resto de ingresos y gastos.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                OPERACIONES CONTINUADAS (cont.). Otros ingresos y gastos de carácter
+                financiero. Resto de ingresos y gastos
+            x-agp34c1g6h130c1q60o3ac1g:
+              help: 'Dato del modelo 220, ejercicio 2024: Cuenta de pérdidas y ganancias
+                consolidada (pág. 4B hoja 00). RESULTADO CONSOLIDADO DEL EJERCICIO.'
+              label: Cuenta de pérdidas y ganancias consolidada (pág. 4B hoja 00).
+                RESULTADO CONSOLIDADO DEL EJERCICIO
             x-agp34c1g6h130chq60o34dpn:
               help: 'Dato del modelo 220, ejercicio 2024: Cuenta técnica del seguro
                 no vida. Gastos del inmovilizado material y de las inversiones.'

@@ -1840,6 +1840,255 @@ modelo:
                 net (pàg. 3D full 02). Fons propis. Reserves. Reserva d''anivellació.'
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
                 Reserves. Reserva d'anivellació
+            x-agp34c1g6h130c1q60o30cpg6g:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Ingressos
+                financers. Imputació de subvencions, donacions i llegats de caràcter
+                financer.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Ingressos financers. Imputació de subvencions,
+                donacions i llegats de caràcter financer
+            x-agp34c1g6h130c1q60o34d1n:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Resultat consolidat de l''exercici.
+                Resultat atribuït a la societat dominant.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Resultat
+                consolidat de l'exercici. Resultat atribuït a la societat dominant
+            x-agp34c1g6h130c1q60o34d1o:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Resultat consolidat de l''exercici.
+                Resultat atribuït a socis externs.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Resultat
+                consolidat de l'exercici. Resultat atribuït a socis externs
+            x-agp34c1g6h130c1q60o34e9n:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Ingressos
+                financers.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Ingressos financers
+            x-agp34c1g6h130c1q60o34e9o:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Ingressos
+                financers. De participacions en instruments de patrimoni.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Ingressos financers. De participacions en instruments
+                de patrimoni
+            x-agp34c1g6h130c1q60o36c1h:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Ingressos
+                financers. De valors negociables i altres instruments financers.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Ingressos financers. De valors negociables i
+                altres instruments financers
+            x-agp34c1g6h130c1q60o36c1l:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Despeses
+                financeres.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Despeses financeres
+            x-agp34c1g6h130c1q60o36c1m:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Despeses
+                financeres. Per deutes amb empreses del grup associades.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Despeses financeres. Per deutes amb empreses
+                del grup associades
+            x-agp34c1g6h130c1q60o36c1n:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Despeses
+                financeres. Per deutes amb tercers.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Despeses financeres. Per deutes amb tercers
+            x-agp34c1g6h130c1q60o36c1o:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Despeses
+                financeres. Per actuació de provisions.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Despeses financeres. Per actuació de provisions
+            x-agp34c1g6h130c1q60o36c1p:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Variació
+                de valor raonable en instruments financers.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Variació de valor raonable en instruments financers
+            x-agp34c1g6h130c1q60o36c9g:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Variació
+                de valor raonable en instruments financers. Valor raonable amb canvis
+                en pèrdues i guanys.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Variació de valor raonable en instruments financers.
+                Valor raonable amb canvis en pèrdues i guanys
+            x-agp34c1g6h130c1q60o36c9h:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Variació
+                de valor raonable en instruments financers. Transferències d''ajustos
+                de valor raonable amb canvis en el patrimoni net.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Variació de valor raonable en instruments financers.
+                Transferències d'ajustos de valor raonable amb canvis en el patrimoni
+                net
+            x-agp34c1g6h130c1q60o36c9i:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Diferències
+                de canvi.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Diferències de canvi
+            x-agp34c1g6h130c1q60o36c9j:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Deteriorament
+                i resultat per alienacions d''instruments financers.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Deteriorament i resultat per alienacions d'instruments
+                financers
+            x-agp34c1g6h130c1q60o36c9k:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Deteriorament
+                i resultat per alienacions d''instruments financers. Deterioraments
+                i pèrdues.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Deteriorament i resultat per alienacions d'instruments
+                financers. Deterioraments i pèrdues
+            x-agp34c1g6h130c1q60o36c9l:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Deteriorament
+                i resultat per alienacions d''instruments financers. Deterioraments
+                i pèrdues. Deterioraments, empreses del grup, associades i vinculades.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Deteriorament i resultat per alienacions d'instruments
+                financers. Deterioraments i pèrdues. Deterioraments, empreses del
+                grup, associades i vinculades
+            x-agp34c1g6h130c1q60o36c9m:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Deteriorament
+                i resultat per alienacions d''instruments financers. Deterioraments
+                i pèrdues. Deterioraments, altres empreses.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Deteriorament i resultat per alienacions d'instruments
+                financers. Deterioraments i pèrdues. Deterioraments, altres empreses
+            x-agp34c1g6h130c1q60o36c9n:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Deteriorament
+                i resultat per alienacions d''instruments financers. Deterioraments
+                i pèrdues. Reversió de deterioraments, empreses del grup, associades
+                i vinculades.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Deteriorament i resultat per alienacions d'instruments
+                financers. Deterioraments i pèrdues. Reversió de deterioraments, empreses
+                del grup, associades i vinculades
+            x-agp34c1g6h130c1q60o36c9o:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Deteriorament
+                i resultat per alienacions d''instruments financers. Deterioraments
+                i pèrdues. Reversió de deterioraments, altres empreses.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Deteriorament i resultat per alienacions d'instruments
+                financers. Deterioraments i pèrdues. Reversió de deterioraments, altres
+                empreses
+            x-agp34c1g6h130c1q60o36c9p:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Deteriorament
+                i resultat per alienacions d''instruments financers. Resultats per
+                alienacions i altres.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Deteriorament i resultat per alienacions d'instruments
+                financers. Resultats per alienacions i altres
+            x-agp34c1g6h130c1q60o36chg:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Resultats
+                per alienacions i altres. Beneficis, empreses del grup associades
+                i vinculades.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Resultats per alienacions i altres. Beneficis,
+                empreses del grup associades i vinculades
+            x-agp34c1g6h130c1q60o36chh:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Resultats
+                per alienacions i altres. Beneficis, altres empreses.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Resultats per alienacions i altres. Beneficis,
+                altres empreses
+            x-agp34c1g6h130c1q60o36chi:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Resultats
+                per alienacions i altres. Pèrdues, empreses del grup associades i
+                vinculades.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Resultats per alienacions i altres. Pèrdues,
+                empreses del grup associades i vinculades
+            x-agp34c1g6h130c1q60o36chj:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Resultats
+                per alienacions i altres. Pèrdues, altres empreses.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Resultats per alienacions i altres. Pèrdues,
+                altres empreses
+            x-agp34c1g6h130c1q60o36chk:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Resultat
+                financer.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Resultat financer
+            x-agp34c1g6h130c1q60o36chl:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Resultat
+                abans d''impostos.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Resultat abans d'impostos
+            x-agp34c1g6h130c1q60o36chm:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Impostos
+                sobre beneficis.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Impostos sobre beneficis
+            x-agp34c1g6h130c1q60o36chn:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Resultat
+                de l''exercici procedent d''operacions continuades.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Resultat de l'exercici procedent d'operacions
+                continuades
+            x-agp34c1g6h130c1q60o36cho:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions interrompudes. Resultat de
+                l''exercici procedent d''operacions interrompudes net d''impostos.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                interrompudes. Resultat de l'exercici procedent d'operacions interrompudes
+                net d'impostos
+            x-agp34c1g6h130c1q60o36dhg:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Altres
+                ingressos i despeses de caràcter financer.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Altres ingressos i despeses de caràcter financer
+            x-agp34c1g6h130c1q60o36dhh:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Altres
+                ingressos i despeses de caràcter financer. Incorporació a l''actiu
+                de despeses financeres.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Altres ingressos i despeses de caràcter financer.
+                Incorporació a l'actiu de despeses financeres
+            x-agp34c1g6h130c1q60o36dhi:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Altres
+                ingressos i despeses de caràcter financer. Ingressos financers derivats
+                de convenis de creditors.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Altres ingressos i despeses de caràcter financer.
+                Ingressos financers derivats de convenis de creditors
+            x-agp34c1g6h130c1q60o36dhj:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Operacions continuades (cont.). Altres
+                ingressos i despeses de caràcter financer. Resta d''ingressos i despeses.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
+                continuades (cont.). Altres ingressos i despeses de caràcter financer.
+                Resta d'ingressos i despeses
+            x-agp34c1g6h130c1q60o3ac1g:
+              help: 'Dada del model 220, exercici 2024: Compte de pèrdues i guanys
+                consolidat (pàg. 4B full 00). Resultat consolidat de l''exercici.'
+              label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Resultat
+                consolidat de l'exercici
             x-agp34c1g6h130chq60o34dpn:
               help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
                 no vida. Despeses de l''immobilitzat material i de les inversions.'
