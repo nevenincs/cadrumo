@@ -19374,3 +19374,70 @@ untagged. Record sets differ 74 vs 76, with both extra records 2025-only.
 
 Modelo 200's split, unchanged and now sized. It remains the only entry on the
 spanning set. Modelo 347's 2008-2009 and 2010 revisions remain unauthored.
+
+## Tick: two wrong box-number keys, a confirmed ruling, and the parity gate generalised
+
+### A lead that dissolved, twice, before the right key was found
+
+Last tick's modelo 200 measurement reported 10 casillas absent from the design it
+cites -- the same shape as modelo 322's era-bled casilla 171. Chased, and it was
+an artifact of MY OWN key rather than a defect: the pattern matched bare 5-digit
+runs, and all ten boxes are 4-digit (`[1501]`, `[1809]`, `[2231]`). The design
+carries them.
+
+Widening to 4-or-5 digits then reported 28 design boxes with no casilla. Also an
+artifact, in the opposite direction: every one of the 28 is a YEAR printed in
+prose -- `Detalle compensacion bases imponibles negativas - 2015 - Pendiente`,
+`Codigo CNAE-2025 Actividad principal`. Neither reading is right.
+
+The key AEAT actually uses is the BRACKET: `Bonificacion personal investigador
+(RD 475/2014) [00065]`. That is the key modelos 322 and 390 were measured with;
+switching modelo 200 to bare digit runs was the mistake, and it produced a
+plausible finding in both directions.
+
+### The ruling it was testing SURVIVES, and is now exact
+
+Re-measured on bracketed numbers with leading zeros stripped, modelo 200's
+revision declares **3,427 numbered casillas against the 2025 design's 3,427
+bracketed boxes -- zero stray in either direction**, while 246 of them are boxes
+the 2024 design does not carry and NONE is 2024-only. So the previous tick's
+conclusion stands on a clean key: the revision is exactly the 2025 design's box
+set, and ejercicio 2024 was never described by it.
+
+### The gate, generalised rather than duplicated
+
+`test_modelo_322_boxes_match_its_designs.py` is replaced by
+`test_declared_casillas_match_design_boxes.py`, covering an enrolled set --
+modelo 322 and modelo 200 -- each entry carrying the measurement that qualified
+it. A third assertion refuses an entry that states no measurement and one the
+walk never reaches, so enrolment cannot become a suppression list.
+
+Two contract changes were forced by generalising, and both are real:
+
+* it keys on the design the LAYOUT writes against, not the revision's
+  `source_refs`. Modelo 200's revision cites two designs; its layout writes one.
+  Keying on `source_refs` would compare against a union of two eras and could
+  not fail on a revision built entirely on the later one.
+* the docstring records the bracket key and both wrong readings above, with the
+  numbers, so the next author does not re-derive them.
+
+### Verified
+
+* the module: 3 passed, ruff clean; five conditions proved to bite from outside
+  the repo -- restoring casilla 171, dropping a casilla, an unread design, an
+  entry with no measurement, and an enrolled modelo the walk never reaches.
+* registry package: 12 failed, 5346 passed. Nine are the standing declared
+  inventories. Two more passed on re-run -- they were caught mid-write by a
+  peer's uncommitted CLI sweep. The twelfth,
+  `test_help_exposes_prestacion_inss_exenta_flag`, fails with "registrar command
+  is absent for 'modelo work calculate'": that peer's command-spec refactor is
+  in flight with `entrypoints/cli/*` uncommitted, so it is left to them rather
+  than patched against a half-refactored registrar.
+* authority loads CLEAN.
+
+### Still open
+
+Modelo 200's split, sized last tick and unchanged: 142 fields whose boxes exist
+only in 2024, each needing its own grounded casilla, plus 87 ambiguous. It
+remains the only entry on the spanning set. Modelo 347's 2008-2009 and 2010
+revisions remain unauthored.
