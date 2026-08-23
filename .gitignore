@@ -485,3 +485,6 @@ dev/registry/scratch*/
 # siblings. Never tracked -- they are live-process state, not content.
 **/.generated-export-transaction-*
 **/.generated-export-backup-*
+
+# Generated CLI registration cache: build/runtime artifact, never committed
+src/cadrumo/entrypoints/cli/command_registration_metadata.v1.json
