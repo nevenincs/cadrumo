@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:a8fc04e64440ff9a8d9ab77caa30cc1d930cec5b4352d0108c165074cccf5676'
+body_hash: 'sha256:c5af1e7ea7ca14ebd5302392deb1a315ea8d79932c54400ea2f0a8a865d69dff'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -8257,3 +8257,39 @@ and all three resolve:
 So every persistence boundary class in this domain has a real refusal proof behind it. Nothing
 to fix, and the negative result is worth recording because the naive scan says otherwise and
 would send the next reader after 18 phantom gaps.
+
+### Stranded-capability sweep: clean, and the two known ones were the only ones
+
+Two capabilities with no operator door were found in this campaign by ACCIDENT -- the
+profile-bundle import half, and passphrase rotation, which surfaced only because an unrelated
+contract refusal pointed at it. That is a bad way to find a class of defect, so it was finally
+swept systematically.
+
+`application/user_profile` exports 181 public names; 93 are never referenced anywhere under
+`entrypoints/`. That number is not the finding, it is the instrument being coarse: most are
+models, ports, errors and constants a CLI would never name. Filtering to verb-shaped
+capabilities and reading each one:
+
+- The `restore_profile_*` family looks stranded and is not. The CLI calls
+  `restore_profile_capsule_with_password` / `..._with_recovery_artifact`, DIFFERENT names, which
+  looked at first like a second parallel restore path -- a duplicate-path defect if true.
+  Reading it, `_capsule_restore.py:184` delegates straight to `restore_profile_with_password`.
+  Layered, not duplicated: the primitives are legitimately CLI-invisible because the capsule
+  verbs are the door.
+- `enroll_profile_recovery` has no verb of its own and needs none: `_registration.py` invokes it
+  during `config profile create`, so recovery enrolment happens on the registration path.
+- The bundle family and the two register entries (`censo_unadopted_evidence`,
+  `missing_filing_baseline_flags`) are already documented decisions in
+  `test_no_exported_contract_is_never_used`.
+
+So the two known stranded capabilities were the only ones, and both are recorded with their
+dispositions. Nothing new.
+
+A note on a false alarm worth not repeating: HEAD read as `431a3e729b`, the same short hash and
+subject this session began from, which looks exactly like a branch reset that would have
+orphaned every commit made here. It was not. `git merge-base --is-ancestor` puts all seven of
+this campaign's commits in HEAD; the subject "vault: record the S187 step and refresh the
+campaign plans" belongs to a RECURRING vault step a peer re-runs, so a later commit carries the
+identical wording. Check ancestry before believing a hash that looks familiar.
+
+Final state: integration 361, unit 1,703, serial 16 -- all green.
