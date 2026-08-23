@@ -251,6 +251,24 @@ _FAMILY_CASES: tuple[
         },
         BindingAggregationOp.COPY,
     ),
+    (
+        "inventory",
+        "inventory",
+        {
+            "actividad_id": "actividad-profesional-1",
+            "operation": "closing_minus_opening_positive",
+            "target_casilla_id": "0177",
+        },
+        BindingAggregationOp.COPY,
+        # The operation-to-destination identity is closed: an inventory
+        # increase cannot be projected into the decrease casilla.
+        {
+            "actividad_id": "actividad-profesional-1",
+            "operation": "closing_minus_opening_positive",
+            "target_casilla_id": "0182",
+        },
+        BindingAggregationOp.COPY,
+    ),
 )
 
 _FAMILY_IDS = tuple(case[0] for case in _FAMILY_CASES)

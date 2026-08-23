@@ -598,6 +598,44 @@ def test_retenciones_aggregation_selector_rejects_unknown_fact() -> None:
     )
 
 
+def test_inventory_selector_enrollment_hydrates_the_family_model() -> None:
+    """Inventory construction uses the canonical typed family selector."""
+
+    binding = _binding(
+        source=BindingSourceKind.INVENTORY,
+        selector={
+            "actividad_id": "actividad-profesional-1",
+            "operation": "opening_minus_closing_positive",
+            "target_casilla_id": "0182",
+        },
+    )
+    selector_model = selector_model_for_source(BindingSourceKind.INVENTORY)
+
+    assert selector_model is not None
+    assert isinstance(binding.selector, selector_model)
+    assert validate_binding_selector_shape(binding) == []
+
+
+def test_inventory_selector_enrollment_refuses_destination_drift() -> None:
+    """Construction rejects a variation operation paired with the rival casilla."""
+
+    _assert_selector_refused_at_construction(
+        source=BindingSourceKind.INVENTORY,
+        selector={
+            "actividad_id": "actividad-profesional-1",
+            "operation": "opening_minus_closing_positive",
+            "target_casilla_id": "0177",
+        },
+        binding_id="bad-inventory-destination",
+        expected_substrings=(
+            "bad-inventory-destination",
+            "_InventorySelector",
+            "opening_minus_closing_positive",
+            "0182",
+        ),
+    )
+
+
 def test_collectible_invoice_selector_accepts_well_shaped_selector() -> None:
     """A canonical scalar invoice-shaped binding passes the gate.
 
