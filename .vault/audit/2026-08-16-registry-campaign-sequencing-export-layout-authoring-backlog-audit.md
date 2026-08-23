@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:96e6a32ddc553d74527f864575c92c8152063f83eacc622decb9994fb64a1406'
+body_hash: 'sha256:a22789a788e845ea1fd05ff6194d50d84bc9abf11bd8682378ff99e332e54c63'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -17901,3 +17901,146 @@ Three splits remain: modelo 200, 322 and 347. All three need a semantic mapping
 authored against a design that does not correspond 1:1 to an existing one --
 for modelo 322 that is 126 of 231 entries on its two straddling sheets -- which
 is per-box tax review rather than mechanical re-anchoring.
+
+## Tick: one of the three modelo 200 partial reads closed, on a forward anchor
+
+Re-measured at tick start: authority CLEAN at `304591a8a6`.
+
+### The class is not one shape, which last tick got wrong
+
+Last tick reported the position-10 gap as a single recoverable shape across
+three designs, on the strength of the PDFPLUMBER extraction. Read on the plain
+extraction -- which is the path these designs actually take,
+`_uses_page_record_layout` returning False for all three -- they differ:
+
+* `17-200-orden-eha-1338-2010` emits the three coordinate numbers ALONE on their
+  own line, with the naturaleza half below;
+* `02-200-ejercicio-2010` and `03-200-ejercicio-2011` emit no coordinate line at
+  all on those pages.
+
+So one repair was never going to close all three, and the pdfplumber route is
+not the answer either: measured, it reads two of the three WORSE (53 skipped
+against 40).
+
+### The anchor had to be inverted
+
+Every other ordinal admission in this module continues from the row ABOVE. That
+cannot work here. On these pages ordinals 2, 3 and 4 are emitted with ordinal
+and position FUSED -- `23 3 Num`, `36 3 An`, `49 1 An` -- and are not recovered
+until record assembly, so at line-repair time the nearest parsed row above is
+ordinal 1 and a backward check fails by construction. Measured directly:
+`continues=False`, previous row `ord1@1+2`.
+
+The row BELOW is intact. Anchoring on the successor is the same two independent
+facts in the other direction -- its ordinal one more, its position resuming
+exactly where the rebuilt row ends -- and it holds: `6 11 1` follows `5 10 1`.
+
+### What was landed
+
+`_rejoin_bare_coordinate_rows`, admitted only on that forward
+over-determination, with the coordinate pattern anchored END TO END so a bare
+triple is a triple and nothing else. That narrowing is the direct lesson of last
+tick's reverted attempt, which allowed a trailing fragment and was measured
+claiming FORTY lines on one design where two were real; the regression pins the
+rejection of `5 10 1 "C" (Complementaria)` explicitly.
+
+Corpus-wide control, in two processes because the module caches: **216 designs,
+1 improved, 0 regressed, 215 unchanged.** `17-200` goes from 2 skipped records,
+43 sheets and 3411 fields to **0 skipped, 45 sheets, 3696 fields**.
+
+The partly-read inventory falls from 5 of 218 to **4**.
+
+### Verified
+
+* the new module: 8 passed, including both records carrying the rebuilt row at
+  position 10 and tiling with no hole at all;
+* it bites: disabling the repair reds 6 of the 8, the two survivors being the
+  pattern-narrowness check and the refusal case, which is correct;
+* authority loads CLEAN; the three ruff findings in `_record_design.py` sit at
+  lines 3186, 3626 and 3831, none in the new function at 786, and the new test
+  module is clean.
+
+### Still open
+
+The remaining two modelo 200 designs are a DIFFERENT defect from the one closed
+here -- their coordinate line is absent from the plain extraction entirely, not
+merely displaced -- so they need their own repair or a per-sheet correction, and
+should not be described as the same class again.
+
+Modelo 180 and 349 remain form diagrams needing AEAT acquisition, which is
+operator-side.
+
+Three splits remain: modelo 200, 322 and 347, each needing a semantic mapping
+authored against a non-corresponding design.
+
+## Tick: the position-10 row recovered on all three designs, in both its orientations
+
+Re-measured at tick start: authority CLEAN at `8384537b5e`, partly-read
+inventory at 4 of 218.
+
+### Another of my own statements corrected
+
+Last tick recorded that `02-200` and `03-200` "emit no coordinate line at all on
+those pages", and that this made them a different defect from the one closed.
+The first half is wrong. The triple IS there -- `5 10 1` -- it simply lands
+AFTER a page break, five lines below its own naturaleza half, with the running
+furniture in between:
+
+    4 9 1 An C Fin de identificador de modelo.
+    An C Indicador de pagina complementaria.
+    Blanco (No
+    complementaria) o
+    Diseno de registro / Impuesto sobre Sociedades ... / Modelo 200 / vers. 1.0
+    5 10 1
+    "C" (Complementaria)
+    6 11 1 A C Operaciones fusion, escision, canje valores ...
+
+So it is the SAME row as `17-200`'s, mirrored: that design prints the naturaleza
+half below the triple, these two print it above. The repair now tries the line
+below first and then looks back a bounded distance, and the successor anchor is
+unchanged in both directions.
+
+### A pass that was written, measured at zero, and kept anyway -- with the reason
+
+`_split_fused_ordinal_position_prefix` splits a row whose ordinal and position
+ran together into one token: `23 3 Num C Modelo.` for `2 3 3 Num C Modelo.`. It
+is reconstructed from the previous row -- ordinal plus one, position where that
+row ends -- and admitted only when concatenating the two reproduces the fused
+token CHARACTER FOR CHARACTER.
+
+Measured alone it changes nothing: 216 designs, 0 improved, 0 regressed. Those
+rows were already being recovered downstream during record assembly. It earns
+its place only because the position-10 row needs ordinal 4 to PARSE AT LINE
+STAGE to bracket it, and that is stated in its docstring rather than left for a
+reader to wonder about.
+
+### What the pair achieves
+
+Corpus-wide, two processes: **216 designs, 3 improved, 0 regressed, 213
+unchanged.**
+
+* `17-200`: 2 skipped -> 0, 43 sheets -> 45, +285 fields;
+* `02-200`: 2 -> 1, 43 -> 44, +51 fields;
+* `03-200`: 3 -> 2, 42 -> 43, +51 fields.
+
+`Pag. 21` is recovered on all three. `Pag. 22` is not, and its reason is
+recorded rather than guessed: it carries a SECOND hole at 1697-1705, nine
+positions, which is a different defect and needs its own reading.
+
+### Verified
+
+* the regression: 10 passed, covering both orientations, the tiling of the
+  recovered records, and the end-to-end anchoring that rejects
+  `5 10 1 "C" (Complementaria)`;
+* it bites: disabling the repair reds 8 of the 10, the two survivors being the
+  pattern-narrowness and refusal checks;
+* authority loads CLEAN; the three ruff findings sit at 3279, 3719 and 3924,
+  none in the new functions at 791 and 895.
+
+### Still open
+
+`Pag. 22` on the two 2010/2011 designs, for the 1697-1705 hole -- and it should
+not be called the position-10 class, which is now closed everywhere it occurs.
+
+Modelo 180 and 349 remain form diagrams needing AEAT acquisition. Three splits
+remain: modelo 200, 322 and 347.
