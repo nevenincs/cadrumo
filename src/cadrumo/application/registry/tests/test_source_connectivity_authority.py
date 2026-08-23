@@ -34,14 +34,10 @@ from ....domain.modelos import (
     CalculationSourceRef,
     derive_calculation_revision_id,
 )
+from ....entrypoints.cli._common import _current_operator_surface_reconciliation
 from ...aggregation import BindingSourceDisposition
 from ...modelo import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
-from ...operator_surface import (
-    LiveLeafInventoryRow,
-    OperatorSurfaceReconciliation,
-    ReconciledOperatorLeaf,
-    build_supported_modelo_calculation_workflow_catalogue,
-)
+from ...operator_surface import build_supported_modelo_calculation_workflow_catalogue
 from .. import (
     CalculationRouteResolverSourceOwnership,
     CalculationRouteSourceOwnershipCatalogue,
@@ -72,22 +68,7 @@ _EVIDENCE_REFERENCES = {
 
 
 def _live_workflows():
-    leaf = ReconciledOperatorLeaf(
-        live_leaf=LiveLeafInventoryRow(
-            subject_leaf_key=_COMMAND,
-            canonical_cli_path=_CLI_PATH,
-            provenance="resolved Click command tree",
-        ),
-        result_schema=None,
-        input_schema=None,
-        mounted_family=None,
-        profile_policy=None,
-        surface_exposure=None,
-        exclusions=(),
-    )
-    return build_supported_modelo_calculation_workflow_catalogue(
-        OperatorSurfaceReconciliation(leaves=(leaf,)),
-    )
+    return build_supported_modelo_calculation_workflow_catalogue(_current_operator_surface_reconciliation())
 
 
 def _persisted_revision(
@@ -115,7 +96,10 @@ def _persisted_revision(
         updated_at=timestamp,
     )
     repository.save(CalculationRevisionCatalogue(revisions={revision_id: revision}))
-    return repository.load().revisions[revision_id]
+    loaded = repository.load().revisions[revision_id]
+    assert loaded == revision
+    assert loaded.source_provenance == provenance
+    return loaded
 
 
 def _evidence_root(tmp_path: Path) -> Path:
@@ -240,6 +224,53 @@ def test_real_live_authority_admits_coherent_encrypted_connected_row(
 
     assert row.connected_proof is not None
     assert row.connected_proof.connection == connection
+
+
+def test_real_live_authority_encrypted_payload_roundtrip_and_raw_lineage_deletion(
+    tmp_path: Path,
+    secure_objects: SecureObjectRepository,
+) -> None:
+    import json
+
+    from ....adapters.persistence.profile.modelos_calculation import (
+        _CALCULATION_CATALOGUE_VERSION,
+        _CALCULATION_NAMESPACE,
+        _CALCULATION_OBJECT_KEY,
+    )
+    from ....adapters.persistence.storage import SensitivityClass
+
+    authority, connection, proof, _ = _composition(tmp_path, secure_objects)
+    repository = authority.calculation_revisions
+    assert isinstance(repository, CalculationRevisionCatalogueRepository)
+    loaded = repository.load().revisions[connection.calculation_revision_id]
+    persisted = loaded.source_provenance[0]
+    assert persisted.resolver_id == connection.resolver_id
+    assert persisted.resolved_binding_source is connection.source_kind
+    assert persisted.source_ref == proof.encrypted_revision.persisted_source_identity
+    assert persisted.fingerprint == proof.encrypted_revision.persisted_source_fingerprint
+
+    record = secure_objects.load(
+        _CALCULATION_NAMESPACE,
+        _CALCULATION_OBJECT_KEY,
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+    )
+    assert record is not None
+    envelope = json.loads(record.payload.decode("utf-8"))
+    raw_row = envelope["payload"]["revisions"][connection.calculation_revision_id]["source_provenance"][0]
+    assert raw_row == persisted.model_dump(mode="json")
+    assert raw_row.pop("lineage_role") == CalculationSourceLineageRole.PRIMARY.value
+    secure_objects.save(
+        namespace=_CALCULATION_NAMESPACE,
+        object_key=_CALCULATION_OBJECT_KEY,
+        classification=record.classification,
+        schema_version=record.schema_version,
+        written_at=record.written_at,
+        payload=json.dumps(envelope).encode("utf-8"),
+    )
+
+    with pytest.raises(ValidationError, match="lineage_role"):
+        repository.load()
 
 
 @pytest.mark.parametrize(
@@ -386,7 +417,7 @@ def test_real_live_authority_refuses_persisted_provenance_mutations_and_ambiguit
 
     for mutation in (
         {"resolver_id": "rival-resolver"},
-        {"binding_source": BindingSourceKind.PAYABLE_INVOICE, "source_kind": BindingSourceKind.PAYABLE_INVOICE.value},
+        {"resolved_binding_source": BindingSourceKind.PAYABLE_INVOICE},
         {"source_ref": "collectible_invoice:inv-0002"},
         {"fingerprint": "sha256:" + "c" * 64},
     ):
@@ -403,27 +434,21 @@ def test_real_live_authority_refuses_persisted_provenance_mutations_and_ambiguit
                 authority=authority,
             )
 
-    ambiguous_revision = _persisted_revision(
-        repository,
-        (persisted, persisted.model_copy(update={"resolver_id": "rival-resolver"})),
-    )
-    assert ambiguous_revision.calculation_revision_id != connection.calculation_revision_id
-    ambiguous_connection = connection.model_copy(
-        update={"calculation_revision_id": ambiguous_revision.calculation_revision_id},
-    )
-    ambiguous_proof = _proof(root, ambiguous_connection)
-    with pytest.raises(ValidationError):
-        SourceConnectivityCensusRow.validate_with_authority(
-            _payload(ambiguous_connection, ambiguous_proof),
-            authority=authority,
+    with pytest.raises(ValidationError, match="primary reference is ambiguous"):
+        _persisted_revision(
+            repository,
+            (persisted, persisted.model_copy(update={"resolver_id": "rival-resolver"})),
         )
 
 
 def test_legacy_revision_payloads_missing_resolver_or_provenance_are_refused() -> None:
     source_payload = {
-        "source_kind": BindingSourceKind.FOREIGN_ASSET.value,
-        "binding_source": BindingSourceKind.FOREIGN_ASSET,
+        "resolved_binding_source": BindingSourceKind.FOREIGN_ASSET,
+        "contributor_source_kind": BindingSourceKind.FOREIGN_ASSET.value,
+        "contributor_binding_source": BindingSourceKind.FOREIGN_ASSET,
+        "lineage_role": CalculationSourceLineageRole.PRIMARY,
         "source_ref": "foreign_asset:AD-ACCOUNT-001",
+        "parent_source_ref": None,
         "fingerprint": _FINGERPRINT,
     }
     with pytest.raises(ValidationError, match="resolver_id"):
