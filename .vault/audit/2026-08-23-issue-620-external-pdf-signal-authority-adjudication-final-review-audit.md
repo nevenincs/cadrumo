@@ -48,6 +48,12 @@ prove that well-formed substitutions of every coordinate component, including
 a host-valid alternate authority pair and a complete but wrong page mapping,
 fail validation.
 
+Independent re-review of commit `696c0bf3e8` confirms the resolution. The
+complete coordinate is enforced for every allowed modelo before a candidate can
+load, and the focused gate exercises each valid-looking substitution rather
+than only malformed values. Final status: resolved; no remaining actionable
+official-source evidence-lock finding.
+
 ### counterpart-digest-binding | medium | Pair-render evidence is not bound to the physical opposite candidate
 
 `ExternalLayoutPairRenderEvidence.counterpart_sha256` at
@@ -70,6 +76,13 @@ PDF selected by `counterpart_kind` and compares that observation with the
 declared `counterpart_sha256`. A focused mutation retains a syntactically valid
 64-hex digest while replacing its value and proves that the gate reports a
 counterpart content mismatch.
+
+Independent re-review of commit `696c0bf3e8` confirms the resolution. Opposite
+kind is still schema-bound, and every canonical sidecar reaches the physical
+counterpart hash comparison through the parametrized corpus gate. The focused
+valid-wrong-digest mutation bites, and the complete contract module passes 40
+tests. Final status: resolved; no remaining actionable counterpart-digest
+finding.
 
 ### parser-registry-review | low | no actionable findings
 
