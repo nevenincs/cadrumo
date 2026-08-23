@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:998db497bb1a144a6ca28e59daa4d9a597c752046fb00763e17148df0ce5b9f2'
+body_hash: 'sha256:1c565ad7bade953237ca9dbac856d44f3f7f7fddfc0997966a754bf8b378edb0'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -17213,3 +17213,162 @@ flight.
 The gates touched this tick were re-run after the breakage and still pass, so
 the verification above stands; but a full-suite run is not meaningful until
 modelo 220 loads again.
+
+## Tick: a standing gate closed by authoring -- modelo 390/2021's ten missing labels
+
+Re-measured at tick start: authority CLEAN at `36ff649d19`. The modelo 220
+breakage reported last tick is GONE -- the peer fixed it 65 seconds before this
+tick began, with "adopt modelo 200's segmento convention". Deferring to them was
+right, and they are still actively committing.
+
+### What was closed
+
+`test_every_casilla_label_resolves_in_the_mandatory_spanish_source`, one of the
+standing thirteen, reported exactly **10** casilla labels unresolved, all in
+modelo 390 revision 2021. It now PASSES.
+
+The ten are the annual IVA spine of that revision: the three repercutido rates,
+the 21% intra-community acquisition cuota, soportado interiores, the devengada
+and deducible totals, the régimen general result, and the two compensación
+boxes.
+
+### Where the values came from, and why that is grounding rather than invention
+
+Every one of the ten exists in modelo 390's 2022 revision under the IDENTICAL
+casilla id, with all four locales already authored. The values were copied from
+that sibling for the same box, not composed here.
+
+Worth recording that the reuse was checked rather than assumed: three of the ten
+already had a dashed entry in the Spanish catalogue under a `continuidad`
+segment and still did not resolve, which showed that path is a SEGMENT rather
+than a fallback tier. The real keys are revision-scoped and base32hex-encoded --
+`modelo.schema.390.revision.2021.casilla.x-<encoded>.label` -- and were read off
+each compiled casilla's own `localization_keys` rather than constructed by hand.
+
+Two of the ten carry ids the 2021 revision alone uses --
+`compensacion-ultimo-periodo-97` and `compensacion-generada-ejercicio-no-97` --
+and both still resolved a 2022 donor under the same id.
+
+All forty values were written through `python -m dev.locales set`, driven from a
+script so the accented Spanish, Catalan and Hungarian never round-tripped
+through a console that mangles them. The shard trees were not hand-edited.
+
+### What was NOT done, and why
+
+`scaffold --check` still reports 44 missing keys for modelo 390/2021: the `.help`
+counterparts of these ten, which the scaffold expects to exist as nulls. Closing
+them needs a TREE-WIDE `dev.locales scaffold` run, and that would also emit the
+2444 keys modelo 036 is missing and the 2468 modelo 220 is missing -- the latter
+being a casilla set another agent is authoring right now, mid-flight. Sweeping a
+peer's unscaffolded keys into this change is the hazard the docs-scaffold rule
+names for its own tool, and the same reasoning applies here.
+
+### Attribution, checked rather than asserted
+
+`dev/locales` reports four failures, including
+`test_codebase_to_locale_parity` ("es is missing 1074 codebase keys ... 180
+extra", identically across all four locales). None of it is this change: the
+parity report mentions `390.revision.2021` ZERO times, and `git status` shows
+exactly four modified files, the four 390 shards. The translation-honesty
+ratchet passes (6), which is the gate a copied translation would most plausibly
+trip.
+
+### Verified
+
+* the closed gate: 2 passed, from a hard failure listing ten casillas.
+* honesty ratchet: 6 passed. Authority loads CLEAN. The 390 record-design gate
+  still passes alongside it (6 passed together).
+* one retry was needed mid-tick: the first run died on "registry directory
+  changed during cache fingerprinting", the peer's concurrent modelo 220 writes
+  racing the load. Re-running settled it, exactly as the local-execution rule
+  says to do before blaming the code.
+
+### Still open
+
+Twelve standing registry failures, from thirteen. The three relayout splits are
+unchanged, and modelo 390/2021's `.help` keys wait on a tree-wide scaffold run
+that should happen when modelo 220's author is done.
+
+## Tick: a second standing gate closed -- the rate-box guard was firing on a parser revision
+
+Re-measured at tick start: authority CLEAN at `ff236adb76`.
+
+### What was wrong
+
+`test_modelo_390_rate_box_total_invariant::test_the_derived_sets_are_populated`
+failed with `2021: no formula operands were extracted at all`.
+
+It is an anti-vacuity guard: disjointness holds trivially over an empty set, so
+the module asserts both derived sets are populated before asserting the
+invariant over them. Its target is a WALKER that silently returns nothing.
+
+Modelo 390's 2021 revision has nothing to walk. Measured against its siblings:
+
+| revision | casillas | formulas | bindings | constructs |
+|---|---|---|---|---|
+| 2021 | 10 | 0 | 0 | 0 |
+| 2022 | 325 | 4 | 266 | 1 |
+| 2023 | 329 | 4 | 266 | 1 |
+| 2024 | 393 | 4 | 275 | 1 |
+| 2025 | 393 | 4 | 264 | 1 |
+
+It holds only `application_links`, `casillas`, `extraction_profiles`,
+`revision.toml` and `workbook_parity_refs` -- no bindings, no formulas, no
+export layout, no schedules.
+
+### Why that is correct data rather than an authoring gap
+
+The revision says so itself. `authority_grade = "applicability"`, and its review
+note reads "exact 2021 declaration-parser casillas checked against the enrolled
+AEAT record design; **filing layout authority is not claimed**". Its ten
+casillas are the annual IVA spine -- the three repercutido rates, the 21% AIC
+cuota, soportado interiores, the devengada and deducible totals, the régimen
+general result and the two compensación boxes -- and the extraction profile
+exists so a FILED prior-year return can be parsed back into them.
+
+A hypothesis was tested and dropped on the way: that 2021 exists as a
+carry-source for 2022. No binding or relation in 2022 or 2023 cites it, so that
+is not why it is there; the extraction profile and the declared grade are.
+
+### The narrowing, and the proof it discards only false positives
+
+The guard now scopes to revisions that DECLARE a formula, because a walker can
+only fail on a revision that has something to walk. Keyed on the declaration,
+never on a revision id.
+
+`authority_grade` was considered as the discriminator and rejected on
+measurement: tree-wide, applicability-grade revisions split 31 without formulas
+to 4 WITH, and filing-grade 53 with to 12 without, so the grade is a proxy for
+the thing rather than the thing.
+
+The converse is asserted too -- a formula-less revision must also yield no
+operands -- so the exemption cannot hide operands appearing from nowhere.
+
+Both directions were broken on purpose to check the teeth survived:
+
+* forcing the walker empty everywhere reds `2022: no formula operands were
+  extracted at all`, so a real walker failure is still caught;
+* making the formula-less revision yield an operand reds `2021: declares no
+  formulas yet 1 operand(s) were extracted`.
+
+### Verified
+
+* the closed gate: 2 passed, from a hard failure. Authority loads CLEAN, ruff
+  clean.
+* last tick's modelo 390/2021 labels survive and resolve: the revision now has
+  ZERO unlabelled casillas, and a peer has committed that work as
+  `locales(modelo-390): schema string sweep`.
+
+### A gate re-opened, and it is not this campaign's
+
+`test_every_casilla_label_resolves_in_the_mandatory_spanish_source`, closed last
+tick, fails again with **371** unresolved labels. Every one is modelo
+`220/2024`; zero are modelo 390. The peer authoring modelo 220 has landed a
+large casilla set whose labels are not yet in the catalogues, and they are still
+committing. Left to them, for the same stated reason as their earlier
+mid-authoring breakage.
+
+### Still open
+
+Eleven standing registry failures, from twelve, counting the modelo 220 label
+gap as theirs rather than ours. The three relayout splits are unchanged.
