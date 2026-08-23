@@ -23,6 +23,7 @@ import subprocess
 import sys
 import threading
 import tomllib
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Any, cast
@@ -216,6 +217,10 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
                 iter_directory(cohort_dir, pattern="cadrumo_data_official-*.tar.gz"),
             ).name,
         }
+        source_archive = cohort_dir / f"cadrumo-source-{source_commit}.zip"
+        with zipfile.ZipFile(source_archive, "w") as archive:
+            archive.writestr("pyproject.toml", "[project]\nname='cadrumo'\n")
+        artifacts["source-archive"] = source_archive.name
         project_metadata = tomllib.loads(
             (build_root / "pyproject.toml").read_text(encoding="utf-8"),
         )
@@ -232,7 +237,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
                     root_wheel,
                     cohort_dir / artifacts["cadrumo-sdist"],
                     source_commit,
-                    "f" * 64,
+                    source_archive,
                     work_root=work_dir,
                     uv=uv,
                 ),

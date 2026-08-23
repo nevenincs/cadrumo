@@ -102,6 +102,7 @@ _ATTESTATION_DIGEST_FIELDS: Final[tuple[str, ...]] = (
     "root_sdist_sha256",
     "source_archive_sha256",
     "artifact_members_sha256",
+    "origins_sha256",
     "identities_sha256",
     "locales_sha256",
     "policies_sha256",
@@ -122,11 +123,12 @@ import dataclasses
 import importlib
 import json
 import os
+from pathlib import Path
 import site
 import sys
 
-sys.path.append(os.environ["AEAT_DEPENDENCY_SITE"])
 site.addsitedir(os.environ["AEAT_INSTALL_SITE"])
+sys.path.append(os.environ["AEAT_DEPENDENCY_SITE"])
 
 from click.testing import CliRunner
 from typer.main import get_command
@@ -291,12 +293,21 @@ else:
     raise AssertionError(f"unknown CommandSpec probe mode: {probe_mode}")
 if set(import_budgets["handler_modules_loaded"]) - {"cadrumo.entrypoints.cli"}:
     raise AssertionError(f"installed CommandSpec projection exceeded selected-path import budgets: {import_budgets}")
+install_root = Path(os.environ["AEAT_INSTALL_SITE"]).resolve()
+origins = sorted(
+    (name, str(Path(module.__file__).resolve()))
+    for name, module in sys.modules.items()
+    if (name == "cadrumo" or name.startswith("cadrumo.")) and getattr(module, "__file__", None)
+)
+if not origins or any(not Path(origin).is_relative_to(install_root) for _name, origin in origins):
+    raise AssertionError(f"installed CommandSpec probe escaped its wheel target: {origins}")
 print(json.dumps({
     "identities": identities,
     "locales": locales,
     "policies": policies,
     "schemas": schemas,
     "import_budgets": import_budgets,
+    "origins": origins,
 }, sort_keys=True))
 """
 _INSTALLED_PROBE: Final[str] = """
@@ -326,6 +337,7 @@ class PythonCohort:
     version: str
     root_wheel: Path
     root_sdist: Path
+    source_archive: Path
     manuals_wheel: Path
     manuals_sdist: Path
     official_wheel: Path
@@ -362,7 +374,9 @@ def _projection_digest(value: object) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
-def _artifact_command_projection(root_wheel: Path, root_sdist: Path) -> tuple[tuple[str, str], ...]:
+def _artifact_command_projection(
+    root_wheel: Path, root_sdist: Path, source_archive: Path
+) -> tuple[tuple[str, str], ...]:
     """Return the exact normalized root artifact member cohort."""
     with zipfile.ZipFile(root_wheel) as archive:
         wheel_members = tuple(("wheel", PurePosixPath(name).as_posix()) for name in archive.namelist())
@@ -377,7 +391,11 @@ def _artifact_command_projection(root_wheel: Path, root_sdist: Path) -> tuple[tu
         for name in raw_sdist_members
         if PurePosixPath(name).parts[0] == archive_root
     )
-    return tuple(sorted((*wheel_members, *sdist_members)))
+    with zipfile.ZipFile(source_archive) as archive:
+        source_members = tuple(
+            ("source", PurePosixPath(name).as_posix()) for name in archive.namelist()
+        )
+    return tuple(sorted((*wheel_members, *sdist_members, *source_members)))
 
 
 def _validate_command_spec_attestation(
@@ -386,6 +404,7 @@ def _validate_command_spec_attestation(
     expected_source_commit: str | None = None,
     expected_root_wheel_sha256: str | None = None,
     expected_root_sdist_sha256: str | None = None,
+    expected_source_archive_sha256: str | None = None,
 ) -> dict[str, object]:
     if not isinstance(value, dict):
         raise SystemExit("Python cohort CommandSpec attestation must be a JSON object")
@@ -422,6 +441,7 @@ def _validate_command_spec_attestation(
         "source_commit": expected_source_commit,
         "root_wheel_sha256": expected_root_wheel_sha256,
         "root_sdist_sha256": expected_root_sdist_sha256,
+        "source_archive_sha256": expected_source_archive_sha256,
     }
     for field, expected_value in comparisons.items():
         if expected_value is not None and value[field] != expected_value:
@@ -433,7 +453,7 @@ def _attest_installed_command_specs(
     root_wheel: Path,
     root_sdist: Path,
     source_commit: str,
-    source_archive_sha256: str,
+    source_archive: Path,
     *,
     work_root: Path,
     uv: str,
@@ -487,7 +507,7 @@ def _attest_installed_command_specs(
                 for item in selected_projection["import_budgets"]["selected_path_deltas"]
             ],
         }
-        artifact_projection = _artifact_command_projection(root_wheel, root_sdist)
+        artifact_projection = _artifact_command_projection(root_wheel, root_sdist, source_archive)
         forbidden_members = tuple(
             (kind, member)
             for kind, member in artifact_projection
@@ -499,12 +519,12 @@ def _attest_installed_command_specs(
             "source_commit": source_commit,
             "root_wheel_sha256": sha256_path(root_wheel),
             "root_sdist_sha256": sha256_path(root_sdist),
-            "source_archive_sha256": source_archive_sha256,
+            "source_archive_sha256": sha256_path(source_archive),
             "artifact_members_sha256": _projection_digest(artifact_projection),
             "forbidden_artifacts_absent": not forbidden_members,
             **{
                 f"{field}_sha256": _projection_digest(projection[field])
-                for field in ("identities", "locales", "policies", "schemas", "import_budgets")
+                for field in ("identities", "locales", "policies", "schemas", "import_budgets", "origins")
             },
         }
         attestation["envelope_sha256"] = _projection_digest(attestation)
@@ -727,13 +747,12 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     archive = output.parent / f".{output.name}-source.zip"
     if archive.exists():
         archive.unlink()
-    source_archive_sha256 = ""
+    retained_source_archive = output / f"cadrumo-source-{source_commit}.zip"
     try:
         _run(
             ["git", "archive", "--format=zip", "-o", str(archive), source_commit],
             cwd=root,
         )
-        source_archive_sha256 = sha256_path(archive)
         with zipfile.ZipFile(archive) as bundle:
             bundle.extractall(build_root)  # noqa: S202 - archive is produced by local Git.
         _stamp_bundled_registry_records_into_build_tree(build_root)
@@ -754,6 +773,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
             ],
             cwd=build_root,
         )
+        shutil.move(archive, retained_source_archive)
         _run(
             [
                 uv,
@@ -816,6 +836,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     artifacts = {
         "cadrumo": root_wheel.name,
         "cadrumo-sdist": root_sdist.name,
+        "source-archive": retained_source_archive.name,
         "cadrumo-data-manuals": manuals_wheel.name,
         "cadrumo-data-manuals-sdist": manuals_sdist.name,
         "cadrumo-data-official": official_wheel.name,
@@ -826,7 +847,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         root_wheel,
         root_sdist,
         source_commit,
-        source_archive_sha256,
+        retained_source_archive,
         work_root=output.parent,
         uv=uv,
     )
@@ -874,6 +895,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     expected_keys = {
         "cadrumo",
         "cadrumo-sdist",
+        "source-archive",
         "cadrumo-data-manuals",
         "cadrumo-data-manuals-sdist",
         "cadrumo-data-official",
@@ -924,10 +946,20 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         expected_source_commit=source_commit,
         expected_root_wheel_sha256=str(sha256["cadrumo"]),
         expected_root_sdist_sha256=str(sha256["cadrumo-sdist"]),
+        expected_source_archive_sha256=str(sha256["source-archive"]),
     )
-    projection = _artifact_command_projection(resolved["cadrumo"], resolved["cadrumo-sdist"])
+    projection = _artifact_command_projection(
+        resolved["cadrumo"], resolved["cadrumo-sdist"], resolved["source-archive"]
+    )
     if command_spec_attestation["artifact_members_sha256"] != _projection_digest(projection):
         raise SystemExit("Python cohort CommandSpec attestation artifact member projection drifted")
+    forbidden_members = tuple(
+        (kind, member)
+        for kind, member in projection
+        if PurePosixPath(member).name in _FORBIDDEN_COMMAND_ARTIFACT_NAMES
+    )
+    if forbidden_members:
+        raise SystemExit(f"Python cohort contains forbidden command authority artifacts: {forbidden_members!r}")
 
     observed_version = _validate_wheel_contract(
         resolved["cadrumo"],
@@ -951,6 +983,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         version=version,
         root_wheel=resolved["cadrumo"],
         root_sdist=resolved["cadrumo-sdist"],
+        source_archive=resolved["source-archive"],
         manuals_wheel=resolved["cadrumo-data-manuals"],
         manuals_sdist=resolved["cadrumo-data-manuals-sdist"],
         official_wheel=resolved["cadrumo-data-official"],

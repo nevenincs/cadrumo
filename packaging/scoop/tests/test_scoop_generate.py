@@ -139,6 +139,10 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
         "cadrumo-data-official": copied_official.name,
         "cadrumo-data-official-sdist": next(path.name for path in copied_sdists if "official" in path.name),
     }
+    source_archive = cohort_dir / f"cadrumo-source-{'a' * 40}.zip"
+    with zipfile.ZipFile(source_archive, "w") as archive:
+        archive.writestr("pyproject.toml", "[project]\nname='cadrumo'\n")
+    artifacts["source-archive"] = source_archive.name
     (cohort_dir / "python-cohort.json").write_text(
         json.dumps(
             {
@@ -150,7 +154,7 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
                     copied_root,
                     copied_sdists[0],
                     "a" * 40,
-                    "f" * 64,
+                    source_archive,
                     work_root=root_dir,
                     uv=uv,
                 ),

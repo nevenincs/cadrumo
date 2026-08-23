@@ -7,6 +7,7 @@ import re
 import shutil
 import sys
 import tomllib
+import zipfile
 from dataclasses import dataclass, replace
 from pathlib import Path
 
@@ -89,6 +90,10 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
         "cadrumo-data-official": copied_wheels[2].name,
         "cadrumo-data-official-sdist": copied[2].name,
     }
+    source_archive = cohort / f"cadrumo-source-{'a' * 40}.zip"
+    with zipfile.ZipFile(source_archive, "w") as archive:
+        archive.writestr("pyproject.toml", "[project]\nname='cadrumo'\n")
+    artifacts["source-archive"] = source_archive.name
     (cohort / "python-cohort.json").write_text(
         json.dumps(
             {
@@ -100,7 +105,7 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
                     copied_wheels[0],
                     copied[0],
                     "a" * 40,
-                    "f" * 64,
+                    source_archive,
                     work_root=root_dir,
                     uv=uv,
                 ),

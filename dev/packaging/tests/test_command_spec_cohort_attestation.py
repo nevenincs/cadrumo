@@ -31,6 +31,7 @@ _DIGEST_FIELDS = (
     "root_sdist_sha256",
     "source_archive_sha256",
     "artifact_members_sha256",
+    "origins_sha256",
     "identities_sha256",
     "locales_sha256",
     "policies_sha256",
@@ -248,7 +249,10 @@ def test_locale_values_and_both_root_artifact_member_sets_are_digest_bound(tmp_p
         info = tarfile.TarInfo("cadrumo-1.0/src/cadrumo/entrypoints/cli/app_lazy_manifest.v1.json")
         info.size = len(payload)
         archive.addfile(info, io.BytesIO(payload))
-    projection = _artifact_command_projection(wheel, sdist)
+    source = tmp_path / "source.zip"
+    with zipfile.ZipFile(source, "w") as archive:
+        archive.writestr("pyproject.toml", "")
+    projection = _artifact_command_projection(wheel, sdist, source)
     assert ("sdist", "src/cadrumo/entrypoints/cli/app_lazy_manifest.v1.json") in projection
 
 

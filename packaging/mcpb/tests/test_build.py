@@ -28,6 +28,10 @@ from dev.packaging._smoke_common import (
     run_checked,
 )
 from dev.packaging.python_cohort import load_python_cohort
+from dev.packaging.tests._cohort_attestation import (
+    add_test_source_archive,
+    make_test_command_spec_attestation,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -75,6 +79,7 @@ def _write_cohort_manifest(
         text=True,
         encoding="utf-8",
     ).stdout.strip()
+    add_test_source_archive(cohort_dir, names, digests)
     (cohort_dir / "python-cohort.json").write_text(
         json.dumps(
             {
@@ -82,16 +87,9 @@ def _write_cohort_manifest(
                 "sha256": digests,
                 "source_commit": source_commit,
                 "version": version,
-                "command_spec_attestation": {
-                    "schema": "cadrumo.command-spec-cohort.v1",
-                    "node_count": 1,
-                    "forbidden_artifacts_absent": True,
-                    "identities_sha256": "a" * 64,
-                    "locales_sha256": "b" * 64,
-                    "policies_sha256": "c" * 64,
-                    "schemas_sha256": "d" * 64,
-                    "import_budgets_sha256": "e" * 64,
-                },
+                "command_spec_attestation": make_test_command_spec_attestation(
+                    cohort_dir, names, source_commit=source_commit
+                ),
             },
             sort_keys=True,
         ),

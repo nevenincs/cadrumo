@@ -18,6 +18,7 @@ import pytest
 
 from cadrumo.core import iter_directory
 
+from ...packaging.tests._cohort_attestation import make_minimal_test_python_cohort
 from ..readiness import check_generated_surface_versions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -47,32 +48,24 @@ def _cohort(
     (root / "mcpb").mkdir()
 
     (root / "release-cohort.json").write_text(json.dumps({"version": version}), encoding="utf-8")
-    (root / "python" / "python-cohort.json").write_text(
-        json.dumps(
-            {
-                "sha256": {
-                    "cadrumo": _WHEEL_CADRUMO,
-                    "cadrumo-data-manuals": _WHEEL_MANUALS,
-                    "cadrumo-data-official": _WHEEL_OFFICIAL,
-                    "cadrumo-sdist": _SDIST_CADRUMO,
-                },
-            },
-        ),
-        encoding="utf-8",
-    )
+    python_sha = make_minimal_test_python_cohort(root / "python", version=version)
+    wheel_cadrumo = python_sha["cadrumo"]
+    wheel_manuals = python_sha["cadrumo-data-manuals"]
+    wheel_official = python_sha["cadrumo-data-official"]
+    sdist_cadrumo = python_sha["cadrumo-sdist"]
     (root / "scoop" / "cadrumo.json").write_text(
         json.dumps(
             {
                 "version": scoop_version or version,
                 "architecture": {
-                    "64bit": {"hash": scoop_hashes or [_WHEEL_CADRUMO, _WHEEL_MANUALS, _WHEEL_OFFICIAL]},
+                    "64bit": {"hash": scoop_hashes or [wheel_cadrumo, wheel_manuals, wheel_official]},
                 },
             },
         ),
         encoding="utf-8",
     )
     hv = homebrew_version or version
-    hs = homebrew_sha or _SDIST_CADRUMO
+    hs = homebrew_sha or sdist_cadrumo
     (root / "homebrew" / "Formula" / "cadrumo.rb").write_text(
         "class Cadrumo < Formula\n"
         f'  url "https://github.com/nevenincs/cadrumo/releases/download/v{hv}/cadrumo-{hv}.tar.gz"\n'
