@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:29743d13534bacd8178419c91e45b419bfa081dac790bb3984129ea5d0576954'
+body_hash: 'sha256:9573ed02468d96b395a4be62f461fe70e9f45e705d4a984b9fd52dd1ab666f88'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7796,3 +7796,40 @@ Current cost, unchanged and now precisely attributable: integration 13, unit 9, 
 contract refusal is the largest single cause among them; `config profile show` still emits
 nothing to an operator. Handover is one line long -- restore `config passphrase change` per
 your own ADR's closed inventory, and the contract goes green.
+
+### One deleted module explains the entire red state, and it looks unintended
+
+Measured on a FULLY clean tree (`git status` reporting zero, HEAD unmoved across the run), so
+this is HEAD's behaviour and not churn -- the first such reading in many ticks. Integration 13,
+unit 9, serial 16 green. Of those 22 failures, `OperatorSurfaceContractError` dominates, and
+the remaining cases resolve to the same root: `config profile show` emits nothing because the
+surface contract refuses, so anything asserting on its output fails downstream. That includes
+the ONE case still failing in the peer's own module, whose `JSONDecodeError` is simply the
+empty stdout of a refused `show`.
+
+So the whole red state in this domain -- and the peer's own last failure, which is what has
+been holding the sharpened defer criterion open -- reduces to a single cause.
+
+The cause is a deleted file. `src/cadrumo/entrypoints/cli/_config/_passphrase.py` is ABSENT at
+HEAD, removed 83 minutes ago by `75ab8f3ef1 "src: retire the schema-surface normaliser onto the
+command spec kernel"`, a 36-file consolidation with 1,500 deletions. Not just its command-spec
+registration -- the command module itself. Meanwhile the governing ADR
+(`2026-08-23-cli-machine-secret-channel-unification`) names `config passphrase change` in its
+closed scalar-secret verb inventory, and the operator-surface contract still mounts the family.
+
+Three signals say this was collateral rather than a decision: the deleting commit's subject is
+about a schema-surface normaliser, not about retiring a custody verb; the ADR that governs the
+same landing requires the verb; and the peer has committed repeatedly in the intervening 83
+minutes without restoring it, while their own test fails for exactly this reason in a way that
+does not obviously point at a deleted module.
+
+Not reconstructed from here. Restoring means re-authoring a deleted CLI module plus its specs
+and registration, with three secret fields, inside a command-spec kernel its owner is actively
+reshaping, to ADR channel constraints (exactly one `--secrets-stdin` and one `--secrets-fd`,
+identical naming and ordering, refusal preceding any source read) that are theirs to satisfy.
+
+Handover, with the recovery path: the deleted module is retrievable at
+`git show 75ab8f3ef1^:src/cadrumo/entrypoints/cli/_config/_passphrase.py`, though it will need
+reshaping onto the new spec kernel rather than a straight revert. Restoring
+`config passphrase change` clears the contract refusal, `config profile show`, roughly twenty
+domain failures, and the peer's own outstanding case, in one change.
