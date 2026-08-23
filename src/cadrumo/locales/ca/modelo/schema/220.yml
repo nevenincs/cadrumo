@@ -1959,82 +1959,151 @@ modelo:
                 material i de les inversions. Pèrdues per l'alienació de participacions
                 en societats posades en equivalència
             x-agp34c1g6h230chq60o36cpk:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Altres despeses tècniques (+ o -).'
               label: Compte tècnic de l'assegurança de vida. Altres despeses tècniques
                 (+ o -)
             x-agp34c1g6h230chq60o36cpl:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Altres despeses tècniques (+ o -). Variació del deteriorament
+                per insolvències (+ o -).'
               label: Compte tècnic de l'assegurança de vida. Altres despeses tècniques
                 (+ o -). Variació del deteriorament per insolvències (+ o -)
             x-agp34c1g6h230chq60o36cpm:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Altres despeses tècniques (+ o -). Variació del deteriorament
+                de l''immobilitzat (+ o -).'
               label: Compte tècnic de l'assegurança de vida. Altres despeses tècniques
                 (+ o -). Variació del deteriorament de l'immobilitzat (+ o -)
             x-agp34c1g6h230chq60o36cpn:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Altres despeses tècniques (+ o -). Altres.'
               label: Compte tècnic de l'assegurança de vida. Altres despeses tècniques
                 (+ o -). Altres
             x-agp34c1g6h230chq60o36cpo:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions
             x-agp34c1g6h230chq60o36cpp:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Despeses de gestió de l''immobilitzat material i de les inversions.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Despeses de gestió de l'immobilitzat
                 material i de les inversions
             x-agp34c1g6h230chq60o36d1g:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Despeses de gestió de l''immobilitzat material i de les inversions.
+                Despeses de l''immobilitzat material i de les inversions immobiliàries.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Despeses de gestió de l'immobilitzat
                 material i de les inversions. Despeses de l'immobilitzat material
                 i de les inversions immobiliàries
             x-agp34c1g6h230chq60o36d1h:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Despeses de gestió de l''immobilitzat material i de les inversions.
+                Despeses d''inversions i comptes financers.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Despeses de gestió de l'immobilitzat
                 material i de les inversions. Despeses d'inversions i comptes financers
             x-agp34c1g6h230chq60o36d1i:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Correccions de valor de l''immobilitzat material i de les inversions.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Correccions de valor de l'immobilitzat
                 material i de les inversions
             x-agp34c1g6h230chq60o36d1j:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Correccions de valor de l''immobilitzat material i de les inversions.
+                Amortització de l''immobilitzat material i de les inversions immobiliàries.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Correccions de valor de l'immobilitzat
                 material i de les inversions. Amortització de l'immobilitzat material
                 i de les inversions immobiliàries
             x-agp34c1g6h230chq60o36d1k:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Correccions de valor de l''immobilitzat material i de les inversions.
+                Deteriorament de l''immobilitzat material i de les inversions immobiliàries.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Correccions de valor de l'immobilitzat
                 material i de les inversions. Deteriorament de l'immobilitzat material
                 i de les inversions immobiliàries
             x-agp34c1g6h230chq60o36d1l:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Correccions de valor de l''immobilitzat material i de les inversions.
+                Deteriorament d''inversions financeres.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Correccions de valor de l'immobilitzat
                 material i de les inversions. Deteriorament d'inversions financeres
             x-agp34c1g6h230chq60o36d1m:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Pèrdues procedents de l''immobilitzat material i de les inversions.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Pèrdues procedents de l'immobilitzat
                 material i de les inversions
             x-agp34c1g6h230chq60o36d1n:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Pèrdues procedents de l''immobilitzat material i de les inversions.
+                De l''immobilitzat material i de les inversions immobiliàries.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Pèrdues procedents de l'immobilitzat
                 material i de les inversions. De l'immobilitzat material i de les
                 inversions immobiliàries
             x-agp34c1g6h230chq60o36d1o:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Pèrdues procedents de l''immobilitzat material i de les inversions.
+                De les inversions financeres.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Pèrdues procedents de l'immobilitzat
                 material i de les inversions. De les inversions financeres
             x-agp34c1g6h230chq60o36d1p:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses d''inversions afectes a assegurances en què el prenedor
+                assumeix el risc de la inversió.'
               label: Compte tècnic de l'assegurança de vida. Despeses d'inversions
                 afectes a assegurances en què el prenedor assumeix el risc de la inversió
             x-agp34c1g6h230chq60o36d9g:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Subtotal (Resultat del compte tècnic de l''assegurança de
+                vida).'
               label: Compte tècnic de l'assegurança de vida. Subtotal (Resultat del
                 compte tècnic de l'assegurança de vida)
             x-agp34c1g6h230chq60o3cd9o:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Pèrdues per l''alienació de participacions en societats consolidades.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Pèrdues per l'alienació de participacions
                 en societats consolidades
             x-agp34c1g6h230chq60o3ec9l:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Despeses d''entitats incloses en la consolidació.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Despeses d'entitats incloses en la consolidació
             x-agp34c1g6h230chq60o3ec9m:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Despeses d''entitats incloses en la consolidació. Participació en
+                pèrdues d''entitats posades en equivalència.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Despeses d'entitats incloses en la consolidació.
                 Participació en pèrdues d'entitats posades en equivalència
             x-agp34c1g6h230chq60o3ec9n:
+              help: 'Dada del model 220, exercici 2024: Compte tècnic de l''assegurança
+                de vida. Despeses de l''immobilitzat material i de les inversions.
+                Despeses d''entitats incloses en la consolidació. Pèrdues per alienació
+                de participacions en societats posades en equivalència.'
               label: Compte tècnic de l'assegurança de vida. Despeses de l'immobilitzat
                 material i de les inversions. Despeses d'entitats incloses en la consolidació.
                 Pèrdues per alienació de participacions en societats posades en equivalència

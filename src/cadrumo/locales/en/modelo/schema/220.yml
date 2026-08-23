@@ -2031,84 +2031,152 @@ modelo:
                 and equipment and of investments. Losses on disposal of holdings in
                 equity-accounted companies
             x-agp34c1g6h230chq60o36cpk:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Other technical expenses (+ or -).'
               label: Life insurance technical account. Other technical expenses (+
                 or -)
             x-agp34c1g6h230chq60o36cpl:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Other technical expenses (+ or -). Change in impairment for bad debts
+                (+ or -).'
               label: Life insurance technical account. Other technical expenses (+
                 or -). Change in impairment for bad debts (+ or -)
             x-agp34c1g6h230chq60o36cpm:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Other technical expenses (+ or -). Change in impairment of fixed assets
+                (+ or -).'
               label: Life insurance technical account. Other technical expenses (+
                 or -). Change in impairment of fixed assets (+ or -)
             x-agp34c1g6h230chq60o36cpn:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Other technical expenses (+ or -). Other.'
               label: Life insurance technical account. Other technical expenses (+
                 or -). Other
             x-agp34c1g6h230chq60o36cpo:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments
             x-agp34c1g6h230chq60o36cpp:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Management
+                expenses of property, plant and equipment and of investments.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Management expenses of property,
                 plant and equipment and of investments
             x-agp34c1g6h230chq60o36d1g:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Management
+                expenses of property, plant and equipment and of investments. Expenses
+                of property, plant and equipment and of investment property.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Management expenses of property,
                 plant and equipment and of investments. Expenses of property, plant
                 and equipment and of investment property
             x-agp34c1g6h230chq60o36d1h:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Management
+                expenses of property, plant and equipment and of investments. Expenses
+                of investments and financial accounts.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Management expenses of property,
                 plant and equipment and of investments. Expenses of investments and
                 financial accounts
             x-agp34c1g6h230chq60o36d1i:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Value
+                adjustments of property, plant and equipment and of investments.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Value adjustments of property, plant
                 and equipment and of investments
             x-agp34c1g6h230chq60o36d1j:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Value
+                adjustments of property, plant and equipment and of investments. Depreciation
+                of property, plant and equipment and of investment property.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Value adjustments of property, plant
                 and equipment and of investments. Depreciation of property, plant
                 and equipment and of investment property
             x-agp34c1g6h230chq60o36d1k:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Value
+                adjustments of property, plant and equipment and of investments. Impairment
+                of property, plant and equipment and of investment property.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Value adjustments of property, plant
                 and equipment and of investments. Impairment of property, plant and
                 equipment and of investment property
             x-agp34c1g6h230chq60o36d1l:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Value
+                adjustments of property, plant and equipment and of investments. Impairment
+                of financial investments.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Value adjustments of property, plant
                 and equipment and of investments. Impairment of financial investments
             x-agp34c1g6h230chq60o36d1m:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Losses
+                on property, plant and equipment and on investments.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Losses on property, plant and equipment
                 and on investments
             x-agp34c1g6h230chq60o36d1n:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Losses
+                on property, plant and equipment and on investments. On property,
+                plant and equipment and on investment property.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Losses on property, plant and equipment
                 and on investments. On property, plant and equipment and on investment
                 property
             x-agp34c1g6h230chq60o36d1o:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Losses
+                on property, plant and equipment and on investments. On financial
+                investments.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Losses on property, plant and equipment
                 and on investments. On financial investments
             x-agp34c1g6h230chq60o36d1p:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of investments backing policies where the policyholder bears
+                the investment risk.'
               label: Life insurance technical account. Expenses of investments backing
                 policies where the policyholder bears the investment risk
             x-agp34c1g6h230chq60o36d9g:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Subtotal (Result of the life insurance technical account).'
               label: Life insurance technical account. Subtotal (Result of the life
                 insurance technical account)
             x-agp34c1g6h230chq60o3cd9o:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Losses
+                on disposal of holdings in consolidated companies.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Losses on disposal of holdings in
                 consolidated companies
             x-agp34c1g6h230chq60o3ec9l:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Expenses
+                of entities included in the consolidation.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Expenses of entities included in
                 the consolidation
             x-agp34c1g6h230chq60o3ec9m:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Expenses
+                of entities included in the consolidation. Share of losses of equity-accounted
+                entities.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Expenses of entities included in
                 the consolidation. Share of losses of equity-accounted entities
             x-agp34c1g6h230chq60o3ec9n:
+              help: 'Modelo 220 entry, tax year 2024: Life insurance technical account.
+                Expenses of property, plant and equipment and of investments. Expenses
+                of entities included in the consolidation. Losses on disposal of holdings
+                in equity-accounted companies.'
               label: Life insurance technical account. Expenses of property, plant
                 and equipment and of investments. Expenses of entities included in
                 the consolidation. Losses on disposal of holdings in equity-accounted
