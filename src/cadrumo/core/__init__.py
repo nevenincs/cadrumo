@@ -491,6 +491,7 @@ if TYPE_CHECKING:
         DEFAULT_WRITE_PROVENANCE,
         SecureObjectWrite,
     )
+    from .storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
     from .text_fold import fold_diacritics, fold_printed_phrase, unicode_compose
 
 
@@ -566,6 +567,7 @@ __all__: list[str] = [
     "SPANISH_ADDRESS_COMPONENTS",
     "SPANISH_ADDRESS_INFIXES",
     "STORAGE_FIELD_CATEGORIES",
+    "STORAGE_ROOT_MODE",
     "STORAGE_ROOT_SETTINGS_FIELD",
     "STORAGE_TAXONOMY",
     "STRICT_FROZEN_CONFIG",
@@ -795,6 +797,7 @@ __all__: list[str] = [
     "detect_image_media_type",
     "elide_to_cap",
     "elided_prose",
+    "ensure_storage_tree",
     "exclusive_file_lock",
     "expected_floor",
     "extract_orden_anual_iva_authority",
@@ -1127,6 +1130,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ReviewAdvisoryKind": "._confirmation_gate",
     "RevisionReviewStatus": "._revision_review",
     "STORAGE_FIELD_CATEGORIES": "._storage_taxonomy",
+    "STORAGE_ROOT_MODE": ".storage_materialization",
     "STORAGE_ROOT_SETTINGS_FIELD": "._storage_taxonomy",
     "STORAGE_TAXONOMY": "._storage_taxonomy",
     "STRICT_FROZEN_CONFIG": "._models",
@@ -1263,6 +1267,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "stem_spanish_text": "._spanish_stemming",
     "storage_location": "._storage_taxonomy",
     "storage_path": "._storage_taxonomy",
+    "ensure_storage_tree": ".storage_materialization",
     "storage_tree_targets": "._storage_taxonomy",
     "to_str_keyed_dict": "._toml",
     "undeclared_persisted_formats": ".compatibility_lifecycle",

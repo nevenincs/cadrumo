@@ -229,7 +229,7 @@ def preflight_parsed_leaf(
         if active is not None and read_profile_bucket_by_id(active) is None:
             if root is not None:
                 _refuse("profile_secrets_inapplicable")
-            from ...core.config import ensure_storage_tree
+            from ...core import ensure_storage_tree
 
             ensure_storage_tree()
             return
@@ -264,7 +264,7 @@ def preflight_parsed_leaf(
             command_path=node.path[1:],
             authenticate_root=authenticate,
         )
-    from ...core.config import ensure_storage_tree
+    from ...core import ensure_storage_tree
 
     ensure_storage_tree()
 

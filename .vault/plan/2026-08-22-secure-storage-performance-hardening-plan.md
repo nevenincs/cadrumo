@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:398bc22f226fecdc977205a8584cf584d0f8f281a442b27eb2696110bbd1719d'
+body_hash: 'sha256:b3b2f7c2a7ab6e5ce26cde8991287b7fce6d33f3b90d5c59c36796424bc3fc05'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -88,7 +88,7 @@ Stop lightweight handlers paying for broad application and materialization graph
 
 - [x] `W02.P05.S18` - Replace the eager workflow facade with an explicit PEP 562 lazy export map preserving public symbols and direction; `src/cadrumo/application/workflow/__init__.py`.
 - [x] `W02.P05.S19` - Move heavy workflow contracts into cohesive sibling modules loaded only by owning commands; `src/cadrumo/application/workflow/`.
-- [ ] `W02.P05.S20` - Separate read-only settings and path calculation from directory, permission, logging, journal, and topology materialization; `src/cadrumo/core/config.py`.
+- [x] `W02.P05.S20` - Separate read-only settings and path calculation from directory, permission, logging, journal, and topology materialization; `src/cadrumo/core/config.py`.
 - [ ] `W02.P05.S21` - Add facade parity, cycle, forbidden-import, and read-only-materialization gates; `src/cadrumo/tests/`.
 
 ## Wave `W03` - Build the pure secure-storage summary path

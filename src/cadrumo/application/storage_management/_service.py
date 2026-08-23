@@ -13,7 +13,7 @@ while failing for the key material that opens them is unrecoverable.
 See Also:
     :func:`~cadrumo.core.storage_path`
         The resolver every row is built from.
-    :func:`~cadrumo.core.config.ensure_storage_tree`
+    :func:`~cadrumo.core.storage_materialization.ensure_storage_tree`
         The materialiser ``init`` delegates to rather than re-implementing.
 """
 
@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from ...core import (
+    STORAGE_ROOT_MODE,
     STORAGE_TAXONOMY,
     StorageArea,
     StorageCategory,
@@ -34,6 +35,7 @@ from ...core import (
     StorageNodeKind,
     StorageScope,
     bucket_scoped_storage_path,
+    ensure_storage_tree,
     is_link_like,
     iter_directory,
     resolve_active_bucket_id,
@@ -41,7 +43,7 @@ from ...core import (
     storage_location,
     storage_path,
 )
-from ...core.config import STORAGE_ROOT_MODE, ensure_storage_tree, load_settings
+from ...core.config import load_settings
 from ...core.logging import get_logger
 from ._errors import StorageReclaimRefusedError, StorageReclaimUnconfirmedError
 from ._models import (
@@ -260,7 +262,7 @@ def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeChec
 def materialise_storage_tree(*, settings: Settings | None = None) -> StorageInitReport:
     """Create every declared directory, preserving whatever already exists.
 
-    Delegates to :func:`~cadrumo.core.config.ensure_storage_tree` rather than
+    Delegates to :func:`~cadrumo.core.storage_materialization.ensure_storage_tree` rather than
     walking the taxonomy again, so the operator verb and the runtime bootstrap
     cannot materialise different trees. It never removes and recreates a
     directory to reach a clean state: the tree holds the encrypted substrate,
