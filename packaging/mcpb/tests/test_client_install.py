@@ -76,7 +76,7 @@ def _write_cohort_manifest(
     artifacts: dict[str, Path],
     version: str,
 ) -> None:
-    """Retain the six built artifacts under one immutable digest manifest."""
+    """Retain six install archives and the source archive under one immutable manifest."""
     names: dict[str, str] = {}
     digests: dict[str, str] = {}
     for label, artifact in artifacts.items():
@@ -114,7 +114,7 @@ def _write_cohort_manifest(
 
 
 def _build_real_cohort(work: Path) -> Path:
-    """Build the six-file canonical cohort from a commit-defined root.
+    """Build the install archives plus retained source archive from a commit-defined root.
 
     Mirrors the build test: the cohort the installed client is bound to must
     correspond to a commit, or a peer's uncommitted edit in this shared worktree

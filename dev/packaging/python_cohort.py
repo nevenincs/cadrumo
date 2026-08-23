@@ -128,7 +128,8 @@ import site
 import sys
 
 site.addsitedir(os.environ["AEAT_INSTALL_SITE"])
-sys.path.append(os.environ["AEAT_DEPENDENCY_SITE"])
+for dependency_site in os.environ["AEAT_DEPENDENCY_SITE"].split(os.pathsep):
+    sys.path.append(dependency_site)
 
 from click.testing import CliRunner
 from typer.main import get_command

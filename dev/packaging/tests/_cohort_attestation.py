@@ -48,7 +48,7 @@ def make_test_command_spec_attestation(
         "forbidden_artifacts_absent": True,
         "root_wheel_sha256": sha256_path(root_wheel),
         "root_sdist_sha256": sha256_path(root_sdist),
-        "source_archive_sha256": "a" * 64,
+        "source_archive_sha256": sha256_path(directory / artifacts["source-archive"]),
         "artifact_members_sha256": member_digest,
         "origins_sha256": "1" * 64,
         "identities_sha256": "b" * 64,

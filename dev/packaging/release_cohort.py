@@ -360,6 +360,11 @@ def build_from_clean_source(
             ("cadrumo-wheel", ArtifactKind.PYTHON_WHEEL, cohort.root_wheel),
             ("cadrumo-sdist", ArtifactKind.PYTHON_SDIST, cohort.root_sdist),
             (
+                "cadrumo-source-archive",
+                ArtifactKind.PYTHON_SOURCE_ARCHIVE,
+                cohort.source_archive,
+            ),
+            (
                 "cadrumo-data-manuals-wheel",
                 ArtifactKind.PYTHON_WHEEL,
                 cohort.manuals_wheel,

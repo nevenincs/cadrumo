@@ -62,6 +62,7 @@ def _make_artifacts(tmp_path: Path) -> tuple[PythonCohort, Path]:
         version=_VERSION,
         root_wheel=paths["cadrumo"],
         root_sdist=paths["cadrumo-sdist"],
+        source_archive=tmp_path / "cadrumo-source.zip",
         manuals_wheel=paths["cadrumo-data-manuals"],
         manuals_sdist=tmp_path / f"cadrumo_data_manuals-{_VERSION}.tar.gz",
         official_wheel=paths["cadrumo-data-official"],

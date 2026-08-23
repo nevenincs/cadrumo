@@ -99,7 +99,7 @@ def _write_cohort_manifest(
 
 @pytest.fixture(scope="module")
 def real_cohort(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Build the real six-file canonical cohort consumed by the bundle."""
+    """Build the canonical install archives plus retained source archive consumed by the bundle."""
     uv = shutil.which("uv")
     assert uv is not None
     work = tmp_path_factory.mktemp("mcpb-real-cohort")

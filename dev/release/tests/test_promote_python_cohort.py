@@ -116,7 +116,7 @@ def _make_cohort_dir(
 ) -> Path:
     """Create a minimal valid python-cohort directory and return its path.
 
-    The directory contains six artifact files (three wheels, three sdists)
+    The directory contains six install archives plus the retained source archive
     that satisfy ``load_python_cohort``'s metadata validation, plus a
     ``python-cohort.json`` manifest with correct SHA-256 digests.
     """

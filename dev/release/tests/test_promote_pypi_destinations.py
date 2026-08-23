@@ -44,6 +44,7 @@ def test_pypi_destinations_absent_passes_for_dev_version(tmp_path: Path) -> None
         version="0.99.0.dev1",
         root_wheel=tmp_path / "cadrumo.whl",
         root_sdist=tmp_path / "cadrumo.tar.gz",
+        source_archive=tmp_path / "cadrumo-source.zip",
         manuals_wheel=tmp_path / "manuals.whl",
         manuals_sdist=tmp_path / "manuals.tar.gz",
         official_wheel=tmp_path / "official.whl",

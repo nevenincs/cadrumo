@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import ast
 import dataclasses
+import hashlib
 import io
+import json
+import os
+import subprocess
+import sys
 import tarfile
 import zipfile
 from pathlib import Path
@@ -23,6 +28,7 @@ from ..python_cohort import (
     _projection_digest,
     _validate_command_spec_attestation,
 )
+from ._cohort_attestation import make_minimal_test_python_cohort, make_test_command_spec_attestation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -75,7 +81,10 @@ def _valid_attestation() -> dict[str, object]:
         "node_count": 1,
         "source_commit": "a" * 40,
         "forbidden_artifacts_absent": True,
-        **{field: str(index) * 64 for index, field in enumerate(_DIGEST_FIELDS, start=1)},
+        **{
+            field: format(index, "x") * 64
+            for index, field in enumerate(_DIGEST_FIELDS, start=1)
+        },
     }
     value["envelope_sha256"] = _projection_digest(value)
     return value
@@ -134,6 +143,57 @@ def _calls_canonical_loader(source: str) -> bool:
     )
 
 
+def _calls_forbidden_builder(source: str) -> bool:
+    tree = ast.parse(source)
+    forbidden = {"build_python_cohort", "build_wheel", "build_sdist", "build_companion_wheels"}
+    aliases: set[str] = set()
+    module_aliases: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            aliases.update(item.asname or item.name for item in node.names if item.name in forbidden)
+        elif isinstance(node, ast.Import):
+            module_aliases.update(item.asname or item.name for item in node.names)
+    changed = True
+    while changed:
+        changed = False
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+                continue
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            value = node.value
+            canonical = isinstance(value, ast.Name) and value.id in aliases
+            canonical = canonical or (
+                isinstance(value, ast.Attribute)
+                and value.attr in forbidden
+                and isinstance(value.value, ast.Name)
+                and value.value.id in module_aliases
+            )
+            if canonical:
+                before = len(aliases)
+                aliases.update(target.id for target in targets if isinstance(target, ast.Name))
+                changed = changed or before != len(aliases)
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if isinstance(node.func, ast.Name) and node.func.id in aliases:
+            return True
+        if (
+            isinstance(node.func, ast.Attribute)
+            and node.func.attr in forbidden
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id in module_aliases
+        ):
+            return True
+        tokens = [
+            item.value
+            for item in ast.walk(node)
+            if isinstance(item, ast.Constant) and isinstance(item.value, str)
+        ]
+        if "uv" in tokens and "build" in tokens:
+            return True
+    return False
+
+
 def test_attestation_schema_refuses_every_missing_malformed_and_forbidden_dimension() -> None:
     valid = _valid_attestation()
     assert _validate_command_spec_attestation(valid) == valid
@@ -161,11 +221,18 @@ def test_every_downstream_consumer_loads_the_sealed_cohort_and_cannot_rebuild_it
         calls = _called_names(source)
         assert _calls_canonical_loader(source), relative
         assert not calls.intersection(forbidden_build_calls), relative
+        assert not _calls_forbidden_builder(source), relative
 
     for lane in _LANES.values():
         for form in lane.forms:
             if lane.name != "dev":
                 assert "--cohort-dir" in form.command(), f"{lane.name}/{form.name} rebuild bypass"
+                command = form.command()
+                module = command[command.index("-m") + 1]
+                module_path = REPO_ROOT / f"{module.replace('.', '/')}.py"
+                assert _calls_canonical_loader(module_path.read_text(encoding="utf-8")), (
+                    f"campaign topology consumer bypasses validator: {lane.name}/{form.name}/{module}"
+                )
 
     discovered = {
         path.relative_to(REPO_ROOT).as_posix()
@@ -192,6 +259,14 @@ def test_canonical_loader_detector_follows_import_and_assignment_aliases() -> No
         "sealed = validate\nsealed(path)\n"
     )
     assert not _calls_canonical_loader("def load_python_cohort(path): return path\nload_python_cohort(path)\n")
+    assert _calls_forbidden_builder(
+        "from dev.packaging.python_cohort import build_python_cohort as build\n"
+        "again = build\nagain(repo, out)\n"
+    )
+    assert _calls_forbidden_builder(
+        "import dev.packaging.python_cohort as cohort\nrebuild = cohort.build_python_cohort\nrebuild(repo, out)\n"
+    )
+    assert _calls_forbidden_builder("subprocess.run(['uv', 'build', '--wheel'])\n")
 
 
 def test_shipping_workflows_route_one_downloaded_cohort_without_python_rebuilds() -> None:
@@ -236,6 +311,32 @@ def test_deferred_target_detector_rejects_missing_private_wrong_kind_and_unknown
         resolve(("future_role",), target("public"))  # type: ignore[operator]
 
 
+def test_installed_probe_origin_guard_defeats_competing_ambient_cadrumo(tmp_path: Path) -> None:
+    ambient = tmp_path / "ambient"
+    (ambient / "cadrumo").mkdir(parents=True)
+    (ambient / "cadrumo" / "__init__.py").write_text("raise RuntimeError('ambient won')\n", encoding="utf-8")
+    dependency_site = next(path for path in sys.path if path.endswith("site-packages"))
+    environment = {
+        **os.environ,
+        "PYTHONPATH": "",
+        "AEAT_INSTALL_SITE": str(REPO_ROOT / "src"),
+        "AEAT_DEPENDENCY_SITE": os.pathsep.join((str(ambient), dependency_site)),
+        "AEAT_COMMAND_SPEC_PROBE_MODE": "aeat config profile list",
+    }
+    completed = subprocess.run(  # noqa: S603 - fixed planted origin probe.
+        [sys.executable, "-S", "-c", _COMMAND_SPEC_PROBE],
+        cwd=REPO_ROOT,
+        env=environment,
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    assert completed.returncode == 0, completed.stderr
+    projection = json.loads(completed.stdout)
+    assert all(str(REPO_ROOT / "src") in origin for _name, origin in projection["origins"])
+
+
 def test_locale_values_and_both_root_artifact_member_sets_are_digest_bound(tmp_path: Path) -> None:
     assert _projection_digest([("key", "en", "value-a")]) != _projection_digest(
         [("key", "en", "value-b")]
@@ -254,6 +355,66 @@ def test_locale_values_and_both_root_artifact_member_sets_are_digest_bound(tmp_p
         archive.writestr("pyproject.toml", "")
     projection = _artifact_command_projection(wheel, sdist, source)
     assert ("sdist", "src/cadrumo/entrypoints/cli/app_lazy_manifest.v1.json") in projection
+
+
+@pytest.mark.parametrize("artifact_kind", ["wheel", "sdist", "source"])
+def test_canonical_loader_derives_forbidden_absence_from_self_consistent_artifacts(
+    tmp_path: Path, artifact_kind: str
+) -> None:
+    from ..python_cohort import load_python_cohort
+
+    make_minimal_test_python_cohort(tmp_path, version="1.0.0")
+    manifest_path = tmp_path / "python-cohort.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    artifact_key = {"wheel": "cadrumo", "sdist": "cadrumo-sdist", "source": "source-archive"}[
+        artifact_kind
+    ]
+    artifact = tmp_path / manifest["artifacts"][artifact_key]
+    if artifact_kind in {"wheel", "source"}:
+        forbidden = (
+            "cadrumo/entrypoints/cli/app_lazy_manifest.v1.json"
+            if artifact_kind == "wheel"
+            else "dev/quality/generate_app_lazy_manifest.py"
+        )
+        with zipfile.ZipFile(artifact, "a") as archive:
+            archive.writestr(forbidden, "{}")
+    else:
+        metadata = b"Name: cadrumo\nVersion: 1.0.0\n"
+        with tarfile.open(artifact, "w:gz") as archive:
+            for name, payload in (
+                ("cadrumo-1.0.0/PKG-INFO", metadata),
+                ("cadrumo-1.0.0/src/cadrumo/entrypoints/cli/app_lazy_manifest.v1.json", b"{}"),
+            ):
+                info = tarfile.TarInfo(name)
+                info.size = len(payload)
+                archive.addfile(info, io.BytesIO(payload))
+    manifest["sha256"][artifact_key] = hashlib.sha256(artifact.read_bytes()).hexdigest()
+    manifest["command_spec_attestation"] = make_test_command_spec_attestation(
+        tmp_path, manifest["artifacts"], source_commit=manifest["source_commit"]
+    )
+    manifest["command_spec_attestation"]["forbidden_artifacts_absent"] = True
+    envelope = dict(manifest["command_spec_attestation"])
+    envelope.pop("envelope_sha256")
+    manifest["command_spec_attestation"]["envelope_sha256"] = _projection_digest(envelope)
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(SystemExit, match="forbidden command authority"):
+        load_python_cohort(tmp_path)
+
+
+def test_canonical_loader_rejects_valid_envelope_with_swapped_source_archive_digest(tmp_path: Path) -> None:
+    from ..python_cohort import load_python_cohort
+
+    make_minimal_test_python_cohort(tmp_path, version="1.0.0")
+    manifest_path = tmp_path / "python-cohort.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    attestation = manifest["command_spec_attestation"]
+    attestation["source_archive_sha256"] = "0" * 64
+    envelope = dict(attestation)
+    envelope.pop("envelope_sha256")
+    attestation["envelope_sha256"] = _projection_digest(envelope)
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(SystemExit, match="source_archive_sha256 does not bind"):
+        load_python_cohort(tmp_path)
 
 
 def test_attestation_is_release_output_only_and_never_production_authority() -> None:
