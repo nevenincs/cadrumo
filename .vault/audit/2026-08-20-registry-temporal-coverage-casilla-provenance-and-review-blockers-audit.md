@@ -4208,3 +4208,58 @@ conclude two boxes were missing.
 ### Scale
 
 **10410 of 11570 slots remain** across 110 numbered records; 1160 modelled, zero orphaned.
+
+## 2026-08-23 — T22005A00, and repairing the ligature from AEAT's own evidence
+
+### What landed
+
+Record **T22005A00** — the *estado de ingresos y gastos consolidados reconocidos*: the
+resultado consolidado, the eight items recognised directly in consolidated equity with
+their total, the seven transfers to the consolidated P&L with their total, and the
+consolidated total split between the sociedad dominante and the socios externos.
+**21 casillas**, revision 1326 → **1347**, twenty-four of 137 records. Flat record, every
+box carrying AEAT's own number.
+
+Suite: **identical FAILED list, zero regressions.**
+
+### One record, three spellings of one word
+
+The previous entry recorded that AEAT emits U+FB01 and that a grep for a Spanish word over
+this workbook silently misses those lines. Measured across the whole design: **U+FB01 307
+times, U+FB02 twice, and 29 of them followed by a space** that splits the word.
+
+This record carries **all three forms of the same word**: `instrumentos ﬁ nancieros` at @33,
+`instrumentos ﬁnancieros` at @50, and plain `Activos financieros` in that *same line* at
+@50. Expanding the codepoint alone leaves `fi nancieros` in an operator label.
+
+**The repair is grounded in the workbook's own vocabulary.** A split is rejoined only when
+the joined token already appears as a whole word elsewhere in the design — `financieros`
+attested 615 times, `flujos` 7 — and an **unattested split refuses the run** rather than
+being joined on a hunch. That is evidence from AEAT's text, not a rule about where Spanish
+words break.
+
+This is the shape the three earlier normalisation defects should have taken from the start:
+**derive the correction from data already present, and refuse when the data does not support
+it.**
+
+### Uniqueness is a property of the pair, not the line
+
+Seven line labels appear **twice** in this record — `Efecto impositivo`, `Por coberturas de
+flujos de efectivo`, `Subvenciones, donaciones y legados recibidos` and four more — once
+under INGRESOS Y GASTOS and again under TRANSFERENCIAS. That is AEAT's structure.
+
+The within-record duplicate assertion originally fired on the bare line, and **taking that
+at face value would have forced a false distinction into the labels**. The right invariant
+is `(section, label)`, plus uniqueness of the *composed* label in all four catalogues —
+which is where an operator actually reads it. A check that fires is not automatically
+right; what it asserts has to be the thing that matters.
+
+### Two numbers are absent from consecutive runs
+
+`00336`–`00345` skips **00343**; `00346`–`00354` skips **00352**. They are not in the sheet
+at all. Recorded so a reader checking for a contiguous range does not conclude two boxes
+were dropped in transcription.
+
+### Scale
+
+**10389 of 11570 slots remain** across 109 numbered records; 1181 modelled, zero orphaned.
