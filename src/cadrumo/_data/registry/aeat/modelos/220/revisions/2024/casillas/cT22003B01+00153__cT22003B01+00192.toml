@@ -1,0 +1,571 @@
+# Modelo 220 RECORD T22003B01 -- BALANCE CONSOLIDADO, PASIVO, in the shape used by entidades de credito: the
+# financial-liability portfolios by measurement category, derivados de
+# cobertura, provisiones, pasivos por impuestos, and the closing TOTAL
+# PASIVO.
+#
+# 42 casillas describe all 52 design fields -- 42 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position. Every box carries AEAT's own five-digit
+# number, so not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# TWENTY OF THESE FORTY-TWO BOXES SHARE A LABEL WITH A SIBLING, for the same
+# reason as T22003A01 on the activo side: this is a PORTFOLIO x INSTRUMENT
+# matrix and AEAT prints the portfolio head on its own row -- [00153] mantenidos
+# para negociar, [00162] designados a valor razonable, [00169] a coste
+# amortizado -- then prints the instrument rows beneath it WITHOUT the portfolio
+# name. Three boxes read "Depositos", three "Depositos. Bancos centrales",
+# three "Valores representativos de deuda emitidos", and so on.
+#
+# THE PORTFOLIO IS NOT DERIVED FROM POSITION, exactly as on T22003A01 and
+# T22005A01. The box number is the only disambiguator this data supports, and an
+# operator surface that hides numbers will show three identical rows.
+#
+# [00756] AND [00757] BOTH READ "Pro memoria: pasivos subordinados", one with a
+# trailing period and one without. They belong to different portfolios and the
+# design says so nowhere but by position, so they are left sharing a label.
+#
+# IT CLOSES THE CREDITO PASIVO on [00192] TOTAL PASIVO. The credito patrimonio
+# neto, T22003C01, is still unauthored, so this sector's accounting identity is
+# NOT yet expressible.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
+# intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is
+# derived as the common prefix of every numbered line and the remainder is stripped, so
+# both spellings land on the same heading. 0 parent-child separator
+# repair(s)
+# applied: none needed.
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 0
+# rejoin(s) applied: none.
+
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22003B01 tiles
+# 1..891 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 03, letra B, hoja 01. Sibling sector pages of this
+# family share every heading AEAT prints in the BODY -- two records both head their
+# lines "ACTIVO" and both declare a "Total activo" -- so the envelope is the ONLY
+# non-inferential way to tell them apart. The operator label carries it for exactly
+# that reason; it claims no sector, which the design does not state.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @730+150 RESERVADO PARA LA ADMINISTRACION; and
+# @880+12 Fin de registro.
+#
+# NOT CLAIMED: THIS BALANCE SHEET DOES NOT BALANCE HERE. Every subtotal and the TOTAL are
+# DECLARED, not computed: no formula, construct or binding sums a group into its head or
+# the heads into the total, and nothing checks activo against patrimonio neto plus pasivo.
+# Every box is a manual input.
+
+# @16+17 N. PASIVO. Pasivos financieros mantenidos para negociar. [00153]
+[[revisions."2024".casillas]]
+id = "T22003B01:00153"
+number = "00153"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. PASIVO. Derivados [00154]
+[[revisions."2024".casillas]]
+id = "T22003B01:00154"
+number = "00154"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. PASIVO. Posiciones cortas [00155]
+[[revisions."2024".casillas]]
+id = "T22003B01:00155"
+number = "00155"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. PASIVO. Depósitos. [00156]
+[[revisions."2024".casillas]]
+id = "T22003B01:00156"
+number = "00156"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. PASIVO. Depósitos. Bancos centrales. [00157]
+[[revisions."2024".casillas]]
+id = "T22003B01:00157"
+number = "00157"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. PASIVO. Depósitos. Entidades de crédito. [00158]
+[[revisions."2024".casillas]]
+id = "T22003B01:00158"
+number = "00158"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. PASIVO. Depósitos. Clientela. [00159]
+[[revisions."2024".casillas]]
+id = "T22003B01:00159"
+number = "00159"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. PASIVO. Valores representativos de deuda emitidos. [00160]
+[[revisions."2024".casillas]]
+id = "T22003B01:00160"
+number = "00160"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. PASIVO. Otros pasivos financieros. [00161]
+[[revisions."2024".casillas]]
+id = "T22003B01:00161"
+number = "00161"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. PASIVO. Pasivos financieros designados a valor razonable con cambios en resultados. [00162]
+[[revisions."2024".casillas]]
+id = "T22003B01:00162"
+number = "00162"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. PASIVO. Depósitos. [00163]
+[[revisions."2024".casillas]]
+id = "T22003B01:00163"
+number = "00163"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. PASIVO. Depósitos. Bancos centrales. [00164]
+[[revisions."2024".casillas]]
+id = "T22003B01:00164"
+number = "00164"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. PASIVO. Depósitos. Entidades de crédito. [00165]
+[[revisions."2024".casillas]]
+id = "T22003B01:00165"
+number = "00165"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. PASIVO. Depósitos. Clientela. [00166]
+[[revisions."2024".casillas]]
+id = "T22003B01:00166"
+number = "00166"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. PASIVO. Valores representativos de deuda emitidos. [00167]
+[[revisions."2024".casillas]]
+id = "T22003B01:00167"
+number = "00167"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. PASIVO. Otros pasivos financieros. [00168]
+[[revisions."2024".casillas]]
+id = "T22003B01:00168"
+number = "00168"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. PASIVO. Pro memoria: pasivos subordinados [00756]
+[[revisions."2024".casillas]]
+id = "T22003B01:00756"
+number = "00756"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. PASIVO. Pasivos financieros a coste amortizado. [00169]
+[[revisions."2024".casillas]]
+id = "T22003B01:00169"
+number = "00169"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. PASIVO. Depósitos. [00170]
+[[revisions."2024".casillas]]
+id = "T22003B01:00170"
+number = "00170"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. PASIVO. Depósitos. Bancos centrales. [00171]
+[[revisions."2024".casillas]]
+id = "T22003B01:00171"
+number = "00171"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 N. PASIVO. Depósitos. Entidades de crédito. [00172]
+[[revisions."2024".casillas]]
+id = "T22003B01:00172"
+number = "00172"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17 N. PASIVO. Depósitos. Clientela. [00173]
+[[revisions."2024".casillas]]
+id = "T22003B01:00173"
+number = "00173"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17 N. PASIVO. Valores representativos de deuda emitidos [00174]
+[[revisions."2024".casillas]]
+id = "T22003B01:00174"
+number = "00174"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17 N. PASIVO. Otros pasivos financieros. [00175]
+[[revisions."2024".casillas]]
+id = "T22003B01:00175"
+number = "00175"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17 N. PASIVO. Pro memoria: pasivos subordinados. [00757]
+[[revisions."2024".casillas]]
+id = "T22003B01:00757"
+number = "00757"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17 N. PASIVO. Derivados - contabilidad de coberturas. [00176]
+[[revisions."2024".casillas]]
+id = "T22003B01:00176"
+number = "00176"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17 N. PASIVO. Cambios del valor razonable de los elementos cubiertos de una cartera con cobertura del riesgo de tipo de interés. [00177]
+[[revisions."2024".casillas]]
+id = "T22003B01:00177"
+number = "00177"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @475+17 N. PASIVO. Pasivos amparados por contratos de seguro o reaseguro. [00178]
+[[revisions."2024".casillas]]
+id = "T22003B01:00178"
+number = "00178"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @492+17 N. PASIVO. Provisiones. [00179]
+[[revisions."2024".casillas]]
+id = "T22003B01:00179"
+number = "00179"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @509+17 N. PASIVO. Pensiones y otras obligaciones de prestaciones definidas post-empleo. [00180]
+[[revisions."2024".casillas]]
+id = "T22003B01:00180"
+number = "00180"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @526+17 N. PASIVO. Otras retribuciones a los empleados a largo plazo. [00181]
+[[revisions."2024".casillas]]
+id = "T22003B01:00181"
+number = "00181"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @543+17 N. PASIVO. Cuestiones procesales y litigios por impuestos pendientes. [00182]
+[[revisions."2024".casillas]]
+id = "T22003B01:00182"
+number = "00182"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @560+17 N. PASIVO. Compromisos y garantías concedidos. [00183]
+[[revisions."2024".casillas]]
+id = "T22003B01:00183"
+number = "00183"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @577+17 N. PASIVO. Restantes provisiones. [00184]
+[[revisions."2024".casillas]]
+id = "T22003B01:00184"
+number = "00184"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @594+17 N. PASIVO. Pasivos por impuestos. [00185]
+[[revisions."2024".casillas]]
+id = "T22003B01:00185"
+number = "00185"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @611+17 N. PASIVO. Pasivos por impuestos corrientes. [00186]
+[[revisions."2024".casillas]]
+id = "T22003B01:00186"
+number = "00186"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @628+17 N. PASIVO. Pasivos por impuestos diferidos. [00187]
+[[revisions."2024".casillas]]
+id = "T22003B01:00187"
+number = "00187"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @645+17 N. PASIVO. Capital social reembolsable a la vista. [00188]
+[[revisions."2024".casillas]]
+id = "T22003B01:00188"
+number = "00188"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @662+17 N. PASIVO. Otros pasivos. [00189]
+[[revisions."2024".casillas]]
+id = "T22003B01:00189"
+number = "00189"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @679+17 N. PASIVO. De los cuales: fondo de la obra social (solo cajas de ahorros y cooperativas de crédito). [00190]
+[[revisions."2024".casillas]]
+id = "T22003B01:00190"
+number = "00190"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @696+17 N. PASIVO. Pasivos incluidos en grupos enajenables de elementos que se han clasificado como mantenidos para la venta. [00191]
+[[revisions."2024".casillas]]
+id = "T22003B01:00191"
+number = "00191"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @713+17 N. PASIVO. Total pasivo. [00192]
+[[revisions."2024".casillas]]
+id = "T22003B01:00192"
+number = "00192"
+segmento = "T22003B01"
+section = ["liquidacion", "balance_consolidado_pasivo_credito"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

@@ -700,12 +700,12 @@ cli:
           factura_emitida: factura emitida
           factura_recibida: factura recibida
           gasto193_contribuyente: contribuyente de la relación de gastos
+          inventario: inventario de existencias
           miembro_atribucion: miembro de atribución de rentas
           operacion_reembolso: operación de reembolso
           operacion_vinculada: operación vinculada
           registro_retenciones: registro de retenciones
           regularizacion_bienes_inversion: regularización de bienes de inversión
-          inventario: inventario de existencias
           regularizacion_prorrata: regularización de prorrata
           retencion: retención
           withholding296_perceptor: perceptor de la declaración de retenciones
@@ -1766,13 +1766,14 @@ cli:
         la clave de recuperación en claro y no puede mostrarla otra vez.
       errors:
         echo_suppression_unavailable: Esta terminal no puede ocultar lo que se escribe,
-          por lo que el secreto quedaría visible en pantalla; use --secrets-stdin.
+          por lo que el secreto quedaría visible en pantalla; use --secrets-stdin
+          o --secrets-fd.
         new_passphrase_mismatch: La nueva contraseña y su confirmación no coinciden.
         no_controlling_terminal_for_secret: Este secreto solo puede mostrarse en un
           terminal y no hay ninguno conectado. Vuelve a ejecutar el comando desde
           una sesión interactiva.
         non_interactive_secret_required: Se requiere un secreto pero no hay una terminal
-          interactiva; usa --secrets-stdin.
+          interactiva; use --secrets-stdin o --secrets-fd.
         secrets_channel_conflict: No se puede especificar --secrets-stdin y --secrets-fd
           a la vez.
         secrets_fd_invalid_json: 'El contenido de secretos de máquina no es un objeto
@@ -2697,10 +2698,6 @@ cli:
     try_for_help: Pruebe [blue]'{command_path} {help_option}'[/] para obtener ayuda.
     usage_prefix: 'Uso: '
   ledger:
-    participation:
-      help: Audita qué revisiones finalizadas de modelos y presentaciones consumieron una transacción del libro.
-      rebuild_help: Reconstruye el índice de participación del bucket activo.
-      transaction_id_help: Id de la transacción del libro cuyas participaciones en revisiones finalizadas se listan.
     add:
       actor_help: Nombre del operador registrado en el evento del bucket
       amount_help: Importe de la transacción en la moneda de la transacción (decimal,
@@ -3167,6 +3164,12 @@ cli:
       help: Fusiona de nuevo transacciones hijas divididas
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la fusión de las transacciones hijas
+    participation:
+      help: Audita qué revisiones finalizadas de modelos y presentaciones consumieron
+        una transacción del libro.
+      rebuild_help: Reconstruye el índice de participación del bucket activo.
+      transaction_id_help: Id de la transacción del libro cuyas participaciones en
+        revisiones finalizadas se listan.
     preflight:
       empty_ledger_advisory: No se comprobó ningún movimiento activo del libro para
         este período.

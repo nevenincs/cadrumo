@@ -688,12 +688,12 @@ cli:
           factura_emitida: factura emesa
           factura_recibida: factura rebuda
           gasto193_contribuyente: contribuent de la relació de despeses
+          inventario: inventari d’existències
           miembro_atribucion: membre d'atribució de rendes
           operacion_reembolso: operació de reemborsament
           operacion_vinculada: operació vinculada
           registro_retenciones: registre de retencions
           regularizacion_bienes_inversion: regularització de béns d’inversió
-          inventario: inventari d’existències
           regularizacion_prorrata: regularització de prorrata
           retencion: retenció
           withholding296_perceptor: perceptor de la declaració de retencions
@@ -1748,13 +1748,14 @@ cli:
         de recuperació en clar i no la pot tornar a mostrar.
       errors:
         echo_suppression_unavailable: Aquest terminal no pot ocultar el que s'escriu,
-          de manera que el secret quedaria visible a la pantalla; utilitzeu --secrets-stdin.
+          de manera que el secret quedaria visible a la pantalla; utilitzeu --secrets-stdin
+          o --secrets-fd.
         new_passphrase_mismatch: La nova contrasenya i la confirmació no coincideixen.
         no_controlling_terminal_for_secret: Aquest secret només es pot mostrar en
           un terminal i no n'hi ha cap de connectat. Torna a executar l'ordre des
           d'una sessió interactiva.
         non_interactive_secret_required: Cal un secret però no hi ha cap terminal
-          interactiu; utilitza --secrets-stdin.
+          interactiu; utilitzeu --secrets-stdin o --secrets-fd.
         secrets_channel_conflict: No es pot especificar --secrets-stdin i --secrets-fd
           alhora.
         secrets_fd_invalid_json: 'El contingut de secrets de màquina no és un objecte
@@ -2669,10 +2670,6 @@ cli:
     try_for_help: Proveu [blue]'{command_path} {help_option}'[/] per obtenir ajuda.
     usage_prefix: 'Ús: '
   ledger:
-    participation:
-      help: Audita quines revisions finalitzades de models i presentacions van consumir una transacció del llibre.
-      rebuild_help: Reconstrueix l'índex de participació del bucket actiu.
-      transaction_id_help: Id de la transacció del llibre les participacions de la qual en revisions finalitzades es llisten.
     add:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       amount_help: Import de la transacció en la moneda de la transacció (decimal,
@@ -3138,6 +3135,12 @@ cli:
       help: Fusiona de nou transaccions filles dividides
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma la fusió de les transaccions filles
+    participation:
+      help: Audita quines revisions finalitzades de models i presentacions van consumir
+        una transacció del llibre.
+      rebuild_help: Reconstrueix l'índex de participació del bucket actiu.
+      transaction_id_help: Id de la transacció del llibre les participacions de la
+        qual en revisions finalitzades es llisten.
     preflight:
       empty_ledger_advisory: No s ha comprovat cap moviment actiu del llibre per a
         aquest període.

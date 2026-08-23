@@ -711,6 +711,121 @@ modelo:
               help: null
               label: Balance consolidado. Patrimonio neto y pasivo. Fondo de reserva
                 obligatorio de cooperativas
+            x-agp34c1g6d130c9q60o32d9j:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Pasivos financieros
+                mantenidos para negociar
+            x-agp34c1g6d130c9q60o32d9k:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Derivados
+            x-agp34c1g6d130c9q60o32d9l:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Posiciones cortas
+            x-agp34c1g6d130c9q60o32d9m:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Depositos
+            x-agp34c1g6d130c9q60o32d9n:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Depositos. Bancos
+                centrales
+            x-agp34c1g6d130c9q60o32d9o:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Depositos. Entidades
+                de credito
+            x-agp34c1g6d130c9q60o32d9p:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Depositos. Clientela
+            x-agp34c1g6d130c9q60o32dhg:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Valores representativos
+                de deuda emitidos
+            x-agp34c1g6d130c9q60o32dhh:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Otros pasivos
+                financieros
+            x-agp34c1g6d130c9q60o32dhi:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Pasivos financieros
+                designados a valor razonable con cambios en resultados
+            x-agp34c1g6d130c9q60o32dhj:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Depositos
+            x-agp34c1g6d130c9q60o32dhk:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Depositos. Bancos
+                centrales
+            x-agp34c1g6d130c9q60o32dhl:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Depositos. Entidades
+                de credito
+            x-agp34c1g6d130c9q60o32dhm:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Depositos. Clientela
+            x-agp34c1g6d130c9q60o32dhn:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Valores representativos
+                de deuda emitidos
+            x-agp34c1g6d130c9q60o32dho:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Otros pasivos
+                financieros
+            x-agp34c1g6d130c9q60o32dhp:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Pasivos financieros
+                a coste amortizado
+            x-agp34c1g6d130c9q60o32dpg:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Depositos
+            x-agp34c1g6d130c9q60o32dph:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Depositos. Bancos
+                centrales
+            x-agp34c1g6d130c9q60o32dpi:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Depositos. Entidades
+                de credito
+            x-agp34c1g6d130c9q60o32dpj:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Depositos. Clientela
+            x-agp34c1g6d130c9q60o32dpk:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Valores representativos
+                de deuda emitidos
+            x-agp34c1g6d130c9q60o32dpl:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Otros pasivos
+                financieros
+            x-agp34c1g6d130c9q60o32dpm:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Derivados - contabilidad
+                de coberturas
+            x-agp34c1g6d130c9q60o32dpn:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Cambios del valor
+                razonable de los elementos cubiertos de una cartera con cobertura
+                del riesgo de tipo de interes
+            x-agp34c1g6d130c9q60o32dpo:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Pasivos amparados
+                por contratos de seguro o reaseguro
+            x-agp34c1g6d130c9q60o32dpp:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Provisiones
+            x-agp34c1g6d130c9q60o32e1g:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Pensiones y otras
+                obligaciones de prestaciones definidas post-empleo
+            x-agp34c1g6d130c9q60o32e1h:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Otras retribuciones
+                a los empleados a largo plazo
+            x-agp34c1g6d130c9q60o32e1i:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Cuestiones procesales
+                y litigios por impuestos pendientes
+            x-agp34c1g6d130c9q60o32e1j:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Compromisos y
+                garantias concedidos
+            x-agp34c1g6d130c9q60o32e1k:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Restantes provisiones
+            x-agp34c1g6d130c9q60o32e1l:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Pasivos por impuestos
+            x-agp34c1g6d130c9q60o32e1m:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Pasivos por impuestos
+                corrientes
+            x-agp34c1g6d130c9q60o32e1n:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Pasivos por impuestos
+                diferidos
+            x-agp34c1g6d130c9q60o32e1o:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Capital social
+                reembolsable a la vista
+            x-agp34c1g6d130c9q60o32e1p:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Otros pasivos
+            x-agp34c1g6d130c9q60o32e9g:
+              label: 'Balance consolidado. Pasivo (pag. 3B hoja 01). De los cuales:
+                fondo de la obra social (solo cajas de ahorros y cooperativas de credito)'
+            x-agp34c1g6d130c9q60o32e9h:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Pasivos incluidos
+                en grupos enajenables de elementos que se han clasificado como mantenidos
+                para la venta
+            x-agp34c1g6d130c9q60o32e9i:
+              label: Balance consolidado. Pasivo (pag. 3B hoja 01). Total pasivo
+            x-agp34c1g6d130c9q60o3ed9m:
+              label: 'Balance consolidado. Pasivo (pag. 3B hoja 01). Pro memoria:
+                pasivos subordinados'
+            x-agp34c1g6d130c9q60o3ed9n:
+              label: 'Balance consolidado. Pasivo (pag. 3B hoja 01). Pro memoria:
+                pasivos subordinados'
             x-agp34c1g6d130chq60o32d1l:
               help: null
               label: Balance consolidado. Activo (pag. 3B hoja 02). Inmovilizado intangible

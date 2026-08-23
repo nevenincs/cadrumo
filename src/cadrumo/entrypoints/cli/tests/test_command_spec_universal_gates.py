@@ -59,13 +59,45 @@ def _assert_no_forbidden_authority(
     tree = ast.parse(source)
     aliases = {name: name for name in ("Typer", "Option", "Argument", "CommandSpec")}
     typer_modules = {"typer"}
+    command_spec_modules: set[str] = set()
     for item in ast.walk(tree):
         if isinstance(item, ast.Import):
             typer_modules.update(alias.asname or alias.name for alias in item.names if alias.name == "typer")
+            command_spec_modules.update(
+                alias.asname or alias.name for alias in item.names if alias.name.endswith("._command_spec")
+            )
         if isinstance(item, ast.ImportFrom):
             for alias in item.names:
                 if alias.name in aliases:
                     aliases[alias.asname or alias.name] = alias.name
+    changed = True
+    while changed:
+        changed = False
+        for item in tree.body:
+            if isinstance(item, ast.Assign) and len(item.targets) == 1:
+                target, value = item.targets[0], item.value
+            elif isinstance(item, ast.AnnAssign) and item.value is not None:
+                target, value = item.target, item.value
+            else:
+                continue
+            if not isinstance(target, ast.Name) or target.id in aliases:
+                continue
+            canonical: str | None = None
+            if isinstance(value, ast.Name):
+                canonical = aliases.get(value.id)
+            elif isinstance(value, ast.Attribute):
+                structural_bound_method = value.attr in {"command", "callback", "add_command", "add_typer"}
+                if structural_bound_method or (isinstance(value.value, ast.Name) and value.value.id in typer_modules):
+                    canonical = value.attr
+                elif (
+                    value.attr == "CommandSpec"
+                    and isinstance(value.value, ast.Name)
+                    and value.value.id in command_spec_modules
+                ):
+                    canonical = "CommandSpec"
+            if canonical is not None:
+                aliases[target.id] = canonical
+                changed = True
     allowed_spec_calls: set[int] = set()
     allowed_factories: set[str] = set()
     if spec_declaration:
@@ -82,6 +114,13 @@ def _assert_no_forbidden_authority(
                 and target.id.endswith(("_COMMAND_SPEC", "_COMMAND_SPECS"))
                 for target in targets
             ):
+                direct = (
+                    (value,)
+                    if isinstance(value, ast.Call)
+                    else value.elts
+                    if isinstance(value, (ast.Tuple, ast.List))
+                    else ()
+                )
                 allowed_factories.update(
                     child.func.id
                     for child in ast.walk(value)
@@ -89,20 +128,29 @@ def _assert_no_forbidden_authority(
                 )
                 allowed_spec_calls.update(
                     id(child)
-                    for child in ast.walk(value)
+                    for child in direct
                     if isinstance(child, ast.Call)
                     and isinstance(child.func, ast.Name)
                     and aliases.get(child.func.id, child.func.id) == "CommandSpec"
                 )
         for item in tree.body:
             if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and item.name in allowed_factories:
-                allowed_spec_calls.update(
-                    id(child)
-                    for child in ast.walk(item)
-                    if isinstance(child, ast.Call)
-                    and isinstance(child.func, ast.Name)
-                    and aliases.get(child.func.id, child.func.id) == "CommandSpec"
-                )
+                for returned in (child for child in ast.walk(item) if isinstance(child, ast.Return)):
+                    value = returned.value
+                    direct = (
+                        (value,)
+                        if isinstance(value, ast.Call)
+                        else value.elts
+                        if isinstance(value, (ast.Tuple, ast.List))
+                        else ()
+                    )
+                    allowed_spec_calls.update(
+                        id(child)
+                        for child in direct
+                        if isinstance(child, ast.Call)
+                        and isinstance(child.func, ast.Name)
+                        and aliases.get(child.func.id, child.func.id) == "CommandSpec"
+                    )
     forbidden_modules = {
         "cadrumo.entrypoints.cli._app_lazy_registration",
         "cadrumo.entrypoints.cli._app_lazy_families",
@@ -131,11 +179,27 @@ def _assert_no_forbidden_authority(
                 and node.func.value.id in typer_modules
             ):
                 canonical_name = node.func.attr
+            elif (
+                isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id in command_spec_modules
+                and node.func.attr == "CommandSpec"
+            ):
+                canonical_name = "CommandSpec"
             assert name not in forbidden_calls
             if not runtime_projection:
-                assert canonical_name not in {"Typer", "Option", "Argument", "add_command"}
+                assert canonical_name not in {
+                    "Typer",
+                    "Option",
+                    "Argument",
+                    "add_command",
+                    "add_typer",
+                }
+                assert not (canonical_name in {"command", "callback"} and name in aliases)
                 if isinstance(node.func, ast.Call) and isinstance(node.func.func, ast.Attribute):
                     assert node.func.func.attr not in {"command", "callback"}
+                if isinstance(node.func, ast.Call) and isinstance(node.func.func, ast.Name):
+                    assert aliases.get(node.func.func.id) not in {"command", "callback"}
             if canonical_name == "CommandSpec":
                 assert id(node) in allowed_spec_calls
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -163,23 +227,20 @@ def _assert_no_forbidden_authority(
             route_names = {
                 name
                 for name in names
-                if name == "ROUTES" or name.endswith(("_PATHS", "_ALIASES", "_PATH_MAP", "_ROUTES"))
+                if name in {"ROUTE", "ROUTES", "ROUTE_MAP", "PATH_MAP", "ALIAS_MAP"}
+                or name.endswith(
+                    ("_PATH", "_PATHS", "_ALIAS", "_ALIASES", "_PATH_MAP", "_ROUTE", "_ROUTES", "_ROUTE_MAP")
+                )
             }
-            if route_names:
+            if route_names and value is not None:
                 for mapping in (child for child in ast.walk(value) if isinstance(child, ast.Dict)):
-                    for key, mapped in zip(mapping.keys, mapping.values, strict=True):
-                        path_key = (
-                            isinstance(key, ast.Constant)
-                            and isinstance(key.value, str)
-                            and any(
-                                token in key.value.split() for token in ("aeat", "app", "config", "modelo", "ledger")
-                            )
-                        ) or (
+                    for key, _mapped in zip(mapping.keys, mapping.values, strict=True):
+                        path_key = (isinstance(key, ast.Constant) and isinstance(key.value, str)) or (
                             isinstance(key, ast.Tuple)
                             and key.elts
                             and all(isinstance(item, ast.Constant) and isinstance(item.value, str) for item in key.elts)
                         )
-                        assert not (path_key and isinstance(mapped, (ast.Name, ast.Attribute, ast.Lambda)))
+                        assert not path_key
         elif isinstance(node, ast.Constant) and isinstance(node.value, str):
             assert not node.value.endswith(("app_lazy_manifest.v1.json", "command_registration_metadata.v1.json"))
 
@@ -455,8 +516,44 @@ RESOURCE = 'command_registration_metadata.v1.json'
         "app.callback()(handler)",
         "ROUTES = {('app', 'x'): handler}",
         "ROUTES = [{'app x': handler}]",
+        "ROUTES = {'app x': DeferredTarget('x', 'y')}",
+        "ROUTES = {'app x': 'x:y'}",
+        "ROUTES = {'app.live.portals.list': handler}",
+        "ROUTE_MAP = {'app live': handler}",
+        "ROUTES = {'overview.status': handler}",
+        "PATH_MAP = {'registry.inspect': handler}",
+        "ALIAS_MAP = {'status': handler}",
         "ROGUE = CommandSpec(key='rogue')",
         "from x import CommandSpec as CS\nrogue = CS(key='rogue')",
+        "from typer import Typer\nmaker = Typer\napp = maker()",
+        "import typer\nmaker = typer.Typer\napp = maker()",
+        "from typer import Typer\nmaker: object = Typer\napp = maker()",
+        "decorate = app.command\ndecorate()(handler)",
+        "attach = app.add_command\nattach(handler)",
+        "from x import CommandSpec\nCS2 = CommandSpec\nrogue = CS2(key='rogue')",
+        "import cadrumo.entrypoints.cli._command_spec as cs\nmaker = cs.CommandSpec\nrogue = maker(key='rogue')",
     ):
         with pytest.raises(AssertionError):
             _assert_no_forbidden_authority(former_authority)
+    dead_factory = """
+from x import CommandSpec
+def helper():
+    rogue = CommandSpec(key='rogue')
+    return ()
+REAL_COMMAND_SPECS = (*helper(),)
+"""
+    with pytest.raises(AssertionError):
+        _assert_no_forbidden_authority(dead_factory, spec_declaration=True)
+    for dead_return in (
+        "return CommandSpec(key='rogue') if False else ()",
+        "return (CommandSpec(key='rogue'),)[1:]",
+    ):
+        source = f"from x import CommandSpec\ndef helper():\n    {dead_return}\nREAL_COMMAND_SPECS = (*helper(),)"
+        with pytest.raises(AssertionError):
+            _assert_no_forbidden_authority(source, spec_declaration=True)
+    for dead_export in (
+        "REAL_COMMAND_SPECS = CommandSpec(key='rogue') if False else ()",
+        "REAL_COMMAND_SPECS = (CommandSpec(key='rogue'),)[1:]",
+    ):
+        with pytest.raises(AssertionError):
+            _assert_no_forbidden_authority(f"from x import CommandSpec\n{dead_export}", spec_declaration=True)

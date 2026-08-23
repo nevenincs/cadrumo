@@ -116,3 +116,74 @@ modelo:
                 title: null
           field:
             label: null
+        2026-y-siguientes:
+          casilla:
+            base_imponible:
+              label: Base imposable
+            base_imponible_directa_g:
+              label: Base imposable (210 G)
+            base_imponible_directa_i:
+              label: Base imposable (210 I)
+            base_imponible_ganancias_h:
+              label: Base imposable ([12]+[16]) (210 H)
+            coeficiente_imputacion_inmobiliaria:
+              label: Coeficient d'imputació immobiliària
+            convenio_indicador:
+              label: Conveni
+            cuota_diferencial:
+              label: Quota diferencial
+            cuota_integra:
+              label: Quota íntegra
+            cuota_integra_reducida:
+              label: Quota íntegra reduïda ([24]-[27])
+            cuota_ley_irnr:
+              label: Quota Llei IRNR ([22]-[23])
+            deduccion_donativos:
+              label: Deducció per donatius
+            dias_imputacion:
+              label: Dies d'imputació
+            exencion_dividendos:
+              label: Exempció aplicada dividends (límit anual 1.500 euros) (210 R)
+            exenciones_ley_irnr_indicador:
+              label: Exempcions Llei IRNR, excepte dividends (límit anual 1.500 euros)
+            ganancia_diferencia:
+              label: Adquisició. Diferència (210 H)
+            ganancia_importe:
+              label: Adquisició. Guany (210 H)
+            ganancia_valor_adquisicion:
+              label: Adquisició. Valor d'adquisició (actualitzat) (210 H)
+            ganancia_valor_transmision:
+              label: Adquisició. Valor de transmissió (210 H)
+            gastos_deducibles:
+              label: Despeses deduïbles
+            ingreso_devolucion_anterior:
+              label: Ingrés/Devolució anterior (exclusivament autoliquidació complementària)
+            limite_convenio:
+              label: Límit Conveni
+            mejora_diferencia:
+              label: Millora o 2a adquisició. Diferència (210 H)
+            mejora_ganancia:
+              label: Millora o 2a adquisició. Guany (210 H)
+            mejora_valor_adquisicion:
+              label: Millora o 2a adquisició. Valor d'adquisició (actualitzat) (210
+                H)
+            mejora_valor_transmision:
+              label: Millora o 2a adquisició. Valor de transmissió (210 H)
+            porcentaje_convenio:
+              label: Percentatge Conveni (%)
+            reduccion_convenio:
+              label: Reducció per Conveni ([24]-[26])
+            rendimientos_integros:
+              label: Rendiments íntegres
+            retencion_practicada:
+              label: Retenció practicada
+            tipo_gravamen:
+              label: Tipus de gravamen
+            tipo_renta:
+              label: Tipus de renda
+            valor_adquisicion:
+              label: Valor d'adquisició
+            valor_catastral:
+              label: Valor cadastral
+            valor_comprobado_administracion:
+              label: Valor comprovat per l'Administració
