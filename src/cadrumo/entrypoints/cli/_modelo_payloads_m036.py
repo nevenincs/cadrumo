@@ -2,7 +2,7 @@
 
 Split from :mod:`_modelo_payloads` to keep each module
 within the line budget. Each class is a strict
-:class:`OutputSchema` subclass registered through
+:class:`OutputSchema` subclass referenced through
 CommandSpec schema authority and re-exported through
 :mod:`_modelo_payloads` so the public ``--json``
 payload import surface is

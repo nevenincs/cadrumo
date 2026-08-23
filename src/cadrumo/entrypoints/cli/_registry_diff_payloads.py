@@ -27,7 +27,7 @@ See Also:
     :class:`~core.json_contract.OutputSchema`
         Strict base class for typed CLI JSON result payloads.
     Production-authored CommandSpec deferred schema target
-        Schema registry hook used by the JSON-contract tests.
+        Public schema target traversed by graph-derived JSON-contract tests.
 """
 
 from __future__ import annotations

@@ -6,7 +6,7 @@ return in plain language, then calls the same
 :mod:`~entrypoints.cli._modelo`'s ``work amend`` verb uses. This module documents the JSON
 transport shape only; the wizard's step-by-step prompting and amendment
 delegation live in :mod:`~entrypoints.cli._modelo_amend_wizard_cli`. Every payload here is an
-:class:`OutputSchema` subclass registered on the JSON-contract surface.
+:class:`OutputSchema` subclass referenced on the JSON-contract surface.
 """
 
 from __future__ import annotations

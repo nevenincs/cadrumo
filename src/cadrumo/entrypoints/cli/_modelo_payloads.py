@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for modelo command envelopes.
 
 Each command result is a strict
-:class:`OutputSchema` subclass registered by
+:class:`OutputSchema` subclass referenced by
 production-authored CommandSpec as deferred public schema targets for a stable command path
 and wrapped at emit time in
 :class:`SchemaEnvelope` through

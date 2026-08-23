@@ -1,6 +1,6 @@
 """Typed ``--json`` payload schemas for the ``aeat config provision`` verbs.
 
-Each class is a strict :class:`~core.json_contract.OutputSchema` registered with
+Each class is a strict :class:`~core.json_contract.OutputSchema` referenced by
 production-authored CommandSpec as deferred public schema targets, so the JSON-contract gate enumerates
 the surface. Diagnostics ride the shared envelope's typed ``notices`` channel;
 nothing here declares a bespoke ``advisory``, ``next`` or ``suggestion`` field,

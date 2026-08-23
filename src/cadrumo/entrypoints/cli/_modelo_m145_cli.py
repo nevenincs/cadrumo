@@ -19,7 +19,7 @@ See Also:
     :mod:`~entrypoints.cli._modelo_m145_rendering`
         Text/JSON envelope emitters for the registered commands.
     :mod:`~entrypoints.cli._modelo_payloads_m145`
-        Typed JSON payload schemas registered for Modelo 145 CLI operations.
+        Typed JSON payload schemas declared for Modelo 145 CLI operations.
 """
 
 from __future__ import annotations

@@ -28,7 +28,7 @@ from ...application.registry import (
 from ...core.json_contract import OutputSchema
 
 # ---------------------------------------------------------------------------
-# Registered schemas
+# Graph-declared schema targets
 # ---------------------------------------------------------------------------
 
 

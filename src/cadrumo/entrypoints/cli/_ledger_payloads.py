@@ -442,7 +442,7 @@ class LedgerClassifyResult(OutputRootSchema[LedgerClassifySingleResult | LedgerC
     ``--file``: the single-transaction mutation quintet
     (:class:`LedgerClassifySingleResult`) or the bulk row-count summary
     (:class:`LedgerClassifyBulkResult`). The JSON-schema conformance gate maps
-    exactly one registered schema per CLI leaf, so this discriminated root
+    exactly one graph-declared schema per CLI leaf, so this discriminated root
     validates either branch under the one ``ledger.classify`` command key;
     ``model_dump`` serialises the flat branch shape, not a wrapped root.
     """

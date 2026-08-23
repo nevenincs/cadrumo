@@ -8,7 +8,7 @@ established by :mod:`~entrypoints.cli._modelo_aux_payloads`,
 :mod:`~entrypoints.cli._modelo_work_revision_payloads`. Covers the
 ``modelo bindings list`` and ``modelo bindings resolve`` (preview) command
 envelopes. Every class declared here is a strict
-:class:`OutputSchema` subclass registered with
+:class:`OutputSchema` subclass referenced by
 production-authored CommandSpec as deferred public schema targets for the bindings-list and
 bindings-resolve command JSON-contract surface.
 

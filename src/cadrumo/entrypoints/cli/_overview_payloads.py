@@ -15,7 +15,7 @@ tuples on re-validation.
 The nested calendar payloads mirror the JSON form of
 :class:`OverviewCalendar`, :class:`OverviewCalendarEntry`,
 :class:`OverviewCalendarEvent`, and
-:class:`OverviewCalendarFilingEvidence`. Registered result schemas then wrap
+:class:`OverviewCalendarFilingEvidence`. Graph-declared result schemas then wrap
 those fragments, plus read models returned by
 :func:`build_overview_status_report`, :func:`build_overview_agenda`,
 :func:`build_overview_backlog`, and :func:`build_overview_explain`, for the
@@ -373,7 +373,7 @@ class OverviewCalendarProfilePayload(OutputSchema):
 
 
 # ---------------------------------------------------------------------------
-# Registered schemas
+# Graph-declared schema targets
 # ---------------------------------------------------------------------------
 
 

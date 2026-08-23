@@ -1,7 +1,7 @@
 """Typed payload schemas for modelo reconciliation and taxation comparison.
 
 Every declared payload is a
-:class:`OutputSchema` subclass registered with
+:class:`OutputSchema` subclass referenced by
 CommandSpec schema authority for the modelo
 reconciliation and taxation-comparison JSON-contract surface. The application
 facade remains authoritative for

@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for ledger rule commands.
 
 Every declared payload is an
-:class:`OutputSchema` subclass registered with
+:class:`OutputSchema` subclass referenced by
 production-authored CommandSpec as deferred public schema targets for the ledger rule
 command JSON-contract surface carried by
 :class:`SchemaEnvelope` through

@@ -136,7 +136,7 @@ class CalculationRevisionProjectionFields(OutputSchema):
     ``prompted_casillas``, …). Not itself a CommandSpec schema authority target: each
     concrete result subclasses this mixin and registers its own command
     path, so the shared fields stay declared once while each command keeps
-    its own strict, independently-registered schema.
+    its own strict, independently declared schema target.
     """
 
     calculation_revision_id: CalculationRevisionId

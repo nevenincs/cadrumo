@@ -1,7 +1,7 @@
 """Typed JSON payloads for the cross-period IVA prorrata register CLI.
 
 Each result model is a strict
-:class:`OutputSchema` subclass registered under a
+:class:`OutputSchema` subclass referenced as a deferred target under a
 stable ``command`` key so the ``_emit_envelope`` spine and the JSON-schema
 conformance gate bind the ``aeat app ledger prorrata`` leaves to a schema.
 

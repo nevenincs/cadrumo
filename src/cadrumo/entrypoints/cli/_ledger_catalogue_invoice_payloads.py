@@ -1,7 +1,7 @@
 """JSON-contract payloads for the ``aeat app ledger invoice`` verbs.
 
 Each payload is a strict
-:class:`OutputSchema` subclass registered with
+:class:`OutputSchema` subclass referenced by
 production-authored CommandSpec as deferred public schema targets on the shared
 :class:`SchemaEnvelope` surface through
 :func:`_emit_envelope`.

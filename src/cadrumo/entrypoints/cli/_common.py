@@ -12,7 +12,7 @@ ledger access, :class:`InvoiceCatalogue` and
 calculations.
 
 The output boundary is :func:`_emit_envelope`. It routes every JSON result
-through :class:`SchemaEnvelope`, requires a registered result schema, and
+through :class:`SchemaEnvelope`, requires a graph-declared result schema, and
 carries typed :class:`Notice` diagnostics while preserving the text line
 iterator unchanged.
 
@@ -823,7 +823,7 @@ def _current_operator_surface_input_schemas() -> tuple[
     """Collect the live result-schema and S05 input-schema projections.
 
     A key in :data:`~._verb_input_schema.DECLARED_UNIMPLEMENTED_SURFACES` carries
-    a registered result schema while its verb is knowingly absent, so the live
+    a graph-declared result schema while its verb is knowingly absent, so the live
     tree walk resolves no leaf for it and it takes part in no live
     reconciliation row. Those keys are dropped from BOTH projections here rather
     than half-dropped downstream; every OTHER divergence between the registry

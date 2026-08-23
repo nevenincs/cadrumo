@@ -1,8 +1,7 @@
 """Typed ``--json`` payload schema for ``aeat config profile complete-setup``.
 
-Referenced as deferred public schema targets by production-authored CommandSpec so the JSON-contract gate enumerates the
-surface, and kept beside its CLI module so importing that module runs the
-decorator on the CLI build path.
+Referenced as a deferred public schema target by production-authored CommandSpec
+so the JSON-contract gate enumerates the surface without import-time registration.
 
 The payload reports the promotion, never the facts: what an operator needs from
 this verb is whether the profile now carries the readiness CLAIM, and which

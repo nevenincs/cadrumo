@@ -4,7 +4,7 @@ This module wires filed-declaration commands through :func:`list_filed_data`,
 :func:`list_filed_data_bulk`, :func:`capture_filed_data`,
 :func:`capture_filed_data_bulk`, and :func:`capture_source_filed_data`; it also
 delegates IVA-wallet and subgroup command families to live application services.
-It emits registered payload schemas such as :class:`FiledListResult`,
+It emits graph-declared payload schemas such as :class:`FiledListResult`,
 :class:`FiledCaptureResult`, and :class:`FiledCaptureSourcesResult` through
 :func:`_emit_envelope`. The commands collect or render local evidence only; live
 submission, payment, acknowledgement, and representative write actions remain

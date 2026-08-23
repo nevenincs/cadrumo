@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for review CLI commands.
 
 Each class declared here is a strict
-:class:`OutputSchema` subclass decorated with
-production-authored CommandSpec as a deferred public schema target so the JSON-contract
+:class:`OutputSchema` subclass referenced by production-authored CommandSpec as
+a deferred public schema target so the JSON-contract
 test suite can enumerate every review-command surface. The typed result enters
 the shared :class:`SchemaEnvelope` through
 :func:`_emit_envelope`.

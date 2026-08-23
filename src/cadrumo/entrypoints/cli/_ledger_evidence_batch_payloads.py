@@ -1,6 +1,6 @@
 """Typed ``--json`` payload schemas for the ledger evidence batch run.
 
-Every model here is registered as an :class:`OutputSchema`, so the batch run's
+Every model here is referenced as an :class:`OutputSchema` deferred target, so the batch run's
 ``--json`` surface is introspectable from the same registry every other command's
 payload is, rather than being an untyped dict assembled at the emit site.
 
