@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:08a68c35f4774a90f67eefefd70277e83c0ec41660ba658cadc78a95187d22e2'
+body_hash: 'sha256:a8fc04e64440ff9a8d9ab77caa30cc1d930cec5b4352d0108c165074cccf5676'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -8226,3 +8226,34 @@ interactive desktop session -- an operator action, not a code gap. Two handovers
 other trees: `runbook_id` (harness) and the import-hygiene ratchet plus the five unreachable
 `dev/packaging` cases (their campaigns). The CLI secret-channel landing is mid-flight and owns
 the 44 `_config` failures.
+
+### Anti-tautology coverage of the storage persistence boundaries: clean
+
+The quality rule requires every persistence boundary to carry a roundtrip AND an anti-tautology
+proof -- corrupt the stored payload, reload, assert refusal or strict inequality -- because
+"if this ever passes with the boundary broken, every roundtrip in the suite is tautological".
+Never verified across this domain until now.
+
+45 roundtrip modules under `adapters/persistence/storage`. A keyword scan for the phrase
+"anti-tautology" reported 18 without one, which was the instrument being wrong rather than a
+finding: the rule demands a BEHAVIOUR, not a comment convention. `envelope/tests/test_envelope`
+carries `ValidationError`, `StorageValidationError`, `DecryptionError` and `ClassificationError`
+refusals without ever using the word.
+
+Re-run on behaviour -- roundtrip modules with no refusal assertion of any kind -- leaves three,
+and all three resolve:
+
+- `tests/test_sensitive_persistence_policy` is an AST policy scan, not a persistence boundary.
+- `bucket/tests/test_output_language_hint` DOES exercise corruption
+  (`invalid_file_falls_back_to_none`) and deliberately tolerates it. Correct for a cosmetic
+  output-language hint: a corrupt hint must not block an operator, and the tolerance is the
+  documented contract rather than a missing guard.
+- `sql/tests/test_archive_bundle_roundtrip` has no corruption case of its own, and does not need
+  one. The rule asks for a proof per boundary CLASS, and the `SecureObject` class is covered by
+  siblings that mutate stored rows and require `SecureObjectUnreadableError`
+  (`test_secure_object_absent_revision`, `test_secure_object_decode_order`) -- verified by
+  reading them, not inferred from their names.
+
+So every persistence boundary class in this domain has a real refusal proof behind it. Nothing
+to fix, and the negative result is worth recording because the naive scan says otherwise and
+would send the next reader after 18 phantom gaps.
