@@ -96,6 +96,13 @@ _UNGROUNDED_BASELINE: dict[str, int] = {
     "190": 70,
     "193": 52,
     "202": 13,
+    # Split at devengos from 2026 (AEAT record design "a partir del
+    # 01-01-2026"): the later half repeats the earlier half's casilla ids,
+    # un-reviewed. The split was a RECORD-LENGTH change -- Pagina 01 goes
+    # from 2700 declared positions to 4000 -- so no casilla moved and no
+    # sibling revision carries a continuidad_id to copy. Stamping would mean
+    # inventing a chain identity no source establishes.
+    "210": 34,
     "220": 2,
     "232": 46,
     "303": 6,

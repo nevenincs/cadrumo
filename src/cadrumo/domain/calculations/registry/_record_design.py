@@ -763,6 +763,104 @@ def _recover_coordinate_stutter_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(rebuilt.get(index, line) for index, line in enumerate(lines) if index not in dropped)
 
 
+#: A row whose three coordinate numbers were emitted ALONE on their own line,
+#: with the naturaleza and description following on the next: ``5 10 1`` then
+#: ``An C Indicador de pagina complementaria.``. Deliberately anchored end to
+#: end, so the line must be EXACTLY ordinal, position and length and nothing
+#: else -- a looser pattern that tolerated a trailing fragment was measured
+#: claiming forty lines on one design where two were real.
+_BARE_COORDINATE_TRIPLE_RE = re.compile(
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s*$",
+)
+
+#: How far past the naturaleza half the anchoring successor row may sit. The
+#: wrapped Contenido cell runs to three lines in the measured corpus.
+_BARE_COORDINATE_LOOKAHEAD = 6
+
+#: The half that follows it: naturaleza then description, no numbers of its own.
+_NATURALEZA_HEAD_RE = re.compile(
+    r"^\s*(?P<naturaleza>An|Num|N|A)\s+(?P<rest>\D\S*.*)$",
+)
+
+
+def _rejoin_bare_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Rebuild a row split between a bare coordinate line and its naturaleza half.
+
+    Modelo 200's ``17-200-orden-eha-1338-2010`` design emits the ``Indicador de
+    pagina complementaria`` row of its Pag. 21 and Pag. 22 records this way::
+
+        5 10 1
+        An C Indicador de pagina complementaria.
+        Blanco (No
+        complementaria) o
+        "C" (Complementaria)
+        6 11 1 A C Operaciones fusion, escision, canje valores - ...
+
+    Position 10 is then the ONLY hole on either record, and a record read with a
+    hole is skipped whole, so two sheets are lost to one split row.
+
+    ANCHORED ON THE SUCCESSOR, NOT THE PREDECESSOR, and that is forced rather
+    than chosen. On these pages the rows above -- ordinals 2, 3 and 4 -- are
+    emitted with their ordinal and position FUSED (``23 3 Num``, ``36 3 An``)
+    and are not recovered until record assembly, so at line-repair time the
+    nearest parsed row above is ordinal 1 and a backward check can never be
+    satisfied. The row BELOW is intact.
+
+    The over-determination is the same strength either way: the successor's
+    ordinal must be one more than the rebuilt row's AND its position must resume
+    exactly where the rebuilt row ends. Two independent facts, from a row read
+    without help, that must agree.
+
+    The intervening lines are the wrapped ``Contenido`` cell and are folded into
+    the description rather than dropped, so nothing AEAT printed is discarded.
+    """
+    parsed = tuple(_parse_pdf_row(line, index + 1) for index, line in enumerate(lines))
+
+    rebuilt: dict[int, str] = {}
+    consumed: set[int] = set()
+    for index, line in enumerate(lines):
+        if parsed[index] is not None or index + 1 >= len(lines):
+            continue
+        triple = _BARE_COORDINATE_TRIPLE_RE.match(line)
+        if triple is None or parsed[index + 1] is not None:
+            continue
+        head = _NATURALEZA_HEAD_RE.match(lines[index + 1])
+        if head is None:
+            continue
+        ordinal = triple.group("ordinal")
+        offset = int(triple.group("offset"))
+        length = int(triple.group("length"))
+
+        successor_index = None
+        for candidate in range(index + 2, min(index + 2 + _BARE_COORDINATE_LOOKAHEAD, len(lines))):
+            if parsed[candidate] is not None:
+                successor_index = candidate
+                break
+        if successor_index is None:
+            continue
+        successor = parsed[successor_index]
+        assert successor is not None
+        if successor.ordinal != str(int(ordinal) + 1) or successor.offset != offset + length:
+            continue
+
+        middle = " ".join(
+            lines[position].strip() for position in range(index + 2, successor_index)
+        )
+        rebuilt[index] = (
+            f"{ordinal} {offset} {length} {head.group('naturaleza')} "
+            f"{head.group('rest')} {middle}".rstrip()
+        )
+        consumed.update(range(index + 1, successor_index))
+
+    if not rebuilt:
+        return lines
+    return tuple(
+        rebuilt.get(index, line)
+        for index, line in enumerate(lines)
+        if index not in consumed
+    )
+
+
 #: A field row whose four tokens are complete but whose DESCRIPTION wrapped onto
 #: the next line. AEAT does this often enough to matter: modelo 202 writes
 #: ``15 80 1 Num`` and puts "Datos adicionales (3) - Cooperativa fiscalmente
@@ -1281,6 +1379,7 @@ def _read_with_reversed_column_repair(
     if not first.skipped:
         return first
     repaired_lines = _recover_coordinate_stutter_rows(
+        _rejoin_bare_coordinate_rows(
         _reattach_stranded_casilla_tags(
             _collapse_stuttered_row_prefix(
                 _join_wrapped_row_descriptions(
@@ -1289,6 +1388,7 @@ def _read_with_reversed_column_repair(
                     ),
                 ),
             ),
+        ),
         ),
     )
     try:
