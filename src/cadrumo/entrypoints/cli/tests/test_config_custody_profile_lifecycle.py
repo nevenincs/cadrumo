@@ -278,6 +278,66 @@ def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_pat
     assert "config.login.session_not_persisted" in shown.stdout
     assert passphrase not in _combined_output(shown)
 
+    for command in (("config", "profile", "validate", "custody"), ("config", "profile", "history", "custody")):
+        result = _run_cadrumo(
+            tmp_path,
+            ("--profile-secrets-stdin", *command),
+            extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
+            stdin_payload=json.dumps({"profile_passphrase": passphrase}),
+        )
+        assert result.returncode == 0, _combined_output(result)
+        assert passphrase not in _combined_output(result)
+
+
+def test_root_and_leaf_stdin_collision_refuses_before_fresh_tree_mutation(tmp_path: Path) -> None:
+    """Parsed cross-scope collision wins before profile lookup, reads, or setup writes."""
+    result = _run_cadrumo(
+        tmp_path,
+        ("--profile-secrets-stdin", "config", "passphrase", "change", "--secrets-stdin"),
+        stdin_payload="must-remain-unread",
+    )
+
+    output = _combined_output(result)
+    assert result.returncode == 2, output
+    assert "collision" in output.lower()
+    assert "json" not in output.lower()
+    assert not tmp_path.exists() or tuple(tmp_path.iterdir()) == ()
+
+
+def test_self_authenticating_leaf_refuses_root_source_unread(tmp_path: Path) -> None:
+    result = _run_cadrumo(
+        tmp_path,
+        ("--profile-secrets-stdin", "config", "passphrase", "change"),
+        stdin_payload="must-remain-unread",
+    )
+
+    output = _combined_output(result)
+    assert result.returncode == 2, output
+    assert "inapplicable" in output.lower()
+    assert "json" not in output.lower()
+
+
+@pytest.mark.os_keychain
+def test_valid_resumed_session_refuses_root_source_unread(tmp_path: Path) -> None:
+    _register_profile(tmp_path, "custody")
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    logged_in = _run_cadrumo(
+        tmp_path,
+        ("config", "login", "custody", "--secrets-stdin"),
+        stdin_payload=json.dumps({"passphrase": passphrase}),
+    )
+    assert logged_in.returncode == 0, _combined_output(logged_in)
+
+    refused = _run_cadrumo(
+        tmp_path,
+        ("--profile-secrets-stdin", "config", "profile", "show", "custody"),
+        stdin_payload="must-remain-unread",
+    )
+    output = _combined_output(refused)
+    assert refused.returncode == 2, output
+    assert "unused" in output.lower()
+    assert "json" not in output.lower()
+
 
 def test_passphrase_change_resolves_target_before_reading_machine_secrets(tmp_path: Path) -> None:
     """An absent active target refuses without parsing the supplied payload."""

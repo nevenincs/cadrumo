@@ -35,6 +35,7 @@ import functools
 import inspect
 import io
 import json
+import logging
 import sys
 from collections.abc import Callable, Generator, Mapping, Sequence
 from contextlib import contextmanager
@@ -56,11 +57,10 @@ from ...core.errors import (
     render_error_text,
 )
 from ...core.json_contract import Notice, ResolvedPreconditionAction
-from ...core.logging import get_logger
 from ...core.redaction import redact_for_cli_output
 from ...domain.user_profile import StoredProfileDriftError
 
-_log = get_logger(__name__)
+_log = logging.getLogger(__name__)
 
 _UNDER_TEST: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_under_test", default=False)
 #: Dotted identifier of the command whose callback is currently executing,

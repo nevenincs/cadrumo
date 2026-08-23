@@ -181,8 +181,18 @@ def _behavior_wrapper(spec: CommandSpec) -> Callable[..., object]:
     def invoke(*args: object, **kwargs: object) -> object:
         bound = signature.bind(*args, **kwargs)
         context_parameter = spec.invocation.context_parameter
+        if spec.kind == "group" and context_parameter is not None:
+            structural_context = bound.arguments.get(context_parameter)
+            if structural_context is None or not hasattr(structural_context, "find_root"):
+                raise TypeError("command invocation context has an invalid type")
+            if getattr(structural_context, "invoked_subcommand", None) is not None:
+                # Ancestor groups are structural only. Their terminal behavior
+                # must not be imported or executed while Click descends toward
+                # the fully parsed child authority.
+                return None
         if context_parameter is not None and (
-            spec.kind == "leaf" or (spec.kind == "group" and spec.invocation.invoke_without_command)
+            spec.kind == "leaf"
+            or (spec.kind == "group" and spec.invocation.terminal_behavior == "executable")
         ):
             from ._config._secure_input import clear_staged_machine_secret_payloads
             from ._profile_authentication_gate import preflight_parsed_leaf
@@ -190,11 +200,6 @@ def _behavior_wrapper(spec: CommandSpec) -> Callable[..., object]:
             context = bound.arguments.get(context_parameter)
             if context is None or not hasattr(context, "find_root"):
                 raise TypeError("command invocation context has an invalid type")
-            if spec.kind == "group" and getattr(context, "invoked_subcommand", None) is not None:
-                target = resolve_deferred_target(target_ref)
-                if not callable(target):
-                    raise TypeError(f"command target is not callable: {target_ref.identity!r}")
-                return cast(Callable[..., object], target)(**bound.arguments)
             try:
                 preflight_parsed_leaf(cast(typer.Context, context), spec=spec, arguments=bound.arguments)
                 target = resolve_deferred_target(target_ref)

@@ -254,7 +254,11 @@ PROFILE_COMMAND_SPECS = (
         "group",
         _key("cli.config.profile.descendiente.help"),
         None,
-        InvocationSpec(invoke_without_command=True, context_parameter="ctx"),
+        InvocationSpec(
+            invoke_without_command=True,
+            context_parameter="ctx",
+            terminal_behavior="executable",
+        ),
         (_LANGUAGE,),
         ENCRYPTED_READ,
         _handler("_descendiente", "descendiente_door"),

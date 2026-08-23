@@ -127,20 +127,31 @@ def preflight_parsed_leaf(
     if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK and root is not None:
         _refuse("profile_secrets_inapplicable")
     root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
+    from ...core.logging import resume_logging_configuration
+    from ._log_levels import LogLevel, apply_to_root_logger
+
+    log_level = root_state.get("log_level")
+    if isinstance(log_level, LogLevel):
+        resume_logging_configuration()
+        apply_to_root_logger(log_level)
     explicit_target = None
+    explicit_label = None
     if spec.profile_target_parameter is not None:
         raw_target = arguments.get(spec.profile_target_parameter)
         if isinstance(raw_target, str) and raw_target.strip():
             from ...application.user_profile import resolve_login_target
             pointer = resolve_login_target(raw_target)
             explicit_target = pointer.bucket_id
+            explicit_label = pointer.label
             root_state[_RESOLVED_PROFILE_TARGET_KEY] = pointer
     if explicit_target is None and posture is not ProfileAuthenticationPosture.NOT_APPLICABLE:
         profile_override = root_state.get("profile_override")
         if isinstance(profile_override, str):
             from ...application.user_profile import resolve_login_target
 
-            explicit_target = resolve_login_target(profile_override).bucket_id
+            pointer = resolve_login_target(profile_override)
+            explicit_target = pointer.bucket_id
+            explicit_label = pointer.label
             if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK:
                 bind_profile_target(ctx, bucket_id=explicit_target)
         else:
@@ -181,6 +192,7 @@ def preflight_parsed_leaf(
             spec=spec,
             arguments=arguments,
             target_bucket_id=explicit_target,
+            target_profile_label=explicit_label,
             command_path=node.path[1:],
             authenticate_root=authenticate,
         )
@@ -198,6 +210,7 @@ def preflight_parsed_leaf(
             spec=spec,
             arguments=arguments,
             target_bucket_id=explicit_target,
+            target_profile_label=explicit_label,
             command_path=node.path[1:],
             authenticate_root=authenticate,
         )

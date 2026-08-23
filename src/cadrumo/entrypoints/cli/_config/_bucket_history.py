@@ -38,7 +38,7 @@ def profile_history(
     from ....adapters.persistence.storage import secure_object_repository_for_bucket
     from .._config_bucket_history_payloads import BucketHistoryResult
 
-    profile_label, bucket_id = _resolve_profile_history_target(ctx, profile)
+    profile_label, bucket_id = _resolve_profile_history_target(profile, ctx=ctx)
     selected = _parse_bucket_event_types(event_type)
     since_dt = _parse_bucket_history_instant(since, flag="--since")
     until_dt = _parse_bucket_history_instant(until, flag="--until")
@@ -79,13 +79,17 @@ def profile_history(
     _emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
 
 
-def _resolve_profile_history_target(ctx: typer.Context, profile: str | None) -> tuple[str, str]:
+def _resolve_profile_history_target(
+    profile: str | None, *, ctx: typer.Context | None = None
+) -> tuple[str, str]:
     """Resolve an explicit profile token or the active profile for history reads."""
     from ....application.workflow import ProfileLabelAmbiguousError, resolve_profile_bucket
     from ....core import resolve_active_bucket_id
     from .._common import _no_active_profile_refusal
 
     if profile is not None:
+        if ctx is None:
+            raise RuntimeError("explicit profile history target requires parsed dispatch context")
         from .._profile_authentication_gate import resolved_command_profile_target
 
         pointer = resolved_command_profile_target(ctx)

@@ -222,13 +222,18 @@ def test_the_gate_reports_no_session_when_no_screen_was_shown(tmp_path) -> None:
     is exercised by the login screen's own tests plus the shared
     ``login_profile`` door, not simulated with a double.
     """
-    from ... import _authenticated_at_the_gate
+    from ..._profile_session_gate import authenticate_profile_for_manager
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _a_profile_exists()
         (only_choice,) = _login_choices()
 
-        assert _authenticated_at_the_gate(_context(output_format="text"), bucket_id=only_choice.profile_id) is False
+        assert (
+            authenticate_profile_for_manager(
+                _context(output_format="text"), bucket_id=only_choice.profile_id
+            )
+            is False
+        )
 
 
 def test_authenticated_profile_replaces_the_invocations_stale_storage_route(tmp_path) -> None:
@@ -240,7 +245,7 @@ def test_authenticated_profile_replaces_the_invocations_stale_storage_route(tmp_
     before parsing the named edit target.
     """
     from .....core.config import classify_storage_route, load_settings
-    from ... import _bind_authenticated_profile_to_invocation
+    from ..._profile_session_gate import bind_profile_target
     from .._manager_frontend import attempt_registration
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -253,7 +258,7 @@ def test_authenticated_profile_replaces_the_invocations_stale_storage_route(tmp_
         with override_settings(cadrumo_active_profile=first.outcome.bucket_id):
             ctx = _context(output_format="text")
             try:
-                _bind_authenticated_profile_to_invocation(ctx, bucket_id=second.outcome.bucket_id)
+                bind_profile_target(ctx, bucket_id=second.outcome.bucket_id)
                 settings = load_settings()
                 route = classify_storage_route(settings)
 

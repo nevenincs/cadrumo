@@ -51,6 +51,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             add_help_option=False,
             add_completion=True,
             context_parameter="ctx",
+            terminal_behavior="introspection",
         ),
         parameters=(
             OptionSpec(
@@ -170,6 +171,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             invoke_without_command=True,
             add_help_option=False,
             context_parameter="ctx",
+            terminal_behavior="introspection",
         ),
         parameters=(
             OptionSpec(
@@ -202,6 +204,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             add_help_option=False,
             add_completion=True,
             context_parameter="ctx",
+            terminal_behavior="introspection",
         ),
         parameters=(
             OptionSpec(

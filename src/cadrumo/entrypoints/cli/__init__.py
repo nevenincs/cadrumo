@@ -18,7 +18,7 @@ application functions and pydantic records.
 from __future__ import annotations
 
 import os
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -35,9 +35,8 @@ if TYPE_CHECKING:
     from ._command_schema import command_schema_refs as command_schema_refs
     from ._command_schema import command_schema_type as command_schema_type
     from ._command_schema import command_schema_types as command_schema_types
-    from ._command_spec import CommandSpec, ProfileAuthenticationPosture
+    from ._command_spec import CommandSpec
     from ._config._google import OAuthClientPayload as OAuthClientPayload
-    from ._config._secure_input import MachineSecretSelection, ProfileSecretSelection
     from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
     from ._verb_input_schema import cli_path_for_command_key as cli_path_for_command_key
 from ._stdio import _disable_rich_cli_rendering as _disable_rich_cli_rendering
@@ -58,7 +57,6 @@ _configure_stdio_for_utf8()
 _disable_rich_cli_rendering()
 
 from ...core import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
-from ...core import ProfileSessionRefusalReason as _ProfileSessionRefusalReason
 from ...core import StorageCategory as _StorageCategory
 from ...core import storage_location as _storage_location
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
@@ -68,18 +66,13 @@ from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
 from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 from ._common import (
-    RequestedCliLeaf,
     _emit_envelope,
     active_profile_label,
-    attach_cli_policy_refusal_projection,
     attach_cli_policy_verdict,
-    cli_policy_refusal_context,
     preserve_requested_cli_leaf,
-    project_cli_policy_refusal,
     requested_cli_leaf,
     resolve_cli_precondition_action,
 )
-from ._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._errors import decorate_typer_app as _decorate_typer_app
 from ._framework_localisation import (
     localise_help_section_headers as _localise_help_section_headers,
@@ -88,7 +81,6 @@ from ._framework_localisation import (
     localise_typer_parse_error_messages as _localise_typer_parse_error_messages,
 )
 from ._language_argv import apply_language_argv_to_environment as _apply_language_argv_to_environment
-from ._log_levels import apply_to_root_logger as _apply_to_root_logger
 from ._log_levels import resolve_log_level as _resolve_log_level
 from ._root_payloads import AppRootResult, RootStatusResult
 
@@ -128,9 +120,9 @@ def root_command(
         from ...core.config import override_settings
 
         ctx.with_resource(override_settings(cadrumo_output_language=language))
-    _apply_to_root_logger(_resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
     state = cast("dict[str, object]", ctx.ensure_object(dict))
     state["format"] = format_
+    state["log_level"] = _resolve_log_level(quiet=quiet, verbose=verbose, debug=debug)
     if version:
         _emit_version_report_and_exit(detail=detail)
     if help_:
@@ -177,23 +169,6 @@ def root_command(
     # Session activation runs from the graph-generated leaf wrapper after the
     # complete command has parsed, so root and leaf secret sources can be
     # preflighted together before either is consumed.
-
-
-def _ensure_storage_tree_for_invocation() -> None:
-    """Materialise the state tree, translating a refusal into an operator error.
-
-    The refusal carries the offending path, which is the whole of what the
-    operator needs: a directory occupied by a file, or a root that cannot be
-    created. Letting it escape as a traceback would bury that line under a
-    stack the operator cannot act on.
-    """
-    from ...core.config import ensure_storage_tree
-    from ...core.errors import CoreValidationError
-
-    try:
-        ensure_storage_tree()
-    except CoreValidationError as refusal:
-        raise typer.BadParameter(str(refusal)) from refusal
 
 
 def _emit_version_report_and_exit(*, detail: bool) -> None:
@@ -440,345 +415,10 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     ctx.with_resource(override_settings(cadrumo_active_profile=pointer.bucket_id))
 
 
-def _activate_active_bucket_session(
-    ctx: typer.Context,
-    *,
-    posture: ProfileAuthenticationPosture,
-    root_selection: ProfileSecretSelection | None,
-    leaf_selection: MachineSecretSelection | None,
-    spec: CommandSpec,
-    arguments: Mapping[str, object],
-    target_bucket_id: str | None = None,
-) -> None:
-    """Active-gate the CLI session against the bootstrap-exempt registry.
-
-    Three outcomes:
-
-    - Bootstrap-exempt verbs (``profile create``, ``profile import``,
-      ``config login`` / ``config logout``, ``config repair`` family) run
-      without a session — return early.
-    - No active profile resolves — return without opening a session.
-      Each non-exempt verb carries its own
-      ``resolve_active_bucket_id() is None`` guard that refuses with a
-      translated message; opening a session here against an absent
-      per-bucket database would pre-empt that cleaner per-verb refusal
-      and break the bare-invocation landing card.
-    - An active profile resolves — RESUME its persisted login session so
-      the verb body can decrypt stored records, or refuse instructively.
-
-    The session is resumed, never implicitly unlocked. This callback used
-    to enter the master-key provider directly, which on the file backend
-    prompted for (or read) the passphrase on EVERY command and on the
-    keyring backend unlocked silently with no authentication gate at all.
-    Authentication is now a deliberate act — ``aeat config login`` — and
-    every other verb either resumes that login's still-valid session or
-    refuses, naming the verb that fixes it.
-
-    The per-verb guards remain the primary refusal surface. This root
-    callback adds one fail-closed guard before the verb body: a callback whose
-    attached execution policy declares ``profile-bound`` may not proceed when
-    settings route the primary SQL store to the root fallback database. The
-    selected live callback is resolved by canonical path; no parallel path
-    catalogue or mutation-name heuristic participates.
-    ``_full_invocation_verb_path`` returns ``None`` for in-process test
-    runner invocations (``sys.argv[0]`` is not the ``aeat`` console
-    script). In that case we fall back to
-    :func:`_verb_path_from_context`, which reconstructs the verb chain
-    from the typer/click context so the bootstrap-exemption gate sees
-    the same verb path it would on a real ``aeat`` invocation — without
-    this fallback an in-process invocation would be misclassified as
-    bare and the session would never open.
-    """
-    from ...adapters.persistence.storage import active_bucket_session_serves
-    from ...core import resolve_active_bucket_id
-    from ._command_spec import ProfileAuthenticationPosture
-
-    node = next(node for node in _COMMAND_GRAPH.nodes() if node.spec.key == spec.key)
-    leaf = RequestedCliLeaf(
-        subject_leaf_key=spec.result_schema.identity or spec.key,
-        canonical_cli_path=node.path[1:],
-    )
-    execution_policy = _execution_policy_from_spec(spec)
-    if execution_policy.write_route == "profile-bound":
-        from ...application.storage_write_policy import inspect_storage_write_policy
-
-        write_policy = inspect_storage_write_policy(execution_policy.write_route)
-    else:
-        write_policy = None
-    if write_policy is not None and not write_policy.allowed:
-        if write_policy.verdict is None:
-            raise RuntimeError("root write-policy refusal is missing its requested leaf or verdict")
-        projection = project_cli_policy_refusal(
-            requested_leaf=leaf,
-            verdict=write_policy.verdict,
-        )
-        raise attach_cli_policy_refusal_projection(
-            _CliRefusedBoundaryError(
-                write_policy.render_refusal_message(),
-                context=cli_policy_refusal_context(projection),
-            ),
-            projection=projection,
-        )
-    active_bucket_id = target_bucket_id or resolve_active_bucket_id()
-    if active_bucket_id is None:
-        # No active profile: each non-exempt verb refuses for itself
-        # with a translated message (see the per-verb
-        # ``resolve_active_bucket_id() is None`` guards). Returning here
-        # avoids opening a session against an absent per-bucket
-        # database and keeps the bare-invocation landing card path
-        # (handled by the caller) intact. Bootstrap-exempt verbs also
-        # return — they run cleanly with no profile by design.
-        return
-    # Bootstrap verbs establish their own storage span after dispatch.  They
-    # must leave before even the wizard-catalogue registration below: loading
-    # that application path can resolve profile-bound runtime collaborators
-    # while the selected bucket is deliberately locked.
-    if posture is ProfileAuthenticationPosture.NOT_APPLICABLE:
-        return
-    if posture is ProfileAuthenticationPosture.SELF_AUTHENTICATING:
-        return
-    _register_wizard_catalogue_for_profile_keys()
-    # A session bound to another bucket does not serve this verb's profile;
-    # returning on its presence skips the resume and runs against the wrong one.
-    if active_bucket_session_serves(active_bucket_id):
-        if root_selection is not None:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.custody.errors.profile_secrets_unused"
-            )
-        if target_bucket_id is not None:
-            _bind_authenticated_profile_to_invocation(ctx, bucket_id=target_bucket_id)
-        return
-    _resume_profile_session_or_refuse(
-        ctx,
-        active_bucket_id,
-        root_selection=root_selection,
-        leaf_selection=leaf_selection,
-        spec=spec,
-        arguments=arguments,
-        bind_exact_target=target_bucket_id is not None,
-    )
-    # The active profile's encrypted record is only decryptable once the
-    # bucket session above is open. ``output_language()`` is cached, and
-    # its cache key (env vars + `.env` mtime) does not vary when a
-    # session opens — so any `tr()` fired during module import or the
-    # root callback cached the settings-default language before the
-    # profile preference was readable. Drop the cache here so the verb
-    # body re-resolves through the now-readable profile preference.
-    from ...core.i18n import clear_output_language_cache
-
-    clear_output_language_cache()
 
 
-#: Persisted-session refusal reasons that mean "this operator never logged
-#: in", as opposed to "a login existed and has since lapsed". The two get
-#: different operator copy: one is an instruction, the other is news.
-#: Held as enum members rather than their string values so a future rename
-#: cannot silently drop a reason out of this set and flip an operator from
-#: "you are not logged in" to "your session expired".
-_LOGGED_OUT_REFUSALS: frozenset[_ProfileSessionRefusalReason] = frozenset(
-    {
-        _ProfileSessionRefusalReason.ABSENT,
-        _ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING,
-    },
-)
 
 
-def _resume_profile_session_or_refuse(
-    ctx: typer.Context,
-    bucket_id: str,
-    *,
-    root_selection: ProfileSecretSelection | None = None,
-    leaf_selection: MachineSecretSelection | None = None,
-    spec: CommandSpec | None = None,
-    arguments: Mapping[str, object] | None = None,
-    exact_target: bool = False,
-    bind_exact_target: bool = False,
-) -> None:
-    """Resume the persisted login session, or refuse naming ``aeat config login``.
-
-    Fail-closed: the application resume authority deletes stale artefacts
-    and reports a typed reason, and this callback opens nothing on any
-    refusal branch. The refusal is a BLOCKING failure, so it raises and
-    renders through the stderr error document (which shares the envelope
-    spine and carries the next-verb ``suggestion``) rather than riding the
-    non-blocking ``notices`` channel.
-
-    An interactive operator logs in HERE, on the screen this callback
-    offers, rather than being sent away to run ``login`` and then retype
-    the invocation that was already parsed. Both shapes ask for the same
-    single passphrase; only one of them costs two extra commands. Every
-    caller that cannot be shown a screen — JSON, piped, CI, dumb terminal
-    — and every operator who leaves the screen without unlocking falls
-    through to the refusals below unchanged.
-    """
-    from ...adapters.persistence.storage.errors import KeyringUnavailableError
-    from ...application.profile_preconditions import profile_session_failure_verdict
-    from ...application.user_profile import bind_resumed_profile_session
-    from ._errors import CliRefusedBoundaryError
-
-    refusal = bind_resumed_profile_session(bucket_id=bucket_id)
-    if refusal is None:
-        if root_selection is not None:
-            raise CliRefusedBoundaryError(
-                translated_message="cli.config.custody.errors.profile_secrets_unused"
-            )
-        if bind_exact_target:
-            _bind_authenticated_profile_to_invocation(ctx, bucket_id=bucket_id)
-        return
-    if root_selection is not None:
-        from ._command_spec import CommandSpec
-        from ._config._secure_input import ProfileSecretSelection
-        from ._profile_authentication_gate import consume_root_fallback
-
-        if not isinstance(root_selection, ProfileSecretSelection):
-            raise TypeError("root profile-secret selection has an invalid type")
-        if not isinstance(spec, CommandSpec) or arguments is None:
-            if exact_target:
-                leaf = requested_cli_leaf(ctx)
-                if leaf is None:
-                    raise RuntimeError("explicit profile target has no parsed leaf")
-                spec = _COMMAND_GRAPH.resolve_path(("aeat", *leaf.canonical_cli_path))
-                arguments = {}
-            else:
-                raise TypeError("root fallback is missing parsed command authority")
-        consume_root_fallback(
-            ctx,
-            bucket_id=bucket_id,
-            root=root_selection,
-            leaf=leaf_selection,
-            spec=spec,
-            arguments=arguments,
-        )
-        return
-    if refusal is _ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
-        # A real process-scoped login is possible only when the explicit
-        # password path is invoked by the operator.  Never treat a broken
-        # acceleration keychain as permission to revive a provider/master-key
-        # route or discard its receipt evidence.
-        raise KeyringUnavailableError("OS keychain is unavailable for profile-session acceleration")
-    if _authenticated_at_the_gate(ctx, bucket_id=bucket_id):
-        return
-    # Session state is keyed by the opaque bucket UUID, but the recovery
-    # command is addressed by the operator-facing profile label.  Keep those
-    # identities separate: projecting the storage UUID as ``config login``'s
-    # argument makes the typed action both privacy-redacted and non-executable.
-    verdict = profile_session_failure_verdict(
-        refusal,
-        profile_name=active_profile_label() or bucket_id,
-    )
-    if refusal in _LOGGED_OUT_REFUSALS:
-        error = CliRefusedBoundaryError(
-            translated_message="cli.config.errors.profile_session_absent",
-            context={"reason": refusal.value},
-        )
-    else:
-        error = CliRefusedBoundaryError(
-            translated_message="cli.config.errors.profile_session_expired",
-            context={"reason": refusal.value},
-        )
-    raise attach_cli_policy_verdict(
-        error,
-        verdict=verdict,
-        requested_leaf=requested_cli_leaf(ctx),
-    )
-
-
-def _authenticated_at_the_gate(ctx: typer.Context, *, bucket_id: str) -> bool:
-    """Offer the login screen to a gated verb; report whether a session is open.
-
-    ``False`` means the verb must still refuse — no screen could be shown,
-    the operator left without unlocking, or the session did not survive
-    into this context. The caller then raises exactly the refusal it would
-    have raised without this step, so the gate can only ever remove a
-    round trip, never admit an unauthenticated verb.
-
-    Two things have to happen after the screen closes, and neither is
-    optional:
-
-    The session is re-resumed rather than assumed. Textual runs the unlock
-    in an asyncio task, and a ``ContextVar`` bound inside that child task
-    does not flow back into this synchronous context — so the login is
-    real and persisted, but the in-process session this callback is
-    supposed to leave open is not yet bound here. Re-resuming through the
-    same authority binds it. (``_manager_dispatch`` learned this on the
-    registration screen and does the same thing for the same reason.)
-
-    The active profile is re-pointed when the operator picked a different
-    one. By the time this runs, ``_resolve_active_profile_pointer`` has
-    already pinned ``cadrumo_active_profile`` to whoever was selected
-    BEFORE the screen opened. Left alone, a verb would then run against
-    the old profile holding the new profile's session — the wrong-taxpayer
-    shape this whole surface exists to avoid. The override is re-applied
-    to whatever was actually authenticated, so the verb and the session
-    always name the same profile.
-    """
-    from ...application.user_profile import bind_resumed_profile_session
-    from ._config._login_frontend import offer_login_to_a_gated_verb
-
-    outcome = offer_login_to_a_gated_verb(ctx, bucket_id=bucket_id)
-    if outcome is None:
-        return False
-    if outcome.bucket_id != bucket_id:
-        return False
-    _bind_authenticated_profile_to_invocation(ctx, bucket_id=outcome.bucket_id)
-    return bind_resumed_profile_session(bucket_id=outcome.bucket_id) is None
-
-
-def _bind_authenticated_profile_to_invocation(ctx: typer.Context, *, bucket_id: str) -> None:
-    """Make the authenticated profile the current invocation's storage route.
-
-    The requested gate target is not the previous effective settings profile:
-    ``profile edit B`` can request and authenticate B while the root callback
-    still carries an override for A.  Binding only when the outcome differs
-    from the requested target therefore leaves the exact stale route this
-    helper exists to retire.  Authentication is the selection authority, so
-    every successful outcome replaces the invocation override unconditionally.
-    """
-    from ...core.config import override_settings
-
-    ctx.with_resource(override_settings(cadrumo_active_profile=bucket_id))
-
-
-def resume_profile_session_for_target(ctx: typer.Context, *, bucket_id: str) -> None:
-    """Authenticate a command-selected profile through the canonical CLI gate."""
-    from ._config._secure_input import select_profile_secret_channel
-    from ._profile_authentication_contract import ProfileSecretSourceOptions
-
-    source = cast("dict[str, object]", ctx.find_root().ensure_object(dict)).get("profile_secret_source")
-    options = source if isinstance(source, ProfileSecretSourceOptions) else ProfileSecretSourceOptions()
-    selection = select_profile_secret_channel(
-        profile_secrets_stdin=options.stdin,
-        profile_secrets_fd=options.descriptor,
-    )
-    _resume_profile_session_or_refuse(
-        ctx,
-        bucket_id,
-        root_selection=selection,
-        exact_target=True,
-        bind_exact_target=True,
-    )
-
-
-def bind_profile_target_to_invocation(ctx: typer.Context, *, bucket_id: str) -> None:
-    """Bind an authenticated command-selected profile to this invocation."""
-    _bind_authenticated_profile_to_invocation(ctx, bucket_id=bucket_id)
-
-
-def _is_unregistered_profile_status_probe(verb_path: str | None, active_bucket_id: str) -> bool:
-    """Let ``config profile status`` diagnose a dangling active pointer."""
-    if verb_path != "config profile status":
-        return False
-    from ...application.workflow import read_profile_bucket_by_id
-
-    return read_profile_bucket_by_id(active_bucket_id) is None
-
-
-def _register_wizard_catalogue_for_profile_keys() -> None:
-    """Import wizard registration side effects before profile-key reads."""
-    from ...application.wizard import _catalogue as _wizard_catalogue
-    from ...application.wizard import _persistence as _wizard_persistence
-
-    _ = (_wizard_catalogue, _wizard_persistence)
 
 
 def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
