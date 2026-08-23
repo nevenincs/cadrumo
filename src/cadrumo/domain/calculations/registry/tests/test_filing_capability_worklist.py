@@ -191,10 +191,51 @@ def _blocker(modelo: object, revision: object, sources: object) -> str:
     short = _casilla_surface_shortfall(modelo, revision)
     if short is not None:
         return short
+    missing_producers = _producer_vocabulary_gap(modelo)
+    if missing_producers is not None:
+        return missing_producers
     return (
         f"AUTHORABLE on era: cites {cited[0]}, {len(revision.casillas or ())} casilla(s) declared "
         "-- needs its semantic map and layout, AND its design's extraction checked for partial "
         "overlap first (see test_cited_design_field_bounds_are_self_consistent)"
+    )
+
+
+def _producer_vocabulary_gap(modelo: object) -> str | None:
+    """Return why this modelo cannot be exported YET, when nothing can supply its values.
+
+    A record design says WHERE each value sits. It does not say where the value comes
+    FROM. Most fields on a declaration are not casillas at all -- an address, a
+    municipio, an activity code, a representative -- and the semantic map addresses
+    those with ``kind = "header"`` plus a ``producer_key`` naming one member of the
+    closed :class:`FilingProducerKey` vocabulary. A key that names nothing the
+    application produces is a design-only shell, so the vocabulary has to exist before
+    the map can.
+
+    Measured across the tree: every modelo that ships a generated export tree owns a
+    producer namespace -- 135 keys for modelo 200, 112 for 296, 102 for 210, 70 for
+    360 -- and every modelo still on this worklist owns none. Modelo 840 is the worked
+    example: its design carries 381 fields of which 130 are casillas and 177 are
+    untagged data (Delegación, Municipio, Elementos Tributarios del grupo o epígrafe),
+    and the vocabulary contains no IAE identity at all. Authoring its map would mean
+    inventing 177 keys with no producer behind them.
+
+    THE NAMESPACE TEST CAN ONLY UNDER-FLAG. Modelo 210's keys are namespaced ``irnr``
+    rather than ``m210``, so a modelo whose keys sit under a domain alias reads as
+    empty here. That direction is safe: such a modelo already ships its export and is
+    therefore not on this list. A modelo genuinely lacking a vocabulary cannot be
+    hidden by the alias, because it has no keys under any name.
+    """
+    from .....core import FilingProducerKey
+
+    prefix = f"m{modelo.id}."
+    if any(member.value.startswith(prefix) for member in FilingProducerKey):
+        return None
+    return (
+        f"BLOCKED on producer vocabulary: no FilingProducerKey is namespaced {prefix!r}, so the "
+        "non-casilla fields of this design -- addresses, codes, activity data -- have no identity "
+        "the semantic map may name; the producer keys and the application producers behind them "
+        "come before the export"
     )
 
 
