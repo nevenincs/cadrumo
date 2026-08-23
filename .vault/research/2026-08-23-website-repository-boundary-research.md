@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:c2e603e1384f5c94327395054fa10829777f9e1977dfa2421f5e6af7f53207e2'
+body_hash: 'sha256:3399a923ce1fb532213a5c3ca732a414f515892d66f4b83818b39e719081d67c'
 related:
   - "[[2026-08-05-cadrumo-frontend-launch-product-page-vs-docs-landing-boundary-audit]]"
 ---
@@ -35,7 +35,7 @@ The accepted canonical-release-pipeline ADR names the removed publisher and depl
 
 The accepted ci-discipline ADR creates `T1-frontend` in the product repository and binds `frontend.yml` to `frontend/**` (`.vault/adr/2026-07-21-ci-discipline-adr.md:103`; `:114`). Current code implements the inverse: product CI declares no website source or lane (`.github/workflows/ci.yml:30`), while marketing CI owns all site changes (`Y:/code/cadrumo-marketing-worktrees/main/.github/workflows/ci.yml:8`).
 
-`RELEASING.md` should preserve product documentation publication while eliminating any implication that the marketing site participates in product release. Residual migration-history comments appear in `justfile:999`, `.github/workflows/ci.yml:30`, `src/cadrumo-harness/NOTICE:17`, and `dev/audit/duplication_dispositions.toml:69`. CLI and TUI uses of â€œfrontendâ€� name application presentation boundaries and are unrelated to the website.
+`RELEASING.md` should preserve product documentation publication while eliminating any implication that the marketing site participates in product release. Residual migration-history comments appear in `justfile:999`, `.github/workflows/ci.yml:30`, `src/cadrumo-harness/NOTICE:17`, and `dev/audit/duplication_dispositions.toml:69`. CLI and TUI uses of Ã¢â‚¬Å“frontend" name application presentation boundaries and are unrelated to the website.
 
 ### Option 1: keep the website in the product repository
 

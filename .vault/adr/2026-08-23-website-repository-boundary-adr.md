@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:f6db3e843c8e4c929fe2c2fb4fd928817d09048ab275c9699da19cc2837c75d4'
+body_hash: 'sha256:7f53d3eaea08e39bbfa076c9c4f43598d2b9fab682fcf10d407479ae1762526b'
 related:
   - "[[2026-08-23-website-repository-boundary-research]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -19,25 +19,25 @@ The Cadrumo marketing website was mistakenly treated as part of the product repo
 
 ## Considerations
 
-- The marketing repository already contains the complete website source and operational surface. Grounding: `2026-08-23-website-repository-boundary-research`, â€œThe website implementation and its operational surface have already moved as one unit.â€�
-- The product repository retains product distributions and product-documentation publication, neither of which requires the marketing website. Grounding: `2026-08-23-website-repository-boundary-research`, â€œThe surviving runtime coupling is infrastructure partitioning, not release-pipeline coupling.â€�
-- A shared delivery target does not justify shared source, command, CI, or release ownership. Grounding: `2026-08-23-website-repository-boundary-research`, â€œThe surviving runtime coupling is infrastructure partitioning, not release-pipeline coupling.â€�
-- Two accepted ADRs retain valid product release and CI decisions alongside obsolete website clauses. Grounding: `2026-08-23-website-repository-boundary-research`, â€œAccepted decisions still contain obsolete product-repository website ownership.â€�
-- Durable inverse enforcement is required in the product repository, but active workflow and command comments should describe the current invariant rather than migration history. Grounding: `2026-08-23-website-repository-boundary-research`, â€œOption 3.â€�
+- The marketing repository already contains the complete website source and operational surface. Grounding: `2026-08-23-website-repository-boundary-research`, Ã¢â‚¬Å“The website implementation and its operational surface have already moved as one unit."
+- The product repository retains product distributions and product-documentation publication, neither of which requires the marketing website. Grounding: `2026-08-23-website-repository-boundary-research`, Ã¢â‚¬Å“The surviving runtime coupling is infrastructure partitioning, not release-pipeline coupling."
+- A shared delivery target does not justify shared source, command, CI, or release ownership. Grounding: `2026-08-23-website-repository-boundary-research`, Ã¢â‚¬Å“The surviving runtime coupling is infrastructure partitioning, not release-pipeline coupling."
+- Two accepted ADRs retain valid product release and CI decisions alongside obsolete website clauses. Grounding: `2026-08-23-website-repository-boundary-research`, Ã¢â‚¬Å“Accepted decisions still contain obsolete product-repository website ownership."
+- Durable inverse enforcement is required in the product repository, but active workflow and command comments should describe the current invariant rather than migration history. Grounding: `2026-08-23-website-repository-boundary-research`, Ã¢â‚¬Å“Option 3."
 
 ## Considered options
 
 ### Keep the website in the product repository
 
-Rejected. This reverses the completed migration, restores a release-unrelated toolchain and CI lane, and creates conflicting ownership unless the marketing repository is dismantled. Grounding: `2026-08-23-website-repository-boundary-research`, â€œOption 1.â€�
+Rejected. This reverses the completed migration, restores a release-unrelated toolchain and CI lane, and creates conflicting ownership unless the marketing repository is dismantled. Grounding: `2026-08-23-website-repository-boundary-research`, Ã¢â‚¬Å“Option 1."
 
 ### Keep website source in marketing but retain product-side commands or workflows
 
-Rejected. Cross-repository dispatch, imports, or product-side website commands divide operational ownership and introduce permissions, revision, and failure coupling for a non-product artifact. Grounding: `2026-08-23-website-repository-boundary-research`, â€œOption 2.â€�
+Rejected. Cross-repository dispatch, imports, or product-side website commands divide operational ownership and introduce permissions, revision, and failure coupling for a non-product artifact. Grounding: `2026-08-23-website-repository-boundary-research`, Ã¢â‚¬Å“Option 2."
 
 ### Fully rehome the website and retain only product distributions and product documentation here
 
-Accepted. The marketing team and repository own the website's source, dependencies, build, tests, CI, commands, publisher, deployment, verification, and recovery. The product repository owns product distributions, product release automation, and product-documentation publication only. Grounding: `2026-08-23-website-repository-boundary-research`, â€œOption 3.â€�
+Accepted. The marketing team and repository own the website's source, dependencies, build, tests, CI, commands, publisher, deployment, verification, and recovery. The product repository owns product distributions, product release automation, and product-documentation publication only. Grounding: `2026-08-23-website-repository-boundary-research`, Ã¢â‚¬Å“Option 3."
 
 ## Constraints
 
@@ -47,7 +47,7 @@ Accepted. The marketing team and repository own the website's source, dependenci
 - Shared delivery infrastructure is a path-partitioning seam. It must remain protected by exclusions and delivery assertions without becoming release-pipeline coupling.
 - The product repository retains inverse anti-regression gates that detect returned website ownership markers or a website CI lane.
 - Active workflow, Just, and enforcement comments state durable present-tense constraints rather than migration history.
-- Product application presentation boundaries named â€œfrontendâ€� are outside this decision.
+- Product application presentation boundaries named Ã¢â‚¬Å“frontend" are outside this decision.
 - Stable portions of `canonical-release-pipeline` and `ci-discipline` remain authoritative. Only their website-specific ownership clauses are invalidated and narrowed here.
 
 ## Implementation
@@ -66,9 +66,9 @@ Rewrite product release documentation around the actual product artifact and doc
 
 ## Rationale
 
-Full operational ownership is the only option that matches current implementation while preserving one accountable home for every website concern. It prevents product releases from acquiring cross-repository permissions, revision coordination, failure semantics, or gates for an artifact this repository does not own. Grounding: `2026-08-23-website-repository-boundary-research`, â€œOption 3.â€�
+Full operational ownership is the only option that matches current implementation while preserving one accountable home for every website concern. It prevents product releases from acquiring cross-repository permissions, revision coordination, failure semantics, or gates for an artifact this repository does not own. Grounding: `2026-08-23-website-repository-boundary-research`, Ã¢â‚¬Å“Option 3."
 
-The shared infrastructure does not defeat this ownership model because its contract is path separation and survival checks, not coupled source trees or release orchestration. Grounding: `2026-08-23-website-repository-boundary-research`, â€œThe surviving runtime coupling is infrastructure partitioning, not release-pipeline coupling.â€�
+The shared infrastructure does not defeat this ownership model because its contract is path separation and survival checks, not coupled source trees or release orchestration. Grounding: `2026-08-23-website-repository-boundary-research`, Ã¢â‚¬Å“The surviving runtime coupling is infrastructure partitioning, not release-pipeline coupling."
 
 Amending the two existing ADRs is preferable to superseding them: this decision corrects a bounded ownership mistake, while their other canonical release and CI decisions remain applicable. Supersession would incorrectly retire valid product architecture.
 
