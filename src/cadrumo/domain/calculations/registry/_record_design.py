@@ -952,6 +952,146 @@ def _split_fused_ordinal_position_prefix(lines: tuple[str, ...]) -> tuple[str, .
         split.append(rebuilt)
     return tuple(split)
 
+#: A row whose NATURALEZA ran into the content-column marker that follows it:
+#: ``170 1697 9 AnC ...`` for AEAT's ``170 1697 9 An C ...``. The sibling
+#: :data:`_DOUBLED_COORDINATE_ROW_RE` covers the same gluing when the
+#: coordinates are ALSO doubled; this covers it on its own.
+_GLUED_NATURALEZA_ROW_RE = re.compile(
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s+"
+    r"(?P<naturaleza>An|Num|N|A)(?P<marker>[A-Z])\s+(?P<rest>\S.*)$",
+)
+
+
+def _split_glued_naturaleza_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Separate a naturaleza that ran into the following content-column marker.
+
+    Modelo 200's 2010 design loses one row of its ``Pag. 22`` record this way::
+
+        169 1690 7 Num C Agrup.interes economico y UTES - Modelo de info...
+        170 1697 9 AnC A i t   i UTES M d l d i f i  R l i  d i 18 NIF
+        171 1706 1 Num C Agrup.interes economico y UTES - Modelo de info...
+
+    Nothing is missing: ordinal 170 at position 1697, nine bytes, naturaleza
+    ``An``, content column ``A``. Only the space between ``An`` and the marker
+    is gone, and without it the row does not parse and its nine positions read
+    as a hole -- which costs the whole record.
+
+    ADMITTED ON OVER-DETERMINATION and on the split parsing. The coordinates
+    must continue the previous row -- ordinal one more, position resuming where
+    it ended -- and the separated line must then parse as a row. A line that
+    merely looks like this but sits at the wrong position is left alone.
+
+    The description here is visibly mangled -- AEAT's own PDF drops characters
+    from that cell -- and that is NOT this repair's business. Recovering the
+    row's POSITION is what stops the record being skipped; the description is
+    carried through exactly as extracted rather than being cleaned up, because
+    inventing text is a different and worse failure than reporting it damaged.
+    """
+    split: list[str] = []
+    previous: _PdfRow | None = None
+    for index, line in enumerate(lines):
+        parsed = _parse_pdf_row(line, index + 1)
+        if parsed is not None:
+            previous = parsed
+            split.append(line)
+            continue
+        glued = _GLUED_NATURALEZA_ROW_RE.match(line)
+        if glued is None or previous is None:
+            split.append(line)
+            continue
+        if not _continues(previous, glued.group("ordinal"), int(glued.group("offset"))):
+            split.append(line)
+            continue
+        rebuilt = (
+            f"{glued.group('ordinal')} {glued.group('offset')} {glued.group('length')} "
+            f"{glued.group('naturaleza')} {glued.group('marker')} {glued.group('rest')}"
+        )
+        reparsed = _parse_pdf_row(rebuilt, index + 1)
+        if reparsed is None:
+            split.append(line)
+            continue
+        previous = reparsed
+        split.append(rebuilt)
+    return tuple(split)
+
+#: A row's TRUE ordinal and position, restated alone on the line below it after
+#: the row itself was printed with a truncated position: ``18 215`` under
+#: ``18 21 17 N ...``. Anchored end to end -- two integers and nothing else --
+#: because a looser pattern would claim any line opening with two numbers.
+_STRANDED_COORDINATE_PAIR_RE = re.compile(
+    r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s*$",
+)
+
+
+def _repair_truncated_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
+    """Restore a row whose position lost a digit, from the pair restating it below.
+
+    Modelo 200's 2011 design loses one row of its ``Pag. 44`` record this way::
+
+        17 198 17 N  Inst. inversion colectiva - Cuenta perdidas y ganancias ...
+        18 21 17 N   Inst. inversion colectiva - Cuenta perdidas y ganancias ...
+        18 215
+        19 232 17 N  Inst. inversion colectiva - Cuenta perdidas y ganancias ...
+
+    The middle row PARSES, which is what makes this dangerous: it reads as
+    ordinal 18 at position 21, seventeen bytes, and nothing downstream doubts
+    it. Position 215 is then a hole and the record is skipped, while the row
+    quietly claims bytes 21-37 that belong to other fields.
+
+    The truncation is visible only against the neighbours, and they settle it
+    three ways at once. The stranded pair must repeat the parsed row's OWN
+    ordinal; the position it states must resume exactly where the row above
+    ends; and the position the row currently claims must NOT. All three, or the
+    line is left alone -- the third is what stops this touching a healthy row
+    that merely happens to sit above a stray pair.
+
+    Distinct from :func:`_recover_coordinate_stutter_rows`, which handles the
+    same restatement when the stutter line also carries the casilla tag and the
+    damaged half does not parse at all. Here the line is bare and the damaged
+    half parses wrongly, so neither of that function's halves matches.
+    """
+    parsed = list(_parse_pdf_row(line, index + 1) for index, line in enumerate(lines))
+
+    repaired: dict[int, str] = {}
+    dropped: set[int] = set()
+    for index in range(1, len(lines)):
+        pair = _STRANDED_COORDINATE_PAIR_RE.match(lines[index])
+        if pair is None:
+            continue
+        damaged = parsed[index - 1]
+        if damaged is None or damaged.ordinal != pair.group("ordinal"):
+            continue
+        anchor = None
+        for candidate in range(index - 2, -1, -1):
+            if parsed[candidate] is not None:
+                anchor = parsed[candidate]
+                break
+        if anchor is None:
+            continue
+        stated = int(pair.group("offset"))
+        resumes = anchor.offset + anchor.length
+        if stated != resumes or damaged.offset == resumes:
+            continue
+        rebuilt = re.sub(
+            rf"^(\s*{re.escape(damaged.ordinal)})\s+{damaged.offset}\s",
+            rf"\g<1> {stated} ",
+            lines[index - 1],
+            count=1,
+        )
+        if _parse_pdf_row(rebuilt, index) is None:
+            continue
+        repaired[index - 1] = rebuilt
+        parsed[index - 1] = _parse_pdf_row(rebuilt, index)
+        dropped.add(index)
+
+    if not repaired:
+        return lines
+    return tuple(
+        repaired.get(index, line)
+        for index, line in enumerate(lines)
+        if index not in dropped
+    )
+
 #: A field row whose four tokens are complete but whose DESCRIPTION wrapped onto
 #: the next line. AEAT does this often enough to matter: modelo 202 writes
 #: ``15 80 1 Num`` and puts "Datos adicionales (3) - Cooperativa fiscalmente
@@ -1470,7 +1610,9 @@ def _read_with_reversed_column_repair(
     if not first.skipped:
         return first
     repaired_lines = _recover_coordinate_stutter_rows(
+        _repair_truncated_offset_rows(
         _rejoin_bare_coordinate_rows(
+        _split_glued_naturaleza_rows(
         _split_fused_ordinal_position_prefix(
         _reattach_stranded_casilla_tags(
             _collapse_stuttered_row_prefix(
@@ -1480,6 +1622,8 @@ def _read_with_reversed_column_repair(
                     ),
                 ),
             ),
+        ),
+        ),
         ),
         ),
         ),

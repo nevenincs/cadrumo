@@ -1,0 +1,243 @@
+# Modelo 220 RECORD T22011000 -- a PER-ENTITY DETAIL record: bonificaciones
+# declared entity by entity, each row a NIF plus 8 amount columns, followed by one
+# TOTAL per column carrying AEAT's own box number.
+#
+# 17 casillas describe all 234 design fields. THE NUMBER SET DECIDES THE
+# CASILLA SET, NOT THE SHAPE. The 24 detail blocks carry NO number and differ only
+# by a printed row index, so ONE row is declared and a layout repeat writes the rest --
+# the mechanism modelo 720's binding_record already uses. Declaring every block instead
+# would mint 216 casillas for 9 declared values.
+#
+# THE STRIDE IS PROVEN, NOT ASSUMED. The detail run starts at @16, the second block
+# starts at @161 so the stride is 145, and 16 + 145 x 24
+# lands exactly on @3496 where the first total begins. Every block was compared
+# field-for-field against the first with its row index removed: 1 distinct shape.
+#
+# COMPLETENESS COMPLEMENT, asserted in the generator rather than claimed here: every one
+# of the 234 fields is authored, covered by the repeat, or named below as excluded,
+# and the difference of those sets against the design is empty.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22011000 tiles
+# 1..3793 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT'S OWN TEXT DIFFERS BETWEEN A DETAIL ROW AND ITS TOTAL in some columns, and both are
+# transcribed as printed rather than quietly reconciled:
+#   detail  Bonificaciones entidades dedicadas al arrendamiento de viviendas (Cap. III Tít. VII LIS)
+#   total   Bonificaciones entidades dedicadas al arrendamiento de viviendas (Cap. III Tit. VII LIS)
+#
+# THE FAMILY WORDING "detalle por entidad" IS DESCRIPTIVE AND MINE. The design gives this
+# sheet no heading of its own -- only a column of NIFs beside the amounts -- so the
+# per-entity reading is taken from that shape and is not an AEAT phrase.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @3632+150 RESERVADO PARA LA ADMINISTRACION; and
+# @3782+12 Fin de registro.
+#
+# NOT CLAIMED: the totals are DECLARED, not computed. Each is the sum of its own column
+# down the 24 detail rows, and NO formula, construct or binding expresses that
+# here. A reader should not mistake a declared total for a computed one.
+
+# @16+9. NIF.1  <-- ONE declared row; the layout repeats it 24 times at stride 145
+[[revisions."2024".casillas]]
+id = "T22011000:t22011000.16-24"
+number = "t22011000.16-24"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @25+17. Bonificaciones por rentas obtenidas en Ceuta y Melilla (art. 33 LIS). 1  <-- ONE declared row; the layout repeats it 24 times at stride 145
+[[revisions."2024".casillas]]
+id = "T22011000:t22011000.25-41"
+number = "t22011000.25-41"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @42+17. Bonificaciones por prestación de servicios (art. 34 LIS). 1  <-- ONE declared row; the layout repeats it 24 times at stride 145
+[[revisions."2024".casillas]]
+id = "T22011000:t22011000.42-58"
+number = "t22011000.42-58"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @59+17. Bonificación rendimientos por venta bienes corporales producidos en Canarias (art. 26 Ley. 19/1994).1  <-- ONE declared row; the layout repeats it 24 times at stride 145
+[[revisions."2024".casillas]]
+id = "T22011000:t22011000.59-75"
+number = "t22011000.59-75"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @76+17. Bonificación rendimientos por venta bienes corporales producidos en Illes Balears (DA 70.Cinco Ley 31/2022). 1  <-- ONE declared row; the layout repeats it 24 times at stride 145
+[[revisions."2024".casillas]]
+id = "T22011000:t22011000.76-92"
+number = "t22011000.76-92"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @93+17. Bonificaciones sociedades cooperativas (Ley.20/1990).1  <-- ONE declared row; the layout repeats it 24 times at stride 145
+[[revisions."2024".casillas]]
+id = "T22011000:t22011000.93-109"
+number = "t22011000.93-109"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @110+17. Bonificaciones entidades dedicadas al arrendamiento de viviendas (Cap. III Tít. VII LIS). 1  <-- ONE declared row; the layout repeats it 24 times at stride 145
+[[revisions."2024".casillas]]
+id = "T22011000:t22011000.110-126"
+number = "t22011000.110-126"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @127+17. Otras Bonificaciones.1  <-- ONE declared row; the layout repeats it 24 times at stride 145
+[[revisions."2024".casillas]]
+id = "T22011000:t22011000.127-143"
+number = "t22011000.127-143"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @144+17. Bonificaciones empresas navieras en Canarias (art. 76 Ley.19/1994).1  <-- ONE declared row; the layout repeats it 24 times at stride 145
+[[revisions."2024".casillas]]
+id = "T22011000:t22011000.144-160"
+number = "t22011000.144-160"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @3496+17. Bonificaciones por rentas obtenidas en Ceuta y Melilla (art. 33 LIS). Total [00567]
+[[revisions."2024".casillas]]
+id = "T22011000:00567"
+number = "00567"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @3513+17. Bonificaciones por prestación de servicios (art. 34 LIS). Total [00568]
+[[revisions."2024".casillas]]
+id = "T22011000:00568"
+number = "00568"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @3530+17. Bonificación rendimientos por venta bienes corporales producidos en Canarias (art. 26 Ley. 19/1994). Total [00563]
+[[revisions."2024".casillas]]
+id = "T22011000:00563"
+number = "00563"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @3547+17. Bonificación rendimientos por venta bienes corporales producidos en Illes Balears (DA 70.Cinco Ley 31/2022). Total [01375]
+[[revisions."2024".casillas]]
+id = "T22011000:01375"
+number = "01375"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @3564+17. Bonificaciones sociedades cooperativas (Ley.20/1990). Total [00566]
+[[revisions."2024".casillas]]
+id = "T22011000:00566"
+number = "00566"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @3581+17. Bonificaciones entidades dedicadas al arrendamiento de viviendas (Cap. III Tit. VII LIS). Total [00576]
+[[revisions."2024".casillas]]
+id = "T22011000:00576"
+number = "00576"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @3598+17. Otras Bonificaciones. Total [00569]
+[[revisions."2024".casillas]]
+id = "T22011000:00569"
+number = "00569"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @3615+17. Bonificaciones empresas navieras en Canarias (art. 76 Ley.19/1994). Total [00581]
+[[revisions."2024".casillas]]
+id = "T22011000:00581"
+number = "00581"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
