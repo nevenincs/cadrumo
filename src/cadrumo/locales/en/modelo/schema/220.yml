@@ -92,6 +92,130 @@ modelo:
               label: 'Other corrections to the sum of taxable bases: other corrections
                 to the sum of individual taxable bases, not covered by the preceding
                 sections. Correction to the taxable base'
+            x-agp34c1g6t6j0c1q60p34c9p:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. j6) Income, expenses or gains forming part
+                of the operating profit that are not included in the taxable base
+            x-agp34c1g6t6j0c1q60p34chg:
+              label: 'Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. m) Overall limit on the deduction of net financial
+                expenses: in any event 1 million euro where the limit on the deduction
+                of net financial expenses plus the addition entered in letters k and
+                l is below 1 million'
+            x-agp34c1g6t6j0c1q60pj2e9m:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.5, 67 b) or 83 LIS. a) Financial expenses of the tax period
+                arising from debt taken on to acquire holdings, covered by art. 16.5,
+                67 b) or 83 LIS (unsigned)
+            x-agp34c1g6t6j0c1q60pj2e9n:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.5, 67 b) or 83 LIS. b) Additional limit on the deduction of
+                financial expenses (art. 16.5, 67 b) or 83 LIS) (unsigned)
+            x-agp34c1g6t6j0c1q60pj2e9o:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.5, 67 b) or 83 LIS. c1) Financial expenses of the tax period
+                deductible after applying the limit of art. 16.5, 67 b) or 83 LIS
+                (<= [b], [a=c1+c2], >= 0)
+            x-agp34c1g6t6j0c1q60pj2e9p:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.5, 67 b) or 83 LIS. c2) Financial expenses of the tax period
+                not deductible after applying the limit of art. 16.5, 67 b) and/or
+                83 LIS (= [a-c1], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c1g:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.5, 67 b) or 83 LIS. d) Financial expenses of the group outstanding
+                from earlier periods, covered by art. 16.5, 67 b) and/or 83, deductible
+                after this limit ([b >= c1+d+e], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c1h:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.5, 67 b) or 83 LIS. e) Financial expenses outstanding from
+                earlier periods, covered by art. 16.5, 67 b) and/or 83 LIS, deductible
+                after this limit, arising in or assumed by the entities before they
+                joined the group (art. 67 b) and 74.3 b) LIS) ([b >= c1+d+e], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c1i:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. f) Financial expenses of the tax period not
+                covered by art. 16.5, 67 b) and/or 83 LIS (unsigned)
+            x-agp34c1g6t6j0c1q60pj4c1j:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. g) Financial expenses of the group for the
+                tax period (= [c1+f])
+            x-agp34c1g6t6j0c1q60pj4c1k:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. h) Financial income of the group for the tax
+                period arising from lending own capital to third parties
+            x-agp34c1g6t6j0c1q60pj4c1l:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. i) Net financial expenses of the group for
+                the tax period (= [g-h])
+            x-agp34c1g6t6j0c1q60pj4c1m:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. j) Limit on the deduction of net financial
+                expenses (= 30% * [j1-j2-j3-j4+j5-j6])
+            x-agp34c1g6t6j0c1q60pj4c1n:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. j1) Operating result (same sign as in the
+                profit and loss account)
+            x-agp34c1g6t6j0c1q60pj4c1o:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. j2) Depreciation of fixed assets (same sign
+                as in the profit and loss account)
+            x-agp34c1g6t6j0c1q60pj4c1p:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. j3) Recognition of grants for non-financial
+                fixed assets and others (same sign as in the profit and loss account)
+            x-agp34c1g6t6j0c1q60pj4c9g:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. j4) Impairment and result on disposals of
+                fixed assets (same sign as in the profit and loss account)
+            x-agp34c1g6t6j0c1q60pj4c9h:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. j5) Financial income from holdings in equity
+                instruments (same sign as in the profit and loss account)
+            x-agp34c1g6t6j0c1q60pj4c9i:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. k) Addition for the operating-profit limit
+                not used in the five preceding tax years, arising within the group
+            x-agp34c1g6t6j0c1q60pj4c9j:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. l) Addition for the operating-profit limit
+                not used in the five preceding tax years, arising in or assumed by
+                the entities before they joined the group (art. 67 a) and 74.3 b)
+                LIS)
+            x-agp34c1g6t6j0c1q60pj4c9k:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. n1) Net financial expenses of the tax period
+                that are deductible ([i=n1+n2], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9l:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. n2) Net financial expenses of the tax period
+                that are not deductible (= [i-n1], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9m:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. o) Financial expenses of the group outstanding
+                from earlier tax periods, covered by art. 16.5, 67 b) and/or 83 LIS,
+                deductible after applying both limits (<= [d], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9n:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. p) Financial expenses outstanding from earlier
+                periods, covered by art. 16.5, 67 b) and/or 83 LIS, deductible after
+                applying both limits, arising in or assumed by the entities before
+                they joined the group (art. 67 b) and 74.3 b) LIS) (<= [e], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9o:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. q) Net financial expenses of the group outstanding
+                from earlier tax periods, not covered by art. 16.5, 67 b) and/or 83
+                LIS, applied
+            x-agp34c1g6t6j0c1q60pj4c9p:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. r) Net financial expenses outstanding from
+                earlier periods and applied, not covered by art. 16.5, 67 b) and/or
+                83 LIS, arising in or assumed by the entities before they joined the
+                group (art. 67 b) and 74.3 b) LIS)
+            x-agp34c1g6t6j0c1q60pj4chg:
+              label: Limit on the deductibility of financial expenses. Limit under
+                art. 16.1 and 16.2 LIS. Total non-deductible financial expenses of
+                the tax period (= [c2+n2])
             x-agp34c1g710j0c1q60o34chl:
               label: Consolidation of accounting results and taxable bases. D. Preliminary
                 taxable base of the group

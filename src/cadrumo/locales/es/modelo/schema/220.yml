@@ -100,6 +100,134 @@ modelo:
               label: 'Otras correcciones a la suma de bases imponibles: otras correcciones
                 a la suma de bases imponibles individuales, no comprendidas en los
                 apartados anteriores. Correccion en base imponible'
+            x-agp34c1g6t6j0c1q60p34c9p:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. j6) Ingresos, gastos o rentas que forman parte
+                del beneficio operativo que no se integran en la base imponible
+            x-agp34c1g6t6j0c1q60p34chg:
+              label: 'Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. m) Limite total a la deduccion de gastos financieros
+                netos: en todo caso 1 millon de euros si el limite a la deduccion
+                de gastos financieros netos mas la adicion de limite consignada en
+                las letras k y l es inferior a 1 millon'
+            x-agp34c1g6t6j0c1q60pj2e9m:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.5, 67 b) o 83 LIS. a) Gastos financieros del periodo impositivo
+                derivados de deudas por adquisicion de participaciones afectados por
+                art. 16.5, 67 b) o 83 LIS (sin signo)
+            x-agp34c1g6t6j0c1q60pj2e9n:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.5, 67 b) o 83 LIS. b) Limite adicional a la deduccion de gastos
+                financieros (art. 16.5, 67 b) o 83 LIS) (sin signo)
+            x-agp34c1g6t6j0c1q60pj2e9o:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.5, 67 b) o 83 LIS. c1) Gastos financieros del periodo impositivo
+                deducibles tras aplicacion del limite art. 16.5, 67 b) o 83 LIS (<=
+                [b], [a=c1+c2], >= 0)
+            x-agp34c1g6t6j0c1q60pj2e9p:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.5, 67 b) o 83 LIS. c2) Gastos financieros del periodo impositivo
+                no deducibles tras aplicacion del limite art. 16.5, 67 b) y/o 83 LIS
+                (= [a-c1], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c1g:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.5, 67 b) o 83 LIS. d) Gastos financieros del grupo pendientes
+                de deducir en periodos anteriores afectados por art. 16.5, 67 b) y/o
+                83, deducibles tras este limite ([b >= c1+d+e], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c1h:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.5, 67 b) o 83 LIS. e) Gastos financieros pendientes de deducir
+                en periodos anteriores afectados por art. 16.5, 67 b) y/o 83 LIS,
+                deducibles tras este limite, generados o asumidos por las entidades
+                previamente a su incorporacion al grupo (art. 67 b) y 74.3 b) LIS)
+                ([b >= c1+d+e], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c1i:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. f) Gastos financieros del periodo impositivo
+                no afectados por art. 16.5, 67 b) y/o 83 LIS (sin signo)
+            x-agp34c1g6t6j0c1q60pj4c1j:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. g) Gastos financieros del grupo del periodo
+                impositivo (= [c1+f])
+            x-agp34c1g6t6j0c1q60pj4c1k:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. h) Ingresos financieros del grupo del periodo
+                impositivo derivados de la cesion a terceros de capitales propios
+            x-agp34c1g6t6j0c1q60pj4c1l:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. i) Gastos financieros netos del grupo del periodo
+                impositivo (= [g-h])
+            x-agp34c1g6t6j0c1q60pj4c1m:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. j) Limite a la deduccion de gastos financieros
+                netos (= 30% * [j1-j2-j3-j4+j5-j6])
+            x-agp34c1g6t6j0c1q60pj4c1n:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. j1) Resultado de explotacion (signo igual a
+                Cuenta de Perdidas y Ganancias)
+            x-agp34c1g6t6j0c1q60pj4c1o:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. j2) Amortizacion del inmovilizado (signo igual
+                a Cuenta de Perdidas y Ganancias)
+            x-agp34c1g6t6j0c1q60pj4c1p:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. j3) Imputacion de subvenciones de inmovilizado
+                no financiero y otras (signo igual a Cuenta de Perdidas y Ganancias)
+            x-agp34c1g6t6j0c1q60pj4c9g:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. j4) Deterioro y resultado por enajenaciones
+                del inmovilizado (signo igual a Cuenta de Perdidas y Ganancias)
+            x-agp34c1g6t6j0c1q60pj4c9h:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. j5) Ingresos financieros de participaciones
+                en instrumentos de patrimonio (signo igual a Cuenta de Perdidas y
+                Ganancias)
+            x-agp34c1g6t6j0c1q60pj4c9i:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. k) Adicion por limite beneficio operativo no
+                aplicado en los cinco ejercicios anteriores generado en el grupo
+            x-agp34c1g6t6j0c1q60pj4c9j:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. l) Adicion por limite beneficio operativo no
+                aplicado en los cinco ejercicios anteriores, generado o asumido por
+                las entidades previamente a su incorporacion al grupo (art. 67 a)
+                y 74.3 b) LIS)
+            x-agp34c1g6t6j0c1q60pj4c9k:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. n1) Gastos financieros netos del periodo impositivo
+                deducibles ([i=n1+n2], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9l:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. n2) Gastos financieros netos del periodo impositivo
+                no deducibles (= [i-n1], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9m:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. o) Gastos financieros del grupo pendientes de
+                deducir de periodos impositivos anteriores afectados por art. 16.5,
+                67 b) y/o 83 LIS, deducibles tras aplicar los 2 limites (<= [d], >=
+                0)
+            x-agp34c1g6t6j0c1q60pj4c9n:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. p) Gastos financieros pendientes de deducir
+                de periodos anteriores afectados por art. 16.5, 67 b) y/o 83 LIS,
+                deducibles tras aplicar los 2 limites, generados o asumidos por las
+                entidades previamente a su incorporacion al grupo (art. 67 b) y 74.3
+                b) LIS) (<= [e], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9o:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. q) Gastos financieros netos del grupo pendientes
+                de deducir de periodos impositivos anteriores no afectados por art.
+                16.5, 67 b) y/o 83 LIS, aplicados
+            x-agp34c1g6t6j0c1q60pj4c9p:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. r) Gastos financieros netos pendientes de deducir
+                de periodos anteriores aplicados, no afectados por art. 16.5, 67 b)
+                y/o 83 LIS, generados o asumidos por las entidades previamente a su
+                incorporacion al grupo (art. 67 b) y 74.3 b) LIS)
+            x-agp34c1g6t6j0c1q60pj4chg:
+              label: Limitacion en la deducibilidad de gastos financieros. Limite
+                art. 16.1 y 16.2 LIS. Total gastos financieros del periodo impositivo
+                no deducibles (= [c2+n2])
             x-agp34c1g710j0c1q60o34chl:
               label: Consolidacion de resultados y bases imponibles. D. Base imponible
                 previa del grupo

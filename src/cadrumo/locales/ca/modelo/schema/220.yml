@@ -97,6 +97,131 @@ modelo:
               label: 'Altres correccions a la suma de bases imposables: altres correccions
                 a la suma de bases imposables individuals, no compreses als apartats
                 anteriors. Correccio en base imposable'
+            x-agp34c1g6t6j0c1q60p34c9p:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. j6) Ingressos, despeses o rendes que formen part
+                del benefici operatiu que no s'integren en la base imposable
+            x-agp34c1g6t6j0c1q60p34chg:
+              label: 'Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. m) Limit total a la deduccio de despeses financeres
+                netes: en tot cas 1 milio d''euros si el limit a la deduccio de despeses
+                financeres netes mes l''addicio de limit consignada a les lletres
+                k i l es inferior a 1 milio'
+            x-agp34c1g6t6j0c1q60pj2e9m:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.5, 67 b) o 83 LIS. a) Despeses financeres del periode impositiu
+                derivades de deutes per adquisicio de participacions afectats per
+                art. 16.5, 67 b) o 83 LIS (sense signe)
+            x-agp34c1g6t6j0c1q60pj2e9n:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.5, 67 b) o 83 LIS. b) Limit addicional a la deduccio de despeses
+                financeres (art. 16.5, 67 b) o 83 LIS) (sense signe)
+            x-agp34c1g6t6j0c1q60pj2e9o:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.5, 67 b) o 83 LIS. c1) Despeses financeres del periode impositiu
+                deduibles despres d'aplicar el limit art. 16.5, 67 b) o 83 LIS (<=
+                [b], [a=c1+c2], >= 0)
+            x-agp34c1g6t6j0c1q60pj2e9p:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.5, 67 b) o 83 LIS. c2) Despeses financeres del periode impositiu
+                no deduibles despres d'aplicar el limit art. 16.5, 67 b) i/o 83 LIS
+                (= [a-c1], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c1g:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.5, 67 b) o 83 LIS. d) Despeses financeres del grup pendents de
+                deduir de periodes anteriors afectades per art. 16.5, 67 b) i/o 83,
+                deduibles despres d'aquest limit ([b >= c1+d+e], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c1h:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.5, 67 b) o 83 LIS. e) Despeses financeres pendents de deduir de
+                periodes anteriors afectades per art. 16.5, 67 b) i/o 83 LIS, deduibles
+                despres d'aquest limit, generades o assumides per les entitats abans
+                de la seva incorporacio al grup (art. 67 b) i 74.3 b) LIS) ([b >=
+                c1+d+e], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c1i:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. f) Despeses financeres del periode impositiu no afectades
+                per art. 16.5, 67 b) i/o 83 LIS (sense signe)
+            x-agp34c1g6t6j0c1q60pj4c1j:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. g) Despeses financeres del grup del periode impositiu
+                (= [c1+f])
+            x-agp34c1g6t6j0c1q60pj4c1k:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. h) Ingressos financers del grup del periode impositiu
+                derivats de la cessio a tercers de capitals propis
+            x-agp34c1g6t6j0c1q60pj4c1l:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. i) Despeses financeres netes del grup del periode
+                impositiu (= [g-h])
+            x-agp34c1g6t6j0c1q60pj4c1m:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. j) Limit a la deduccio de despeses financeres netes
+                (= 30% * [j1-j2-j3-j4+j5-j6])
+            x-agp34c1g6t6j0c1q60pj4c1n:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. j1) Resultat d'explotacio (signe igual al Compte
+                de Perdues i Guanys)
+            x-agp34c1g6t6j0c1q60pj4c1o:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. j2) Amortitzacio de l'immobilitzat (signe igual al
+                Compte de Perdues i Guanys)
+            x-agp34c1g6t6j0c1q60pj4c1p:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. j3) Imputacio de subvencions d'immobilitzat no financer
+                i altres (signe igual al Compte de Perdues i Guanys)
+            x-agp34c1g6t6j0c1q60pj4c9g:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. j4) Deteriorament i resultat per alienacions de l'immobilitzat
+                (signe igual al Compte de Perdues i Guanys)
+            x-agp34c1g6t6j0c1q60pj4c9h:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. j5) Ingressos financers de participacions en instruments
+                de patrimoni (signe igual al Compte de Perdues i Guanys)
+            x-agp34c1g6t6j0c1q60pj4c9i:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. k) Addicio per limit de benefici operatiu no aplicat
+                en els cinc exercicis anteriors generat en el grup
+            x-agp34c1g6t6j0c1q60pj4c9j:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. l) Addicio per limit de benefici operatiu no aplicat
+                en els cinc exercicis anteriors, generat o assumit per les entitats
+                abans de la seva incorporacio al grup (art. 67 a) i 74.3 b) LIS)
+            x-agp34c1g6t6j0c1q60pj4c9k:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. n1) Despeses financeres netes del periode impositiu
+                deduibles ([i=n1+n2], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9l:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. n2) Despeses financeres netes del periode impositiu
+                no deduibles (= [i-n1], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9m:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. o) Despeses financeres del grup pendents de deduir
+                de periodes impositius anteriors afectades per art. 16.5, 67 b) i/o
+                83 LIS, deduibles despres d'aplicar els 2 limits (<= [d], >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9n:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. p) Despeses financeres pendents de deduir de periodes
+                anteriors afectades per art. 16.5, 67 b) i/o 83 LIS, deduibles despres
+                d'aplicar els 2 limits, generades o assumides per les entitats abans
+                de la seva incorporacio al grup (art. 67 b) i 74.3 b) LIS) (<= [e],
+                >= 0)
+            x-agp34c1g6t6j0c1q60pj4c9o:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. q) Despeses financeres netes del grup pendents de
+                deduir de periodes impositius anteriors no afectades per art. 16.5,
+                67 b) i/o 83 LIS, aplicades
+            x-agp34c1g6t6j0c1q60pj4c9p:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. r) Despeses financeres netes pendents de deduir de
+                periodes anteriors aplicades, no afectades per art. 16.5, 67 b) i/o
+                83 LIS, generades o assumides per les entitats abans de la seva incorporacio
+                al grup (art. 67 b) i 74.3 b) LIS)
+            x-agp34c1g6t6j0c1q60pj4chg:
+              label: Limitacio en la deduibilitat de despeses financeres. Limit art.
+                16.1 i 16.2 LIS. Total despeses financeres del periode impositiu no
+                deduibles (= [c2+n2])
             x-agp34c1g710j0c1q60o34chl:
               label: Consolidacio de resultats i bases imposables. D. Base imposable
                 previa del grup
