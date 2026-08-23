@@ -4558,3 +4558,62 @@ kind of artefact a reader assumes must balance.
 ### Scale
 
 **10221 of 11570 slots remain** across 105 numbered records; 1349 modelled, zero orphaned.
+
+## 2026-08-23 — T22003A02, and the first fix that would have caught all three
+
+### What landed
+
+Record **T22003A02** — the *balance consolidado activo* in the aseguradoras shape: the
+financial-asset portfolios by measurement category, préstamos y partidas a cobrar with its
+long breakdown, the participación del reaseguro en las provisiones técnicas, and
+inmovilizado material. **47 casillas**, revision 1515 → **1562**, twenty-nine of 137 records.
+
+Suite: **identical FAILED list, zero regressions.**
+
+### A correction must declare how many times it will fire
+
+AEAT drops the initial letter at @186, printing `nversiones por cuenta de los tomadores`
+where @271 prints the same phrase correctly. Correcting the bare fragment **also matched the
+correct line four rows below** and produced `IInversiones`.
+
+The substitution is now anchored to the preceding separator *and* **declares an expected
+firing count**, asserted after every label is built.
+
+That count assertion is the first form of this fix that **would have caught all three**
+earlier instances of the same family — `DT 24.5 LIS` → `DT 24. 5 LIS`, `N.I.F.` →
+`N. I. F.`, and this one. Each was a substitution reaching further than intended; each was
+caught by a different downstream check or by eye. **"How many times should this fire?" is
+answerable in advance and checkable afterwards**, which the scoping fixes never were.
+
+### AEAT gets the separator wrong in both directions, on one record
+
+**None** at @50 and @84 (`para negociar.Instrumentos de patrimonio`) and **two** at @696 and
+@730 (`provisiones técnicas.. Provisión para prestaciones`). Both repaired only after an
+attested standalone line of the same record; five repairs, each listed on the fragment face.
+
+### Three-level nesting, and why it works here
+
+`Préstamos y partidas a cobrar. Préstamos. Entidades asociadas` — AEAT prints every level
+inline. The locale composition takes the **longest attested prefix** as the parent, which
+resolves the depth without a rule about how deep the tree goes. T22005A01 stays the
+counter-example: it prints no nesting, so it was authored flat.
+
+### The refusal to infer a sector has a visible cost, and it is recorded
+
+Because both activo records carry AEAT's identical `ACTIVO` heading, `T22003A00:00177` and
+`T22003A02:00101` now **share an operator label** (`Efectivo y otros activos líquidos
+equivalentes`). These are *different* boxes — unlike box `00500`, which is one box printed on
+two pages.
+
+They belong to alternative sector layouts a taxpayer never files together, and separating
+them would mean asserting a sector AEAT does not print. **The cost of not inferring is a
+collision; the cost of inferring is a false claim on a filing-grade label.** The collision is
+recorded rather than hidden.
+
+Revision now: 6 duplicated texts over 23 casillas — 4 AEAT repeats inside T22005A01, 1 box
+declared twice, and this.
+
+### Scale
+
+**10174 of 11570 slots remain** across 104 numbered records; 1396 modelled, zero orphaned.
+This record has no TOTAL: the aseguradoras activo continues onto sheets not yet authored.
