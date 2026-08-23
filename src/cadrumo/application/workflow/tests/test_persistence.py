@@ -134,8 +134,8 @@ def test_reset_workflow_state_emit_failure_leaves_row_intact() -> None:
     """
 
     from ....adapters.persistence.storage import WORKFLOW_STATE_NAMESPACE
-    from .._models import WorkflowState
     from .._persistence import WorkflowStateRepository
+    from .._state_models import WorkflowState
 
     def _raise(**_: object) -> None:
         raise _EmitError("simulated downstream emit failure")
@@ -168,8 +168,8 @@ def test_fingerprint_state_classifies_healthy_envelope_as_readable() -> None:
     classification must reflect that.
     """
 
-    from .._models import WorkflowState
     from .._persistence import WorkflowStateRepository
+    from .._state_models import WorkflowState
 
     repository = WorkflowStateRepository()
     repository.save(WorkflowState())
@@ -196,8 +196,8 @@ def test_fingerprint_state_classifies_absent_envelope_as_absent() -> None:
 def test_fingerprint_state_honours_explicit_reason_class_override() -> None:
     """An explicit ``reason_class`` from a caller that knows the trigger wins."""
 
-    from .._models import WorkflowState
     from .._persistence import WorkflowStateRepository
+    from .._state_models import WorkflowState
 
     repository = WorkflowStateRepository()
     repository.save(WorkflowState())

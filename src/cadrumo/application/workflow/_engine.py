@@ -60,7 +60,18 @@ from ._engine_helpers import (
 )
 from ._engine_recording import record_site_unavailable, record_unhandled
 from ._errors import WorkflowAbortSignalError, WorkflowError, WorkflowInputMismatchError
-from ._models import (
+from ._protocols import (
+    CertificateBundleProtocol,
+    DeadlineEngineProtocol,
+    ExpedientesSource,
+    ModeloDraftBuilderProtocol,
+    ModeloInputs,
+    ModeloInputsProviderProtocol,
+    NotificationsSource,
+    RegistryModeloDraftProtocol,
+    SubmissionEngineProtocol,
+)
+from ._run_models import (
     WorkflowAbortReason,
     WorkflowAlreadyFiledDetails,
     WorkflowAuthCheckDetails,
@@ -80,19 +91,8 @@ from ._models import (
     WorkflowStep,
     WorkflowValidationFailedDetails,
     compute_run_id,
-    declaration_key,
 )
-from ._protocols import (
-    CertificateBundleProtocol,
-    DeadlineEngineProtocol,
-    ExpedientesSource,
-    ModeloDraftBuilderProtocol,
-    ModeloInputs,
-    ModeloInputsProviderProtocol,
-    NotificationsSource,
-    RegistryModeloDraftProtocol,
-    SubmissionEngineProtocol,
-)
+from ._state_models import declaration_key
 
 _logger = get_logger(__name__)
 

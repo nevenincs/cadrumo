@@ -68,7 +68,8 @@ from ._events import (
     WorkflowStateResetFingerprint,
     emit_workflow_state_reset,
 )
-from ._models import WorkflowResult, WorkflowState, utc_now
+from ._run_models import WorkflowResult
+from ._state_models import WorkflowState, utc_now
 
 _logger = get_logger(__name__)
 

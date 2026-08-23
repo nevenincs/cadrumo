@@ -698,7 +698,6 @@ convention = "google"
 "src/cadrumo/entrypoints/cli/_config/__init__.py" = ["E402"]
 # Mid-file imports in these modules sit after a forward-reference-resolving
 # block; moving them to the top would re-introduce the circular import.
-"src/cadrumo/application/workflow/_models.py" = ["E402"]
 "src/cadrumo/adapters/outbound/aeat/sede/tests/test_groi_check.py" = ["E402"]
 
 # PDF scrubbing draws synthetic replacement bytes; the scrubber is local-

@@ -31,7 +31,7 @@ from ....core.errors import BaseSeverity
 from ....domain.submission import ModeloFinding
 from .._engine import WorkflowEngine
 from .._errors import WorkflowAbortSignalError
-from .._models import WorkflowAbortReason, WorkflowStage, WorkflowStep
+from .._run_models import WorkflowAbortReason, WorkflowStage, WorkflowStep
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

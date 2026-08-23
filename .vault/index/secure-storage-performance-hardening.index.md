@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:5be52d34960ccc3104cc64e1693100b02271d4b025187816317ba2da5c27a11f'
+body_hash: 'sha256:e552e851e29ee9e5c5504aca66f4dea6cb89e46a1fa3f0037fd4d6aca063e6ca'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S01]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P01-S02]]'
@@ -39,6 +39,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P04-S16]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P04-S17]]'
   - '[[2026-08-22-secure-storage-performance-hardening-W02-P05-S18]]'
+  - '[[2026-08-22-secure-storage-performance-hardening-W02-P05-S19]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
@@ -62,6 +63,7 @@ related:
   - '[[2026-08-23-secure-storage-performance-hardening-s16-owned-lazy-target-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s17-exact-command-spec-gate-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s18-lazy-workflow-facade-review-audit]]'
+  - '[[2026-08-23-secure-storage-performance-hardening-s19-workflow-contract-split-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s54-command-spec-convergence-review-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s55-command-spec-universal-gates-audit]]'
   - '[[2026-08-23-secure-storage-performance-hardening-s56-source-lane-review-audit]]'
@@ -108,6 +110,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-23-secure-storage-performance-hardening-s16-owned-lazy-target-review-audit` - `secure-storage-performance-hardening` audit: `s16 owned lazy target review`
 - `2026-08-23-secure-storage-performance-hardening-s17-exact-command-spec-gate-review-audit` - `secure-storage-performance-hardening` audit: `s17 exact command spec gate review`
 - `2026-08-23-secure-storage-performance-hardening-s18-lazy-workflow-facade-review-audit` - `secure-storage-performance-hardening` audit: `s18 lazy workflow facade review`
+- `2026-08-23-secure-storage-performance-hardening-s19-workflow-contract-split-review-audit` - `secure-storage-performance-hardening` audit: `s19 workflow contract split review`
 - `2026-08-23-secure-storage-performance-hardening-s54-command-spec-convergence-review-audit` - `secure-storage-performance-hardening` audit: `S54 command-spec convergence review`
 - `2026-08-23-secure-storage-performance-hardening-s55-command-spec-universal-gates-audit` - `secure-storage-performance-hardening` audit: `S55 CommandSpec universal gate review`
 - `2026-08-23-secure-storage-performance-hardening-s56-source-lane-review-audit` - `secure-storage-performance-hardening` audit: `S56 clean source and editable lane review`
@@ -155,6 +158,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-22-secure-storage-performance-hardening-W02-P04-S16` - Replace hidden first-party function-local coupling with owned lazy public handler and schema boundaries referenced only by CommandSpec targets
 - `2026-08-22-secure-storage-performance-hardening-W02-P04-S17` - Require every current and future CLI root, group, and leaf to be declared exactly once through CommandSpec with no decorator, registrar, callback-metadata, generated-resource, or path-catalogue escape hatch
 - `2026-08-22-secure-storage-performance-hardening-W02-P05-S18` - Replace the eager workflow facade with an explicit PEP 562 lazy export map preserving public symbols and direction
+- `2026-08-22-secure-storage-performance-hardening-W02-P05-S19` - Move heavy workflow contracts into cohesive sibling modules loaded only by owning commands
 
 ### plan
 
