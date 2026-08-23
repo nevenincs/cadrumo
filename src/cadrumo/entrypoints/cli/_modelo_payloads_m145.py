@@ -6,7 +6,7 @@ stable JSON envelopes while preserving registry legal/source references and
 local communication state.
 
 See Also:
-    :func:`~core.json_contract.register_schema`
+    CommandSpec schema authority
         Central CLI schema registry used for each Modelo 145 operation name.
     :mod:`~entrypoints.cli._modelo_m145_cli`
         Typer command group that emits these payloads.

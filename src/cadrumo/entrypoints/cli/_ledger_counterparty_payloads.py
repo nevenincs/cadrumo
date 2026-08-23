@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for the counterparty establishment commands.
 
 Every declared payload is an :class:`OutputSchema` subclass registered with
-:func:`register_schema` and carried on the shared :class:`SchemaEnvelope` spine
+CommandSpec schema authority and carried on the shared :class:`SchemaEnvelope` spine
 through ``_emit_envelope``, so the answer an operator gives about a counterparty
 reaches a caller under the same contract every other ledger command uses.
 
@@ -27,7 +27,7 @@ from datetime import datetime
 from pydantic import Field
 
 from ...core import ClassifierInputSource
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.iva import EUMemberState, IvaTerritorialScope
 
 
@@ -57,7 +57,6 @@ class CounterpartyEstablishmentPayload(OutputSchema):
     note: str = ""
 
 
-@register_schema("ledger.counterparty.confirm")
 class CounterpartyConfirmResult(OutputSchema):
     """JSON envelope for ``aeat app ledger counterparty confirm``.
 
@@ -74,7 +73,6 @@ class CounterpartyConfirmResult(OutputSchema):
     recorded: bool
 
 
-@register_schema("ledger.counterparty.withdraw")
 class CounterpartyWithdrawResult(OutputSchema):
     """JSON envelope for ``aeat app ledger counterparty withdraw``.
 
@@ -91,7 +89,6 @@ class CounterpartyWithdrawResult(OutputSchema):
     withdrawn: bool
 
 
-@register_schema("ledger.counterparty.show")
 class CounterpartyShowResult(OutputSchema):
     """JSON envelope for ``aeat app ledger counterparty show``.
 

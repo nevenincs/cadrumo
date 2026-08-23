@@ -4,7 +4,7 @@ An opt-in axis: for each command explicitly ENROLLED as replayable, this gate
 captures the command's emitted ``SchemaEnvelope`` twice under a frozen clock with
 injected identity against REAL repositories, canonicalises and masks via the
 shared substrate primitive, and asserts byte-identical full-envelope equality. An
-un-enrolled ``register_schema`` command is REPORTED as a visible coverage gap (a
+un-enrolled command-spec result identity is REPORTED as a visible coverage gap (a
 pytest warning enumerating the uncovered set) rather than silently passing, so the
 axis grows deliberately. The enrolled set only ratchets up: a stale enrolment (a
 command that no longer registers) fails loudly.
@@ -44,7 +44,7 @@ from ....application.ledger import (
     ledger_transaction_review_status,
 )
 from ....core import scan_directory
-from ....core.json_contract import SCHEMA_REGISTRY, Notice, NoticeSeverity, emit_json_success
+from ....core.json_contract import Notice, NoticeSeverity, emit_json_success
 from ....core.observability import (
     canonicalise,
     capture_envelopes,
@@ -57,6 +57,7 @@ from ....core.time import frozen_clock
 from ....domain.transactions import TransactionDirection
 from ....tests.env_scope import scoped_cwd
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from .._command_schema import command_schema_types
 from .._ledger_payloads import EvidenceAddResult, LedgerAddResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -72,7 +73,7 @@ ENROLLED_REPLAYABLE_COMMANDS: frozenset[str] = frozenset({"ledger.add", "ledger.
 
 def uncovered_replayable_commands() -> frozenset[str]:
     """Return registered ``--format json`` commands not yet enrolled as replayable."""
-    return frozenset(SCHEMA_REGISTRY) - ENROLLED_REPLAYABLE_COMMANDS
+    return frozenset(command_schema_types()) - ENROLLED_REPLAYABLE_COMMANDS
 
 
 def _committed_db_fingerprint(profile: TestRuntimeProfile, snapshot_dir: Path) -> str:
@@ -292,7 +293,7 @@ class TestEnrolledCommandDeterminism:
 class TestCoverageDiscipline:
     def test_enrolled_commands_are_all_registered(self) -> None:
         """No stale enrolment: every enrolled command still resolves in the registry."""
-        stale = ENROLLED_REPLAYABLE_COMMANDS - frozenset(SCHEMA_REGISTRY)
+        stale = ENROLLED_REPLAYABLE_COMMANDS - frozenset(command_schema_types())
         assert not stale, f"enrolled replayable commands no longer registered: {sorted(stale)}"
 
     def test_uncovered_commands_are_reported_not_silently_passed(self) -> None:
@@ -307,7 +308,7 @@ class TestCoverageDiscipline:
         if uncovered:
             warnings.warn(
                 f"determinism-conformance coverage: {len(ENROLLED_REPLAYABLE_COMMANDS)} of "
-                f"{len(SCHEMA_REGISTRY)} registered --format json commands enrolled; "
+                f"{len(command_schema_types())} authored --format json commands enrolled; "
                 f"{len(uncovered)} uncovered (opt-in). First uncovered: {sorted(uncovered)[:10]}",
                 stacklevel=2,
             )

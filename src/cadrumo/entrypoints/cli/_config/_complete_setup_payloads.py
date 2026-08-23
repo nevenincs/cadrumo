@@ -1,6 +1,6 @@
 """Typed ``--json`` payload schema for ``aeat config profile complete-setup``.
 
-Registered with :func:`register_schema` so the JSON-contract gate enumerates the
+Registered with CommandSpec schema authority so the JSON-contract gate enumerates the
 surface, and kept beside its CLI module so importing that module runs the
 decorator on the CLI build path.
 
@@ -13,10 +13,9 @@ idempotent no-op.
 from __future__ import annotations
 
 from ....core.identity import ProfileId
-from ....core.json_contract import OutputSchema, register_schema
+from ....core.json_contract import OutputSchema
 
 
-@register_schema("config.profile.complete_setup")
 class ProfileCompleteSetupResult(OutputSchema):
     """JSON envelope for ``aeat config profile complete-setup``.
 

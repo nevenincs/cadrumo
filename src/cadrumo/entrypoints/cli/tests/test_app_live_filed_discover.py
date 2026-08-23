@@ -2,7 +2,7 @@
 
 The envelope-level conformance cases are written out explicitly here rather than
 left to the shared parametrised gates in ``test_json_schema_conformance.py``.
-Those gates parametrise over ``SCHEMA_REGISTRY`` as populated at COLLECTION
+Those gates parametrise over the immutable command-spec schema projection at COLLECTION
 time, and that module imports only the ``config`` payload modules -- so the whole
 ``app.live.*`` schema family, including the two shipped ``filed`` verbs, never
 reaches ``test_registered_schema_envelope_round_trips`` or

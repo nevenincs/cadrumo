@@ -1,7 +1,7 @@
 """Payload-contract guard for the declared-unimplemented profile export surface.
 
 The ``_config_payloads.py`` export / import / subject-access-request /
-rename payload classes are ``@register_schema`` declarations for the
+rename payload classes are authored CommandSpec result targets for the
 declared-unimplemented keys -- deliberate evidence-keeping of retired
 verbs, not live surfaces. This module pins the canonical result type's
 strictness so a permissive shell cannot be reintroduced at the payload

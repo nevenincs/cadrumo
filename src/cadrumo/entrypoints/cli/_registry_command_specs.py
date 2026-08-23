@@ -107,7 +107,11 @@ def _leaf(
         parameters,
         _READ,
         LazyBinding.available(DeferredTarget(module, handler)),
-        ResultSchemaSpec(SchemaState.TARGET, DeferredTarget(schema_module, schema), identity=key.replace("_", ".")),
+        ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget(schema_module, schema),
+            identity=key.removeprefix("app_").replace("_", "."),
+        ),
     )
 
 

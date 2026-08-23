@@ -2,7 +2,7 @@
 
 Each class declared here is a strict
 :class:`OutputSchema` subclass and is decorated
-with :func:`register_schema` so the
+with CommandSpec schema authority so the
 JSON-contract test suite can enumerate every registry command surface this
 module covers.
 
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry import (
     ExportLayoutId,
     LegalRefId,
@@ -63,8 +63,6 @@ class RegistryRevisionDetailPayload(OutputSchema):
     workbook_parity: list[RegistryWorkbookParityDetailPayload] = []
 
 
-@register_schema("registry.inspect")
-@register_schema("registry.verify")
 class RegistryInspectResult(OutputSchema):
     """JSON envelope shared by ``aeat app registry inspect`` and ``... verify``.
 
@@ -108,7 +106,6 @@ class RegistryInspectResult(OutputSchema):
     unverified_invariant_families: list[str] = []
 
 
-@register_schema("registry.verify_filed_state")
 class RegistryVerifyFiledStateResult(OutputSchema):
     """JSON envelope for ``aeat app registry verify-filed-state``.
 

@@ -2,7 +2,7 @@
 
 Each command result is a strict
 :class:`OutputSchema` subclass registered by
-:func:`register_schema` for a stable command path
+CommandSpec schema authority for a stable command path
 and wrapped at emit time in
 :class:`SchemaEnvelope` through
 :func:`_emit_envelope`. This file is the CLI-side
@@ -49,7 +49,7 @@ from ...core.identity import (
     VerificationReportId,
     WorkUnitId,
 )
-from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
+from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
@@ -409,7 +409,6 @@ class FormulaPayload(OutputSchema):
     source_refs: tuple[SourceRefId, ...]
 
 
-@register_schema("modelo.work.create")
 class WorkCreateResult(OutputSchema):
     """Creation result returned by ``aeat app modelo work create``.
 
@@ -448,7 +447,6 @@ class WorkCreateResult(OutputSchema):
     causante_ccaa: str | None = None
 
 
-@register_schema("modelo.work.list")
 class WorkListResult(OutputSchema):
     """Work-unit listing result returned by ``aeat app modelo work list``.
 
@@ -464,7 +462,6 @@ class WorkListResult(OutputSchema):
     work_units: list[WorkUnitPayload]
 
 
-@register_schema("modelo.work.status")
 class WorkStatusResult(OutputSchema):
     """Status projection returned by ``aeat app modelo work status``.
 
@@ -497,7 +494,6 @@ class WorkStatusResult(OutputSchema):
     causante_ccaa: str | None = None
 
 
-@register_schema("modelo.work.rename")
 class WorkRenameResult(OutputSchema):
     """Rename confirmation returned by ``aeat app modelo work rename``.
 
@@ -530,7 +526,6 @@ class WorkRenameResult(OutputSchema):
     causante_ccaa: str | None = None
 
 
-@register_schema("modelo.work.discard")
 class WorkDiscardResult(OutputSchema):
     """Work-unit discard confirmation returned by ``aeat app modelo work discard``.
 
@@ -564,7 +559,6 @@ class WorkDiscardResult(OutputSchema):
     causante_ccaa: str | None = None
 
 
-@register_schema("modelo.work.calculate")
 class WorkCalculateResult(CalculationRevisionProjectionFields):
     """Successful ``modelo work calculate`` result payload.
 
@@ -590,7 +584,6 @@ class WorkCalculateResult(CalculationRevisionProjectionFields):
     deadline: WorkDeadlinePosturePayload | None = None
 
 
-@register_schema("modelo.work.revisions")
 class WorkRevisionsResult(OutputSchema):
     """Calculation-revision listing returned by ``aeat app modelo work revisions``.
 
@@ -606,7 +599,6 @@ class WorkRevisionsResult(OutputSchema):
     revisions: list[CalculationRevisionPayload]
 
 
-@register_schema("modelo.work.verify")
 class WorkVerifyResult(OutputSchema):
     """Verification report returned by ``aeat app modelo work verify``.
 
@@ -633,7 +625,6 @@ class WorkVerifyResult(OutputSchema):
     findings: list[FindingPayload]
 
 
-@register_schema("modelo.work.review")
 class WorkReviewResult(OutputSchema):
     """Envelope payload carrying the canonical application review record.
 
@@ -646,7 +637,6 @@ class WorkReviewResult(OutputSchema):
     review: ModeloWorkReview
 
 
-@register_schema("modelo.work.dependencies")
 class WorkDependenciesResult(OutputSchema):
     """Cross-period dependency inventory and optional active-bucket clean-state verdict."""
 
@@ -661,7 +651,6 @@ class WorkDependenciesResult(OutputSchema):
     clean_state: CrossPeriodCleanStatePayload | None = None
 
 
-@register_schema("modelo.work.file")
 class WorkFileResult(ModeloRecordPayload):
     """Internal-filing confirmation returned by ``aeat app modelo work file``.
 
@@ -675,7 +664,6 @@ class WorkFileResult(ModeloRecordPayload):
     operation: str = "modelo.work.file"
 
 
-@register_schema("modelo.work.amend")
 class WorkAmendResult(ModeloRecordPayload):
     """Amendment filing confirmation returned by ``aeat app modelo work amend``.
 
@@ -1057,7 +1045,6 @@ class ModeloLifecycleEventPayload(OutputSchema):
     payload: dict[str, str]
 
 
-@register_schema("modelo.history")
 class ModeloHistoryResult(OutputSchema):
     """Chronological modelo lifecycle history result.
 
@@ -1168,7 +1155,6 @@ class LedgerIssuePayload(OutputSchema):
     operator_action: OperatorActionAxis
 
 
-@register_schema("modelo.readiness")
 class ModeloReadinessResult(OutputSchema):
     """Active-profile modelo readiness report."""
 
@@ -1193,7 +1179,6 @@ class ModeloReadinessResult(OutputSchema):
     ledger_issues: list[LedgerIssuePayload]
 
 
-@register_schema("modelo.work.resume")
 class WorkResumeResult(OutputSchema):
     """Workflow resume precondition and context result.
 

@@ -24,8 +24,6 @@ import typer
 
 from ....core import ModelRole
 from .._common import _emit_envelope, resolve_cli_precondition_action
-
-# Eager import so the @register_schema decorators run on the CLI build path.
 from ._provision_payloads import (
     ProvisionContentionPayload,
     ProvisionModelPayload,

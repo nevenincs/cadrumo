@@ -2,7 +2,7 @@
 
 Each class is a strict
 :class:`OutputSchema` subclass registered with
-:func:`register_schema` so the JSON-contract gate
+CommandSpec schema authority so the JSON-contract gate
 enumerates the surface. Field sets match the payload dicts constructed in
 :mod:`_capabilities_cli` and enter
 :class:`SchemaEnvelope` through
@@ -19,7 +19,7 @@ from __future__ import annotations
 from ....application.user_profile import CapabilitySource
 from ....core import ServiceCapability
 from ....core.identity import ProfileId
-from ....core.json_contract import OutputSchema, register_schema
+from ....core.json_contract import OutputSchema
 
 
 class CapabilityRowPayload(OutputSchema):
@@ -39,7 +39,6 @@ class CapabilityRowPayload(OutputSchema):
     reason: str
 
 
-@register_schema("config.profile.capabilities.show")
 class CapabilitiesShowResult(OutputSchema):
     """JSON envelope for ``aeat config profile capabilities show``.
 
@@ -53,7 +52,6 @@ class CapabilitiesShowResult(OutputSchema):
     capabilities: list[CapabilityRowPayload] = []
 
 
-@register_schema("config.profile.capabilities.set")
 class CapabilitySetResult(OutputSchema):
     """JSON envelope for ``aeat config profile capabilities set``.
 

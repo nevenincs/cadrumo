@@ -24,7 +24,7 @@ import pytest
 
 from ....application.ledger import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 from ....core import FieldGroundingOutcome, FieldOrigin
-from ....core.json_contract import SCHEMA_REGISTRY
+from .._command_schema import command_schema_types
 from .._ledger_business_payloads import EvidenceConfirmResult, EvidenceExtractResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -61,7 +61,7 @@ def _draft() -> InvoiceDraft:
 @pytest.mark.parametrize("command", _PROVENANCE_BEARING_COMMANDS)
 def test_both_evidence_surfaces_declare_the_provenance_channel(command: str) -> None:
     """Registered under their command paths, so the conformance gate sees them."""
-    schema = SCHEMA_REGISTRY[command]
+    schema = command_schema_types()[command]
 
     assert "provenance" in schema.model_fields
     assert "discrepancies" in schema.model_fields
@@ -122,7 +122,7 @@ def test_no_operator_surface_carries_a_numeric_model_confidence(command: str) ->
     text, which legitimately mentions the axis in the prose ruling it out.
     """
     forbidden = ("confidence", "score", "probability", "certainty", "likelihood")
-    document = SCHEMA_REGISTRY[command].model_json_schema()
+    document = command_schema_types()[command].model_json_schema()
 
     names: list[str] = []
 

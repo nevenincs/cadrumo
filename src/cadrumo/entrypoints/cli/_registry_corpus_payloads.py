@@ -2,7 +2,7 @@
 
 Each class declared here is a strict
 :class:`OutputSchema` subclass and is decorated
-with :func:`register_schema` so the
+with CommandSpec schema authority so the
 JSON-contract test suite can enumerate every registry-corpus command surface
 this module covers.
 
@@ -25,14 +25,13 @@ from ...application.registry import (
     RegistryCorpusIssueProjection,
     RegistryTopicProjection,
 )
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 
 # ---------------------------------------------------------------------------
 # Registered schemas
 # ---------------------------------------------------------------------------
 
 
-@register_schema("registry.citations.list")
 class CitationListResult(OutputSchema):
     """JSON envelope for ``aeat app registry citations list``.
 
@@ -50,7 +49,6 @@ class CitationListResult(OutputSchema):
     references: list[RegistryCitationReferenceProjection] = []
 
 
-@register_schema("registry.citations.view")
 class CitationShowResult(OutputSchema):
     """JSON envelope for ``aeat app registry citations view``.
 
@@ -67,7 +65,6 @@ class CitationShowResult(OutputSchema):
     related_topics: list[RegistryTopicProjection] = []
 
 
-@register_schema("registry.citations.verify")
 class CitationVerifyResult(OutputSchema):
     """JSON envelope for ``aeat app registry citations verify``.
 
@@ -87,7 +84,6 @@ class CitationVerifyResult(OutputSchema):
     topics: list[RegistryTopicProjection] = []
 
 
-@register_schema("registry.manuals.list")
 class ManualListResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals list``.
 
@@ -110,7 +106,6 @@ class ManualListResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
 
 
-@register_schema("registry.manuals.view")
 class ManualShowResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals view``.
 
@@ -138,7 +133,6 @@ class ManualShowResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
 
 
-@register_schema("registry.manuals.rules")
 class ManualRulesListResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals rules``.
 
@@ -165,7 +159,6 @@ class ManualRulesListResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
 
 
-@register_schema("registry.manuals.verify")
 class ManualVerifyResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals verify``.
 

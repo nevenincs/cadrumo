@@ -9,7 +9,7 @@ established by :mod:`~entrypoints.cli._modelo_aux_payloads`,
 ``modelo bindings list`` and ``modelo bindings resolve`` (preview) command
 envelopes. Every class declared here is a strict
 :class:`OutputSchema` subclass registered with
-:func:`register_schema` for the bindings-list and
+CommandSpec schema authority for the bindings-list and
 bindings-resolve command JSON-contract surface.
 
 Per `aeat-registry-bindings`, every row here carries the binding's

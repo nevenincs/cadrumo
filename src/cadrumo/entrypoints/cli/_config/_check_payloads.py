@@ -5,7 +5,7 @@ The command is the workstation doctor: it reports every
 external dependency probes that must be provisioned for opted-in capabilities.
 These strict :class:`OutputSchema` subclasses
 document only the transport shape registered with
-:func:`register_schema` and emitted through
+CommandSpec schema authority and emitted through
 :class:`SchemaEnvelope` by
 :func:`_emit_envelope`. Capability semantics live
 in :mod:`user_profile`, and provisioning semantics live in
@@ -20,7 +20,7 @@ from pydantic import Field, model_validator
 
 from ....application.preflight import HealthSeverity
 from ....core.identity import ProfileId
-from ....core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
+from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
 
 ProvisioningFactPayload = Mapping[str, str | int | bool]
 """Locale-neutral scalar facts projected from a provisioning outcome."""
@@ -98,7 +98,6 @@ class CheckPreflightPayload(OutputSchema):
         return self
 
 
-@register_schema("config.check")
 class ConfigCheckResult(OutputSchema):
     """JSON envelope for ``aeat config check``.
 

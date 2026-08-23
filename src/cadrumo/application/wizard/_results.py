@@ -1,12 +1,10 @@
-"""Registered ``--json`` result schemas for the setup-wizard success emitters.
+"""Typed ``--json`` results for the setup-wizard success emitters.
 
 These two classes are the actual runtime payload the wizard's success and
 save-exit emitters build and validate (see
 :mod:`application.wizard._commands`). Each is a strict
-:class:`~cadrumo.core.json_contract.OutputSchema` subclass, registered
-directly against :func:`~cadrumo.core.json_contract.register_schema` at
-their true owner —
-the wizard, not the CLI transport — because the CLI package sits ABOVE
+:class:`~cadrumo.core.json_contract.OutputSchema` subclass at its true owner —
+the wizard, not the CLI transport — because the CLI package sits above
 :mod:`application.wizard` in the accepted hexagonal direction and the wizard
 cannot reach back up into an ``entrypoints.cli`` payload module for a class
 to construct.
@@ -15,8 +13,7 @@ Before this module existed, ``entrypoints.cli._config_payloads`` carried a
 same-shaped pair of classes purely to satisfy the CLI-leaf-has-a-registered-
 schema conformance gate; nothing ever imported or constructed them, and the
 wizard emitted an untyped ``dict`` instead. A field drifting between the two
-therefore failed silently. Registering the schema at its real producer closes
-that gap: constructing :class:`ConfigProfileCreateResult` /
+therefore failed silently. Constructing :class:`ConfigProfileCreateResult` /
 :class:`ConfigProfileEditResult` now IS the strict validation, enforced at
 every emit rather than only by a structural CLI-tree-vs-registry test.
 """
@@ -25,7 +22,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 
 __all__ = ["ConfigProfileCreateResult", "ConfigProfileEditResult", "ProfileWizardStatus"]
 
@@ -48,7 +45,6 @@ class ProfileWizardStatus(StrEnum):
     ABANDONED = "abandoned"
 
 
-@register_schema("config.profile.create")
 class ConfigProfileCreateResult(OutputSchema):
     """JSON envelope for ``aeat config profile create``.
 
@@ -65,7 +61,6 @@ class ConfigProfileCreateResult(OutputSchema):
     active_profile: str | None = None
 
 
-@register_schema("config.profile.edit")
 class ConfigProfileEditResult(OutputSchema):
     """JSON envelope for ``aeat config profile edit``.
 

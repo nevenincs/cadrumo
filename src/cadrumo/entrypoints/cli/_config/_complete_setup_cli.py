@@ -29,7 +29,6 @@ from ....core import resolve_active_bucket_id
 from ....core.i18n import tr
 from .._common import bad, emit_envelope
 
-# Eager import so the @register_schema decorator runs when this module is imported
 # on the CLI build path, keeping the leaf in the JSON-contract registry.
 from ._complete_setup_payloads import ProfileCompleteSetupResult
 

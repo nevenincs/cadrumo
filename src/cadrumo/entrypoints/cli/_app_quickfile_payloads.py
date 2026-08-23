@@ -13,7 +13,7 @@ from ...application.modelo import QuickfileResult, QuickfileStage, QuickfileStag
 from ...application.state_projection import ProjectionModeloReadiness
 from ...core import Period
 from ...core.identity import CalculationRevisionId, WorkUnitId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry import RevisionId
 from ._modelo_payloads import ModeloExportPayload
 
@@ -37,7 +37,6 @@ class QuickfileStageOutcomePayload(OutputSchema):
     context: dict[str, str] = {}
 
 
-@register_schema("quickfile")
 class QuickfileResultPayload(OutputSchema):
     """Aggregate ``aeat app quickfile`` result envelope.
 

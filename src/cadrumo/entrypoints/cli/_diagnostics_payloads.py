@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for ``aeat app diagnostics`` commands.
 
 Every declared payload is an :class:`OutputSchema` subclass registered with
-:func:`register_schema` for the local-only run-health diagnostic surface
+CommandSpec schema authority for the local-only run-health diagnostic surface
 carried by :class:`SchemaEnvelope` through :func:`_emit_envelope`. These
 schemas project :class:`~application.diagnostics_run_health.RunHealthReport`,
 :class:`~application.diagnostics_run_health.LatencyReport`,
@@ -29,7 +29,7 @@ from decimal import Decimal
 from pydantic import Field, field_validator, model_validator
 
 from ...core.decimal import try_parse_canonical_decimal
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...core.telemetry import TelemetryEventPayload, TelemetryTier
 from ...core.time import validate_inclusive_iso_date_range
 from ._decimal_wire import DecimalWireText
@@ -66,7 +66,6 @@ class LlmRunProviderPayload(OutputSchema):
     mean_duration_ms: DecimalWireText | None = None
 
 
-@register_schema("diagnostics.run_health")
 class RunHealthResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics run-health``.
 
@@ -124,7 +123,6 @@ class RunRecordPayload(OutputSchema):
     started_at: datetime
 
 
-@register_schema("diagnostics.runs")
 class RunsListResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics runs``.
 
@@ -178,7 +176,6 @@ class LatencyProviderRowPayload(OutputSchema):
     percentiles: LatencyPercentilesPayload
 
 
-@register_schema("diagnostics.latency")
 class LatencyResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics latency``.
 
@@ -223,7 +220,6 @@ class ErrorKindCountPayload(OutputSchema):
     count: int = Field(ge=1)
 
 
-@register_schema("diagnostics.errors")
 class ErrorsBreakdownResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics errors``.
 
@@ -301,7 +297,6 @@ class LlmRunHealthProviderPayload(OutputSchema):
         return _validate_success_rate(value)
 
 
-@register_schema("diagnostics.llm_usage")
 class LlmUsageResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics llm-usage``.
 
@@ -340,7 +335,6 @@ class LlmUsageResult(OutputSchema):
     has_run_data: bool
 
 
-@register_schema("diagnostics.telemetry.status")
 class TelemetryStatusResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics telemetry status``.
 
@@ -358,7 +352,6 @@ class TelemetryStatusResult(OutputSchema):
     would_emit_if_acknowledged: bool
 
 
-@register_schema("diagnostics.telemetry.flush")
 class TelemetryFlushResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics telemetry flush``.
 

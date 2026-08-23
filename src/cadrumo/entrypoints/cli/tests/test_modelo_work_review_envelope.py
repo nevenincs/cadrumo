@@ -16,7 +16,6 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....application.modelo import ModeloWorkReview, build_modelo_work_review
 from ....core import EstadoCasillaOficial, OperatorActionAxis, Period
 from ....core.json_contract import (
-    SCHEMA_REGISTRY,
     EnvelopeStatus,
     SchemaEnvelope,
     derive_status,
@@ -40,6 +39,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from .._command_schema import command_schema_types
 from .._modelo_payloads import WorkReviewResult
 from .._modelo_rendering import verification_report_notices
 
@@ -160,7 +160,7 @@ def test_review_record_round_trips_through_registered_schema_envelope(tmp_path: 
         document = envelope.model_dump(mode="json")
         round_tripped = envelope_cls.model_validate_json(envelope.model_dump_json())
 
-        assert SCHEMA_REGISTRY[_COMMAND] is WorkReviewResult
+        assert command_schema_types()[_COMMAND] is WorkReviewResult
         assert result.review is review
         assert round_tripped == envelope
         assert round_tripped.status is EnvelopeStatus.WARNING

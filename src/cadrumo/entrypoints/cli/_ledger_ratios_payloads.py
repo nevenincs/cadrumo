@@ -1,7 +1,7 @@
 """JSON-contract payloads for the ``aeat app ledger ratios`` subgroup.
 
 Each result is a strict :class:`OutputSchema` registered through
-:func:`register_schema` and emitted inside :class:`SchemaEnvelope` via
+CommandSpec schema authority and emitted inside :class:`SchemaEnvelope` via
 :func:`_emit_envelope`. The parent :mod:`_ledger_payloads` module re-exports
 these split schemas so ledger ratio handlers keep the existing payload import
 surface.
@@ -20,7 +20,7 @@ from pydantic import Field, field_validator
 
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.identity import BucketId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.categories import ProportionalityKind, SpendingCategory
 from ...domain.usage_ratios import UsageRatioValidationError, validate_usage_ratio_bound
 
@@ -97,7 +97,6 @@ class RatiosValidateFindingPayload(OutputSchema):
     detail: str = Field(min_length=1)
 
 
-@register_schema("ledger.ratios.list")
 class RatiosListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios list``."""
 
@@ -107,7 +106,6 @@ class RatiosListResult(OutputSchema):
     censo_mismatch: str | None = None
 
 
-@register_schema("ledger.ratios.set")
 class RatiosSetResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios set``."""
 
@@ -121,7 +119,6 @@ class RatiosSetResult(OutputSchema):
         return _validated_ratio_text(value, field="ratio")
 
 
-@register_schema("ledger.ratios.unset")
 class RatiosUnsetResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios unset``."""
 
@@ -131,7 +128,6 @@ class RatiosUnsetResult(OutputSchema):
     ratio: str = ""
 
 
-@register_schema("ledger.ratios.eligible")
 class RatiosEligibleResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios eligible``."""
 
@@ -140,7 +136,6 @@ class RatiosEligibleResult(OutputSchema):
     count: int
 
 
-@register_schema("ledger.ratios.validate")
 class RatiosValidateResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios validate``.
 

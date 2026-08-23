@@ -1,34 +1,26 @@
-"""Import-light execution policy attached to CLI callbacks.
+"""Import-light immutable execution-policy value facade.
 
-The callback is the command's executable authority.  Policy metadata therefore
-lives on that callable rather than in a command-path table: aliases and lazy
-materialisation retain the same declaration, while an unannotated callback is
-truthfully visible as unclassified.
+Executable policy authority lives in the command graph.  This module retains
+only the validated public value type used by graph consumers while the graph
+transition completes; it does not attach metadata to behavior callables.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Literal, TypeVar, cast
+from typing import Literal
 
 from ._command_schema import CommandCapabilityClass
 
 CommandWriteRouteScope = Literal["none", "profile-bound", "bootstrap-root"]
 """Storage route a state-mutating callback is permitted to use."""
 
-_POLICY_ATTRIBUTE = "__cadrumo_command_execution_policy__"
 _WRITE_ROUTE_SCOPES = frozenset({"none", "profile-bound", "bootstrap-root"})
 
 
 @dataclass(frozen=True, slots=True)
 class CommandExecutionPolicy:
-    """Complete execution declaration owned by one command callback.
-
-    False risk values are meaningful only because the record itself is
-    explicitly attached.  Absence is represented by ``None`` at census time;
-    it is never coerced into an apparently safe policy.
-    """
+    """Validated immutable execution declaration projected from a command graph."""
 
     classification: CommandCapabilityClass
     write_route: CommandWriteRouteScope
@@ -64,48 +56,7 @@ class CommandExecutionPolicy:
             raise ValueError("a live write requires a network or browser side effect")
 
 
-_Callback = TypeVar("_Callback", bound=Callable[..., object])
-
-
-def command_execution_policy(policy: CommandExecutionPolicy) -> Callable[[_Callback], _Callback]:
-    """Attach ``policy`` to a Typer command or group callback.
-
-    Typer registration decorators retain the callback object until Click
-    materialisation, so this decorator is order-independent: it may appear
-    immediately above or below ``@app.command`` / ``@app.callback``.  The
-    callable is returned unchanged, preserving handler identity and signature.
-
-    Reapplying the same immutable policy is idempotent.  A different policy on
-    the same callback is a contradictory declaration and fails at import time.
-    """
-    if not isinstance(policy, CommandExecutionPolicy):
-        raise TypeError("command execution policy must be a CommandExecutionPolicy")
-
-    def attach(callback: _Callback) -> _Callback:
-        existing = getattr(callback, _POLICY_ATTRIBUTE, None)
-        if existing is not None and existing != policy:
-            raise ValueError("command callback already has a different execution policy")
-        setattr(callback, _POLICY_ATTRIBUTE, policy)
-        return callback
-
-    return attach
-
-
-def execution_policy_for(callback: object | None) -> CommandExecutionPolicy | None:
-    """Return directly attached callback policy, preserving honest absence."""
-    if callback is None:
-        return None
-    policy = getattr(callback, _POLICY_ATTRIBUTE, None)
-    if policy is None:
-        return None
-    if not isinstance(policy, CommandExecutionPolicy):
-        raise TypeError("command callback carries invalid execution-policy metadata")
-    return cast(CommandExecutionPolicy, policy)
-
-
 __all__ = [
     "CommandExecutionPolicy",
     "CommandWriteRouteScope",
-    "command_execution_policy",
-    "execution_policy_for",
 ]

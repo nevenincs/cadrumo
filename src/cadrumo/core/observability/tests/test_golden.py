@@ -17,7 +17,7 @@ masking.
 from __future__ import annotations
 
 import io
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any, cast
 
@@ -222,7 +222,7 @@ class TestAntiTautologyMaskIsExactlyResidual:
 class TestTypedReValidation:
     def test_captured_envelope_revalidates_to_typed_model(self) -> None:
         captured = _capture_scenario()
-        envelope = validate_captured_envelope(captured, registry={_COMMAND: _GoldenResult})
+        envelope = validate_captured_envelope(captured, schema=_GoldenResult)
         # A typed envelope, not a dict[str, Any] bag.
         assert envelope.command == _COMMAND
         assert isinstance(envelope.result, _GoldenResult)
@@ -230,12 +230,11 @@ class TestTypedReValidation:
         assert envelope.result.generated_at == _INSTANT
 
     def test_invalid_captured_envelopes_are_refused(self) -> None:
-        cases: tuple[tuple[Callable[[], dict[str, object]], Mapping[str, type[OutputSchema]], str | None], ...] = (
-            (_capture_scenario, {}, "not registered"),
-            (lambda: {"result": {}}, {_COMMAND: _GoldenResult}, "command"),
-            (_capture_with_schema_violation, {_COMMAND: _GoldenResult}, None),
+        cases: tuple[tuple[Callable[[], dict[str, object]], str | None], ...] = (
+            (lambda: {"result": {}}, "command"),
+            (_capture_with_schema_violation, None),
         )
 
-        for capture, registry, match in cases:
+        for capture, match in cases:
             with pytest.raises(GoldenCaptureError, match=match):
-                validate_captured_envelope(capture(), registry=registry)
+                validate_captured_envelope(capture(), schema=_GoldenResult)

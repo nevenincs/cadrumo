@@ -14,8 +14,8 @@ from ....application.invoices import (
     CatalogueInvoiceUpdateResult,
     build_catalogue_invoice,
 )
-from ....core.json_contract import SCHEMA_REGISTRY
 from ....domain.iva import InvoiceKind
+from .._command_schema import command_schema_types
 from .._ledger_business_invoice_cli import _catalogue_invoice_payload
 from .._ledger_catalogue_invoice_payloads import (
     BulkInvoiceImportRowFailurePayload,
@@ -80,7 +80,7 @@ def test_invoice_mutation_results_and_cli_payloads_have_distinct_schema_identiti
         for title in expected_titles
     } == {title: {title} for title in expected_titles}
     assert {
-        command: SCHEMA_REGISTRY[command]
+        command: command_schema_types()[command]
         for command in (
             "ledger.invoice.add",
             "ledger.invoice.update",

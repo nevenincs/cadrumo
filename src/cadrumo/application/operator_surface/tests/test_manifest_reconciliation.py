@@ -48,7 +48,7 @@ def _complete_inventory() -> _ReconciliationInventory:
             ResultSchemaInventoryRow(
                 subject_leaf_key="app.ledger.list",
                 schema_name="LedgerListPayload",
-                provenance="SCHEMA_REGISTRY",
+                provenance="COMMAND_GRAPH",
             ),
         ),
         "input_schemas": (
@@ -151,7 +151,7 @@ def test_reconciliation_accounts_for_the_root_status_callback_without_a_mounted_
         ResultSchemaInventoryRow(
             subject_leaf_key="root.status",
             schema_name="RootStatusPayload",
-            provenance="SCHEMA_REGISTRY",
+            provenance="COMMAND_GRAPH",
         ),
     )
     inventory["input_schemas"] = (
@@ -202,7 +202,7 @@ def test_reconciliation_rejects_unmatched_duplicate_and_ambiguous_identities() -
         ResultSchemaInventoryRow(
             subject_leaf_key="app.unknown.list",
             schema_name="UnknownPayload",
-            provenance="SCHEMA_REGISTRY",
+            provenance="COMMAND_GRAPH",
         ),
     )
     with pytest.raises(OperatorSurfaceContractError, match="unmatched result_schema identity"):

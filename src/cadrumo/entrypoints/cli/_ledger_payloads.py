@@ -2,7 +2,7 @@
 
 Each class declared here is a strict
 :class:`OutputSchema` subclass and is decorated
-with :func:`register_schema` so the
+with CommandSpec schema authority so the
 JSON-contract test suite can enumerate every ledger-command surface this module
 covers.  Emission wraps the validated result in
 :class:`SchemaEnvelope` through
@@ -49,7 +49,7 @@ from ...core.identity import (
     TransactionId,
     WorkUnitId,
 )
-from ...core.json_contract import OutputRootSchema, OutputSchema, register_schema
+from ...core.json_contract import OutputRootSchema, OutputSchema
 from ._ledger_business_payloads import (
     AttachmentReviewPayload,
     AttachmentReviewQueueResult,
@@ -397,7 +397,6 @@ class _LedgerMutationResult(OutputSchema):
     transaction: TransactionPayload
 
 
-@register_schema("ledger.add")
 class LedgerAddResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger add``.
 
@@ -407,7 +406,6 @@ class LedgerAddResult(_LedgerMutationResult):
     """
 
 
-@register_schema("ledger.update")
 class LedgerUpdateResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger update``."""
 
@@ -435,7 +433,6 @@ class LedgerClassifyBulkResult(OutputSchema):
     failures: list[BulkClassifyFailurePayload] = []
 
 
-@register_schema("ledger.classify")
 class LedgerClassifyResult(OutputRootSchema[LedgerClassifySingleResult | LedgerClassifyBulkResult]):
     """JSON envelope for ``aeat app ledger classify``, either branch.
 
@@ -449,18 +446,14 @@ class LedgerClassifyResult(OutputRootSchema[LedgerClassifySingleResult | LedgerC
     """
 
 
-@register_schema("ledger.allocate")
 class LedgerAllocateResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger allocate``."""
 
 
-@register_schema("ledger.attach")
-@register_schema("ledger.doclink")
 class LedgerAttachResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger attach`` and ``ledger doclink``."""
 
 
-@register_schema("ledger.detach")
 class LedgerDetachResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger detach``.
 
@@ -487,7 +480,6 @@ class LedgerDocLinkPullFolderFilePayload(OutputSchema):
     refusal_reason: str | None = None
 
 
-@register_schema("ledger.pull_folder")
 class LedgerDocLinkPullFolderResult(OutputSchema):
     """JSON envelope for ``aeat app ledger pull-folder``.
 
@@ -507,22 +499,18 @@ class LedgerDocLinkPullFolderResult(OutputSchema):
     files: list[LedgerDocLinkPullFolderFilePayload] = []
 
 
-@register_schema("ledger.archive")
 class LedgerArchiveResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger archive``."""
 
 
-@register_schema("ledger.stash")
 class LedgerStashResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger stash``."""
 
 
-@register_schema("ledger.restore")
 class LedgerRestoreResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger restore``."""
 
 
-@register_schema("ledger.exclude")
 class LedgerExcludeResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger exclude``.
 
@@ -532,7 +520,6 @@ class LedgerExcludeResult(_LedgerMutationResult):
     """
 
 
-@register_schema("ledger.remove")
 class LedgerRemoveResult(OutputSchema):
     """JSON envelope for ``aeat app ledger remove``.
 
@@ -555,7 +542,6 @@ class LedgerRemoveResult(OutputSchema):
     bucket_event_ids: list[str] = []
 
 
-@register_schema("ledger.reset")
 class LedgerResetResult(OutputSchema):
     """JSON envelope for ``aeat app ledger reset``.
 
@@ -575,7 +561,6 @@ class LedgerResetResult(OutputSchema):
     bucket_event_ids: list[str] = []
 
 
-@register_schema("ledger.split")
 class LedgerSplitResult(OutputSchema):
     """JSON envelope for ``aeat app ledger split``.
 
@@ -607,7 +592,6 @@ class LedgerSplitResult(OutputSchema):
     classified_child_count: int | None = None
 
 
-@register_schema("ledger.merge")
 class LedgerMergeResult(OutputSchema):
     """JSON envelope for ``aeat app ledger merge``."""
 
@@ -683,7 +667,6 @@ class LedgerListRowPayload(OutputSchema):
     group_label: str | None = None
 
 
-@register_schema("ledger.list")
 class LedgerListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger list``.
 
@@ -702,7 +685,6 @@ class LedgerListResult(OutputSchema):
     truncated: bool = False
 
 
-@register_schema("ledger.view")
 class LedgerViewResult(OutputSchema):
     """JSON envelope for ``aeat app ledger view``.
 
@@ -715,7 +697,6 @@ class LedgerViewResult(OutputSchema):
     transaction: TransactionPayload
 
 
-@register_schema("ledger.status")
 class LedgerStatusResult(OutputSchema):
     """JSON envelope for ``aeat app ledger status``.
 
@@ -765,7 +746,6 @@ class LedgerHistoryEventPayload(OutputSchema):
     payload: dict[str, str] = {}
 
 
-@register_schema("ledger.history")
 class LedgerHistoryResult(OutputSchema):
     """JSON envelope for ``aeat app ledger history``."""
 
@@ -775,7 +755,6 @@ class LedgerHistoryResult(OutputSchema):
     events: list[LedgerHistoryEventPayload]
 
 
-@register_schema("ledger.categories")
 class LedgerCategoriesResult(OutputSchema):
     """JSON envelope for ``aeat app ledger categories``."""
 
@@ -863,7 +842,6 @@ class LedgerExportRowPayload(OutputSchema):
         return value
 
 
-@register_schema("ledger.export")
 class LedgerExportPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger export``.
 
@@ -907,7 +885,6 @@ class LedgerExportPayload(OutputSchema):
         return cls.model_validate(data)
 
 
-@register_schema("ledger.import")
 class LedgerImportPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger import``.
 
@@ -950,7 +927,6 @@ class LedgerImportPayload(OutputSchema):
         return cls.model_validate(data)
 
 
-@register_schema("ledger.participation")
 class LedgerTransactionParticipationPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger participation <transaction-id>``.
 
@@ -965,7 +941,6 @@ class LedgerTransactionParticipationPayload(OutputSchema):
     participations: list[LedgerTransactionParticipationEntryPayload]
 
 
-@register_schema("ledger.participation.rebuild")
 class LedgerParticipationRebuildResult(OutputSchema):
     """JSON envelope for ``aeat app ledger participation rebuild``.
 
@@ -1050,7 +1025,6 @@ class LedgerTrackingPayload(OutputSchema):
     lifecycle_lineage: list[LedgerTrackingLifecyclePayload] = []
 
 
-@register_schema("ledger.track")
 class LedgerTrackResult(OutputSchema):
     """JSON envelope for ``aeat app ledger track``.
 
@@ -1067,7 +1041,6 @@ class LedgerTrackResult(OutputSchema):
     participated_in: list[LedgerTransactionParticipationEntryPayload] | None = None
 
 
-@register_schema("ledger.review")
 class LedgerReviewResult(OutputSchema):
     """JSON envelope for ``aeat app ledger review``.
 
@@ -1166,7 +1139,6 @@ class LedgerLinkInconsistencyPayload(OutputSchema):
     direction: LinkInconsistencyDirection
 
 
-@register_schema("ledger.check")
 class LedgerCheckResult(OutputSchema):
     """JSON envelope for ``aeat app ledger check``.
 
@@ -1191,7 +1163,6 @@ class LedgerCheckResult(OutputSchema):
     ready: bool
 
 
-@register_schema("ledger.preflight")
 class LedgerPreflightResult(OutputSchema):
     """JSON envelope for ``aeat app ledger preflight``.
 
@@ -1211,7 +1182,6 @@ class LedgerPreflightResult(OutputSchema):
     ready: bool
 
 
-@register_schema("ledger.link")
 class LedgerLinkResult(OutputSchema):
     """JSON envelope for ``aeat app ledger link``.
 

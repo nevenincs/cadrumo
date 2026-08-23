@@ -34,6 +34,8 @@ if TYPE_CHECKING:
     # re-export (below, via `__getattr__`) its real signature without paying the
     # eager registry-parse import cost at runtime -- this line never executes.
     from ._command_schema import command_schema_refs as command_schema_refs
+    from ._command_schema import command_schema_type as command_schema_type
+    from ._command_schema import command_schema_types as command_schema_types
     from ._config._google import OAuthClientPayload as OAuthClientPayload
     from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
     from ._verb_input_schema import cli_path_for_command_key as cli_path_for_command_key
@@ -88,6 +90,8 @@ from ._language_argv import apply_language_argv_to_environment as _apply_languag
 from ._log_levels import apply_to_root_logger as _apply_to_root_logger
 from ._log_levels import resolve_log_level as _resolve_log_level
 from ._root_payloads import AppRootResult, RootStatusResult
+
+CommandExecutionPolicy = _CommandExecutionPolicy
 
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.
@@ -955,6 +959,17 @@ def _full_invocation_tokens() -> tuple[str, ...]:
     return tuple(sys.argv[1:])
 
 
+def app_root(ctx: typer.Context, help_: bool = False) -> None:
+    """Render app-level workflow help when requested."""
+    if help_ or ctx.invoked_subcommand is None:
+        from ...application.operator_surface import build_help_document, render_help_text
+
+        document = build_help_document("app")
+        typed_app = _strict_round_trip(AppRootResult, document)
+        _emit_envelope(ctx, command="root.app", result=typed_app, lines=render_help_text(document).splitlines())
+        raise typer.Exit()
+
+
 app = _build_command_app(_COMMAND_GRAPH)
 _decorate_typer_app(app)
 
@@ -971,7 +986,20 @@ def full_command_tree() -> _TyCommand:
 def _declared_execution_policy_for_cli_path(
     cli_path: tuple[str, ...],
 ) -> _CommandExecutionPolicy | _ExecutionPolicySpec:
-    return _COMMAND_GRAPH.resolve_path((_PRODUCT_IDENTITY.cli_executable, *cli_path)).policy
+    from ._command_schema import CommandCapabilityClass
+
+    declared = _COMMAND_GRAPH.resolve_path((_PRODUCT_IDENTITY.cli_executable, *cli_path)).policy
+    return _CommandExecutionPolicy(
+        classification=CommandCapabilityClass(
+            declared.capabilities,
+            declared.side_effects,
+            declared.performance,
+        ),
+        write_route=declared.write_route,
+        destructive=declared.destructive,
+        handoff=declared.handoff,
+        live_write=declared.live_write,
+    )
 
 
 def command_execution_policy_for_cli_path(
@@ -1019,10 +1047,10 @@ def __getattr__(name: str) -> object:
     siblings) would defeat that and reintroduce the startup cost
     :mod:`._stdio` / the lazy command-tree gate guard against.
     """
-    if name == "command_schema_refs":
-        from ._command_schema import command_schema_refs
+    if name in {"command_schema_refs", "command_schema_type", "command_schema_types"}:
+        from . import _command_schema
 
-        return command_schema_refs
+        return getattr(_command_schema, name)
     if name in _VERB_INPUT_SCHEMA_EXPORTS:
         from . import _verb_input_schema
 
@@ -1170,6 +1198,7 @@ def _emit_operator_progress(progress: object) -> None:
 __all__ = [
     "DECLARED_UNIMPLEMENTED_SURFACES",
     "AppRootResult",
+    "CommandExecutionPolicy",
     "JsonType",
     "OAuthClientPayload",
     "ResolvedVerbLeaf",
@@ -1189,6 +1218,8 @@ __all__ = [
     "cli_path_for_command_key",
     "command_execution_policy_for_cli_path",
     "command_schema_refs",
+    "command_schema_type",
+    "command_schema_types",
     "full_command_tree",
     "is_exposable_command",
     "main",

@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for overview CLI commands.
 
 Each class declared here is a strict
-:class:`OutputSchema` subclass and is decorated with :func:`register_schema` so
+:class:`OutputSchema` subclass and is decorated with CommandSpec schema authority so
 the JSON-contract test suite can enumerate every overview-command surface this
 module covers.
 
@@ -31,7 +31,7 @@ from pydantic import Field, model_validator
 
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
 from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, ProfileId, SnapshotId, WorkUnitId
-from ...core.json_contract import OutputSchema, ResolvedNoticeAction, register_schema
+from ...core.json_contract import OutputSchema, ResolvedNoticeAction
 from ...core.parsing import require_iso8601_date
 from ...domain.calculations.registry import RevisionId
 from ._decimal_wire import NonNegativeDecimalWireText
@@ -376,7 +376,6 @@ class OverviewCalendarProfilePayload(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
-@register_schema("overview.status")
 class OverviewStatusResult(OutputSchema):
     """JSON envelope result for ``aeat app overview status``.
 
@@ -407,7 +406,6 @@ class OverviewStatusResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: Full status-report passthrough (model_dump of OverviewStatusReport). The status report is an application-layer pydantic model; the full shape is fo...
 
 
-@register_schema("overview.calendar")
 class OverviewCalendarResult(OutputSchema):
     """JSON envelope for ``aeat app overview calendar``.
 
@@ -442,7 +440,6 @@ class OverviewCalendarResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
 
 
-@register_schema("overview.agenda")
 class OverviewAgendaResult(OutputSchema):
     """JSON envelope result for ``aeat app overview agenda``.
 
@@ -461,7 +458,6 @@ class OverviewAgendaResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
 
 
-@register_schema("overview.backlog")
 class OverviewBacklogResult(OutputSchema):
     """JSON envelope result for ``aeat app overview backlog``.
 
@@ -478,7 +474,6 @@ class OverviewBacklogResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is...
 
 
-@register_schema("overview.explain")
 class OverviewExplainResult(OutputSchema):
     """JSON envelope result for ``aeat app overview explain``.
 
@@ -516,7 +511,6 @@ class OverviewPrepareStepPayload(OutputSchema):
     next_action: ResolvedNoticeAction | None = None
 
 
-@register_schema("overview.prepare")
 class OverviewPrepareResult(OutputSchema):
     """JSON envelope result for ``aeat app overview prepare``.
 
@@ -551,7 +545,6 @@ class OverviewPipelineModeloPayload(OutputSchema):
     next_action: ResolvedNoticeAction | None = None
 
 
-@register_schema("overview.pipeline")
 class OverviewPipelineResult(OutputSchema):
     """JSON envelope result for ``aeat app overview pipeline``.
 

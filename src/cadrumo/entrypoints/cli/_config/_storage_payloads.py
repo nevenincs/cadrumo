@@ -21,7 +21,7 @@ from ....application.storage_management import (
     StorageOccupancy,
 )
 from ....core import StorageArea
-from ....core.json_contract import OutputSchema, register_schema
+from ....core.json_contract import OutputSchema
 
 
 class StorageAreaPayload(OutputSchema):
@@ -36,7 +36,6 @@ class StorageAreaPayload(OutputSchema):
     reclaimable: bool
 
 
-@register_schema("config.storage.list")
 class ConfigStorageListResult(OutputSchema):
     """JSON envelope for ``aeat config storage list``.
 
@@ -48,7 +47,6 @@ class ConfigStorageListResult(OutputSchema):
     areas: list[StorageAreaPayload] = []
 
 
-@register_schema("config.storage.show")
 class ConfigStorageShowResult(OutputSchema):
     """JSON envelope for ``aeat config storage show AREA``."""
 
@@ -65,7 +63,6 @@ class StorageAreaIssuePayload(OutputSchema):
     detail: str = ""
 
 
-@register_schema("config.storage.check")
 class ConfigStorageCheckResult(OutputSchema):
     """JSON envelope for ``aeat config storage check``.
 
@@ -81,7 +78,6 @@ class ConfigStorageCheckResult(OutputSchema):
     issues: list[StorageAreaIssuePayload] = []
 
 
-@register_schema("config.storage.init")
 class ConfigStorageInitResult(OutputSchema):
     """JSON envelope for ``aeat config storage init``.
 
@@ -94,7 +90,6 @@ class ConfigStorageInitResult(OutputSchema):
     already_present: int = Field(default=0, ge=0)
 
 
-@register_schema("config.storage.reclaim")
 class ConfigStorageReclaimResult(OutputSchema):
     """JSON envelope for ``aeat config storage reclaim AREA``.
 

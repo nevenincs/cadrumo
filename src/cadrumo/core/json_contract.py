@@ -3,11 +3,10 @@
 Defines the strict pydantic v2 bases (:class:`OutputSchema`,
 :class:`OutputRootSchema`), the canonical success envelope
 (:class:`SchemaEnvelope`), the typed diagnostic channel
-(:class:`Notice`), the schema registry (:data:`SCHEMA_REGISTRY`), and
+(:class:`Notice`), and
 the emit helpers (:func:`emit_json_document`, :func:`emit_json_success`)
-used by every registered machine-output path.  CLI payload modules import
-these primitives directly from this module, register
-result models with :func:`register_schema`, and route JSON mode through
+used by every authored machine-output path. CLI payload modules import
+these primitives directly from this module and route JSON mode through
 :func:`entrypoints.cli._common._emit_envelope`.
 
 :func:`emit_json_success` derives :class:`EnvelopeStatus` from supplied
@@ -34,7 +33,7 @@ from __future__ import annotations
 import json
 import re
 import sys
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from types import MappingProxyType
 from typing import IO, Any, Final, Protocol, cast, runtime_checkable
@@ -318,11 +317,9 @@ def derive_status(notices: Sequence[Notice]) -> EnvelopeStatus:
 
 
 class OutputSchemaError(CadrumoError):
-    """Raised when the CLI output-schema registry is misconfigured.
+    """Raised when a strict CLI output contract is violated.
 
-    Triggered by :func:`register_schema` when a non-schema class is
-    decorated, when a command path is registered twice with different
-    schemas, or when the command path is blank.  It deliberately inherits
+    It deliberately inherits
     :class:`core.errors.CadrumoError` so registry defects route through
     the shared CLI error boundary instead of bypassing structured output.
     """
@@ -335,8 +332,7 @@ class OutputSchema(BaseModel):
     and ``validate_assignment=True`` so accidental field drift between
     contract and implementation surfaces as a validation error rather
     than a silently-extended payload.  Each concrete result model should
-    be decorated with :func:`register_schema` so the CLI conformance gate
-    can match command leaves against :data:`SCHEMA_REGISTRY`.
+    be referenced by the authored CLI command specification.
 
     The class describes the inner ``result`` payload only; the outer
     :class:`SchemaEnvelope` is applied later by :func:`emit_json_success`.
@@ -351,7 +347,7 @@ class OutputRootSchema[RootT](RootModel[RootT]):
     Use this for commands whose top-level JSON value is a list or scalar
     rather than an object. Carries the same strict / frozen / validate-on-
     assignment configuration as :class:`OutputSchema`, and participates in
-    the same :func:`register_schema` registry contract.
+    the same strict command-spec result contract.
     """
 
     model_config = _STRICT_ROOT_CONFIG
@@ -392,7 +388,7 @@ class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
     envelope so one shape describes success, warning, and error outcomes.
     :func:`emit_json_success` constructs the runtime mapping and the
     JSON-contract conformance gate specialises this generic envelope over
-    every schema in :data:`SCHEMA_REGISTRY`.
+    every schema authored by the command-spec graph.
 
     The envelope is a wire contract, not the command dispatcher. It does
     not discover Click/Typer leaves, choose text output, or own command
@@ -436,15 +432,6 @@ class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
 
 
 type RegisteredSchema = type[OutputSchema] | type[OutputRootSchema[Any]]
-
-
-SCHEMA_REGISTRY: dict[str, RegisteredSchema] = {}
-"""Process-global registry mapping command-path strings to their result schema.
-
-Populated by the :func:`register_schema` decorator at import time.
-Consumers (notably the doc generator and the JSON-contract conformance
-tests) iterate over this mapping to enumerate every contract a release
-exposes."""
 
 
 @runtime_checkable
@@ -610,80 +597,17 @@ def _record_captured_envelope(envelope_payload: object) -> None:
         _log.debug("json_contract: envelope capture failed; continuing", exc_info=True)
 
 
-def register_schema[RegisteredSchemaT: OutputSchema | OutputRootSchema[Any]](
-    command_path: str,
-) -> Callable[[type[RegisteredSchemaT]], type[RegisteredSchemaT]]:
-    """Decorator that binds a strict schema to a stable ``command_path``.
-
-    Usage::
-
-        @register_schema("workflow list")
-        class WorkflowListResult(OutputSchema):
-            ...
-
-    The same schema may register the same path more than once
-    (idempotent re-import); registering a *different* schema under an
-    existing path raises :class:`OutputSchemaError`.  Registered paths are
-    the authoritative command strings emitted as
-    :attr:`SchemaEnvelope.command` and compared against the Typer command
-    tree by the JSON-schema conformance tests.
-
-    Register concrete command leaves only. Aliases, helper functions, and
-    text-only utilities do not belong in :data:`SCHEMA_REGISTRY` unless a
-    real CLI path emits their strict payload through the envelope.
-
-    Args:
-        command_path: Stable command-path string used both as the
-            registry key and as the value emitted under
-            :attr:`SchemaEnvelope.command`.
-
-    Returns:
-        The decorator, returning the schema class unchanged.
-
-    Raises:
-        OutputSchemaError: When ``command_path`` is blank, when the
-            decorated class is not a strict schema subclass, or when the
-            path is already bound to a different schema.
-    """
-    normalized_path = command_path.strip()
-    if not normalized_path:
-        raise OutputSchemaError("command_path must not be blank")
-
-    def _decorator(schema: type[object]) -> type[RegisteredSchemaT]:
-        try:
-            is_output_schema = issubclass(schema, (OutputSchema, OutputRootSchema))
-        except TypeError as error:
-            raise OutputSchemaError(
-                f"registered schema for {normalized_path!r} must be an OutputSchema or OutputRootSchema subclass",
-            ) from error
-        if not is_output_schema:
-            raise OutputSchemaError(
-                f"registered schema for {normalized_path!r} must inherit from OutputSchema or OutputRootSchema",
-            )
-        existing = SCHEMA_REGISTRY.get(normalized_path)
-        if existing is not None and existing is not schema:
-            raise OutputSchemaError(
-                f"duplicate schema registration for {normalized_path!r}: {existing.__module__}.{existing.__name__}",
-            )
-        SCHEMA_REGISTRY[normalized_path] = schema
-        # CAST-RATIONALE-REGISTERED-SCHEMA: the runtime issubclass check above
-        # proves the generic bound before returning this decorator result.
-        return cast("type[RegisteredSchemaT]", schema)
-
-    return _decorator
-
-
 def validate_registered_result(command: str, result: object) -> OutputSchema | OutputRootSchema[Any]:
-    """Validate one operator result against the schema registered for ``command``.
+    """Strictly revalidate an already typed operator result.
 
     The low-level JSON emitter intentionally remains a transport primitive for
     metadata and diagnostic surfaces. Operator command output must enter
     through this check so an envelope cannot claim a registered command while
     carrying an arbitrary result shape.
     """
-    schema = SCHEMA_REGISTRY.get(command)
-    if schema is None:
-        raise OutputSchemaError(f"operator JSON command {command!r} has no registered output schema")
+    if not isinstance(result, OutputSchema | OutputRootSchema):
+        raise OutputSchemaError(f"operator JSON result for {command!r} is not a strict output schema")
+    schema = type(result)
     payload = result.model_dump(mode="python") if isinstance(result, BaseModel) else result
     try:
         return schema.model_validate(payload)
@@ -693,7 +617,10 @@ def validate_registered_result(command: str, result: object) -> OutputSchema | O
         ) from error
 
 
-def validate_registered_envelope_document(document: object) -> dict[str, object]:
+def validate_registered_envelope_document(
+    document: object,
+    schema: RegisteredSchema | None,
+) -> dict[str, object]:
     """Strictly validate one emitted CLI success or error JSON document."""
     if not isinstance(document, dict):
         raise OutputSchemaError("operator JSON envelope must be an object")
@@ -703,7 +630,9 @@ def validate_registered_envelope_document(document: object) -> dict[str, object]
     typed_document: dict[str, object] = {key: value for key, value in raw_document.items() if isinstance(key, str)}
     if typed_document.get("status") == EnvelopeStatus.ERROR.value:
         return _validated_error_envelope(typed_document)
-    return _validated_success_envelope(typed_document)
+    if schema is None:
+        raise OutputSchemaError("operator JSON success envelope requires its authored result schema")
+    return _validated_success_envelope(typed_document, schema)
 
 
 def _validated_error_envelope(typed_document: dict[str, object]) -> dict[str, object]:
@@ -728,7 +657,10 @@ def _validated_error_envelope(typed_document: dict[str, object]) -> dict[str, ob
     return typed_document
 
 
-def _validated_success_envelope(typed_document: dict[str, object]) -> dict[str, object]:
+def _validated_success_envelope(
+    typed_document: dict[str, object],
+    schema: RegisteredSchema,
+) -> dict[str, object]:
     command = typed_document.get("command")
     if not isinstance(command, str) or not command:
         raise OutputSchemaError("operator JSON envelope has no usable command")
@@ -737,12 +669,8 @@ def _validated_success_envelope(typed_document: dict[str, object]) -> dict[str, 
         raise OutputSchemaError("operator JSON success envelope has an invalid outer shape")
     if typed_document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
         raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
-    schema = SCHEMA_REGISTRY.get(command)
-    if schema is None:
-        raise OutputSchemaError(f"operator JSON command {command!r} has no registered output schema")
     # CAST-RATIONALE-ENVELOPE-GENERIC: __class_getitem__ returns a bare `type`
-    # at runtime; `schema` was just looked up from SCHEMA_REGISTRY, which
-    # only stores OutputSchema subclasses, so the parameterized generic is
+    # at runtime; `schema` is an OutputSchema subclass, so the parameterized generic is
     # exactly SchemaEnvelope[OutputSchema].
     envelope_model = cast("type[SchemaEnvelope[OutputSchema]]", SchemaEnvelope.__class_getitem__(schema))
     try:
@@ -757,7 +685,6 @@ def _validated_success_envelope(typed_document: dict[str, object]) -> dict[str, 
 
 __all__ = [
     "ENVELOPE_SCHEMA_VERSION",
-    "SCHEMA_REGISTRY",
     "ActionConditionEvidence",
     "EnvelopeStatus",
     "Notice",
@@ -773,7 +700,6 @@ __all__ = [
     "derive_status",
     "emit_json_document",
     "emit_json_success",
-    "register_schema",
     "strict_round_trip",
     "validate_registered_envelope_document",
     "validate_registered_result",

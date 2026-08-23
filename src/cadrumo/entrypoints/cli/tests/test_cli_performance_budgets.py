@@ -7,7 +7,6 @@ from pathlib import Path
 from textwrap import dedent
 
 import pytest
-import typer
 
 from cadrumo.tests.cli_performance import (
     CliPerformanceObservation,
@@ -18,10 +17,6 @@ from cadrumo.tests.cli_performance import (
     evaluate_latency_budget,
     profile_cli_path,
 )
-
-from .._app_execution_policies import METADATA
-from .._command_policy import command_execution_policy
-from .._command_suggestions import CadrumoTyperGroup, LiveCommandNode, walk_live_command_tree
 
 pytestmark = pytest.mark.hex_entrypoint
 
@@ -191,7 +186,7 @@ def test_fresh_process_gate_bites_on_filesystem_materialization(tmp_path: Path) 
     injector = _write_fresh_process_injector(
         tmp_path / "filesystem-injector",
         (
-            'from pathlib import Path; import os; '
+            "from pathlib import Path; import os; "
             'marker = Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]) / "planted-materialization"; '
             'marker.mkdir(); (marker / "unexpected.txt").write_text("planted", encoding="utf-8")'
         ),
@@ -218,61 +213,3 @@ def test_fresh_process_gate_bites_on_filesystem_materialization(tmp_path: Path) 
             _require_no_new_filesystem_changes(control_phase, planted_phase)
         assert "unexpected filesystem changes" in str(failure.value)
     assert tuple(storage.iterdir()) == ()
-
-
-def _require_complete_policy(nodes: tuple[LiveCommandNode, ...]) -> None:
-    missing = tuple(" ".join(node.path) for node in nodes if node.execution_policy is None)
-    assert not missing, f"unclassified CLI nodes: {', '.join(missing)}"
-
-
-def _classified_callback() -> None:
-    return None
-
-
-command_execution_policy(METADATA)(_classified_callback)
-
-
-def _planted_unclassified_tree(shape: str) -> typer.Typer:
-    root = typer.Typer(name=f"planted-{shape}", cls=CadrumoTyperGroup)
-    if shape != "root":
-        root.callback()(_classified_callback)
-    else:
-
-        @root.callback()
-        def unclassified_root() -> None:
-            return None
-
-    if shape == "group":
-        generated = typer.Typer(name="generated", cls=CadrumoTyperGroup)
-
-        @generated.callback()
-        def unclassified_generated_group() -> None:
-            return None
-
-        generated.command("classified-leaf")(_classified_callback)
-        root.add_typer(generated, name="generated")
-    elif shape == "leaf":
-
-        @root.command("unclassified-leaf")
-        def unclassified_leaf() -> None:
-            return None
-
-    return root
-
-
-@pytest.mark.unit
-@pytest.mark.parametrize(
-    ("shape", "offending_path"),
-    [
-        ("root", "planted-root"),
-        ("group", "planted-group generated"),
-        ("leaf", "planted-leaf unclassified-leaf"),
-    ],
-)
-def test_census_gate_bites_on_every_unclassified_node_shape(shape: str, offending_path: str) -> None:
-    """Future roots, helper-generated groups, and leaves all fail closed."""
-    nodes = walk_live_command_tree(_planted_unclassified_tree(shape))
-
-    with pytest.raises(AssertionError, match=offending_path) as failure:
-        _require_complete_policy(nodes)
-    assert "unclassified CLI nodes" in str(failure.value)

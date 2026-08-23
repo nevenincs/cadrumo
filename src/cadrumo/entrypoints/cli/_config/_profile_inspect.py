@@ -3,13 +3,8 @@
 ``show`` reads and renders the active (or named) profile's persisted
 :class:`UserProfileRecord`, alongside its schema validity; ``preflight``
 reports which profile fields a given filing context still needs; ``validate`` is
-the report-only companion to ``show`` (same validator, no fact dump). All three
-read-only verbs are registered here rather than left inline in the ``config``
-package facade, following the same
-``register_*_commands(profile_app, *, ...)`` composition shape as the sibling
-``._bucket_archive`` and ``._descendiente`` modules: a resolver helper and a
-``_register_<verb>_command`` function per verb, called from the one public
-``register_profile_inspect_commands`` entry point.
+the report-only companion to ``show`` (same validator, no fact dump). Their
+public behavior targets live here while CommandSpecs own the executable shape.
 """
 
 from __future__ import annotations

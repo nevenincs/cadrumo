@@ -16,8 +16,7 @@ Four commands wire the Google OAuth Desktop backend
   preserve the registered `oauth-client` so a subsequent `login` works
   without re-importing the JSON.
 
-`credential-source set|show` (registered by
-`_google_credential_source_cli.register_google_credential_source_commands`)
+`credential-source set|show`
 selects which `core.GoogleCredentialSourceKind` a profile uses to build Google
 credentials — the default per-profile OAuth Desktop flow above, or a shared
 service-account impersonation grant

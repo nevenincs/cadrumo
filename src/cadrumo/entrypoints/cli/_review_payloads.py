@@ -2,7 +2,7 @@
 
 Each class declared here is a strict
 :class:`OutputSchema` subclass decorated with
-:func:`register_schema` so the JSON-contract
+CommandSpec schema authority so the JSON-contract
 test suite can enumerate every review-command surface. The typed result enters
 the shared :class:`SchemaEnvelope` through
 :func:`_emit_envelope`.
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from ...application.review import ReviewSeverity, ReviewState
 from ...core.identity import BucketId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...core.time import UtcInstant
 from ...domain.calculations.registry import LegalRefId
 
@@ -61,7 +61,6 @@ class ReviewQueueRowPayload(OutputSchema):
     legal_refs: tuple[LegalRefId, ...] = ()
 
 
-@register_schema("review.queue")
 class ReviewQueueResult(OutputSchema):
     """JSON envelope for ``aeat review queue``.
 
@@ -74,7 +73,6 @@ class ReviewQueueResult(OutputSchema):
     rows: tuple[ReviewQueueRowPayload, ...]
 
 
-@register_schema("review.view")
 class ReviewViewResult(OutputSchema):
     """JSON envelope for ``aeat review view <item_id>``.
 

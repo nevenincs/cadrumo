@@ -17,7 +17,7 @@ The ``invoice`` noun-group is *not* here: every invoice payload lives in
 sole invoice aggregate.
 
 Each class is a strict :class:`~core.json_contract.OutputSchema`
-subclass, decorated with :func:`~core.json_contract.register_schema`
+subclass, decorated with CommandSpec schema authority
 so the JSON-contract test suite can enumerate the surface. Re-imported into
 :mod:`~entrypoints.cli._ledger_payloads` so existing ``from ._ledger_payloads import
 InventoryLedgerPayload`` (etc.) call sites keep resolving unchanged.
@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import AfterValidator, Field
 
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.contribuyente.inventory import INVENTORY_SCHEMA_VERSION, MovementKind, ValuationMethod
 from ._decimal_wire import bounded_decimal_wire_text
 from ._wire_scalars import IsoDateText, enum_value_text
@@ -119,7 +119,6 @@ class InventoryListRowPayload(InventoryLedgerPayload):
     movement_count: int = 0
 
 
-@register_schema("ledger.inventory.list")
 class InventoryListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory list``."""
 
@@ -128,17 +127,14 @@ class InventoryListResult(OutputSchema):
     count: int
 
 
-@register_schema("ledger.inventory.create")
 class InventoryCreateResult(InventoryLedgerPayload):
     """JSON envelope for ``aeat app ledger inventory create``."""
 
 
-@register_schema("ledger.inventory.movement.add")
 class InventoryMovementAddResult(InventoryLedgerPayload):
     """JSON envelope for ``aeat app ledger inventory movement add``."""
 
 
-@register_schema("ledger.inventory.valuation.preview")
 class InventoryValuationPreviewPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory valuation preview``.
 
@@ -205,27 +201,22 @@ class EvidenceRecordPayload(OutputSchema):
     bucket_event_ids: list[str] = []
 
 
-@register_schema("ledger.evidence.add")
 class EvidenceAddResult(EvidenceRecordPayload):
     """JSON envelope for ``aeat app ledger evidence add``."""
 
 
-@register_schema("ledger.evidence.view")
 class EvidenceViewResult(EvidenceRecordPayload):
     """JSON envelope for ``aeat app ledger evidence view``."""
 
 
-@register_schema("ledger.evidence.update")
 class EvidenceUpdateResult(EvidenceRecordPayload):
     """JSON envelope for ``aeat app ledger evidence update``."""
 
 
-@register_schema("ledger.evidence.remove")
 class EvidenceRemoveResult(EvidenceRecordPayload):
     """JSON envelope for ``aeat app ledger evidence remove``."""
 
 
-@register_schema("ledger.evidence.list")
 class EvidenceListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence list``."""
 
@@ -248,7 +239,6 @@ class AttachmentReviewPayload(OutputSchema):
     pending_review: bool
 
 
-@register_schema("ledger.evidence.attachment_queue")
 class AttachmentReviewQueueResult(OutputSchema):
     """Pending Drive attachments awaiting explicit invoice confirmation."""
 
@@ -257,7 +247,6 @@ class AttachmentReviewQueueResult(OutputSchema):
     rows: list[AttachmentReviewPayload] = []
 
 
-@register_schema("ledger.evidence.attachment_view")
 class AttachmentReviewViewResult(AttachmentReviewPayload):
     """One stored attachment's non-secret metadata and provenance."""
 
@@ -284,7 +273,6 @@ class CloudDerivedArtefactPayload(OutputSchema):
     rederivable_on_host: bool | None = None
 
 
-@register_schema("ledger.evidence.consent.list")
 class EvidenceConsentListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence consent list``.
 
@@ -300,7 +288,6 @@ class EvidenceConsentListResult(OutputSchema):
     cloud_derived_artefacts: list[CloudDerivedArtefactPayload]
 
 
-@register_schema("ledger.evidence.consent.rederive")
 class EvidenceConsentRederiveResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence consent rederive``.
 
@@ -417,7 +404,6 @@ class EvidenceDraftDiscrepancyPayload(OutputSchema):
     observed: str | None = None
 
 
-@register_schema("ledger.evidence.extract")
 class EvidenceExtractResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence extract``.
 
@@ -533,7 +519,6 @@ class EvidenceExtractResult(OutputSchema):
     off_host_acknowledged_surface: str | None = None
 
 
-@register_schema("ledger.evidence.confirm")
 class EvidenceConfirmResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence extract --confirm``.
 
@@ -669,7 +654,6 @@ class EvidenceReviewRowPayload(OutputSchema):
     advisories: list[str] = []
 
 
-@register_schema("ledger.evidence.review.list")
 class EvidenceReviewListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence review list``.
 
@@ -683,7 +667,6 @@ class EvidenceReviewListResult(OutputSchema):
     rows: list[EvidenceReviewRowPayload] = []
 
 
-@register_schema("ledger.evidence.review.show")
 class EvidenceReviewShowResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence review show``.
 

@@ -2,7 +2,7 @@
 
 Every declared payload is an
 :class:`OutputSchema` subclass registered with
-:func:`register_schema` for the ledger rule
+CommandSpec schema authority for the ledger rule
 command JSON-contract surface carried by
 :class:`SchemaEnvelope` through
 :func:`_emit_envelope`. These schemas are the CLI projection of the secure,
@@ -21,7 +21,7 @@ from pydantic import Field, model_validator
 
 from ...core import Hex64Str
 from ...core.identity import TransactionId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.transactions import BusinessClassification, LedgerClassificationRule
 from ._decimal_wire import DecimalWireText
 
@@ -61,7 +61,6 @@ class ClassificationRulePayload(OutputSchema):
         return self
 
 
-@register_schema("ledger.rule.add")
 class RuleAddResult(ClassificationRulePayload):
     """JSON envelope for ``aeat app ledger rule add``.
 
@@ -73,7 +72,6 @@ class RuleAddResult(ClassificationRulePayload):
     """
 
 
-@register_schema("ledger.rule.list")
 class RuleListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger rule list``.
 
@@ -119,7 +117,6 @@ class RuleApplyAppliedPayload(OutputSchema):
     classification: BusinessClassification
 
 
-@register_schema("ledger.rule.apply")
 class RuleApplyResult(OutputSchema):
     """JSON envelope for ``aeat app ledger rule apply``.
 
@@ -189,7 +186,6 @@ class LlmConfidenceProviderPayload(OutputSchema):
     mean_confidence: DecimalWireText | None = None
 
 
-@register_schema("ledger.llm_diagnostics")
 class LedgerLlmDiagnosticsResult(OutputSchema):
     """JSON envelope for ``aeat app ledger llm-diagnostics``.
 
