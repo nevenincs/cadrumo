@@ -4,10 +4,12 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:7568b769f6d3344c8f8e3774dd813ce2b083e91e34ef867579c79288bccb60c5'
+body_hash: 'sha256:cc0e295ed48ed877a7d0992447d780e120eee1b3d6708bb927b5569aa3cb07f3'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
+  - '[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]'
+  - '[[2026-08-23-cli-runtime-resource-architecture-convergence-research]]'
   - '[[2026-08-22-secure-storage-performance-hardening-research]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
 ---
@@ -54,18 +56,29 @@ Generalize lazy loading to nested groups and leaves.
 
 - [x] `W02.P03.S09` - Refactor lazy registration into a reusable node loader with explicit targets and fail-loud dependency classification; `src/cadrumo/entrypoints/cli/_command_suggestions.py`.
 - [x] `W02.P03.S10` - Preserve root help, completion, version, error-envelope, and suggestion contracts through metadata-only traversal; `src/cadrumo/entrypoints/cli/_common.py`.
-- [x] `W02.P03.S11` - Make schema and operator-help discovery consume registration metadata without materializing handler subtrees; `src/cadrumo/entrypoints/cli/_command_schema.py`.
 - [x] `W02.P03.S12` - Extend lazy import failure coverage across nested groups and leaves for required and optional dependencies; `src/cadrumo/entrypoints/cli/tests/`.
+
+### Phase `W02.P03a` - Urgent command-authority correction
+
+Correct the nonconforming generated-resource design before any further command-loading or performance work, then make one atomic hard cut to production-authored CommandSpec authority and prove every source, build, shipping, and installed-runtime lane.
+
+- [ ] `W02.P03a.S54` - Atomically hard-cut the complete root, group, and leaf surface to distributed production-authored CommandSpec as sole structural authority, project runtime assembly, help, completion, census, schema, operator, MCP/HITL, execution policy, and write routing from specs, make handlers behavior-only, and delete callback/decorator authority, lazy and path mirrors, both runtime JSON readers, both development generators, ignore entries, cache-parity tests, and stale prose with no fallback, shim, or partial coexistence; `repository CLI command-authority surface`.
+- [ ] `W02.P03a.S11` - Correct the reopened S11 execution and review evidence, preserving its latency observations while re-proving schema and operator-help discovery exclusively from production CommandSpec after the atomic cutover; `.vault/exec/2026-08-22-secure-storage-performance-hardening/ and .vault/audit/`.
+- [ ] `W02.P03a.S14` - Correct the open S14 evidence by rejecting the app-manifest reader and generator as nonconforming, then re-prove demand-loaded modelo, registry, ledger, live, maintenance, overview, review, diagnostics, and quickfile descendants exclusively from production CommandSpec after the atomic cutover; `.vault/exec/2026-08-22-secure-storage-performance-hardening/ and .vault/audit/`.
+- [ ] `W02.P03a.S55` - Add dynamic CommandSpec exact-set, uniqueness, parent-edge, target, locale-key, schema, policy, side-effect, performance-class, and write-route gates for every current and future root, group, and leaf, forbid every former structural authority and runtime artifact edge, and prove each detector with independently constructed missing, duplicate, orphan, malformed, forbidden-import, and undeclared-node negatives; `src/cadrumo/entrypoints/cli/tests/ and dev/ci/tests/`.
+- [ ] `W02.P03a.S56` - Prove clean-checkout direct-source and editable-install CLI assembly, help, completion, census, schema, operator, MCP/HITL, and write-routing behavior from tracked CommandSpec modules without generation or development imports, including explicit absence of both command JSON names and generator paths; `src/cadrumo/entrypoints/cli/tests/ and dev/packaging/`.
+- [ ] `W02.P03a.S57` - Prove direct-wheel, direct-sdist, and sdist-to-wheel contents and installed behavior include every production CommandSpec module, exclude both command JSON names and development generators, and materialize the complete localized root, group, and leaf surface with resolvable public handler and schema targets; `src/cadrumo/tests/test_wheel_content_boundary.py and dev/packaging/`.
+- [ ] `W02.P03a.S58` - Bind one immutable Git-archive Python cohort to exhaustive installed-runtime CommandSpec identities, locale metadata, policy, schema, selected-path import budgets, and artifact absence, then require downstream smoke, Scoop, Homebrew, MCPB, marketplace, and publish lanes to consume that sealed cohort without rebuilding or regenerating command authority; `dev/packaging/ and dev/release/`.
+- [ ] `W02.P03a.S59` - Run two independent post-cutover architecture reviews and reconcile all command-authority, production-development boundary, build-lane, shipping-lane, and installed-runtime findings before resuming the remaining performance campaign; `.vault/audit/`.
 
 ### Phase `W02.P04` - Enroll every command subtree
 
 Convert the complete CLI to the shared demand-loaded registration shape.
 
 - [x] `W02.P04.S13` - Convert the complete config subtree from eager registrar imports to nested loader references; `src/cadrumo/entrypoints/cli/_config/`.
-- [ ] `W02.P04.S14` - Convert the complete app subtree including modelo, registry, ledger, live, maintenance, overview, review, diagnostics, and quickfile descendants; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W02.P04.S15` - Split import-heavy payload contracts from handlers so registration imports only option and help metadata; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W02.P04.S16` - Replace hidden first-party function-local coupling with owned lazy public boundaries; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W02.P04.S17` - Require every current and future CLI node to use the shared loader contract with no eager registrar escape hatch; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
+- [ ] `W02.P04.S15` - Keep distributed CommandSpec modules import-light by splitting heavyweight handler payload and schema implementations behind owned lazy public targets while retaining all structural declarations in production specs; `src/cadrumo/entrypoints/cli/`.
+- [ ] `W02.P04.S16` - Replace hidden first-party function-local coupling with owned lazy public handler and schema boundaries referenced only by CommandSpec targets; `src/cadrumo/entrypoints/cli/`.
+- [ ] `W02.P04.S17` - Require every current and future CLI root, group, and leaf to be declared exactly once through CommandSpec with no decorator, registrar, callback-metadata, generated-resource, or path-catalogue escape hatch; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
 
 ### Phase `W02.P05` - Lazy public application and configuration boundaries
 
@@ -114,7 +127,7 @@ Turn the architectural properties into permanent gates over every CLI node and r
 
 Prove each live node resolution graph is a subset of its declared capabilities.
 
-- [ ] `W04.P09.S33` - Parameterize fresh-process resolution over every live node and reject undeclared module families; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
+- [ ] `W04.P09.S33` - Parameterize fresh-process resolution over the dynamic CommandSpec graph and reject undeclared module families for every projected live node; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
 - [ ] `W04.P09.S34` - Keep state-free nodes free of registry, calculation, filing, network, browser, Google, crypto, keyring, and storage materialization; `src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py`.
 - [ ] `W04.P09.S35` - Defer expensive capability families until the owning leaf executes rather than ancestor or sibling resolution; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
 - [ ] `W04.P09.S36` - Add static and executed import-graph checks for eager cross-layer edges, cycles, and private shortcuts; `src/cadrumo/tests/test_deferred_cross_layer_imports.py`.
@@ -123,7 +136,7 @@ Prove each live node resolution graph is a subset of its declared capabilities.
 
 Hold every enrolled node to calibrated class budgets.
 
-- [ ] `W04.P10.S37` - Run calibrated resolution and invocation budgets over the live census with class-relative per-path failures; `src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py`.
+- [ ] `W04.P10.S37` - Run calibrated resolution and invocation budgets over the exact dynamic CommandSpec graph with class-relative per-path failures and exact parity to projected live nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py`.
 - [ ] `W04.P10.S38` - Add empty, one-profile, and multi-profile scaling lanes using real subprocesses and persisted capsules; `src/cadrumo/entrypoints/cli/tests/test_cli_storage_scaling.py`.
 - [ ] `W04.P10.S39` - Assert filesystem equality for read-only nodes and declared write roots for mutating nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_side_effect_contract.py`.
 - [ ] `W04.P10.S40` - Action generated outliers until no enrolled path exceeds budget or imports undeclared capabilities; `src/cadrumo/entrypoints/cli/`.
@@ -136,7 +149,7 @@ Validate the refactor against all behavior, security, architecture, and campaign
 
 Preserve CLI schemas, refusal semantics, custody guarantees, and storage roundtrips.
 
-- [ ] `W05.P11.S41` - Run CLI contract, documented-command, help, completion, envelope, localization, and profile lifecycle suites; `src/cadrumo/entrypoints/cli/tests/`.
+- [ ] `W05.P11.S41` - Run CommandSpec authority, CLI contract, documented-command, help, completion, envelope, localization, profile lifecycle, clean-source, and installed-artifact suites; `src/cadrumo/entrypoints/cli/tests/ and dev/packaging/`.
 - [ ] `W05.P11.S42` - Run custody, secure-storage, recovery, unlock, persistence-roundtrip, and adversarial filesystem suites; `src/cadrumo/adapters/persistence/storage/`.
 - [ ] `W05.P11.S43` - Run lint, architecture gates, full pytest, and Vaultspec checks and action every in-scope regression; `repository-wide quality gates`.
 
@@ -147,4 +160,4 @@ Prove the entire live CLI and secure-storage goal is satisfied.
 - [ ] `W05.P12.S44` - Run the mandated eight-axis structural audit and action every confirmed finding; `.vault/audit/`.
 - [ ] `W05.P12.S45` - Perform a fresh-context honesty review and open Steps for every remaining gap; `.vault/audit/`.
 - [ ] `W05.P12.S46` - Publish final distributions, import reductions, filesystem effects, populated scaling, and census coverage; `.vault/reference/`.
-- [ ] `W05.P12.S47` - Close only when every live node is classified and gated and no review item remains unactioned; `.vault/exec/2026-08-22-secure-storage-performance-hardening/`.
+- [ ] `W05.P12.S47` - Close only when every CommandSpec and projected live node is exactly classified and gated, both forbidden JSON names and development generators are absent from tracked and shipped runtime surfaces, every build and shipping lane is proven, and no review item remains unactioned; `.vault/exec/2026-08-22-secure-storage-performance-hardening/`.
