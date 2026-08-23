@@ -147,7 +147,12 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
                 "source_commit": "a" * 40,
                 "version": version,
                 "command_spec_attestation": _attest_installed_command_specs(
-                    copied_root, work_root=root_dir, uv=uv
+                    copied_root,
+                    copied_sdists[0],
+                    "a" * 40,
+                    "f" * 64,
+                    work_root=root_dir,
+                    uv=uv,
                 ),
             },
             sort_keys=True,

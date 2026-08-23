@@ -229,7 +229,12 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
                 "source_commit": source_commit,
                 "version": version,
                 "command_spec_attestation": _attest_installed_command_specs(
-                    root_wheel, work_root=work_dir, uv=uv
+                    root_wheel,
+                    cohort_dir / artifacts["cadrumo-sdist"],
+                    source_commit,
+                    "f" * 64,
+                    work_root=work_dir,
+                    uv=uv,
                 ),
             },
         )
