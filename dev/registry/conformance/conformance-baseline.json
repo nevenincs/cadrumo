@@ -2,29 +2,29 @@
   "ceilings": {
     "grounding_findings": 0,
     "locale_unavailable_modelos": 0,
-    "modelo_scope_classification_findings": 24,
+    "modelo_scope_classification_findings": 6,
     "required_coverage_gap_rows": 0,
     "scope_diagnostics": 0,
     "unattributed_oracle_payloads": 0,
     "unmatched_oracle_evidence": 0,
-    "unused_declared_axes": 5
+    "unused_declared_axes": 3
   },
   "floors": {
-    "audited_locale_leaves": 47376,
-    "bundled_oracle_payloads": 21,
-    "composed_modelos": 73,
-    "composed_revisions": 90,
-    "declared_grounding_claims": 59,
-    "reconciled_casillas": 1261
+    "audited_locale_leaves": 78198,
+    "bundled_oracle_payloads": 26,
+    "composed_modelos": 58,
+    "composed_revisions": 102,
+    "declared_grounding_claims": 78,
+    "reconciled_casillas": 1515
   },
-  "note": "Re-recorded for the counter-family split. The three review counters and the locale counter were shrink-only ceilings pinned at the full population, so the ninety-first revision reddened all three and the only sanctioned way past the refusal was the flag reserved for a deliberately suspicious capture. They are now grow-only progress floors counting the work DONE, whose values are the exact arithmetic inverse of the ceilings they replace at this population: reviewed 90-90=0, operator-reviewed 90-90=0, engineered_by 90-90=0, translated leaves 47376-21609=25767. No retained ceiling moved. The declared_grounding_claims floor rises 58 to 59, folding in the M303 prorrata percentage oracle that landed committed earlier in this campaign, which the prior capture's own record predicted the next capture would take. Peer working-tree edits on the M303 tree at capture time were comments and one verification predicate; neither declares a grounding claim, verified by inspection.",
+  "note": "Re-recorded because the composed_modelos floor of 73 outlived the population it described. Commit efed87876fa (registry: resolve Group W via human tax review) relocated fifteen modelos out of the bundled tree -- 121, 140, 143, 179, 186, 231, 233, 234, 238, 289, 361, 379, 380, 592 and 848 -- and enrolled M721 as the first UNMODELED_OBLIGATIONS member. That capture was never re-taken, so the floor kept demanding a population the tree had deliberately stopped carrying, and audit --check has been failing on it since. The weakening is accepted for that one counter only and is a relocation, not a loss: the modelo directories were removed by a human tax review decision, not dropped. Every other counter moved the safe way or held: revisions 90 to 102, reconciled casillas 1261 to 1515, oracle payloads 21 to 26, locale leaves 47376 to 78198, and no ceiling grew. declared_grounding_claims records 78, which is three LOWER than the tree carried an hour ago: modelo 322 declared its IVA chain externally_grounded on the 2008-2022, 2023 and 2026-y-siguientes revisions while the only bundled oracles are the Manual practico IVA 2024 grupo-de-entidades worked examples, authority for filing year 2024 alone. Those three unbacked claims were removed in the same campaign; the 2024-2025 revision keeps the claim the oracle actually supports. Tree conditions: two peer working-tree edits were present at capture time, in a filing export-producer test and the record-design module; neither declares a grounding claim or a modelo.",
   "progress": {
     "operator_reviewed_revisions": 0,
-    "reviewed_revisions": 0,
+    "reviewed_revisions": 101,
     "revisions_with_engineered_by": 0,
-    "translated_locale_labels": 25767
+    "translated_locale_labels": 55278
   },
-  "recorded_at": "2026-07-28",
+  "recorded_at": "2026-08-23",
   "review_cadence": "revisit whenever a stamping or grounding campaign lands",
   "source": "python -m dev.registry.conformance audit --record"
 }

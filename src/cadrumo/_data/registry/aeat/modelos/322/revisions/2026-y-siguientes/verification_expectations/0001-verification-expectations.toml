@@ -12,17 +12,15 @@ discrepancy_causes = [
 ]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure"]
-# Grounded against the AEAT Manual practico IVA 2024, Cap. 6 "Los regimenes
-# especiales en el IVA", "Regimen especial del grupo de entidades" worked
-# example (pag. 199-200): "Las sociedades OMEGA, S.A. y DELTA, S.A. ...
-# presenta su autoliquidacion individual en el modelo 322 ... Sociedad OMEGA,
-# S.A.: IVA devengado: 6.000 / IVA deducible: 2.000 / Resultado
-# autoliquidacion: 4.000. Sociedad DELTA, S.A.: IVA devengado: 1.000 / IVA
-# deducible: 2.000 / Resultado autoliquidacion: -1.000". See
-# test_m322_2024_grupo_entidades_manual_worked_example.py and
-# corpus/manual_oracles/modelo-322-2024-grupo-entidades-omega.json and
-# corpus/manual_oracles/modelo-322-2024-grupo-entidades-delta.json.
-externally_grounded_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general"]
+# NOT externally grounded. The only bundled oracles for this modelo are the AEAT
+# Manual practico IVA 2024 grupo-de-entidades worked examples
+# (corpus/manual_oracles/modelo-322-2024-grupo-entidades-{omega,delta}.json), whose
+# figures are authority for filing year 2024 only. This revision does not cover that
+# year, so declaring these casillas externally_grounded here claimed an AEAT check
+# that no bundled oracle performs. The casillas stay enrolled in the verification
+# expectation above -- reconciled filed-versus-engine -- which is the weaker and
+# accurate claim. The grounding declaration lives on the 2024-2025 revision, where
+# the oracle actually applies.
 
 # -----------------------------------------------------------------------------
 # Ledger IVA aggregation bindings for the individual monthly group-entity

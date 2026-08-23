@@ -36,6 +36,7 @@ import json
 import os
 import re
 import shutil
+import tomllib
 from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from inspect import signature
@@ -1508,10 +1509,21 @@ def operator_signed_copy(registry_copy: Path) -> Path:
     the fixture never established the state it refuses to touch.
     """
     manifest = _manifest_of(registry_copy)
-    manifest.write_text(
-        manifest.read_text(encoding=UTF_8_ENCODING).rstrip("\n") + "\n" + _OPERATOR_SIGNOFF,
-        encoding=UTF_8_ENCODING,
-    )
+    text = manifest.read_text(encoding=UTF_8_ENCODING)
+
+    # The four scalars belong to the REVISION, so they must be written above the first
+    # table header. Appending them to the end of the file binds them to whichever table
+    # the manifest happens to close in -- today [family_dispositions.relations] -- and
+    # the revision then refuses to compile at all.
+    body = text.split("\n")
+    first_table = next((index for index, line in enumerate(body) if line.startswith("[")), len(body))
+    head = "\n".join(body[:first_table]).rstrip("\n")
+    tail = "\n".join(body[first_table:])
+    manifest.write_text(head + "\n" + _OPERATOR_SIGNOFF + tail, encoding=UTF_8_ENCODING)
+
+    # Prove the seed landed where it was aimed, before any test reads it.
+    seeded = tomllib.loads(manifest.read_text(encoding=UTF_8_ENCODING))
+    assert seeded["review_status"] == "operator_reviewed"
     revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
     assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
     assert revision.reviewed_by == _OPERATOR_SIGNATORY
