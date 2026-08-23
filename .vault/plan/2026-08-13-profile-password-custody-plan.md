@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-23'
-body_hash: 'sha256:6033b8032ea47999466ff32c37876779880ace2d1eac54770738c3a84eb4a369'
+body_hash: 'sha256:7f0320369e9363706ea14e48c3f2968278f393e746624d44c69ae316184acfba'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -97,7 +97,7 @@ Rebuild restore and operator access around current capsules and explicit secret 
 Separate safe deterministic transport from custody-authorized password restore and explicit recovery restore.
 
 - [x] `W03.P05.S13` - Have Terra XHigh rebuild deterministic sealed archive transport framing without recovery.wrap, shared-master assumptions, or retired format parsing; `src/cadrumo/adapters/persistence/storage/bucket/`.
-- [x] `W03.P05.S14` - Have Terra XHigh implement password-only restore, explicit restore-recover lineage, and new-identity portability, wiring the exclusive recovery-artifact export and import to the per-profile artifact module that ALREADY EXISTS in the custody package rather than authoring a second one, that module already being a guarded external export with no coupling to the archive transport; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py`.
+- [x] `W03.P05.S14` - Have Terra XHigh implement password-only restore and the single explicit restore --artifact recovery-proof variant, wiring the exclusive recovery artifact export and import to the existing per-profile artifact module and republishing the restored capsule under its existing password envelope unchanged, while leaving lost-password reset and new-envelope lineage to the separately accepted canonical-credential decision; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py`.
 - [x] `W03.P05.S15` - Have Sol Medium review archive roots, hostile transport refusal, artifact export-import warnings and proof, restore publication, and rollback limits; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/`.
 - [ ] `W03.P05.S206` - Have Terra XHigh turn on recovery enrollment at the profile creation door, wiring the composable enrollment mint into the create transaction so a real operator's profile is enrolled at the moment it is created, since the accepted decision places enrollment at creation and the mint lands as a primitive its consumer must call, and the single line that activates it belongs to the transaction whose ordering guarantee closed the displaced-session leak rather than to the row that built the primitive; `src/cadrumo/application/user_profile/_registration.py and src/cadrumo/application/user_profile/_custody_service.py`.
 
@@ -105,7 +105,7 @@ Separate safe deterministic transport from custody-authorized password restore a
 
 Expose canonical profile verbs and secret channels through typed action envelopes and truthful operator surfaces.
 
-- [x] `W03.P06.S16` - Have Terra XHigh expose canonical profile restore, restore-recover, and delete verbs through action envelopes and one-shot secrets-fd; `src/cadrumo/entrypoints/cli/_config/`.
+- [x] `W03.P06.S16` - Have Terra XHigh expose canonical profile restore with its --artifact recovery-proof variant and canonical delete through action envelopes and the one-shot machine-secret descriptor channel, with both restore credentials converging on one authority and the recovery variant preserving the existing password envelope; `src/cadrumo/entrypoints/cli/_config/`.
 - [x] `W03.P06.S17` - Have Terra XHigh update root bootstrap, TUI login, locales, and status projection to remove old environment and provider channels; `src/cadrumo/entrypoints/`.
 - [x] `W03.P06.S18` - Have Sol Medium review CLI and TUI secret handling, typed outcomes, bootstrap exemptions, and local-only operator guarantees; `src/cadrumo/entrypoints/cli/`.
 - [x] `W03.P06.S42` - Have Terra XHigh close the drift between the curated operator help and the registered command tree, which advertises a first-run profile creation verb that no longer resolves, leaving command-line profile creation reachable only through the terminal interface, and gate the two surfaces against each other so a verb can never again be advertised without being registered; `src/cadrumo/entrypoints/cli/`.

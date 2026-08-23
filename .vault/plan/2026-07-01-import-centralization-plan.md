@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#import-centralization'
 date: '2026-07-01'
-modified: '2026-07-04'
-body_hash: 'sha256:884e783a9ad2f4c0b3f73c6d966d584d77fb75ad5384ad8dfd82af717cfd0931'
+modified: '2026-08-23'
+body_hash: 'sha256:3aeeb42399ba4df49b540c0b459fe1ca98271f8ad213fa21a10a7b3d19741311'
 tier: L4
 related:
   - '[[2026-07-01-import-centralization-adr]]'
@@ -14,6 +14,8 @@ related:
 <!-- RETIRED: P01, S365, S366, S367, S370, S371, S372, S373, S374, S375, S376, S380, S381, S385, S386 -->
 
 # `import-centralization` plan
+
+## Steps
 
 ## Description
 
@@ -902,6 +904,7 @@ Confirm the scanner reports zero production Family-1 violations, flip the Wave W
 - [x] `W06.P90.S400` - Run a fresh-context honesty review against the campaign closure summary per the campaign-close-honesty-review discipline before declaring the campaign structurally complete, tracking every surfaced item as a new Step or a formally deferred follow-up; `.vault/audit/2026-07-01-import-centralization-audit.md`.
 - [x] `W06.P90.S401` - Persist Step Records for every closed Step and rebuild the feature index, then confirm vaultspec-core vault plan status reports the plan fully closed; `.vault/exec/2026-07-01-import-centralization`.
 - [x] `W06.P90.S402` - Extend the import-hygiene scanner to detect underscore-named __all__ entries and dispose the 8 pre-existing hits surfaced by honesty-review finding #7; `dev/import_hygiene_scan.py`.
+- [ ] `W06.P90.S403` - Reconcile the post-close import-integrity drift measured by the machine-secret S18 honesty review: return the test-only private-import debt ratchet to exact named equality, dispose every new Family-2 forwarding wrapper, correct the excluded-test-tree dev-tooling detector, remove every dangling first-party import target, and prove the complete import-hygiene and import-edge lane has zero failures without enlarging a baseline or exemption; `dev/quality/import_hygiene_test_debt.json; dev/quality/import_hygiene_scan.py; dev/tests/test_import_hygiene_gate.py; dev/tests/test_import_edge_integrity_gate.py; current named producer and consumer sites`.
 
 ## Parallelization
 
