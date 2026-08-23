@@ -13,7 +13,7 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
 modified: '2026-08-23'
-body_hash: 'sha256:a5985a27a3ea4a534b473b72ecd7fe9c53fb94f6c00d0e3d7cf4a9cddde3fd57'
+body_hash: 'sha256:61b1faa6fa7dbb09697050d199e78a87f5f99602a8c5b1fdd946cc2ea3cae634'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -171,7 +171,7 @@ Declare only the revision-specific facts established by adjudication.
 - [x] `W02.P08.S185` - ground which supported M100 filing formats carry repeated economic-activity casilla rows and their exact official coordinates; `.vault/research/2026-08-23-inventory-casilla-grounding-research.md`.
 - [x] `W02.P08.S205` - amend this plan with one renderer step and one proof step per grounded row-capable format, or record no renderer when no supported format qualifies; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
 - [x] `W02.P08.S186` - add typed row-indexed casilla values and direct-materialization provenance to the canonical source-resolution carrier; `src/cadrumo/domain/calculations, src/cadrumo/application/aggregation/_source_mesh.py`.
-- [ ] `W02.P08.S187` - persist row-indexed casilla values and direct-materialization provenance through encrypted CalculationRevision state; `src/cadrumo/domain/modelos/_calculation_revision.py`.
+- [ ] `W02.P08.S187` - persist row-indexed casilla values and direct-materialization provenance through encrypted CalculationRevision state; `src/cadrumo/domain/modelos/_calculation_revision.py, src/cadrumo/application/modelo, src/cadrumo/adapters/persistence/storage/_namespace_registry.py, src/cadrumo/adapters/persistence/profile/tests/test_source_mesh_revision_roundtrip.py`.
 - [ ] `W02.P08.S188` - exclude ROWS bindings from scalar calculation-input projection; `src/cadrumo/application/modelo/_calculation_actions.py`.
 - [ ] `W02.P08.S194` - exclude ROWS bindings from scalar formula operand resolution; `src/cadrumo/domain/calculations`.
 - [ ] `W02.P08.S189` - exclude ROWS bindings from scalar draft bound-casilla discovery; `src/cadrumo/application/filing/__init__.py`.
