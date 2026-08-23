@@ -5,30 +5,11 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:b78a453cdf83395ecdd821853e52519aba269b744a9b4e1bf5186e99b7dfe97c'
+body_hash: 'sha256:f5273ace9593255d5cf04c5c67f437bd64bbeba7bd514701b3e8e1cdacd3b0dd'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace secure-storage-performance-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `secure-storage-performance-hardening` audit: `S55 CommandSpec universal gate review`
 
@@ -53,6 +34,10 @@ The first exact-set test compared a tuple with a graph constructed directly from
 ### translation-key-traversal | medium | Confirmation prompt keys were omitted
 
 The first explicit field list did not traverse `confirmation_prompt_key`. The corrected detector recursively walks immutable dataclass fields, so every current and future `TranslationKey` field is enrolled without another maintained field list.
+
+### adversarial-representation-coverage | high | Equivalent syntax could bypass early structural detectors
+
+Repeated independent adversarial passes found representation-specific holes in import and assignment aliases, bound structural methods, dead constructors inside factories and exports, dotted or single-token route maps, and deferred targets nested below parameter, default, and machine-secret records. The final detector resolves alias chains, authorizes constructors only through a closed export grammar, rejects semantic route/path/alias maps independent of mapped representation, and recursively validates every deferred target according to its field role. Every discovered bypass was retained as a planted negative.
 
 ## Recommendations
 
