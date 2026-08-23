@@ -1,0 +1,145 @@
+[revisions."2024-y-siguientes"]
+# Prepared and reviewed by an agent against the bundled diseno de registros
+# (aeat-dr-200-2025) and the ordenes it cites; NO human operator has
+# countersigned it, and 'agent_reviewed' plus this reviewer token record that
+# state honestly rather than claiming the operator's own sign-off.
+#
+# What the review covered: every one of the 6,800 design fields was classified
+# and its kind justified -- casilla from the field's own printed token, literal
+# from its Constante cell, projection slot and member from the printed slot
+# token, filler where the design reserves the run -- and the thirteen repeated
+# blocks were each checked for exact geometry agreement against the projection
+# models. That check found and corrected a real modelling error, section G
+# conflating the secretario del consejo with the representantes legales.
+#
+# An operator re-stamping this to 'operator_reviewed' is what promotes the
+# revision to a countersigned filing grade.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
+authority_grade = "filing"
+# valid_from tracks the ejercicio this revision computes (2024), matching the
+# registry-wide convention (holds for 44/52 annual-cadence revisions) and its
+# own sibling M220 (identical orden, byte-identical deadline windows), not
+# the orden's own publication/effective year. The prior 2025-01-01 value
+# self-contradicted the revision's own declared filing_year=2024 deadline
+# window and excluded any 2024-dated `on=` selection with no basis in law.
+#
+# HAZARD -- this revision spans TWO record designs, and a layout must never
+# cite both. source_refs below carry aeat-dr-200-2024 (applies_to 2024-12-31)
+# and aeat-dr-200-2025 (applies_from 2025-01-01): a clean year boundary, but
+# two different designs -- 75 sheets / 6,635 required positions for 2024, and
+# 77 sheets / 6,726 for 2025. The export-layout coverage gate concatenates
+# every cited record_design, so a layout authored here would be measured
+# against all 152 sheets at once and could not be correct for either year.
+#
+# The hazard is LATENT today: this revision declares no export layout and none
+# of its 3,250 casillas carries an export_ref, so nothing can currently be
+# filed by any route and no wrong-era bytes can be produced. Authoring a layout
+# is what makes it bite, so the split must land BEFORE that work, not after.
+#
+# Sizing, measured rather than estimated, so the next author does not discover
+# it: splitting into '2024' and '2025-y-siguientes' duplicates 1,045 TOML files
+# (2,575,213 bytes) and re-keys 26,008 locale leaves (6,502 x es/en/ca/hu),
+# because casilla locale keys are revision-scoped and a revision cannot be
+# casilla-less. The new revision needs its own 3,250 casillas, i.e. another
+# 26,008 leaves.
+#
+# SEQUENCE IT WITH THE SEGMENTO REFACTOR, NOT BEFORE IT. The 2024 design
+# demands 5,482 distinct (sheet, box) identities while only 94 of these 3,250
+# casillas carry a `segmento`, so exact (segmento, number) matches number 92.
+# Segment-qualifying the ~3,156 bare-numbered casillas re-keys their locale
+# leaves too. Splitting first means paying the 26,008 re-keys twice; doing both
+# together pays them once. That identity refactor also changes ids the
+# formulas, constructs, verification predicates and completeness manifest
+# already reference, so it needs its own ruling before either starts.
+valid_from = 2024-01-01
+period_selector = { year_from = 2024, periods = ["0A"] }
+legal_refs = [
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-124",
+    "ley-27-2014:art-10",
+    "ley-27-2014:art-11",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-36",
+    "ley-27-2014:art-100",
+    "ley-27-2014:art-101",
+    "ley-27-2014:art-12",
+    "rd-634-2015:art-3",
+    "ley-27-2014:art-15",
+    "ley-27-2014:art-21",
+    "ley-27-2014:art-22",
+    "ley-27-2014:art-31",
+    "ley-27-2014:art-32",
+    "ley-27-2014:art-13",
+    "ley-27-2014:art-16",
+    "ley-27-2014:art-25",
+    "ley-27-2014:art-26",
+    "ley-27-2014:art-105",
+    "ley-27-2014:dt-44",
+    "ley-49-2002:art-10",
+    "orden-hac-657-2025:modelo-200",
+]
+orden_aplicabilidad = [
+    "orden-hac-657-2025:modelo-200",
+]
+source_refs = [
+    "aeat-dr-200-2024",
+    "aeat-dr-200-2025",
+    "aeat-modelo-200-manual-2024",
+    "aeat-modelo-200-manual-2025",
+    "boe-modelo-200-2025-form",
+]
+
+
+[revisions."2024-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2024-y-siguientes' of modelo 200 has no strictly-earlier sibling revision of this modelo (valid_from 2024-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
+legal_refs = [
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-124",
+    "ley-27-2014:art-10",
+    "ley-27-2014:art-11",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-36",
+    "ley-27-2014:art-100",
+    "ley-27-2014:art-101",
+    "ley-27-2014:art-12",
+    "rd-634-2015:art-3",
+    "ley-27-2014:art-15",
+    "ley-27-2014:art-21",
+    "ley-27-2014:art-22",
+    "ley-27-2014:art-31",
+    "ley-27-2014:art-32",
+    "ley-27-2014:art-13",
+    "ley-27-2014:art-16",
+    "ley-27-2014:art-25",
+    "ley-27-2014:art-26",
+    "ley-27-2014:art-105",
+    "ley-27-2014:dt-44",
+    "ley-49-2002:art-10",
+    "orden-hac-657-2025:modelo-200",
+]
+source_refs = [
+    "aeat-dr-200-2024",
+    "aeat-dr-200-2025",
+    "aeat-modelo-200-manual-2024",
+    "aeat-modelo-200-manual-2025",
+    "boe-modelo-200-2025-form",
+]
+
+[revisions."2024-y-siguientes".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. Modelo 200's corpus carries its diseno de registro workbook, which describes the fichero layout rather than the labels the declaracion prints, and no declaracion specimen. The label dictionary that grounds modelo 100's profiles is bundled for modelo 100 alone -- a sweep for \
+.properties field dictionaries across the whole corpus returns that modelo and no other. Authoring patterns without such a document would invent them. Modelo 100's 2020 revision disposes this family on exactly this ground while its 2021-2024 siblings populate theirs, so the family is evidence-scoped by revision rather than absent by nature: acquire a label-printing artefact and it becomes applicable, at which point this disposition must be revisited rather than inherited."""
+legal_refs = ["ley-27-2014:art-124", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

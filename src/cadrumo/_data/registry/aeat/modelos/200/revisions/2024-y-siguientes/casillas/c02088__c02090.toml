@@ -1,0 +1,33 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02088"
+number = "02088"
+section = ["deducc_para_incentivar_determ_actividades", "2017_inversiones_en_territ_africa_occidental_y_gas"]
+data_type = "money"
+semantic_role = "is_deduccion_inversiones_africa_canarias"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200017.f0074"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02089"
+number = "02089"
+section = ["deducc_para_incentivar_determ_actividades", "2017_inversiones_en_territ_africa_occidental_y_gas"]
+data_type = "money"
+semantic_role = "is_deduccion_inversiones_africa_canarias_periodo"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200017.f0075"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02090"
+number = "02090"
+section = ["deducc_para_incentivar_determ_actividades", "2017_inversiones_en_territ_africa_occidental_y_gas"]
+data_type = "money"
+semantic_role = "is_deduccion_inversiones_africa_canarias_pendiente"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200017.f0076"]

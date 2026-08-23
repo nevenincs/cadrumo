@@ -1,0 +1,1378 @@
+[[revisions.2024-y-siguientes.export_layouts]]
+id = 'generated-modelo-200-2024-y-siguientes-fichero'
+
+[[revisions.2024-y-siguientes.export_layouts.records]]
+id = 'm200-page-023'
+record_type = 'page-023'
+order = 35
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0001'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0002'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '200'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0003'
+offset = 6
+length = 5
+kind = 'literal'
+literal = '23000'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0004'
+offset = 11
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0005'
+offset = 12
+length = 1
+kind = 'header'
+producer_key = 'amendment_evidence.is_complementaria'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0006'
+offset = 13
+length = 1
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 1
+field = 'tipo_operacion'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0007'
+offset = 14
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 1
+field = 'transmitente_nif'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0008'
+offset = 23
+length = 40
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 1
+field = 'transmitente_denominacion_social'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0009'
+offset = 63
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 1
+field = 'adquirente_nif'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0010'
+offset = 72
+length = 40
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 1
+field = 'adquirente_denominacion_social'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0011'
+offset = 112
+length = 8
+kind = 'projection'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 1
+field = 'fecha_inscripcion_registro_mercantil'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0012'
+offset = 120
+length = 8
+kind = 'projection'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 1
+field = 'fecha_comunicacion_operacion'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0013'
+offset = 128
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 1
+field = 'valor_acciones_entregadas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0014'
+offset = 145
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 1
+field = 'valor_acciones_recibidas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0015'
+offset = 162
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 1
+field = 'importe_rentas_no_integradas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0016'
+offset = 179
+length = 1
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 2
+field = 'tipo_operacion'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0017'
+offset = 180
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 2
+field = 'transmitente_nif'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0018'
+offset = 189
+length = 40
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 2
+field = 'transmitente_denominacion_social'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0019'
+offset = 229
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 2
+field = 'adquirente_nif'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0020'
+offset = 238
+length = 40
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 2
+field = 'adquirente_denominacion_social'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0021'
+offset = 278
+length = 8
+kind = 'projection'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 2
+field = 'fecha_inscripcion_registro_mercantil'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0022'
+offset = 286
+length = 8
+kind = 'projection'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 2
+field = 'fecha_comunicacion_operacion'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0023'
+offset = 294
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 2
+field = 'valor_acciones_entregadas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0024'
+offset = 311
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 2
+field = 'valor_acciones_recibidas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0025'
+offset = 328
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 2
+field = 'importe_rentas_no_integradas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0026'
+offset = 345
+length = 1
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 3
+field = 'tipo_operacion'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0027'
+offset = 346
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 3
+field = 'transmitente_nif'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0028'
+offset = 355
+length = 40
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 3
+field = 'transmitente_denominacion_social'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0029'
+offset = 395
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 3
+field = 'adquirente_nif'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0030'
+offset = 404
+length = 40
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 3
+field = 'adquirente_denominacion_social'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0031'
+offset = 444
+length = 8
+kind = 'projection'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 3
+field = 'fecha_inscripcion_registro_mercantil'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0032'
+offset = 452
+length = 8
+kind = 'projection'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 3
+field = 'fecha_comunicacion_operacion'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0033'
+offset = 460
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 3
+field = 'valor_acciones_entregadas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0034'
+offset = 477
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 3
+field = 'valor_acciones_recibidas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0035'
+offset = 494
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 3
+field = 'importe_rentas_no_integradas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0036'
+offset = 511
+length = 1
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 4
+field = 'tipo_operacion'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0037'
+offset = 512
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 4
+field = 'transmitente_nif'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0038'
+offset = 521
+length = 40
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 4
+field = 'transmitente_denominacion_social'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0039'
+offset = 561
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 4
+field = 'adquirente_nif'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0040'
+offset = 570
+length = 40
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 4
+field = 'adquirente_denominacion_social'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0041'
+offset = 610
+length = 8
+kind = 'projection'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 4
+field = 'fecha_inscripcion_registro_mercantil'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0042'
+offset = 618
+length = 8
+kind = 'projection'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 4
+field = 'fecha_comunicacion_operacion'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0043'
+offset = 626
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 4
+field = 'valor_acciones_entregadas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0044'
+offset = 643
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 4
+field = 'valor_acciones_recibidas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0045'
+offset = 660
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 4
+field = 'importe_rentas_no_integradas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0046'
+offset = 677
+length = 1
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 5
+field = 'tipo_operacion'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0047'
+offset = 678
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 5
+field = 'transmitente_nif'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0048'
+offset = 687
+length = 40
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 5
+field = 'transmitente_denominacion_social'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0049'
+offset = 727
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 5
+field = 'adquirente_nif'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0050'
+offset = 736
+length = 40
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 5
+field = 'adquirente_denominacion_social'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0051'
+offset = 776
+length = 8
+kind = 'projection'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 5
+field = 'fecha_inscripcion_registro_mercantil'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0052'
+offset = 784
+length = 8
+kind = 'projection'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 5
+field = 'fecha_comunicacion_operacion'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0053'
+offset = 792
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 5
+field = 'valor_acciones_entregadas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0054'
+offset = 809
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 5
+field = 'valor_acciones_recibidas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0055'
+offset = 826
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_operacion_reestructuracion'
+slot = 5
+field = 'importe_rentas_no_integradas'
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0056'
+offset = 843
+length = 200
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200023.f0057'
+offset = 1043
+length = 12
+kind = 'literal'
+literal = '</T20023000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2024-y-siguientes.export_layouts.records.row_field_casilla_ids]

@@ -1,0 +1,44 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200011:00569"
+number = "00569"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+data_type = "money"
+semantic_role = "is_ecpn_operaciones_socios_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200011:00570"
+number = "00570"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+data_type = "money"
+semantic_role = "is_ecpn_operaciones_socios_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200011:00571"
+number = "00571"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+data_type = "money"
+semantic_role = "is_ecpn_operaciones_socios_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200011:00572"
+number = "00572"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+data_type = "money"
+semantic_role = "is_ecpn_operaciones_socios_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

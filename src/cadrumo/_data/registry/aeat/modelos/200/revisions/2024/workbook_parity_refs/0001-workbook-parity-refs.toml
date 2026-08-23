@@ -1,9 +1,0 @@
-[[revisions."2024".workbook_parity_refs]]
-id = "modelo-200-2024-dr-xls"
-workbook_source = "aeat-dr-200-2024"
-fixture_id = "modelo-200-2024-record-design-layout"
-formula_coverage = "record_design_layout"
-runner_required = false
-tolerance = "0.01"
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024"]
