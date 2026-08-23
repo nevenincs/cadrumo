@@ -4447,3 +4447,54 @@ page rather than starting a PASIVO one. Read the descriptions, not the sheet nam
 **10272 of 11570 slots remain** across 106 numbered records; 1298 modelled, zero orphaned.
 Nothing here sums a group into its head or checks activo against patrimonio neto plus
 pasivo: the balance sheet does not balance.
+
+## 2026-08-23 — iteration blocked: the registry does not load
+
+**No record was authored and no stamp was written this iteration.** The registry fails
+validation, so `bundled_authority()` cannot be loaded, locale keys cannot be derived, and a
+suite run would measure someone else's churn rather than this work.
+
+### What is broken, precisely
+
+**189 failures, every one in `modelo 322 revision 2008-2022`:**
+
+- 187 × a casilla referencing an export field that does not exist
+  (`m322-2022.page-01.f019` and siblings)
+- 1 × the revision declaring no export layout at all
+- 1 × its `filing` grade claim blocked by that absence
+
+Zero failures involve modelo 220 or any record authored in this campaign. The 32 m220
+fragments — 1464 casillas — all parse standalone.
+
+### It is a peer's era split, in flight right now
+
+`6d416bbd33` renamed m322's `2008-2023` revision to `2023`, and a new `2008-2022` revision
+is being built beside it: its casillas already carry `export_refs` into an `m322-2022`
+layout whose directory does not exist yet. The peer's worktree also holds uncommitted edits
+to the 2023 export records and untracked `dev/registry/mappings/modelo_322/2022/` and
+`render_profiles/modelo_322/2022/`.
+
+**The failure count moved between two consecutive load attempts — 203 then 189 — so files
+are being written as this is measured.** That is the tell that separates a stable break from
+an active one, and it is worth checking before diagnosing anything: a count that changes
+under a re-run is not a defect to analyse, it is a worktree in motion.
+
+### Why this is recorded rather than worked around
+
+The honest options were to author T22003B00 from the design alone and hold it unloaded, or
+to stop. Authoring without loading would skip every check this campaign relies on — locale
+keys, label resolution, the completeness complement against a loaded revision — and would
+put a fragment into a tree whose owner is mid-restructure. **The protocol's value is that it
+is not optional when it is inconvenient.**
+
+This is also the structure-change fallout the campaign brief warns about, observed live: an
+era split leaves casillas pointing at a layout that does not exist until the layout lands,
+and in this registry that state is not degraded, it is a hard load failure for every consumer
+of the whole authority.
+
+### Next iteration
+
+Re-measure first. If m322 still fails, the block is not mine to clear without coordinating.
+The next unit remains **T22003B00** (61 fields, 51 numbered boxes, the patrimonio neto and
+pasivo side of the general-PGC balance sheet), which pairs with T22003A00 authored last
+iteration.
