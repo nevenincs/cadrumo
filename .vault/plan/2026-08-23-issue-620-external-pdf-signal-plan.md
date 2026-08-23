@@ -5,11 +5,13 @@ tags:
 date: '2026-08-23'
 tier: L1
 related:
+  - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-research]]'
   - '[[2026-07-26-declaracion-real-render-verification-adr]]'
   - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:2ce0a36e6c19e10612f299755bb7f0f6c3e9f2455d14fe05efa1976f12725ab8'
+body_hash: 'sha256:9537a32b9fa4f2ccafa86702ce22ee232efece8453c569a2eaf71f6c0f1d087a'
 ---
 
 # `issue-620-external-pdf-signal` plan
@@ -22,7 +24,7 @@ The accepted real-render verification decision requires render-dependent claims 
 
 ## Steps
 
-- [ ] `S01` - Inventory and fingerprint the externally sourced Modelo 130 plain and fillable PDFs; `src/cadrumo/tests/fixtures/external_layout_candidates/130/`.
+- [x] `S01` - Inventory and fingerprint the externally sourced Modelo 130 plain and fillable PDFs; `src/cadrumo/tests/fixtures/external_layout_candidates/130/`.
 - [ ] `S02` - Inventory and fingerprint the externally sourced Modelo 131 plain and fillable PDFs; `src/cadrumo/tests/fixtures/external_layout_candidates/131/`.
 - [ ] `S03` - Inventory and fingerprint the externally sourced Modelo 303 plain and fillable PDFs; `src/cadrumo/tests/fixtures/external_layout_candidates/303/`.
 - [ ] `S04` - Inventory and fingerprint the externally sourced Modelo 036 plain and fillable PDFs; `src/cadrumo/tests/fixtures/external_layout_candidates/036/`.

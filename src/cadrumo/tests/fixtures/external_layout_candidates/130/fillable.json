@@ -1,0 +1,49 @@
+{
+  "modelo": "130",
+  "candidate_kind": "fillable",
+  "source_page_url": "https://fiscalbot.es/modelos-tributarios/modelo-130/",
+  "source_pdf_url": "https://fiscalbot.es/assets/pdf/Modelo130_rellenable.pdf?v=3",
+  "retrieved_on": "2026-08-23",
+  "source_chain": {
+    "classification": "third_party_hosted_external_layout_candidate",
+    "host": "fiscalbot.es",
+    "authority_status": "unverified"
+  },
+  "content": {
+    "sha256": "cb2440c04f499005a5bb93231b2072d2b585d40283a60eedce7d73d1efed1379",
+    "size_bytes": 155146
+  },
+  "pdf": {
+    "version": "1.7",
+    "header_version": "1.4",
+    "page_count": 1,
+    "page_sizes_points": [
+      [595.22, 842.0]
+    ],
+    "encrypted": false,
+    "acroform_top_level_field_count": 31,
+    "acroform_nonempty_value_count": 0,
+    "document_info": {
+      "Author": "AEAT",
+      "Creator": "AEAT",
+      "Keywords": "AEAT, Justificante, Declaracion, Predeclaracion, Vista Previa",
+      "ModDate": "D:20251217154156+01'00'",
+      "Producer": "3.0.30 (5.1.14) ",
+      "Subject": "Justificante AEAT. CSV=M2LBFVRNBTLZK4W8",
+      "Title": "Justificante AEAT. CSV=M2LBFVRNBTLZK4W8"
+    }
+  },
+  "observations": {
+    "text_layer_character_count": 4753,
+    "nif_like_match_count": 0,
+    "iban_like_match_count": 0,
+    "email_like_match_count": 0,
+    "printed_placeholder_justificante_number_present": true,
+    "value_observation": "The text layer contains printed labels and box numbers; all observed AcroForm values are empty and no populated taxpayer NIF, IBAN, or email address was observed."
+  },
+  "limitations": [
+    "Third-party hosting, PDF branding, and document metadata do not establish AEAT provenance.",
+    "The candidate is retained byte-for-byte as downloaded; fillable is only the source page's variant label.",
+    "A blank external layout does not ground populated-value placement."
+  ]
+}
