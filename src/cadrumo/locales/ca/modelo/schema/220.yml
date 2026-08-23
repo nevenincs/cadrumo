@@ -674,6 +674,420 @@ modelo:
             x-agp34c1h68o30c1q60pj4dhi:
               label: Deduccions per doble imposicio internacional, LIS. total de l'exercici
                 2024. pendent d'aplicacio en periodes futurs (registre T22012000)
+            x-agp34c1h690j0c9q60o34d9o:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2017. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60o34dhi:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2017. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60o34dhj:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2017. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60o34dhk:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2017. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60o34dhl:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2017. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60o3ie1k:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2019. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60o3ie1o:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2019. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60o3ie1p:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2019. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60o3ie9g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2019. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60o3ie9h:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2019. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60ojie1j:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2016. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60ojie9n:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2016. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60ojie9o:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2016. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60ojie9p:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2016. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60p30c1g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2016. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60p32c9g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2023. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60p32c9k:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2023. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60p32c9l:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2023. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60p32c9m:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2023. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60p32c9n:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2023. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60p3cd1j:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2024. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60p3cdpn:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2024. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60p3cdpo:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2024. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60p3cdpp:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2024. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60p3ce1g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2024. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60pj4d1l:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2015. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60pj6e1m:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2018. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60pj6e9h:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2018. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60pj6e9i:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2018. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60pj6e9j:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2018. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60pj6e9k:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2018. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60pjce9l:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2022. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60pjce9p:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2022. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60pjec1g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2022. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60pjec1h:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2022. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60pjec1i:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2022. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60q30c1j:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2020. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60q30c1n:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2020. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60q30c1o:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2020. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60q30c1p:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2020. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60q30c9g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2020. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60q3ac1k:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2021. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60q3ac1o:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2021. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60q3ac1p:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2021. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60q3ac9g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2021. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60q3ac9h:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2021. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2015. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1h:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2015. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60qjad1i:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2015. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1j:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2015. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1k:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. total. deduccio pendent de periodes anteriors (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60qjad1l:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. total. deduccio pendent el 2024 (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1m:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. total. aplicat en aquesta liquidacio (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1n:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. total. pendent d'aplicacio en periodes futurs (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60qjad1o:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                juridica, impost suportat pel contribuent (art. 31 LIS). doble imposicio
+                de 2024. deduccio generada (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1p:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                juridica, impost suportat pel contribuent (art. 31 LIS). doble imposicio
+                de 2024. aplicat en aquesta liquidacio (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad9g:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                juridica, impost suportat pel contribuent (art. 31 LIS). doble imposicio
+                de 2024. pendent d'aplicacio en periodes futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad9h:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                economica, dividends i participacions en beneficis (art. 32 LIS).
+                doble imposicio de 2024. deduccio generada (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad9i:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                economica, dividends i participacions en beneficis (art. 32 LIS).
+                doble imposicio de 2024. aplicat en aquesta liquidacio (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad9j:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                economica, dividends i participacions en beneficis (art. 32 LIS).
+                doble imposicio de 2024. pendent d'aplicacio en periodes futurs (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60qjad9k:
+              label: Deduccions per doble imposicio internacional, LIS. total de l'exercici
+                2024. deduccio generada (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad9l:
+              label: Deduccions per doble imposicio internacional, LIS. total de l'exercici
+                2024. aplicat en aquesta liquidacio (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad9m:
+              label: Deduccions per doble imposicio internacional, LIS. total de l'exercici
+                2024. pendent d'aplicacio en periodes futurs (registre T22012A01)
+            x-agp34c1h690j2c9q60o34dpg:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2017. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60o34dph:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2017. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60o34dpi:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2017. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60o34dpj:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2017. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60o3ie9m:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2019. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60o3ie9n:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2019. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60o3ie9o:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2019. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60o3ie9p:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2019. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60p30chi:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2016. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60p30chj:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2016. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60p30chk:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2016. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60p30chl:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2016. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60p32d1n:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2023. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60p32d1o:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2023. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60p32d1p:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2023. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60p32d9g:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2023. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60p3ce1l:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2024. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60p3ce1m:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2024. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60p3gchj:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2024. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60p3gchk:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2024. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60pj6e9p:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2018. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60pj8c1g:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2018. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60pj8c1h:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2018. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60pj8c1i:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2018. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60pjec1n:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2022. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60pjec1o:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2022. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60pjec1p:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2022. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60q30c9l:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2020. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60q30c9m:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2020. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60q30c9n:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2020. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60q30c9o:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2020. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60q3ac9m:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2021. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60q3ac9n:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2021. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60q3ac9o:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2021. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60q3ac9p:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2021. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60qjachj:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2015. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60qjachk:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2015. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60qjachl:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2015. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60qjachm:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2015. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60qjachn:
+              label: Deduccions per doble imposicio internacional, LIS. total. deduccio
+                pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacho:
+              label: Deduccions per doble imposicio internacional, LIS. total. deduccio
+                pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60qjachp:
+              label: Deduccions per doble imposicio internacional, LIS. total. aplicat
+                en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpg:
+              label: Deduccions per doble imposicio internacional, LIS. total. pendent
+                d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacph:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                juridica, impost suportat pel contribuent (art. 31 LIS). doble imposicio
+                de 2024. deduccio generada (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpi:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                juridica, impost suportat pel contribuent (art. 31 LIS). doble imposicio
+                de 2024. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpj:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                juridica, impost suportat pel contribuent (art. 31 LIS). doble imposicio
+                de 2024. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpk:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                economica, dividends i participacions en beneficis (art. 32 LIS).
+                doble imposicio de 2024. deduccio generada (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpl:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                economica, dividends i participacions en beneficis (art. 32 LIS).
+                doble imposicio de 2024. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpm:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                economica, dividends i participacions en beneficis (art. 32 LIS).
+                doble imposicio de 2024. pendent d'aplicacio en periodes futurs (registre
+                T22012A11)
+            x-agp34c1h690j2c9q60qjacpn:
+              label: Deduccions per doble imposicio internacional, LIS. total de l'exercici
+                2024. deduccio generada (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpo:
+              label: Deduccions per doble imposicio internacional, LIS. total de l'exercici
+                2024. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpp:
+              label: Deduccions per doble imposicio internacional 2024. total 2024.
+                pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60r32cpg:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2022. pendent d'aplicacio en periodes futurs (registre T22012A11)
             x-agp34c1h69130c1q60o34dpk:
               label: Deduccions per doble imposicio interna, DT 23a LIS. exercicis
                 anteriors. doble imposicio de 2017. deduccio pendent de periodes anteriors
