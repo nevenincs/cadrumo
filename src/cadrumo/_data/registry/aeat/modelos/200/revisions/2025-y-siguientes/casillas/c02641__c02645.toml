@@ -1,0 +1,61 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "02641"
+number = "02641"
+section = ["libertad_de_amortizacion_sin_mantenimiento_de_empl", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 200 RDL 13/2010 sin-mantenimiento-empleo row; AEAT manual distinguishes it from RDL 6/2010 regime."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026b.f0161"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02642"
+number = "02642"
+section = ["libertad_de_amortizacion_sin_mantenimiento_de_empl", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_ejercicio_aumento"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 200 RDL 13/2010 sin-mantenimiento-empleo row; AEAT manual distinguishes it from RDL 6/2010 regime."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026b.f0162"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02643"
+number = "02643"
+section = ["libertad_de_amortizacion_sin_mantenimiento_de_empl", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_anteriores_aumento"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 200 RDL 13/2010 sin-mantenimiento-empleo row; AEAT manual distinguishes it from RDL 6/2010 regime."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026b.f0163"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02644"
+number = "02644"
+section = ["libertad_de_amortizacion_sin_mantenimiento_de_empl", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_saldo_inicial"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026b.f0160"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02645"
+number = "02645"
+section = ["libertad_de_amortizacion_sin_mantenimiento_de_empl", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_saldo_final"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026b.f0164"]

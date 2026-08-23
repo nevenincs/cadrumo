@@ -1,0 +1,77 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "00979"
+number = "00979"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200018c.f0109"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00980"
+number = "00980"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200018c.f0110"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00981"
+number = "00981"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200018c.f0111"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00982"
+number = "00982"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200018c.f0112"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00983"
+number = "00983"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200018c.f0113"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00984"
+number = "00984"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200018c.f0114"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00985"
+number = "00985"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200018c.f0115"]

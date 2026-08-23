@@ -1,0 +1,24 @@
+# Segment-qualified Liquidación II total of correcciones al resultado contable
+# de DISMINUCIÓN (DP200013 segment, diseño 2024 pos 1577). The per-row
+# correccion detalle casillas (is_correccion_disminucion and the per-article
+# disminución roles) feed THIS column total; the base-previa formula subtracts
+# this stored subtotal — never the individual leaves — so the leaves are not
+# double-summed against their own total.
+#
+# The bare number 00418 also occurs on an unrelated Estado de Cambios en el
+# Patrimonio Neto record; base-chain references MUST use this segment-qualified
+# id, never the bare number.
+[[revisions."2025-y-siguientes".casillas]]
+id = "DP200013:00418"
+number = "00418"
+segmento = "DP200013"
+section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+data_type = "money"
+semantic_role = "is_correcciones_disminuciones_total"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Total de correcciones de disminución al resultado contable is the single base-chain disminuciones column subtotal in the DP200013 segment; the per-row correccion leaves carry is_correccion_disminucion and feed this total rather than sharing its role."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-15", "ley-27-2014:art-12", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200011.f0023", "m200-2025.dp200013.f0098", "m200-2025.dp200020b.f0015", "m200-2025.dp200042.f0011"]

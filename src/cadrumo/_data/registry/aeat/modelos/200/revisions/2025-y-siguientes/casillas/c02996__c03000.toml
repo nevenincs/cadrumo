@@ -1,0 +1,55 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "02996"
+number = "02996"
+section = ["exencion_sobre_la_renta_obtenida_en_la_transmision", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026e.f0022"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02997"
+number = "02997"
+section = ["exencion_sobre_la_renta_obtenida_en_la_transmision", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026e.f0023"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02998"
+number = "02998"
+section = ["exencion_sobre_la_renta_obtenida_en_la_transmision", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026e.f0024"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02999"
+number = "02999"
+section = ["exencion_sobre_la_renta_obtenida_en_la_transmision", "disminucion"]
+data_type = "money"
+semantic_role = "is_exencion_rentas_ajuste_saldo_inicio"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026e.f0021"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "03000"
+number = "03000"
+section = ["exencion_sobre_la_renta_obtenida_en_la_transmision", "disminucion"]
+data_type = "money"
+semantic_role = "is_exencion_transmision_saldo_fin"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026e.f0025"]
