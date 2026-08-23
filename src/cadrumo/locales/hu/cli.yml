@@ -270,12 +270,9 @@ cli:
         acquisition_cost_stdin_help: A teljes beszerzési költség JSON-objektum beolvasása
           a szabványos bemenetről
         actividad_id_help: Gazdasági tevékenység azonosítója.
-        authority_channel_required: Pontosan egy strukturált zárókészlet-hatósági
-          bemeneti csatornát válasszon.
-        authority_fd_help: A teljes zárókészlet-hatósági JSON beolvasása egyszer használatos
-          fájlleíróból
+        authority_file_help: A teljes zárókészlet-hatósági JSON-dokumentum beolvasása
+          fájlból.
         authority_invalid: A zárókészlet-hatósági objektum érvénytelen ehhez a készletfőkönyvhöz.
-        authority_stdin_help: A teljes zárókészlet-hatósági JSON beolvasása stdinről
         closing_authority_record_help: A bizonyított zárókészlet-hatóság atomi rögzítése
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
         group_help: Készlet-főkönyvek tevékenységek, mozgások és értékelés szerint.

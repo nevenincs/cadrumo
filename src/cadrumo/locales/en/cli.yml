@@ -250,14 +250,10 @@ cli:
         acquisition_cost_stdin_help: Read the complete acquisition-cost JSON object
           from stdin
         actividad_id_help: Economic activity identifier
-        authority_channel_required: Select exactly one structured closing-authority
-          input channel.
-        authority_fd_help: Read the complete closing-authority JSON object from a
-          one-shot file descriptor
+        authority_file_help: Read the complete closing-authority JSON document from
+          a file.
         authority_invalid: The closing-authority object is invalid for this inventory
           ledger.
-        authority_stdin_help: Read the complete closing-authority JSON object from
-          stdin
         closing_authority_record_help: Atomically record evidenced inventory closing
           authority
         create_help: Create an inventory ledger for one activity and tax year

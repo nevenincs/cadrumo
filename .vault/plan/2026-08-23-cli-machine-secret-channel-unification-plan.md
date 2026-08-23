@@ -4,7 +4,7 @@ tags:
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
 modified: '2026-08-23'
-body_hash: 'sha256:f68f14762721deac80bb1db2920674c0cb84698fb64a332e276b77272c1f4699'
+body_hash: 'sha256:5c2c241940f43b92fef4e1bdee09179ce6404ffa6679fa59a502305d297d060d'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
@@ -64,7 +64,7 @@ Migrate remaining scalar-secret commands and hard-cut legacy fields.
 Align diagnostics and remove superseded implementations and fallbacks.
 
 - [x] `W02.P05.S11` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and regenerate all four locales through python -m dev.locales with channel-neutral diagnostics that reserve only fd1/fd2 and remove stale environment and legacy-field strings; `src/cadrumo/locales/ and dev/locales/`.
-- [ ] `W02.P05.S12` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and remove obsolete imports, models, manual injection, CLI environment routes, direct readers, and prompts outside the closed inventory while retaining separately governed core and programmatic settings; `src/cadrumo/entrypoints/cli/ and its tests`.
+- [x] `W02.P05.S12` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and remove obsolete imports, models, manual injection, CLI environment routes, direct readers, and prompts outside the closed inventory while retaining separately governed core and programmatic settings; `src/cadrumo/entrypoints/cli/ and its tests`.
 
 ### Phase `W02.P11` - Root profile authentication precondition
 

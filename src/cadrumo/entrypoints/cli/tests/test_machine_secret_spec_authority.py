@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import ast
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
@@ -26,6 +28,44 @@ _COMMANDS = {
     "config.profile.create",
     "config.profile.restore",
     "config.auth.certificate.secret.set",
+}
+
+_PUBLIC_SECRET_IMPORTERS = {
+    "MachineSecretPayload": {
+        "_certificate.py",
+        "_custody.py",
+        "_passphrase.py",
+        "_restore_cli.py",
+        "_scripted_registration.py",
+        "_profile_authentication_contract.py",
+        "_profile_authentication_gate.py",
+    },
+    "read_machine_secret_payload": {
+        "_certificate.py",
+        "_custody.py",
+        "_passphrase.py",
+        "_restore_cli.py",
+        "_scripted_registration.py",
+        "_profile_authentication_gate.py",
+    },
+    "select_machine_secret_channel": {
+        "_certificate.py",
+        "_custody.py",
+        "_passphrase.py",
+        "_restore_cli.py",
+        "_scripted_registration.py",
+        "_profile_authentication_gate.py",
+    },
+    "prompt_secret_no_echo": {
+        "_certificate.py",
+        "_custody.py",
+        "_passphrase.py",
+        "_restore_cli.py",
+        "_scripted_registration.py",
+    },
+    "read_profile_secret_payload": {"_profile_authentication_gate.py"},
+    "select_profile_secret_channel": {"_profile_authentication_gate.py"},
+    "stage_machine_secret_payload": {"_profile_authentication_gate.py"},
 }
 
 
@@ -71,6 +111,22 @@ def test_machine_secret_model_targets_are_public_strict_and_shape_exact() -> Non
             assert isinstance(model, type)
             assert issubclass(model, MachineSecretPayload)
             assert tuple(model.model_fields) == tuple(field.name for field in variant.fields)
+
+
+def test_public_secret_apis_are_confined_to_five_leaves_and_the_root_gate() -> None:
+    cli_root = Path(__file__).parents[1]
+    actual = {name: set() for name in _PUBLIC_SECRET_IMPORTERS}
+    for path in cli_root.rglob("*.py"):
+        if "tests" in path.parts or path.name == "_secure_input.py":
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom) or not (node.module or "").endswith("_secure_input"):
+                continue
+            for alias in node.names:
+                if alias.name in actual:
+                    actual[alias.name].add(path.name)
+    assert actual == _PUBLIC_SECRET_IMPORTERS
 
 
 def test_duplicate_machine_secret_contract_is_refused() -> None:

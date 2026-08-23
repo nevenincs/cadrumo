@@ -161,8 +161,8 @@ def root_command(
     # the active profile's encrypted records. Deferred after the
     # bare-invocation path for the same reason as above. Help and usage-error
     # renderings are introspection surfaces too: they must never require the
-    # master key, or a newcomer without CADRUMO_SECRET_PASSPHRASE cannot
-    # browse the command tree and an unknown-command typo is masked by a
+    # profile session, or a newcomer without an explicit authentication act
+    # cannot browse the command tree and an unknown-command typo is masked by a
     # master-key refusal instead of the usage error.
     # Session activation runs from the graph-generated leaf wrapper after the
     # complete command has parsed, so root and leaf secret sources can be
@@ -424,7 +424,8 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
 
     Two introspection shapes never execute a verb body and therefore must
     not open the encrypted bucket session (which demands the master key and,
-    without ``CADRUMO_SECRET_PASSPHRASE`` on a non-interactive stdin, refuses):
+    without an explicit root profile-authentication source on non-interactive
+    stdin, refuses):
 
     - A help request: a ``--help`` / ``-h`` token anywhere in the unparsed
       remainder. Click's eager help callback (or the curated subgroup help

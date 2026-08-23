@@ -273,14 +273,10 @@ cli:
         acquisition_cost_stdin_help: Llegeix de l'entrada estàndard l'objecte JSON
           de cost d'adquisició complet
         actividad_id_help: Identificador de l'activitat econòmica
-        authority_channel_required: Seleccioneu exactament un canal estructurat d'autoritat
-          de tancament.
-        authority_fd_help: Llegir l'objecte JSON complet d'autoritat de tancament
-          des d'un descriptor d'un sol ús
+        authority_file_help: Llegiu el document JSON complet d'autoritat de tancament
+          des d'un fitxer.
         authority_invalid: L'objecte d'autoritat de tancament no és vàlid per a aquest
           llibre d'existències.
-        authority_stdin_help: Llegir l'objecte JSON complet d'autoritat de tancament
-          des de stdin
         closing_authority_record_help: Registrar atòmicament l'autoritat acreditada
           del tancament d'existències
         create_help: Crea un llibre d'existències per a una activitat i exercici

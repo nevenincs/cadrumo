@@ -8,11 +8,13 @@ from :mod:`._ledger_payloads`.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import typer
 from pydantic import ValidationError
 
 from ...application.inventory import InventoryMovementCommand, InventoryService
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
 from ...domain.contribuyente.inventory import (
     InventoryAcquisitionCost,
@@ -29,11 +31,6 @@ from ._common import (
 from ._common import (
     active_bucket_id_or_refuse as _inventory_bucket_id,
 )
-from ._config._secure_input import (
-    MachineSecretPayload,
-    read_machine_secret_payload,
-    select_machine_secret_channel,
-)
 from ._ledger_payloads import (
     InventoryClosingAuthorityRecordResult,
     InventoryCreateResult,
@@ -41,14 +38,6 @@ from ._ledger_payloads import (
     InventoryMovementAddResult,
     InventoryValuationPreviewPayload,
 )
-
-
-class _InventoryClosingAuthorityInput(MachineSecretPayload):
-    """Strict bounded structured input; values never appear in argv or output."""
-
-    decision: dict[str, object]
-    physical_observation: dict[str, object] | None
-    prior_closing_link: dict[str, object]
 
 
 def _inventory_service() -> InventoryService:
@@ -238,31 +227,21 @@ def inventory_closing_authority_record(
     ctx: typer.Context,
     actividad_id: str,
     year: int,
-    authority_stdin: bool = False,
-    authority_fd: int | None = None,
+    file: Path,
 ) -> None:
-    """Record one complete authority bundle through a bounded non-argv channel."""
-    selection = select_machine_secret_channel(secrets_stdin=authority_stdin, secrets_fd=authority_fd)
-    if selection is None:
-        raise typer.BadParameter(
-            tr("cli.app.ledger.inventory.authority_channel_required"),
-            param_hint="--authority-stdin/--authority-fd",
-        )
-    incoming = read_machine_secret_payload(_InventoryClosingAuthorityInput, selection=selection)
+    """Record one complete typed authority document from its canonical file input."""
     try:
-        record = InventoryClosingAuthorityRecord.model_validate_json(
-            incoming.model_dump_json(),
-        )
+        record = InventoryClosingAuthorityRecord.model_validate_json(file.read_text(encoding=UTF_8_ENCODING))
         result = _inventory_service().closing_authority_record(
             bucket_id=_inventory_bucket_id(),
             actividad_id=actividad_id,
             year=year,
             authority_record=record,
         )
-    except ValidationError as exc:
+    except (OSError, ValidationError) as exc:
         raise typer.BadParameter(
             tr("cli.app.ledger.inventory.authority_invalid"),
-            param_hint="--authority-stdin/--authority-fd",
+            param_hint="--file",
         ) from exc
     persisted = result.ledger.closing_authority_record
     assert persisted is not None
