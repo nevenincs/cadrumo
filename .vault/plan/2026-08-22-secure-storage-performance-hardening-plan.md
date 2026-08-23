@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:c6e318fe8e40530684888a68fdd4fa1fff62e2207be1f928e9d03b53e9d64885'
+body_hash: 'sha256:61ce8fa71faa7e3c1022d946ca1515de4c2792fdf5537878335c598705f0dbff'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -71,7 +71,7 @@ Generalize lazy loading to nested groups and leaves.
 - [x] `W02.P03.S09` - Refactor lazy registration into a reusable node loader with explicit targets and fail-loud dependency classification; `src/cadrumo/entrypoints/cli/_command_suggestions.py`.
 - [x] `W02.P03.S10` - Preserve root help, completion, version, error-envelope, and suggestion contracts through metadata-only traversal; `src/cadrumo/entrypoints/cli/_common.py`.
 - [x] `W02.P03.S11` - Make schema and operator-help discovery consume registration metadata without materializing handler subtrees; `src/cadrumo/entrypoints/cli/_command_schema.py`.
-- [ ] `W02.P03.S12` - Extend lazy import failure coverage across nested groups and leaves for required and optional dependencies; `src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W02.P03.S12` - Extend lazy import failure coverage across nested groups and leaves for required and optional dependencies; `src/cadrumo/entrypoints/cli/tests/`.
 
 ### Phase `W02.P04` - Enroll every command subtree
 

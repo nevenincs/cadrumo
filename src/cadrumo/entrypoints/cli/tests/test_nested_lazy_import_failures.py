@@ -46,7 +46,7 @@ _PROBE = textwrap.dedent(
     from typer.main import get_command
     from typer.testing import CliRunner
 
-    package_root, target_module, declared_optional, action = sys.argv[1:]
+    package_root, target_module, declared_optional, action, target_position = sys.argv[1:]
     sys.path.insert(0, package_root)
 
     class RequiredUnavailable(RuntimeError):
@@ -76,14 +76,22 @@ _PROBE = textwrap.dedent(
     def root_callback():
         pass
 
+    parent = LazySubcommand(
+        "parent",
+        LazyImportTarget(
+            target_module if target_position == "group" else "s12probe.parent",
+            optional_dependencies=frozenset(filter(None, [declared_optional]))
+            if target_position == "group"
+            else frozenset(),
+        ),
+        child_registry_key="s12-parent",
+        optional_unavailable=optional if target_position == "group" else None,
+        required_unavailable=required if target_position == "group" else None,
+        help="Parent metadata help.",
+    )
     register_lazy_subcommand(
         "s12-root",
-        LazySubcommand(
-            "parent",
-            LazyImportTarget("s12probe.parent"),
-            child_registry_key="s12-parent",
-            help="Parent metadata help.",
-        ),
+        parent,
     )
     selected = LazySubcommand(
         "selected",
@@ -125,10 +133,12 @@ _PROBE = textwrap.dedent(
             result["completion"] = [item.value for item in parent.shell_complete(parent_ctx, "sel")]
             parent_ctx.close()
         elif action == "resolve":
-            command = resolve_command_path(root, ("parent", "selected"))
+            path = ("parent",) if target_position == "group" else ("parent", "selected")
+            command = resolve_command_path(root, path)
             result["resolved"] = command.name
         elif action == "dispatch":
-            invoked = CliRunner().invoke(root, ["parent", "selected"])
+            path = ["parent"] if target_position == "group" else ["parent", "selected"]
+            invoked = CliRunner().invoke(root, path)
             result.update(exit_code=invoked.exit_code, output=invoked.output)
             if invoked.exception is not None:
                 result["invocation_exception"] = type(invoked.exception).__name__
@@ -136,7 +146,7 @@ _PROBE = textwrap.dedent(
             failures = []
             for _ in range(2):
                 try:
-                    selected.load()
+                    (parent if target_position == "group" else selected).load()
                 except BaseException as error:
                     failures.append(
                         {
@@ -147,8 +157,9 @@ _PROBE = textwrap.dedent(
                     )
             result["failures"] = failures
         elif action == "repeat-optional":
-            first = selected.load()
-            second = selected.load()
+            subject = parent if target_position == "group" else selected
+            first = subject.load()
+            second = subject.load()
             result["same"] = first is second
         else:
             raise AssertionError(action)
@@ -167,7 +178,7 @@ _PROBE = textwrap.dedent(
         sibling_imported="s12probe.sibling" in sys.modules,
         required_calls=required_calls,
         optional_calls=optional_calls,
-        materialized=selected.is_materialized,
+        materialized=(parent if target_position == "group" else selected).is_materialized,
     )
     print(json.dumps(result, sort_keys=True))
     """
@@ -178,21 +189,53 @@ _OPTIONAL_LOCALE_PROBE = textwrap.dedent(
     import json
     import os
     import sys
+    import tempfile
+    from pathlib import Path
 
     locale = sys.argv[1]
     os.environ["CADRUMO_OUTPUT_LANGUAGE"] = locale
 
     from typer.testing import CliRunner
-    from cadrumo.core import OPTIONAL_EXTRAS
-    from cadrumo.entrypoints.cli import _surface_for_import_failure
+    import typer
+    from cadrumo.entrypoints.cli import _optional_import_surface, _required_import_failure
+    from cadrumo.entrypoints.cli._command_suggestions import (
+        CadrumoTyperGroup,
+        LazyImportTarget,
+        LazySubcommand,
+        register_lazy_subcommand,
+    )
     from cadrumo.entrypoints.cli._errors import decorate_typer_app
 
-    extra = next(candidate for candidate in OPTIONAL_EXTRAS if candidate.extra == "browser")
-    error = ModuleNotFoundError(f"No module named {extra.import_name!r}", name=extra.import_name)
-    surface = _surface_for_import_failure("live", error)
-    decorate_typer_app(surface)
-    help_result = CliRunner().invoke(surface, ["--help"])
-    dispatch_result = CliRunner().invoke(surface, [])
+    root_dir = Path(tempfile.mkdtemp(prefix="s12-optional-locale-"))
+    (root_dir / "s12_optional_locale_target.py").write_text("import playwright\n", encoding="utf-8")
+    sys.path.insert(0, str(root_dir))
+
+    class _BlockedPlaywright:
+        def find_spec(self, fullname, path=None, target=None):
+            if fullname.split(".")[0] == "playwright":
+                raise ModuleNotFoundError(f"No module named {fullname!r}", name=fullname)
+            return None
+
+    sys.meta_path.insert(0, _BlockedPlaywright())
+    surface = typer.Typer(name="s12-locale-root", cls=CadrumoTyperGroup)
+
+    @surface.callback()
+    def root_callback():
+        pass
+
+    register_lazy_subcommand(
+        "s12-locale-root",
+        LazySubcommand(
+            "live",
+            LazyImportTarget("s12_optional_locale_target", optional_dependencies=frozenset({"playwright"})),
+            decorate=decorate_typer_app,
+            optional_unavailable=_optional_import_surface,
+            required_unavailable=_required_import_failure,
+            help="Live feature metadata.",
+        ),
+    )
+    help_result = CliRunner().invoke(surface, ["live", "--help"])
+    dispatch_result = CliRunner().invoke(surface, ["live"])
     print(json.dumps({
         "help_exit": help_result.exit_code,
         "help": help_result.output,
@@ -232,10 +275,11 @@ def _run_probe(
     target_source: str,
     action: str,
     declared_optional: str = "",
+    target_position: str = "leaf",
 ) -> dict[str, object]:
     target = _write_probe_package(tmp_path, target_source)
     completed = subprocess.run(  # noqa: S603 - trusted interpreter and fixed probe source
-        [sys.executable, "-c", _PROBE, str(tmp_path), target, declared_optional, action],
+        [sys.executable, "-c", _PROBE, str(tmp_path), target, declared_optional, action, target_position],
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -269,17 +313,23 @@ def test_help_and_completion_do_not_import_nested_leaf_or_sibling(tmp_path: Path
         assert result["completion"] == ["selected"]
 
 
-def test_exact_declared_optional_failure_resolves_and_dispatches_explicit_surface(tmp_path: Path) -> None:
+@pytest.mark.parametrize(("target_position", "node_name"), [("group", "parent"), ("leaf", "selected")])
+def test_exact_declared_optional_failure_resolves_and_dispatches_explicit_surface(
+    tmp_path: Path,
+    target_position: str,
+    node_name: str,
+) -> None:
     result = _run_probe(
         tmp_path,
         target_source="import s12_declared_optional_dependency\n",
         declared_optional="s12_declared_optional_dependency",
         action="dispatch",
+        target_position=target_position,
     )
 
     assert result["exit_code"] == 23
-    assert result["output"] == "explicit-unavailable:selected:s12_declared_optional_dependency\n"
-    assert result["optional_calls"] == [["selected", "s12_declared_optional_dependency"]]
+    assert result["output"] == f"explicit-unavailable:{node_name}:s12_declared_optional_dependency\n"
+    assert result["optional_calls"] == [[node_name, "s12_declared_optional_dependency"]]
     assert result["required_calls"] == []
     assert result["sibling_imported"] is False
     assert result["materialized"] is True
@@ -299,17 +349,20 @@ def test_exact_declared_optional_failure_resolves_and_dispatches_explicit_surfac
         ("def broken(:\n    pass\n", "SyntaxError", None),
     ],
 )
+@pytest.mark.parametrize("target_position", ["group", "leaf"])
 def test_internal_transitive_and_non_module_import_defects_fail_loudly(
     tmp_path: Path,
     target_source: str,
     expected_type: str,
     expected_name: str | None,
+    target_position: str,
 ) -> None:
     result = _run_probe(
         tmp_path,
         target_source=target_source,
         declared_optional="s12_declared_optional_dependency",
         action="resolve",
+        target_position=target_position,
     )
 
     assert result["error_type"] == expected_type
@@ -322,7 +375,12 @@ def test_internal_transitive_and_non_module_import_defects_fail_loudly(
         assert result["optional_calls"] == []
 
 
-def test_same_namespace_internal_miss_is_not_the_exact_declared_dependency(tmp_path: Path) -> None:
+@pytest.mark.parametrize(("target_position", "node_name"), [("group", "parent"), ("leaf", "selected")])
+def test_same_namespace_internal_miss_is_not_the_exact_declared_dependency(
+    tmp_path: Path,
+    target_position: str,
+    node_name: str,
+) -> None:
     dependency = tmp_path / "s12_declared_optional_dependency"
     dependency.mkdir()
     (dependency / "__init__.py").write_text("", encoding="utf-8")
@@ -331,15 +389,21 @@ def test_same_namespace_internal_miss_is_not_the_exact_declared_dependency(tmp_p
         target_source="import s12_declared_optional_dependency.broken_internal\n",
         declared_optional="s12_declared_optional_dependency",
         action="resolve",
+        target_position=target_position,
     )
 
     assert result["error_type"] == "RequiredUnavailable"
     assert result["cause_name"] == "s12_declared_optional_dependency.broken_internal"
     assert result["optional_calls"] == []
-    assert result["required_calls"] == [["selected", "s12_declared_optional_dependency.broken_internal"]]
+    assert result["required_calls"] == [[node_name, "s12_declared_optional_dependency.broken_internal"]]
 
 
-def test_missing_transitive_dependency_inside_declared_optional_fails_loudly(tmp_path: Path) -> None:
+@pytest.mark.parametrize(("target_position", "node_name"), [("group", "parent"), ("leaf", "selected")])
+def test_missing_transitive_dependency_inside_declared_optional_fails_loudly(
+    tmp_path: Path,
+    target_position: str,
+    node_name: str,
+) -> None:
     dependency = tmp_path / "s12_declared_optional_dependency"
     dependency.mkdir()
     (dependency / "__init__.py").write_text("import s12_absent_transitive_dependency\n", encoding="utf-8")
@@ -348,21 +412,28 @@ def test_missing_transitive_dependency_inside_declared_optional_fails_loudly(tmp
         target_source="import s12_declared_optional_dependency\n",
         declared_optional="s12_declared_optional_dependency",
         action="resolve",
+        target_position=target_position,
     )
 
     assert result["error_type"] == "RequiredUnavailable"
     assert result["cause_type"] == "ModuleNotFoundError"
     assert result["cause_name"] == "s12_absent_transitive_dependency"
     assert result["optional_calls"] == []
-    assert result["required_calls"] == [["selected", "s12_absent_transitive_dependency"]]
+    assert result["required_calls"] == [[node_name, "s12_absent_transitive_dependency"]]
     assert result["materialized"] is False
 
 
-def test_required_failure_is_retried_and_each_refusal_preserves_original_cause(tmp_path: Path) -> None:
+@pytest.mark.parametrize(("target_position", "node_name"), [("group", "parent"), ("leaf", "selected")])
+def test_required_failure_is_retried_and_each_refusal_preserves_original_cause(
+    tmp_path: Path,
+    target_position: str,
+    node_name: str,
+) -> None:
     result = _run_probe(
         tmp_path,
         target_source="import s12_required_dependency\n",
         action="repeat",
+        target_position=target_position,
     )
 
     assert result["failures"] == [
@@ -370,22 +441,28 @@ def test_required_failure_is_retried_and_each_refusal_preserves_original_cause(t
         {"cause_name": "s12_required_dependency", "cause_type": "ModuleNotFoundError", "type": "RequiredUnavailable"},
     ]
     assert result["required_calls"] == [
-        ["selected", "s12_required_dependency"],
-        ["selected", "s12_required_dependency"],
+        [node_name, "s12_required_dependency"],
+        [node_name, "s12_required_dependency"],
     ]
     assert result["materialized"] is False
 
 
-def test_optional_unavailable_surface_is_cached_after_first_classification(tmp_path: Path) -> None:
+@pytest.mark.parametrize(("target_position", "node_name"), [("group", "parent"), ("leaf", "selected")])
+def test_optional_unavailable_surface_is_cached_after_first_classification(
+    tmp_path: Path,
+    target_position: str,
+    node_name: str,
+) -> None:
     result = _run_probe(
         tmp_path,
         target_source="import s12_declared_optional_dependency\n",
         declared_optional="s12_declared_optional_dependency",
         action="repeat-optional",
+        target_position=target_position,
     )
 
     assert result["same"] is True
-    assert result["optional_calls"] == [["selected", "s12_declared_optional_dependency"]]
+    assert result["optional_calls"] == [[node_name, "s12_declared_optional_dependency"]]
     assert result["materialized"] is True
 
 

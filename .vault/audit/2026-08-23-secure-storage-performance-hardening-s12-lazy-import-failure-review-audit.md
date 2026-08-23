@@ -5,29 +5,10 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:74c90de1c7e31649445b4a6d94f841354665623addebaf37a08711278dbb7e53'
+body_hash: 'sha256:04d2fb023c3c300232a987569e0978b9f6ddbb95d6adc227861d2ac439142ed8'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace secure-storage-performance-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `secure-storage-performance-hardening` audit: `S12 nested lazy import failure review`
 
@@ -72,6 +53,33 @@ node is classified, materialized, decorated, and dispatched through the shared
 operator envelope. The required branch does exercise the installed CLI end to
 end, so the asymmetry can conceal a wiring regression unique to optional lazy
 targets.
+
+### nested-group-failure-matrix-resolution | high | Resolved by exercising the complete matrix at both node kinds
+
+Re-review confirmed that the real-module probe now selects either the parent
+group loader or nested leaf loader as the failing node. Exact optional
+dispatch, unclassified required dependency, same-namespace internal miss,
+absent transitive dependency, ordinary `ImportError`, `SyntaxError`,
+`RuntimeError`, required retry with original cause, and optional unavailable-
+surface caching all run for both positions. Group resolution selects only the
+parent token and continues to assert sibling exclusion; leaf resolution
+selects the full parent/selected path. This closes the HIGH finding.
+
+### optional-localization-boundary-resolution | medium | Resolved through a real lazy target and decorated dispatch
+
+Re-review confirmed that every supported locale now writes and imports a real
+temporary target module whose declared `playwright` dependency is blocked by
+Python's meta-path protocol. The probe registers that module through
+`LazyImportTarget` and `LazySubcommand`, applies the production optional and
+required failure factories and shared decorator, then invokes both selected-
+node help and dispatch through `CliRunner`. The localized surface is therefore
+reached only after the lazy loader classifies and caches the exact optional
+failure. The separate group/leaf cache cases prove one surface construction
+per loader. This closes the MEDIUM finding.
+
+The re-review reran the complete S12 integration file: 29 cases passed in real
+subprocesses. Scoped Ruff and `ty` checks also passed. No HIGH or CRITICAL
+finding remains open.
 
 ## Recommendations
 
