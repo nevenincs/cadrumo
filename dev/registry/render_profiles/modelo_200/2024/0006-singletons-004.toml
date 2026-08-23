@@ -1,0 +1,321 @@
+schema_version = 1
+fragment_id = "singletons-004"
+width_17_rules = []
+
+[design_identity]
+modelo = "200"
+design_epoch = "2024"
+source_ref = "aeat-dr-200-2024"
+source_sha256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200023"
+source_row = 56
+source_cell = "A56"
+ordinal = 51
+record_identity = "DP200023"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2024-dp200023-r0056"
+decision_statement = "DP200023 source row 56: a 8-position field renders as AAAAMMDD."
+justification = "The 2024 diseno states no format annotation for this field: AEAT introduced the AAAAMMDD column in the 2025 edition, and the token appears nowhere in the 2024 workbook, so it is not represented as official-source text here."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200023"
+source_row = 56
+source_cell = "A56"
+ordinal = 51
+record_identity = "DP200023"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200023"
+source_row = 57
+source_cell = "A57"
+ordinal = 52
+record_identity = "DP200023"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2024-dp200023-r0057"
+decision_statement = "DP200023 source row 57: a 8-position field renders as AAAAMMDD."
+justification = "The 2024 diseno states no format annotation for this field: AEAT introduced the AAAAMMDD column in the 2025 edition, and the token appears nowhere in the 2024 workbook, so it is not represented as official-source text here."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200023"
+source_row = 57
+source_cell = "A57"
+ordinal = 52
+record_identity = "DP200023"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200024"
+source_row = 31
+source_cell = "A31"
+ordinal = 26
+record_identity = "DP200024"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200024"
+source_cell = "H28"
+expected_normalized_statement = "3 enteros y 2 decimales"
+justification = "Reviewed official-source analogy for exact field DP200024 row 31; the cited repeated block states the same wire representation and the exact field description identifies the same semantic role."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200024"
+source_row = 34
+source_cell = "A34"
+ordinal = 29
+record_identity = "DP200024"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200024"
+source_cell = "H28"
+expected_normalized_statement = "3 enteros y 2 decimales"
+justification = "Reviewed official-source analogy for exact field DP200024 row 34; the cited repeated block states the same wire representation and the exact field description identifies the same semantic role."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200DID"
+source_row = 12
+source_cell = "A12"
+ordinal = 7
+record_identity = "DP200DID"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200DID"
+source_cell = "E12"
+expected_normalized_statement = "Identificación - Ejercicio"
+justification = "Reviewed official-source conclusion for exact field DP200DID row 12, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2", "3"]
+
+[singleton_rules.anchor]
+sheet = "DP200DID"
+source_row = 13
+source_cell = "A13"
+ordinal = 8
+record_identity = "DP200DID"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200DID"
+source_cell = "E13"
+expected_normalized_statement = "Tipo de ejercicio"
+justification = "Reviewed official-source conclusion for exact field DP200DID row 13, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "day_dd"
+value_policy = "two-digit-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200DID"
+source_row = 15
+source_cell = "A15"
+ordinal = 10
+record_identity = "DP200DID"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200DID"
+source_cell = "E15"
+expected_normalized_statement = "Período Impositivo inicio - Día"
+justification = "Reviewed official-source conclusion for exact field DP200DID row 15, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "month_mm"
+value_policy = "two-digit-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200DID"
+source_row = 16
+source_cell = "A16"
+ordinal = 11
+record_identity = "DP200DID"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200DID"
+source_cell = "E16"
+expected_normalized_statement = "Período Impositivo inicio - Mes"
+justification = "Reviewed official-source conclusion for exact field DP200DID row 16, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_last_two_digits"
+value_policy = "four-digit-year-final-two-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200DID"
+source_row = 17
+source_cell = "A17"
+ordinal = 12
+record_identity = "DP200DID"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200did-r0017"
+decision_statement = "DP200DID source row 17: encode the final two digits of the four-digit year."
+justification = "Reviewed exact-anchor policy for DP200DID source row 17; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200DID"
+source_row = 17
+source_cell = "A17"
+ordinal = 12
+record_identity = "DP200DID"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "day_dd"
+value_policy = "two-digit-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200DID"
+source_row = 18
+source_cell = "A18"
+ordinal = 13
+record_identity = "DP200DID"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200DID"
+source_cell = "E18"
+expected_normalized_statement = "Período Impositivo fin - Día"
+justification = "Reviewed official-source conclusion for exact field DP200DID row 18, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "month_mm"
+value_policy = "two-digit-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200DID"
+source_row = 19
+source_cell = "A19"
+ordinal = 14
+record_identity = "DP200DID"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200DID"
+source_cell = "E19"
+expected_normalized_statement = "Período Impositivo fin - Mes"
+justification = "Reviewed official-source conclusion for exact field DP200DID row 19, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_last_two_digits"
+value_policy = "four-digit-year-final-two-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200DID"
+source_row = 20
+source_cell = "A20"
+ordinal = 15
+record_identity = "DP200DID"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200did-r0020"
+decision_statement = "DP200DID source row 20: encode the final two digits of the four-digit year."
+justification = "Reviewed exact-anchor policy for DP200DID source row 20; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200DID"
+source_row = 20
+source_cell = "A20"
+ordinal = 15
+record_identity = "DP200DID"
