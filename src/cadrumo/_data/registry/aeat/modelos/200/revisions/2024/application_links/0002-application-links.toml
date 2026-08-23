@@ -1,0 +1,80 @@
+[[revisions."2024".application_links]]
+id = "modelo-200-2024-portal"
+surface = "portal"
+consumer = "cadrumo.domain.portals.Portal.PORTAL_M200_SOCIEDADES_ANUAL"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024".application_links]]
+id = "modelo-200-2024-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024".application_links]]
+id = "modelo-200-2024-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024".application_links]]
+id = "modelo-200-2024-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-124", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["boe-modelo-200-2025-form", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024".application_links]]
+id = "modelo-200-2024-review"
+surface = "review"
+consumer = "cadrumo.application.review"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-124", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-modelo-200-manual-2024", "boe-modelo-200-2025-form"]
+
+[[revisions."2024".application_links]]
+id = "modelo-200-2024-approval"
+surface = "approval"
+consumer = "cadrumo.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-124", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-modelo-200-manual-2024", "boe-modelo-200-2025-form"]
+
+[[revisions."2024".application_links]]
+id = "modelo-200-2024-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024".application_links]]
+id = "modelo-200-2024-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-124", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-modelo-200-manual-2024", "boe-modelo-200-2025-form"]
+
+[[revisions."2024".application_links]]
+id = "modelo-200-2024-export"
+surface = "export"
+consumer = "cadrumo.application.filing._export"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024"]
+
+# ===========================================================================
+# Full casilla schema transcribed from DR200e25.xlsx (77 sheets, 3215 casillas).
+# Generated by walking each sheet's column-5 descriptions and extracting the
+# trailing [NNNNN] casilla number per AEAT convention. Each casilla appears
+# once at its first-seen sheet; section path encodes the page (DP200NN) where
+# the casilla originates. data_type derived from the XLSX 'Tipo' column.
+# Existing computed casillas 00592 and 00599 are not duplicated here.
+# ===========================================================================

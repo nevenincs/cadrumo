@@ -1,0 +1,12 @@
+[[revisions."2024".casillas]]
+id = "00027"
+number = "00027"
+section = ["base_imponible_negativa_o_cero"]
+data_type = "decimal"
+semantic_role = "base_imponible_negativa_is"
+constraints = { sign = "non_positive", legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200001.f0080", "m200-2024.dp200015b.f0030"]

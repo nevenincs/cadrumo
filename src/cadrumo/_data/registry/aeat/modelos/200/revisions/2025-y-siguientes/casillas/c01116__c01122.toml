@@ -1,0 +1,77 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "01116"
+number = "01116"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+data_type = "money"
+semantic_role = "is_conversion_aid_art130_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020c.f0081"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "01117"
+number = "01117"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+data_type = "money"
+semantic_role = "is_conversion_aid_art130_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020c.f0086"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "01118"
+number = "01118"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+data_type = "money"
+semantic_role = "is_conversion_aid_art130_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020c.f0087"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "01119"
+number = "01119"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+data_type = "money"
+semantic_role = "is_conversion_aid_art130_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020c.f0088"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "01120"
+number = "01120"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+data_type = "money"
+semantic_role = "is_conversion_aid_art130_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020c.f0089"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "01121"
+number = "01121"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+data_type = "money"
+semantic_role = "is_conversion_aid_art130_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020c.f0090"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "01122"
+number = "01122"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+data_type = "money"
+semantic_role = "is_conversion_aid_art130_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200020c.f0092"]

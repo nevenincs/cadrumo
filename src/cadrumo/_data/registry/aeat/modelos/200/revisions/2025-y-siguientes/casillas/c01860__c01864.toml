@@ -1,0 +1,55 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "01860"
+number = "01860"
+section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_participaciones_dt16_saldo_inicial_neto"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026c.f0056"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "01861"
+number = "01861"
+section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_participaciones_dt16_permanente_aumento"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026c.f0057"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "01862"
+number = "01862"
+section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_participaciones_dt16_all_temporaria_ejercicio_aumento"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026c.f0058"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "01863"
+number = "01863"
+section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_participaciones_dt16_temporaria_anteriores_aumento"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026c.f0059"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "01864"
+number = "01864"
+section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_participaciones_dt16_saldo_final"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200026c.f0060"]

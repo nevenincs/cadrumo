@@ -1,0 +1,82 @@
+# Boxes the 2024 diseno carries and the 2025 one drops, so they belong to this
+# revision alone. Each takes the section of a surviving sibling in the same
+# record (DP200022) and that record's uniform legal_refs -- every casilla entry
+# the generator routes into this record declares the same set.
+
+[[revisions."2024".casillas]]
+# DP200022 17 bytes: Rég. especial reserva inversiones Canarias - RIC 2019 - Pendiente de materializar RIC a principi
+id = "922"
+number = "922"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200022.f0006"]
+
+[[revisions."2024".casillas]]
+# DP200022 17 bytes: Rég. especial reserva inversiones Canarias - RIC 2019 - Aplicado/materializado en esta liquidaci
+id = "923"
+number = "923"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200022.f0007"]
+
+[[revisions."2024".casillas]]
+# DP200022 17 bytes: Rég. especial reserva inversiones Canarias - RIC 2019 - Aplicado/materializado en esta liquidaci
+id = "924"
+number = "924"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200022.f0008"]
+
+[[revisions."2024".casillas]]
+# DP200022 17 bytes: Rég. especial reserva inversiones Canarias - RIC 2020 - Pendiente de materializar RIC al final d
+id = "996"
+number = "996"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200022.f0014"]
+
+[[revisions."2024".casillas]]
+# DP200022 17 bytes: Rég. especial reserva inversiones Canarias - RIC 2019 - Aplicado/materializado en esta liquidaci
+id = "1963"
+number = "1963"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200022.f0009"]
+
+[[revisions."2024".casillas]]
+# DP200022 17 bytes: Rég. especial reserva inversiones Canarias - RIC 2024 - Aplicado/materializado en esta liquidaci
+id = "3312"
+number = "3312"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200022.f0030"]

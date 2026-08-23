@@ -1,0 +1,33 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "00475"
+number = "00475"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_en_pn_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200011.f0047", "m200-2025.dp200026.f0039", "m200-2025.dp200032.f0074", "m200-2025.dp200043.f0033"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00476"
+number = "00476"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_en_pn_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200011.f0048", "m200-2025.dp200026.f0040", "m200-2025.dp200032.f0075", "m200-2025.dp200043.f0034"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00477"
+number = "00477"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_ingresos_gastos_en_pn_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200011.f0049", "m200-2025.dp200026.f0041", "m200-2025.dp200043.f0035"]

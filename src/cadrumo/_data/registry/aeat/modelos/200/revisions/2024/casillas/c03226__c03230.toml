@@ -1,0 +1,55 @@
+[[revisions."2024".casillas]]
+id = "03226"
+number = "03226"
+section = ["regimen_fiscal_entidades_de_tenencia_de_valores_ex", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200026f.f0062"]
+[[revisions."2024".casillas]]
+id = "03227"
+number = "03227"
+section = ["regimen_fiscal_entidades_de_tenencia_de_valores_ex", "disminucion"]
+data_type = "money"
+semantic_role = "is_etv_ajuste_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200026f.f0063"]
+[[revisions."2024".casillas]]
+id = "03228"
+number = "03228"
+section = ["regimen_fiscal_entidades_de_tenencia_de_valores_ex", "disminucion"]
+data_type = "money"
+semantic_role = "is_etv_ajuste_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200026f.f0064"]
+[[revisions."2024".casillas]]
+id = "03229"
+number = "03229"
+section = ["regimen_fiscal_entidades_de_tenencia_de_valores_ex", "disminucion"]
+data_type = "money"
+semantic_role = "is_etv_ajuste_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200026f.f0061"]
+[[revisions."2024".casillas]]
+id = "03230"
+number = "03230"
+section = ["regimen_fiscal_entidades_de_tenencia_de_valores_ex", "disminucion"]
+data_type = "money"
+semantic_role = "is_etv_ajuste_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200026f.f0065"]

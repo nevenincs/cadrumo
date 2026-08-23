@@ -1,0 +1,55 @@
+[[revisions."2024".casillas]]
+id = "03036"
+number = "03036"
+section = ["reduccion_de_rentas_procedentes_de_determinados_ac", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_reduccion_rentas_activos_intangibles_permanente_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200026e.f0062"]
+[[revisions."2024".casillas]]
+id = "03037"
+number = "03037"
+section = ["reduccion_de_rentas_procedentes_de_determinados_ac", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_reduccion_rentas_activos_intangibles_temporaria_ejercicio_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200026e.f0063"]
+[[revisions."2024".casillas]]
+id = "03038"
+number = "03038"
+section = ["reduccion_de_rentas_procedentes_de_determinados_ac", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_reduccion_rentas_activos_intangibles_temporaria_anteriores_disminucion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200026e.f0064"]
+[[revisions."2024".casillas]]
+id = "03039"
+number = "03039"
+section = ["reduccion_de_rentas_procedentes_de_determinados_ac", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_reduccion_rentas_activos_intangibles_saldo_inicial"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200026e.f0061"]
+[[revisions."2024".casillas]]
+id = "03040"
+number = "03040"
+section = ["reduccion_de_rentas_procedentes_de_determinados_ac", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_reduccion_rentas_activos_intangibles_saldo_final"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200026e.f0065"]

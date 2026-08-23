@@ -1,0 +1,77 @@
+[[revisions."2024".casillas]]
+id = "00729"
+number = "00729"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0139", "m200-2024.dp200015b.f0114"]
+[[revisions."2024".casillas]]
+id = "00730"
+number = "00730"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0140", "m200-2024.dp200015b.f0119"]
+[[revisions."2024".casillas]]
+id = "00731"
+number = "00731"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0141", "m200-2024.dp200015b.f0124"]
+[[revisions."2024".casillas]]
+id = "00732"
+number = "00732"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0142", "m200-2024.dp200015b.f0129"]
+[[revisions."2024".casillas]]
+id = "00733"
+number = "00733"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0143", "m200-2024.dp200015b.f0134"]
+[[revisions."2024".casillas]]
+id = "00734"
+number = "00734"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0144", "m200-2024.dp200015b.f0139"]
+[[revisions."2024".casillas]]
+id = "00735"
+number = "00735"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0145", "m200-2024.dp200015b.f0036"]

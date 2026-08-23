@@ -1,0 +1,110 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "02480"
+number = "02480"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+data_type = "money"
+semantic_role = "is_fraccionamiento_cambio_residencia_bi"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200014b.f0078", "m200-2025.dp200026.f0097"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02481"
+number = "02481"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+data_type = "money"
+semantic_role = "is_fraccionamiento_cambio_residencia_deuda"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200014b.f0079"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02482"
+number = "02482"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+data_type = "money"
+semantic_role = "is_fraccionamiento_cambio_residencia_deuda"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200014b.f0080", "m200-2025.dp200026.f0102"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02483"
+number = "02483"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+data_type = "money"
+semantic_role = "is_fraccionamiento_cambio_residencia_deuda"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200014b.f0081"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02484"
+number = "02484"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+data_type = "money"
+semantic_role = "is_fraccionamiento_cambio_residencia_deuda"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200014b.f0082", "m200-2025.dp200026.f0107"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02485"
+number = "02485"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+data_type = "money"
+semantic_role = "is_fraccionamiento_cambio_residencia_resultado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200014b.f0083"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02486"
+number = "02486"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+data_type = "money"
+semantic_role = "is_fraccionamiento_cambio_residencia_resultado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200014b.f0084", "m200-2025.dp200026.f0112"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02487"
+number = "02487"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+data_type = "money"
+semantic_role = "is_fraccionamiento_cambio_residencia_resultado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200014b.f0085"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02488"
+number = "02488"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+data_type = "money"
+semantic_role = "is_fraccionamiento_cambio_residencia_resultado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200014b.f0086", "m200-2025.dp200026.f0117"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02489"
+number = "02489"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+data_type = "money"
+semantic_role = "is_fraccionamiento_cambio_residencia_resultado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200014b.f0087", "m200-2025.dp200did.f0022"]

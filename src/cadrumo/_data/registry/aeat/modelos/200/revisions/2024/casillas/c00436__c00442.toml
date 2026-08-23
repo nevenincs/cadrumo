@@ -1,0 +1,77 @@
+[[revisions."2024".casillas]]
+id = "00436"
+number = "00436"
+section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
+data_type = "money"
+semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0034", "m200-2024.dp200015b.f0082", "m200-2024.dp200033.f0054", "m200-2024.dp200043.f0015"]
+[[revisions."2024".casillas]]
+id = "00437"
+number = "00437"
+section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
+data_type = "money"
+semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0035", "m200-2024.dp200015b.f0083", "m200-2024.dp200032.f0062", "m200-2024.dp200043.f0016"]
+[[revisions."2024".casillas]]
+id = "00438"
+number = "00438"
+section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
+data_type = "money"
+semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0036", "m200-2024.dp200015b.f0084", "m200-2024.dp200032.f0063", "m200-2024.dp200043.f0017"]
+[[revisions."2024".casillas]]
+id = "00439"
+number = "00439"
+section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
+data_type = "money"
+semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0037", "m200-2024.dp200018c.f0151", "m200-2024.dp200032.f0064", "m200-2024.dp200042.f0020"]
+[[revisions."2024".casillas]]
+id = "00440"
+number = "00440"
+section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
+data_type = "money"
+semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0038", "m200-2024.dp200018c.f0152", "m200-2024.dp200032.f0065", "m200-2024.dp200042.f0021"]
+[[revisions."2024".casillas]]
+id = "00441"
+number = "00441"
+section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
+data_type = "money"
+semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0039", "m200-2024.dp200020b.f0026", "m200-2024.dp200032.f0066", "m200-2024.dp200042.f0022"]
+[[revisions."2024".casillas]]
+id = "00442"
+number = "00442"
+section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
+data_type = "money"
+semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2024.dp200010.f0040", "m200-2024.dp200026.f0024", "m200-2024.dp200032.f0067", "m200-2024.dp200042.f0023"]

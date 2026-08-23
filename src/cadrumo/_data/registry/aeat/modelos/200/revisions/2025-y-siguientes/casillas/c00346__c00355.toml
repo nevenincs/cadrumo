@@ -1,0 +1,110 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "00346"
+number = "00346"
+section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0017", "m200-2025.dp200012.f0091", "m200-2025.dp200032.f0031", "m200-2025.dp200040.f0018"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00347"
+number = "00347"
+section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0018", "m200-2025.dp200012.f0095", "m200-2025.dp200033.f0030", "m200-2025.dp200040.f0019"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00348"
+number = "00348"
+section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0019", "m200-2025.dp200012.f0096", "m200-2025.dp200040.f0020"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00349"
+number = "00349"
+section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0020", "m200-2025.dp200018b.f0140", "m200-2025.dp200033.f0031", "m200-2025.dp200040.f0021"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00350"
+number = "00350"
+section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0021", "m200-2025.dp200018b.f0141", "m200-2025.dp200040.f0022"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00351"
+number = "00351"
+section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0022", "m200-2025.dp200013.f0030", "m200-2025.dp200033.f0032", "m200-2025.dp200040.f0023"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00352"
+number = "00352"
+section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0023", "m200-2025.dp200033.f0033", "m200-2025.dp200040.f0024"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00353"
+number = "00353"
+section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0024", "m200-2025.dp200032.f0032", "m200-2025.dp200040.f0025"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00354"
+number = "00354"
+section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0025", "m200-2025.dp200032.f0033", "m200-2025.dp200040.f0026"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "00355"
+number = "00355"
+section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200009.f0026", "m200-2025.dp200012.f0014", "m200-2025.dp200032.f0034", "m200-2025.dp200040.f0027"]

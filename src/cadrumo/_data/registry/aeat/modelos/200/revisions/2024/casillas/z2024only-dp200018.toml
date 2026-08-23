@@ -1,0 +1,1057 @@
+# Boxes the 2024 diseno carries and the 2025 one drops, so they belong to this
+# revision alone. Each takes the section of a surviving sibling in the same
+# record (DP200018) and that record's uniform legal_refs -- every casilla entry
+# the generator routes into this record declares the same set.
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 IX Centenario de la Reconquista de Sigüenza (C
+id = "352"
+number = "352"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0051"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 IX Centenario de la Reconquista de Sigüenza (C
+id = "353"
+number = "353"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0052"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 IX Centenario de la Reconquista de Sigüenza (C
+id = "354"
+number = "354"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0053"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024  50 aniversario del fallecimiento de Clara Cam
+id = "425"
+number = "425"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0054"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 50 aniversario del fallecimiento de Clara Camp
+id = "428"
+number = "428"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0055"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 50 aniversario del fallecimiento de Clara Camp
+id = "429"
+number = "429"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0056"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Nuevas Metas II (NMII) - Deducción pendiente/g
+id = "433"
+number = "433"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0057"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Nuevas Metas II (NMII) - Aplicado en esta liqu
+id = "434"
+number = "434"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0058"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Nuevas Metas II (NMII) - Pendiente de aplicaci
+id = "435"
+number = "435"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0059"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Programa Deporte Inclusivo II (DI2) - Deducció
+id = "522"
+number = "522"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0060"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Programa Deporte Inclusivo II (DI2) - Aplicado
+id = "523"
+number = "523"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0061"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Programa Deporte Inclusivo II (DI2) - Pendient
+id = "537"
+number = "537"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0062"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - Total - Aplicado en esta liquidación [00588]
+id = "588"
+number = "588"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0172"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - Total deducciones programas apoyo acontecimientos d
+id = "634"
+number = "634"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0168"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - Total deducciones programas apoyo acontecimientos d
+id = "635"
+number = "635"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0169"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - Total deducciones programas apoyo acontecimientos d
+id = "636"
+number = "636"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0170"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - Total - Deducción pendiente/generada [00831]
+id = "831"
+number = "831"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0171"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - Total - Pendiente de aplicación en periodos futuros
+id = "832"
+number = "832"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0173"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Plan 2030 de Apoyo al Deporte de Base (P30) - 
+id = "902"
+number = "902"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0069"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Plan 2030 de Apoyo al Deporte de Base (P30) - 
+id = "906"
+number = "906"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0070"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Universo Mujer III (UM3) - Aplicado en esta li
+id = "955"
+number = "955"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0073"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Universo Mujer III (UM3) - Pendiente de aplica
+id = "956"
+number = "956"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0074"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Programa de preparación de los deportistas esp
+id = "957"
+number = "957"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0075"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Programa de preparación de los deportistas esp
+id = "1087"
+number = "1087"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0076"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Programa de preparación de los deportistas esp
+id = "1088"
+number = "1088"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0077"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 100 años del fallecimiento de Joaquín Sorolla 
+id = "1089"
+number = "1089"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0078"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 100 años del fallecimiento de Joaquín Sorolla 
+id = "1110"
+number = "1110"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0079"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 100 años del fallecimiento de Joaquín Sorolla 
+id = "1141"
+number = "1141"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0080"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 20 Aniversario de Primavera Sound (PS) - Deduc
+id = "1142"
+number = "1142"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0081"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 20 Aniversario de Primavera Sound (PS) - Aplic
+id = "1144"
+number = "1144"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0082"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 20 Aniversario de Primavera Sound (PS) - Pendi
+id = "1145"
+number = "1145"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0083"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Centenario del nacimiento de Victoria de los Á
+id = "1146"
+number = "1146"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0084"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Centenario del nacimiento de Victoria de los Á
+id = "1150"
+number = "1150"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0085"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Centenario del nacimiento de Victoria de los Á
+id = "1151"
+number = "1151"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0086"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Conmemoración del 50 aniversario de la muerte 
+id = "1152"
+number = "1152"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0087"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Conmemoración del 50 aniversario de la muerte 
+id = "1153"
+number = "1153"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0088"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Conmemoración del 50 aniversario de la muerte 
+id = "1154"
+number = "1154"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0089"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Todos contra el cáncer (TC) - Deducción pendie
+id = "1155"
+number = "1155"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0090"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Todos contra el cáncer (TC) - Aplicado en esta
+id = "1156"
+number = "1156"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0091"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Todos contra el cáncer (TC) - Pendiente de apl
+id = "1157"
+number = "1157"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0092"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 7ª Conferencia Mundial sobre Turismo Enológico
+id = "1220"
+number = "1220"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0099"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 7ª Conferencia Mundial sobre Turismo Enológico
+id = "1221"
+number = "1221"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0100"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 7ª Conferencia Mundial sobre Turismo Enológico
+id = "1222"
+number = "1222"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0101"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Bicentenario del Ateneo de Madrid (BA) - Deduc
+id = "1233"
+number = "1233"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0105"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Bicentenario del Ateneo de Madrid (BA) - Aplic
+id = "1235"
+number = "1235"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0106"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Bicentenario del Ateneo de Madrid (BA) - Pendi
+id = "1236"
+number = "1236"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0107"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Barcelona Equestrian Challenge (4ª Edición) (B
+id = "1237"
+number = "1237"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0108"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Barcelona Equestrian Challenge (4ª Edición) (B
+id = "1238"
+number = "1238"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0109"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Barcelona Equestrian Challenge (4ª Edición) (B
+id = "1239"
+number = "1239"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0110"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 200 Aniversario del Passeig de Grácia (PG) - D
+id = "1261"
+number = "1261"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0111"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 200 Aniversario del Passeig de Grácia (PG) - A
+id = "1262"
+number = "1262"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0112"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 200 Aniversario del Passeig de Grácia (PG) - P
+id = "1263"
+number = "1263"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0113"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Reconstrucción de la Piscina Histórica cubiert
+id = "1264"
+number = "1264"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0114"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Reconstrucción de la Piscina Histórica cubiert
+id = "1265"
+number = "1265"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0115"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Reconstrucción de la Piscina Histórica cubiert
+id = "1266"
+number = "1266"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0116"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 ALIMENTARIA 2022 y HOSTELCO 2022 (AH) -  Deduc
+id = "1267"
+number = "1267"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0117"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 ALIMENTARIA 2022 y HOSTELCO 2022 (AH) - Aplica
+id = "1268"
+number = "1268"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0118"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 ALIMENTARIA 2022 y HOSTELCO 2022 (AH) - Pendie
+id = "1269"
+number = "1269"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0119"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Barcelona Music Lab. El futuro de la música (M
+id = "1272"
+number = "1272"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0120"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Barcelona Music Lab. El futuro de la música (M
+id = "1273"
+number = "1273"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0121"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Barcelona Music Lab. El futuro de la música (M
+id = "1274"
+number = "1274"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0122"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 South Summit 2022-2024 (SS) - Deducción pendie
+id = "1281"
+number = "1281"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0123"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 South Summit 2022-2024 (SS) - Aplicado en esta
+id = "1282"
+number = "1282"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0124"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 South Summit 2022-2024 (SS) - Pendiente de apl
+id = "1283"
+number = "1283"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0125"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2025(****) Otras deducciones relativas a programas 
+id = "1683"
+number = "1683"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0165"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2025(****) Otras deducciones relativas a programas 
+id = "1684"
+number = "1684"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0166"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2025(****) Otras deducciones relativas a programas 
+id = "1685"
+number = "1685"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0167"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Plan 2030 de Apoyo al Deporte de Base (P30) - 
+id = "1870"
+number = "1870"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0071"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024: Centenario del Hockey 1923-2023 (CH) - Deducc
+id = "1903"
+number = "1903"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0129"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024: Centenario del Hockey 1923-2023 (CH) - Aplica
+id = "1904"
+number = "1904"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0130"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Universo Mujer III (UM3) - Deducción pendiente
+id = "1914"
+number = "1914"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0072"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024: Centenario del Hockey 1923-2023 (CH) - Pendie
+id = "1976"
+number = "1976"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0131"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024: Bienal Manifesta 15 Barcelona (BM15) - Deducc
+id = "2284"
+number = "2284"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0159"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024: Bienal Manifesta 15 Barcelona (BM15) - Aplica
+id = "2285"
+number = "2285"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0160"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024: Bienal Manifesta 15 Barcelona (BM15) - Pendie
+id = "2286"
+number = "2286"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0161"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Alicante 2021. Salida Vuelta al Mundo a Vela (
+id = "2365"
+number = "2365"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0045"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Alicante 2021. Salida Vuelta al Mundo a Vela (
+id = "2366"
+number = "2366"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0046"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Alicante 2021. Salida Vuelta al Mundo a Vela (
+id = "2367"
+number = "2367"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0047"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Andalucía Valderrama Masters 2022/2024 (AVM22)
+id = "2458"
+number = "2458"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0063"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Andalucía Valderrama Masters 2022/2024 (AVM22)
+id = "2459"
+number = "2459"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0064"]
+
+[[revisions."2024".casillas]]
+# DP200018 17 bytes: Deducc. para incentivar determ.actividades - 2024 Andalucía Valderrama Masters 2022/2024 (AVM22)
+id = "2460"
+number = "2460"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018.f0065"]

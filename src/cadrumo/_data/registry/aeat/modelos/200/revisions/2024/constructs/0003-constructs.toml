@@ -1,0 +1,9 @@
+[[revisions."2024".constructs]]
+id = "modelo-200-2024-foundation"
+
+casilla_ids = [
+    "01949",
+    "01950",
+    "01951",
+    "01952",
+]

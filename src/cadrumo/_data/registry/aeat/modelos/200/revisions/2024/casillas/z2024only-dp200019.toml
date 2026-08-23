@@ -1,0 +1,43 @@
+# Boxes the 2024 diseno carries and the 2025 one drops, so they belong to this
+# revision alone. Each takes the section of a surviving sibling in the same
+# record (DP200019) and that record's uniform legal_refs -- every casilla entry
+# the generator routes into this record declares the same set.
+
+[[revisions."2024".casillas]]
+# DP200019 17 bytes: Deducciones I+D+i excluidas de límite - Información adicional para el cálculo de límites de dedu
+id = "130"
+number = "130"
+section = ["deducciones_i_d_i_excluidas_de_limite", "2014_investigacion_y_desarrollo"]
+semantic_role = "is_deduccion_idi_excluida_limite_investigacion"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200019.f0228"]
+
+[[revisions."2024".casillas]]
+# DP200019 17 bytes: Deducciones I+D+i excluidas de límite - Información adicional para el cálculo de límites de dedu
+id = "814"
+number = "814"
+section = ["deducciones_i_d_i_excluidas_de_limite", "2014_investigacion_y_desarrollo"]
+semantic_role = "is_deduccion_idi_excluida_limite_investigacion"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200019.f0226"]
+
+[[revisions."2024".casillas]]
+# DP200019 17 bytes: Deducciones I+D+i excluidas de límite - Información adicional para el cálculo de límites de dedu
+id = "1935"
+number = "1935"
+section = ["deducciones_i_d_i_excluidas_de_limite", "2014_investigacion_y_desarrollo"]
+semantic_role = "is_deduccion_idi_excluida_limite_investigacion"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200019.f0227"]

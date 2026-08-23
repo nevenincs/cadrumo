@@ -1,0 +1,22 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "01270"
+number = "01270"
+section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2023"]
+data_type = "money"
+semantic_role = "is_deduccion_di_interna_dt231_detalle"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200015b.f0086", "m200-2025.dp200020d.f0011"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "01271"
+number = "01271"
+section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2023"]
+data_type = "decimal"
+semantic_role = "is_deduccion_di_interna_tipo_gravamen"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200015b.f0087", "m200-2025.dp200020d.f0012"]
