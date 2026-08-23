@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#config-reset-recovery'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:47df5e359693d8a6773bfcb8c656e80519ed73ccb66d92363080471e12997cc3'
+body_hash: 'sha256:cdacbc938847699de0785f2af0b7ecb1c9a1a48f3fa3fb0a3e3e977a3b8d8669'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
 ---
@@ -71,6 +71,22 @@ erases it. The guarantee holds for exactly one resume. Any workable design must
 key the check on the bucket carrying a completed delete receipt rather than on the
 phase, or persist something the rebuild does not drop.
 
+The mechanism itself was pinned afterwards, by an investigation that reproduced
+the failure six times out of six and read the child's own error rather than its
+exit code. The delete loop is not re-entrant across the erase. It destroys the
+capsule, then advances the phase and saves; between those two the durable record
+still says the target is being deleted while the capsule is already gone. The
+loop's only skip is for a target already marked deleted, so a resume re-enters
+preparation, loads a profile that no longer exists, and aborts. The boundary that
+fails is the one whose whole purpose is to prove that window recovers.
+
+That is worth stating in operator terms: a crash or power loss in that window
+leaves the reset permanently unresumable -- the data is erased and the operation
+can never be driven to completion. Any fix must recognise the erase as its own
+before advancing, using the deletion marker already written just before it, and
+must not blanket-swallow the not-found error, which would silently absorb a
+target destroyed by something else.
+
 Two further facts a future attempt needs. A restored capsule can never be
 fingerprint-identical, because the commit record mints a fresh transaction id and
 publication instant and the inventory covers records by content - verified by
@@ -94,6 +110,25 @@ the platform refuses the rename, and would stay hidden where the platform allows
 it. Any long-lived process driving a reset carries the same exposure. Fixing it
 introduces a dependency from the custody adapter onto the engine layer on a
 destructive path, which is why it is recorded rather than patched here.
+
+## The suite cannot be trusted green while the tree is being written
+
+A boundary case failed once in a long run and passed on re-run, which read as
+flakiness in the reset. It is not. These cases spawn real child processes that
+import the package fresh from disk, so a peer writing source mid-run can leave a
+child importing a transiently inconsistent tree; it dies before any reset logic
+executes. One bad window took out ten boundaries at once, which is what
+distinguishes it from a code defect -- it is boundary- and order-independent.
+
+The error names the wrong file, too: the missing symbol is resolved lazily
+through the package facade, so the import machinery reports it against the
+facade rather than the module actually being rewritten.
+
+Two consequences. An authoritative run needs a quiet tree, or a detached
+worktree pinned at a commit; a red result taken while peers are committing says
+nothing about the code. And the harness now surfaces the resuming child's stderr
+instead of its exit code alone -- that gap turned a one-look diagnosis into hours
+of search twice, once for this and once for the defect above.
 
 ## Note on method
 

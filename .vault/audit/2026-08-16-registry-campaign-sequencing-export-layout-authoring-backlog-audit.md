@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:84db417b43ed42b1fd10717f35618b7fa845428fffddc1c9676482a47ec247ba'
+body_hash: 'sha256:15115aa35ab5ee50b3803983feac98a2c7dda69787c028c0046cdcf14126ae0e'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -18685,3 +18685,167 @@ not-a-defect. The standing backlog is unchanged: three relayout splits (200,
 nine entries blocked on corpus or era, two form diagrams needing AEAT
 acquisition, and modelo 840's layout waiting on bindings for `Pag. 2` and the
 Anexo.
+
+## Tick: the queue closed, and three phantom "unregistered designs" that were stale duplicates
+
+All six queue items are adjudicated, so this tick worked the standing backlog.
+The filing-capability worklist names four AUTHORABLE revisions; modelo 390's
+2021 is the smallest at 10 casillas, but it holds no bindings, formulas or
+constructs and was committed against five hours ago by a peer building it out,
+so it was left to that peer rather than half-authored into a thin record.
+
+### A measurement that was vacuous twice, and the control that caught it
+
+The unregistered-design worklist stood at 42. Deciding which are registrable
+needs the era each file claims and whether that epoch is already taken. The
+first pass reported twenty-odd files claiming a free epoch.
+
+That was wrong, and wrong in the SAME shape as an earlier tick's error:
+`design_epoch` is not a field on `SourceReference` -- the attribute is
+`record_design_epoch` -- so every registered design was keyed under the string
+`'None'` and every epoch looked free. The control that caught it was simply
+printing the registered epochs per modelo and seeing `None` eighteen times for
+one modelo. Corrected, twenty-odd drops to FIVE.
+
+Worth stating plainly because it has now happened twice: reading a field that
+does not exist returns a uniform value that makes every comparison succeed. A
+"free" verdict list should be sanity-checked against the population it claims
+to have excluded before anything is authored on top of it.
+
+### The five, and what three of them actually were
+
+Two are modelo 036's known epoch rivals -- both titled "Ejercicio 2021 y
+siguientes", differing only by update date -- still parked, because deciding
+which governs when means reading an update date as a governed period.
+
+The other three were modelo 303 files whose titles state sub-year windows. All
+three turned out to be ALREADY registered, under `aeat-dr-303-2024-late`,
+`aeat-dr-303-2018-salvo-ultimo-periodo` and `aeat-dr-303-2021-hasta-periodo-06`.
+They appeared unregistered because each is a SECOND COPY under a truncated
+name -- `...-381-kb-x.xlsx` beside `...-381-kb-xls.xlsx`, `...-4t-de-20.xlsx`
+beside `...-4t-de-2018.xlsx`, `...-27-0.xlsx` beside `...-27-04.xlsx`.
+
+Verified before touching anything: each pair is BYTE-IDENTICAL by sha256; the
+per-modelo `manifest.json` lists the full-name file and not the twin; no source
+cites the twin; and the only things referencing them were their own extraction
+sidecars, a CLI benchmark baseline, and regenerable search-index artefacts. They
+were stale download artifacts, so registering them would have minted a second
+source id for one design rather than closing a gap.
+
+Deleted, with their `.extracted.json` and `.extracted.md` sidecars -- nine files.
+A corpus-wide scan found exactly three such orphans, all in modelo 303, and zero
+remain. The unregistered worklist is 39, from 42.
+
+### The guard
+
+`test_no_orphan_duplicate_bundled_design.py` fails on any bundled design that is
+byte-identical to another while being claimed by no manifest entry and no
+source. Both halves are required: name similarity is never consulted, because
+two AEAT editions legitimately differ by a few bytes and both deserve
+registration; and shared bytes alone is not a defect, because a cited duplicate
+is claimed. A companion asserts a claimed file is never reported, so the check
+cannot degrade into "no two bundled files share bytes" and push an author toward
+deleting something that is read.
+
+An unclaimed file with UNIQUE bytes stays out of scope -- that is the
+unregistered-design gate's subject.
+
+### Verified
+
+* the new module: 2 passed, ruff clean. Bite proved on a REAL twin: a copy of a
+  registered design was placed in the corpus, the gate named it, and the copy
+  was removed in the same command -- the filesystem is the detector's input, so
+  an out-of-repo patch could not have proved this honestly.
+* registry package: 10 failed, 5335 passed. Nine are the standing declared
+  inventories. The tenth, `test_loader_cache_isolation`, is the disk cache
+  legitimately invalidating once on a corpus change; it passes on re-run
+  (11 passed).
+* authority loads CLEAN.
+
+### Still open
+
+Unchanged: three relayout splits (200, 322, 347 -- the last needing three
+revisions), four AUTHORABLE filing-capability revisions (036/2025 at 706
+casillas, 220/2024 at 1326, 390/2021 with a peer on it, 840 waiting on bindings
+for `Pag. 2` and the Anexo), nine worklist entries blocked on corpus or era, and
+two form diagrams needing AEAT acquisition.
+
+## Tick: a gate that demanded what its own docstring called impossible
+
+The queue is closed, so this tick took the largest standing failure cluster: the
+four assertions in `test_revision_span_matches_published_designs`.
+
+### A transient that was not a defect
+
+The module first refused to COLLECT, with
+`ImportError: cannot import name 'CalculationSourceLineageRole' from
+'cadrumo.core'`. Chased rather than assumed: the symbol is defined in
+`core/aggregation.py`, listed in `__all__`, AND present in the `_LAZY_EXPORTS`
+map that PEP 562 resolution reads, so none of the obvious causes held.
+Reproducing it directly -- importing `_source_mesh`, then the whole conftest
+chain from `application.wizard` -- succeeded both times.
+
+`_source_mesh.py` is an uncommitted working-tree edit belonging to a peer, and
+the module collected normally on re-run. Recorded as a peer mid-write, not a
+defect, and NOT worked around. Worth carrying: in this shared tree an import
+error that will not reproduce twice in a row is a writer, not a bug.
+
+### The contradiction
+
+`test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured`
+lists every bundled design stating no ejercicio in its filename or title -- 21
+of them -- and asserts the list is empty. Its own docstring says otherwise:
+
+> Several of these are not defects at all and are named anyway: Modelo 036 is
+> scoped by an in-force DATE and Modelo 210 by a devengo span, so they have real
+> coverage expressed on an axis that is not an ejercicio. [...] Being visible as
+> unattributed is the correct outcome for them.
+
+So the assertion demanded attribution for designs the author had already
+established cannot be attributed, and the gate could never pass. The failure
+message names the missing half -- "record why the design has no ejercicio to
+state" -- and no mechanism to record it existed.
+
+Consulting the source catalogue's `applies_from` would have "fixed" it and was
+rejected: the gate compares a revision's span against PUBLISHED design coverage,
+and the revision cites those same sources, so an era taken from the catalogue
+would check our own declaration against itself. The module reads AEAT's filename
+and title deliberately, because that is the external attestation.
+
+### What was added
+
+`_NON_EJERCICIO_COVERAGE_AXIS` -- a `(modelo, filename)` keyed declaration whose
+value states the axis the FILE ITSELF uses, so each reason is checkable against
+the filename rather than merely asserted. Four entries, exactly the ones the
+docstring already established: modelo 036's in-force-date pair and modelo 210's
+two devengo spans.
+
+Deliberately NOT absorbed: the other 17. An orden-named design states no
+coverage at all, and parking it here would relabel "nobody knows" as "known on
+another axis" -- the precise confusion the assertion exists to prevent. The
+unmeasured list is 17, from 21, and stays red, which is the honest state.
+
+`test_every_non_ejercicio_declaration_is_still_earned` audits the declaration
+for both ways an entry goes stale: the design renamed or dropped, and -- the
+one that matters -- the design BECOMING attributable, at which point the entry
+would silently suppress something the module can now measure. It also refuses
+an entry whose reason is not a stated axis, and refuses an empty declaration.
+
+### Verified
+
+* the module: 20 passed, from 19; ruff check and format clean.
+* all four staleness conditions proved to bite from OUTSIDE the repo: an entry
+  for an unbundled design, a declared design that became attributable, an entry
+  with no stated axis, and an empty declaration.
+* the four declared designs no longer appear in the unmeasured list, and no
+  other design left it -- 17 remain, all genuinely unattributed.
+* registry package: 9 failed, 5337 passed -- the standing declared inventories,
+  unchanged. Authority loads CLEAN.
+
+### Still open
+
+The three relayout splits (200, 322, 347) are the substance of the remaining
+span failures and are unchanged. 17 designs remain unattributed, each needing an
+external source that states its era rather than an inference from its orden --
+the module's docstring measures that inference wrong by seven years on modelo
+180, so it stays refused. Backlog otherwise unchanged.
