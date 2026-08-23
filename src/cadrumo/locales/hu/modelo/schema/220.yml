@@ -7,6 +7,88 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g6t230c1q60o30e1g:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport nem
+                mentes belso osztalekainak kiszurese. Osszesen'
+            x-agp34c1g6t230c1qegp34c1g6ti30c1e64r2qchk:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport nem
+                mentes belso osztalekainak kiszurese. Az osztalekot kifizeto entitas
+                adoazonositoja'
+            x-agp34c1g6t230c1qegp34c1g6ti30c1e68qiqcpj:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport nem
+                mentes belso osztalekainak kiszurese. Az osztalekot kapo entitas adoazonositoja'
+            x-agp34c1g6t230c1qegp34c1g6ti30c1e6cq2qcpn:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport nem
+                mentes belso osztalekainak kiszurese. Az adoev, amelynek nyeresegebol
+                az osztalek szarmazik'
+            x-agp34c1g6t230c1qegp34c1g6ti30c1e6cs2qd9k:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport nem
+                mentes belso osztalekainak kiszurese. Kiszurt osztalek'
+            x-agp34c1g6t2j0c1q60o30e1i:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport entitasaiban
+                levo sajat toke reszesedesek korabbi idoszakokban kiszurt ertekvesztesenek
+                beszamitasa. Osszesen'
+            x-agp34c1g6t2j0c1qegp34c1g6tij0c1e64r2qchk:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport entitasaiban
+                levo sajat toke reszesedesek korabbi idoszakokban kiszurt ertekvesztesenek
+                beszamitasa. Az ertekvesztett reszvenyeket vagy reszesedeseket birtoklo
+                entitas adoazonositoja'
+            x-agp34c1g6t2j0c1qegp34c1g6tij0c1e68qiqcpj:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport entitasaiban
+                levo sajat toke reszesedesek korabbi idoszakokban kiszurt ertekvesztesenek
+                beszamitasa. Az ertekvesztett reszvenyeket vagy reszesedeseket kibocsato
+                entitas adoazonositoja'
+            x-agp34c1g6t2j0c1qegp34c1g6tij0c1e6cq2qcpn:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport entitasaiban
+                levo sajat toke reszesedesek korabbi idoszakokban kiszurt ertekvesztesenek
+                beszamitasa. Az adoev, amelyben az ertekvesztest kiszurtek'
+            x-agp34c1g6t2j0c1qegp34c1g6tij0c1e6cs2qd9k:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport entitasaiban
+                levo sajat toke reszesedesek korabbi idoszakokban kiszurt ertekvesztesenek
+                beszamitasa. Beszamitott ertekvesztes'
+            x-agp34c1g6t330c1q60o32c1i:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport entitasaiban
+                levo sajat toke reszesedesek korabbi idoszakokban kiszurt, az idoszak
+                vegen meg be nem szamitott ertekvesztese. Osszesen'
+            x-agp34c1g6t330c1qegp34c1g6tj30c1e64r2qchk:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport entitasaiban
+                levo sajat toke reszesedesek korabbi idoszakokban kiszurt, az idoszak
+                vegen meg be nem szamitott ertekvesztese. Az ertekvesztett reszvenyeket
+                vagy reszesedeseket birtoklo entitas adoazonositoja'
+            x-agp34c1g6t330c1qegp34c1g6tj30c1e68qiqcpj:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport entitasaiban
+                levo sajat toke reszesedesek korabbi idoszakokban kiszurt, az idoszak
+                vegen meg be nem szamitott ertekvesztese. Az ertekvesztett reszvenyeket
+                vagy reszesedeseket kibocsato entitas adoazonositoja'
+            x-agp34c1g6t330c1qegp34c1g6tj30c1e6cq2qcpn:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport entitasaiban
+                levo sajat toke reszesedesek korabbi idoszakokban kiszurt, az idoszak
+                vegen meg be nem szamitott ertekvesztese. Az adoev, amelyben az ertekvesztest
+                kiszurtek'
+            x-agp34c1g6t330c1qegp34c1g6tj30c1e6cs2qd9k:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: az adocsoport entitasaiban
+                levo sajat toke reszesedesek korabbi idoszakokban kiszurt, az idoszak
+                vegen meg be nem szamitott ertekvesztese. Meg be nem szamitott ertekvesztes'
+            x-agp34c1g6t430c1q60o30e1l:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: egyeb korrekciok az
+                egyedi adoalapok osszegehez, amelyeket az elozo pontok nem fednek
+                le. Az adoalap korrekcioja. Osszesen'
+            x-agp34c1g6t430c1qegp34c1g6tk30c1e64r2qdpl:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: egyeb korrekciok az
+                egyedi adoalapok osszegehez, amelyeket az elozo pontok nem fednek
+                le. A tranzakcio leirasa'
+            x-agp34c1g6t430c1qegp34c1g6tk30c1e6sr2qe1k:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: egyeb korrekciok az
+                egyedi adoalapok osszegehez, amelyeket az elozo pontok nem fednek
+                le. Az adoalapok osszegenek korrekciojat kivalto csoporttag adoazonositoja'
+            x-agp34c1g6t430c1qegp34c1g6tk30c1e70qiqe9j:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: egyeb korrekciok az
+                egyedi adoalapok osszegehez, amelyeket az elozo pontok nem fednek
+                le. A tranzakcioban reszt vevo masik csoporttag adoazonositoja'
+            x-agp34c1g6t430c1qegp34c1g6tk30c1e74q2qc9h60:
+              label: 'Egyeb korrekciok az adoalapok osszegehez: egyeb korrekciok az
+                egyedi adoalapok osszegehez, amelyeket az elozo pontok nem fednek
+                le. Az adoalap korrekcioja'
             x-agp34c1g710j0c1q60o34chl:
               label: Szamviteli eredmenyek es adoalapok konszolidacioja. D. A csoport
                 elozetes adoalapja

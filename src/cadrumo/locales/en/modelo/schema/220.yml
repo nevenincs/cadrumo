@@ -7,6 +7,91 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g6t230c1q60o30e1g:
+              label: 'Other corrections to the sum of taxable bases: elimination of
+                non-exempt internal dividends of the tax group. Total'
+            x-agp34c1g6t230c1qegp34c1g6ti30c1e64r2qchk:
+              label: 'Other corrections to the sum of taxable bases: elimination of
+                non-exempt internal dividends of the tax group. Tax ID of the entity
+                that distributed the dividend'
+            x-agp34c1g6t230c1qegp34c1g6ti30c1e68qiqcpj:
+              label: 'Other corrections to the sum of taxable bases: elimination of
+                non-exempt internal dividends of the tax group. Tax ID of the entity
+                that received the dividend'
+            x-agp34c1g6t230c1qegp34c1g6ti30c1e6cq2qcpn:
+              label: 'Other corrections to the sum of taxable bases: elimination of
+                non-exempt internal dividends of the tax group. Tax year whose profit
+                the dividend comes from'
+            x-agp34c1g6t230c1qegp34c1g6ti30c1e6cs2qd9k:
+              label: 'Other corrections to the sum of taxable bases: elimination of
+                non-exempt internal dividends of the tax group. Dividend eliminated'
+            x-agp34c1g6t2j0c1q60o30e1i:
+              label: 'Other corrections to the sum of taxable bases: incorporation
+                of impairments of equity holdings in tax group entities, eliminated
+                in earlier periods. Total'
+            x-agp34c1g6t2j0c1qegp34c1g6tij0c1e64r2qchk:
+              label: 'Other corrections to the sum of taxable bases: incorporation
+                of impairments of equity holdings in tax group entities, eliminated
+                in earlier periods. Tax ID of the entity holding the impaired shares
+                or holdings'
+            x-agp34c1g6t2j0c1qegp34c1g6tij0c1e68qiqcpj:
+              label: 'Other corrections to the sum of taxable bases: incorporation
+                of impairments of equity holdings in tax group entities, eliminated
+                in earlier periods. Tax ID of the entity issuing the impaired shares
+                or holdings'
+            x-agp34c1g6t2j0c1qegp34c1g6tij0c1e6cq2qcpn:
+              label: 'Other corrections to the sum of taxable bases: incorporation
+                of impairments of equity holdings in tax group entities, eliminated
+                in earlier periods. Tax year in which the impairment was eliminated'
+            x-agp34c1g6t2j0c1qegp34c1g6tij0c1e6cs2qd9k:
+              label: 'Other corrections to the sum of taxable bases: incorporation
+                of impairments of equity holdings in tax group entities, eliminated
+                in earlier periods. Impairment incorporated'
+            x-agp34c1g6t330c1q60o32c1i:
+              label: 'Other corrections to the sum of taxable bases: impairments of
+                equity holdings in tax group entities eliminated in earlier periods,
+                still to be incorporated at the end of the period. Total'
+            x-agp34c1g6t330c1qegp34c1g6tj30c1e64r2qchk:
+              label: 'Other corrections to the sum of taxable bases: impairments of
+                equity holdings in tax group entities eliminated in earlier periods,
+                still to be incorporated at the end of the period. Tax ID of the entity
+                holding the impaired shares or holdings'
+            x-agp34c1g6t330c1qegp34c1g6tj30c1e68qiqcpj:
+              label: 'Other corrections to the sum of taxable bases: impairments of
+                equity holdings in tax group entities eliminated in earlier periods,
+                still to be incorporated at the end of the period. Tax ID of the entity
+                issuing the impaired shares or holdings'
+            x-agp34c1g6t330c1qegp34c1g6tj30c1e6cq2qcpn:
+              label: 'Other corrections to the sum of taxable bases: impairments of
+                equity holdings in tax group entities eliminated in earlier periods,
+                still to be incorporated at the end of the period. Tax year in which
+                the impairment was eliminated'
+            x-agp34c1g6t330c1qegp34c1g6tj30c1e6cs2qd9k:
+              label: 'Other corrections to the sum of taxable bases: impairments of
+                equity holdings in tax group entities eliminated in earlier periods,
+                still to be incorporated at the end of the period. Impairment still
+                to be incorporated'
+            x-agp34c1g6t430c1q60o30e1l:
+              label: 'Other corrections to the sum of taxable bases: other corrections
+                to the sum of individual taxable bases, not covered by the preceding
+                sections. Correction to the taxable base. Total'
+            x-agp34c1g6t430c1qegp34c1g6tk30c1e64r2qdpl:
+              label: 'Other corrections to the sum of taxable bases: other corrections
+                to the sum of individual taxable bases, not covered by the preceding
+                sections. Description of the transaction'
+            x-agp34c1g6t430c1qegp34c1g6tk30c1e6sr2qe1k:
+              label: 'Other corrections to the sum of taxable bases: other corrections
+                to the sum of individual taxable bases, not covered by the preceding
+                sections. Tax ID of the group entity giving rise to the correction
+                of the sum of taxable bases'
+            x-agp34c1g6t430c1qegp34c1g6tk30c1e70qiqe9j:
+              label: 'Other corrections to the sum of taxable bases: other corrections
+                to the sum of individual taxable bases, not covered by the preceding
+                sections. Tax ID of the other group entity taking part in the transaction'
+            x-agp34c1g6t430c1qegp34c1g6tk30c1e74q2qc9h60:
+              label: 'Other corrections to the sum of taxable bases: other corrections
+                to the sum of individual taxable bases, not covered by the preceding
+                sections. Correction to the taxable base'
             x-agp34c1g710j0c1q60o34chl:
               label: Consolidation of accounting results and taxable bases. D. Preliminary
                 taxable base of the group

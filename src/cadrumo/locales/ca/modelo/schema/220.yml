@@ -7,6 +7,96 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g6t230c1q60o30e1g:
+              label: 'Altres correccions a la suma de bases imposables: eliminacio
+                de dividends interns no exempts del grup fiscal. Total'
+            x-agp34c1g6t230c1qegp34c1g6ti30c1e64r2qchk:
+              label: 'Altres correccions a la suma de bases imposables: eliminacio
+                de dividends interns no exempts del grup fiscal. N.I.F. de l''entitat
+                que va distribuir el dividend'
+            x-agp34c1g6t230c1qegp34c1g6ti30c1e68qiqcpj:
+              label: 'Altres correccions a la suma de bases imposables: eliminacio
+                de dividends interns no exempts del grup fiscal. N.I.F. de l''entitat
+                que va percebre el dividend'
+            x-agp34c1g6t230c1qegp34c1g6ti30c1e6cq2qcpn:
+              label: 'Altres correccions a la suma de bases imposables: eliminacio
+                de dividends interns no exempts del grup fiscal. Exercici del benefici
+                del qual prove el dividend'
+            x-agp34c1g6t230c1qegp34c1g6ti30c1e6cs2qd9k:
+              label: 'Altres correccions a la suma de bases imposables: eliminacio
+                de dividends interns no exempts del grup fiscal. Dividend eliminat'
+            x-agp34c1g6t2j0c1q60o30e1i:
+              label: 'Altres correccions a la suma de bases imposables: incorporacio
+                de deterioraments de valor de participacions en fons propis d''entitats
+                del grup fiscal, eliminats en periodes anteriors. Total'
+            x-agp34c1g6t2j0c1qegp34c1g6tij0c1e64r2qchk:
+              label: 'Altres correccions a la suma de bases imposables: incorporacio
+                de deterioraments de valor de participacions en fons propis d''entitats
+                del grup fiscal, eliminats en periodes anteriors. N.I.F. de l''entitat
+                titular de les accions o participacions deteriorades'
+            x-agp34c1g6t2j0c1qegp34c1g6tij0c1e68qiqcpj:
+              label: 'Altres correccions a la suma de bases imposables: incorporacio
+                de deterioraments de valor de participacions en fons propis d''entitats
+                del grup fiscal, eliminats en periodes anteriors. N.I.F. de l''entitat
+                emissora de les accions o participacions deteriorades'
+            x-agp34c1g6t2j0c1qegp34c1g6tij0c1e6cq2qcpn:
+              label: 'Altres correccions a la suma de bases imposables: incorporacio
+                de deterioraments de valor de participacions en fons propis d''entitats
+                del grup fiscal, eliminats en periodes anteriors. Exercici en que
+                va eliminar el deteriorament de valor'
+            x-agp34c1g6t2j0c1qegp34c1g6tij0c1e6cs2qd9k:
+              label: 'Altres correccions a la suma de bases imposables: incorporacio
+                de deterioraments de valor de participacions en fons propis d''entitats
+                del grup fiscal, eliminats en periodes anteriors. Deteriorament de
+                valor incorporat'
+            x-agp34c1g6t330c1q60o32c1i:
+              label: 'Altres correccions a la suma de bases imposables: deterioraments
+                de valor de participacions en fons propis d''entitats del grup fiscal
+                eliminats en periodes anteriors, pendents d''incorporar al final del
+                periode. Total'
+            x-agp34c1g6t330c1qegp34c1g6tj30c1e64r2qchk:
+              label: 'Altres correccions a la suma de bases imposables: deterioraments
+                de valor de participacions en fons propis d''entitats del grup fiscal
+                eliminats en periodes anteriors, pendents d''incorporar al final del
+                periode. N.I.F. de l''entitat titular de les accions o participacions
+                deteriorades'
+            x-agp34c1g6t330c1qegp34c1g6tj30c1e68qiqcpj:
+              label: 'Altres correccions a la suma de bases imposables: deterioraments
+                de valor de participacions en fons propis d''entitats del grup fiscal
+                eliminats en periodes anteriors, pendents d''incorporar al final del
+                periode. N.I.F. de l''entitat emissora de les accions o participacions
+                deteriorades'
+            x-agp34c1g6t330c1qegp34c1g6tj30c1e6cq2qcpn:
+              label: 'Altres correccions a la suma de bases imposables: deterioraments
+                de valor de participacions en fons propis d''entitats del grup fiscal
+                eliminats en periodes anteriors, pendents d''incorporar al final del
+                periode. Exercici en que es va eliminar el deteriorament de valor'
+            x-agp34c1g6t330c1qegp34c1g6tj30c1e6cs2qd9k:
+              label: 'Altres correccions a la suma de bases imposables: deterioraments
+                de valor de participacions en fons propis d''entitats del grup fiscal
+                eliminats en periodes anteriors, pendents d''incorporar al final del
+                periode. Deteriorament de valor pendent d''incorporacio'
+            x-agp34c1g6t430c1q60o30e1l:
+              label: 'Altres correccions a la suma de bases imposables: altres correccions
+                a la suma de bases imposables individuals, no compreses als apartats
+                anteriors. Correccio en base imposable. Total'
+            x-agp34c1g6t430c1qegp34c1g6tk30c1e64r2qdpl:
+              label: 'Altres correccions a la suma de bases imposables: altres correccions
+                a la suma de bases imposables individuals, no compreses als apartats
+                anteriors. Descripcio de l''operacio'
+            x-agp34c1g6t430c1qegp34c1g6tk30c1e6sr2qe1k:
+              label: 'Altres correccions a la suma de bases imposables: altres correccions
+                a la suma de bases imposables individuals, no compreses als apartats
+                anteriors. N.I.F. de l''entitat del grup que origina la correccio
+                de la suma de bases imposables'
+            x-agp34c1g6t430c1qegp34c1g6tk30c1e70qiqe9j:
+              label: 'Altres correccions a la suma de bases imposables: altres correccions
+                a la suma de bases imposables individuals, no compreses als apartats
+                anteriors. N.I.F. de l''altra entitat del grup que interve en l''operacio'
+            x-agp34c1g6t430c1qegp34c1g6tk30c1e74q2qc9h60:
+              label: 'Altres correccions a la suma de bases imposables: altres correccions
+                a la suma de bases imposables individuals, no compreses als apartats
+                anteriors. Correccio en base imposable'
             x-agp34c1g710j0c1q60o34chl:
               label: Consolidacio de resultats i bases imposables. D. Base imposable
                 previa del grup
