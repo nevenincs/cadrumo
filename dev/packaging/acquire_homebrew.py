@@ -245,7 +245,6 @@ def run_homebrew_acquisition(
         "verified_formula_digests": verified_digests,
         "installed_prefix": str(installed_prefix),
         "installed_tax_oracle": tax_evidence.to_jsonable(),
-        "installed_mcp_oracle": None,
     }
     evidence_path = run_root / "acquire-homebrew-evidence.json"
     evidence_path.write_text(

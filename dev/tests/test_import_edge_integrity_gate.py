@@ -321,19 +321,17 @@ def test_family9_excludes_the_shapes_reached_without_an_import(tmp_path: Path) -
 def test_family9_census_spans_the_whole_first_party_tree() -> None:
     """The reach census must cover every tree that can import the package.
 
-    Three modules read as orphaned when the census was the package alone,
-    because their only importers lived in the harness distribution and the
-    development tooling. Scoping the census to the scanner's own subject is
+    Modules can read as orphaned when the census is the package alone because
+    their only importers live in development tooling. Scoping the census to the scanner's own subject is
     the exact mistake that turns this detector into a deletion hazard, so the
     census composition is asserted rather than assumed.
     """
     census_roots = {src_root for _path, src_root in first_party_census_files()}
     covered = {str(root).replace("\\", "/") for root in census_roots}
 
-    assert any(c.endswith("/src") and "cadrumo-harness" not in c for c in covered), (
+    assert any(c.endswith("/src") for c in covered), (
         f"census omits the package source root: {sorted(covered)}"
     )
-    assert any("cadrumo-harness" in c for c in covered), f"census omits the harness distribution: {sorted(covered)}"
     assert any(c == str(REPO_ROOT).replace("\\", "/") for c in covered), (
         f"census omits the development tooling tree: {sorted(covered)}"
     )

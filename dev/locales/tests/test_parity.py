@@ -11,7 +11,6 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLa
 from cadrumo.tests.cli_runner import invoke_typer_app
 from dev.locales import (
     DOCS_SRC_DIR,
-    HARNESS_SRC_DIR,
     LocaleError,
     LocaleManager,
     LocaleNode,
@@ -65,8 +64,7 @@ _IDENTITY_TOKEN_PATTERNS: dict[str, re.Pattern[str]] = {
     # Sentence prose: the product as a subject or possessive.
     "Cadrumo": re.compile(r"\bCadrumo\b"),
     # Machine names, which stay lower case and are not product prose.
-    "cadrumo-mcp": re.compile(r"\bcadrumo-mcp\b"),
-    "cadrumo": re.compile(r"\bcadrumo\b(?!-mcp)(?!://)"),
+    "cadrumo": re.compile(r"\bcadrumo\b(?!://)"),
     # The tax authority, which is never renamed to the product.
     "AEAT": re.compile(r"\bAEAT\b"),
     # The sole human executable token.
@@ -213,7 +211,7 @@ def manager():
     # package but render operator-facing prose from this same catalogue, so
     # the gate must see their keys or it reports every one as an extra key
     # with no codebase site.
-    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
+    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR,))
 
 
 def _committed_catalogues(manager) -> dict[str, Path]:
@@ -525,8 +523,7 @@ def test_identity_token_extractor_discriminates_product_spellings() -> None:
 
     assert _identity_tokens("CADRUMO - workflow with the Spanish Tax Agency (AEAT)") == {"CADRUMO", "AEAT"}
     assert _identity_tokens("Cadrumo prepares the draft.") == {"Cadrumo"}
-    assert _identity_tokens("Install cadrumo; launch cadrumo-mcp.") == {"cadrumo", "cadrumo-mcp"}
-    assert _identity_tokens("launch cadrumo-mcp only") == {"cadrumo-mcp"}
+    assert _identity_tokens("Install cadrumo.") == {"cadrumo"}
     assert _identity_tokens("read cadrumo://status") == set()
     assert _identity_tokens("Run `aeat config profile status`.") == {"aeat"}
     assert _identity_tokens("nothing to see here") == set()
@@ -761,7 +758,7 @@ def test_canonicalize_product_identity_references_handles_folded_help_copy(tmp_p
             "      Cadrumo prepares tax forms for AEAT. Run cadrumo\n"
             "      app modelo work calculate or cadrumo manual fetch.\n"
             "product:\n"
-            "  machine_names: Install cadrumo; launch cadrumo-mcp; read cadrumo://status.\n",
+            "  machine_names: Install cadrumo; read cadrumo://status.\n",
             encoding="utf-8",
         )
 
@@ -775,7 +772,7 @@ def test_canonicalize_product_identity_references_handles_folded_help_copy(tmp_p
             "Cadrumo prepares tax forms for AEAT. Run aeat app modelo work calculate or aeat manual fetch."
         )
         assert _leaf(data, "product", "machine_names") == (
-            "Install cadrumo; launch cadrumo-mcp; read cadrumo://status."
+            "Install cadrumo; read cadrumo://status."
         )
 
 

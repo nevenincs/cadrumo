@@ -64,12 +64,6 @@ def _write_manifest(root: Path, version: str) -> None:
     (root / ".release-please-manifest.json").write_text(json.dumps({".": version}), encoding="utf-8")
 
 
-def _write_mcpb_manifest(root: Path, version: str = "0.0.0") -> None:
-    manifest_dir = root / "packaging" / "mcpb"
-    manifest_dir.mkdir(parents=True, exist_ok=True)
-    (manifest_dir / "manifest.json").write_text(json.dumps({"version": version}), encoding="utf-8")
-
-
 def _write_changelog(root: Path, *, prior_version: str = "1.2.3", prior_date: str = "2026-07-04") -> None:
     (root / "CHANGELOG.md").write_text(
         f"# Changelog\n\n## [Unreleased]\n\n## [{prior_version}] - {prior_date}\n\n### Features\n- thing\n",
@@ -83,7 +77,6 @@ def _make_repo_root(tmp_path: Path, *, version: str = "1.2.3") -> Path:
     _write_pyprojects(root, version)
     _write_init(root, version)
     _write_manifest(root, version)
-    _write_mcpb_manifest(root)
     _write_changelog(root, prior_version=version)
     return root
 
@@ -134,18 +127,6 @@ def test_apply_version_updates_all_seven_surfaces_individually(tmp_path: Path) -
     assert _CHANGELOG_BLOCK.strip() in changelog
     # New section lands directly after Unreleased and before the prior release.
     assert changelog.index("## [2.0.0]") < changelog.index("## [1.2.3]")
-
-
-def test_apply_version_leaves_the_mcpb_manifest_sentinel_untouched(tmp_path: Path) -> None:
-    """The build-stamped `.mcpb` manifest is never one of the bumped surfaces."""
-    root = _make_repo_root(tmp_path, version="1.2.3")
-    before = (root / "packaging" / "mcpb" / "manifest.json").read_text(encoding="utf-8")
-
-    version_bump.apply_version(root, "2.0.0", changelog_block=_CHANGELOG_BLOCK, release_date="2026-08-02")
-
-    after = (root / "packaging" / "mcpb" / "manifest.json").read_text(encoding="utf-8")
-    assert after == before
-    assert json.loads(after)["version"] == "0.0.0"
 
 
 def test_apply_version_refuses_when_a_pyproject_carries_no_version_literal(tmp_path: Path) -> None:

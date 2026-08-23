@@ -80,7 +80,7 @@ def _passing_evidence(tmp_path: Path) -> DistributionEvidence:
             python_implementation=platform.python_implementation(),
         ),
         client=ClientIdentity(
-            name="cadrumo-mcp-sdk-client",
+            name="release-probe",
             version="1.26.0",
             executable=sys.executable,
         ),
@@ -89,7 +89,7 @@ def _passing_evidence(tmp_path: Path) -> DistributionEvidence:
             ambient_product_executables_removed=True,
             installed_executables=(
                 InstalledExecutableIdentity(
-                    name="cadrumo-mcp",
+                    name="aeat",
                     path=sys.executable,
                     sha256=sha256_path(Path(sys.executable)),
                 ),

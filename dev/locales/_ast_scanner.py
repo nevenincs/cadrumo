@@ -138,7 +138,12 @@ _TRANSLATION_KEY_KWARGS: frozenset[str] = frozenset(
 )
 
 #: Single-argument constructors and helpers that WRAP a translation key without
-#: changing it. The CLI command specs never pass a bare string: every help key is
+#: changing it. Note ``_key`` is NOT unique to this purpose -- the AEAT session
+#: store defines its own ``_key(path)`` returning a posix path -- so a wrapper is
+#: only ever read as a key when its argument is a catalogue-rooted dotted literal.
+#: The name alone is not the signal; the name plus the shape of what it wraps is.
+#:
+#: The CLI command specs never pass a bare string: every help key is
 #: written ``help_key=TranslationKey("cli...")`` or ``help_key=_key("cli...")``, so
 #: reading only ``ast.Constant`` values made 690 live keys invisible to this scanner
 #: and reported them as catalogue-only extras — one strip away from deleting the
@@ -548,6 +553,7 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str], tr_names: frozen
     if name is None:
         return
     _collect_translation_key_kwargs(node, findings)
+    _collect_wrapped_key_arguments(node, findings)
     if name in _COMMAND_SPEC_KEY_FACTORIES:
         _collect_command_spec_positional_keys(node, findings)
     if name in tr_names:
@@ -566,6 +572,25 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str], tr_names: frozen
         return
     if name.endswith("Error") or name.endswith("Exception"):
         _add_first_dotted_arg(node, findings)
+
+
+def _collect_wrapped_key_arguments(node: ast.Call, findings: set[str]) -> None:
+    """Collect wrapped translation keys from ANY argument of ANY call.
+
+    Callee-agnostic on purpose. A key written ``TranslationKey("cli...")`` denotes
+    that key wherever it appears, and the CLI spec tables pass it positionally into
+    a long tail of local factories -- enumerating those factories chased the same
+    defect one helper at a time, while the wrapper is the thing that actually marks
+    the string.
+
+    Safety comes from the argument, not the callee: the wrapper must hold a lone
+    dotted literal ROOTED IN A CATALOGUE NAMESPACE, so an overloaded helper such as
+    the session store's ``_key(path)`` cannot contribute a phantom key.
+    """
+    for argument in (*node.args, *(kw.value for kw in node.keywords)):
+        value = _unwrapped_key_literal(argument)
+        if value is not None and _is_dynamic_translation_prefix(value):
+            findings.add(value)
 
 
 def _collect_command_spec_positional_keys(node: ast.Call, findings: set[str]) -> None:

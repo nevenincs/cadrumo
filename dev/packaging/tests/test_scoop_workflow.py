@@ -123,9 +123,6 @@ def test_scoop_workflow_runs_the_real_native_lifecycle_without_rebuilding() -> N
     assert "_command.py" in stage["run"]
     assert "constraint_effect.py" in stage["run"]
     assert "installed_tax_oracle.py" in stage["run"]
-    # The lane is CLI-only: the retired MCP oracle is not staged, so a
-    # reintroduced cadrumo-mcp leg has nothing to run on.
-    assert "installed_mcp_oracle.py" not in stage["run"]
     assert "$env:CADRUMO_SCOOP_ROOT/harness/dev/packaging/smoke_scoop.ps1" in smoke["run"]
     assert "-Mode Host" in smoke["run"]
     # Negative pins: a silent revert to the container lane would strand the row

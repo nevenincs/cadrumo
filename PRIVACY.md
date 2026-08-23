@@ -2,9 +2,7 @@
 
 **Last updated: 12 July 2026**
 
-This policy covers the Cadrumo project: the `aeat` software (the CLI, the MCP
-console, and the agent harness), the website at
-[cadrumo.neve.md](https://cadrumo.neve.md), and this repository at
+This policy covers the Cadrumo `aeat` software and this repository at
 [github.com/nevenincs/cadrumo](https://github.com/nevenincs/cadrumo).
 
 **Responsible party:** Neve Nincs, the legal entity behind

@@ -310,11 +310,6 @@ def test_localization_rejects_a_cohort_archive_not_matching_the_formula_digest(
 
 
 def test_oracle_evidence_refuses_a_keg_whose_cli_misses_the_expected_figure() -> None:
-    """The installed CLI must reproduce the oracle figure, not merely run.
-
-    The MCP leg this assertion once also carried is gone: Homebrew installs the
-    ``cadrumo`` distribution alone, and ``cadrumo-mcp`` ships in the sibling
-    ``cadrumo-harness`` distribution the formula does not carry.
-    """
+    """The installed CLI must reproduce the oracle figure, not merely run."""
     with pytest.raises(SystemExit, match="installed CLI oracle returned unexpected evidence"):
         _assert_oracle_evidence(tax_document={"target_value": "22999.99"})

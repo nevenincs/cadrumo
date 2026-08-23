@@ -64,19 +64,12 @@ count_is_advisory = true
 #
 #   * `dev/` is outside `source_root`. The standing runner scans the product
 #     tree only, so the tooling that gates the product has never been measured
-#     by it. A direct run over `dev/` observed 2 clone groups. One group no
-#     longer exists in this repository. The remaining group is the argparse
-#     main() emit tail shared by
-#     packaging/installed_mcp_oracle.py and installed_tax_oracle.py: two
-#     separate console entry points whose only shared tail is
-#     parse-run-dump-print, left as advisory residue. Named here rather than
-#     left invisible, since no scan reaches them.
+#     by it.
 #
 #     The product-only scope is deliberate, not an oversight: the governing
 #     audit scopes every instrument to "the intended production scope", and
 #     the runner's docstring now says so. `dev/` remains scannable on demand
-#     by passing a different `source_root`, which is how the two groups above
-#     were found.
+#     by passing a different `source_root`.
 #
 #   * Semantic duplication, per the banner at the top of this file.
 

@@ -1441,31 +1441,6 @@ exact_body_group_id = ""
 exact_body_group_member_count = 1
 
 [[fixture]]
-id = "dev/packaging/tests/test_serving_path_benchmark.py:46:evidence"
-effective_name = "evidence"
-owner = "dev/packaging/tests/test_serving_path_benchmark.py:46:evidence"
-disposition = "retained-current-owner"
-body_sha256 = "bb370f4fee40ee95e407a23e7b04bfdea00fffb742c7fb32b02490112524189c"
-scope = "module"
-autouse = false
-constraints_sha256 = "d0d9bf1da220a0f56e0bb934f44712c17421c153ca0386493a67f7d1da535045"
-owner_globals_sha256 = "806c9433a7cd364b08d25bfef6ba61e4f2c100559be3182bc9d4db1888f36d0e"
-import_count = 0
-imports_sha256 = "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
-direct_consumer_count = 7
-direct_consumers_sha256 = "b061e231b9b84fbe4d379b3c8ea8826a57848db140efc1b8f3b455f01698c8de"
-autouse_reach_count = 0
-autouse_reach_sha256 = "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
-divergence_kind = ""
-divergence_evidence_sha256 = ""
-ownership_group_id = ""
-ownership_group_member_count = 1
-semantic_name_group_id = ""
-semantic_name_group_member_count = 1
-exact_body_group_id = ""
-exact_body_group_member_count = 1
-
-[[fixture]]
 id = "dev/registry/aeip/tests/test_manager.py:70:modelos_root"
 effective_name = "modelos_root"
 owner = "dev/registry/aeip/tests/test_manager.py:70:modelos_root"
@@ -1837,56 +1812,6 @@ ownership_group_id = ""
 ownership_group_member_count = 1
 semantic_name_group_id = "effective-name-sha256:b84ca04b3cceaca62d8f28bf377adb96ad4f07356d4500a5e8b7d5b205e1f7a9"
 semantic_name_group_member_count = 2
-exact_body_group_id = ""
-exact_body_group_member_count = 1
-
-[[fixture]]
-id = "packaging/mcpb/tests/test_build.py:93:real_cohort"
-effective_name = "real_cohort"
-owner = "packaging/mcpb/tests/test_build.py:93:real_cohort"
-disposition = "retained-current-owner"
-body_sha256 = "65c19ea0d410298026b53d3f29af8a97bcb4743064db5be8be4830f092afd84f"
-scope = "module"
-autouse = false
-constraints_sha256 = "5ab0d4f1ebdeec004e3c7f9704b11d8fb159aac3c22b023802a525b1b956f9cd"
-owner_globals_sha256 = "747cddba428260088bc4c77bff8b1c8f0d4beddcd8c366ae452a5d102e836026"
-import_count = 0
-imports_sha256 = "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
-direct_consumer_count = 7
-direct_consumers_sha256 = "612a1632b1e310ec9da47d1a719c0635d0d53fc7f86091ccdc3da228e878bff9"
-autouse_reach_count = 0
-autouse_reach_sha256 = "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
-divergence_kind = ""
-divergence_evidence_sha256 = ""
-ownership_group_id = ""
-ownership_group_member_count = 1
-semantic_name_group_id = ""
-semantic_name_group_member_count = 1
-exact_body_group_id = ""
-exact_body_group_member_count = 1
-
-[[fixture]]
-id = "packaging/mcpb/tests/test_client_install.py:173:client_install_evidence"
-effective_name = "client_install_evidence"
-owner = "packaging/mcpb/tests/test_client_install.py:173:client_install_evidence"
-disposition = "retained-current-owner"
-body_sha256 = "68c028b45642237e30929d9372d06255dcd282270be05031eebc3c8f3520d2d7"
-scope = "module"
-autouse = false
-constraints_sha256 = "5ab0d4f1ebdeec004e3c7f9704b11d8fb159aac3c22b023802a525b1b956f9cd"
-owner_globals_sha256 = "ef8f21de21a845fae705a29ac0c2e2bb8c86aedc6a3aea0ead7aed77aa295093"
-import_count = 0
-imports_sha256 = "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
-direct_consumer_count = 4
-direct_consumers_sha256 = "b185c0af8671d375e206b984e1b0f2a8c99b9c5ff2753a999e67e7df95c0278f"
-autouse_reach_count = 0
-autouse_reach_sha256 = "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
-divergence_kind = ""
-divergence_evidence_sha256 = ""
-ownership_group_id = ""
-ownership_group_member_count = 1
-semantic_name_group_id = ""
-semantic_name_group_member_count = 1
 exact_body_group_id = ""
 exact_body_group_member_count = 1
 

@@ -2,7 +2,7 @@
 
 The development tooling tree ships in neither the wheel nor the sdist. By
 operator ruling the boundary is ABSOLUTE: no module under ``src/`` -- shipped
-or test, ``cadrumo`` or ``cadrumo-harness`` -- may have ANY awareness of the
+or test -- may have ANY awareness of the
 dev tree. Family 5 detects an import of ``dev.*`` (static or dynamic), Family
 6 detects a module building a path into ``dev/``, and Family 10 detects prose
 awareness -- a comment, docstring or multi-line string naming the dev tree.
@@ -61,7 +61,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC_ROOT: Final[Path] = REPO_ROOT / "src"
 _PKG_ROOT: Final[Path] = _SRC_ROOT / "cadrumo"
-_HARNESS_ROOT: Final[Path] = _SRC_ROOT / "cadrumo-harness" / "src"
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -76,11 +75,8 @@ _VACUITY_FLOOR: Final[int] = 4000
 
 
 def _live_boundary_files() -> list[Path]:
-    """Return every ``.py`` module under ``src/``, both distributions included."""
-    files = list(scan_directory(_PKG_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",)))
-    if _HARNESS_ROOT.is_dir():
-        files += scan_directory(_HARNESS_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
-    return files
+    """Return every ``.py`` module in the product package."""
+    return list(scan_directory(_PKG_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",)))
 
 
 def _assert_not_vacuous(files: list[Path]) -> None:
@@ -113,7 +109,7 @@ def _planted_files(root: Path, *rels: str) -> list[Path]:
 
 
 def test_no_src_module_imports_dev_tooling() -> None:
-    """Every module under ``src/`` -- shipped, test, harness alike -- imports nothing from dev."""
+    """Every product module, shipped or test, imports nothing from dev."""
     files = _live_boundary_files()
     _assert_not_vacuous(files)
     offenders = find_dev_tooling_import_violations(files, src_root=_SRC_ROOT)

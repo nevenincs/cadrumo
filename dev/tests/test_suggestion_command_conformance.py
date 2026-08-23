@@ -488,13 +488,6 @@ def test_action_ledger_exclusions_have_specific_non_action_contexts() -> None:
         if path == "src/cadrumo/application/operator_surface/_crud_registry.py":
             assert "static cli_path on MutatingNounGroupContract" in reason
             category = "static-crud-contract"
-        elif path == "src/cadrumo-harness/src/cadrumo_harness/mcp/_resources.py":
-            assert "_DESCRIPTIONS resource label" in reason
-            category = "mcp-resource-name"
-        elif path == "src/cadrumo-harness/src/cadrumo_harness/mcp/_tools.py":
-            assert row.key.action_identity == "aeat "
-            assert "fixed textual prefix used by _cli_form" in reason
-            category = "cli-render-prefix"
         else:
             pytest.fail(f"exclusion has no approved non-action source context: {row.key.render()}")
 
