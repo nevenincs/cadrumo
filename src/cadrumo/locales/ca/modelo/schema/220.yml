@@ -602,6 +602,145 @@ modelo:
               help: null
               label: Balanc consolidat. Actiu (pag. 3B hoja 02). Immobilitzat intangible.
                 Fons de comerc de consolidacio
+            x-agp34c1g6d1j0chq60o32dhj:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Passius financers
+                mantinguts per negociar
+            x-agp34c1g6d1j0chq60o32dhk:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Altres passius financers
+                a valor raonable amb canvis en perdues i guanys
+            x-agp34c1g6d1j0chq60o32dhl:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar
+            x-agp34c1g6d1j0chq60o32dhm:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Passius subordinats
+            x-agp34c1g6d1j0chq60o32dhn:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Diposits rebuts per reassegurament cedit
+            x-agp34c1g6d1j0chq60o32dho:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Deutes per operacions d'asseguranca
+            x-agp34c1g6d1j0chq60o32dhp:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Deutes amb assegurats
+            x-agp34c1g6d1j0chq60o32dpg:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Deutes amb mediadors
+            x-agp34c1g6d1j0chq60o32dph:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Deutes condicionats
+            x-agp34c1g6d1j0chq60o32dpi:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Deutes per operacions de reassegurament
+            x-agp34c1g6d1j0chq60o32dpj:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Deutes per operacions de coassegurament
+            x-agp34c1g6d1j0chq60o32dpk:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Obligacions i altres valors negociables
+            x-agp34c1g6d1j0chq60o32dpl:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Deutes amb entitats de credit
+            x-agp34c1g6d1j0chq60o32dpm:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Deutes per operacions preparatories de contractes d'asseguranca
+            x-agp34c1g6d1j0chq60o32dpn:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Altres deutes
+            x-agp34c1g6d1j0chq60o32dpo:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Altres deutes. Deutes amb les Administracions Publiques
+            x-agp34c1g6d1j0chq60o32dpp:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Altres deutes. Altres deutes amb entitats del grup i associades
+            x-agp34c1g6d1j0chq60o32e1g:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Altres deutes. Resta d'altres deutes
+            x-agp34c1g6d1j0chq60o32e1h:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Derivats de cobertura
+            x-agp34c1g6d1j0chq60o32e1i:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions tecniques
+            x-agp34c1g6d1j0chq60o32e1j:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions tecniques.
+                Provisio per a primes no consumides
+            x-agp34c1g6d1j0chq60o32e1k:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions tecniques.
+                Provisio per a riscos en curs
+            x-agp34c1g6d1j0chq60o32e1l:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions tecniques.
+                Provisio d'assegurances de vida
+            x-agp34c1g6d1j0chq60o32e1m:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions tecniques.
+                Provisio d'assegurances de vida. Provisio per a primes no consumides
+            x-agp34c1g6d1j0chq60o32e1n:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions tecniques.
+                Provisio d'assegurances de vida. Provisio per a riscos en curs
+            x-agp34c1g6d1j0chq60o32e1o:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions tecniques.
+                Provisio d'assegurances de vida. Provisio matematica
+            x-agp34c1g6d1j0chq60o32e1p:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions tecniques.
+                Provisio d'assegurances de vida. Provisio d'assegurances de vida quan
+                el risc de la inversio l'assumeix el prenedor
+            x-agp34c1g6d1j0chq60o32e9g:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions tecniques.
+                Provisio per a prestacions
+            x-agp34c1g6d1j0chq60o32e9h:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions tecniques.
+                Provisio per a participacio en beneficis i per a extorns
+            x-agp34c1g6d1j0chq60o32e9i:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions tecniques.
+                Altres provisions tecniques
+            x-agp34c1g6d1j0chq60o32e9j:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions no tecniques
+            x-agp34c1g6d1j0chq60o32e9k:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions no tecniques.
+                Provisions per a impostos i altres contingencies legals
+            x-agp34c1g6d1j0chq60o32e9l:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions no tecniques.
+                Provisio per a pensions i obligacions similars
+            x-agp34c1g6d1j0chq60o32e9m:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions no tecniques.
+                Provisio per a pagaments per convenis de liquidacio
+            x-agp34c1g6d1j0chq60o32e9n:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Provisions no tecniques.
+                Altres provisions no tecniques
+            x-agp34c1g6d1j0chq60o32e9o:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Passius fiscals
+            x-agp34c1g6d1j0chq60o32e9p:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Passius fiscals.
+                Passius per impost corrent
+            x-agp34c1g6d1j0chq60o34c1g:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Passius fiscals.
+                Passius per impost diferit
+            x-agp34c1g6d1j0chq60o34c1h:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Resta de passius
+            x-agp34c1g6d1j0chq60o34c1i:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Resta de passius.
+                Periodificacions
+            x-agp34c1g6d1j0chq60o34c1j:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Resta de passius.
+                Passius per asimetries comptables
+            x-agp34c1g6d1j0chq60o34c1k:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Resta de passius.
+                Comissions i altres costos d'adquisicio del reassegurament cedit
+            x-agp34c1g6d1j0chq60o34c1l:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Resta de passius.
+                Altres passius
+            x-agp34c1g6d1j0chq60o34c1m:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Passius vinculats
+                amb actius mantinguts per a la venda
+            x-agp34c1g6d1j0chq60o34c1n:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Total passiu
+            x-agp34c1g6d1j0chq60o3ec1j:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Altres deutes. Entitats associades
+            x-agp34c1g6d1j0chq60o3ec1k:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Altres deutes. Entitats multigrup
+            x-agp34c1g6d1j0chq60o3ec1l:
+              label: Balanc consolidat. Passiu (pag. 3C hoja 02). Debits i partides
+                a pagar. Altres deutes. Altres
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: Estat d'ingressos i despeses consolidats reconeguts. Total d'ingressos
