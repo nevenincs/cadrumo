@@ -62,13 +62,15 @@ def _registry_root(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def bundled_root_pointing_at() -> Iterator[Callable[[Path], None]]:
+def durability_bundled_root_pointing_at() -> Iterator[Callable[[Path], None]]:
     """Redirect the bundled registry root at a caller-chosen real tree.
 
     Rebinds inside ``_loader_cache``, which holds its own reference to
     ``bundled_path``; patching ``core.resources`` would leave the predicate
     calling the original. Both memoised roots are cleared on repoint.
     """
+    if not callable(loader_cache.bundled_path):
+        raise AssertionError("the registry bundled-path resolver must remain callable")
     real_bundled_path = loader_cache.bundled_path
     target: dict[str, Path] = {}
 
@@ -116,7 +118,7 @@ def test_a_truncated_stamp_is_refused_rather_than_parsed(tmp_path: Path) -> None
 
 def test_a_cold_read_only_install_resolves_and_writes_nothing(
     tmp_path: Path,
-    bundled_root_pointing_at: Callable[[Path], None],
+    durability_bundled_root_pointing_at: Callable[[Path], None],
 ) -> None:
     """No stamp, no write permission beside the tree: the walk still answers.
 
@@ -125,7 +127,7 @@ def test_a_cold_read_only_install_resolves_and_writes_nothing(
     where the read-only attribute below is advisory rather than enforced.
     """
     root = _registry_root(tmp_path)
-    bundled_root_pointing_at(root)
+    durability_bundled_root_pointing_at(root)
     package_dir = root.parent
     before = {path.name for path in package_dir.iterdir()}
     assert registry_identity_stamp_location(root).name not in before

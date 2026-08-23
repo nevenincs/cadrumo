@@ -35,9 +35,27 @@ def _leaf(identity: str):
     return COMMAND_GRAPH.by_schema_identity()[identity]
 
 
-def test_cross_scope_stdin_collision_refuses_before_any_read() -> None:
-    root = ProfileSecretSelection(ProfileSecretChannel.STDIN)
-    leaf = MachineSecretSelection(MachineSecretChannel.STDIN)
+@pytest.mark.parametrize(
+    ("root", "leaf"),
+    (
+        (
+            ProfileSecretSelection(ProfileSecretChannel.STDIN),
+            MachineSecretSelection(MachineSecretChannel.STDIN),
+        ),
+        (
+            ProfileSecretSelection(ProfileSecretChannel.FILE_DESCRIPTOR, descriptor=0),
+            MachineSecretSelection(MachineSecretChannel.STDIN),
+        ),
+        (
+            ProfileSecretSelection(ProfileSecretChannel.STDIN),
+            MachineSecretSelection(MachineSecretChannel.FILE_DESCRIPTOR, descriptor=0),
+        ),
+    ),
+)
+def test_cross_scope_stdin_identity_collision_refuses_before_any_read(
+    root: ProfileSecretSelection,
+    leaf: MachineSecretSelection,
+) -> None:
 
     with pytest.raises(CliRefusedBoundaryError) as caught:
         _preflight_sources(root=root, leaf=leaf)
@@ -98,16 +116,12 @@ def test_non_persistence_notice_is_delivered_on_a_post_login_refusal() -> None:
     drain_profile_authentication_notices()
     stage_profile_session_not_persisted_notice()
     rendered = render_error_payload(
-        CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.profile_secrets_unused"
-        ),
+        CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_unused"),
         as_json=True,
         command="config.profile.show",
     )
     payload = json.loads(rendered)
-    assert [notice["code"] for notice in payload["notices"]] == [
-        "config.login.session_not_persisted"
-    ]
+    assert [notice["code"] for notice in payload["notices"]] == ["config.login.session_not_persisted"]
     assert payload["error"]["code"] == "REFUSED_CLI_BOUNDARY"
     assert drain_profile_authentication_notices() == ()
 
@@ -116,9 +130,7 @@ def test_non_persistence_notice_uses_the_notice_transport_in_text_refusals() -> 
     drain_profile_authentication_notices()
     stage_profile_session_not_persisted_notice()
     rendered = render_error_payload(
-        CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.profile_secrets_unused"
-        ),
+        CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_unused"),
         as_json=False,
         command="config.profile.show",
     )

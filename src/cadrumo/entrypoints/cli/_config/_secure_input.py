@@ -17,17 +17,16 @@ collision can never slip past ``extra="forbid"`` by being resolved before
 pydantic sees the mapping. This module carries the passphrase channel for the
 per-profile custody flows, ``config login`` foremost.
 
-The descriptor channel exists because stdin is a shared, singular resource: a
-caller that must also pipe a document, or that runs a verb from a supervisor
-already owning stdin, has nowhere to put the passphrase but the environment,
-and an environment variable is inherited by every child process, survives for
-the whole process lifetime, and is readable from a crash dump or a CI log. A
-descriptor is none of those: it is passed to one process, read once, and closed.
-:func:`_read_secrets_fd` enforces the "once" half by closing the descriptor as
-soon as it has been read, including on every refusal path. A second read of a
-still-closed number then fails at the operating system and refuses as
-unreadable, rather than returning the empty payload that would otherwise be
-indistinguishable from a caller supplying an empty secret.
+The descriptor channel exists because stdin is a shared, singular resource. A
+caller that must also pipe a document, or whose supervisor already owns stdin,
+can provide a separate caller-managed descriptor. This boundary claims only a
+bounded one-shot local read and local closure; it does not govern the backing
+transport, inheritance before dispatch, or immutable decoded strings retained
+by the Python runtime. :func:`_read_secrets_fd` closes the local descriptor as
+soon as it has been read, including on every refusal path. A second read of the
+closed number then fails at the operating system and refuses as unreadable,
+rather than returning an empty payload indistinguishable from an intentionally
+empty secret.
 
 The descriptor must be inherited from the parent. POSIX callers pass one with
 ``os.pipe()`` plus ``pass_fds``. On Windows arbitrary descriptors are not
@@ -107,7 +106,8 @@ class MachineSecretSelection:
 
     def __post_init__(self) -> None:
         """Keep descriptor state impossible to misinterpret downstream."""
-        if not isinstance(self.channel, MachineSecretChannel):
+        channel = cast(object, self.channel)
+        if not isinstance(channel, MachineSecretChannel):
             raise TypeError("machine-secret selection requires a known channel")
         if self.channel is MachineSecretChannel.STDIN and self.descriptor is not None:
             raise ValueError("stdin machine-secret selection cannot carry a descriptor")
@@ -123,7 +123,8 @@ class ProfileSecretSelection:
     descriptor: int | None = None
 
     def __post_init__(self) -> None:
-        if not isinstance(self.channel, ProfileSecretChannel):
+        channel = cast(object, self.channel)
+        if not isinstance(channel, ProfileSecretChannel):
             raise TypeError("profile-secret selection requires a known channel")
         if self.channel is ProfileSecretChannel.STDIN and self.descriptor is not None:
             raise ValueError("stdin profile-secret selection cannot carry a descriptor")
@@ -387,7 +388,7 @@ def read_machine_secret_payload[SecretsModelT: MachineSecretPayload](
     selection: MachineSecretSelection,
 ) -> SecretsModelT:
     """Read and validate one previously selected bounded machine channel."""
-    if not issubclass(model, MachineSecretPayload):
+    if not issubclass(cast(type[object], model), MachineSecretPayload):
         raise TypeError("canonical machine-secret payloads must inherit MachineSecretPayload")
     staged = dict(_STAGED_MACHINE_SECRET_PAYLOADS.get() or {})
     prevalidated = staged.pop(model, None)
@@ -406,7 +407,7 @@ def read_profile_secret_payload[SecretsModelT: MachineSecretPayload](
     model: type[SecretsModelT], *, selection: ProfileSecretSelection
 ) -> SecretsModelT:
     """Read a root profile payload with canonical mechanics and distinct diagnostics."""
-    if not issubclass(model, MachineSecretPayload):
+    if not issubclass(cast(type[object], model), MachineSecretPayload):
         raise TypeError("profile-secret payloads must inherit MachineSecretPayload")
     if selection.channel is ProfileSecretChannel.STDIN:
         return _read_secrets_stdin(model, diagnostic_prefix="profile_secrets")
@@ -446,10 +447,8 @@ def _stdin_is_a_real_console() -> bool:
         import msvcrt
         from ctypes import wintypes
 
-        # TYPE-IGNORE-RATIONALE-PLATFORM-WINDOWS-CTYPES:
-        # get_osfhandle and WinDLL are Windows-only, absent from cross-platform stubs.
-        handle = msvcrt.get_osfhandle(sys.stdin.fileno())  # type: ignore[attr-defined]  # reason: TYPE-IGNORE-RATIONALE-PLATFORM-WINDOWS-CTYPES: get_osfhandle and WinDLL are Windows-only, absent from cross-platform stubs
-        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]  # reason: TYPE-IGNORE-RATIONALE-PLATFORM-WINDOWS-CTYPES, same Windows-only gate as the get_osfhandle call above
+        handle = msvcrt.get_osfhandle(sys.stdin.fileno())
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
         kernel32.GetConsoleMode.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
         kernel32.GetConsoleMode.restype = wintypes.BOOL
         mode = wintypes.DWORD()

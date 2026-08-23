@@ -23,14 +23,20 @@ from collections.abc import Sequence
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import ConfigDict, Field, field_validator, model_validator
 
 from ...application.aggregation import (
     PerModeloAggregationContributor,
     PerModeloAggregationResult,
 )
 from ...application.calculations import ObservationSourceKind, PriorDomiciliationElectionProjection
-from ...application.modelo import ModeloWorkReview, validate_modelo_work_deadline_posture
+from ...application.modelo import (
+    BlockerRef,
+    ModeloWorkProgress,
+    ModeloWorkReview,
+    ModeloWorkReviewCasilla,
+    validate_modelo_work_deadline_posture,
+)
 from ...core import (
     BindingSourceKind,
     CasillaId,
@@ -43,6 +49,7 @@ from ...core import (
 from ...core.identity import (
     BucketId,
     CalculationRevisionId,
+    ContentDigest,
     FilingRecordId,
     ProfileId,
     TransactionId,
@@ -68,12 +75,15 @@ from ...domain.calculations.registry import (
     WithholdingClaveBreakdown,
 )
 from ...domain.modelos import (
+    CalculationRevisionState,
     ExternalEvidenceKind,
     M303RectificativaMotive,
     ModeloCode,
     ModeloRecordStatus,
+    ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
 )
 from ._decimal_wire import DecimalWireText
 from ._modelo_aux_payloads import (
@@ -625,16 +635,73 @@ class WorkVerifyResult(OutputSchema):
     findings: list[FindingPayload]
 
 
+class WorkReviewRowSourceFingerprintPayload(OutputSchema):
+    """Safe row-source provenance admitted to ordinary operator review output."""
+
+    binding_id: BindingId
+    row_index: int = Field(ge=1)
+    source_kind: BindingSourceKind
+    fingerprint: ContentDigest
+
+
+class WorkReviewPayload(OutputSchema):
+    """Explicit CLI projection of review state with fingerprint-only row provenance."""
+
+    model_config = ConfigDict(**{**OutputSchema.model_config, "hide_input_in_errors": True})
+    bucket_id: BucketId
+    modelo: ModeloCode
+    filing_year: int
+    period: Period
+    registry_revision_id: RevisionId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId | None
+    lifecycle_state: CalculationRevisionState | None
+    verification_outcome: VerificationCompletenessStatus | None
+    progress: ModeloWorkProgress
+    casillas: tuple[ModeloWorkReviewCasilla, ...]
+    findings: tuple[ModeloVerificationFinding, ...]
+    blockers: tuple[BlockerRef, ...]
+    row_source_fingerprints: tuple[WorkReviewRowSourceFingerprintPayload, ...] = ()
+
+    @classmethod
+    def from_review(cls, review: ModeloWorkReview) -> WorkReviewPayload:
+        """Build the ordinary-output projection without secure identity state."""
+        return cls(
+            bucket_id=review.bucket_id,
+            modelo=review.modelo,
+            filing_year=review.filing_year,
+            period=review.period,
+            registry_revision_id=review.registry_revision_id,
+            work_unit_id=review.work_unit_id,
+            calculation_revision_id=review.calculation_revision_id,
+            lifecycle_state=review.lifecycle_state,
+            verification_outcome=review.verification_outcome,
+            progress=review.progress,
+            casillas=review.casillas,
+            findings=review.findings,
+            blockers=review.blockers,
+            row_source_fingerprints=tuple(
+                WorkReviewRowSourceFingerprintPayload(
+                    binding_id=item.binding_id,
+                    row_index=item.row_index,
+                    source_kind=item.source_kind,
+                    fingerprint=item.fingerprint,
+                )
+                for item in review.row_source_fingerprints
+            ),
+        )
+
+
 class WorkReviewResult(OutputSchema):
     """Envelope payload carrying the canonical application review record.
 
-    The CLI boundary wraps :class:`ModeloWorkReview` unchanged. Schema,
-    origins, realised values, progress, findings, and blocker references remain
-    owned by ``application.modelo`` rather than being redeclared here.
+    The CLI boundary uses an explicit safe projection so encrypted row-source
+    identities cannot enter generic JSON serialization. Operator review keeps
+    only their binding/row/source-kind/fingerprint cohort provenance.
     """
 
     operation: Literal["modelo.work.review"] = "modelo.work.review"
-    review: ModeloWorkReview
+    review: WorkReviewPayload
 
 
 class WorkDependenciesResult(OutputSchema):
@@ -1414,7 +1481,9 @@ __all__ = [
     "WorkPreviewMaritimeExemptionResult",
     "WorkRenameResult",
     "WorkResumeResult",
+    "WorkReviewPayload",
     "WorkReviewResult",
+    "WorkReviewRowSourceFingerprintPayload",
     "WorkRevisionResult",
     "WorkRevisionsResult",
     "WorkRunsResult",

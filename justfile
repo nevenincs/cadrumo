@@ -551,10 +551,10 @@ test-integration:
 # the reason `packaging-smoke-preflight-tests` states it: these directories are
 # mixed-marker, so inheriting the default `-m 'unit and ...'` would silently
 # deselect the integration contracts and still exit zero.
-[doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness subsystems).')]
+[doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, identity, locales, sanitizer, registry, docs, ingest-harness subsystems).')]
 [group('testing')]
 test-dev-tooling:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/ingest_harness/tests
 
 # Run the dev-tree workflow/tooling conformance gates that CI runs per-push
 # (workflow structural pins, evidence-transport conformance, shard-plugin
@@ -629,7 +629,7 @@ test-dev-ci:
 [doc('Run the four cross-layer conformance gates the per-push lane needs (rule-surface, status-frontend, self-referential-string, suggestion-command).')]
 [group('testing')]
 test-per-push-integration-gates:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo-harness/src/cadrumo_harness/tests/test_rule_surface_conformance.py src/cadrumo/entrypoints/cli/_config/tests/test_status_frontend_gate.py src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py dev/tests/test_suggestion_command_conformance.py
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/cli/_config/tests/test_status_frontend_gate.py src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py dev/tests/test_suggestion_command_conformance.py
 
 # Enrol the tests that query the resident vaultspec-rag search service. Held out
 # of every other lane by the `resident_service` marker, because the service is a
@@ -746,16 +746,16 @@ test-smoke:
 test-workbook-parity:
     uv run --no-sync pytest -m external_tool dev/registry/tests/test_workbook_parity.py
 
-# Run the Homebrew/Scoop/mcpb channel-artifact conformance tests. These bind
+# Run the Homebrew/Scoop channel-artifact conformance tests. These bind
 # the generated formula and manifest to a real built cohort. Explicit paths
 # and -n0, never marker selection alone: a marker-filtered xdist run holds
 # serial tests out while still reporting a clean pass. Dispatch-only
 # (ci-full.yml) rather than per-push: these tests build real sdists and
 # wheels, costing minutes the per-push budget cannot absorb.
-[doc('Run the Homebrew/Scoop/mcpb channel-artifact conformance tests (serial, builds real sdists and wheels).')]
+[doc('Run the Homebrew/Scoop channel-artifact conformance tests (serial, builds real sdists and wheels).')]
 [group('testing')]
 test-channel-artifacts:
-    @uv run --no-sync pytest -q -n0 --timeout=900 -m serial packaging/homebrew/tests packaging/scoop/tests packaging/mcpb/tests
+    @uv run --no-sync pytest -q -n0 --timeout=900 -m serial packaging/homebrew/tests packaging/scoop/tests
 
 # Run the unit test suite with coverage report and fail-under check. Quiet progress.
 [doc('Run the unit test suite with a coverage report and a fail-under check.')]
@@ -1140,13 +1140,11 @@ release:
 
 # Aggregate every distribution-evidence row from the given CI run(s)' evidence
 # drafts into var/distribution-install-readiness/ so `just release-readiness`
-# can reach 11/11. Pass the packaging-smoke run id (mints python-<os> rows +
+# can reach the complete required set. Pass the packaging-smoke run id (mints python-<os> rows +
 # the release cohort) plus any acquisition run ids (Scoop, Homebrew) - every
 # run publishes its rows as assets on a draft release tagged
 # evidence-<lane>-<run_id> (release-asset transport; Actions artifacts are
-# retired). The four real client rows (claude-*) are minted locally by
-# `python -m dev.packaging.emit_real_client_evidence ...` and already live in
-# the dest.
+# retired).
 [doc('Aggregate distribution-evidence rows from the given CI run(s) into var/distribution-install-readiness/.')]
 [group('release')]
 [unix]
@@ -1162,7 +1160,7 @@ release-collect-evidence *run_ids:
     tmp="$(mktemp -d)"
     for run_id in {{run_ids}}; do
         tag=""
-        for lane in smoke scoop homebrew claude; do
+        for lane in smoke scoop homebrew; do
             candidate="evidence-$lane-$run_id"
             if gh release view "$candidate" --json tagName >/dev/null 2>&1; then
                 tag="$candidate"
@@ -1180,7 +1178,7 @@ release-collect-evidence *run_ids:
     while IFS= read -r -d '' f; do cp "$f" "$dest/"; n=$((n + 1)); done \
         < <(find "$tmp" -name '*.json' ! -name 'evidence-manifest.json' -print0)
     rm -rf "$tmp"
-    echo "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"
+    echo "collected $n record(s) into $dest"
 
 [doc('Aggregate distribution-evidence rows from the given CI run(s) into var/distribution-install-readiness/.')]
 [group('release')]
@@ -1198,7 +1196,7 @@ release-collect-evidence *run_ids:
     $tmp = (New-Item -ItemType Directory -Path (Join-Path $env:TEMP ("collect-" + [Guid]::NewGuid().ToString("N")))).FullName
     foreach ($id in $ids) {
         $tag = $null
-        foreach ($lane in @("smoke", "scoop", "homebrew", "claude")) {
+        foreach ($lane in @("smoke", "scoop", "homebrew")) {
             $candidate = "evidence-$lane-$id"
             & gh release view $candidate --json tagName *> $null
             if ($LASTEXITCODE -eq 0) { $tag = $candidate; break }
@@ -1216,24 +1214,4 @@ release-collect-evidence *run_ids:
         Where-Object { $_.Name -ne "evidence-manifest.json" } |
         ForEach-Object { Copy-Item $_.FullName -Destination $dest -Force; $n++ }
     Remove-Item -Recurse -Force $tmp
-    Write-Host "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"
-
-# Automated Claude Desktop real-client capture (claude-desktop-mcpb /
-# claude-desktop-plugin). Provisions a clean isolated Desktop profile (auth
-# seeded from the operator's logged-in profile, one extension, isolated
-# per-run platform root), launches the real Store app as the debug-enabled
-# primary over MSIX activation, drives it via CDP, verifies the tool CALL
-# RESULT from Desktop's own MCP telemetry, and mints the evidence row.
-# MUST run from a NON-ELEVATED INTERACTIVE session; closes a running Desktop
-# only with --allow-close-running (graceful close first) and leaves it closed.
-[doc('Automated Claude Desktop real-client capture (claude-desktop-mcpb / claude-desktop-plugin).')]
-[group('release')]
-[windows]
-desktop-capture row_id release_cohort_dir acquisition_source destination_locator *extra_args:
-    @uv run --no-sync python -m dev.packaging.smoke_desktop_client \
-        --row-id {{row_id}} \
-        --release-cohort-dir {{release_cohort_dir}} \
-        --evidence-dir var/desktop-capture \
-        --acquisition-source {{acquisition_source}} \
-        --destination-locator {{destination_locator}} \
-        --run-real-capture {{extra_args}}
+    Write-Host "collected $n record(s) into $dest"
