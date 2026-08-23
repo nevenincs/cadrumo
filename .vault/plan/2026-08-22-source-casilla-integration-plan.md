@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:eb4ac6af7d171eead9a4a2ba36bc481e42c305daf13a7c32e32d4d9bc87c8c8c'
+body_hash: 'sha256:2992614205c54e6fa3d80bf081796bbb7b788faff535e671385382f5fa8f7316'
 ---
 
 # `source-casilla-integration` plan
@@ -128,7 +128,7 @@ Settle revision coverage, source facts, sign, units, activity grain, absence sem
 
 - [x] `W02.P06.S31` - ground M100 inventory increase, purchases, and decrease semantics against official AEAT and BOE sources; `.vault/research/2026-08-23-inventory-casilla-grounding-research.md`.
 - [x] `W02.P06.S32` - adjudicate the mapping from opening stock, purchase movements, and closing stock to 0177, 0181, and 0182; `.vault/adr/2026-08-23-inventory-casilla-mapping-adr.md`.
-- [ ] `W02.P06.S33` - decide revision windows, activity aggregation, sign, rounding, missing-ledger behavior, and caller override policy; `.vault/adr/2026-08-23-inventory-casilla-mapping-adr.md`.
+- [x] `W02.P06.S33` - decide revision windows, activity aggregation, sign, rounding, missing-ledger behavior, and caller override policy; `.vault/adr/2026-08-23-inventory-casilla-mapping-adr.md`.
 - [ ] `W02.P06.S34` - remove or correct the stale Anexo D casilla 0155 intent after adjudication; `src/cadrumo/domain/contribuyente/inventory/__init__.py`.
 - [ ] `W02.P06.S35` - record the adjudicated inventory disposition and re-fetchable evidence; `src/cadrumo/_data/source_connectivity/census.toml`.
 
