@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:78a8805558599554dd7cd10659c8486a2a8fc71c0b0edee910372fcb5804a66a'
+body_hash: 'sha256:0e1831356153fada7d26b1e3bb457b383103ebc8107c19b8c8bd4981a6464458'
 ---
 
 # `source-casilla-integration` plan
@@ -112,7 +112,7 @@ Close the formal review findings before any source candidate is promoted or inve
 
 - [x] `W01.P23.S156` - replace advisory destination strings with typed registry-resolvable candidate identities and fail on absent or ambiguous destinations; `src/cadrumo/application/registry/source_connectivity.py`.
 - [x] `W01.P23.S157` - verify every reviewed capability locator remains re-fetchable and corresponds to its stable capability identity; `dev/source_connectivity/check.py`.
-- [ ] `W01.P23.S158` - emit deterministic per-capability census membership and reviewed disposition evidence for aggregate coverage buckets; `dev/source_connectivity/cli.py`.
+- [x] `W01.P23.S158` - emit deterministic per-capability census membership and reviewed disposition evidence for aggregate coverage buckets; `dev/source_connectivity/cli.py`.
 - [ ] `W01.P23.S159` - make the census and ratchet modules clean on their intended static type-check surface; `dev/source_connectivity`.
 - [ ] `W01.P23.S160` - decide and implement the canonical live connected-proof gate composition; `src/cadrumo/application/registry`.
 - [ ] `W01.P23.S161` - re-review the remediated census foundation and close every recorded finding; `.vault/audit/2026-08-22-source-casilla-integration-census-code-review-audit.md`.
