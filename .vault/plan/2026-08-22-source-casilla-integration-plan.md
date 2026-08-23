@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#source-casilla-integration'
 date: '2026-08-22'
+modified: '2026-08-23'
+body_hash: 'sha256:e95b237577abe2c38265a09004d99905110019d569573ded834e45b3f85a2ab5'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -12,8 +14,6 @@ related:
   - '[[2026-08-23-amortization-casilla-mapping-adr]]'
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
-modified: '2026-08-23'
-body_hash: 'sha256:cda45d250de7835efbb25feb9f3323fd807dcbb811aa60cfaa28c5d40c7ba081'
 ---
 
 # `source-casilla-integration` plan
@@ -143,7 +143,7 @@ Add inventory to the canonical taxonomy and resolution mesh without bypassing se
 - [x] `W02.P07.S37` - define and validate the typed inventory selector contract; `src/cadrumo/domain/calculations/registry/_inventory_bindings.py`.
 - [x] `W02.P07.S38` - enroll inventory selector validation in registry binding construction; `src/cadrumo/domain/calculations/registry/_bindings.py`.
 - [x] `W02.P07.S163` - define validated complete inventory acquisition-cost facts including attributable costs, non-recoverable IVA, and evidence completeness; `src/cadrumo/domain/contribuyente/inventory`.
-- [ ] `W02.P07.S164` - propagate complete acquisition-cost facts through inventory application and operator ingress; `src/cadrumo/application/inventory; src/cadrumo/entrypoints/cli`.
+- [x] `W02.P07.S164` - propagate complete acquisition-cost facts through inventory application and operator ingress; `src/cadrumo/application/inventory; src/cadrumo/entrypoints/cli`.
 - [ ] `W02.P07.S165` - prove complete acquisition-cost fields survive the encrypted inventory repository round trip; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_roundtrip.py`.
 - [ ] `W02.P07.S166` - replace bare closing-stock authority with a provenance-bearing physical-closing observation and prior-closing continuity contract; `src/cadrumo/domain/contribuyente/inventory`.
 - [ ] `W02.P07.S167` - propagate physical-closing authority and continuity evidence through secure inventory ingress; `src/cadrumo/application/inventory; src/cadrumo/entrypoints/cli`.
