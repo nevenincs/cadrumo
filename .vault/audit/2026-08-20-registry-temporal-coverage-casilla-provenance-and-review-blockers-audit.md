@@ -5305,3 +5305,79 @@ re-accenting is owed. Recorded as known-wrong, not as acceptable.
 That asymmetry is worth stating plainly: the Spanish was repairable *because the source of
 truth was still in the repository*. The other two languages were only ever in the author's
 head, and there is nothing to check them against.
+
+## 2026-08-23 — Catalan, and a Spanish word that lived inside 473 Catalan labels
+
+### What this iteration did
+
+No new record. The diacritic repair moved from Spanish to **Catalan**: 1879 labels without
+diacritics down to **87**. Suite, run sequentially, 9 failed / 5397 passed; the one
+arriving failure is a peer's, below.
+
+### Without a donor, the discipline has to move into the table
+
+Spanish was repairable *because the design is Spanish* — the source of truth was still in
+the repository, and the pass could refuse anything the corpus did not settle. **Catalan has
+no donor at all.** Every one of the 146 accented tokens is a hand decision over an
+enumerated inventory of 859.
+
+So the checks that the corpus used to provide had to be rebuilt inside the table:
+
+- **the accent-only invariant is asserted on every table entry**, before any label is
+  touched, not just on the output. An entry can add a diacritic and can never respell a
+  word — `balanc → balanç` passes, `balanc → balancos` cannot;
+- **every entry must fire.** An entry never reached is removed. That is the third time this
+  campaign has met the same defect — stale header prose, an unused hand decision in the
+  Spanish pass, and now this — and it is worth stating as a general shape: **a claim nobody
+  can reach is a claim nobody can falsify.**
+
+The 87 labels left alone were checked token by token: all 137 distinct tokens are correct
+Catalan as written. As with Spanish, an unchanged label had to be *shown* correct, because
+"the table skipped it" and "it was already right" look identical from outside.
+
+### The gate counted keys, so it could not see the language
+
+**`hoja` is Spanish, and it had never been translated — on 473 Catalan labels.** It sat
+inside the composed record prefix, which is the largest untranslated fragment in the whole
+catalogue.
+
+Every parity and coverage check the campaign runs was green throughout: **every key
+present, every value non-null, no value equal to its Spanish counterpart.** The label read
+`Balanç consolidat. Actiu (pàg. 3A hoja 00)` — Catalan, Catalan, Catalan, Spanish, and
+nothing in the tree could tell.
+
+It was found by *enumerating the token inventory* — the same move that found the accents.
+The general lesson is sharper than either: **a non-null value in the right key is not
+evidence of the right language**, and every check the campaign had was measuring key
+presence while the defect lived in the values.
+
+### Two things that are not accents and could not be fixed as accents
+
+The **punt volat** was lost twice — to a doubled L in `Installacions`, and to a *hyphen* in
+`intel-lectual`. Neither is a diacritic, so the accent pass correctly refused both and both
+became declared substitutions. And the Catalan ordinals were `1o/2o/3o`, copied from the
+Spanish: Catalan takes `1r/2n/3r`, **not** the masculine ordinal indicator the Spanish
+repair used. One cause, two different correct answers.
+
+### The declared count earned its keep, again
+
+One substitution targeted `netes mes l'addicio` — text the accent pass had already rewritten
+to `addició`. It fired **zero** times against a declared one and refused. Written without
+the count it would have silently done nothing, and the defect would have shipped *looking*
+repaired. This is now the second distinct bug that assertion has caught in this campaign.
+
+### A peer's failure, reported not fixed
+
+`test_binding_source_kind_taxonomy` reports **`BindingSourceKind.INVENTORY` declared by no
+registry binding and absent from the deferred carve-outs** — an orphan enum member, from an
+inventory-resolver commit that landed during this iteration. Left to its owner.
+
+Also worth recording: a **parallel** run of the registry suite reported three failures that
+all pass in isolation, and mislabelled which of two same-file tests failed. The sequential
+re-run is the only list this iteration trusted.
+
+### Still owed
+
+**Hungarian: 1848 of 1897 labels carry no diacritic**, over a 1031-token inventory, with no
+donor. It needs the same hand pass, and its long-vowel pairs (`o`/`ő`, `u`/`ű`) carry
+meaning, so it is less forgiving than Catalan. Recorded as known-wrong, not acceptable.
