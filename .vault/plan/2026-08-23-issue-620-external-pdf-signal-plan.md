@@ -3,14 +3,14 @@ tags:
   - '#plan'
   - '#issue-620-external-pdf-signal'
 date: '2026-08-23'
-modified: '2026-08-23'
-body_hash: 'sha256:3639dd1d2ba70914568784b41bdd9ed3d575f7ce392bc1f13daf2957a50c5fb8'
 tier: L1
 related:
   - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-research]]'
   - '[[2026-07-26-declaracion-real-render-verification-adr]]'
   - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
+modified: '2026-08-23'
+body_hash: 'sha256:e783b377df73ffe933b961e6a67967df44e310c9069602550d71c7195c75ba87'
 ---
 
 # `issue-620-external-pdf-signal` plan
@@ -31,7 +31,7 @@ The accepted real-render verification decision requires render-dependent claims 
 - [x] `S06` - Implement typed source classification and physical-byte validation for external layout candidates; `src/cadrumo/tests/fixtures/external_layout_candidates/`.
 - [x] `S07` - Add Modelo 130 production-parser regressions for printed-box discovery and zero fabricated blank values; `src/cadrumo/adapters/inbound/declaracion/tests/test_parser_boundary_m130_external_layout.py`.
 - [x] `S08` - Add the cross-model external-layout outcome matrix with explicit unsupported and unavailable results; `src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py`.
-- [ ] `S09` - Correct Modelo 130 extraction-profile evidence claims and lock the operator advisory; `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/extraction_profiles/`.
+- [x] `S09` - Correct Modelo 130 extraction-profile evidence claims and lock the operator advisory; `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/extraction_profiles/`.
 
 ## Parallelization
 
