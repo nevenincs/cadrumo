@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 10:30+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-19 09:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -135,14 +135,13 @@ msgid "Run the version check from the checkout:"
 msgstr "Ejecuta la comprobación de versión desde la copia:"
 
 #: ../../download.md:56
+#, fuzzy
 msgid ""
 "A version number confirms the install. Then run the full workstation "
 "check and add the optional extras you want (Google export, the live AEAT "
-"browser, OFX/QFX import, the agent surface) by following [Install Cadrumo"
-"](workstation-setup.md), which covers the dependency report, platform "
-"checks, and per-extra install commands. To let an AI assistant such as "
-"Claude drive Cadrumo, continue with [Connect an agent (MCP)](how-to"
-"/connect-an-agent.md)."
+"browser, and OFX/QFX import) by following [Install Cadrumo](workstation-"
+"setup.md), which covers the dependency report, platform checks, and per-"
+"extra install commands."
 msgstr ""
 "Un número de versión confirma la instalación. Después ejecuta la "
 "comprobación completa de la estación de trabajo y añade los extras "
@@ -154,11 +153,11 @@ msgstr ""
 "maneje Cadrumo, continúa con [Conecta un agente (MCP)](how-to/connect-an-"
 "agent.md)."
 
-#: ../../download.md:64
+#: ../../download.md:62
 msgid "Install channels"
 msgstr "Canales de instalación"
 
-#: ../../download.md:66
+#: ../../download.md:64
 msgid ""
 "Each release builds and install-tests a native package per channel. Beta "
 "participants get every artifact from the release page; each channel's "
@@ -171,98 +170,70 @@ msgstr ""
 "abrirá con el lanzamiento público, y esta página muestra el comando de "
 "instalación de un canal cuando ese canal ya está activo."
 
-#: ../../download.md:78
+#: ../../download.md:76
 msgid "Platform"
 msgstr "Plataforma"
 
-#: ../../download.md:79
+#: ../../download.md:77
 msgid "Channel"
 msgstr "Canal"
 
-#: ../../download.md:80
+#: ../../download.md:78
 msgid "How you get the current beta"
 msgstr "Cómo consigues la beta actual"
 
-#: ../../download.md:81
+#: ../../download.md:79
 msgid "Any platform with Python 3.13+"
 msgstr "Cualquier plataforma con Python 3.13+"
 
-#: ../../download.md:82
+#: ../../download.md:80
 msgid "Python package"
 msgstr "Paquete de Python"
 
-#: ../../download.md:83
+#: ../../download.md:81
 msgid "Release page artifact; PyPI listing at public launch"
 msgstr ""
 "Artefacto de la página de la versión; listado en PyPI en el lanzamiento "
 "público"
 
-#: ../../download.md:84
+#: ../../download.md:82
 msgid "Windows (x86-64)"
 msgstr "Windows (x86-64)"
 
-#: ../../download.md:85
+#: ../../download.md:83
 msgid "Scoop package"
 msgstr "Paquete de Scoop"
 
-#: ../../download.md:86
+#: ../../download.md:84
 msgid "Release page artifact; Scoop bucket at public launch"
 msgstr ""
 "Artefacto de la página de la versión; bucket de Scoop en el lanzamiento "
 "público"
 
-#: ../../download.md:87
+#: ../../download.md:85
 msgid "macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "macOS (Apple silicon), Linux (x86-64 y arm64)"
 
-#: ../../download.md:88
+#: ../../download.md:86
 msgid "Homebrew formula"
 msgstr "Fórmula de Homebrew"
 
-#: ../../download.md:89
+#: ../../download.md:87
 msgid "Release page artifact; Homebrew tap at public launch"
 msgstr ""
 "Artefacto de la página de la versión; tap de Homebrew en el lanzamiento "
 "público"
 
 #: ../../download.md:90
-msgid "Claude Code, Claude Desktop, Claude Cowork"
-msgstr "Claude Code, Claude Desktop, Claude Cowork"
-
-#: ../../download.md:91
-msgid "Claude plugin"
-msgstr "Plugin de Claude"
-
-#: ../../download.md:92
-msgid "Release page artifact; neve marketplace listing at public launch"
-msgstr ""
-"Artefacto de la página de la versión; listado en el marketplace neve en "
-"el lanzamiento público"
-
-#: ../../download.md:93
-msgid "Claude Desktop"
-msgstr "Claude Desktop"
-
-#: ../../download.md:94
-msgid "Claude Desktop extension (MCPB)"
-msgstr "Extensión de Claude Desktop (MCPB)"
-
-#: ../../download.md:95
-msgid "Release page artifact; Claude Desktop extension directory at public launch"
-msgstr ""
-"Artefacto de la página de la versión; directorio de extensiones de Claude"
-" Desktop en el lanzamiento público"
-
-#: ../../download.md:98
 msgid "Per-channel install paths:"
 msgstr "Vías de instalación por canal:"
 
-#: ../../download.md:100
+#: ../../download.md:92
 #, fuzzy
 msgid "**Python package**: Any platform with Python 3.13+"
 msgstr "**Paquete de Python** — Cualquier plataforma con Python 3.13+"
 
-#: ../../download.md:102
+#: ../../download.md:94
 msgid ""
 "The PyPI listing opens at public launch; until then, install the release-"
 "page artifact attached to the latest release."
@@ -271,12 +242,12 @@ msgstr ""
 "instala el artefacto de la página de la versión adjunto a la última "
 "versión."
 
-#: ../../download.md:104
+#: ../../download.md:96
 #, fuzzy
 msgid "**Scoop package**: Windows (x86-64)"
 msgstr "**Paquete de Scoop** — Windows (x86-64)"
 
-#: ../../download.md:106
+#: ../../download.md:98
 msgid ""
 "The Scoop bucket opens at public launch; until then, install the release-"
 "page artifact attached to the latest release."
@@ -285,12 +256,12 @@ msgstr ""
 "instala el artefacto de la página de la versión adjunto a la última "
 "versión."
 
-#: ../../download.md:108
+#: ../../download.md:100
 #, fuzzy
 msgid "**Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "**Fórmula de Homebrew** — macOS (Apple silicon), Linux (x86-64 y arm64)"
 
-#: ../../download.md:110
+#: ../../download.md:102
 msgid ""
 "The Homebrew tap opens at public launch; until then, install the release-"
 "page artifact attached to the latest release."
@@ -299,35 +270,7 @@ msgstr ""
 "instala el artefacto de la página de la versión adjunto a la última "
 "versión."
 
-#: ../../download.md:112
-#, fuzzy
-msgid "**Claude plugin**: Claude Code, Claude Desktop, Claude Cowork"
-msgstr "**Plugin de Claude** — Claude Code, Claude Desktop, Claude Cowork"
-
-#: ../../download.md:114
-msgid ""
-"The neve marketplace listing opens at public launch; until then, install "
-"the release-page artifact attached to the latest release."
-msgstr ""
-"El listado en el marketplace neve se abrirá con el lanzamiento público; "
-"hasta entonces, instala el artefacto de la página de la versión adjunto a"
-" la última versión."
-
-#: ../../download.md:116
-#, fuzzy
-msgid "**Claude Desktop extension (MCPB)**: Claude Desktop"
-msgstr "**Extensión de Claude Desktop (MCPB)** — Claude Desktop"
-
-#: ../../download.md:118
-msgid ""
-"The Claude Desktop extension directory opens at public launch; until "
-"then, install the release-page artifact attached to the latest release."
-msgstr ""
-"El directorio de extensiones de Claude Desktop se abrirá con el "
-"lanzamiento público; hasta entonces, instala el artefacto de la página de"
-" la versión adjunto a la última versión."
-
-#: ../../download.md:123
+#: ../../download.md:107
 msgid ""
 "Every published artifact carries the exact bytes that passed its "
 "platform's install-and-run checks for that release, and each release's "
@@ -338,35 +281,91 @@ msgstr ""
 "versión, y las notas de cada versión en [Actualizaciones](updates.md) "
 "indican qué ha cambiado."
 
-#: ../../download.md:127
+#: ../../download.md:111
 msgid "After you install"
 msgstr "Después de instalar"
 
-#: ../../download.md:133
+#: ../../download.md:118
 msgid "Quickstart"
 msgstr "Guía rápida"
 
-#: ../../download.md:138
+#: ../../download.md:123
 msgid "Take the shortest path from an empty profile to an exported modelo file."
 msgstr ""
 "Toma el camino más corto desde un perfil vacío hasta un fichero de modelo"
 " exportado."
-
-#: ../../download.md:141
-msgid "Connect an agent (MCP)"
-msgstr "Conecta un agente (MCP)"
-
-#: ../../download.md:146
-msgid ""
-"Let an AI assistant such as Claude drive Cadrumo with you, on your "
-"machine."
-msgstr ""
-"Deja que un asistente de IA como Claude maneje Cadrumo contigo, en tu "
-"máquina."
 
 #~ msgid "macOS (Apple silicon)"
 #~ msgstr "macOS (Apple silicon)"
 
 #~ msgid "Repository checkout today; PyPI at public launch"
 #~ msgstr "Copia del repositorio hoy; PyPI en el lanzamiento público"
+
+#~ msgid "Claude Code, Claude Desktop, Claude Cowork"
+#~ msgstr "Claude Code, Claude Desktop, Claude Cowork"
+
+#~ msgid "Claude plugin"
+#~ msgstr "Plugin de Claude"
+
+#~ msgid "Release page artifact; neve marketplace listing at public launch"
+#~ msgstr ""
+#~ "Artefacto de la página de la "
+#~ "versión; listado en el marketplace neve"
+#~ " en el lanzamiento público"
+
+#~ msgid "Claude Desktop"
+#~ msgstr "Claude Desktop"
+
+#~ msgid "Claude Desktop extension (MCPB)"
+#~ msgstr "Extensión de Claude Desktop (MCPB)"
+
+#~ msgid ""
+#~ "Release page artifact; Claude Desktop "
+#~ "extension directory at public launch"
+#~ msgstr ""
+#~ "Artefacto de la página de la "
+#~ "versión; directorio de extensiones de "
+#~ "Claude Desktop en el lanzamiento público"
+
+#~ msgid "**Claude plugin**: Claude Code, Claude Desktop, Claude Cowork"
+#~ msgstr "**Plugin de Claude** — Claude Code, Claude Desktop, Claude Cowork"
+
+#~ msgid ""
+#~ "The neve marketplace listing opens at"
+#~ " public launch; until then, install "
+#~ "the release-page artifact attached to"
+#~ " the latest release."
+#~ msgstr ""
+#~ "El listado en el marketplace neve "
+#~ "se abrirá con el lanzamiento público;"
+#~ " hasta entonces, instala el artefacto "
+#~ "de la página de la versión adjunto"
+#~ " a la última versión."
+
+#~ msgid "**Claude Desktop extension (MCPB)**: Claude Desktop"
+#~ msgstr "**Extensión de Claude Desktop (MCPB)** — Claude Desktop"
+
+#~ msgid ""
+#~ "The Claude Desktop extension directory "
+#~ "opens at public launch; until then, "
+#~ "install the release-page artifact "
+#~ "attached to the latest release."
+#~ msgstr ""
+#~ "El directorio de extensiones de Claude"
+#~ " Desktop se abrirá con el lanzamiento"
+#~ " público; hasta entonces, instala el "
+#~ "artefacto de la página de la "
+#~ "versión adjunto a la última versión."
+
+#~ msgid "Connect an agent (MCP)"
+#~ msgstr "Conecta un agente (MCP)"
+
+#~ msgid ""
+#~ "Let an AI assistant such as Claude"
+#~ " drive Cadrumo with you, on your "
+#~ "machine."
+#~ msgstr ""
+#~ "Deja que un asistente de IA como"
+#~ " Claude maneje Cadrumo contigo, en tu"
+#~ " máquina."
 

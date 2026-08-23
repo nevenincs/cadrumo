@@ -315,8 +315,6 @@ cli:
           sem felelt meg nekik: {columns}'
         invoice_class_help: A számla osztálya. A rectificativa emellett a --rectifies-invoice-number
           megadását is megköveteli, amely a javított számlát nevezi meg.
-        invoice_date_help: A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN),
-          pl. 2026-01-15.
         invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
         iva_category_help: Az ügylet áfakezelése. Szükséges ahhoz, hogy egy renta-számítás
           megalapozhassa.
@@ -460,7 +458,6 @@ cli:
         list_help: Mentett expediente pillanatképek listázása.
         pull_help: Letölti az AEAT nyilatkozat-nyilvántartást és bucket-szintű pillanatképet
           ment.
-        pull_modelo_help: Korlátozza ezt a letöltést erre a modellre.
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: Expediente pillanatkép megjelenítése.
       filed:
@@ -2774,25 +2771,18 @@ cli:
         a kategóriához használati aránynak kell tartoznia.
       value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
     allocate:
-      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       business_pct_help: Üzleti célú arány 0 és 1 között MIXED/arányos sorokhoz; teljesen
         BUSINESS sorhoz ne használja a ledger allocate parancsot.
-      category_help: Levonható költség kategóriaidentifikátora (csak kiadásoknál;
-        bevételekhez nem szükséges).
       help: Üzleti/magáncélú arányosság rögzítése egy főkönyvi tranzakcióhoz.
       id_help: A kiosztandó főkönyvi tranzakció azonosítója.
       prorrata_reference_help: IVA prorrata hivatkozás ÁFA-munkafolyamatokhoz.
-      usage_ratio_help: Arányos üzleti használathoz már beállított használatiarány-azonosító;
-        a kategóriához használati aránynak kell tartoznia.
     app_help: Könyvelési főkönyvek és ÁFA-nyilvántartások kezelése.
     archive:
-      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       help: Egyetlen főkönyvi tranzakció archiválása az aktív profilban.
       id_help: Az archiválandó főkönyvi tranzakció azonosítója.
       reason_help: Az életciklus-előzményekben rögzített ok.
       yes_help: A főkönyvi tranzakció archiválásának megerősítése.
     attach:
-      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       attachment_help: A tranzakcióhoz csatolandó biztonságos melléklet azonosítója;
         több melléklet esetén ismételje meg.
       finalized_revision_stale: A bizonylat bekerült a főkönyvi sorba, de a(z) %{modelo}
@@ -2837,7 +2827,6 @@ cli:
         felülettel egyezően.'
       year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
     classify:
-      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       apply_help: 'Az LLM javaslatát llm: eredettel menti, nem csak előnézetet készít.'
       auto_split_help: Beolvassa a csatolt számlát, és ha többkomponensű, soronkénti
         alap/áfa gyermekekre bontja; egyébként helyben osztályozza (a --read-evidence
@@ -2857,8 +2846,6 @@ cli:
         vonatkozik. Egy BUSINESS vagy PERSONAL sor teljes egészében üzleti vagy magáncélú;
         hagyja el a --business-pct értéket, vagy adja meg a --classification MIXED
         értéket.
-      category_help: Levonható költség kategóriaidentifikátora (csak kiadásoknál;
-        bevételekhez nem szükséges).
       classification_help: A tranzakció üzleti besorolási állapota.
       classification_required: A --classification megadása kötelező, ha a --file nincs
         megadva.
@@ -3007,20 +2994,17 @@ cli:
       unknown_provider: 'Ismeretlen importálási --provider {provider!r}. Elismert
         szolgáltatók: {providers}.'
     exclude:
-      actor_help: Operátor címke.
       help: Egy átnézett főkönyvi tranzakciót szándékosan kizártként jelöl a bevallásból.
       id_help: Főkönyvi tranzakció azonosítója.
       reason_help: Opcionális megjegyzés arról, miért van kizárva a sor.
       yes_help: Erősítse meg az átnézett-kizárt döntést.
     export:
-      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       format_help: Exportálási sorosítási formátum.
       help: Kanonikus főkönyvsorok exportálása az aktív profilból.
       include_inactive_help: Archivált és elrejtett főkönyvi tranzakciók bevonása.
       output_help: Az exportált főkönyvfájl mentési útvonala.
       period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
         01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
-      year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
     history:
       help: Egyetlen főkönyvi tranzakcióazonosító kronológiai bucket-eseménylánca.
       id_help: A megvizsgálandó főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális
@@ -3043,13 +3027,10 @@ cli:
       no_rows_imported: 'Nem importáltak bejegyzéseket: a fájl sikeresen elemzett,
         de nem tartalmazott adatsorokat. A banki CSV-nek fejlécsorral kell rendelkeznie
         (dátum, összeg, leírás oszlopokkal), amelyet legalább egy adatsor követ.'
-      period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
-        01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
       provider_help: 'Kivonatformátum-szolgáltató. Elismert értékek: {providers}'
       verbose_help: Részletes információ megjelenítése importálás közben.
       verify_help: Bejegyzések ellenőrzése importálás után.
       verify_source_help: Az importált sorok ellenőrzésére használt eredeti fájl.
-      year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
     labels:
       active: Aktív
       amount: Összeg
@@ -3184,8 +3165,6 @@ cli:
       help: Hiányzó főkönyvi adatok (kategória, adóköteles alap, IVA-összeg/kulcs,
         pénznem, arányossági hivatkozás) jelentése az aktív profil tranzakcióira egy
         adott időszakra. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
-      period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
-        01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
       year_help: Bevallási év (pl. 2024).
     pull_folder:
       errors:
@@ -3207,7 +3186,6 @@ cli:
         files_refused: Ebben a mappában %{refused_count} fájlt nem sikerült letölteni
           a drive.file hatókörben; töltsd le őket kézzel, és csatold őket.
     remove:
-      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       dry_run_help: Az eltávolítás hatásainak jelentése a főkönyvi tranzakció törlése
         nélkül.
       help: Egyetlen főkönyvi tranzakció eltávolítása az aktív profilból.
@@ -3215,16 +3193,13 @@ cli:
       reason_help: Az eltávolítási előzményekben rögzített ok.
       yes_help: A főkönyvi tranzakció törlésének megerősítése.
     reset:
-      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       dry_run_help: A reset hatásainak jelentése a főkönyvi katalógus törlése nélkül.
       help: Az aktív profil főkönyvi katalógusának alaphelyzetbe állítása.
       reason_help: A reset-előzményekben rögzített ok.
       yes_help: Az aktív főkönyvi katalógus törlésének megerősítése.
     restore:
-      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek
       help: Egy elrejtett vagy archivált főkönyvi tranzakció visszaállítása aktívra
       id_help: Az aktívra visszaállítandó főkönyvi tranzakció azonosítója
-      reason_help: Az életciklus-előzményekben rögzített ok
       yes_help: A főkönyvi tranzakció aktívra állításának megerősítése
     review:
       filter_help: Sorok szűrése status, period (egyszerű AEAT token, pl. period=1T)
@@ -3261,25 +3236,15 @@ cli:
       llm_help: Javasolj bizonyíték-alapú N-részes felosztást a megadott LLM szolgáltatóval.
       read_evidence_help: Olvasd be a tranzakcióhoz csatolt számlát helyben, és add
         át a --llm felosztásjavaslónak.
-      reason_help: A bucket-esemény adatcsomagjában és az életciklus-előzményekben
-        rögzített ok.
-      vision_model_help: Felülírja a helyi Ollama látómodellt egy beszkennelt vagy
-        képi számla olvasásához (pl. qwen2.5vl:7b); alapértelmezetten a beállított
-        modellt használja.
       yes_help: A felosztás megerősítése (a szülőt SPLIT állapotba viszi és megőriz
         N gyermek tranzakciót).
     stash:
-      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       help: Egyetlen főkönyvi tranzakció elrejtése az aktív profilban.
       id_help: Az elrejtendő főkönyvi tranzakció azonosítója.
-      reason_help: Az életciklus-előzményekben rögzített ok.
       yes_help: A főkönyvi tranzakció elrejtésének megerősítése.
     status:
       help: A főkönyv állapotának és számítási készültségének összefoglalása az aktív
         profilban.
-      period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
-        01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
-      year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
     track:
       help: Egyetlen főkönyvi tranzakció eseményleszármazásának megjelenítése.
       transaction_id_help: A vizsgálandó főkönyvi tranzakció azonosítója.

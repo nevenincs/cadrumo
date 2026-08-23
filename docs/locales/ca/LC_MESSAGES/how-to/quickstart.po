@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 10:30+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -19,25 +19,27 @@ msgstr ""
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../how-to/quickstart.md:1
-msgid "Quickstart: produce a modelo file"
+#, fuzzy
+msgid "Quickstart: prepare a modelo filing"
 msgstr "Guia ràpida: produeix un fitxer de modelo"
 
 #: ../../how-to/quickstart.md:3
+#, fuzzy
 msgid ""
 "Use this when you are new to Cadrumo and want the shortest path from "
-"local records to a file you can upload yourself through the Agencia "
-"Estatal de Administración Tributaria (AEAT) portal."
+"local records to figures you can present yourself at the Agencia Estatal "
+"de Administración Tributaria (AEAT) portal."
 msgstr ""
 "Fes servir això quan ets nou a Cadrumo i vols el camí més curt dels "
 "registres locals fins a un fitxer que puguis pujar tu mateix pel portal "
 "de l'Agencia Estatal de Administración Tributaria (AEAT)."
 
 #: ../../how-to/quickstart.md:7
+#, fuzzy
 msgid ""
-"Cadrumo, invoked as the `aeat` command, prepares, checks, and exports "
-"local files for Spanish tax forms. It does not submit filings to AEAT. "
-"You remain responsible for reviewing and filing through official AEAT "
-"channels."
+"Cadrumo, invoked as the `aeat` command, prepares and checks local records"
+" for Spanish tax forms. It does not submit filings to AEAT. You remain "
+"responsible for reviewing and filing through official AEAT channels."
 msgstr ""
 "Cadrumo, invocat com a ordre `aeat`, prepara, comprova i exporta fitxers "
 "locals per als formularis tributaris espanyols. No presenta cap "
@@ -45,11 +47,12 @@ msgstr ""
 "pels canals oficials de l'AEAT."
 
 #: ../../how-to/quickstart.md:11
+#, fuzzy
 msgid ""
 "This page follows one complete path: create a profile, add two "
-"transactions, then calculate, verify, and export a Modelo 130 for the "
-"first quarter of 2026. Every command below is run in order. It links to "
-"deeper guides whenever a step has tax-specific setup or review choices."
+"transactions, then calculate, verify, and file a Modelo 130 for the first"
+" quarter of 2026. Every command below is run in order. It links to deeper"
+" guides whenever a step has tax-specific setup or review choices."
 msgstr ""
 "Aquesta pàgina segueix un camí complet: crea un perfil, afegeix dues "
 "transaccions i, tot seguit, calcula, verifica i exporta un Modelo 130 per"
@@ -88,11 +91,11 @@ msgstr ""
 "configuració completa, incloses la baixada del paquet i les integracions "
 "opcionals."
 
-#: ../../how-to/quickstart.md:33
+#: ../../how-to/quickstart.md:32
 msgid "The master-key passphrase"
 msgstr "La contrasenya de clau mestra"
 
-#: ../../how-to/quickstart.md:35
+#: ../../how-to/quickstart.md:34
 msgid ""
 "`aeat` encrypts your local data with a master key derived from a "
 "passphrase. The first command that touches the store asks for the "
@@ -106,7 +109,7 @@ msgstr ""
 "desateses, consulta [Executa sense demanar la contrasenya](protect-data-"
 "access.md#run-without-a-passphrase-prompt)."
 
-#: ../../how-to/quickstart.md:40
+#: ../../how-to/quickstart.md:39
 msgid ""
 "The CLI emits its help and messages in Spanish. The English text on this "
 "page describes what each step does."
@@ -114,11 +117,11 @@ msgstr ""
 "La CLI mostra l'ajuda i els missatges en castellà. El text d'aquesta "
 "pàgina descriu què fa cada pas."
 
-#: ../../how-to/quickstart.md:43
+#: ../../how-to/quickstart.md:42
 msgid "1. Create your taxpayer profile"
 msgstr "1. Crea el teu perfil de contribuent"
 
-#: ../../how-to/quickstart.md:45
+#: ../../how-to/quickstart.md:44
 msgid ""
 "A profile is your personal taxpayer record inside the tool. Create it "
 "with your own details:"
@@ -126,12 +129,13 @@ msgstr ""
 "Un perfil és el teu registre personal de contribuent dins de l'eina. "
 "Crea'l amb les teves pròpies dades:"
 
-#: ../../how-to/quickstart.md:52
+#: ../../how-to/quickstart.md:51
+#, fuzzy
 msgid ""
-"The name and surnames are required (the export step refuses without "
-"them), and the activity start date scopes out prior periods so a first "
-"filing has no earlier quarter to depend on. `--quiet` runs without the "
-"interactive setup wizard."
+"The name and surnames are required (filing refuses without them), and the"
+" activity start date scopes out prior periods so a first filing has no "
+"earlier quarter to depend on. `--quiet` runs without the interactive "
+"setup wizard."
 msgstr ""
 "El nom i els cognoms són obligatoris (el pas d'exportació es nega sense "
 "ells), i la data d'inici d'activitat deixa fora d'abast els períodes "
@@ -139,11 +143,11 @@ msgstr ""
 " de què dependre. `--quiet` s'executa sense l'assistent de configuració "
 "interactiu."
 
-#: ../../how-to/quickstart.md:57
+#: ../../how-to/quickstart.md:56
 msgid "Confirm the active profile is configured and ready:"
 msgstr "Confirma que el perfil actiu està configurat i a punt:"
 
-#: ../../how-to/quickstart.md:63
+#: ../../how-to/quickstart.md:62
 msgid ""
 "Profile setup can ask many more tax questions. Use [Set up your taxpayer "
 "profile](profile-setup.md) to choose the right answers, see every profile"
@@ -155,11 +159,11 @@ msgstr ""
 "triar les respostes correctes, veure cada grup de preguntes del perfil, "
 "llistar o canviar de perfil i exportar o importar un perfil existent."
 
-#: ../../how-to/quickstart.md:68
+#: ../../how-to/quickstart.md:67
 msgid "2. Add your transactions"
 msgstr "2. Afegeix les teves transaccions"
 
-#: ../../how-to/quickstart.md:70
+#: ../../how-to/quickstart.md:69
 msgid ""
 "The tax calculation uses the income and expense records in your ledger. "
 "There are two ways to add them."
@@ -167,7 +171,7 @@ msgstr ""
 "El càlcul tributari utilitza els registres d'ingressos i despeses del teu"
 " ledger. Hi ha dues maneres d'afegir-los."
 
-#: ../../how-to/quickstart.md:73
+#: ../../how-to/quickstart.md:72
 msgid ""
 "The simplest is to add each row directly with its tax fields. `--amount` "
 "is the gross total (taxable base plus IVA); an expense row also needs a "
@@ -180,11 +184,11 @@ msgstr ""
 "despesa reconegudes. La `--idempotency-key` de cada fila fa que sigui "
 "segur tornar-la a executar sense afegir un duplicat:"
 
-#: ../../how-to/quickstart.md:82
+#: ../../how-to/quickstart.md:81
 msgid "List the recognised expense categories any time:"
 msgstr "Llista les categories de despesa reconegudes en qualsevol moment:"
 
-#: ../../how-to/quickstart.md:88
+#: ../../how-to/quickstart.md:87
 msgid ""
 "If you instead have a bank export, import it. `aeat` reads a semicolon-"
 "delimited CSV with comma decimals and a negative `Importe` for money "
@@ -194,7 +198,7 @@ msgstr ""
 "CSV delimitat per punt i coma amb decimals per coma i un `Importe` "
 "negatiu per als diners que surten del compte:"
 
-#: ../../how-to/quickstart.md:97
+#: ../../how-to/quickstart.md:96
 msgid ""
 "Preview the import, then run it for real (shown as a display-only "
 "example, since running it here would duplicate the two rows added above):"
@@ -203,7 +207,7 @@ msgstr ""
 "com a exemple només il·lustratiu, ja que executar-la aquí duplicaria les "
 "dues files afegides més amunt):"
 
-#: ../../how-to/quickstart.md:103
+#: ../../how-to/quickstart.md:102
 msgid ""
 "Imported rows arrive without a tax category and must be classified before"
 " they count in a calculation (see the next step). The `ledger add` rows "
@@ -214,7 +218,7 @@ msgstr ""
 " files de `ledger add` de més amunt ja estan classificades, de manera que"
 " pots saltar directament al pas 4."
 
-#: ../../how-to/quickstart.md:107
+#: ../../how-to/quickstart.md:106
 msgid ""
 "Use [Import and manage transactions](import-bank-statements.md) for the "
 "full transaction workflow: import, add, update, remove, review, classify,"
@@ -225,11 +229,11 @@ msgstr ""
 "actualitza, elimina, revisa, classifica, distribueix i executa "
 "comprovacions de preparació."
 
-#: ../../how-to/quickstart.md:111
+#: ../../how-to/quickstart.md:110
 msgid "3. Classify imported transactions"
 msgstr "3. Classifica les transaccions importades"
 
-#: ../../how-to/quickstart.md:113
+#: ../../how-to/quickstart.md:112
 msgid ""
 "Each imported transaction has no tax category until you classify it. "
 "Classification tells `aeat` whether a row is a business expense, personal"
@@ -242,13 +246,13 @@ msgstr ""
 "de transacció de la sortida de la fila i, tot seguit, classifica-la i "
 "comprova que el trimestre estigui a punt:"
 
-#: ../../how-to/quickstart.md:122
+#: ../../how-to/quickstart.md:121
 msgid "`preflight` reports whether the quarter's rows are ready to calculate."
 msgstr ""
 "`preflight` informa de si les files del trimestre estan a punt per "
 "calcular."
 
-#: ../../how-to/quickstart.md:124
+#: ../../how-to/quickstart.md:123
 msgid ""
 "Use [Classify transactions](classify-transactions.md) for the detailed "
 "review path, including manual classification, bulk CSV classification, "
@@ -259,11 +263,11 @@ msgstr ""
 "classificació CSV massiva, la distribució d'ús mixt, els camps tributaris"
 " i els suggeriments opcionals de l'LLM."
 
-#: ../../how-to/quickstart.md:128
+#: ../../how-to/quickstart.md:127
 msgid "4. Create, calculate, and verify the draft"
 msgstr "4. Crea, calcula i verifica l'esborrany"
 
-#: ../../how-to/quickstart.md:130
+#: ../../how-to/quickstart.md:129
 msgid ""
 "With the profile and a classified ledger in place, prepare the Modelo 130"
 " draft for the first quarter of 2026, calculate it, and verify it. A "
@@ -275,11 +279,11 @@ msgstr ""
 "modelo és un formulari tributari espanyol, i l'any més el període "
 "identifiquen la presentació que estàs preparant."
 
-#: ../../how-to/quickstart.md:139
+#: ../../how-to/quickstart.md:138
 msgid "Read the frames in order:"
 msgstr "Llegeix els marcs en ordre:"
 
-#: ../../how-to/quickstart.md:141
+#: ../../how-to/quickstart.md:140
 msgid ""
 "Create the draft. The command creates your filing workspace for that form"
 " if one does not exist yet; running it again returns the existing "
@@ -293,7 +297,7 @@ msgstr ""
 "trimestre (primer trimestre). Altres codis de període són `2T`, `3T`, "
 "`4T` per als trimestres següents i `0A` per a una presentació anual."
 
-#: ../../how-to/quickstart.md:145
+#: ../../how-to/quickstart.md:144
 msgid ""
 "Calculate the values. Modelo 130 needs three prior-period figures; for a "
 "first filing they are all zero, passed as bindings so the calculation has"
@@ -310,14 +314,15 @@ msgstr ""
 "dels teus ingressos), la casilla `03` el rendiment net (`500.00`) i la "
 "casilla `04` el pagament fraccionat (`100.00`, el vint per cent del net)."
 
-#: ../../how-to/quickstart.md:151
+#: ../../how-to/quickstart.md:150
+#, fuzzy
 msgid ""
 "Verify the draft. Verification is a local check. It does not send "
 "anything to AEAT. When the draft is complete the report reads "
 "`completeness_status complete` and `granted_verificado_completo true`. A "
 "first filing also shows one advisory noting that the period falls before "
-"your activity start date; this is informational and does not block the "
-"export."
+"your activity start date; this is informational and does not block "
+"filing."
 msgstr ""
 "Verifica l'esborrany. La verificació és una comprovació local. No envia "
 "res a l'AEAT. Quan l'esborrany és complet, l'informe diu "
@@ -326,11 +331,11 @@ msgstr ""
 "període cau abans de la teva data d'inici d'activitat; això és informatiu"
 " i no bloqueja l'exportació."
 
-#: ../../how-to/quickstart.md:157
+#: ../../how-to/quickstart.md:156
 msgid "Review every saved box with:"
 msgstr "Revisa cada casilla desada amb:"
 
-#: ../../how-to/quickstart.md:163
+#: ../../how-to/quickstart.md:162
 msgid ""
 "If a value is missing or a modelo needs a value you must enter by hand, "
 "see [Review and supply calculation inputs](review-calculation-values.md)."
@@ -345,35 +350,41 @@ msgstr ""
 "saber com organitza l'eina la feina de presentació entre bastidors, "
 "consulta [El flux de treball de presentació](filing-spine.md)."
 
-#: ../../how-to/quickstart.md:169
-msgid "5. Export the file"
+#: ../../how-to/quickstart.md:168
+#, fuzzy
+msgid "5. Record the quarter as filed"
 msgstr "5. Exporta el fitxer"
 
-#: ../../how-to/quickstart.md:171
-msgid "Export creates the `.boe` file, the format AEAT's upload portal accepts:"
+#: ../../how-to/quickstart.md:170
+msgid ""
+"Modelo 130 has no fichero-BOE layout, so export refuses. Record the "
+"quarter as filed locally instead:"
 msgstr ""
-"L'exportació crea el fitxer `.boe`, el format que accepta el portal de "
-"pujada de l'AEAT:"
 
 #: ../../how-to/quickstart.md:177
 msgid ""
-"The tool shows where the file was saved, its size in bytes, and a "
-"`file_sha256` verification code. Keep this code so you can later confirm "
-"you uploaded the exact file that was generated."
+"The refusal is deliberate. A fichero-BOE layout is published only once "
+"every field it contains can be produced from checked values, because a "
+"partial layout can under-declare without saying so. Calculation, "
+"verification and the local filing record all still work; only the upload "
+"file is unavailable."
 msgstr ""
-"L'eina mostra on s'ha desat el fitxer, la seva mida en bytes i un codi de"
-" verificació `file_sha256`. Conserva aquest codi perquè després puguis "
-"confirmar que has pujat exactament el fitxer que es va generar."
 
-#: ../../how-to/quickstart.md:181
+#: ../../how-to/quickstart.md:182
+msgid ""
+"Enter the calculated box values yourself at the AEAT portal, as step 7 "
+"describes."
+msgstr ""
+
+#: ../../how-to/quickstart.md:185
 msgid ""
 "This example uses a deductible-IVA expense, so it links the purchase "
-"invoice before calculating. Export refuses a deducted IVA row that "
+"invoice before calculating. Verification refuses a deducted IVA row that "
 "carries no invoice (the message reads `Deductible IVA ledger rows require"
 " linked purchase invoice evidence`)."
 msgstr ""
 
-#: ../../how-to/quickstart.md:186
+#: ../../how-to/quickstart.md:190
 msgid ""
 "Link the invoice while you record the expense, before you calculate. A "
 "draft bundles its evidence when you verify it, so an invoice attached "
@@ -382,11 +393,11 @@ msgid ""
 "filing](modelo-303.md) walk through the evidence workflow end to end."
 msgstr ""
 
-#: ../../how-to/quickstart.md:192
+#: ../../how-to/quickstart.md:196
 msgid "6. Check what else is due (optional)"
 msgstr "6. Comprova què més venç (opcional)"
 
-#: ../../how-to/quickstart.md:194
+#: ../../how-to/quickstart.md:198
 msgid ""
 "Use the local calendar to see what may be due for the active profile. On "
 "a fresh profile, pass `--allow-incomplete` so the agenda runs before "
@@ -396,7 +407,7 @@ msgstr ""
 "actiu. En un perfil nou, passa `--allow-incomplete` perquè l'agenda "
 "s'executi abans que s'omplin totes les dades del perfil:"
 
-#: ../../how-to/quickstart.md:202
+#: ../../how-to/quickstart.md:206
 msgid ""
 "The calendar uses profile facts and local filing context. It does not "
 "replace AEAT's official portal. For the full calendar flow, see [Plan "
@@ -407,62 +418,65 @@ msgstr ""
 "del calendari, consulta [Planifica el teu calendari de presentacions"
 "](filing-calendar.md)."
 
-#: ../../how-to/quickstart.md:206
+#: ../../how-to/quickstart.md:210
 msgid "7. File manually through AEAT"
 msgstr "7. Presenta manualment a través de l'AEAT"
 
-#: ../../how-to/quickstart.md:208
+#: ../../how-to/quickstart.md:212
 msgid "The final filing step is outside `aeat`:"
 msgstr "El pas final de presentació és fora d'`aeat`:"
 
-#: ../../how-to/quickstart.md:210
+#: ../../how-to/quickstart.md:214
 msgid "Log in to the official AEAT electronic filing portal."
 msgstr "Inicia sessió al portal oficial de presentació electrònica de l'AEAT."
 
-#: ../../how-to/quickstart.md:211
-msgid "Choose the Modelo 130 file-upload path for the relevant year and period."
+#: ../../how-to/quickstart.md:215
+#, fuzzy
+msgid "Open the Modelo 130 form for the relevant year and period."
 msgstr ""
 "Tria el camí de pujada de fitxer del Modelo 130 per a l'any i el període "
 "corresponents."
 
-#: ../../how-to/quickstart.md:212
-msgid "Upload the exported `.boe` file."
-msgstr "Puja el fitxer `.boe` exportat."
+#: ../../how-to/quickstart.md:216
+msgid ""
+"Enter the box values the calculation produced. The command card below "
+"reads them back before it records the local filing marker."
+msgstr ""
 
-#: ../../how-to/quickstart.md:213
+#: ../../how-to/quickstart.md:218
 msgid "Review, sign, and keep the justificante AEAT issues after filing."
 msgstr ""
 "Revisa, signa i conserva el justificante que l'AEAT emet després de "
 "presentar."
 
-#: ../../how-to/quickstart.md:215
+#: ../../how-to/quickstart.md:220
+#, fuzzy
 msgid ""
-"The full handoff checklist, including what to do when the upload goes "
-"wrong, is in [File your modelo at the AEAT portal](file-at-"
-"aeat.md)."
+"The full handoff checklist is in [File your modelo at the AEAT portal"
+"](file-at-aeat.md)."
 msgstr ""
 "La llista de comprovació completa del traspàs, inclòs què fer quan la "
 "pujada va malament, és a [Puja el teu modelo exportat al portal de l'AEAT"
 "](file-at-aeat.md)."
 
-#: ../../how-to/quickstart.md:218
+#: ../../how-to/quickstart.md:223
 msgid "After a real filing, record the local filing marker:"
 msgstr "Després d'una presentació real, registra el marcador de presentació local:"
 
-#: ../../how-to/quickstart.md:224
+#: ../../how-to/quickstart.md:229
 #, fuzzy
 msgid ""
-"Like export, `work file` refuses a deducted IVA row whose invoice is not "
-"linked (`Deductible IVA ledger rows require linked purchase invoice "
-"evidence`). The draft exported above already carries its invoice, so the "
-"marker records."
+"`work file` refuses a deducted IVA row whose invoice is not linked "
+"(`Deductible IVA ledger rows require linked purchase invoice evidence`). "
+"The draft verified above already carries its invoice, so the marker "
+"records."
 msgstr ""
 "Com l'exportació, `work file` necessita primer que la factura de la "
 "despesa amb IVA deduïble estigui vinculada com a evidència (es nega amb "
 "`Deductible IVA ledger rows require linked purchase invoice evidence`). "
 "Adjunta la factura i, tot seguit, registra el marcador."
 
-#: ../../how-to/quickstart.md:228
+#: ../../how-to/quickstart.md:233
 msgid ""
 "This only records the action on your own computer. It does not contact "
 "AEAT. To compare your local record with the AEAT receipt, see [How to "
@@ -473,11 +487,11 @@ msgstr ""
 "consulta [Com conciliar un modelo presentat contra el seu "
 "justificante](reconcile.md)."
 
-#: ../../how-to/quickstart.md:232
+#: ../../how-to/quickstart.md:237
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/quickstart.md:234
+#: ../../how-to/quickstart.md:239
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) if profile facts are "
 "still incomplete."
@@ -485,7 +499,7 @@ msgstr ""
 "[Configura el teu perfil de contribuent](profile-setup.md) si les dades "
 "del perfil encara són incompletes."
 
-#: ../../how-to/quickstart.md:236
+#: ../../how-to/quickstart.md:241
 msgid ""
 "[Import and manage transactions](import-bank-statements.md) when your "
 "ledger is not ready yet."
@@ -493,7 +507,7 @@ msgstr ""
 "[Importa i gestiona transaccions](import-bank-statements.md) quan el teu "
 "ledger encara no està a punt."
 
-#: ../../how-to/quickstart.md:238
+#: ../../how-to/quickstart.md:243
 msgid ""
 "[Classify transactions](classify-transactions.md) before calculating from"
 " imported rows."
@@ -501,7 +515,7 @@ msgstr ""
 "[Classifica transaccions](classify-transactions.md) abans de calcular a "
 "partir de files importades."
 
-#: ../../how-to/quickstart.md:240
+#: ../../how-to/quickstart.md:245
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md) - understand the transaction-to-box pipeline."
@@ -510,7 +524,7 @@ msgstr ""
 "tributàries](../explanation/from-records-to-figures.md) - entén el flux "
 "de transacció a casilla."
 
-#: ../../how-to/quickstart.md:241
+#: ../../how-to/quickstart.md:246
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) when"
 " a modelo needs manual values, offsets, or binding review."
@@ -518,7 +532,7 @@ msgstr ""
 "[Revisa i aporta entrades de càlcul](review-calculation-values.md) quan "
 "un modelo necessita valors manuals, desplaçaments o revisió de bindings."
 
-#: ../../how-to/quickstart.md:243
+#: ../../how-to/quickstart.md:248
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) if a command "
 "stops or the local state looks wrong."
@@ -553,3 +567,41 @@ msgstr ""
 #~ "presentació d'IVA amb el Modelo "
 #~ "303](modelo-303.md) recorren el flux de "
 #~ "treball d'evidència de punta a punta."
+
+#~ msgid ""
+#~ "Export creates the `.boe` file, the "
+#~ "format AEAT's upload portal accepts:"
+#~ msgstr ""
+#~ "L'exportació crea el fitxer `.boe`, el"
+#~ " format que accepta el portal de "
+#~ "pujada de l'AEAT:"
+
+#~ msgid ""
+#~ "The tool shows where the file was"
+#~ " saved, its size in bytes, and "
+#~ "a `file_sha256` verification code. Keep "
+#~ "this code so you can later confirm"
+#~ " you uploaded the exact file that "
+#~ "was generated."
+#~ msgstr ""
+#~ "L'eina mostra on s'ha desat el "
+#~ "fitxer, la seva mida en bytes i"
+#~ " un codi de verificació `file_sha256`. "
+#~ "Conserva aquest codi perquè després "
+#~ "puguis confirmar que has pujat "
+#~ "exactament el fitxer que es va "
+#~ "generar."
+
+#~ msgid ""
+#~ "This example uses a deductible-IVA "
+#~ "expense, so it links the purchase "
+#~ "invoice before calculating. Export refuses "
+#~ "a deducted IVA row that carries no"
+#~ " invoice (the message reads `Deductible "
+#~ "IVA ledger rows require linked purchase"
+#~ " invoice evidence`)."
+#~ msgstr ""
+
+#~ msgid "Upload the exported `.boe` file."
+#~ msgstr "Puja el fitxer `.boe` exportat."
+

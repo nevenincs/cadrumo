@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 10:30+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -122,7 +122,15 @@ msgstr ""
 "[Tranzakciók importálása és kezelése](import-bank-statements.md) és "
 "[Tranzakciók osztályozása](classify-transactions.md); erősítse meg ezzel:"
 
-#: ../../how-to/modelo-100.md:42
+#: ../../how-to/modelo-100.md:43
+msgid ""
+"The transaction ledger is not the stock-inventory register. If your "
+"activity holds stock, maintain its encrypted inventory ledger separately,"
+" then enter the applicable Renta stock figures manually. There is no "
+"automatic inventory-to-Modelo-100 projection in this version."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:47
 msgid ""
 "File and evidence the year's quarterly instalments first. Modelo 100 "
 "folds in your Modelo 130/131 payments on account and the retenciones "
@@ -134,7 +142,7 @@ msgstr ""
 " 190-es és 193-as modelókon bejelentett forrásadókat, ahol léteznek. "
 "Ellenőrizze, mit vár el ez a bevallás, és mi blokkolja:"
 
-#: ../../how-to/modelo-100.md:51
+#: ../../how-to/modelo-100.md:56
 msgid ""
 "`dependencies` names each source filing and whether its clean-state "
 "evidence is satisfied; an unfiled or unevidenced quarter blocks the "
@@ -147,18 +155,19 @@ msgstr ""
 "rögzítse vagy egyeztesse ezeket a benyújtásokat, lásd: [Benyújtás "
 "egyeztetése](reconcile.md)."
 
-#: ../../how-to/modelo-100.md:56
+#: ../../how-to/modelo-100.md:61
 msgid "Create, calculate, and verify"
 msgstr "Létrehozás, számítás és ellenőrzés"
 
-#: ../../how-to/modelo-100.md:58
+#: ../../how-to/modelo-100.md:63
+#, fuzzy
 msgid ""
 "The example below follows an employee filer - a Madrid-resident salaried "
 "taxpayer filing an individual 2025 return, with no self-employed "
 "activity, so the Modelo 130/131 and retención-model folds are scoped out "
-"and the annual grants on the employment figures alone. If you also file "
-"quarterly Modelo 130 instalments, they fold in as payments on account - "
-"see [Prepare a Modelo 130 IRPF instalment](modelo-130.md)."
+"and the annual calculation uses the employment figures alone. If you also"
+" file quarterly Modelo 130 instalments, they fold in as payments on "
+"account - see [Prepare a Modelo 130 IRPF instalment](modelo-130.md)."
 msgstr ""
 "Az alábbi példa egy munkavállalói bevallót követ: egy Madridban lakó, "
 "béres adózót, aki egyéni 2025-ös bevallást nyújt be, önálló vállalkozói "
@@ -168,7 +177,7 @@ msgstr ""
 "benyújt, azok előlegfizetésként olvadnak be, lásd: [Modelo 130 IRPF-"
 "részlet előkészítése](modelo-130.md)."
 
-#: ../../how-to/modelo-100.md:69
+#: ../../how-to/modelo-100.md:74
 msgid ""
 "Calculation reads the year's classified ledger, the profile facts, the "
 "prior filings the registry binds in, and any carry-forward from last "
@@ -191,7 +200,7 @@ msgstr ""
 "le egy hiányzó korábbi időszakot: amit nincs nyilvántartva, az látható "
 "üresen marad, hogy Ön rendezze, nem pedig egy találgatott nulla."
 
-#: ../../how-to/modelo-100.md:78
+#: ../../how-to/modelo-100.md:83
 msgid ""
 "Most of Modelo 100's casillas are optional manual inputs for situations "
 "the ledger cannot know (employment income details, capital income, "
@@ -202,7 +211,15 @@ msgstr ""
 "tőkejövedelem, levonások). Keresse meg, mi vonatkozik Önre, és mi "
 "hiányzik még:"
 
-#: ../../how-to/modelo-100.md:86
+#: ../../how-to/modelo-100.md:91
+msgid ""
+"For stock under estimación directa, inspect and supply boxes 0177, 0181, "
+"and 0182 when they apply. They are manual inputs in the current registry."
+" Do not use 0155 as an inventory substitute. Calculation does not treat "
+"it as an inventory input."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:96
 msgid ""
 "Supply a manual casilla and recalculate by passing `--casilla 0003=24000`"
 " on the calculate command, alongside the bindings the declaration still "
@@ -214,7 +231,7 @@ msgstr ""
 "a bevallásnak még szüksége van (a fenti fő parancssorozat mutatja a "
 "teljes formát). Az újraszámítás felváltja az aktuális piszkozatrevíziót."
 
-#: ../../how-to/modelo-100.md:91
+#: ../../how-to/modelo-100.md:101
 msgid ""
 "For the full input workflow - bound versus manual casillas, offsets, and "
 "revision selection - see [Review and supply calculation inputs](review-"
@@ -228,18 +245,19 @@ msgstr ""
 "összeállított bevallás táblázatos felülvizsgálatához lásd: [Számítások "
 "felülvizsgálata Google Táblázatokkal](review-with-google-sheets.md)."
 
-#: ../../how-to/modelo-100.md:97
+#: ../../how-to/modelo-100.md:107
 msgid "Export and file"
 msgstr "Export és benyújtás"
 
-#: ../../how-to/modelo-100.md:99
+#: ../../how-to/modelo-100.md:109
+#, fuzzy
 msgid ""
 "The verify step in the sequence above ran the annual completeness check, "
 "including the cross-period gates: every dependency filing must be filed "
 "and evidenced, and every carried figure must still point at the revision "
-"it was filed under. A blocked report names the dependency in the way - "
-"resolve it and re-run. See [Verify a draft filing](verification-"
-"reports.md)."
+"it was filed under. A blocked report names the unresolved dependency. "
+"Resolve it, then rerun verification. See [Verify a draft filing"
+"](verification-reports.md)."
 msgstr ""
 "A fenti parancssorozat ellenőrzési lépése lefuttatta az éves teljességi "
 "ellenőrzést, beleértve az időszakok közötti kapukat: minden függőségi "
@@ -249,7 +267,7 @@ msgstr ""
 "futtassa újra. Lásd: [Piszkozati benyújtás ellenőrzése](verification-"
 "reports.md)."
 
-#: ../../how-to/modelo-100.md:105
+#: ../../how-to/modelo-100.md:115
 msgid ""
 "Export the verified declaration. Export is the local finish line. "
 "Recording the filed marker afterwards is optional and applies only while "
@@ -260,15 +278,15 @@ msgid ""
 "reads from AEAT:"
 msgstr ""
 
-#: ../../how-to/modelo-100.md:116
+#: ../../how-to/modelo-100.md:126
 msgid "See [Reconcile a filing](reconcile.md) for the reconciliation verdicts."
 msgstr "Az egyeztetési verdiktekhez lásd: [Benyújtás egyeztetése](reconcile.md)."
 
-#: ../../how-to/modelo-100.md:118
+#: ../../how-to/modelo-100.md:128
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/modelo-100.md:120
+#: ../../how-to/modelo-100.md:130
 msgid ""
 "[How the Renta declaration is assembled](../explanation/how-renta-is-"
 "assembled.md)"
@@ -276,21 +294,21 @@ msgstr ""
 "[Hogyan áll össze a Renta bevallás](../explanation/how-renta-is-"
 "assembled.md)"
 
-#: ../../how-to/modelo-100.md:121
+#: ../../how-to/modelo-100.md:131
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr "[Modelo 130 IRPF-részlet előkészítése](modelo-130.md)"
 
-#: ../../how-to/modelo-100.md:122
+#: ../../how-to/modelo-100.md:132
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[Számítási bemenetek felülvizsgálata és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/modelo-100.md:123
+#: ../../how-to/modelo-100.md:133
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Töltse fel exportált modelóját az AEAT-portálon](file-at-aeat.md)"
 
-#: ../../how-to/modelo-100.md:124
+#: ../../how-to/modelo-100.md:134
 msgid "[Reconcile a filing](reconcile.md)"
 msgstr "[Benyújtás egyeztetése](reconcile.md)"
 

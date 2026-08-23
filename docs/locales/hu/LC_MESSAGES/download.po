@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 10:30+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -135,14 +135,13 @@ msgid "Run the version check from the checkout:"
 msgstr "Futtassa a verzióellenőrzést a kicsekkolásból:"
 
 #: ../../download.md:56
+#, fuzzy
 msgid ""
 "A version number confirms the install. Then run the full workstation "
 "check and add the optional extras you want (Google export, the live AEAT "
-"browser, OFX/QFX import, the agent surface) by following [Install Cadrumo"
-"](workstation-setup.md), which covers the dependency report, platform "
-"checks, and per-extra install commands. To let an AI assistant such as "
-"Claude drive Cadrumo, continue with [Connect an agent (MCP)](how-to"
-"/connect-an-agent.md)."
+"browser, and OFX/QFX import) by following [Install Cadrumo](workstation-"
+"setup.md), which covers the dependency report, platform checks, and per-"
+"extra install commands."
 msgstr ""
 "Egy verziószám megerősíti a telepítést. Ezután futtassa a teljes "
 "munkaállomás-ellenőrzést, és adja hozzá a kívánt opcionális extrákat "
@@ -153,11 +152,11 @@ msgstr ""
 "asszisztens, például a Claude vezérelje a Cadrumót, folytassa az [Ügynök "
 "csatlakoztatása (MCP)](how-to/connect-an-agent.md) oldallal."
 
-#: ../../download.md:64
+#: ../../download.md:62
 msgid "Install channels"
 msgstr "Telepítési csatornák"
 
-#: ../../download.md:66
+#: ../../download.md:64
 msgid ""
 "Each release builds and install-tests a native package per channel. Beta "
 "participants get every artifact from the release page; each channel's "
@@ -170,90 +169,64 @@ msgstr ""
 "meg, és ez az oldal akkor mutatja egy csatorna telepítési parancsát, "
 "amikor az a csatorna már élő."
 
-#: ../../download.md:78
+#: ../../download.md:76
 msgid "Platform"
 msgstr "Platform"
 
-#: ../../download.md:79
+#: ../../download.md:77
 msgid "Channel"
 msgstr "Csatorna"
 
-#: ../../download.md:80
+#: ../../download.md:78
 msgid "How you get the current beta"
 msgstr "Hogyan szerezheti meg a jelenlegi bétát"
 
-#: ../../download.md:81
+#: ../../download.md:79
 msgid "Any platform with Python 3.13+"
 msgstr "Bármely platform Python 3.13+ verzióval"
 
-#: ../../download.md:82
+#: ../../download.md:80
 msgid "Python package"
 msgstr "Python-csomag"
 
-#: ../../download.md:83
+#: ../../download.md:81
 msgid "Release page artifact; PyPI listing at public launch"
 msgstr "Kiadási oldal műtárgya; PyPI-listázás a nyilvános indulásnál"
 
-#: ../../download.md:84
+#: ../../download.md:82
 msgid "Windows (x86-64)"
 msgstr "Windows (x86-64)"
 
-#: ../../download.md:85
+#: ../../download.md:83
 msgid "Scoop package"
 msgstr "Scoop csomag"
 
-#: ../../download.md:86
+#: ../../download.md:84
 msgid "Release page artifact; Scoop bucket at public launch"
 msgstr "Kiadási oldal műtárgya; Scoop bucket a nyilvános indulásnál"
 
-#: ../../download.md:87
+#: ../../download.md:85
 msgid "macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "macOS (Apple silicon), Linux (x86-64 és arm64)"
 
-#: ../../download.md:88
+#: ../../download.md:86
 msgid "Homebrew formula"
 msgstr "Homebrew-formula"
 
-#: ../../download.md:89
+#: ../../download.md:87
 msgid "Release page artifact; Homebrew tap at public launch"
 msgstr "Kiadási oldal műtárgya; Homebrew tap a nyilvános indulásnál"
 
 #: ../../download.md:90
-msgid "Claude Code, Claude Desktop, Claude Cowork"
-msgstr "Claude Code, Claude Desktop, Claude Cowork"
-
-#: ../../download.md:91
-msgid "Claude plugin"
-msgstr "Claude-plugin"
-
-#: ../../download.md:92
-msgid "Release page artifact; neve marketplace listing at public launch"
-msgstr "Kiadási oldal műtárgya; neve marketplace-listázás a nyilvános indulásnál"
-
-#: ../../download.md:93
-msgid "Claude Desktop"
-msgstr "Claude Desktop"
-
-#: ../../download.md:94
-msgid "Claude Desktop extension (MCPB)"
-msgstr "Claude Desktop-kiterjesztés (MCPB)"
-
-#: ../../download.md:95
-msgid "Release page artifact; Claude Desktop extension directory at public launch"
-msgstr ""
-"Kiadási oldal műtárgya; Claude Desktop kiterjesztéskönyvtár a nyilvános "
-"indulásnál"
-
-#: ../../download.md:98
 msgid "Per-channel install paths:"
 msgstr "Telepítési utak csatornánként:"
 
-#: ../../download.md:100
+#: ../../download.md:92
 #, fuzzy
 msgid "**Python package**: Any platform with Python 3.13+"
 msgstr "**Python-csomag** — Bármely platform Python 3.13+ verzióval"
 
-#: ../../download.md:102
+#: ../../download.md:94
 msgid ""
 "The PyPI listing opens at public launch; until then, install the release-"
 "page artifact attached to the latest release."
@@ -261,12 +234,12 @@ msgstr ""
 "A PyPI-listázás a nyilvános indulásnál nyílik meg; addig telepítse a "
 "legutóbbi kiadáshoz csatolt kiadási oldali műtárgyat."
 
-#: ../../download.md:104
+#: ../../download.md:96
 #, fuzzy
 msgid "**Scoop package**: Windows (x86-64)"
 msgstr "**Scoop csomag** — Windows (x86-64)"
 
-#: ../../download.md:106
+#: ../../download.md:98
 msgid ""
 "The Scoop bucket opens at public launch; until then, install the release-"
 "page artifact attached to the latest release."
@@ -274,12 +247,12 @@ msgstr ""
 "A Scoop bucket a nyilvános indulásnál nyílik meg; addig telepítse a "
 "legutóbbi kiadáshoz csatolt kiadási oldali műtárgyat."
 
-#: ../../download.md:108
+#: ../../download.md:100
 #, fuzzy
 msgid "**Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "**Homebrew-formula** — macOS (Apple silicon), Linux (x86-64 és arm64)"
 
-#: ../../download.md:110
+#: ../../download.md:102
 msgid ""
 "The Homebrew tap opens at public launch; until then, install the release-"
 "page artifact attached to the latest release."
@@ -287,33 +260,7 @@ msgstr ""
 "A Homebrew tap a nyilvános indulásnál nyílik meg; addig telepítse a "
 "legutóbbi kiadáshoz csatolt kiadási oldali műtárgyat."
 
-#: ../../download.md:112
-#, fuzzy
-msgid "**Claude plugin**: Claude Code, Claude Desktop, Claude Cowork"
-msgstr "**Claude-plugin** — Claude Code, Claude Desktop, Claude Cowork"
-
-#: ../../download.md:114
-msgid ""
-"The neve marketplace listing opens at public launch; until then, install "
-"the release-page artifact attached to the latest release."
-msgstr ""
-"A neve marketplace-listázás a nyilvános indulásnál nyílik meg; addig "
-"telepítse a legutóbbi kiadáshoz csatolt kiadási oldali műtárgyat."
-
-#: ../../download.md:116
-#, fuzzy
-msgid "**Claude Desktop extension (MCPB)**: Claude Desktop"
-msgstr "**Claude Desktop-kiterjesztés (MCPB)** — Claude Desktop"
-
-#: ../../download.md:118
-msgid ""
-"The Claude Desktop extension directory opens at public launch; until "
-"then, install the release-page artifact attached to the latest release."
-msgstr ""
-"A Claude Desktop kiterjesztéskönyvtár a nyilvános indulásnál nyílik meg; "
-"addig telepítse a legutóbbi kiadáshoz csatolt kiadási oldali műtárgyat."
-
-#: ../../download.md:123
+#: ../../download.md:107
 msgid ""
 "Every published artifact carries the exact bytes that passed its "
 "platform's install-and-run checks for that release, and each release's "
@@ -324,31 +271,19 @@ msgstr ""
 " kiadáshoz, és az egyes kiadások jegyzetei a [Frissítések](updates.md) "
 "oldalon megnevezik, mi változott."
 
-#: ../../download.md:127
+#: ../../download.md:111
 msgid "After you install"
 msgstr "A telepítés után"
 
-#: ../../download.md:133
+#: ../../download.md:118
 msgid "Quickstart"
 msgstr "Gyorsindító"
 
-#: ../../download.md:138
+#: ../../download.md:123
 msgid "Take the shortest path from an empty profile to an exported modelo file."
 msgstr ""
 "Tegye meg a legrövidebb utat egy üres profiltól egy exportált "
 "modelofájlig."
-
-#: ../../download.md:141
-msgid "Connect an agent (MCP)"
-msgstr "Ügynök csatlakoztatása (MCP)"
-
-#: ../../download.md:146
-msgid ""
-"Let an AI assistant such as Claude drive Cadrumo with you, on your "
-"machine."
-msgstr ""
-"Hagyja, hogy egy MI-asszisztens, például a Claude, Önnel együtt vezérelje"
-" a Cadrumót a saját gépén."
 
 #~ msgid ""
 #~ "Cadrumo is pre-alpha. The one "
@@ -435,4 +370,68 @@ msgstr ""
 
 #~ msgid "Repository checkout today; PyPI at public launch"
 #~ msgstr "Tároló kicsekkolása ma; PyPI a nyilvános indulásnál"
+
+#~ msgid "Claude Code, Claude Desktop, Claude Cowork"
+#~ msgstr "Claude Code, Claude Desktop, Claude Cowork"
+
+#~ msgid "Claude plugin"
+#~ msgstr "Claude-plugin"
+
+#~ msgid "Release page artifact; neve marketplace listing at public launch"
+#~ msgstr ""
+#~ "Kiadási oldal műtárgya; neve marketplace-"
+#~ "listázás a nyilvános indulásnál"
+
+#~ msgid "Claude Desktop"
+#~ msgstr "Claude Desktop"
+
+#~ msgid "Claude Desktop extension (MCPB)"
+#~ msgstr "Claude Desktop-kiterjesztés (MCPB)"
+
+#~ msgid ""
+#~ "Release page artifact; Claude Desktop "
+#~ "extension directory at public launch"
+#~ msgstr ""
+#~ "Kiadási oldal műtárgya; Claude Desktop "
+#~ "kiterjesztéskönyvtár a nyilvános indulásnál"
+
+#~ msgid "**Claude plugin**: Claude Code, Claude Desktop, Claude Cowork"
+#~ msgstr "**Claude-plugin** — Claude Code, Claude Desktop, Claude Cowork"
+
+#~ msgid ""
+#~ "The neve marketplace listing opens at"
+#~ " public launch; until then, install "
+#~ "the release-page artifact attached to"
+#~ " the latest release."
+#~ msgstr ""
+#~ "A neve marketplace-listázás a nyilvános"
+#~ " indulásnál nyílik meg; addig telepítse "
+#~ "a legutóbbi kiadáshoz csatolt kiadási "
+#~ "oldali műtárgyat."
+
+#~ msgid "**Claude Desktop extension (MCPB)**: Claude Desktop"
+#~ msgstr "**Claude Desktop-kiterjesztés (MCPB)** — Claude Desktop"
+
+#~ msgid ""
+#~ "The Claude Desktop extension directory "
+#~ "opens at public launch; until then, "
+#~ "install the release-page artifact "
+#~ "attached to the latest release."
+#~ msgstr ""
+#~ "A Claude Desktop kiterjesztéskönyvtár a "
+#~ "nyilvános indulásnál nyílik meg; addig "
+#~ "telepítse a legutóbbi kiadáshoz csatolt "
+#~ "kiadási oldali műtárgyat."
+
+#~ msgid "Connect an agent (MCP)"
+#~ msgstr "Ügynök csatlakoztatása (MCP)"
+
+#~ msgid ""
+#~ "Let an AI assistant such as Claude"
+#~ " drive Cadrumo with you, on your "
+#~ "machine."
+#~ msgstr ""
+#~ "Hagyja, hogy egy MI-asszisztens, például"
+#~ " a Claude, Önnel együtt vezérelje a"
+#~ " Cadrumót a saját gépén."
 

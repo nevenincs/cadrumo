@@ -46,11 +46,17 @@ from cadrumo.application import operator_surface
 from cadrumo.application.operator_surface import (
     FamilyMountState,
     FilingStatus,
+    HelpDocument,
+    HelpEntry,
+    HelpSection,
+    LifecycleContract,
     ModeloLifecycleStep,
     MountedCommandDomain,
     MountedCommandFamily,
     OperatorMutability,
     OperatorSurfaceContractError,
+    RootLandingReport,
+    RootSurface,
     RootSurfaceName,
     build_help_document,
     build_root_landing_report,
@@ -60,14 +66,6 @@ from cadrumo.application.operator_surface import (
     resolve_source_kind_alias,
 )
 from cadrumo.application.operator_surface import _help as _help_module
-from cadrumo.application.operator_surface._models import (
-    HelpDocument,
-    HelpEntry,
-    HelpSection,
-    LifecycleContract,
-    RootLandingReport,
-    RootSurface,
-)
 from cadrumo.core import BindingSourceKind
 from cadrumo.core.aggregation import COUNTERPART_SOURCE_KINDS
 from cadrumo.core.config import override_settings

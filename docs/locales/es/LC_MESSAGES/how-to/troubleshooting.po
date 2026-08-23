@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -79,8 +79,8 @@ msgid ""
 "state, clear that broken local pointer, then switch to a good profile:"
 msgstr ""
 "Si la comprobación de reparación indica que el ajuste de activo apunta a "
-"un estado de perfil ilegible, borra ese puntero local roto y luego cambia "
-"a un perfil correcto:"
+"un estado de perfil ilegible, borra ese puntero local roto y luego cambia"
+" a un perfil correcto:"
 
 #: ../../how-to/troubleshooting.md:32
 msgid ""
@@ -113,13 +113,12 @@ msgstr ""
 #: ../../how-to/troubleshooting.md:44
 msgid ""
 "Log in to the right profile with `aeat config login <profile-name>` - "
-"[Set up your taxpayer profile](profile-setup.md) covers creating "
-"profiles and moving between them."
+"[Set up your taxpayer profile](profile-setup.md) covers creating profiles"
+" and moving between them."
 msgstr ""
-"Inicia sesión en el perfil correcto con `aeat config login "
-"<profile-name>`; [Configura tu perfil de "
-"contribuyente](profile-setup.md) cubre la creación de perfiles y el paso "
-"de uno a otro."
+"Inicia sesión en el perfil correcto con `aeat config login <profile-"
+"name>`; [Configura tu perfil de contribuyente](profile-setup.md) cubre la"
+" creación de perfiles y el paso de uno a otro."
 
 #: ../../how-to/troubleshooting.md:46
 msgid "A calculation refuses because the ledger is not ready"
@@ -138,9 +137,9 @@ msgid ""
 msgstr ""
 "El cálculo lee tus movimientos importados, y algunas filas no están "
 "listas. Ejecuta la comprobación de preflight para el periodo que estás "
-"calculando: `ledger preflight` toma un token de la AEAT (`1T`-`4T`, `0A`, "
-"`01`-`12`) y también requiere `--year`, así que añádelo aunque el mensaje "
-"anterior lo omita:"
+"calculando: `ledger preflight` toma un token de la AEAT (`1T`-`4T`, `0A`,"
+" `01`-`12`) y también requiere `--year`, así que añádelo aunque el "
+"mensaje anterior lo omita:"
 
 #: ../../how-to/troubleshooting.md:60
 msgid ""
@@ -263,9 +262,9 @@ msgstr ""
 #: ../../how-to/troubleshooting.md:117
 msgid ""
 "This refusal applies to `aeat app modelo work file` only - exporting "
-"works at any time. See [File your modelo at the AEAT portal"
-"](file-at-aeat.md) for the recording workflow and [Plan your filing "
-"calendar](filing-calendar.md) for when each window opens."
+"works at any time. See [File your modelo at the AEAT portal](file-at-"
+"aeat.md) for the recording workflow and [Plan your filing calendar"
+"](filing-calendar.md) for when each window opens."
 msgstr ""
 "Este rechazo se aplica solo a `aeat app modelo work file`; la exportación"
 " funciona en cualquier momento. Consulta [Sube tu modelo exportado en el "
@@ -422,14 +421,15 @@ msgstr ""
 "Previsualiza primero y luego aplica:"
 
 #: ../../how-to/troubleshooting.md:185
+#, fuzzy
 msgid ""
 "The preview lists how many records would move, per storage area, without "
 "changing anything. The real run requires `--yes`. Quarantine does not "
 "delete anything: each unreadable record is moved, still encrypted, into a"
 " quarantine archive inside the same storage, and readable records are "
-"untouched. If the cause was a missing key that you later recover (for "
-"example with the recovery key, see [Protect access to your data](protect-"
-"data-access.md)), the archived records still exist."
+"untouched. If the cause was a missing key that you later restore, the "
+"archived records still exist. See [Protect access to your data](protect-"
+"data-access.md)."
 msgstr ""
 "La vista previa enumera cuántos registros se moverían, por área de "
 "almacenamiento, sin cambiar nada. La ejecución real requiere `--yes`. La "
@@ -465,15 +465,15 @@ msgstr ""
 
 #: ../../how-to/troubleshooting.md:196
 msgid ""
-"Both `participation` verbs read the active profile's encrypted bucket, "
-"so they need an unlocked profile session. If either refuses with `No hay "
+"Both `participation` verbs read the active profile's encrypted bucket, so"
+" they need an unlocked profile session. If either refuses with `No hay "
 "una sesion de bucket activa`, log in to the profile first with `aeat "
 "config login <profile-name>`."
 msgstr ""
-"Ambos verbos de `participation` leen el bucket cifrado del perfil "
-"activo, así que necesitan una sesión de perfil desbloqueada. Si alguno "
-"se niega con `No hay una sesion de bucket activa`, inicia sesión primero "
-"en el perfil con `aeat config login <profile-name>`."
+"Ambos verbos de `participation` leen el bucket cifrado del perfil activo,"
+" así que necesitan una sesión de perfil desbloqueada. Si alguno se niega "
+"con `No hay una sesion de bucket activa`, inicia sesión primero en el "
+"perfil con `aeat config login <profile-name>`."
 
 #: ../../how-to/troubleshooting.md:198
 msgid ""
@@ -483,7 +483,7 @@ msgstr ""
 "Cuando nada más resuelve el problema, y solo entonces, borra el progreso "
 "guardado de los comandos interrumpidos. Este comando es destructivo:"
 
-#: ../../how-to/troubleshooting.md:203
+#: ../../how-to/troubleshooting.md:204
 msgid ""
 "It removes saved interrupted-command progress and requires `--yes`. Like "
 "the participation verbs, it reads the active profile's bucket, so switch "
@@ -495,11 +495,11 @@ msgstr ""
 "perfil activo, así que cambie primero al perfil si se niega con `No hay "
 "una sesion de bucket activa`."
 
-#: ../../how-to/troubleshooting.md:205
+#: ../../how-to/troubleshooting.md:207
 msgid "Prepare a privacy-safe support request"
 msgstr "Prepara una solicitud de soporte respetuosa con la privacidad"
 
-#: ../../how-to/troubleshooting.md:207
+#: ../../how-to/troubleshooting.md:209
 msgid ""
 "When the steps on this page don't resolve the problem, gather this before"
 " asking for help:"
@@ -507,36 +507,36 @@ msgstr ""
 "Cuando los pasos de esta página no resuelvan el problema, reúne esto "
 "antes de pedir ayuda:"
 
-#: ../../how-to/troubleshooting.md:209
+#: ../../how-to/troubleshooting.md:211
 msgid "The exact command you ran."
 msgstr "El comando exacto que ejecutó."
 
-#: ../../how-to/troubleshooting.md:210
+#: ../../how-to/troubleshooting.md:212
 msgid "The error lines the command printed."
 msgstr "Las líneas de error que el comando imprimió."
 
-#: ../../how-to/troubleshooting.md:211
+#: ../../how-to/troubleshooting.md:213
 msgid "The log path and the relevant recent lines from `aeat config repair logs`."
 msgstr ""
 "La ruta del registro y las líneas recientes relevantes de `aeat config "
 "repair logs`."
 
-#: ../../how-to/troubleshooting.md:212
+#: ../../how-to/troubleshooting.md:214
 msgid "Any report or work-unit IDs the output shows."
 msgstr "Cualquier id de informe o de unidad de trabajo que muestre la salida."
 
-#: ../../how-to/troubleshooting.md:214
+#: ../../how-to/troubleshooting.md:216
 msgid ""
 "Remove personal data first: tax identifiers (NIF, CIF, DNI, NIE, NII), "
 "names, addresses, and file paths that embed your user name. Log lines can"
 " contain personal data - read them before pasting."
 msgstr ""
-"Elimina primero los datos personales: identificadores fiscales (NIF, CIF, "
-"DNI, NIE, NII), nombres, direcciones y rutas de fichero que incrusten tu "
-"nombre de usuario. Las líneas de registro pueden contener datos "
+"Elimina primero los datos personales: identificadores fiscales (NIF, CIF,"
+" DNI, NIE, NII), nombres, direcciones y rutas de fichero que incrusten tu"
+" nombre de usuario. Las líneas de registro pueden contener datos "
 "personales; léelas antes de pegarlas."
 
-#: ../../how-to/troubleshooting.md:216
+#: ../../how-to/troubleshooting.md:218
 msgid ""
 "Take the request to the [project issue "
 "tracker](https://github.com/nevenincs/cadrumo/issues)."
@@ -544,7 +544,7 @@ msgstr ""
 "Lleva la solicitud al [gestor de incidencias del "
 "proyecto](https://github.com/nevenincs/cadrumo/issues)."
 
-#: ../../how-to/troubleshooting.md:218
+#: ../../how-to/troubleshooting.md:220
 #, python-brace-format
 msgid ""
 "If a term in an error message is unfamiliar, look it up in the "
@@ -553,11 +553,11 @@ msgstr ""
 "Si un término de un mensaje de error le resulta desconocido, búscalo en "
 "el {doc}`glosario </_generated/glossary>`."
 
-#: ../../how-to/troubleshooting.md:220
+#: ../../how-to/troubleshooting.md:222
 msgid "Next steps"
 msgstr "Pasos siguientes"
 
-#: ../../how-to/troubleshooting.md:222
+#: ../../how-to/troubleshooting.md:224
 msgid ""
 "[Quickstart: produce a modelo file](quickstart.md) - follow the first "
 "local filing path."
@@ -565,7 +565,7 @@ msgstr ""
 "[Guía rápida: produzca un fichero de modelo](quickstart.md): sigue el "
 "primer camino de presentación local."
 
-#: ../../how-to/troubleshooting.md:223
+#: ../../how-to/troubleshooting.md:225
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) - create and switch "
 "profiles."
@@ -573,7 +573,7 @@ msgstr ""
 "[Configura tu perfil de contribuyente](profile-setup.md): crea y cambia "
 "perfiles."
 
-#: ../../how-to/troubleshooting.md:224
+#: ../../how-to/troubleshooting.md:226
 msgid ""
 "[Authenticate with AEAT](authenticate-with-aeat.md) - check read-only "
 "live access setup."
@@ -581,7 +581,7 @@ msgstr ""
 "[Autentícate ante la AEAT](authenticate-with-aeat.md): comprueba la "
 "configuración del acceso en vivo de solo lectura."
 
-#: ../../how-to/troubleshooting.md:225
+#: ../../how-to/troubleshooting.md:227
 msgid ""
 "[Check AEAT notifications](check-aeat-notifications.md) - inspect saved "
 "DEHu notification snapshots."
@@ -589,7 +589,7 @@ msgstr ""
 "[Consulta notificaciones de la AEAT](check-aeat-notifications.md): "
 "inspecciona las instantáneas guardadas de notificaciones de la DEHú."
 
-#: ../../how-to/troubleshooting.md:226
+#: ../../how-to/troubleshooting.md:228
 msgid ""
 "[Pipeline explanation](../explanation/index.md) - what the registry, "
 "secure storage, and workflow state are."
@@ -597,7 +597,7 @@ msgstr ""
 "[Explicación de la cadena de proceso](../explanation/index.md): qué son "
 "el registro, el almacenamiento seguro y el estado del flujo de trabajo."
 
-#: ../../how-to/troubleshooting.md:227
+#: ../../how-to/troubleshooting.md:229
 msgid ""
 "[CLI reference](../cli/index.rst) - every repair command, flag, and exit "
 "code."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -152,10 +152,42 @@ msgstr ""
 "instantània més recent del perfil actiu."
 
 #: ../../how-to/check-aeat-notifications.md:61
-msgid "2. Declaration history (expedientes)"
-msgstr "2. Historial de declaracions (expedientes)"
+msgid "2. Read documents from notifications you already opened"
+msgstr ""
 
 #: ../../how-to/check-aeat-notifications.md:63
+msgid ""
+"Read a notification document only after you have personally opened that "
+"notification in the AEAT sede. Opening an unread electronic notification "
+"is a legally consequential act: it serves the notification and starts its"
+" appeal and payment periods. The tool therefore refuses to pull a "
+"document unless AEAT already reports its notification as read. Open an "
+"unread notification yourself when you decide that those periods should "
+"begin."
+msgstr ""
+
+#: ../../how-to/check-aeat-notifications.md:70
+msgid ""
+"Pull one eligible document into encrypted local custody, view a stored "
+"document without contacting AEAT, or list the figures reported by each "
+"parsed document:"
+msgstr ""
+
+#: ../../how-to/check-aeat-notifications.md:76
+msgid ""
+"Treat history as a document record, not as a balance. It does not total "
+"the figures, state what is currently payable, or replace the recaudación "
+"register shown by the `aeat app live deudas` commands. A document alone "
+"does not establish whether its amount was paid, appealed, reduced, or "
+"superseded."
+msgstr ""
+
+#: ../../how-to/check-aeat-notifications.md:83
+#, fuzzy
+msgid "3. Declaration history (expedientes)"
+msgstr "2. Historial de declaracions (expedientes)"
+
+#: ../../how-to/check-aeat-notifications.md:85
 msgid ""
 "Expedientes are the official AEAT record of your past declarations: each "
 "filed return for each modelo and year, with its status and filing date."
@@ -164,7 +196,7 @@ msgstr ""
 "declaracions anteriors: cada declaració presentada de cada model i any, "
 "amb el seu estat i la data de presentació."
 
-#: ../../how-to/check-aeat-notifications.md:66
+#: ../../how-to/check-aeat-notifications.md:88
 msgid ""
 "The card shows the expedientes reads: pull downloads the history for one "
 "form and year, pull with a year range covers several years at once (leave"
@@ -181,11 +213,12 @@ msgstr ""
 "dates i enllaços als justificantes) i latest mostra la instantània més "
 "recent."
 
-#: ../../how-to/check-aeat-notifications.md:77
-msgid "3. Filed declaration detail"
+#: ../../how-to/check-aeat-notifications.md:99
+#, fuzzy
+msgid "4. Filed declaration detail"
 msgstr "3. Detall d'una declaració presentada"
 
-#: ../../how-to/check-aeat-notifications.md:79
+#: ../../how-to/check-aeat-notifications.md:101
 msgid ""
 "Download the box-by-box values from a return you have already filed with "
 "AEAT."
@@ -193,7 +226,7 @@ msgstr ""
 "Descarrega els valors casella per casella d'una declaració que ja has "
 "presentat a l'AEAT."
 
-#: ../../how-to/check-aeat-notifications.md:81
+#: ../../how-to/check-aeat-notifications.md:103
 msgid ""
 "The card shows the filed-detail reads. `filed list` lists the filed "
 "returns AEAT holds without saving their box values (it still reads from "
@@ -213,11 +246,12 @@ msgstr ""
 "les declaracions del Model 303 que necessita un resum anual del Model "
 "390)."
 
-#: ../../how-to/check-aeat-notifications.md:94
-msgid "4. NIF and EU VAT verification"
+#: ../../how-to/check-aeat-notifications.md:116
+#, fuzzy
+msgid "5. NIF and EU VAT verification"
 msgstr "4. Verificació de NIF i d'IVA de la UE"
 
-#: ../../how-to/check-aeat-notifications.md:96
+#: ../../how-to/check-aeat-notifications.md:118
 msgid ""
 "Verify whether a NIF is registered for intra-EU VAT purposes (the VIES "
 "register), or check a Spanish NIF in the Spanish ROI register."
@@ -225,7 +259,7 @@ msgstr ""
 "Comprova si un NIF està registrat a efectes d'IVA intracomunitari (el "
 "registre VIES), o comproves un NIF espanyol al registre ROI espanyol."
 
-#: ../../how-to/check-aeat-notifications.md:99
+#: ../../how-to/check-aeat-notifications.md:121
 msgid ""
 "The card shows the verification reads. `verify nif-iva` checks whether a "
 "foreign EU VAT number is valid, and `verify tgvi` checks whether a "
@@ -243,11 +277,12 @@ msgstr ""
 " n'obre una pel seu id d'observació i `verify latest` mostra l'última "
 "observació d'un NIF."
 
-#: ../../how-to/check-aeat-notifications.md:111
-msgid "5. Official AEAT portal catalogue"
+#: ../../how-to/check-aeat-notifications.md:133
+#, fuzzy
+msgid "6. Official AEAT portal catalogue"
 msgstr "5. Catàleg oficial del portal de l'AEAT"
 
-#: ../../how-to/check-aeat-notifications.md:113
+#: ../../how-to/check-aeat-notifications.md:135
 msgid ""
 "The card shows the portal-catalogue reads. `portals list` shows the "
 "official AEAT online portals the tool knows about and their "
@@ -265,11 +300,12 @@ msgstr ""
 "`calendar_reference`). Usa `--modelo` o `--category`, no tots dos: són "
 "mútuament excloents. `portals view` obre els detalls d'un portal."
 
-#: ../../how-to/check-aeat-notifications.md:125
-msgid "6. Borrador (draft Modelo 100)"
+#: ../../how-to/check-aeat-notifications.md:147
+#, fuzzy
+msgid "7. Borrador (draft Modelo 100)"
 msgstr "6. Borrador (esborrany del Model 100)"
 
-#: ../../how-to/check-aeat-notifications.md:127
+#: ../../how-to/check-aeat-notifications.md:149
 msgid ""
 "The borrador is the pre-calculated Modelo 100 IRPF draft that AEAT makes "
 "available to wage earners. The card shows the borrador reads: list shows "
@@ -282,11 +318,12 @@ msgstr ""
 "caselles d'un borrador i latest mostra l'últim esborrany actiu d'un any "
 "de presentació."
 
-#: ../../how-to/check-aeat-notifications.md:137
-msgid "7. IVA compensation balance"
+#: ../../how-to/check-aeat-notifications.md:159
+#, fuzzy
+msgid "8. IVA compensation balance"
 msgstr "7. Saldo de compensació d'IVA"
 
-#: ../../how-to/check-aeat-notifications.md:139
+#: ../../how-to/check-aeat-notifications.md:161
 msgid ""
 "Your IVA compensation balance (saldo a compensar) is the amount of "
 "overpaid IVA from prior quarters that can be deducted from future Modelo "
@@ -307,23 +344,23 @@ msgstr ""
 "lectura, i `history` llista els saldos i les decisions persistits "
 "localment."
 
-#: ../../how-to/check-aeat-notifications.md:152
+#: ../../how-to/check-aeat-notifications.md:174
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/check-aeat-notifications.md:154
+#: ../../how-to/check-aeat-notifications.md:176
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
 
-#: ../../how-to/check-aeat-notifications.md:155
+#: ../../how-to/check-aeat-notifications.md:177
 msgid "[Authenticate with AEAT](authenticate-with-aeat.md)"
 msgstr "[Autentica't amb l'AEAT](authenticate-with-aeat.md)"
 
-#: ../../how-to/check-aeat-notifications.md:156
+#: ../../how-to/check-aeat-notifications.md:178
 msgid "[Set up your taxpayer profile](profile-setup.md)"
 msgstr "[Configura el teu perfil de contribuent](profile-setup.md)"
 
-#: ../../how-to/check-aeat-notifications.md:157
+#: ../../how-to/check-aeat-notifications.md:179
 msgid "[Reconcile filing justificantes](reconcile.md)"
 msgstr "[Reconcilia els justificantes de presentació](reconcile.md)"
 

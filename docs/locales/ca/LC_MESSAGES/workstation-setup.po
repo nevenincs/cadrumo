@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 23:20+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 14:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -22,13 +22,14 @@ msgid "Install Cadrumo"
 msgstr "Instal·la Cadrumo"
 
 #: ../../workstation-setup.md:3
+#, fuzzy
 msgid ""
 "This page covers installation only: get the package, install the `aeat` "
-"command, add the optional extras you want, and (if you use an AI "
-"assistant) install the agent surface. If you do not have Cadrumo on your "
-"machine yet, start at [Get Cadrumo](download.md) for the acquisition "
-"paths and their current availability. Configuration and first use start "
-"in the [quickstart](how-to/quickstart.md) once the install checks pass."
+"command, and add the optional extras you want. If you do not have Cadrumo"
+" on your machine yet, start at [Get Cadrumo](download.md) for the "
+"acquisition paths and their current availability. Configuration and first"
+" use start in the [quickstart](how-to/quickstart.md) once the install "
+"checks pass."
 msgstr ""
 "Aquesta pàgina només tracta la instal·lació: obtén el paquet, instal·la "
 "l'ordre `aeat`, afegeix els extres opcionals que vulguis i (si utilitzes "
@@ -39,10 +40,11 @@ msgstr ""
 "to/quickstart.md) un cop passin les comprovacions d'instal·lació."
 
 #: ../../workstation-setup.md:10
+#, fuzzy
 msgid ""
 "Cadrumo works without any optional service. Google export, on-host LLM "
-"vision, cloud LLM upload, and the agent surface are all opt-in. The core "
-"filing workflow runs with none of them."
+"vision, and cloud LLM upload are all opt-in. The core filing workflow "
+"runs with none of them."
 msgstr ""
 "Cadrumo funciona sense cap servei opcional. L'exportació a Google, la "
 "visió LLM al mateix equip, la pujada a un LLM al núvol i la superfície "
@@ -79,9 +81,9 @@ msgid ""
 "the plugin marketplace) open with the public launch; see [Get "
 "Cadrumo](download.md) for each channel's current status."
 msgstr ""
-"Les llistes als registres dels canals empaquetats (PyPI, Scoop, Homebrew i "
-"el mercat de connectors) s'obriran amb el llançament públic; consulta [Obtén "
-"Cadrumo](download.md) per a l'estat actual de cada canal."
+"Les llistes als registres dels canals empaquetats (PyPI, Scoop, Homebrew "
+"i el mercat de connectors) s'obriran amb el llançament públic; consulta "
+"[Obtén Cadrumo](download.md) per a l'estat actual de cada canal."
 
 #: ../../workstation-setup.md:36
 msgid "Confirm the install"
@@ -120,11 +122,11 @@ msgid "Install optional extras from the checkout"
 msgstr "Instal·la els extres opcionals des de la còpia del codi font"
 
 #: ../../workstation-setup.md:55
+#, fuzzy
 msgid ""
 "The core install is lean. Google export, the live AEAT browser, the "
-"Anthropic-API provider, OFX/QFX bank-statement import, and the agent "
-"surface are optional package extras. Name the extras you need when you "
-"install:"
+"Anthropic-API provider and OFX/QFX bank-statement import are optional "
+"package extras. Name the extras you need when you install:"
 msgstr ""
 "La instal·lació bàsica és mínima. L'exportació a Google, el navegador "
 "AEAT en directe, el proveïdor de l'API d'Anthropic, la importació "
@@ -132,11 +134,12 @@ msgstr ""
 " del paquet. Indica els extres que necessites quan instal·les:"
 
 #: ../../workstation-setup.md:63
+#, fuzzy
 msgid ""
-"The available extras are `google`, `browser`, `anthropic`, `ofx`, "
-"`agent`, and `all`. `aeat config check` lists each extra and prints the "
-"exact install command for any that is missing. A feature whose extra is "
-"not installed refuses with the same hint instead of failing obscurely."
+"The available extras are `google`, `browser`, `anthropic`, `ofx`, and "
+"`all`. `aeat config check` lists each extra and prints the exact install "
+"command for any that is missing. A feature whose extra is not installed "
+"refuses with the same hint instead of failing obscurely."
 msgstr ""
 "Els extres disponibles són `google`, `browser`, `anthropic`, `ofx`, "
 "`agent` i `all`. `aeat config check` enumera cada extra i imprimeix "
@@ -187,51 +190,10 @@ msgstr ""
 "que la mancança està resolta."
 
 #: ../../workstation-setup.md:91
-msgid "Run the Model Context Protocol (MCP) surface"
-msgstr "Executa la superfície del Model Context Protocol (MCP)"
-
-#: ../../workstation-setup.md:93
-msgid ""
-"Cadrumo ships an MCP server, `cadrumo-mcp`, so an AI assistant can "
-"operate the same local, gated commands the CLI exposes, together with an "
-"agent harness: the operator rules, taxpayer-situation skills, and scoped "
-"agent personas that keep the assistant inside the safety boundary."
-msgstr ""
-"Cadrumo inclou un servidor MCP, `cadrumo-mcp`, perquè un assistent d'IA "
-"pugui operar les mateixes ordres locals i controlades que exposa la CLI, "
-"juntament amb un arnès d'agent: les regles d'operador, les habilitats "
-"segons la situació del contribuent i els perfils d'agent d'abast limitat "
-"que mantenen l'assistent dins del límit de seguretat."
-
-#: ../../workstation-setup.md:99
-msgid "In the beta, run the server from the same repository checkout:"
-msgstr "En la beta, executa el servidor des de la mateixa còpia del repositori:"
-
-#: ../../workstation-setup.md:106
-msgid ""
-"[Connect an agent](how-to/connect-an-agent.md) shows the source-checkout "
-"registration and explains what the agent can and cannot do."
-msgstr ""
-"[Connecta un agent](how-to/connect-an-agent.md) mostra el registre des de"
-" la còpia del codi font i explica què pot fer i què no pot fer l'agent."
-
-#: ../../workstation-setup.md:109
-msgid "Materialize the agent harness in a project workspace"
-msgstr "Materialitza l'arnès d'agent en un espai de treball de projecte"
-
-#: ../../workstation-setup.md:111
-msgid ""
-"To place the harness (rules, personas, skills, and a `CLAUDE.md`) "
-"directly into a project directory, materialize it with the CLI:"
-msgstr ""
-"Per col·locar l'arnès (regles, perfils, habilitats i un `CLAUDE.md`) "
-"directament en un directori de projecte, materialitza'l amb la CLI:"
-
-#: ../../workstation-setup.md:118
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../workstation-setup.md:120
+#: ../../workstation-setup.md:93
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -239,7 +201,7 @@ msgstr ""
 "[Inici ràpid](how-to/quickstart.md) - d'un perfil buit a un fitxer de "
 "modelo exportat."
 
-#: ../../workstation-setup.md:122
+#: ../../workstation-setup.md:95
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -248,11 +210,7 @@ msgstr ""
 "capacitats de servei per perfil (exportació a Google, visió LLM, pujada "
 "de proves al núvol)."
 
-#: ../../workstation-setup.md:124
-msgid "[Connect an agent](how-to/connect-an-agent.md)"
-msgstr "[Connecta un agent](how-to/connect-an-agent.md)"
-
-#: ../../workstation-setup.md:125
+#: ../../workstation-setup.md:97
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolució de problemes](how-to/troubleshooting.md)"
 
@@ -291,4 +249,60 @@ msgstr "[Resolució de problemes](how-to/troubleshooting.md)"
 #~ "no estan disponibles. Executa el "
 #~ "servidor des de la mateixa còpia "
 #~ "autoritzada del codi font:"
+
+#~ msgid "Run the Model Context Protocol (MCP) surface"
+#~ msgstr "Executa la superfície del Model Context Protocol (MCP)"
+
+#~ msgid ""
+#~ "Cadrumo ships an MCP server, "
+#~ "`cadrumo-mcp`, so an AI assistant can"
+#~ " operate the same local, gated "
+#~ "commands the CLI exposes, together with"
+#~ " an agent harness: the operator "
+#~ "rules, taxpayer-situation skills, and "
+#~ "scoped agent personas that keep the "
+#~ "assistant inside the safety boundary."
+#~ msgstr ""
+#~ "Cadrumo inclou un servidor MCP, "
+#~ "`cadrumo-mcp`, perquè un assistent d'IA "
+#~ "pugui operar les mateixes ordres locals"
+#~ " i controlades que exposa la CLI, "
+#~ "juntament amb un arnès d'agent: les "
+#~ "regles d'operador, les habilitats segons "
+#~ "la situació del contribuent i els "
+#~ "perfils d'agent d'abast limitat que "
+#~ "mantenen l'assistent dins del límit de"
+#~ " seguretat."
+
+#~ msgid "In the beta, run the server from the same repository checkout:"
+#~ msgstr "En la beta, executa el servidor des de la mateixa còpia del repositori:"
+
+#~ msgid ""
+#~ "[Connect an agent](how-to/connect-an-"
+#~ "agent.md) shows the source-checkout "
+#~ "registration and explains what the agent"
+#~ " can and cannot do."
+#~ msgstr ""
+#~ "[Connecta un agent](how-to/connect-an-"
+#~ "agent.md) mostra el registre des de "
+#~ "la còpia del codi font i explica"
+#~ " què pot fer i què no pot "
+#~ "fer l'agent."
+
+#~ msgid "Materialize the agent harness in a project workspace"
+#~ msgstr "Materialitza l'arnès d'agent en un espai de treball de projecte"
+
+#~ msgid ""
+#~ "To place the harness (rules, personas,"
+#~ " skills, and a `CLAUDE.md`) directly "
+#~ "into a project directory, materialize it"
+#~ " with the CLI:"
+#~ msgstr ""
+#~ "Per col·locar l'arnès (regles, perfils, "
+#~ "habilitats i un `CLAUDE.md`) directament "
+#~ "en un directori de projecte, "
+#~ "materialitza'l amb la CLI:"
+
+#~ msgid "[Connect an agent](how-to/connect-an-agent.md)"
+#~ msgstr "[Connecta un agent](how-to/connect-an-agent.md)"
 

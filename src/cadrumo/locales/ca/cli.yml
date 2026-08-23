@@ -320,8 +320,6 @@ cli:
           hi va coincidir: {columns}'
         invoice_class_help: Classe de factura. Una rectificativa exigeix a més --rectifies-invoice-number
           indicant la factura que corregeix.
-        invoice_date_help: Data d'emissió de la factura en ISO 8601 (AAAA-MM-DD),
-          p. ex. 2026-01-15.
         invoice_id_help: Identificador de factura del catàleg (o prefix no ambigu).
         iva_category_help: Tractament d'IVA de l'operació. Necessari perquè un càlcul
           de renda la pugui fonamentar.
@@ -464,7 +462,6 @@ cli:
         list_help: Llista els snapshots d'expedients desats
         pull_help: Descàrrega el registre de declaracions d'AEAT i desa una instantània
           del bucket.
-        pull_modelo_help: Limita aquesta descàrrega a aquest model.
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot d'expedients
       filed:
@@ -2784,26 +2781,19 @@ cli:
         professional proporcional; la categoria ha de tenir una proporció d'ús.
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
     allocate:
-      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       business_pct_help: Proporció d'ús professional de 0 a 1 per a files MIXED/proporcionals;
         no facis servir ledger allocate per a una fila totalment BUSINESS.
-      category_help: Id de categoria de despesa deduïble (només moviments de despesa;
-        els ingressos no necessiten categoria)
       help: Registrar proporcionalitat professional/personal per a un moviment del
         llibre
       id_help: Id del moviment del llibre a assignar
       prorrata_reference_help: Referència de prorrata d'IVA per a fluxos d'IVA
-      usage_ratio_help: Identificador d'una proporció d'ús ja configurada per a ús
-        professional proporcional; la categoria ha de tenir una proporció d'ús.
     app_help: Gestió de llibres comptables i registres d'IVA
     archive:
-      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       help: Arxivar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a arxivar
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma l'arxivament de la transacció del llibre
     attach:
-      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a
         diversos adjunts
       finalized_revision_stale: El justificant es va desar al moviment del llibre,
@@ -2848,7 +2838,6 @@ cli:
         status.'
       year_help: Any de declaració per a --period (p. ex. 2024).
     classify:
-      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       apply_help: 'Persisteix el suggeriment de l''LLM amb procedència llm: en lloc
         de només previsualitzar-lo.'
       auto_split_help: Llegeix la factura adjunta i, quan és multicomponent, la divideix
@@ -2867,8 +2856,6 @@ cli:
       business_pct_requires_mixed: Rebutjat. --business-pct només s'aplica a una classificació
         MIXED. Una fila BUSINESS o PERSONAL és totalment professional o totalment
         privada; treu --business-pct o passa --classification MIXED.
-      category_help: Id de categoria de despesa deduïble (només moviments de despesa;
-        els ingressos no necessiten categoria)
       classification_help: Estat de classificació professional del moviment
       classification_required: --classification és obligatori quan no s'usa --file.
       counterparty_country_help: País d'establiment de la contrapart (ISO 3166-1 alfa-2,
@@ -3018,21 +3005,18 @@ cli:
       unknown_provider: 'Proveïdor d''importació --provider {provider!r} desconegut.
         Proveïdors reconeguts: {providers}.'
     exclude:
-      actor_help: Etiqueta de l'operador.
       help: Marca una transacció del llibre revisada com a exclosa deliberadament
         de la declaració.
       id_help: Id de transacció del llibre.
       reason_help: Nota opcional que registra per que la fila queda exclosa.
       yes_help: Confirma la decisió d'exclusió revisada.
     export:
-      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       format_help: Format de serialització d'exportació
       help: Exportar moviments canònics del llibre des del perfil actiu
       include_inactive_help: Incloure moviments arxivats i apartats
       output_help: Ruta on escriure el fitxer exportat del llibre
       period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
         0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
-      year_help: Any de declaració per a --period (p. ex. 2024).
     history:
       help: Mostra la cadena cronològica d'esdeveniments d'una transacció
       id_help: Id de la transacció (o prefix no ambigu)
@@ -3056,13 +3040,10 @@ cli:
         no contenia files de dades. Un CSV bancari ha de tenir una fila de capçalera
         amb una columna de data, import i descripció seguida d''almenys una fila de
         dades.'
-      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
-        0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
       provider_help: 'Proveïdor del format de l''extracte. Valors reconeguts: {providers}'
       verbose_help: Mostrar informació detallada durant la importació
       verify_help: Verificar les entrades després de la importació
       verify_source_help: Fitxer original usat per verificar les files importades.
-      year_help: Any de declaració per a --period (p. ex. 2024).
     labels:
       active: Actives
       amount: Import
@@ -3192,8 +3173,6 @@ cli:
       help: Informa de les dades comptables que falten (categoria, base imposable,
         import/tipus d'IVA, moneda, referència de prorrata) per als moviments del
         perfil actiu en un període donat. Local; mai contacta amb AEAT.
-      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
-        0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
       year_help: Any de declaració (p. ex. 2024).
     pull_folder:
       errors:
@@ -3215,23 +3194,19 @@ cli:
         files_refused: '%{refused_count} fitxer(s) d''aquesta carpeta no s''han pogut
           obtenir sota el permís drive.file; descàrrega''ls manualment i adjunta''ls.'
     remove:
-      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       dry_run_help: Informar els efectes sense eliminar el moviment del llibre
       help: Eliminar un moviment del llibre del perfil actiu
       id_help: Id del moviment del llibre a eliminar
       reason_help: Motiu registrat a l'historial d'eliminació
       yes_help: Confirmar l'eliminació del moviment del llibre
     reset:
-      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       dry_run_help: Informar els efectes sense buidar el catàleg del llibre
       help: Reiniciar el catàleg del llibre del perfil actiu
       reason_help: Motiu registrat a l'historial de reinici
       yes_help: Confirmar el buidatge del catàleg actiu del llibre
     restore:
-      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       help: Restaurar a actiu un moviment del llibre apartat o arxivat
       id_help: Id del moviment del llibre a restaurar a actiu
-      reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma la restauració del moviment del llibre a actiu
     review:
       filter_help: Filtrar files per status, period (un testimoni AEAT simple, p.
@@ -3262,22 +3237,13 @@ cli:
         LLM indicat.
       read_evidence_help: Llegeix la factura adjunta de la transacció en local i alimenta-la
         al proposant de divisió --llm.
-      reason_help: Motiu registrat a l'historial de cicle de vida
-      vision_model_help: Substitueix el model de visió local d'Ollama per llegir una
-        factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir
-        el model configurat.
       yes_help: Confirma la divisió de la transacció
     stash:
-      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       help: Apartar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a apartar
-      reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma l'enviament de la transacció a la reserva
     status:
       help: Resumir l'estat del llibre i la preparació de càlcul del perfil actiu
-      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
-        0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
-      year_help: Any de declaració per a --period (p. ex. 2024).
     track:
       help: Mostrar el llinatge d'esdeveniments d'un moviment del llibre
       transaction_id_help: Id del moviment del llibre a inspeccionar

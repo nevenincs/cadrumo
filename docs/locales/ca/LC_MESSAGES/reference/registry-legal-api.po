@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -103,6 +103,81 @@ msgstr ""
 "que ha aportat un valor"
 
 #: ../../reference/registry-legal-api.md:22
+msgid "Filing-input contract shapes"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:24
+msgid ""
+"The validated registry snapshot is the read-model authority for one "
+"modelo, filing year, and period. It defines the casillas, formulas, "
+"bindings, repeating fields, grounding, and export layout required by that"
+" filing revision. Source business records remain owned by their encrypted"
+" domain repositories."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Shape"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+#, fuzzy
+msgid "Registry contract"
+msgstr "Revisió del registre"
+
+#: ../../reference/registry-legal-api.md
+msgid "Runtime projection"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+#, fuzzy
+msgid "Scalar binding"
+msgstr "Fórmula o binding"
+
+#: ../../reference/registry-legal-api.md
+msgid "Typed source kind, selector, and aggregation"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "One numeric, enumerated, text, or date value for a binding id"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Repeating row binding"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Typed source kind plus grouping, row field, and aggregation"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid ""
+"Values keyed by binding id and one-based row index, with validated detail"
+" rows"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Formula"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Typed operands and operation grounded by registry references"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "A calculated casilla observation"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:35
+msgid ""
+"A binding is not an attachable data blob. It is the contract by which an "
+"enrolled source resolver projects an owned source record into one of "
+"these filing-input shapes. Modelo 720 foreign assets use an enrolled "
+"repeating-row projection. The binding-source taxonomy currently has no "
+"inventory member. No calculation resolver is enrolled for the encrypted "
+"`InventoryLedger`, so it remains a standalone business register."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:42
 #, python-brace-format
 msgid ""
 "Use the generated [application command reference](../cli/app.rst) to look"
@@ -116,11 +191,11 @@ msgstr ""
 "{doc}`glossari </_generated/glossary>` per a les definicions de cara al "
 "contribuent."
 
-#: ../../reference/registry-legal-api.md:27
+#: ../../reference/registry-legal-api.md:47
 msgid "Python public API lookup"
 msgstr "Consulta de l'API pública de Python"
 
-#: ../../reference/registry-legal-api.md:29
+#: ../../reference/registry-legal-api.md:49
 msgid ""
 "The generated [Cadrumo package API](../api/cadrumo.rst) is the entry "
 "point for Python lookup. Public consumers import from `cadrumo` and its "
@@ -133,7 +208,7 @@ msgstr ""
 "paquets generat llista les superfícies admeses d'adaptadors, aplicació, "
 "nucli, domini, punt d'entrada i localització."
 
-#: ../../reference/registry-legal-api.md:34
+#: ../../reference/registry-legal-api.md:54
 msgid ""
 "There is no `aeat` Python import compatibility package. Names containing "
 "`aeat` inside the `cadrumo` package identify the external authority "

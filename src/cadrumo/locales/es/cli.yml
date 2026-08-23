@@ -321,8 +321,6 @@ cli:
           coincidió con ellas: {columns}'
         invoice_class_help: Clase de factura. Una rectificativa exige además --rectifies-invoice-number
           indicando la factura que corrige.
-        invoice_date_help: Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD),
-          p. ej. 2026-01-15.
         invoice_id_help: Identificador de factura del catálogo (o prefijo no ambiguo).
         iva_category_help: Tratamiento de IVA de la operación. Necesario para que
           un cálculo de renta pueda fundamentarla.
@@ -466,7 +464,6 @@ cli:
         list_help: Lista los snapshots de expedientes guardados
         pull_help: Descarga el registro de declaraciones de AEAT y guarda una instantánea
           del bucket.
-        pull_modelo_help: Limita esta descarga a este modelo.
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de expedientes
       filed:
@@ -2815,23 +2812,17 @@ cli:
     allocate:
       business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;
         no uses ledger allocate para una fila totalmente BUSINESS.
-      category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
-        los ingresos no necesitan categoría)
       help: Registrar proporcionalidad profesional/personal para un movimiento del
         libro
       id_help: Id del movimiento del libro a asignar
       prorrata_reference_help: Referencia de prorrata de IVA para flujos de IVA
-      usage_ratio_help: Identificador de una proporción de uso ya configurada para
-        uso profesional proporcional; la categoría debe tener una proporción de uso.
     app_help: Gestión de libros contables y registros de IVA
     archive:
-      actor_help: Nombre del operador registrado en el evento del bucket
       help: Archivar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a archivar
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma el archivo de la transacción del libro
     attach:
-      actor_help: Nombre del operador registrado en el evento del bucket
       attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
         varios adjuntos
       finalized_revision_stale: El justificante se guardó en el movimiento del libro,
@@ -2876,7 +2867,6 @@ cli:
         status.'
       year_help: Año de declaración para --period (p. ej. 2024).
     classify:
-      actor_help: Nombre del operador registrado en el evento del bucket
       apply_help: 'Persiste la sugerencia del LLM con procedencia llm: en lugar de
         solo previsualizarla.'
       auto_split_help: Lee la factura adjunta y, cuando es multicomponente, la divide
@@ -2895,8 +2885,6 @@ cli:
       business_pct_requires_mixed: Rechazado. --business-pct solo se aplica a una
         clasificación MIXED. Una fila BUSINESS o PERSONAL es totalmente profesional
         o totalmente privada; quita --business-pct o pasa --classification MIXED.
-      category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
-        los ingresos no necesitan categoría)
       classification_help: Estado de clasificación profesional del movimiento
       classification_required: --classification es obligatorio cuando no se usa --file.
       counterparty_country_help: País de establecimiento de la contraparte (ISO 3166-1
@@ -3045,21 +3033,18 @@ cli:
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
     exclude:
-      actor_help: Etiqueta del operador.
       help: Marca una transacción de libro revisada como excluida deliberadamente
         de la declaración.
       id_help: Id de transacción del libro.
       reason_help: Nota opcional que registra por que la fila esta excluida.
       yes_help: Confirma la decisión de exclusión revisada.
     export:
-      actor_help: Nombre del operador registrado en el evento del bucket
       format_help: Formato de serialización de exportación
       help: Exportar movimientos canónicos del libro desde el perfil activo
       include_inactive_help: Incluir movimientos archivados y apartados
       output_help: Ruta donde escribir el archivo exportado del libro
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
-      year_help: Año de declaración para --period (p. ej. 2024).
     history:
       help: Muestra la cadena cronológica de eventos de una transacción
       id_help: Id de la transacción (o prefijo no ambiguo)
@@ -3083,13 +3068,10 @@ cli:
         no contenía filas de datos. Un CSV bancario debe tener una fila de cabecera
         con una columna de fecha, importe y descripción seguida de al menos una fila
         de datos.'
-      period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
-        (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
       provider_help: 'Proveedor del formato del extracto. Valores reconocidos: {providers}'
       verbose_help: Mostrar información detallada durante la importación
       verify_help: Verificar las entradas después de la importación
       verify_source_help: Archivo original usado para verificar las filas importadas.
-      year_help: Año de declaración para --period (p. ej. 2024).
     labels:
       active: Activas
       amount: Importe
@@ -3220,8 +3202,6 @@ cli:
       help: Informa de los datos contables que faltan (categoría, base imponible,
         importe/tipo de IVA, moneda, referencia de prorrata) para los movimientos
         del perfil activo en un período dado. Local; nunca contacta con AEAT.
-      period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
-        (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
       year_help: Año de declaración (p. ej. 2024).
     pull_folder:
       errors:
@@ -3243,23 +3223,19 @@ cli:
         files_refused: '%{refused_count} archivo(s) de esta carpeta no se pudieron
           obtener bajo el permiso drive.file; descárgalos manualmente y adjúntalos.'
     remove:
-      actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin eliminar el movimiento del libro
       help: Eliminar un movimiento del libro del perfil activo
       id_help: Id del movimiento del libro a eliminar
       reason_help: Motivo registrado en el historial de eliminación
       yes_help: Confirmar la eliminación del movimiento del libro
     reset:
-      actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin vaciar el catálogo del libro
       help: Reiniciar el catálogo del libro del perfil activo
       reason_help: Motivo registrado en el historial de reinicio
       yes_help: Confirmar el vaciado del catálogo activo del libro
     restore:
-      actor_help: Nombre del operador registrado en el evento del bucket
       help: Restaurar a activo un movimiento del libro apartado o archivado
       id_help: Id del movimiento del libro a restaurar a activo
-      reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la restauración del movimiento del libro a activo
     review:
       filter_help: Filtrar filas por status, period (un token AEAT simple, p. ej.
@@ -3290,21 +3266,13 @@ cli:
         LLM indicado.
       read_evidence_help: Lee la factura adjunta de la transacción en local y alimentala
         al proponente de división --llm.
-      reason_help: Motivo registrado en el historial de ciclo de vida
-      vision_model_help: Sustituye el modelo de visión local de Ollama para leer una
-        factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo
-        configurado.
       yes_help: Confirma la división de la transacción
     stash:
       help: Apartar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a apartar
-      reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma el envío de la transacción a la reserva
     status:
       help: Resumir el estado del libro y la preparación de cálculo del perfil activo
-      period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
-        (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
-      year_help: Año de declaración para --period (p. ej. 2024).
     track:
       help: Mostrar el linaje de eventos de un movimiento del libro
       transaction_id_help: Id del movimiento del libro a inspeccionar

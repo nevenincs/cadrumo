@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 10:30+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -23,10 +23,11 @@ msgid "Prepare a Modelo 130 IRPF instalment"
 msgstr "Prepara un pagament fraccionat de l'IRPF amb el Modelo 130"
 
 #: ../../how-to/modelo-130.md:3
+#, fuzzy
 msgid ""
 "This page covers the quarterly Modelo 130 filing: the complete create-"
-"calculate-verify-export chain, the cumulative year-to-date behaviour that"
-" makes each quarter build on the ones before it, and the prior-period "
+"calculate-verify-file chain, the cumulative year-to-date behaviour that "
+"makes each quarter build on the ones before it, and the prior-period "
 "values a later quarter carries in. Modelo 130 is the IRPF payment on "
 "account for self-employed activity under estimación directa; the "
 "registry's official title is \"Impuesto sobre la Renta de las Personas "
@@ -44,17 +45,17 @@ msgstr ""
 
 #: ../../how-to/modelo-130.md:11
 msgid ""
-"`aeat` does not submit Modelo 130 to AEAT. Export creates a local file "
-"that you upload through the official AEAT channel yourself."
+"`aeat` does not submit Modelo 130 to AEAT, and it cannot currently "
+"produce an upload file for it either: Modelo 130 has no fichero-BOE "
+"layout, so `export` refuses. Read the calculated box values back and "
+"enter them through the official AEAT channel yourself."
 msgstr ""
-"`aeat` no presenta el Modelo 130 a l'AEAT. L'exportació crea un fitxer "
-"local que puges tu mateix pel canal oficial de l'AEAT."
 
-#: ../../how-to/modelo-130.md:14
+#: ../../how-to/modelo-130.md:16
 msgid "The tool needs a master-key passphrase and prompts for it."
 msgstr "L'eina necessita una contrasenya de clau mestra i la demana."
 
-#: ../../how-to/modelo-130.md:16
+#: ../../how-to/modelo-130.md:18
 msgid ""
 "**Requirement:** a valid taxpayer profile with self-employed activity "
 "under estimación directa. Create one with `aeat config profile create "
@@ -66,11 +67,11 @@ msgstr ""
 "<name>` abans de començar. [Configura el teu perfil de contribuent"
 "](profile-setup.md) t'hi guia."
 
-#: ../../how-to/modelo-130.md:20
+#: ../../how-to/modelo-130.md:22
 msgid "The complete first-quarter chain"
 msgstr "La cadena completa del primer trimestre"
 
-#: ../../how-to/modelo-130.md:22
+#: ../../how-to/modelo-130.md:24
 msgid ""
 "This is the full path from an empty store to a verified draft for a "
 "first-period filer. The preparation below sets up a self-employed profile"
@@ -83,21 +84,22 @@ msgstr ""
 " seguit crea l'esborrany, el calcula i el verifica. Cada detall "
 "determinant s'explica sota la seqüència."
 
-#: ../../how-to/modelo-130.md:31
+#: ../../how-to/modelo-130.md:33
 msgid "Load-bearing details:"
 msgstr "Detalls determinants:"
 
-#: ../../how-to/modelo-130.md:33
+#: ../../how-to/modelo-130.md:35
+#, fuzzy
 msgid ""
 "Create the profile with `--quiet` for the non-interactive form. The "
-"profile MUST carry `--name` and `--surnames`, or export later refuses "
+"profile MUST carry `--name` and `--surnames`, or filing later refuses "
 "with \"requires the operator name\"."
 msgstr ""
 "Crea el perfil amb `--quiet` per a la forma no interactiva. El perfil ha "
 "de portar `--name` i `--surnames`, o l'exportació més tard es negarà amb "
 "«requires the operator name»."
 
-#: ../../how-to/modelo-130.md:36
+#: ../../how-to/modelo-130.md:38
 msgid ""
 "`--activity-start-date 2026-01-01` scopes the prior-period dependency out"
 " for a first period. Without it, verify blocks on the previous quarter."
@@ -106,7 +108,7 @@ msgstr ""
 "període anterior per a un primer període. Sense això, la verificació es "
 "bloqueja pel trimestre anterior."
 
-#: ../../how-to/modelo-130.md:38
+#: ../../how-to/modelo-130.md:40
 msgid ""
 "`ledger add --amount` is the GROSS amount (`--taxable-base` + `--iva-"
 "amount`); the tool enforces the sum to the cent. A deductible-expense row"
@@ -117,7 +119,7 @@ msgstr ""
 "deduïble necessita `--category-id` (llista els ids amb `aeat app ledger "
 "categories`)."
 
-#: ../../how-to/modelo-130.md:42
+#: ../../how-to/modelo-130.md:44
 msgid ""
 "The three `--binding ...=0` values are the prior-period carries a true "
 "first period does not have: earlier quarters' negative results, earlier "
@@ -133,7 +135,7 @@ msgstr ""
 "presentat: consulta [el comportament acumulatiu](#each-quarter-is-"
 "cumulative) més avall."
 
-#: ../../how-to/modelo-130.md:47
+#: ../../how-to/modelo-130.md:49
 msgid ""
 "With the two rows above, calculate reports cumulative income (casilla "
 "`01`) of `1000.00`, rendimiento neto (casilla `03`) of `500.00` - income "
@@ -145,20 +147,21 @@ msgstr ""
 " de `500.00` -base d'ingressos menys base de despeses- i un pago "
 "fraccionado (casilla `04`) de `100.00`, el 20 per cent del net."
 
-#: ../../how-to/modelo-130.md:51
+#: ../../how-to/modelo-130.md:53
+#, fuzzy
 msgid ""
-"`verify` reports `completeness complete` and `granted true`. Export then "
-"writes the `.boe` and reports its path, byte size, and SHA-256 checksum."
+"`verify` reports `completeness complete` and `granted true`. `export` "
+"then refuses, because Modelo 130 carries no fichero-BOE layout."
 msgstr ""
 "`verify` informa de `completeness complete` i `granted true`. Després "
 "l'exportació escriu el `.boe` i n'informa el camí, la mida en bytes i la "
 "suma de verificació SHA-256."
 
-#: ../../how-to/modelo-130.md:54
+#: ../../how-to/modelo-130.md:56
 msgid "Before you create the draft"
 msgstr "Abans de crear l'esborrany"
 
-#: ../../how-to/modelo-130.md:56
+#: ../../how-to/modelo-130.md:58
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md). Modelo 130 applies to a"
 " profile with self-employed activity under estimación directa; check "
@@ -168,7 +171,7 @@ msgstr ""
 " s'aplica a un perfil amb activitat per compte propi en estimación "
 "directa; comprova l'aplicabilitat amb `aeat app overview explain 130`."
 
-#: ../../how-to/modelo-130.md:59
+#: ../../how-to/modelo-130.md:61
 msgid ""
 "[Plan your filing calendar](filing-calendar.md). Modelo 130 uses "
 "quarterly periods `1T` through `4T` only."
@@ -176,7 +179,7 @@ msgstr ""
 "[Planifica el teu calendari de presentacions](filing-calendar.md). El "
 "Modelo 130 utilitza només períodes trimestrals de `1T` a `4T`."
 
-#: ../../how-to/modelo-130.md:61
+#: ../../how-to/modelo-130.md:63
 msgid ""
 "[Import or add your transactions](import-bank-statements.md), then "
 "[classify them](classify-transactions.md). Modelo 130 reads classified "
@@ -187,11 +190,11 @@ msgstr ""
 "llegeix les files d'ingressos i despeses de negoci classificades; les "
 "despeses necessiten una categoria."
 
-#: ../../how-to/modelo-130.md:65
+#: ../../how-to/modelo-130.md:67
 msgid "What Modelo 130 calculates"
 msgstr "Què calcula el Modelo 130"
 
-#: ../../how-to/modelo-130.md:67
+#: ../../how-to/modelo-130.md:69
 msgid ""
 "Modelo 130 calculates the quarter's IRPF payment on account from your "
 "activity's year-to-date figures: cumulative income (casilla `01`) minus "
@@ -217,7 +220,7 @@ msgstr ""
 "s'arrossega com a `saldo-negativo-fin-periodo` per als trimestres "
 "posteriors."
 
-#: ../../how-to/modelo-130.md:78
+#: ../../how-to/modelo-130.md:80
 msgid ""
 "The ledger feeds the cumulative income, expense, and withholding figures "
 "through registry bindings; prior filings feed the carries. Casillas `06`,"
@@ -233,11 +236,11 @@ msgstr ""
 "habitual, resultats complementaris anteriors). Inspecciona què és "
 "vinculat, què falta o què és manual:"
 
-#: ../../how-to/modelo-130.md:88
+#: ../../how-to/modelo-130.md:90
 msgid "Supply a manual box value"
 msgstr "Aporta el valor d'una casilla manual"
 
-#: ../../how-to/modelo-130.md:90
+#: ../../how-to/modelo-130.md:92
 msgid ""
 "Casilla `06` (Retenciones e ingresos a cuenta) is a manual box: the "
 "ledger does not fill it, so you supply it by hand with `--casilla`. Pass "
@@ -250,7 +253,7 @@ msgstr ""
 "seguit, revisa el càlcul desat per confirmar que el teu valor hi ha "
 "quedat:"
 
-#: ../../how-to/modelo-130.md:99
+#: ../../how-to/modelo-130.md:101
 msgid ""
 "`--casilla` works only on `manual` boxes; a `bound` box filled from your "
 "ledger (like casilla `02`) refuses the override. Check a box's kind with "
@@ -265,11 +268,11 @@ msgstr ""
 "consulta [Revisa i aporta entrades de càlcul](review-calculation-"
 "values.md) per al flux d'entrada complet."
 
-#: ../../how-to/modelo-130.md:106
+#: ../../how-to/modelo-130.md:108
 msgid "Each quarter is cumulative"
 msgstr "Cada trimestre és acumulatiu"
 
-#: ../../how-to/modelo-130.md:108
+#: ../../how-to/modelo-130.md:110
 msgid ""
 "Modelo 130 is a year-to-date form, not a quarter-slice form. The second "
 "quarter's casilla `01` covers January through June, not April through "
@@ -282,7 +285,7 @@ msgstr ""
 "calcula sobre tot l'any transcorregut, i els pagaments fraccionats que ja"
 " has abonat se'n descompten a través de la casilla `05`."
 
-#: ../../how-to/modelo-130.md:113
+#: ../../how-to/modelo-130.md:115
 msgid ""
 "The tool implements this through cumulative ledger bindings (the ledger "
 "window for `2T` is January 1 to June 30) and `previous_filing` bindings "
@@ -293,7 +296,7 @@ msgstr ""
 "bindings `previous_filing` que llegeixen els teus propis trimestres "
 "presentats abans:"
 
-#: ../../how-to/modelo-130.md:117
+#: ../../how-to/modelo-130.md:119
 msgid ""
 "`modelo-130-pagos-fraccionados-anteriores` - the instalments already paid"
 " this year, from your filed `1T`..`3T` records."
@@ -302,7 +305,7 @@ msgstr ""
 "abonats aquest any, a partir dels teus registres presentats de `1T` a "
 "`3T`."
 
-#: ../../how-to/modelo-130.md:119
+#: ../../how-to/modelo-130.md:121
 msgid ""
 "`modelo-130-resultados-negativos-anteriores` - negative results carried "
 "from earlier quarters."
@@ -310,7 +313,7 @@ msgstr ""
 "`modelo-130-resultados-negativos-anteriores`: els resultats negatius "
 "arrossegats de trimestres anteriors."
 
-#: ../../how-to/modelo-130.md:121
+#: ../../how-to/modelo-130.md:123
 msgid ""
 "`irpf.previous_year_economic_activity_net_income` - last year's net "
 "income, which decides the minoración tier."
@@ -318,7 +321,7 @@ msgstr ""
 "`irpf.previous_year_economic_activity_net_income`: la renda neta de l'any"
 " passat, que decideix el tram de la minoración."
 
-#: ../../how-to/modelo-130.md:124
+#: ../../how-to/modelo-130.md:126
 msgid ""
 "For a first period these have no history, which is why the first-quarter "
 "chain passes them as `--binding ...=0`. For later quarters do NOT pass "
@@ -336,11 +339,12 @@ msgstr ""
 "concilia primer aquella presentació anterior (consulta [Concilia una "
 "presentació](reconcile.md))."
 
-#: ../../how-to/modelo-130.md:131
-msgid "Calculate, review, verify, export"
+#: ../../how-to/modelo-130.md:133
+#, fuzzy
+msgid "Calculate, review, verify, file"
 msgstr "Calcula, revisa, verifica, exporta"
 
-#: ../../how-to/modelo-130.md:133
+#: ../../how-to/modelo-130.md:135
 msgid ""
 "The chain is the standard filing workflow - see [The filing workflow"
 "](filing-spine.md) for how work units and calculation revisions behave. "
@@ -350,24 +354,30 @@ msgstr ""
 "flux de treball de presentació](filing-spine.md) per saber com es "
 "comporten les unitats de treball i les revisions de càlcul. En resum:"
 
-#: ../../how-to/modelo-130.md:141
+#: ../../how-to/modelo-130.md:143
 msgid ""
-"Once the draft verifies, export it. Export refuses until every "
-"deductible-expense row carries linked purchase-invoice evidence (see "
-"[Attach invoices and receipts](ledger-evidence.md)), so this example "
-"registers the supplier invoice and attaches it before it calculates. "
-"Attach in that order: a draft bundles its evidence when you verify it, so"
-" an invoice attached afterwards does not reach the filing."
+"Once the draft verifies, record the filed marker. Verification refuses "
+"until every deductible-expense row carries linked purchase-invoice "
+"evidence (see [Attach invoices and receipts](ledger-evidence.md)), so "
+"this example registers the supplier invoice and attaches it before it "
+"calculates. Attach in that order: a draft bundles its evidence when you "
+"verify it, so an invoice attached afterwards does not reach the filing."
 msgstr ""
 
-#: ../../how-to/modelo-130.md:152
+#: ../../how-to/modelo-130.md:150
 msgid ""
-"Recording the filed marker is optional, and it applies only while the "
-"obligation window is open. Export is the local finish line; the marker is"
-" an internal note that you have already presented the file at the portal."
+"The sequence below shows `export` refusing, then the filed marker "
+"recording."
 msgstr ""
 
 #: ../../how-to/modelo-130.md:156
+msgid ""
+"Recording the filed marker applies only while the obligation window is "
+"open. It is an internal note that you have already presented the figures "
+"at the portal."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:159
 #, fuzzy
 msgid ""
 "Each computed casilla carries its formula, legal references, and source "
@@ -382,7 +392,7 @@ msgstr ""
 "Després de registrar el marcador, concilia contra el justificante "
 "(consulta [Concilia una presentació](reconcile.md))."
 
-#: ../../how-to/modelo-130.md:162
+#: ../../how-to/modelo-130.md:165
 msgid ""
 "Modelo 130's quarterly results feed your annual Renta declaration: the "
 "four instalments are folded into Modelo 100 as payments on account. See "
@@ -393,27 +403,27 @@ msgstr ""
 "100 com a pagaments a compte. Consulta [Prepara la declaració anual de la"
 " Renta del Modelo 100](modelo-100.md)."
 
-#: ../../how-to/modelo-130.md:166
+#: ../../how-to/modelo-130.md:169
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/modelo-130.md:168
+#: ../../how-to/modelo-130.md:171
 msgid "[The income-tax year (run-through)](irpf-lifecycle.md)"
 msgstr "[L'any de l'impost sobre la renda (recorregut)](irpf-lifecycle.md)"
 
-#: ../../how-to/modelo-130.md:169
+#: ../../how-to/modelo-130.md:172
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flux de treball de presentació](filing-spine.md)"
 
-#: ../../how-to/modelo-130.md:170
+#: ../../how-to/modelo-130.md:173
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/modelo-130.md:171
+#: ../../how-to/modelo-130.md:174
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Puja el teu modelo exportat al portal de l'AEAT](file-at-aeat.md)"
 
-#: ../../how-to/modelo-130.md:172
+#: ../../how-to/modelo-130.md:175
 msgid "[Reconcile a filing](reconcile.md)"
 msgstr "[Concilia una presentació](reconcile.md)"
 
@@ -446,4 +456,39 @@ msgstr "[Concilia una presentació](reconcile.md)"
 #~ "de punta a punta a [Prepara una"
 #~ " presentació d'IVA amb el Modelo "
 #~ "303](modelo-303.md):"
+
+#~ msgid ""
+#~ "`aeat` does not submit Modelo 130 "
+#~ "to AEAT. Export creates a local "
+#~ "file that you upload through the "
+#~ "official AEAT channel yourself."
+#~ msgstr ""
+#~ "`aeat` no presenta el Modelo 130 a"
+#~ " l'AEAT. L'exportació crea un fitxer "
+#~ "local que puges tu mateix pel "
+#~ "canal oficial de l'AEAT."
+
+#~ msgid ""
+#~ "Once the draft verifies, export it. "
+#~ "Export refuses until every deductible-"
+#~ "expense row carries linked purchase-"
+#~ "invoice evidence (see [Attach invoices "
+#~ "and receipts](ledger-evidence.md)), so this"
+#~ " example registers the supplier invoice "
+#~ "and attaches it before it calculates."
+#~ " Attach in that order: a draft "
+#~ "bundles its evidence when you verify "
+#~ "it, so an invoice attached afterwards"
+#~ " does not reach the filing."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Recording the filed marker is optional,"
+#~ " and it applies only while the "
+#~ "obligation window is open. Export is "
+#~ "the local finish line; the marker "
+#~ "is an internal note that you have"
+#~ " already presented the file at the"
+#~ " portal."
+#~ msgstr ""
 

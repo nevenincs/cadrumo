@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 10:30+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -423,16 +423,17 @@ msgid "Use an LLM suggestion"
 msgstr "Utilitza un suggeriment d'un LLM"
 
 #: ../../how-to/classify-transactions.md:181
+#, fuzzy
 msgid ""
-"Cadrumo can use a configured language model to suggest how to classify each "
-"transaction. The suggestion is a starting point. You must confirm or correct "
-"it. It does not fill in tax amounts such as taxable base, IVA rate, or IRPF "
-"category."
+"Cadrumo can use an AI assistant to suggest how to classify each "
+"transaction. The suggestion is a starting point. You must confirm or "
+"correct it. It does not fill in tax amounts such as taxable base, IVA "
+"rate, or IRPF category."
 msgstr ""
 "Cadrumo pot utilitzar un model de llenguatge configurat per suggerir com "
-"classificar cada moviment. El suggeriment és un punt de partida. L'has de "
-"confirmar o corregir. No emplena imports fiscals com ara la base imposable, "
-"el tipus d'IVA o la categoria d'IRPF."
+"classificar cada moviment. El suggeriment és un punt de partida. L'has de"
+" confirmar o corregir. No emplena imports fiscals com ara la base "
+"imposable, el tipus d'IVA o la categoria d'IRPF."
 
 #: ../../how-to/classify-transactions.md:185
 msgid ""
@@ -584,3 +585,4 @@ msgstr "[Revisa els càlculs amb Google Sheets](review-with-google-sheets.md)"
 #: ../../how-to/classify-transactions.md:256
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"
+

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 10:30+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -23,65 +23,50 @@ msgid "Protect access to your data"
 msgstr "Protege el acceso a tus datos"
 
 #: ../../how-to/protect-data-access.md:3
+#, fuzzy
 msgid ""
 "Cadrumo encrypts every profile, transaction, piece of evidence, and "
-"filing under one master key. Your passphrase opens that key. If you lose "
-"the passphrase and have no recovery key, the data cannot be decrypted by "
-"anyone, including you."
+"filing under one master key. Your passphrase opens that key. Lose it with"
+" no recovery phrase and the data cannot be decrypted by anyone, including"
+" you."
 msgstr ""
 "Cadrumo cifra cada perfil, movimiento, pieza de evidencia y presentación "
 "bajo una única clave maestra. Tu frase de contraseña abre esa clave. Si "
 "pierde la frase de contraseña y no tiene una clave de recuperación, nadie"
 " puede descifrar los datos, ni siquiera tú."
 
-#: ../../how-to/protect-data-access.md:8
+#: ../../how-to/protect-data-access.md:7
+#, fuzzy
 msgid ""
-"Use this guide to set up a recovery key before you need it, change your "
-"passphrase, recover access after a lost passphrase, log out safely, and "
-"reset local state only as a last resort."
+"Use this guide to store the passphrase and recovery phrase safely, change"
+" the passphrase, run commands without an interactive prompt, log out "
+"safely, and reset local state only as a last resort."
 msgstr ""
 "Usa esta guía para configurar una clave de recuperación antes de "
 "necesitarla, cambiar tu frase de contraseña, recuperar el acceso tras "
 "perder la frase de contraseña, cerrar la sesión de forma segura y "
 "restablecer el estado local solo como último recurso."
 
-#: ../../how-to/protect-data-access.md:12
+#: ../../how-to/protect-data-access.md:11
 msgid "Before you start"
 msgstr "Antes de empezar"
 
-#: ../../how-to/protect-data-access.md:14
+#: ../../how-to/protect-data-access.md:13
 msgid "You need:"
 msgstr "Necesita:"
 
+#: ../../how-to/protect-data-access.md:15
+#, fuzzy
+msgid "An active profile - see [set up your taxpayer profile](profile-setup.md)."
+msgstr ""
+"Consulta [Configura tu perfil de contribuyente](profile-setup.md) para "
+"las instrucciones de exportación de perfiles."
+
 #: ../../how-to/protect-data-access.md:16
-msgid ""
-"An active profile - see [set up your taxpayer profile](profile-setup.md)."
-" The first command below refuses without one (`No se pudo determinar "
-"ningún bucket activo. Selecciona un perfil y vuelve a intentarlo.`)."
+msgid "Your current master-key passphrase."
 msgstr ""
-"Un perfil activo; consulta [configura tu perfil de contribuyente"
-"](profile-setup.md). El primer comando siguiente se niega a continuar sin"
-" uno (`No se pudo determinar ningún bucket activo. Selecciona un perfil y"
-" vuelve a intentarlo.`)."
 
-#: ../../how-to/protect-data-access.md:19
-msgid ""
-"Your current master-key passphrase for recovery-key creation, rotation, "
-"and passphrase changes."
-msgstr ""
-"Tu frase de contraseña actual de la clave maestra para crear la clave de "
-"recuperación, rotarla y cambiar la frase de contraseña."
-
-#: ../../how-to/protect-data-access.md:21
-msgid ""
-"Your recovery words for verification or recovery after a lost passphrase."
-" Recovery sets a new passphrase without requiring the lost one."
-msgstr ""
-"Tus palabras de recuperación para la verificación o la recuperación tras "
-"perder la frase de contraseña. La recuperación establece una nueva frase "
-"de contraseña sin exigir la perdida."
-
-#: ../../how-to/protect-data-access.md:24
+#: ../../how-to/protect-data-access.md:18
 msgid ""
 "Use `--language en`, `es`, `ca`, or `hu` when you need a specific output "
 "language."
@@ -89,221 +74,413 @@ msgstr ""
 "Usa `--language en`, `es`, `ca` o `hu` cuando necesites un idioma de "
 "salida concreto."
 
-#: ../../how-to/protect-data-access.md:27
-msgid "Create your recovery key first"
-msgstr "Crea primero tu clave de recuperación"
-
-#: ../../how-to/protect-data-access.md:29
-msgid "Do this once, right after setup, while your passphrase still works:"
-msgstr ""
-"Haz esto una vez, justo después de la configuración, mientras tu frase de"
-" contraseña aún funciona:"
-
-#: ../../how-to/protect-data-access.md:34
-msgid ""
-"The command shows a twenty-four-word recovery key directly on your "
-"terminal, exactly once, and asks you to retype it (hidden) before "
-"anything is saved. The words are never stored, printed to a file, or "
-"included in command output. Only an encrypted wrapper of the master key "
-"is written to disk. Write the words down and keep them offline, separate "
-"from your computer."
-msgstr ""
-"El comando muestra una clave de recuperación de veinticuatro palabras "
-"directamente en tu terminal, exactamente una vez, y te pide volver a "
-"escribirla (oculta) antes de guardar nada. Las palabras no se guardan "
-"nunca, no se imprimen en ningún archivo ni se incluyen en la salida del "
-"comando. Solo se escribe en disco un envoltorio cifrado de la clave "
-"maestra. Anota las palabras y consérvalas sin conexión, separadas de tu "
-"ordenador."
-
-#: ../../how-to/protect-data-access.md:40
-msgid "Confirm enrollment later without exposing the words:"
-msgstr "Confirma más tarde el registro sin exponer las palabras:"
-
-#: ../../how-to/protect-data-access.md:45
-msgid ""
-"The status output reports enrollment and a short fingerprint of the "
-"enrolled key. It never shows the words again."
-msgstr ""
-"La salida de estado informa del registro y de una huella corta de la "
-"clave registrada. Nunca vuelve a mostrar las palabras."
-
-#: ../../how-to/protect-data-access.md:48
-msgid "Check that your recovery key works"
-msgstr "Comprueba que tu clave de recuperación funciona"
-
-#: ../../how-to/protect-data-access.md:50
-msgid "Verify the words you wrote down without changing anything:"
-msgstr "Verifica las palabras que anotó sin cambiar nada:"
-
-#: ../../how-to/protect-data-access.md:55
-msgid ""
-"Type the words at the hidden prompt. The command reports `verified yes` "
-"or `verified no` and exits with a failure code when the words do not open"
-" the recovery wrapper. Nothing is modified either way. Never pass the "
-"words on the command line: they would land in your shell history."
-msgstr ""
-"Escribe las palabras en la solicitud oculta. El comando informa de "
-"`verified yes` o `verified no` y sale con un código de fallo cuando las "
-"palabras no abren el envoltorio de recuperación. En ningún caso se "
-"modifica nada. Nunca pases las palabras en la línea de comandos: "
-"quedarían en el historial de tu shell."
-
-#: ../../how-to/protect-data-access.md:60
-msgid "Replace the recovery key"
-msgstr "Sustituye la clave de recuperación"
-
-#: ../../how-to/protect-data-access.md:62
-msgid ""
-"If the written words may have been seen by someone else, mint a fresh "
-"recovery key:"
-msgstr ""
-"Si otra persona pudo haber visto las palabras anotadas, crea una clave de"
-" recuperación nueva:"
-
-#: ../../how-to/protect-data-access.md:68
-msgid ""
-"The new words appear exactly once and must be retyped before the previous"
-" recovery key is replaced. The previous recovery words stop working "
-"immediately. Store the new words as before."
-msgstr ""
-"Las palabras nuevas aparecen exactamente una vez y deben volver a "
-"escribirse antes de sustituir la clave de recuperación anterior. Las "
-"palabras de recuperación anteriores dejan de funcionar de inmediato. "
-"Guarda las nuevas palabras como antes."
-
-#: ../../how-to/protect-data-access.md:72
-msgid "Change your passphrase"
+#: ../../how-to/protect-data-access.md:21
+#, fuzzy
+msgid "Store your passphrase safely"
 msgstr "Cambia tu frase de contraseña"
 
-#: ../../how-to/protect-data-access.md:74
-msgid "To change the passphrase while you still know the current one:"
-msgstr "Para cambiar la frase de contraseña mientras aún conoce la actual:"
-
-#: ../../how-to/protect-data-access.md:79
+#: ../../how-to/protect-data-access.md:23
 msgid ""
-"The command prompts (hidden) for the current passphrase, then twice for "
-"the new one. The master key itself does not change, so all stored data "
-"stays readable. Only the passphrase that opens it is replaced. For non-"
-"interactive use, pass `--secrets-stdin` and pipe one JSON object with "
-"`current_passphrase`, `new_passphrase`, and "
-"`new_passphrase_confirmation`."
+"Your passphrase opens the key to your encrypted data. Treat it "
+"accordingly:"
 msgstr ""
-"El comando solicita (oculta) la frase de contraseña actual y, después, "
-"dos veces la nueva. La clave maestra en sí no cambia, así que todos los "
-"datos guardados siguen siendo legibles. Solo se sustituye la frase de "
-"contraseña que la abre. Para un uso no interactivo, pasa `--secrets-"
-"stdin` y canaliza un único objeto JSON con `current_passphrase`, "
-"`new_passphrase` y `new_passphrase_confirmation`."
 
-#: ../../how-to/protect-data-access.md:85
-msgid "Recover after a forgotten passphrase"
-msgstr "Recupera el acceso tras olvidar la frase de contraseña"
-
-#: ../../how-to/protect-data-access.md:87
-msgid "If you forgot the passphrase but have your recovery words:"
-msgstr "Si olvidó la frase de contraseña pero tiene tus palabras de recuperación:"
-
-#: ../../how-to/protect-data-access.md:92
+#: ../../how-to/protect-data-access.md:25
 msgid ""
-"The command prompts (hidden) for the recovery words and twice for a new "
-"passphrase, unlocks the master key from the recovery wrapper, and rewraps"
-" it under the new passphrase. All stored data stays intact. Nothing is "
-"deleted or re-encrypted. For non-interactive use, pass `--secrets-stdin` "
-"and pipe one JSON object with `recovery_code`, `new_passphrase`, and "
-"`new_passphrase_confirmation`."
+"Write the passphrase down and keep it offline, separate from your "
+"computer."
 msgstr ""
-"El comando solicita (oculta) las palabras de recuperación y dos veces una"
-" frase de contraseña nueva, desbloquea la clave maestra a partir del "
-"envoltorio de recuperación y la vuelve a envolver bajo la nueva frase de "
-"contraseña. Todos los datos guardados quedan intactos. No se elimina ni "
-"se vuelve a cifrar nada. Para un uso no interactivo, pasa `--secrets-"
-"stdin` y canaliza un único objeto JSON con `recovery_code`, "
-"`new_passphrase` y `new_passphrase_confirmation`."
 
-#: ../../how-to/protect-data-access.md:99
+#: ../../how-to/protect-data-access.md:26
+msgid "Keep a second copy somewhere you can still reach after a disk failure."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:27
+msgid "Never store it in a shared shell profile, a committed script, or a log."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:29
+#, fuzzy
 msgid ""
-"If you have neither the passphrase nor the recovery words, the encrypted "
-"data is permanently unreadable. The only way forward is a reset (below), "
-"which deletes it."
+"If you lose the passphrase and hold no recovery phrase, the encrypted "
+"data is permanently unreadable. The only way forward is a reset, which "
+"deletes it."
 msgstr ""
 "Si no tiene ni la frase de contraseña ni las palabras de recuperación, "
 "los datos cifrados son ilegibles de forma permanente. La única vía "
 "adelante es un restablecimiento (más abajo), que los elimina."
 
-#: ../../how-to/protect-data-access.md:103
+#: ../../how-to/protect-data-access.md:32
 msgid ""
 "Do not reset when only *some* records fail to open. Quarantine them "
 "first. Quarantine moves each unreadable record, still encrypted, into an "
 "archive inside the same storage and leaves every readable record "
-"untouched, so it deletes nothing and can be previewed before it runs. "
-"Recover the passphrase later and the archived records are still there. "
-"See [diagnose and repair your local setup](troubleshooting.md)."
+"untouched, so it deletes nothing and can be previewed before it runs. See"
+" [diagnose and repair your local setup](troubleshooting.md)."
 msgstr ""
 
-#: ../../how-to/protect-data-access.md:111
+#: ../../how-to/protect-data-access.md:38
+#, fuzzy
+msgid "Store your recovery phrase safely"
+msgstr "Crea primero tu clave de recuperación"
+
+#: ../../how-to/protect-data-access.md:40
+msgid ""
+"Cadrumo shows a 24-word recovery phrase once, at the moment it creates a "
+"profile, on your terminal only - and only when you create the profile at "
+"a terminal. It is never written to a file, an export, or a log, and "
+"Cadrumo keeps no copy. Nobody can show it to you again."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:45
+msgid ""
+"Write it down when it appears. Store it apart from your passphrase and "
+"apart from the computer holding the data - anyone who has the phrase can "
+"open the profile without the passphrase."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:49
+msgid ""
+"Whether you hold a phrase depends on the door that created the profile. A"
+" profile created at a terminal receives the phrase there, once. A profile"
+" created by a script or a scheduled job has no terminal to display the "
+"phrase on, so Cadrumo creates none and says so in that run's output. The "
+"full-screen profile screen cannot display the phrase without corrupting "
+"its own display, so it creates none either and says so - check the "
+"creation output before you assume a profile is recoverable. Recovery is "
+"installed only while the profile is being created, so a profile created "
+"without it cannot be given one later."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:58
+msgid ""
+"Keep the phrase even though you cannot yet use it on your own. The "
+"command that opens a profile from a recovery phrase is not available in "
+"this release. Until it ships, your passphrase is the working key and the "
+"phrase is what preserves your ability to recover once it does."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:63
+msgid "Change your passphrase"
+msgstr "Cambia tu frase de contraseña"
+
+#: ../../how-to/protect-data-access.md:65
+msgid ""
+"Change the passphrase whenever you suspect it has been seen, or on "
+"whatever schedule your own policy sets:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:71
+msgid "Enter the current passphrase, then the new one twice. Nothing is echoed."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:73
+msgid "The change re-wraps the existing key rather than replacing it, so:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:75
+msgid "No record is re-encrypted, and every existing record stays readable."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:76
+msgid "A recovery phrase you wrote down earlier stays correct."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:78
+msgid ""
+"The command reports both facts back to you. If the current passphrase is "
+"wrong, the new one is too short, or the two copies do not match, it "
+"refuses and leaves the existing passphrase working."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:82
+msgid ""
+"To change the passphrase without an interactive prompt, pass the three "
+"values as one JSON object through a leaf secret channel:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:88
+#, python-brace-format
+msgid ""
+"Use `--secrets-stdin` when standard input is free. Use `--secrets-fd FD` "
+"with the same object when another input owns standard input. Send "
+"`{\"current_passphrase\": \"...\", \"new_passphrase\": \"...\", "
+"\"new_passphrase_confirmation\": \"...\"}`. Never pass a passphrase as a "
+"command-line argument: arguments are visible in the process list and in "
+"shell history."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:96
 msgid "Run without a passphrase prompt"
 msgstr "Ejecuta sin solicitud de frase de contraseña"
 
+#: ../../how-to/protect-data-access.md:98
+msgid ""
+"Automation cannot answer an interactive passphrase prompt. Supply a "
+"bounded UTF-8 JSON object through an explicit input channel. Do not put a"
+" profile passphrase, recovery phrase, or certificate passphrase in an "
+"environment variable or command-line argument. The CLI does not use "
+"`CADRUMO_SECRET_PASSPHRASE` as a secret-input fallback."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:104
+msgid "There are two separate option pairs:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:106
+msgid ""
+"Use leaf `--secrets-stdin` or `--secrets-fd FD` when the command itself "
+"owns the secret. The five leaf commands and their exact objects are "
+"listed below."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:108
+#, python-brace-format
+msgid ""
+"Use root `--profile-secrets-stdin` or `--profile-secrets-fd FD` before "
+"`config` when a profile-bound command needs to authenticate a selected "
+"profile after its persisted session cannot resume. Its object is "
+"`{\"profile_passphrase\": \"...\"}`."
+msgstr ""
+
 #: ../../how-to/protect-data-access.md:113
 msgid ""
-"Automation cannot answer an interactive passphrase prompt. For an agent "
-"server, scheduled job, or script, set `CADRUMO_SECRET_PASSPHRASE` for "
-"that process. Treat the value like the passphrase itself. Never put it in"
-" a shared shell profile, committed script, or log."
+"The root options do not replace leaf options. For example, certificate-"
+"secret storage may need a root profile passphrase and a certificate "
+"passphrase in the same invocation. Supply them through two non-colliding "
+"channels."
 msgstr ""
-"La automatización no puede responder a una solicitud interactiva de frase"
-" de contraseña. Para un servidor de agente, una tarea programada o un "
-"script, establece `CADRUMO_SECRET_PASSPHRASE` para ese proceso. Trata el "
-"valor como la propia frase de contraseña. Nunca lo pongas en un perfil de"
-" shell compartido, en un script versionado ni en un registro."
 
-#: ../../how-to/protect-data-access.md:118
+#: ../../how-to/protect-data-access.md:117
+msgid "Supply a secret owned by a leaf command"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:119
+msgid "Use the same two leaf flags on each scalar-secret command:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:85
+msgid "Command"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:85
+msgid "Strict JSON object"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:85
+msgid "`aeat config login`"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:85
+#, python-brace-format
+msgid "`{\"passphrase\": \"...\"}`"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:85
+msgid "`aeat config profile create`"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:85
+#, python-brace-format
+msgid "`{\"passphrase\": \"...\", \"passphrase_confirmation\": \"...\"}`"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:85
+msgid "`aeat config passphrase change`"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:85
+#, python-brace-format
 msgid ""
-"Interactive commands prompt when they need the current passphrase. "
-"Recovery commands use the recovery words and ask for a new passphrase "
-"instead. Creating or rotating a recovery key always needs an interactive "
-"terminal, because the words are shown once and must be retyped."
+"`{\"current_passphrase\": \"...\", \"new_passphrase\": \"...\", "
+"\"new_passphrase_confirmation\": \"...\"}`"
 msgstr ""
-"Los comandos interactivos solicitan la frase de contraseña actual cuando "
-"la necesitan. Los comandos de recuperación usan las palabras de "
-"recuperación y piden una nueva frase de contraseña en su lugar. Crear o "
-"rotar una clave de recuperación necesita siempre un terminal interactivo,"
-" porque las palabras se muestran una vez y deben volver a escribirse."
 
-#: ../../how-to/protect-data-access.md:123
+#: ../../how-to/protect-data-access.md:85
+msgid "`aeat config profile restore` without `--artifact`"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:85
+msgid "`aeat config profile restore` with `--artifact`"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:85
+#, python-brace-format
+msgid "`{\"recovery_secret\": \"...\"}`"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:85
+msgid "`aeat config auth certificate secret set`"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:85
+#, python-brace-format
+msgid "`{\"certificate_passphrase\": \"...\"}`"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:130
+msgid ""
+"The object must contain exactly the fields shown. Duplicate, missing, "
+"extra, oversized, malformed, or non-UTF-8 input is refused. The former "
+"restore field `password` and certificate field `secret` are not accepted."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:134
+msgid "Inspect the current flags without supplying a secret:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:140
+msgid "Authenticate a profile for one command"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:142
+msgid ""
+"Place a root option before the command path. Name the exact profile on "
+"the target command when it accepts a profile target. For example:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:149
+msgid ""
+"This source is used only after the exact profile is known, the command "
+"requires a profile session, no matching live session exists, and "
+"persisted-session resume has failed. It is refused without being read "
+"when the command does not need profile authentication, when the exact "
+"target already has a live or resumed session, or when the command is "
+"self-authenticating. Login, create, restore, logout, and passphrase "
+"change do not accept this root proof."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:156
+msgid ""
+"On a host without usable keychain persistence, successful root "
+"authentication continues only the current process. The command emits a "
+"Notice that the passphrase must be supplied again in the next process. "
+"Each new process repeats the Argon2 password derivation; this deliberate "
+"cost is not cached in a weaker credential or transferable bearer token."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:162
+msgid "Keep two secret sources distinct"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:164
+msgid "Choose sources before either is read:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:166
+msgid "Do not select both stdin and a descriptor for the same option pair."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:167
+msgid "Do not assign stdin to both the root and leaf scopes."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:168
+msgid "Do not assign the same descriptor number to both scopes."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:169
+msgid ""
+"Use root fd plus leaf stdin, root stdin plus leaf fd, or two different "
+"descriptors when one invocation needs both objects."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:172
+msgid ""
+"A selected source that does not apply to the resolved command or exact "
+"profile is refused as unused. This protects scripts from sending a "
+"credential to the wrong target after a command-line mistake."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:176
+msgid "Pass an inherited descriptor safely"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:178
+msgid ""
+"Use an anonymous pipe when standard input already carries another value. "
+"The caller owns the descriptor's backing object and lifetime. Cadrumo "
+"performs one bounded read and closes the descriptor locally after reading"
+" begins, including on refusal. Descriptor `0` is allowed as a stdin-"
+"equivalent; descriptors `1` and `2`, negative descriptors, closed "
+"descriptors, and unreadable descriptors are refused."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:185
+msgid ""
+"On POSIX, start the process with the pipe's read descriptor in the child "
+"process's `pass_fds` allowlist, then pass that number to `--secrets-fd` "
+"or `--profile-secrets-fd`. On Windows, do not assume a numeric CRT "
+"descriptor is inherited directly. Allowlist an inheritable Windows HANDLE"
+" and use the supported bootstrap wrapper to convert it with "
+"`msvcrt.open_osfhandle`:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:195
+msgid ""
+"Omit `--profile-handle` or `--secrets-handle` when the invocation needs "
+"only one scope. The wrapper inserts the matching canonical descriptor "
+"option; do not also add it to the command tail. Prefer the stdin channel "
+"for a directly launched portable command."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:200
+msgid ""
+"Cadrumo bounds the input, wipes mutable read buffers on a best-effort "
+"basis, and releases secret-bearing references promptly. Python may create"
+" immutable strings while decoding JSON and validating secret fields, so "
+"the application does not claim guaranteed memory erasure. Never reuse the"
+" pipe, redirect it to a regular file, or log the JSON object."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:206
+msgid ""
+"Interactive commands may prompt only on a verified terminal. A redirected"
+" or non-interactive invocation without the required explicit channel is "
+"refused."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:209
 msgid "Log out of the active profile"
 msgstr "Cierra la sesión del perfil activo"
 
-#: ../../how-to/protect-data-access.md:125
+#: ../../how-to/protect-data-access.md:211
+#, fuzzy
 msgid ""
 "Run `aeat config logout` when you finish working with a profile. Logout "
 "closes the active storage session, discards in-memory key material, "
-"disposes the bucket engines, and clears the active-profile selection:"
+"disposes the bucket engines, and keeps the profile selected for the next "
+"exact login:"
 msgstr ""
 "Ejecuta `aeat config logout` cuando termines de trabajar con un perfil. "
 "El cierre de sesión termina la sesión de almacenamiento activa, descarta "
 "el material de clave en memoria, libera los motores de bucket y borra la "
 "selección del perfil activo:"
 
-#: ../../how-to/protect-data-access.md:133
+#: ../../how-to/protect-data-access.md:219
+#, fuzzy
 msgid ""
-"Nothing in the profile is deleted. Log in again with `aeat config login "
-"<name>` when you return."
+"Nothing in the profile is deleted. Log in again with `aeat config login` "
+"to use the selected profile, or name another exact profile when you "
+"return."
 msgstr ""
 "No se elimina nada del perfil. Inicia sesión de nuevo con `aeat config "
 "login <name>` cuando vuelvas."
 
-#: ../../how-to/protect-data-access.md:136
+#: ../../how-to/protect-data-access.md:222
 msgid "Reset local state (last resort)"
 msgstr "Restablece el estado local (último recurso)"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:224
+#, fuzzy
 msgid ""
 "Export every profile you want to keep before continuing. Reset "
 "permanently deletes every profile stored locally, related local "
 "authentication state, and the active profile selection. It doesn't delete"
-" exports stored elsewhere. You can't undo the reset."
+" exports stored elsewhere. You can't undo the reset. Deleting is also not"
+" a way to hide activity: any copies of your data that left the machine "
+"(exports, filings, backups) are outside Cadrumo's control and nothing in "
+"Cadrumo can retract them."
 msgstr ""
 "Exporta todos los perfiles que quieras conservar antes de continuar. El "
 "restablecimiento elimina de forma permanente todos los perfiles guardados"
@@ -311,7 +488,7 @@ msgstr ""
 "del perfil activo. No elimina las exportaciones guardadas en otro lugar. "
 "El restablecimiento no se puede deshacer."
 
-#: ../../how-to/protect-data-access.md:146
+#: ../../how-to/protect-data-access.md:234
 msgid ""
 "Use `start` only when you intend to remove all local profiles. Confirm "
 "the reset explicitly. It checks retention requirements before deleting "
@@ -322,7 +499,7 @@ msgstr ""
 "conservación antes de eliminar nada y se niega a iniciarse mientras otro "
 "restablecimiento esté incompleto."
 
-#: ../../how-to/protect-data-access.md:149
+#: ../../how-to/protect-data-access.md:237
 msgid ""
 "Use the read-only `status` command to inspect the latest operation "
 "without changing local data. Provide an operation ID to inspect an exact "
@@ -335,7 +512,7 @@ msgstr ""
 " incompleta, en pausa o completa. Su salida incluye el ID de la operación"
 " y cualquier motivo de pausa."
 
-#: ../../how-to/protect-data-access.md:153
+#: ../../how-to/protect-data-access.md:241
 msgid ""
 "Use `resume` after an interruption or pause. Confirm the reset again. It "
 "continues the same incomplete operation instead of creating another. "
@@ -348,7 +525,7 @@ msgstr ""
 "exacta. Una vez que empieza la eliminación, reanudar el restablecimiento "
 "no restaura los datos eliminados."
 
-#: ../../how-to/protect-data-access.md:158
+#: ../../how-to/protect-data-access.md:246
 msgid ""
 "If legal retention requirements pause the reset, stop if you must keep "
 "the affected records. Override the pause only after reviewing and "
@@ -362,19 +539,20 @@ msgstr ""
 "y proporciona siempre un motivo no vacío. Si proporciona un motivo sin la"
 " sobreposición, el comando se niega a continuar."
 
-#: ../../how-to/protect-data-access.md:163
+#: ../../how-to/protect-data-access.md:251
+#, fuzzy
 msgid ""
-"See [Set up your taxpayer profile](profile-setup.md) for profile export "
-"instructions."
+"See [Set up your taxpayer profile](profile-setup.md) for sealed archive "
+"backup instructions."
 msgstr ""
 "Consulta [Configura tu perfil de contribuyente](profile-setup.md) para "
 "las instrucciones de exportación de perfiles."
 
-#: ../../how-to/protect-data-access.md:166
+#: ../../how-to/protect-data-access.md:254
 msgid "Next steps"
 msgstr "Pasos siguientes"
 
-#: ../../how-to/protect-data-access.md:168
+#: ../../how-to/protect-data-access.md:256
 msgid ""
 "[Import, export, and evidence](../reference/import-export-and-"
 "evidence.md) - see where encrypted custody ends and deliberate plaintext "
@@ -384,7 +562,7 @@ msgstr ""
 "evidence.md): ve dónde acaba la custodia cifrada y dónde empiezan los "
 "traspasos en claro deliberados."
 
-#: ../../how-to/protect-data-access.md:170
+#: ../../how-to/protect-data-access.md:258
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) - create, export, and "
 "import profiles."
@@ -392,7 +570,7 @@ msgstr ""
 "[Configura tu perfil de contribuyente](profile-setup.md): crea, exporta e"
 " importa perfiles."
 
-#: ../../how-to/protect-data-access.md:172
+#: ../../how-to/protect-data-access.md:260
 #, fuzzy
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) - quarantine "
@@ -402,7 +580,7 @@ msgstr ""
 "problemas de almacenamiento o integridad que no necesitan un "
 "restablecimiento."
 
-#: ../../how-to/protect-data-access.md:174
+#: ../../how-to/protect-data-access.md:262
 msgid "[CLI reference](../cli/index.rst) - full option reference."
 msgstr "[Referencia de la CLI](../cli/index.rst): referencia completa de opciones."
 
@@ -419,4 +597,263 @@ msgstr "[Referencia de la CLI](../cli/index.rst): referencia completa de opcione
 #~ "de recuperación, el comando informa de"
 #~ " su estado y no vuelve a "
 #~ "imprimir las palabras."
+
+#~ msgid ""
+#~ "An active profile - see [set up"
+#~ " your taxpayer profile](profile-setup.md). "
+#~ "The first command below refuses without"
+#~ " one (`No se pudo determinar ningún"
+#~ " bucket activo. Selecciona un perfil "
+#~ "y vuelve a intentarlo.`)."
+#~ msgstr ""
+#~ "Un perfil activo; consulta [configura tu"
+#~ " perfil de contribuyente](profile-setup.md). "
+#~ "El primer comando siguiente se niega "
+#~ "a continuar sin uno (`No se pudo"
+#~ " determinar ningún bucket activo. "
+#~ "Selecciona un perfil y vuelve a "
+#~ "intentarlo.`)."
+
+#~ msgid ""
+#~ "Your current master-key passphrase for"
+#~ " recovery-key creation, rotation, and "
+#~ "passphrase changes."
+#~ msgstr ""
+#~ "Tu frase de contraseña actual de "
+#~ "la clave maestra para crear la "
+#~ "clave de recuperación, rotarla y cambiar"
+#~ " la frase de contraseña."
+
+#~ msgid ""
+#~ "Your recovery words for verification or"
+#~ " recovery after a lost passphrase. "
+#~ "Recovery sets a new passphrase without"
+#~ " requiring the lost one."
+#~ msgstr ""
+#~ "Tus palabras de recuperación para la "
+#~ "verificación o la recuperación tras "
+#~ "perder la frase de contraseña. La "
+#~ "recuperación establece una nueva frase "
+#~ "de contraseña sin exigir la perdida."
+
+#~ msgid "Do this once, right after setup, while your passphrase still works:"
+#~ msgstr ""
+#~ "Haz esto una vez, justo después de"
+#~ " la configuración, mientras tu frase "
+#~ "de contraseña aún funciona:"
+
+#~ msgid ""
+#~ "The command shows a twenty-four-"
+#~ "word recovery key directly on your "
+#~ "terminal, exactly once, and asks you "
+#~ "to retype it (hidden) before anything"
+#~ " is saved. The words are never "
+#~ "stored, printed to a file, or "
+#~ "included in command output. Only an "
+#~ "encrypted wrapper of the master key "
+#~ "is written to disk. Write the "
+#~ "words down and keep them offline, "
+#~ "separate from your computer."
+#~ msgstr ""
+#~ "El comando muestra una clave de "
+#~ "recuperación de veinticuatro palabras "
+#~ "directamente en tu terminal, exactamente "
+#~ "una vez, y te pide volver a "
+#~ "escribirla (oculta) antes de guardar "
+#~ "nada. Las palabras no se guardan "
+#~ "nunca, no se imprimen en ningún "
+#~ "archivo ni se incluyen en la "
+#~ "salida del comando. Solo se escribe "
+#~ "en disco un envoltorio cifrado de "
+#~ "la clave maestra. Anota las palabras "
+#~ "y consérvalas sin conexión, separadas de"
+#~ " tu ordenador."
+
+#~ msgid "Confirm enrollment later without exposing the words:"
+#~ msgstr "Confirma más tarde el registro sin exponer las palabras:"
+
+#~ msgid ""
+#~ "The status output reports enrollment and"
+#~ " a short fingerprint of the enrolled"
+#~ " key. It never shows the words "
+#~ "again."
+#~ msgstr ""
+#~ "La salida de estado informa del "
+#~ "registro y de una huella corta de"
+#~ " la clave registrada. Nunca vuelve a"
+#~ " mostrar las palabras."
+
+#~ msgid "Check that your recovery key works"
+#~ msgstr "Comprueba que tu clave de recuperación funciona"
+
+#~ msgid "Verify the words you wrote down without changing anything:"
+#~ msgstr "Verifica las palabras que anotó sin cambiar nada:"
+
+#~ msgid ""
+#~ "Type the words at the hidden "
+#~ "prompt. The command reports `verified "
+#~ "yes` or `verified no` and exits "
+#~ "with a failure code when the words"
+#~ " do not open the recovery wrapper."
+#~ " Nothing is modified either way. "
+#~ "Never pass the words on the "
+#~ "command line: they would land in "
+#~ "your shell history."
+#~ msgstr ""
+#~ "Escribe las palabras en la solicitud "
+#~ "oculta. El comando informa de `verified"
+#~ " yes` o `verified no` y sale "
+#~ "con un código de fallo cuando las"
+#~ " palabras no abren el envoltorio de"
+#~ " recuperación. En ningún caso se "
+#~ "modifica nada. Nunca pases las palabras"
+#~ " en la línea de comandos: quedarían"
+#~ " en el historial de tu shell."
+
+#~ msgid "Replace the recovery key"
+#~ msgstr "Sustituye la clave de recuperación"
+
+#~ msgid ""
+#~ "If the written words may have been"
+#~ " seen by someone else, mint a "
+#~ "fresh recovery key:"
+#~ msgstr ""
+#~ "Si otra persona pudo haber visto "
+#~ "las palabras anotadas, crea una clave"
+#~ " de recuperación nueva:"
+
+#~ msgid ""
+#~ "The new words appear exactly once "
+#~ "and must be retyped before the "
+#~ "previous recovery key is replaced. The"
+#~ " previous recovery words stop working "
+#~ "immediately. Store the new words as "
+#~ "before."
+#~ msgstr ""
+#~ "Las palabras nuevas aparecen exactamente "
+#~ "una vez y deben volver a "
+#~ "escribirse antes de sustituir la clave"
+#~ " de recuperación anterior. Las palabras "
+#~ "de recuperación anteriores dejan de "
+#~ "funcionar de inmediato. Guarda las "
+#~ "nuevas palabras como antes."
+
+#~ msgid "To change the passphrase while you still know the current one:"
+#~ msgstr "Para cambiar la frase de contraseña mientras aún conoce la actual:"
+
+#~ msgid ""
+#~ "The command prompts (hidden) for the "
+#~ "current passphrase, then twice for the"
+#~ " new one. The master key itself "
+#~ "does not change, so all stored "
+#~ "data stays readable. Only the passphrase"
+#~ " that opens it is replaced. For "
+#~ "non-interactive use, pass `--secrets-"
+#~ "stdin` and pipe one JSON object "
+#~ "with `current_passphrase`, `new_passphrase`, and "
+#~ "`new_passphrase_confirmation`."
+#~ msgstr ""
+#~ "El comando solicita (oculta) la frase"
+#~ " de contraseña actual y, después, dos"
+#~ " veces la nueva. La clave maestra "
+#~ "en sí no cambia, así que todos "
+#~ "los datos guardados siguen siendo "
+#~ "legibles. Solo se sustituye la frase "
+#~ "de contraseña que la abre. Para un"
+#~ " uso no interactivo, pasa `--secrets-"
+#~ "stdin` y canaliza un único objeto "
+#~ "JSON con `current_passphrase`, `new_passphrase` "
+#~ "y `new_passphrase_confirmation`."
+
+#~ msgid "Recover after a forgotten passphrase"
+#~ msgstr "Recupera el acceso tras olvidar la frase de contraseña"
+
+#~ msgid "If you forgot the passphrase but have your recovery words:"
+#~ msgstr ""
+#~ "Si olvidó la frase de contraseña "
+#~ "pero tiene tus palabras de recuperación:"
+
+#~ msgid ""
+#~ "The command prompts (hidden) for the "
+#~ "recovery words and twice for a new"
+#~ " passphrase, unlocks the master key "
+#~ "from the recovery wrapper, and rewraps"
+#~ " it under the new passphrase. All "
+#~ "stored data stays intact. Nothing is "
+#~ "deleted or re-encrypted. For non-"
+#~ "interactive use, pass `--secrets-stdin` "
+#~ "and pipe one JSON object with "
+#~ "`recovery_code`, `new_passphrase`, and "
+#~ "`new_passphrase_confirmation`."
+#~ msgstr ""
+#~ "El comando solicita (oculta) las "
+#~ "palabras de recuperación y dos veces "
+#~ "una frase de contraseña nueva, "
+#~ "desbloquea la clave maestra a partir "
+#~ "del envoltorio de recuperación y la "
+#~ "vuelve a envolver bajo la nueva "
+#~ "frase de contraseña. Todos los datos "
+#~ "guardados quedan intactos. No se elimina"
+#~ " ni se vuelve a cifrar nada. "
+#~ "Para un uso no interactivo, pasa "
+#~ "`--secrets-stdin` y canaliza un único "
+#~ "objeto JSON con `recovery_code`, "
+#~ "`new_passphrase` y `new_passphrase_confirmation`."
+
+#~ msgid ""
+#~ "Do not reset when only *some* "
+#~ "records fail to open. Quarantine them"
+#~ " first. Quarantine moves each unreadable"
+#~ " record, still encrypted, into an "
+#~ "archive inside the same storage and "
+#~ "leaves every readable record untouched, "
+#~ "so it deletes nothing and can be"
+#~ " previewed before it runs. Recover "
+#~ "the passphrase later and the archived"
+#~ " records are still there. See "
+#~ "[diagnose and repair your local "
+#~ "setup](troubleshooting.md)."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Automation cannot answer an interactive "
+#~ "passphrase prompt. For an agent server,"
+#~ " scheduled job, or script, set "
+#~ "`CADRUMO_SECRET_PASSPHRASE` for that process. "
+#~ "Treat the value like the passphrase "
+#~ "itself. Never put it in a shared"
+#~ " shell profile, committed script, or "
+#~ "log."
+#~ msgstr ""
+#~ "La automatización no puede responder a"
+#~ " una solicitud interactiva de frase "
+#~ "de contraseña. Para un servidor de "
+#~ "agente, una tarea programada o un "
+#~ "script, establece `CADRUMO_SECRET_PASSPHRASE` para"
+#~ " ese proceso. Trata el valor como "
+#~ "la propia frase de contraseña. Nunca "
+#~ "lo pongas en un perfil de shell"
+#~ " compartido, en un script versionado "
+#~ "ni en un registro."
+
+#~ msgid ""
+#~ "Interactive commands prompt when they "
+#~ "need the current passphrase. Recovery "
+#~ "commands use the recovery words and "
+#~ "ask for a new passphrase instead. "
+#~ "Creating or rotating a recovery key "
+#~ "always needs an interactive terminal, "
+#~ "because the words are shown once "
+#~ "and must be retyped."
+#~ msgstr ""
+#~ "Los comandos interactivos solicitan la "
+#~ "frase de contraseña actual cuando la "
+#~ "necesitan. Los comandos de recuperación "
+#~ "usan las palabras de recuperación y "
+#~ "piden una nueva frase de contraseña "
+#~ "en su lugar. Crear o rotar una "
+#~ "clave de recuperación necesita siempre "
+#~ "un terminal interactivo, porque las "
+#~ "palabras se muestran una vez y "
+#~ "deben volver a escribirse."
 

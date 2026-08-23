@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-01 10:30+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -23,13 +23,14 @@ msgid "Verify a draft filing and act on the findings"
 msgstr "Verifica un borrador de presentación y actúe sobre los hallazgos"
 
 #: ../../how-to/verification-reports.md:3
+#, fuzzy
 msgid ""
 "This page covers the verification of a draft filing: running the check, "
 "reading the saved report, and acting on each kind of finding. "
 "Verification checks your saved calculation locally against the official "
 "form rules and saves a report of what it found. Nothing is sent to AEAT; "
 "everything happens on your computer. The order is always the same: "
-"calculate, then verify, then export or record the filing."
+"calculate, then verify, then record the filing."
 msgstr ""
 "Esta página cubre la verificación de un borrador de presentación: "
 "ejecutar la comprobación, leer el informe guardado y actuar sobre cada "
@@ -143,11 +144,12 @@ msgstr ""
 "fechas](filing-calendar.md#period-tokens-and-dates)."
 
 #: ../../how-to/verification-reports.md:56
+#, fuzzy
 msgid ""
 "With the profile and draft above, this first-period Modelo 303 passes: "
 "the report reads `granted_verificado_completo` `true` and a "
 "`completeness_status` of `complete` - the saved calculation is now "
-"verified and ready to export."
+"verified and ready to file."
 msgstr ""
 "Con el perfil y el borrador anteriores, este Modelo 303 del primer "
 "periodo se supera: el informe muestra `granted_verificado_completo` "
@@ -296,8 +298,9 @@ msgstr ""
 "que esos campos están vacíos para ellas."
 
 #: ../../how-to/verification-reports.md:110
+#, fuzzy
 msgid ""
-"Blocking findings prevent the draft from becoming verified, and export "
+"Blocking findings prevent the draft from becoming verified, and filing "
 "needs a verified calculation. Warnings do not block; read them, decide "
 "whether they apply to you, and move on."
 msgstr ""
@@ -382,9 +385,10 @@ msgid "The report says blocked"
 msgstr "El informe indica bloqueado"
 
 #: ../../how-to/verification-reports.md:149
+#, fuzzy
 msgid ""
 "Blocked means at least one blocking finding stands between your draft and"
-" a verified calculation. You cannot export the draft until you resolve "
+" a verified calculation. You cannot file the draft until you resolve "
 "every blocking finding."
 msgstr ""
 "Bloqueado significa que al menos un hallazgo bloqueante se interpone "
@@ -444,18 +448,16 @@ msgstr ""
 "re-run-verification)."
 
 #: ../../how-to/verification-reports.md:174
-msgid "Export refuses because no verified calculation exists"
-msgstr "La exportación se niega porque no existe ningún cálculo verificado"
+msgid "Export refuses"
+msgstr ""
 
 #: ../../how-to/verification-reports.md:176
+#, fuzzy
 msgid ""
-"Export needs a verified (or locally-filed) saved calculation. It refuses "
-"a plain draft with a message such as \"current revision is still draft; "
-"verify it before exporting\" or \"no exportable verified or filed "
-"revision exists\". If the saved calculation is still a draft, verify it "
-"first, as in [After any fix: re-run verification](#after-any-fix-re-run-"
-"verification). Check where the filing stands, then retry the export once "
-"verification grants verified-complete:"
+"Export refuses a plain draft, with a message such as \"current revision "
+"is still draft; verify it before exporting\" or \"no exportable verified "
+"or filed revision exists\". Verify the draft first, as in [After any fix:"
+" re-run verification](#after-any-fix-re-run-verification)."
 msgstr ""
 "La exportación necesita un cálculo guardado verificado (o presentado "
 "localmente). Rechaza un simple borrador con un mensaje como «current "
@@ -467,11 +469,19 @@ msgstr ""
 "exportación una vez que la verificación otorgue el estado verificado-"
 "completo:"
 
-#: ../../how-to/verification-reports.md:188
+#: ../../how-to/verification-reports.md:181
+msgid ""
+"Verified-complete is necessary but not sufficient. Modelo 303 has no "
+"fichero-BOE layout, so the export refuses even after verification grants,"
+" with `REFUSED_MODELO_EXPORT_UNSUPPORTED`. Check where the filing stands,"
+" then read the verified figures back and enter them at the AEAT portal:"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:190
 msgid "More than one filing matches"
 msgstr "Coincide más de una presentación"
 
-#: ../../how-to/verification-reports.md:190
+#: ../../how-to/verification-reports.md:192
 msgid ""
 "When more than one filing or saved calculation matches the modelo, year, "
 "and period you named, the tool refuses to guess and prints the candidates"
@@ -481,7 +491,7 @@ msgstr ""
 " el año y el periodo que nombró, la herramienta se niega a adivinar e "
 "imprime los candidatos en su lugar."
 
-#: ../../how-to/verification-reports.md:193
+#: ../../how-to/verification-reports.md:195
 msgid ""
 "List your filings with their work-unit IDs with `aeat app modelo work "
 "list`, then target the one you mean by passing its work-unit ID directly "
@@ -492,7 +502,7 @@ msgstr ""
 "unidad de trabajo directamente a `aeat app modelo work verify --work-"
 "unit-id <work-unit-id>`."
 
-#: ../../how-to/verification-reports.md:197
+#: ../../how-to/verification-reports.md:199
 msgid ""
 "To confirm which filing a command touched, check its state and the "
 "actions taken on it:"
@@ -500,11 +510,11 @@ msgstr ""
 "Para confirmar qué presentación tocó un comando, comprueba su estado y "
 "las acciones realizadas sobre ella:"
 
-#: ../../how-to/verification-reports.md:205
+#: ../../how-to/verification-reports.md:207
 msgid "The filing deadline has passed"
 msgstr "El plazo de presentación ha pasado"
 
-#: ../../how-to/verification-reports.md:207
+#: ../../how-to/verification-reports.md:209
 msgid ""
 "Verification does not check filing deadlines. It still runs for a past "
 "period and can pass; the deadline gate applies later, when you record the"
@@ -515,7 +525,7 @@ msgstr ""
 "plazo se aplica más tarde, cuando registra la presentación con `work "
 "file`."
 
-#: ../../how-to/verification-reports.md:211
+#: ../../how-to/verification-reports.md:213
 msgid ""
 "If the deadline has passed, file late through AEAT's own channels; "
 "consult AEAT or an advisor about any surcharges that may apply."
@@ -524,11 +534,11 @@ msgstr ""
 " la AEAT; consulta a la AEAT o a un asesor sobre los recargos que puedan "
 "aplicarse."
 
-#: ../../how-to/verification-reports.md:214
+#: ../../how-to/verification-reports.md:216
 msgid "Where to get help"
 msgstr "Dónde obtener ayuda"
 
-#: ../../how-to/verification-reports.md:216
+#: ../../how-to/verification-reports.md:218
 msgid ""
 "Command labels and messages display in Spanish to match the official AEAT"
 " forms, while this guide is in English. The field names this guide names "
@@ -543,7 +553,7 @@ msgstr ""
 "`finding_legal_refs`) coinciden exactamente con la salida, para que pueda"
 " relacionar una línea en español con el paso que la describe."
 
-#: ../../how-to/verification-reports.md:222
+#: ../../how-to/verification-reports.md:224
 #, python-brace-format
 msgid ""
 "If a report or an error message does not match what this guide describes,"
@@ -558,19 +568,20 @@ msgstr ""
 "Antes de compartir la salida de un comando para pedir ayuda, elimina los "
 "identificadores fiscales personales como tu NIF, CIF, DNI, NIE o NII."
 
-#: ../../how-to/verification-reports.md:228
+#: ../../how-to/verification-reports.md:230
 msgid "Next steps"
 msgstr "Pasos siguientes"
 
-#: ../../how-to/verification-reports.md:230
+#: ../../how-to/verification-reports.md:232
+#, fuzzy
 msgid ""
-"[File at AEAT](file-at-aeat.md): upload the exported file at the AEAT "
+"[File at AEAT](file-at-aeat.md): enter the verified figures at the AEAT "
 "portal."
 msgstr ""
 "[Presenta ante la AEAT](file-at-aeat.md): sube el fichero exportado en el"
 " portal de la AEAT."
 
-#: ../../how-to/verification-reports.md:231
+#: ../../how-to/verification-reports.md:233
 msgid ""
 "[Review your calculation values](review-calculation-values.md): check and"
 " correct the inputs behind each casilla."
@@ -578,7 +589,7 @@ msgstr ""
 "[Revisa los valores de tu cálculo](review-calculation-values.md): "
 "comprueba y corrige las entradas que hay tras cada casilla."
 
-#: ../../how-to/verification-reports.md:232
+#: ../../how-to/verification-reports.md:234
 msgid ""
 "[The filing workflow](filing-spine.md): how filings, saved calculations, "
 "and reports fit together."
@@ -586,7 +597,10 @@ msgstr ""
 "[El flujo de presentación](filing-spine.md): cómo encajan las "
 "presentaciones, los cálculos guardados y los informes."
 
-#: ../../how-to/verification-reports.md:233
+#: ../../how-to/verification-reports.md:235
 msgid "[CLI reference](../cli/index.rst): every command and option."
 msgstr "[Referencia de la CLI](../cli/index.rst): todos los comandos y opciones."
+
+#~ msgid "Export refuses because no verified calculation exists"
+#~ msgstr "La exportación se niega porque no existe ningún cálculo verificado"
 

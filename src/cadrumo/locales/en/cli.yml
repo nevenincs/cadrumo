@@ -294,7 +294,6 @@ cli:
           them: {columns}'
         invoice_class_help: Invoice class. A rectificativa also requires --rectifies-invoice-number
           naming the invoice it corrects.
-        invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
         invoice_id_help: Catalogue invoice id (or unambiguous prefix).
         iva_category_help: IVA treatment of the operation. Required for a renta income
           calculation to ground it.
@@ -424,7 +423,6 @@ cli:
         list_help: List saved expediente snapshots
         pull_help: Pull the AEAT declaration register and persist a bucket-scoped
           snapshot.
-        pull_modelo_help: Limit this pull to this modelo.
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show an expediente snapshot
       filed:
@@ -2597,25 +2595,18 @@ cli:
         use; the category must already have a usage ratio.
       value_date_help: Value date (YYYY-MM-DD)
     allocate:
-      actor_help: Operator name recorded on the bucket event
       business_pct_help: Business-use share from 0 to 1 for MIXED/proportional rows;
         do not use ledger allocate for a fully BUSINESS row.
-      category_help: Deductible-expense category id (expense transactions only; income
-        needs no category)
       help: Record business/private proportionality for a ledger transaction
       id_help: Ledger transaction id to allocate
       prorrata_reference_help: IVA prorrata reference for IVA workflows
-      usage_ratio_help: Existing configured usage-ratio id for proportional business
-        use; the category must already have a usage ratio.
     app_help: Management of accounting ledgers and IVA records
     archive:
-      actor_help: Operator name recorded on the bucket event
       help: Archive one ledger transaction in the active profile
       id_help: Ledger transaction id to archive
       reason_help: Reason recorded in lifecycle history
       yes_help: Confirm archiving the ledger transaction
     attach:
-      actor_help: Operator name recorded on the bucket event
       attachment_help: Secure attachment id to link to the transaction; repeat for
         multiple attachments
       finalized_revision_stale: Evidence was stored on the ledger row, but Modelo
@@ -2658,7 +2649,6 @@ cli:
         (annual), 01-12 (months). Combine with --year to match ledger status.'
       year_help: Filing year for --period (e.g. 2024).
     classify:
-      actor_help: Operator name recorded on the bucket event
       apply_help: 'Persist the LLM suggestion with llm: provenance instead of only
         previewing it.'
       auto_split_help: Read the attached invoice and, when it is multi-component,
@@ -2678,8 +2668,6 @@ cli:
       business_pct_requires_mixed: Refused. --business-pct only applies to a MIXED
         classification. A BUSINESS or PERSONAL row is wholly business or wholly private;
         drop --business-pct, or pass --classification MIXED.
-      category_help: Deductible-expense category id (expense transactions only; income
-        needs no category)
       classification_help: Business classification state for the transaction
       classification_required: --classification is required when --file is not provided.
       counterparty_country_help: Country where the counterparty is established (ISO
@@ -2819,20 +2807,17 @@ cli:
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
     exclude:
-      actor_help: Operator label.
       help: Mark one reviewed ledger transaction as deliberately excluded from filing.
       id_help: Ledger transaction id.
       reason_help: Optional note recording why the row is excluded.
       yes_help: Confirm the reviewed-excluded decision.
     export:
-      actor_help: Operator name recorded on the bucket event
       format_help: Export serialization format
       help: Export canonical ledger rows from the active profile
       include_inactive_help: Include archived and stashed ledger transactions
       output_help: Path to write the exported ledger file
       period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
         01-12 (months). Combine with --year to choose the year.'
-      year_help: Filing year for --period (e.g. 2024).
     history:
       help: Emit the chronological bucket-event chain for one ledger transaction id
       id_help: Ledger transaction id (or unambiguous hex prefix) to inspect
@@ -2854,13 +2839,10 @@ cli:
       no_rows_imported: 'No entries were imported: the file parsed but contained no
         data rows. A bank CSV must have a header row naming a date, an amount, and
         a description column followed by at least one data row.'
-      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
-        01-12 (months). Combine with --year to choose the year.'
       provider_help: 'Statement format provider. Recognised values: {providers}'
       verbose_help: Show detailed information during import
       verify_help: Verify entries after import
       verify_source_help: Original file used to verify imported rows.
-      year_help: Filing year for --period (e.g. 2024).
     labels:
       active: Active
       amount: Amount
@@ -2985,8 +2967,6 @@ cli:
       help: Report missing ledger facts (category, taxable base, IVA amount/rate,
         currency, proportionality reference) for the active profile's transactions
         in a given period. Local-only; never contacts AEAT.
-      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
-        01-12 (months). Combine with --year to choose the year.'
       year_help: Filing year (e.g. 2024).
     pull_folder:
       errors:
@@ -3008,23 +2988,19 @@ cli:
         files_refused: '%{refused_count} file(s) in this folder could not be fetched
           under the drive.file scope; download them manually and attach them.'
     remove:
-      actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
       help: Remove one ledger transaction from the active profile
       id_help: Ledger transaction id to remove
       reason_help: Reason recorded in removal history
       yes_help: Confirm deletion of the ledger transaction
     reset:
-      actor_help: Operator name recorded on the bucket event
       dry_run_help: Report reset effects without clearing the ledger catalogue
       help: Reset the active profile's ledger catalogue
       reason_help: Reason recorded in reset history
       yes_help: Confirm clearing the active ledger catalogue
     restore:
-      actor_help: Operator name recorded on the bucket event
       help: Restore one stashed or archived ledger transaction to active
       id_help: Ledger transaction id to restore to active
-      reason_help: Reason recorded in lifecycle history
       yes_help: Confirm restoring the ledger transaction to active
     review:
       filter_help: Filter rows by status, period (a bare AEAT token, e.g. period=1T)
@@ -3057,22 +3033,14 @@ cli:
       llm_help: Propose an evidence-driven N-way split with the given LLM provider.
       read_evidence_help: Read the transaction's attached invoice on-host and feed
         it to the --llm split proposer.
-      reason_help: Reason recorded in the bucket-event payload and lifecycle history
-      vision_model_help: Override the local Ollama vision model for an image/scanned-invoice
-        read (e.g. qwen2.5vl:7b); defaults to the configured model.
       yes_help: Confirm the split (transitions the parent to SPLIT and persists N
         child transactions)
     stash:
-      actor_help: Operator name recorded on the bucket event
       help: Stash one ledger transaction in the active profile
       id_help: Ledger transaction id to stash
-      reason_help: Reason recorded in lifecycle history
       yes_help: Confirm stashing the ledger transaction
     status:
       help: Summarize ledger state and calculation readiness for the active profile
-      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
-        01-12 (months). Combine with --year to choose the year.'
-      year_help: Filing year for --period (e.g. 2024).
     track:
       help: Show the event lineage for one ledger transaction
       transaction_id_help: Ledger transaction id to inspect

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-23 18:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -27,10 +27,10 @@ msgid "Command and workflow-stage lookup"
 msgstr "Consulta d'ordres i d'etapes del flux de treball"
 
 #: ../../reference/commands-and-configuration.md:5
+#, fuzzy
 msgid ""
 "The command-line interface (CLI) exposes live help as the command "
-"authority. The canonical human executable is `aeat`. The separate Model "
-"Context Protocol (MCP) executable is `cadrumo-mcp`."
+"authority. The canonical executable is `aeat`."
 msgstr ""
 "La interfície de línia d'ordres (CLI) exposa l'ajuda en directe com a "
 "autoritat de les ordres. L'executable canònic per a humans és `aeat`. "
@@ -110,7 +110,7 @@ msgstr "Ajuda arrel i de les fulles"
 msgid "[Automation reference](../cli/automation.rst)"
 msgstr "[Referència d'automatització](../cli/automation.rst)"
 
-#: ../../reference/commands-and-configuration.md:17
+#: ../../reference/commands-and-configuration.md:16
 msgid ""
 "The filing stages relate as `calculate` → `review` → `verify` → `export` "
 "→ human upload → local record → reconcile. The stage names describe "
@@ -128,7 +128,7 @@ msgstr ""
 "separades i [les guies pràctiques](../how-to/index.md) per a les "
 "seqüències de tasques."
 
-#: ../../reference/commands-and-configuration.md:23
+#: ../../reference/commands-and-configuration.md:22
 msgid "Configuration ownership"
 msgstr "Propietat de la configuració"
 
@@ -176,15 +176,21 @@ msgstr ""
 "Punts finals de l'autoritat, credencials de l'autoritat, controls de "
 "lectura en directe i terminologia de l'autoritat preservada"
 
-#: ../../reference/commands-and-configuration.md:30
+#: ../../reference/commands-and-configuration.md:29
+#, fuzzy
 msgid ""
 "Examples of product controls include `CADRUMO_LOCAL_STORAGE_ROOT`, "
-"`CADRUMO_SECRET_STORE_BACKEND`, `CADRUMO_SECRET_STORE_DIR`, "
-"`CADRUMO_SECRET_PASSPHRASE`, and `CADRUMO_OUTPUT_LANGUAGE`. Live `aeat "
-"config --help` and its leaf help define operator-facing configuration. "
-"The [configuration map](../cli/config.rst) groups those commands. Python "
-"fields are listed in the generated Cadrumo application programming "
-"interface ([API](../api/cadrumo.rst))."
+"`CADRUMO_SECRET_STORE_BACKEND`, `CADRUMO_SECRET_STORE_DIR`, and "
+"`CADRUMO_OUTPUT_LANGUAGE`. `CADRUMO_SECRET_PASSPHRASE` remains a "
+"separately governed programmatic-substrate setting; the CLI does not read"
+" it as an operator secret-input fallback. Use the explicit leaf "
+"`--secrets-stdin` / `--secrets-fd` pair or root `--profile-secrets-stdin`"
+" / `--profile-secrets-fd` pair described in [Protect access to your data"
+"](../how-to/protect-data-access.md#run-without-a-passphrase-prompt). Live"
+" `aeat config --help` and its leaf help define operator-facing "
+"configuration. The [configuration map](../cli/config.rst) groups those "
+"commands. Python fields are listed in the generated Cadrumo application "
+"programming interface ([API](../api/cadrumo.rst))."
 msgstr ""
 "Alguns exemples de controls del producte són "
 "`CADRUMO_LOCAL_STORAGE_ROOT`, `CADRUMO_SECRET_STORE_BACKEND`, "
@@ -195,7 +201,7 @@ msgstr ""
 "ordres. Els camps de Python es llisten a la interfície de programació "
 "d'aplicacions de Cadrumo generada ([API](../api/cadrumo.rst))."
 
-#: ../../reference/commands-and-configuration.md:38
+#: ../../reference/commands-and-configuration.md:43
 msgid ""
 "Former product-owned `AEAT_*` state controls are not aliases for "
 "`CADRUMO_*`. Authority-owned `AEAT_*` integration controls remain valid "
