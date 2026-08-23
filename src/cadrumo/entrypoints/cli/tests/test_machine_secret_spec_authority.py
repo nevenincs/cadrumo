@@ -22,6 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _COMMANDS = {
     "config.login",
+    "config.passphrase.change",
     "config.profile.create",
     "config.profile.restore",
     "config.auth.certificate.secret.set",

@@ -226,6 +226,14 @@ class MachineSecretChannelKind(Enum):
     FILE_DESCRIPTOR = "file-descriptor"
 
 
+class ProfileAuthenticationPosture(Enum):
+    """How the root profile-session gate applies to one parsed command."""
+
+    NOT_APPLICABLE = "not-applicable"
+    RESUME_FALLBACK = "resume-fallback"
+    SELF_AUTHENTICATING = "self-authenticating"
+
+
 @dataclass(frozen=True, slots=True)
 class ParameterDefault:
     """A required marker, immutable literal, or deferred default factory."""
@@ -503,6 +511,7 @@ class CommandSpec:
     result_schema: ResultSchemaSpec
     search_terms: tuple[str, ...] = ()
     machine_secret: MachineSecretSpec | None = None
+    profile_authentication: ProfileAuthenticationPosture = ProfileAuthenticationPosture.NOT_APPLICABLE
 
     def __post_init__(self) -> None:
         _require_identifier(self.key, field="command key")
@@ -669,6 +678,7 @@ __all__ = [
     "ParameterDefault",
     "ParameterKind",
     "ParameterSpec",
+    "ProfileAuthenticationPosture",
     "ResultSchemaSpec",
     "SchemaState",
     "TranslationKey",

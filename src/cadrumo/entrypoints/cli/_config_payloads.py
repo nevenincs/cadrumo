@@ -386,6 +386,16 @@ class ConfigLoginResult(OutputSchema):
     closed_previous_profile: str | None = None
 
 
+class ConfigPassphraseChangeResult(OutputSchema):
+    """Non-secret outcome of one active-profile passphrase rotation."""
+
+    profile_id: BucketId
+    changed: bool
+    password_generation: int = Field(ge=2)
+    dek_epoch_preserved: bool
+    recovery_enrollment_retained: bool
+
+
 class ConfigProfileArchiveExportResult(OutputSchema):
     """JSON envelope for ``aeat config profile archive export``.
 

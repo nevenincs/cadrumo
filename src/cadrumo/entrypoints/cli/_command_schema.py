@@ -147,6 +147,9 @@ class CommandRegistrationMetadata:
     handler_owner: str | None
     source_sha256: str | None
     machine_secret_payloads: tuple[MachineSecretPayloadMetadata, ...] = ()
+    profile_authentication: Literal["not-applicable", "resume-fallback", "self-authenticating"] = (
+        "not-applicable"
+    )
 
     @property
     def help(self) -> dict[str, str]:
@@ -276,6 +279,7 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
                 owner,
                 None,
                 machine_secret_payload_metadata(spec),
+                spec.profile_authentication.value,
             )
         )
     return CommandRegistrationProjection(tuple(sorted(commands, key=lambda row: row.command)), tuple(nodes))

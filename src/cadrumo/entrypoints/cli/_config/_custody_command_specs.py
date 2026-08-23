@@ -14,6 +14,7 @@ from .._command_spec import (
     MachineSecretVariantSpec,
     OptionSpec,
     ParameterDefault,
+    ProfileAuthenticationPosture,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
@@ -39,6 +40,71 @@ def _schema(name: str, identity: str) -> ResultSchemaSpec:
 
 
 CONFIG_CUSTODY_COMMAND_SPECS = (
+    CommandSpec(
+        key="config_passphrase",
+        parent_key="config",
+        token="passphrase",  # noqa: S106 - CLI token, not a credential.
+        kind="group",
+        help_key=TranslationKey("cli.config.passphrase.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(no_args_is_help=True),
+        parameters=(),
+        policy=BOOTSTRAP_WRITE,
+        handler=None,
+        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+    ),
+    CommandSpec(
+        key="config_passphrase_change",
+        parent_key="config_passphrase",
+        token="change",  # noqa: S106 - CLI token, not a credential.
+        kind="leaf",
+        help_key=TranslationKey("cli.config.passphrase.change_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            OptionSpec(
+                name="secrets_stdin",
+                declarations=("--secrets-stdin",),
+                value=ValueContract(DeferredTarget("builtins", "bool")),
+                default=ParameterDefault.value(False),
+                help_key=TranslationKey("cli.config.custody.secrets_stdin_help"),
+                is_flag=True,
+                flag_value=True,
+                machine_secret_channel=MachineSecretChannelKind.STDIN,
+            ),
+            OptionSpec(
+                name="secrets_fd",
+                declarations=("--secrets-fd",),
+                value=ValueContract(DeferredTarget("builtins", "int")),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.config.custody.secrets_fd_help"),
+                machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
+            ),
+            _OUTPUT_LANGUAGE,
+        ),
+        policy=BOOTSTRAP_WRITE,
+        handler=LazyBinding.available(
+            DeferredTarget("cadrumo.entrypoints.cli._config._passphrase", "passphrase_change")
+        ),
+        result_schema=_schema("ConfigPassphraseChangeResult", "config.passphrase.change"),
+        machine_secret=MachineSecretSpec(
+            (
+                MachineSecretVariantSpec(
+                    "rotation",
+                    (
+                        MachineSecretFieldSpec("current_passphrase"),
+                        MachineSecretFieldSpec("new_passphrase"),
+                        MachineSecretFieldSpec("new_passphrase_confirmation"),
+                    ),
+                    DeferredTarget(
+                        "cadrumo.entrypoints.cli._config._passphrase",
+                        "PassphraseChangeSecrets",
+                    ),
+                ),
+            )
+        ),
+        profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
+    ),
     CommandSpec(
         key="config_login",
         parent_key="config",
