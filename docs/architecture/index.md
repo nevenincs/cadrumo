@@ -351,8 +351,10 @@ separate typed aggregates in encrypted storage. Modelo 720 instead receives
 typed foreign-asset observations from the caller. An enrolled source resolver
 projects only the fields requested by the registry into a calculation revision.
 In the current Modelo 100 registry, stock-related boxes 0177, 0181, and 0182
-remain manual inputs. A dormant inventory helper still names 0155; that stale
-name is not evidence of a live inventory-to-Renta route.
+remain manual inputs. The inventory domain now splits 2025 opening-to-closing
+variation between 0177 and 0182, but that domain projection is not evidence of
+a live inventory-to-Renta route and does not yet claim complete purchases for
+0181.
 
 Nothing in this store crosses outward to the agency as a write. The read-only
 live checks reach the agency only to read. The single path that reaches the
