@@ -2231,7 +2231,7 @@ cli:
         terminálban, és a program bekéri.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
       manager_closed: A(z) '{profile}' módosításai mentve.
-      manager_closed_created: A(z) '{profile}' profil létrejött és készen áll. Bármikor
+      manager_closed_created: A(z) '{profile}' profil létrejött. A modellekkel végzett munka előtt jelentsd be a beállítás befejezését az `aeat config profile complete-setup` paranccsal. Bármikor
         újranyithatod az 'aeat config profile edit' paranccsal.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'

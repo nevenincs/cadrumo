@@ -91,6 +91,57 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
     assert _payload(listed.output)["work_unit_count"] == 0
 
 
+def test_incomplete_setup_readiness_matches_work_create_and_names_completion_door() -> None:
+    """Fact-complete is not operator-declared complete on either surface."""
+    register_cli_profile(label="issue-113-incomplete", complete=False)
+
+    readiness = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "readiness",
+            "--modelo", Modelo.M130.value,
+            "--revision-id", "2019-y-siguientes",
+            "--year", "2026",
+            "--period", "2T",
+        ],
+    )  # fmt: skip
+    assert readiness.exit_code == 0, readiness.output
+    readiness_payload = _payload(readiness.output)
+    assert readiness_payload["profile_ready"] is False
+    assert readiness_payload["ready"] is False
+    assert "aeat config profile complete-setup" in readiness_payload["profile_refusal"]
+
+    create = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", Modelo.M130.value,
+            "--year", "2026",
+            "--period", "2T",
+        ],
+    )  # fmt: skip
+    assert create.exit_code != 0
+    error = json.loads(create.output)["error"]
+    assert error["code"] == "REFUSED_MODELO_PROFILE_READINESS"
+    assert "aeat config profile complete-setup" in error["message"]
+
+    completed = _invoke(["--format", "json", "config", "profile", "complete-setup"])
+    assert completed.exit_code == 0, completed.output
+
+    after = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "readiness",
+            "--modelo", Modelo.M130.value,
+            "--revision-id", "2019-y-siguientes",
+            "--year", "2026",
+            "--period", "2T",
+        ],
+    )  # fmt: skip
+    assert after.exit_code == 0, after.output
+    assert _payload(after.output)["profile_ready"] is True
+
+
 def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
     _create_profile(activity_start_date="2026-05-01")
 
