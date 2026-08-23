@@ -3009,136 +3009,254 @@ modelo:
               label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
                 lap). Adókulcs sávja 2 (három egész, két tizedes)
             x-agp34c1g6t0j0c9q60oj0c1n:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Be nem számított
+                egyedi negatív adóalapok eredeti összege. DA 19 LIS (**). 2023-as
+                keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Be nem számított egyedi negatív adóalapok eredeti összege.
                 DA 19 LIS (**). 2023-as keletkezési időszak
             x-agp34c1g6t0j0c9q60oj0c1o:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Az időszak
+                elején beszámításra váró összeg. 2023-as keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Az időszak elején beszámításra váró összeg. 2023-as keletkezési
                 időszak
             x-agp34c1g6t0j0c9q60oj0c1p:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Az időszakban
+                beszámított összeg. 2023-as keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Az időszakban beszámított összeg. 2023-as keletkezési időszak
             x-agp34c1g6t0j0c9q60oj0c9g:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Az időszak
+                végén beszámításra váró összeg. 2023-as keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Az időszak végén beszámításra váró összeg. 2023-as keletkezési
                 időszak
             x-agp34c1g6t0j0c9q60oj0c9h:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Be nem számított
+                egyedi negatív adóalapok eredeti összege. DA 19 LIS (**). 2024-es
+                keletkezési időszak (*).'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Be nem számított egyedi negatív adóalapok eredeti összege.
                 DA 19 LIS (**). 2024-es keletkezési időszak (*)
             x-agp34c1g6t0j0c9q60oj0c9i:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Az időszak
+                elején beszámításra váró összeg. 2024-es keletkezési időszak (*).'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Az időszak elején beszámításra váró összeg. 2024-es keletkezési
                 időszak (*)
             x-agp34c1g6t0j0c9q60oj0c9j:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Az időszakban
+                beszámított összeg. 2024-es keletkezési időszak (*).'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Az időszakban beszámított összeg. 2024-es keletkezési időszak
                 (*)
             x-agp34c1g6t0j0c9q60oj0c9k:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Az időszak
+                végén beszámításra váró összeg. 2024-es keletkezési időszak (*).'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Az időszak végén beszámításra váró összeg. 2024-es keletkezési
                 időszak (*)
             x-agp34c1g6t0j0c9q60oj0c9l:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Be nem számított
+                egyedi negatív adóalapok eredeti összege. DA 19 LIS (**). 2024-es
+                keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Be nem számított egyedi negatív adóalapok eredeti összege.
                 DA 19 LIS (**). 2024-es keletkezési időszak
             x-agp34c1g6t0j0c9q60oj0c9m:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Az időszak
+                elején beszámításra váró összeg. 2024-es keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Az időszak elején beszámításra váró összeg. 2024-es keletkezési
                 időszak
             x-agp34c1g6t0j0c9q60oj0c9n:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Az időszakban
+                beszámított összeg. 2024-es keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Az időszakban beszámított összeg. 2024-es keletkezési időszak
             x-agp34c1g6t0j0c9q60oj0c9o:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Az időszak
+                végén beszámításra váró összeg. 2024-es keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Az időszak végén beszámításra váró összeg. 2024-es keletkezési
                 időszak
             x-agp34c1g6t0j0c9q60oj0c9p:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Be nem számított
+                egyedi negatív adóalapok eredeti összege. DA 19 LIS (**). Összesen.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Be nem számított egyedi negatív adóalapok eredeti összege.
                 DA 19 LIS (**). Összesen
             x-agp34c1g6t0j0c9q60oj0chg:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Az időszak
+                elején beszámításra váró összeg. Összesen.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Az időszak elején beszámításra váró összeg. Összesen
             x-agp34c1g6t0j0c9q60oj0chh:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Az időszakban
+                beszámított összeg. Összesen.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Az időszakban beszámított összeg. Összesen
             x-agp34c1g6t0j0c9q60oj0chi:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Az időszak
+                végén beszámításra váró összeg. Összesen.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). Általános
                 rendszer. Az időszak végén beszámításra váró összeg. Összesen
             x-agp34c1g6t0j0c9q60oj0chj:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Be nem számított egyedi
+                negatív adóalapok eredeti összege. DA 19 LIS (**). 2023-as keletkezési
+                időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Be nem számított egyedi negatív adóalapok eredeti összege.
                 DA 19 LIS (**). 2023-as keletkezési időszak
             x-agp34c1g6t0j0c9q60oj0chk:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Az időszak elején beszámításra
+                váró összeg. 2023-as keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Az időszak elején beszámításra váró összeg. 2023-as keletkezési
                 időszak
             x-agp34c1g6t0j0c9q60oj0chl:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Az időszakban beszámított
+                összeg. 2023-as keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Az időszakban beszámított összeg. 2023-as keletkezési időszak
             x-agp34c1g6t0j0c9q60oj0chm:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Az időszak végén beszámításra
+                váró összeg. 2023-as keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Az időszak végén beszámításra váró összeg. 2023-as keletkezési
                 időszak
             x-agp34c1g6t0j0c9q60oj0chn:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Be nem számított egyedi
+                negatív adóalapok eredeti összege. DA 19 LIS (**). 2024-es keletkezési
+                időszak (*).'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Be nem számított egyedi negatív adóalapok eredeti összege.
                 DA 19 LIS (**). 2024-es keletkezési időszak (*)
             x-agp34c1g6t0j0c9q60oj0cho:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Az időszak elején beszámításra
+                váró összeg. 2024-es keletkezési időszak (*).'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Az időszak elején beszámításra váró összeg. 2024-es keletkezési
                 időszak (*)
             x-agp34c1g6t0j0c9q60oj0chp:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Az időszakban beszámított
+                összeg. 2024-es keletkezési időszak (*).'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Az időszakban beszámított összeg. 2024-es keletkezési időszak
                 (*)
             x-agp34c1g6t0j0c9q60oj0cpg:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Az időszak végén beszámításra
+                váró összeg. 2024-es keletkezési időszak (*).'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Az időszak végén beszámításra váró összeg. 2024-es keletkezési
                 időszak (*)
             x-agp34c1g6t0j0c9q60oj0cph:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Be nem számított egyedi
+                negatív adóalapok eredeti összege. DA 19 LIS (**). 2024-es keletkezési
+                időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Be nem számított egyedi negatív adóalapok eredeti összege.
                 DA 19 LIS (**). 2024-es keletkezési időszak
             x-agp34c1g6t0j0c9q60oj0cpi:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Az időszak elején beszámításra
+                váró összeg. 2024-es keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Az időszak elején beszámításra váró összeg. 2024-es keletkezési
                 időszak
             x-agp34c1g6t0j0c9q60oj0cpj:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Az időszakban beszámított
+                összeg. 2024-es keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Az időszakban beszámított összeg. 2024-es keletkezési időszak
             x-agp34c1g6t0j0c9q60oj0cpk:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Az időszak végén beszámításra
+                váró összeg. 2024-es keletkezési időszak.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Az időszak végén beszámításra váró összeg. 2024-es keletkezési
                 időszak
             x-agp34c1g6t0j0c9q60oj0cpl:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Be nem számított egyedi
+                negatív adóalapok eredeti összege. DA 19 LIS (**). Összesen.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Be nem számított egyedi negatív adóalapok eredeti összege.
                 DA 19 LIS (**). Összesen
             x-agp34c1g6t0j0c9q60oj0cpm:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Az időszak elején beszámításra
+                váró összeg. Összesen.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Az időszak elején beszámításra váró összeg. Összesen
             x-agp34c1g6t0j0c9q60ojicpl:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Az időszakban beszámított
+                összeg. Összesen.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Az időszakban beszámított összeg. Összesen
             x-agp34c1g6t0j0c9q60ojicpm:
+              help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
+                (DA 19ª LIS) (7A. oldal, 01. lap). A Kanári-szigetek hajóira és hajózási
+                vállalkozásaira vonatkozó különleges rendszer. Az időszak végén beszámításra
+                váró összeg. Összesen.'
               label: Egyedi negatív adóalapok (DA 19ª LIS) (7A. oldal, 01. lap). A
                 Kanári-szigetek hajóira és hajózási vállalkozásaira vonatkozó különleges
                 rendszer. Az időszak végén beszámításra váró összeg. Összesen

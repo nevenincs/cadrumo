@@ -2933,139 +2933,261 @@ modelo:
               label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Tram
                 de tipus de gravamen 2 (tres enters, dos decimals)
             x-agp34c1g6t0j0c9q60oj0c1n:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                original de bases imposables negatives individuals no integrades.
+                DA 19 LIS (**). Període de generació 2023.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import original de bases imposables negatives
                 individuals no integrades. DA 19 LIS (**). Període de generació 2023
             x-agp34c1g6t0j0c9q60oj0c1o:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                pendent d''integració a l''inici del període. Període de generació
+                2023.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import pendent d'integració a l'inici del
                 període. Període de generació 2023
             x-agp34c1g6t0j0c9q60oj0c1p:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                integrat en el període. Període de generació 2023.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import integrat en el període. Període de
                 generació 2023
             x-agp34c1g6t0j0c9q60oj0c9g:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                pendent d''integració al final del període. Període de generació 2023.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import pendent d'integració al final del
                 període. Període de generació 2023
             x-agp34c1g6t0j0c9q60oj0c9h:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                original de bases imposables negatives individuals no integrades.
+                DA 19 LIS (**). Període de generació 2024(*).'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import original de bases imposables negatives
                 individuals no integrades. DA 19 LIS (**). Període de generació 2024(*)
             x-agp34c1g6t0j0c9q60oj0c9i:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                pendent d''integració a l''inici del període. Període de generació
+                2024(*).'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import pendent d'integració a l'inici del
                 període. Període de generació 2024(*)
             x-agp34c1g6t0j0c9q60oj0c9j:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                integrat en el període. Període de generació 2024(*).'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import integrat en el període. Període de
                 generació 2024(*)
             x-agp34c1g6t0j0c9q60oj0c9k:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                pendent d''integració al final del període. Període de generació 2024(*).'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import pendent d'integració al final del
                 període. Període de generació 2024(*)
             x-agp34c1g6t0j0c9q60oj0c9l:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                original de bases imposables negatives individuals no integrades.
+                DA 19 LIS (**). Període de generació 2024.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import original de bases imposables negatives
                 individuals no integrades. DA 19 LIS (**). Període de generació 2024
             x-agp34c1g6t0j0c9q60oj0c9m:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                pendent d''integració a l''inici del període. Període de generació
+                2024.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import pendent d'integració a l'inici del
                 període. Període de generació 2024
             x-agp34c1g6t0j0c9q60oj0c9n:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                integrat en el període. Període de generació 2024.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import integrat en el període. Període de
                 generació 2024
             x-agp34c1g6t0j0c9q60oj0c9o:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                pendent d''integració al final del període. Període de generació 2024.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import pendent d'integració al final del
                 període. Període de generació 2024
             x-agp34c1g6t0j0c9q60oj0c9p:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                original de bases imposables negatives individuals no integrades.
+                DA 19 LIS (**). Total.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import original de bases imposables negatives
                 individuals no integrades. DA 19 LIS (**). Total
             x-agp34c1g6t0j0c9q60oj0chg:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                pendent d''integració a l''inici del període. Total.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import pendent d'integració a l'inici del
                 període. Total
             x-agp34c1g6t0j0c9q60oj0chh:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                integrat en el període. Total.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import integrat en el període. Total
             x-agp34c1g6t0j0c9q60oj0chi:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim general. Import
+                pendent d''integració al final del període. Total.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim general. Import pendent d'integració al final del
                 període. Total
             x-agp34c1g6t0j0c9q60oj0chj:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import original de bases imposables
+                negatives individuals no integrades. DA 19 LIS (**). Període de generació
+                2023.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import original de bases imposables negatives individuals no integrades.
                 DA 19 LIS (**). Període de generació 2023
             x-agp34c1g6t0j0c9q60oj0chk:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import pendent d''integració a
+                l''inici del període. Període de generació 2023.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import pendent d'integració a l'inici del període. Període de generació
                 2023
             x-agp34c1g6t0j0c9q60oj0chl:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import integrat en el període.
+                Període de generació 2023.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import integrat en el període. Període de generació 2023
             x-agp34c1g6t0j0c9q60oj0chm:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import pendent d''integració al
+                final del període. Període de generació 2023.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import pendent d'integració al final del període. Període de generació
                 2023
             x-agp34c1g6t0j0c9q60oj0chn:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import original de bases imposables
+                negatives individuals no integrades. DA 19 LIS (**). Període de generació
+                2024(*).'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import original de bases imposables negatives individuals no integrades.
                 DA 19 LIS (**). Període de generació 2024(*)
             x-agp34c1g6t0j0c9q60oj0cho:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import pendent d''integració a
+                l''inici del període. Període de generació 2024(*).'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import pendent d'integració a l'inici del període. Període de generació
                 2024(*)
             x-agp34c1g6t0j0c9q60oj0chp:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import integrat en el període.
+                Període de generació 2024(*).'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import integrat en el període. Període de generació 2024(*)
             x-agp34c1g6t0j0c9q60oj0cpg:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import pendent d''integració al
+                final del període. Període de generació 2024(*).'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import pendent d'integració al final del període. Període de generació
                 2024(*)
             x-agp34c1g6t0j0c9q60oj0cph:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import original de bases imposables
+                negatives individuals no integrades. DA 19 LIS (**). Període de generació
+                2024.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import original de bases imposables negatives individuals no integrades.
                 DA 19 LIS (**). Període de generació 2024
             x-agp34c1g6t0j0c9q60oj0cpi:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import pendent d''integració a
+                l''inici del període. Període de generació 2024.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import pendent d'integració a l'inici del període. Període de generació
                 2024
             x-agp34c1g6t0j0c9q60oj0cpj:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import integrat en el període.
+                Període de generació 2024.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import integrat en el període. Període de generació 2024
             x-agp34c1g6t0j0c9q60oj0cpk:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import pendent d''integració al
+                final del període. Període de generació 2024.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import pendent d'integració al final del període. Període de generació
                 2024
             x-agp34c1g6t0j0c9q60oj0cpl:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import original de bases imposables
+                negatives individuals no integrades. DA 19 LIS (**). Total.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import original de bases imposables negatives individuals no integrades.
                 DA 19 LIS (**). Total
             x-agp34c1g6t0j0c9q60oj0cpm:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import pendent d''integració a
+                l''inici del període. Total.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import pendent d'integració a l'inici del període. Total
             x-agp34c1g6t0j0c9q60ojicpl:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import integrat en el període.
+                Total.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import integrat en el període. Total
             x-agp34c1g6t0j0c9q60ojicpm:
+              help: 'Dada del model 220, exercici 2024: Bases imposables negatives
+                individuals (DA 19ª LIS) (pàg. 7A full 01). Règim especial de vaixells
+                i empreses navilieres de Canàries. Import pendent d''integració al
+                final del període. Total.'
               label: Bases imposables negatives individuals (DA 19ª LIS) (pàg. 7A
                 full 01). Règim especial de vaixells i empreses navilieres de Canàries.
                 Import pendent d'integració al final del període. Total
