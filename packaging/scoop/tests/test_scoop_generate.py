@@ -14,10 +14,12 @@ import pytest
 from dev.packaging._hashing import sha256_path
 from dev.packaging._smoke_common import (
     build_companion_wheels,
+    build_sdist,
     build_wheel,
     commit_defined_build_root,
     run_checked,
 )
+from dev.packaging.python_cohort import _attest_installed_command_specs
 from dev.packaging.uv_constraints import export_runtime_constraints
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -111,9 +113,47 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
         (root, manuals, official),
         cohort_dir,
     )
+    root_sdist = build_sdist(build_dir, uv, build_root=build_root)
+    companion_sdists = build_dir / "companion-sdists"
+    run_checked(
+        [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
+        cwd=build_root / "packaging/cadrumo_data_manuals",
+    )
+    run_checked(
+        [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
+        cwd=build_root / "packaging/cadrumo_data_official",
+    )
+    copied_sdists = []
+    for artifact in (root_sdist, *sorted(companion_sdists.glob("*.tar.gz"))):
+        target = cohort_dir / artifact.name
+        shutil.copy2(artifact, target)
+        copied_sdists.append(target)
     with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
         version = tomllib.load(handle)["project"]["version"]
     release_base = f"https://github.com/nevenincs/cadrumo/releases/download/v{version}"
+    artifacts = {
+        "cadrumo": copied_root.name,
+        "cadrumo-sdist": copied_sdists[0].name,
+        "cadrumo-data-manuals": copied_manuals.name,
+        "cadrumo-data-manuals-sdist": next(path.name for path in copied_sdists if "manuals" in path.name),
+        "cadrumo-data-official": copied_official.name,
+        "cadrumo-data-official-sdist": next(path.name for path in copied_sdists if "official" in path.name),
+    }
+    (cohort_dir / "python-cohort.json").write_text(
+        json.dumps(
+            {
+                "artifacts": artifacts,
+                "sha256": {name: sha256_path(cohort_dir / filename) for name, filename in artifacts.items()},
+                "source_commit": "a" * 40,
+                "version": version,
+                "command_spec_attestation": _attest_installed_command_specs(
+                    copied_root, work_root=root_dir, uv=uv
+                ),
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
     return BuiltCohort(
         directory=cohort_dir,
         root=copied_root,

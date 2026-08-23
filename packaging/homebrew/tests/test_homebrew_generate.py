@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import sys
@@ -11,7 +12,14 @@ from pathlib import Path
 
 import pytest
 from dev.packaging._hashing import sha256_path
-from dev.packaging._smoke_common import build_sdist, commit_defined_build_root, run_checked
+from dev.packaging._smoke_common import (
+    build_companion_wheels,
+    build_sdist,
+    build_wheel,
+    commit_defined_build_root,
+    run_checked,
+)
+from dev.packaging.python_cohort import _attest_installed_command_specs
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -64,8 +72,38 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
         target = cohort / artifact.name
         shutil.copy2(artifact, target)
         copied.append(target)
+    root_wheel = build_wheel(_REPO_ROOT, build_dir / "wheels", uv, build_root=build_root)
+    companion_wheels = build_companion_wheels(build_dir / "wheels", uv, build_root=build_root)
+    copied_wheels = []
+    for artifact in (root_wheel, *companion_wheels):
+        target = cohort / artifact.name
+        shutil.copy2(artifact, target)
+        copied_wheels.append(target)
     with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
         version = tomllib.load(handle)["project"]["version"]
+    artifacts = {
+        "cadrumo": copied_wheels[0].name,
+        "cadrumo-sdist": copied[0].name,
+        "cadrumo-data-manuals": copied_wheels[1].name,
+        "cadrumo-data-manuals-sdist": copied[1].name,
+        "cadrumo-data-official": copied_wheels[2].name,
+        "cadrumo-data-official-sdist": copied[2].name,
+    }
+    (cohort / "python-cohort.json").write_text(
+        json.dumps(
+            {
+                "artifacts": artifacts,
+                "sha256": {name: sha256_path(cohort / filename) for name, filename in artifacts.items()},
+                "source_commit": "a" * 40,
+                "version": version,
+                "command_spec_attestation": _attest_installed_command_specs(
+                    copied_wheels[0], work_root=root_dir, uv=uv
+                ),
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
     return BuiltCohort(
         directory=cohort,
         root=copied[0],

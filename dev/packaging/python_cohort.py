@@ -116,7 +116,7 @@ site.addsitedir(os.environ["AEAT_INSTALL_SITE"])
 
 from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_entry
 from cadrumo.entrypoints.cli._command_spec import DeferredTarget, TranslationKey
-from cadrumo.entrypoints.cli.command_api import command_spec_nodes
+from cadrumo.entrypoints.cli.command_api import command_spec_for_path, command_spec_nodes
 
 def walk(value, kind):
     if isinstance(value, kind):
@@ -172,7 +172,26 @@ import_budgets = {
         name for name in sys.modules if name == "cadrumo" or name.startswith("cadrumo.")
     ),
     "handler_modules_loaded": sorted(handler_modules.intersection(sys.modules)),
+    "selected_path_deltas": [],
 }
+for path in (
+    ("aeat", "config", "profile", "list"),
+    ("aeat", "app", "registry", "inspect"),
+    ("aeat", "app", "modelo", "work", "calculate"),
+):
+    before = set(sys.modules)
+    command_spec_for_path(path)
+    delta = sorted(
+        name
+        for name in set(sys.modules) - before
+        if name == "cadrumo" or name.startswith("cadrumo.")
+    )
+    import_budgets["selected_path_deltas"].append((path, delta))
+if (
+    set(import_budgets["handler_modules_loaded"]) - {"cadrumo.entrypoints.cli"}
+    or any(delta for _path, delta in import_budgets["selected_path_deltas"])
+):
+    raise AssertionError(f"installed CommandSpec projection exceeded selected-path import budgets: {import_budgets}")
 print(json.dumps({
     "identities": identities,
     "locales": locales,
