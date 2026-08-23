@@ -1160,6 +1160,8 @@ class CalculationRevision(BaseModel):
             raise ModeloValidationError("row casilla values and provenance must have exactly matching coordinates")
         source_coordinates: set[RowBindingKey] = set()
         for key, provenance in self.row_casilla_provenance.items():
+            if key[1] != provenance.source_row_index:
+                raise ModeloValidationError("row casilla index must match its direct source row index")
             source_key = (provenance.source_binding_id, provenance.source_row_index)
             if source_key in source_coordinates:
                 raise ModeloValidationError("one source row cannot materialize more than one row casilla")

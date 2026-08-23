@@ -1,0 +1,691 @@
+# Modelo 220 RECORD T22003B00 -- BALANCE CONSOLIDADO, PATRIMONIO NETO Y PASIVO, in the general Plan General
+# de Contabilidad shape: fondos propios, ajustes por cambios de valor and
+# socios externos, then pasivo no corriente and pasivo corriente down to
+# TOTAL PATRIMONIO NETO Y PASIVO.
+#
+# 51 casillas describe all 61 design fields -- 51 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position.
+#
+# All 51 of this record's numbers carry AEAT's own printed box number (51 are 5-digit).
+# Not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# THIS RECORD HAS NO HEADING AT ALL. Its sibling T22003A00 prefixes every line
+# with "ACTIVO"; here the lines begin directly with "PATRIMONIO NETO",
+# "Fondos propios", "Capital". The heading is derived as the common prefix of
+# the numbered lines and comes out EMPTY, which is carried as a valid answer
+# rather than forced -- an empty common prefix is what a record without a
+# heading looks like, and inventing one would put a word on 51 filing-grade
+# labels that AEAT does not print.
+#
+# FIVE BOXES SIT UNDER "Reservas" ON THE PRINTED MODELO AND CARRY NO PREFIX:
+# [00003] reserva legal y estatutaria, [00752] reserva de capitalizacion,
+# [00753] reserva de nivelacion, [00764] fondo de reserva obligatorio de
+# cooperativas, and [00702] is prefixed while [00003] is not. Left flat, like
+# [00701] and [00761] on the activo side: nested only where the line says so.
+#
+# [00003] IS FAR OUTSIDE THIS RECORD'S NUMBER RANGE, which otherwise runs
+# 00185..00252 with a handful of 007xx additions. Recorded because a reader
+# checking the range would take it for a transcription error; it is AEAT's.
+#
+# TWO LABELS ARE PARENTHESISED IN THE DESIGN -- "(Acciones y participaciones de
+# la sociedad dominante)" and "(Dividendo a cuenta)". The parentheses are
+# AEAT's mark for a line that SUBTRACTS, so they are kept verbatim in every
+# catalogue; stripping them would silently drop the sign convention. NOTHING
+# here acts on that convention -- it is punctuation in a label, not arithmetic.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER A HEADING, writing the same one
+# both with and without the space that should follow its period. The heading is derived as
+# the common prefix of every numbered line and the remainder is stripped, so both
+# spellings land on the same heading. 0 parent-child separator
+# repair(s) applied to this record: none needed.
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 0
+# rejoin(s) applied to this record, 0 distinct: none.
+#
+# 6 of this record's 51 numbered lines carry the real ligature CODEPOINT, unsplit,
+# expanded in the labels and kept as emitted in the verbatim comments. The design carries
+# 309 such codepoints in all, so a plain-text search of this workbook for a Spanish
+# word silently misses them.
+
+# AEAT PRINTS 'Procisiones'; the label reads 'Provisiones'. Corrected by name, never by a general rule.
+#
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22003B00 tiles
+# 1..1044 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 03, letra B, hoja 00. Sibling sector pages in this modelo
+# can share every heading AEAT prints in the BODY -- on the balance-sheet pages two
+# records both head their lines "ACTIVO" and both declare a "Total activo" -- so the
+# envelope is the ONLY non-inferential way to tell such records apart. The operator label
+# carries it for exactly that reason; it claims no sector, which the design does not state.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @883+150 RESERVADO PARA LA ADMINISTRACION; and
+# @1033+12 the record terminator, which this design words 'Fin de registro'.
+#
+# NOT CLAIMED: THIS BALANCE SHEET DOES NOT BALANCE HERE. Every subtotal and the TOTAL are
+# DECLARED, not computed: no formula, construct or binding sums a group into its head or
+# the heads into the total, and nothing checks activo against patrimonio neto plus pasivo.
+# Every box is a manual input.
+
+# @16+17 N. PATRIMONIO NETO [00185]
+[[revisions."2024".casillas]]
+id = "T22003B00:00185"
+number = "00185"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. Fondos propios [00186]
+[[revisions."2024".casillas]]
+id = "T22003B00:00186"
+number = "00186"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. Capital [00187]
+[[revisions."2024".casillas]]
+id = "T22003B00:00187"
+number = "00187"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. Capital. Capital escriturado [00188]
+[[revisions."2024".casillas]]
+id = "T22003B00:00188"
+number = "00188"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. Capital. Capital no exigido [00189]
+[[revisions."2024".casillas]]
+id = "T22003B00:00189"
+number = "00189"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. Prima de emisión [00190]
+[[revisions."2024".casillas]]
+id = "T22003B00:00190"
+number = "00190"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. Reservas [00191]
+[[revisions."2024".casillas]]
+id = "T22003B00:00191"
+number = "00191"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. Reserva legal y estatutaria [00003]
+[[revisions."2024".casillas]]
+id = "T22003B00:00003"
+number = "00003"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. Reservas. Otras reservas [00750]
+[[revisions."2024".casillas]]
+id = "T22003B00:00750"
+number = "00750"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. Reservas. Reserva de revalorización [00702]
+[[revisions."2024".casillas]]
+id = "T22003B00:00702"
+number = "00702"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. Reserva de capitalización [00752]
+[[revisions."2024".casillas]]
+id = "T22003B00:00752"
+number = "00752"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. Reserva de nivelación [00753]
+[[revisions."2024".casillas]]
+id = "T22003B00:00753"
+number = "00753"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. Fondo de reserva obligatorio de cooperativas [00764]
+[[revisions."2024".casillas]]
+id = "T22003B00:00764"
+number = "00764"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. (Acciones y participaciones de la sociedad dominante) [00194]
+[[revisions."2024".casillas]]
+id = "T22003B00:00194"
+number = "00194"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. Otras aportaciones de socios [00198]
+[[revisions."2024".casillas]]
+id = "T22003B00:00198"
+number = "00198"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. Resultado del ejercicio atribuido a la sociedad dominante [00199]
+[[revisions."2024".casillas]]
+id = "T22003B00:00199"
+number = "00199"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. (Dividendo a cuenta) [00200]
+[[revisions."2024".casillas]]
+id = "T22003B00:00200"
+number = "00200"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. Otros instrumentos de patrimonio neto [00201]
+[[revisions."2024".casillas]]
+id = "T22003B00:00201"
+number = "00201"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. Ajustes por cambios de valor [00202]
+[[revisions."2024".casillas]]
+id = "T22003B00:00202"
+number = "00202"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. Subvenciones, donaciones y legados recibidos [00209]
+[[revisions."2024".casillas]]
+id = "T22003B00:00209"
+number = "00209"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 N. Socios externos [00236]
+[[revisions."2024".casillas]]
+id = "T22003B00:00236"
+number = "00236"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17 N. PASIVO NO CORRIENTE [00210]
+[[revisions."2024".casillas]]
+id = "T22003B00:00210"
+number = "00210"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17 N. Provisiones a largo plazo [00211]
+[[revisions."2024".casillas]]
+id = "T22003B00:00211"
+number = "00211"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17 N. Deudas a largo plazo [00216]
+[[revisions."2024".casillas]]
+id = "T22003B00:00216"
+number = "00216"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17 N. Deudas a largo plazo. Obligaciones y otros valores negociables [00217]
+[[revisions."2024".casillas]]
+id = "T22003B00:00217"
+number = "00217"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17 N. Deudas a largo plazo. Deudas con entidades de crédito [00218]
+[[revisions."2024".casillas]]
+id = "T22003B00:00218"
+number = "00218"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17 N. Deudas a largo plazo. Acreedores por arrendamiento ﬁnanciero [00219]
+[[revisions."2024".casillas]]
+id = "T22003B00:00219"
+number = "00219"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @475+17 N. Deudas a largo plazo. Otros pasivos ﬁnancieros [00222]
+[[revisions."2024".casillas]]
+id = "T22003B00:00222"
+number = "00222"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @492+17 N. Deudas con empresas del grupo y asociadas a largo plazo [00223]
+[[revisions."2024".casillas]]
+id = "T22003B00:00223"
+number = "00223"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @509+17 N. Pasivos por impuesto diferido [00224]
+[[revisions."2024".casillas]]
+id = "T22003B00:00224"
+number = "00224"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @526+17 N. Periodiﬁcaciones a largo plazo [00225]
+[[revisions."2024".casillas]]
+id = "T22003B00:00225"
+number = "00225"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @543+17 N. Acreedores comerciales no corrientes [00226]
+[[revisions."2024".casillas]]
+id = "T22003B00:00226"
+number = "00226"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @560+17 N. Deuda con características especiales a largo plazo [00227]
+[[revisions."2024".casillas]]
+id = "T22003B00:00227"
+number = "00227"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @577+17 N. PASIVO CORRIENTE [00228]
+[[revisions."2024".casillas]]
+id = "T22003B00:00228"
+number = "00228"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @594+17 N. Pasivos vinculados con activos no corrientes mantenidos para la venta [00229]
+[[revisions."2024".casillas]]
+id = "T22003B00:00229"
+number = "00229"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @611+17 N. Provisiones a corto plazo [00230]
+[[revisions."2024".casillas]]
+id = "T22003B00:00230"
+number = "00230"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @628+17 N. Procisiones por derechos de emisión de gases de efecto invernadero [00735]
+[[revisions."2024".casillas]]
+id = "T22003B00:00735"
+number = "00735"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @645+17 N. Otras provisiones [00736]
+[[revisions."2024".casillas]]
+id = "T22003B00:00736"
+number = "00736"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @662+17 N. Deudas a corto plazo [00231]
+[[revisions."2024".casillas]]
+id = "T22003B00:00231"
+number = "00231"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @679+17 N. Deudas a corto plazo. Obligaciones y otros valores negociables [00232]
+[[revisions."2024".casillas]]
+id = "T22003B00:00232"
+number = "00232"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @696+17 N. Deudas a corto plazo. Deudas con entidades de crédito [00233]
+[[revisions."2024".casillas]]
+id = "T22003B00:00233"
+number = "00233"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @713+17 N. Deudas a corto plazo. Acreedores por arrendamiento ﬁnanciero [00234]
+[[revisions."2024".casillas]]
+id = "T22003B00:00234"
+number = "00234"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @730+17 N. Deudas a corto plazo. Otros pasivos ﬁnancieros [00237]
+[[revisions."2024".casillas]]
+id = "T22003B00:00237"
+number = "00237"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @747+17 N. Deudas con empresas del grupo y asociadas a corto plazo [00238]
+[[revisions."2024".casillas]]
+id = "T22003B00:00238"
+number = "00238"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @764+17 N. Acreedores comerciales y otras cuentas a pagar [00239]
+[[revisions."2024".casillas]]
+id = "T22003B00:00239"
+number = "00239"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @781+17 N. Acreedores comerciales y otras cuentas a pagar. Proveedores [00240]
+[[revisions."2024".casillas]]
+id = "T22003B00:00240"
+number = "00240"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @798+17 N. Acreedores comerciales y otras cuentas a pagar. Pasivos por impuesto corriente [00246]
+[[revisions."2024".casillas]]
+id = "T22003B00:00246"
+number = "00246"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @815+17 N. Acreedores comerciales y otras cuentas a pagar. Otros acreedores [00249]
+[[revisions."2024".casillas]]
+id = "T22003B00:00249"
+number = "00249"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @832+17 N. Periodiﬁcaciones a corto plazo [00250]
+[[revisions."2024".casillas]]
+id = "T22003B00:00250"
+number = "00250"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @849+17 N. Deuda con características especiales a corto plazo [00251]
+[[revisions."2024".casillas]]
+id = "T22003B00:00251"
+number = "00251"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @866+17 N. TOTAL PATRIMONIO NETO Y PASIVO [00252]
+[[revisions."2024".casillas]]
+id = "T22003B00:00252"
+number = "00252"
+segmento = "T22003B00"
+section = ["liquidacion", "balance_consolidado_patrimonio_neto_pasivo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
