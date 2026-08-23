@@ -24,7 +24,6 @@ from .. import RECOGNISED_FIXTURE_PROVENANCES
 ExternalLayoutModelo = Literal["036", "130", "131", "303", "349"]
 ExternalLayoutCandidateKind = Literal["plain", "fillable"]
 ExternalLayoutSourceClassification = Literal["third_party_hosted_external_layout_candidate"]
-ExternalLayoutAuthorityStatus = Literal["unverified"]
 ExternalLayoutArtifactAuthenticityVerdict = Literal["third_party_sample"]
 ExternalLayoutOfficialBaseVerdict = Literal["verified_official_base_derivative"]
 ExternalLayoutOfficialAuthority = Literal["aeat", "boe"]
@@ -42,7 +41,6 @@ ExternalLayoutRegistryApplicabilityVerdict = Literal[
 EXTERNAL_LAYOUT_MODELOS: frozenset[str] = frozenset({"036", "130", "131", "303", "349"})
 EXTERNAL_LAYOUT_CANDIDATE_KINDS: frozenset[str] = frozenset({"plain", "fillable"})
 EXTERNAL_LAYOUT_SOURCE_CLASSIFICATION = "third_party_hosted_external_layout_candidate"
-EXTERNAL_LAYOUT_AUTHORITY_STATUS = "unverified"
 AEAT_PUBLISHED_FACSIMILE_CLASSIFICATION = "aeat_published_facsimile"
 
 _SHA256 = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
@@ -62,7 +60,6 @@ class ExternalLayoutSourceChain(_FrozenStrictModel):
 
     classification: ExternalLayoutSourceClassification
     host: Literal["fiscalbot.es"]
-    authority_status: ExternalLayoutAuthorityStatus | None = None
 
 
 class ExternalLayoutArtifactAuthenticity(_FrozenStrictModel):
@@ -202,7 +199,7 @@ class ExternalLayoutCandidate(_FrozenStrictModel):
     pdf: ExternalLayoutPdfProperties
     observations: ExternalLayoutObservations
     limitations: Annotated[tuple[_NONEMPTY, ...], Field(min_length=1)]
-    authority_adjudication: ExternalLayoutAuthorityAdjudication | None = None
+    authority_adjudication: ExternalLayoutAuthorityAdjudication
 
     @model_validator(mode="after")
     def _source_urls_and_limitations_are_bound_to_candidate(self) -> ExternalLayoutCandidate:
@@ -221,21 +218,15 @@ class ExternalLayoutCandidate(_FrozenStrictModel):
             for phrase in ("cannot ground populated-value placement", "does not ground populated-value placement")
         ):
             raise ValueError("limitations must retain the populated-value placement gap")
-        legacy_unverified = self.source_chain.authority_status is not None
-        adjudicated = self.authority_adjudication is not None
-        if legacy_unverified == adjudicated:
-            raise ValueError("candidate must carry exactly one of legacy authority_status or authority_adjudication")
-        if adjudicated:
-            assert self.authority_adjudication is not None
-            derivation = self.authority_adjudication.official_base_derivation
-            mapped_pages = frozenset(mapping.candidate_page for mapping in derivation.official_source.page_mapping)
-            expected_pages = frozenset(range(1, self.pdf.page_count + 1))
-            if mapped_pages != expected_pages:
-                raise ValueError("official page mapping must cover every candidate page exactly once")
-            pair_render = derivation.pair_render
-            expected_counterpart = "fillable" if self.candidate_kind == "plain" else "plain"
-            if pair_render.counterpart_kind != expected_counterpart:
-                raise ValueError(f"pair_render counterpart_kind must be {expected_counterpart!r}")
+        derivation = self.authority_adjudication.official_base_derivation
+        mapped_pages = frozenset(mapping.candidate_page for mapping in derivation.official_source.page_mapping)
+        expected_pages = frozenset(range(1, self.pdf.page_count + 1))
+        if mapped_pages != expected_pages:
+            raise ValueError("official page mapping must cover every candidate page exactly once")
+        pair_render = derivation.pair_render
+        expected_counterpart = "fillable" if self.candidate_kind == "plain" else "plain"
+        if pair_render.counterpart_kind != expected_counterpart:
+            raise ValueError(f"pair_render counterpart_kind must be {expected_counterpart!r}")
         return self
 
 
@@ -368,7 +359,6 @@ def external_layout_source_class_is_non_authoritative() -> bool:
 
 __all__ = [
     "AEAT_PUBLISHED_FACSIMILE_CLASSIFICATION",
-    "EXTERNAL_LAYOUT_AUTHORITY_STATUS",
     "EXTERNAL_LAYOUT_CANDIDATE_KINDS",
     "EXTERNAL_LAYOUT_MODELOS",
     "EXTERNAL_LAYOUT_SOURCE_CLASSIFICATION",

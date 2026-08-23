@@ -6,8 +6,38 @@
   "retrieved_on": "2026-08-23",
   "source_chain": {
     "classification": "third_party_hosted_external_layout_candidate",
-    "host": "fiscalbot.es",
-    "authority_status": "unverified"
+    "host": "fiscalbot.es"
+  },
+  "authority_adjudication": {
+    "artifact_authenticity": {
+      "verdict": "third_party_sample",
+      "evidence_summary": "The committed bytes display FiscalBot's example-only disclaimer and placeholder receipt number, and their third-party producer history plus empty fields confirm that this artifact is not an official BOE or AEAT publication byte."
+    },
+    "official_base_derivation": {
+      "verdict": "verified_official_base_derivative",
+      "official_source": {
+        "authority": "boe",
+        "document_id": "BOE-A-2010-5098 Annex I",
+        "source_url": "https://boe.es/boe/dias/2010/03/29/pdfs/BOE-A-2010-5098.pdf",
+        "sha256": "3e194f09e71174b115ccdd6627656259cbbfd2f18fd44147d9091527a3909c69",
+        "page_mapping": [
+          {"candidate_page": 1, "official_page": 13},
+          {"candidate_page": 2, "official_page": 15}
+        ]
+      },
+      "comparison_method": "pdf_text_geometry_and_normalized_render",
+      "comparison_summary": "The summary page has 261 ordered matching tokens with affine R-squared 0.952/0.996; the interior page has 165 matches with R-squared 0.977/0.994. This proves historical physical-form lineage, not exact official bytes or applicability to the current electronic-only registry contract.",
+      "pair_render": {
+        "counterpart_kind": "plain",
+        "counterpart_sha256": "dc77e58a8eb5b24fb5f7dccf65c51dcfc495debd0b053e1d091c9fca8e6abbed",
+        "comparison_method": "normalized_96_dpi_render_similarity",
+        "comparison_summary": "At 96 dpi, pages 1 and 2 have normalized MAE 0.001850 and 0.000877 respectively. The small overlay differences prevent an exact-render claim."
+      }
+    },
+    "registry_applicability": {
+      "verdict": "historical_layout_without_authored_revision",
+      "revision_id": null
+    }
   },
   "content": {
     "sha256": "0457d6a646e2af9ef95ec5be59e3546f31ecd164f9a96899cbe15e26b0d2c539",
