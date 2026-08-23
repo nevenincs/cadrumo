@@ -1,0 +1,80 @@
+[project]
+name = "cadrumo-harness"
+version = "0.1.0"
+description = "Agent-facing operating layer for Cadrumo: operator rules, tax-advisor personas, workflow skills, and the MCP server that exposes the cadrumo CLI to an LLM operator."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [
+  { name = "Neve Nincs", email = "hello@neve.md" },
+]
+keywords = ["cadrumo", "aeat", "agent", "mcp", "harness"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Office/Business :: Financial",
+]
+
+dependencies = [
+  # cadrumo-harness is a consumer of the cadrumo CLI/library, never the reverse:
+  # every persona, skill, and MCP tool in this package operates the `cadrumo`
+  # domain and application layer through its public facade. cadrumo itself
+  # carries no dependency on this package.
+  "cadrumo>=0.2.2,<0.3",
+  # The stdio MCP server (`cadrumo_harness.mcp._server`) runs on the MCP Python
+  # SDK and imports anyio directly to run the transport.
+  "mcp>=2,<3",
+  "anyio>=4.5,<5",
+  # Skill/persona frontmatter parsing.
+  "pydantic>=2.12.5,<3",
+  "PyYAML>=6.0.3,<7",
+]
+
+[project.scripts]
+cadrumo-mcp = "cadrumo_harness.mcp:main"
+
+[tool.uv.sources]
+# Both packages are members of the same repo-root uv workspace: this resolves
+# `cadrumo` to the in-repo editable checkout (not a published wheel) so a local
+# change to `cadrumo` is immediately visible when testing `cadrumo-harness`, and
+# both share the one repo-root `uv.lock`.
+cadrumo = { workspace = true }
+
+[project.urls]
+Homepage = "https://github.com/nevenincs/cadrumo"
+Issues = "https://github.com/nevenincs/cadrumo/issues"
+Repository = "https://github.com/nevenincs/cadrumo"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/cadrumo_harness",
+  "pyproject.toml",
+  "README.md",
+  "LICENSE",
+  "NOTICE",
+]
+exclude = [
+  "src/cadrumo_harness/tests",
+  "src/cadrumo_harness/tests/**",
+  "src/cadrumo_harness/**/tests",
+  "src/cadrumo_harness/**/tests/**",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cadrumo_harness"]
+exclude = [
+  "src/cadrumo_harness/tests",
+  "src/cadrumo_harness/tests/**",
+  "src/cadrumo_harness/**/tests",
+  "src/cadrumo_harness/**/tests/**",
+]
+include = [
+  "src/cadrumo_harness/py.typed",
+]
