@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:ec8147e05b5a8da849c455851f3de5c4c30b84a635f1107b05592ca6f1199cc8'
+body_hash: 'sha256:e5ba705162b6ecbb6a079802f280cbb9be750ff64660737e9a9f847e1116ffa6'
 related:
   - "[[2026-08-23-inventory-casilla-grounding-research]]"
   - "[[2026-08-22-source-casilla-integration-adr]]"
@@ -16,7 +16,7 @@ related:
 
 ## Problem Statement
 
-The inventory domain now exposes a legally complete, source-owned 2025 projection at activity grain, but immutable registry selectors still require a literal activity ID that cannot represent the taxpayer's runtime encrypted-ledger rows. The existing row-indexed binding carrier preserves position and value, not the canonical source-row identity needed to prove that row 1 still names the same activity after merge, persistence, and replay. This decision defines the typed runtime activity-row and identity-preservation contract grounded by `2026-08-23-inventory-casilla-grounding-research`.
+The inventory domain now exposes a legally complete, source-owned 2025 projection at activity grain. S43 completed grounded operation templates, S170 through S175 completed typed row-source identity transport, encrypted persistence, replay validation, and ordinary-output redaction, and S176 completed runtime inventory cohort expansion. The remaining gaps are materialising those transported values as direct row-indexed casillas and grounding whether any official M100 XML or PDF representation supports structured activity rows. This decision defines that bounded materialisation and fail-closed representation boundary, grounded by `2026-08-23-inventory-casilla-grounding-research`.
 
 ## Considerations
 
@@ -54,7 +54,7 @@ Persist and review row bindings without a row calculation or export materialisat
 
 ### Add registry-owned row-indexed casilla materialisation
 
-Materialise each row binding through an independent `(CasillaId, row_index)` carrier with matching source identity and cohort fingerprint, then render the registry-declared M100 activity row. Accepted.
+Materialise each row binding through an independent `(CasillaId, row_index)` carrier with matching source identity and cohort fingerprint, then ground each official output format independently before authorizing any row rendering. Accepted.
 
 ## Constraints
 
@@ -65,21 +65,21 @@ Materialise each row binding through an independent `(CasillaId, row_index)` car
 - Source resolution carries each expanded operation value as a structured row-indexed binding coordinate compatible with `CalculationSourceResolution.row_binding_values`; a binding ID remains a real registry ID and the 1-based row index remains a separate typed coordinate.
 - Row indexes are transport/projection coordinates, not replacement activity identities. A generic typed row-source identity map keyed by `(BindingId, row_index)` accompanies `row_binding_values`; each member carries the canonical `BindingSourceKind`, an opaque stable source-row identity (`actividad_id` for inventory), and the source/projection fingerprint required to revalidate it.
 - Canonical activity identities sort lexically before 1-based row indexes are assigned. Exclusive merge unconditionally refuses every second claim to the same `(BindingId, row_index)` coordinate; identity, source-kind, fingerprint, or value differences are diagnostic mismatch dimensions, never prerequisites for refusal.
-- `ModeloBindingValue` and encrypted `CalculationRevision` review state persist the same typed identity association. The bijection is coordinate-to-coordinate: every `(BindingId, row_index)` row value has exactly one identity-map member at that same coordinate and vice versa. It does not require source-row identities to be globally unique, because one canonical activity intentionally appears once under each of the three operation bindings.
+- `ModeloBindingValue` and encrypted `CalculationRevision` review state persist the typed identity association under the generic carrier's optional-identity contract. Exact coordinate-to-coordinate bijection is required only for inventory operation cohorts and other registry families explicitly declared identity-required: every such `(BindingId, row_index)` value has exactly one identity-map member at that coordinate and vice versa. Unidentified M720 rows remain valid under the completed generic migration contract. Source-row identities need not be globally unique because one inventory activity intentionally appears once under each operation binding.
 - The three operation bindings form one atomic activity cohort. For each `row_index`, the 0177, 0181, and 0182 template members carry the same source-row identity and projection fingerprint; each canonical activity appears exactly once per operation; and all three operation row sets have identical membership and deterministic order. Merge and replay refuse the whole cohort for any missing, orphan, duplicate, substituted, or reordered member.
 - A typed row-casilla carrier keyed by `(CasillaId, row_index)` is distinct from `row_binding_values`. Every row casilla has exactly one registry-owned target/materialisation rule and a matching row-source identity plus cohort fingerprint; binding-coordinate and casilla-coordinate cohorts must be bijective.
 - Inventory 0177, 0181, and 0182 are direct row-casilla materialised values, not scalar formula operands. Every ROWS binding is excluded from scalar bound-casilla discovery, decimal coercion, scalar input projection, and formula channels and is routed only through the row-casilla carrier.
 - No per-row formula execution or cross-row reduction exists under this decision. Either capability requires separately grounded legal authority, a later accepted ADR, and an explicit registry declaration.
-- `CalculationRevision`, draft, replay, and review preserve row-casilla values, identities, cohort fingerprints, observations, and formula provenance. Missing, duplicate, orphan, substituted, reordered, or cross-cohort values refuse atomically.
-- M100 uses one registry-declared typed direct-estimation activity-row representation consumed by XML and PDF renderers. The renderer joins `ModeloBindingValue.row_index` to the matching row-casilla coordinate; a scalar XML/PDF field cannot stand in for a row field. Exact official XML paths, field IDs, cardinality, and PDF row geometry are blocking grounding prerequisites and must not be guessed from the current scalar dictionary layout.
-- Raw opaque activity identity is encrypted revision state. Ordinary output exposes only the safe binding coordinate and fingerprint; it does not emit `actividad_id` or other source-row identifiers.
+- `CalculationRevision`, draft, replay, and review preserve row-casilla values and direct-materialisation provenance only: binding coordinate, casilla coordinate, source identity, projection/cohort fingerprint, and the registry materialisation rule identity/version. Missing, duplicate, orphan, substituted, reordered, or cross-cohort values refuse atomically. Formula observations, formula provenance, and formula-group identity are absent until a later accepted ADR authorizes formula execution.
+- Official grounding must decide independently whether XML, PDF, both, or neither supports structured M100 activity rows and must identify each supported format's exact paths or fields, cardinality, ordering, and geometry. This ADR authorizes no shared renderer, shared layout abstraction, or row representation before that evidence exists; unsupported formats remain explicitly blocked.
+- Raw opaque activity identity is encrypted revision state. Ordinary output exposes the safe binding coordinate (including row index), source kind, and fingerprint; it does not emit `actividad_id` or other source-row identifiers.
 - Inventory row values do not enter the scalar formula engine or any cross-activity fold. Such consumption requires a separate accepted ADR and registry aggregation contract; this decision does not pre-authorize it.
 - Casilla `0181` is complete acquisition cost: purchase consideration plus directly attributable acquisition costs and non-recoverable IVA, excluding recoverable IVA. The current IVA-exclusive subtotal is never an acceptable substitute.
 - Inventory source semantics must represent and validate that complete acquisition cost before `0181` is connected. A binding must not compensate for an incomplete source fact.
 - Casilla `0177` is `max(closing - opening, 0)` and casilla `0182` is `max(opening - closing, 0)`. They are mutually exclusive for a source projection; both may be zero.
 - An explicit physical closing valuation may be authoritative only when its provenance identifies the observation and valuation basis, continuity against the prior authoritative closing is checked, and any conflict with movement-derived closing is retained as an actionable diagnostic. An unexplained override is not authoritative.
 - Missing, incomplete, inconsistent, conflicting without adjudicated authority, or unreadable source state fails closed. It leaves the source outputs unresolved with actionable diagnostics and never supplies inferred zeroes.
-- The accepted source-casilla integration, calculation aggregation, acquisition-cost, explicit-closing, resolver, and ownership contracts are stable parent features. The remaining blocker is the row identity carrier and its encrypted replay contract.
+- The accepted source-casilla integration, acquisition-cost, explicit-closing, resolver, ownership, S43 grounded-template, S170-S175 row-identity transport/persistence/replay/redaction, and S176 runtime cohort-expansion contracts are stable parent features. The remaining blockers are row-casilla materialisation and official-format representation grounding.
 
 ## Implementation
 
@@ -91,9 +91,9 @@ Emit expanded values through the source mesh's row-indexed binding-value channel
 
 The registry materialiser maps each approved operation binding row directly to a typed `(CasillaId, row_index)` value and copies the matching source identity and cohort fingerprint. It validates a bijection between the complete binding cohort and complete casilla cohort. ROWS bindings are excluded before bound-casilla scalar discovery and decimal coercion and never enter scalar input or formula maps. No per-row formula engine, synthetic ID, wildcard, scalar flattening, taxpayer-wide sum, or undeclared cross-row reduction is introduced.
 
-Persist row binding values, row casilla values, both identity associations, cohort fingerprints, and row formula provenance in the encrypted calculation revision and corresponding draft/review surfaces. Replay reconstructs none of them: it validates coordinate bijections, source kinds, fingerprints, formula group identity, deterministic order, and complete cohorts before reuse. Ordinary output exposes safe coordinates and fingerprints only.
+Persist row binding values, row casilla values, both identity associations, cohort fingerprints, and direct-materialisation rule identity/version in the encrypted calculation revision and corresponding draft/review surfaces. Replay reconstructs none of them: it validates coordinate bijections, source kinds, fingerprints, materialisation rule/version, deterministic order, and complete cohorts before reuse. It carries no formula observation, formula provenance, or formula-group identity. Ordinary output exposes safe coordinates, canonical source kind, and fingerprints only.
 
-Declare one typed M100 direct-estimation activity-row representation shared by XML and PDF projection. Before authoring its layout, separately ground the bundled official AEAT dictionary/XSD and PDF structure to identify the exact activity path or record, field IDs for 0177/0181/0182, cardinality, ordering, and PDF row geometry; absence or disagreement refuses implementation and connected status. The renderer joins `ModeloBindingValue.row_index` to `(CasillaId, row_index)` and refuses a missing or extra side. Calculation, draft, replay, review, XML/PDF export, and pull comparison must agree on row count, order, identity fingerprint, casilla value, and provenance.
+Ground the bundled official AEAT dictionary/XSD and PDF structure independently. For each format, determine whether structured activity rows exist and, only when they do, identify exact activity paths or fields for 0177/0181/0182, cardinality, ordering, and geometry. Then declare a format-specific registry representation whose renderer joins `ModeloBindingValue.row_index` to `(CasillaId, row_index)` and refuses a missing or extra side. Evidence that a format is scalar-only, absent, or contradictory blocks row emission for that format and connected status; it does not authorize an inferred shared renderer or layout. Every supported export/pull surface must agree with calculation, draft, replay, and review on row count, order, identity fingerprint, casilla value, and direct-materialisation provenance.
 
 Consume the implemented canonical complete-acquisition-cost and closing-authority projections without recomputing their domain arithmetic or reopening their authority decisions.
 
@@ -101,7 +101,7 @@ Enroll the projection through the existing registry binding, resolver mesh, prov
 
 Validation enforces revision scope, binding/casilla/identity coordinate bijections, three-operation cohort completeness and order equality, deterministic activity order, ROWS-to-scalar exclusion, source-kind and fingerprint equality, acquisition-cost completeness, mutual exclusion, continuity, source readability, provenance, atomic collision/cohort refusal, safe-output redaction, and calculate/draft/replay/review/export/pull parity.
 
-Inventory linkage remains not connected until a real encrypted multi-activity proof shows non-default row values materialised directly into row casillas, excluded from every scalar/decimal/formula path, persisted/replayed without identity drift, and emitted through the M100 activity export/PDF row representation. Negative proof must show missing, duplicate, orphan, substituted, reordered, scalar-coerced, and absent-layout cases refuse before draft/export. Registry binding declarations or row transport alone cannot satisfy connected status.
+Inventory linkage remains not connected until a real encrypted multi-activity proof shows non-default row values materialised directly into row casillas, excluded from every scalar/decimal/formula path, persisted/replayed without identity drift, and emitted with parity through every official format that independent grounding establishes as row-capable. No output format is mandatory or presumed row-capable before that grounding. Negative proof must show missing, duplicate, orphan, substituted, reordered, scalar-coerced, unsupported-format, and absent-layout cases refuse before draft/export. Registry binding declarations or row transport alone cannot satisfy connected status.
 
 ## Rationale
 
@@ -114,7 +114,7 @@ The complete three-output runtime-row projection is the only option that preserv
 - Calculation revisions and review surfaces must preserve row-to-activity identity in addition to row-indexed binding values, increasing the strict replay and mutation-test surface.
 - The generic identity association can support other row-producing sources without teaching the carrier inventory-specific fields.
 - The row-casilla carrier gives repeated calculations a canonical result channel without weakening the scalar engine or inventing source-specific casilla IDs.
-- M100 requires an explicit repeated activity calculation and export/PDF design; the current scalar XML dictionary is insufficient.
+- M100 requires separately grounded format-specific representation decisions; the current scalar XML dictionary proves neither XML nor PDF row support.
 - Connectivity proof grows from source-to-binding transport to source-to-row-casilla calculation and official row-export parity.
 - Operators lose raw activity identifiers in ordinary output; encrypted review/replay retains them and exposes stable fingerprints for safe correlation.
 - The scalar formula engine remains unchanged; inventory row folding stays refused until an explicit aggregation decision exists.

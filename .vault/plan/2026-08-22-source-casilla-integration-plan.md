@@ -13,8 +13,10 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
 modified: '2026-08-23'
-body_hash: 'sha256:1585ecfd033ed2b45c0bbde83274568535ff85b504ccf2133abcb57bc81d8cb3'
+body_hash: 'sha256:44d085f2423e152c6607d0410630940ffb4c624d37e7cab7b33fbd1823cf9fc3'
 ---
+
+<!-- RETIRED: S52, S191, S193 -->
 
 # `source-casilla-integration` plan
 
@@ -166,7 +168,36 @@ Declare only the revision-specific facts established by adjudication.
 - [x] `W02.P08.S175` - redact raw row-source identities while exposing safe cohort fingerprints in operator output; `src/cadrumo/entrypoints/cli`.
 - [x] `W02.P08.S176` - enumerate canonical runtime inventory activities into deterministic atomic three-operation row cohorts; `src/cadrumo/application/aggregation/_inventory.py`.
 - [x] `W02.P08.S43` - add grounded inventory operation row-template bindings for supported M100 revisions without taxpayer activity identities; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
+- [ ] `W02.P08.S185` - ground which supported M100 filing formats carry repeated economic-activity casilla rows and their exact official coordinates; `.vault/research/2026-08-23-inventory-casilla-grounding-research.md`.
+- [ ] `W02.P08.S205` - amend this plan with one renderer step and one proof step per grounded row-capable format, or record no renderer when no supported format qualifies; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
+- [ ] `W02.P08.S186` - add typed row-indexed casilla values and direct-materialization provenance to the canonical source-resolution carrier; `src/cadrumo/application/aggregation/_source_mesh.py`.
+- [ ] `W02.P08.S187` - persist row-indexed casilla values and direct-materialization provenance through encrypted CalculationRevision state; `src/cadrumo/domain/modelos/_calculation_revision.py`.
+- [ ] `W02.P08.S188` - exclude ROWS bindings from scalar calculation-input projection; `src/cadrumo/application/modelo/_calculation_actions.py`.
+- [ ] `W02.P08.S194` - exclude ROWS bindings from scalar formula operand resolution; `src/cadrumo/domain/calculations`.
+- [ ] `W02.P08.S189` - exclude ROWS bindings from scalar draft bound-casilla discovery; `src/cadrumo/application/filing/__init__.py`.
+- [ ] `W02.P08.S195` - exclude ROWS binding maps from scalar decimal-input coercion; `src/cadrumo/application/filing/__init__.py`.
 - [ ] `W02.P08.S44` - link each inventory operation row template to its adjudicated M100 activity-row casilla; `src/cadrumo/_data/registry/aeat/modelos/100/revisions`.
+- [ ] `W02.P08.S190` - materialize inventory binding rows bijectively into direct row-indexed casilla values; `src/cadrumo/application/modelo/_calculation_resolution.py`.
+- [ ] `W02.P08.S192` - prove positive row-casilla identity, cohort, direct-materialization provenance, and scalar-exclusion invariants; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
+- [ ] `W02.P08.S196` - prove row-casilla materialization refuses a missing coordinate; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
+- [ ] `W02.P08.S197` - prove row-casilla materialization refuses an orphaned coordinate; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
+- [ ] `W02.P08.S198` - prove row-casilla materialization refuses a duplicate coordinate claim; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
+- [ ] `W02.P08.S199` - prove row-casilla materialization refuses a substituted value; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
+- [ ] `W02.P08.S206` - prove row-casilla materialization refuses a substituted source identity; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
+- [ ] `W02.P08.S200` - prove row-casilla materialization refuses reordered activity cohorts; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
+- [ ] `W02.P08.S201` - prove row-casilla materialization refuses cross-cohort fingerprint disagreement; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
+- [ ] `W02.P08.S202` - prove ROWS binding maps cannot enter scalar decimal-input channels; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
+- [ ] `W02.P08.S207` - prove ROWS binding maps cannot enter scalar formula channels; `src/cadrumo/application/modelo/tests/test_inventory_row_casilla_materialization.py`.
+- [ ] `W02.P08.S203` - prove encrypted row-casilla state refuses a missing direct-materialization rule identity; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P08.S204` - prove encrypted row-casilla state refuses a substituted direct-materialization rule version; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P08.S209` - prove encrypted row-casilla state refuses a missing direct-materialization rule version; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P08.S211` - prove encrypted calculation revisions refuse missing row-casilla state; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P08.S212` - prove encrypted calculation revisions refuse orphaned row-casilla state; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P08.S213` - prove encrypted calculation revisions refuse duplicate row-casilla coordinates; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P08.S214` - prove encrypted calculation revisions refuse substituted row-casilla values; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P08.S215` - prove encrypted calculation revisions refuse reordered row-casilla activity cohorts; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P08.S216` - prove encrypted calculation revisions refuse cross-cohort row-casilla fingerprint disagreement; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P08.S210` - prove encrypted row-casilla state refuses a substituted direct-materialization rule identity; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
 - [ ] `W02.P08.S45` - verify inventory template shape, legal grounding, runtime activity cohorts, typed row identities, and casilla linkage; `src/cadrumo/domain/calculations/registry/tests/test_inventory_bindings.py`.
 - [ ] `W02.P08.S177` - prove runtime inventory row identity bijection, cohort equality, deterministic order, and atomic malformed-cohort refusal; `src/cadrumo/application/aggregation/tests/test_inventory_source.py`.
 
@@ -174,8 +205,9 @@ Declare only the revision-specific facts established by adjudication.
 
 Prove the real encrypted and operator-facing path, including negative and conflict behavior.
 
-- [ ] `W02.P09.S46` - prove inventory values cross the real encrypted CalculationRevision boundary with strict equality; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
-- [ ] `W02.P09.S47` - prove deleting persisted inventory provenance is detected by the round-trip gate; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P09.S46` - prove inventory row-binding and row-casilla values plus direct-materialization provenance cross the real encrypted CalculationRevision boundary with strict equality; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P09.S47` - prove deleting persisted inventory row-source provenance is detected by the encrypted round-trip gate; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
+- [ ] `W02.P09.S208` - prove deleting persisted inventory row-casilla provenance is detected by the encrypted round-trip gate; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
 - [ ] `W02.P09.S178` - prove encrypted calculation revisions refuse a missing inventory row-source identity; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
 - [ ] `W02.P09.S180` - prove encrypted calculation revisions refuse an orphaned inventory row-source identity; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
 - [ ] `W02.P09.S181` - prove encrypted calculation revisions refuse duplicate inventory activity identity within one operation row set; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_source_revision_roundtrip.py`.
@@ -184,12 +216,11 @@ Prove the real encrypted and operator-facing path, including negative and confli
 - [ ] `W02.P09.S48` - prove missing, incomplete, and unreadable inventory emit actionable diagnostics; `src/cadrumo/application/modelo/tests/test_inventory_source_mesh.py`.
 - [ ] `W02.P09.S49` - prove caller values cannot collide with or replace inventory-owned values; `src/cadrumo/application/modelo/tests/test_inventory_source_mesh.py`.
 - [ ] `W02.P09.S50` - prove the CLI create-to-calculate-to-review workflow reaches the inventory resolver; `src/cadrumo/entrypoints/cli/tests/test_inventory_modelo_workflow.py`.
-- [ ] `W02.P09.S51` - prove recalculation and review preserve source identity, fingerprint, and grounding; `src/cadrumo/application/modelo/tests/test_inventory_replay_review.py`.
+- [ ] `W02.P09.S51` - prove recalculation and review preserve inventory row cohorts, row-casilla coordinates, source identities, fingerprints, and direct-materialization grounding; `src/cadrumo/application/modelo/tests/test_inventory_replay_review.py`.
 - [ ] `W02.P09.S179` - prove replay and review preserve inventory activity cohorts and safe cohort fingerprints; `src/cadrumo/application/modelo/tests/test_inventory_replay_review.py`.
 - [ ] `W02.P09.S184` - prove ordinary CLI output redacts raw inventory source-row identities; `src/cadrumo/entrypoints/cli/tests/test_output_surface_inventory.py`.
-- [ ] `W02.P09.S52` - prove supported export output consumes the frozen inventory-derived casillas; `src/cadrumo/application/filing/tests/test_inventory_export.py`.
 - [ ] `W02.P09.S53` - update inventory readiness to reflect only capabilities proven by the landed slice; `src/cadrumo/application/inventory/_source_readiness.py`.
-- [ ] `W02.P09.S54` - promote inventory to connected only after every connected proof passes; `src/cadrumo/_data/source_connectivity/census.toml`.
+- [ ] `W02.P09.S54` - promote inventory to connected only when a grounded row-capable format and every connected proof pass, otherwise record the evidence-backed blocked disposition with an owned follow-up; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W02.P09.S55` - conduct a formal code review of the inventory vertical slice; `.vault/audit/2026-08-22-inventory-casilla-connection-code-review.md`.
 
 ## Wave `W03` - adjudicate and connect amortization second

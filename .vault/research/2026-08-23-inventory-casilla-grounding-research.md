@@ -5,7 +5,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:3eacc265a410f515a90f6b526c35953f61108932d1aa04b10b1d22b2623a9b4d'
+body_hash: 'sha256:6f802210dda5700a4c78288fc5125b36879f7b4c532eda775859ca6650a03806'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]"
@@ -14,7 +14,7 @@ related:
 
 # `inventory-casilla-grounding` research: `Modelo 100 stock valuation mapping`
 
-Official 2025 evidence supports three inventory outputs for each direct-estimation economic activity: purchases in 0181, positive closing-minus-opening variation in 0177, and the magnitude of negative variation in 0182. The source-domain gaps found at the original adjudication baseline have since been implemented, but runtime inspection exposes a remaining activity-grain mismatch: immutable registry TOML cannot contain the filing instance's concrete activity identities. Existing row carriers can transport repeated binding values, while their positional key alone does not retain the canonical source-row identity. The mapping ADR must settle the runtime activity-row expansion and identity-preservation boundary.
+Official 2025 evidence supports three inventory outputs for each direct-estimation economic activity: purchases in 0181, positive closing-minus-opening variation in 0177, and the magnitude of negative variation in 0182. The source-domain gaps, S43 grounded operation templates, S170-S175 row-source identity transport/persistence/replay/redaction, and S176 runtime cohort expansion are implemented. Runtime inspection now exposes the next seam: row binding values survive as identified source rows but never become row-indexed casillas, and current registry evidence does not establish whether XML, PDF, both, or neither supports structured M100 activity rows. The mapping ADR must settle direct row-casilla materialisation and the fail-closed representation-grounding boundary.
 
 ## Findings
 
@@ -36,7 +36,7 @@ The AEAT manual defines variation as the difference between opening and closing 
 
 At the original decision baseline, `compute_inventory_variation` returned cents-rounded `closing - opening`, while `compute_anexo_d_inventory_variation` mislabelled that signed value as casilla 0155 and collapsed the two official destinations. Evidence: commit `159465372d`, `src/cadrumo/domain/contribuyente/inventory/__init__.py:322-386`. Commit `900319dd7f` removed that stale destination; commits through `841e4444f8` implemented the split projection.
 
-### Grain matches, but continuity and explicit closing authority remain unresolved
+### The original continuity and closing-authority gaps are resolved
 
 At the original decision baseline, `InventoryLedgerDocument` enforced one ledger per `(actividad_id, year)` but did not enforce prior-closing continuity, and bare `closing_stock` could override derived closing without an authority record. Evidence: commit `159465372d`, `src/cadrumo/domain/contribuyente/inventory/__init__.py:203-293` and `:322-339`. Commits `24a7718153` through `a8f6ab0769` subsequently implemented the grounded closing-authority contract. The remaining blocker is how those already authoritative activity rows are represented in registry resolution.
 
@@ -50,13 +50,13 @@ Local registry roles repeat from 2020 through 2025, but this research directly v
 
 ### A literal inventory selector cannot represent taxpayer-specific activity rows
 
-The current strict selector requires one nonblank `actividad_id`, and the resolver groups bindings by that literal before loading the encrypted ledger at `(actividad_id, 2025)`. `DataBindingDefinition` hydrates the immutable TOML selector directly into its source-family model; neither hydration nor the common selector validator provides runtime interpolation, a wildcard, or a template-substitution phase. No production M100 inventory binding currently supplies an activity identifier; the only concrete examples are synthetic selector tests. Evidence: `src/cadrumo/domain/calculations/registry/_inventory_bindings.py:42-69`, `src/cadrumo/application/aggregation/_inventory.py:118-171`, `src/cadrumo/domain/calculations/registry/_schema.py:656-664`, `src/cadrumo/domain/calculations/registry/_schema.py:716-732`, and `src/cadrumo/domain/calculations/registry/_binding_selector_utils.py:525-550`.
+Before S43, the strict selector required one nonblank literal `actividad_id`, the resolver grouped bindings by that literal, and no production M100 inventory binding existed; commit `6315605be8` captures that historical blocker. S43 replaced it with an immutable row-template selector carrying `projection_grain`, `fact`, `record`, `grouping`, `row_field`, and `target_casilla_id`, with no taxpayer activity identity. Production binding `0065-renta-2025-inventory-activity-rows.toml` now declares the three templates, and S176 expands deterministic runtime projections into row values and identities. Current evidence: `src/cadrumo/domain/calculations/registry/_inventory_bindings.py:42-70`, `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/bindings/0065-renta-2025-inventory-activity-rows.toml:1`, and `src/cadrumo/application/aggregation/_inventory.py:83-183`. The generic immutable hydration boundary remains evidenced by `src/cadrumo/domain/calculations/registry/_schema.py:656-664`, `src/cadrumo/domain/calculations/registry/_schema.py:716-732`, and `src/cadrumo/domain/calculations/registry/_binding_selector_utils.py:525-550`.
 
 The work unit is keyed by bucket, modelo, filing year, period, and registry revision and carries no economic-activity coordinate. The taxpayer's actual activity identifiers instead occur in the encrypted inventory ledger. A static registry activity ID would therefore fabricate filing-instance data; a wildcard or taxpayer-wide sum would discard the exact activity grain established above. Evidence: `src/cadrumo/domain/modelos/_work_unit.py:7-20`, `src/cadrumo/domain/modelos/_work_unit.py:125-168`, and `src/cadrumo/application/aggregation/_inventory.py:118-171`.
 
 ### Existing runtime-row mechanisms preserve registry semantics without static activity IDs
 
-The source mesh already has a first-class row-indexed carrier keyed by `(BindingId, row_index)`, with exclusive merge and serialization behavior, while its ordinary decimal channel is keyed only by `BindingId`. Existing row resolvers enumerate canonical runtime observations and emit one value for each binding and 1-based row index. Evidence: `src/cadrumo/application/aggregation/_source_mesh.py:839-853`, `src/cadrumo/application/aggregation/_source_mesh.py:930-966`, `src/cadrumo/application/aggregation/_source_mesh.py:1168-1171`, and `src/cadrumo/domain/calculations/registry/_detail_record_bindings.py:668-677`. The accepted M720 row-carrier decision rejects synthetic scalar IDs and unrelated detail-row DTO reuse in favor of this structured coordinate: `2026-07-05-modelo-720-row-carrier-adr`.
+The source mesh has a first-class row-indexed carrier keyed by `(BindingId, row_index)`, with exclusive merge and serialization behavior, while its ordinary decimal channel is keyed only by `BindingId`. S170-S175 added the matching typed source-row identity association, encrypted persistence, replay validation, and safe-output redaction. Existing row resolvers enumerate canonical runtime observations and emit one value for each binding and 1-based row index. Evidence: `src/cadrumo/application/aggregation/_source_mesh.py:839-853`, `src/cadrumo/application/aggregation/_source_mesh.py:930-966`, `src/cadrumo/application/aggregation/_source_mesh.py:1168-1171`, `src/cadrumo/domain/modelos/_calculation_revision.py:962-979`, and `src/cadrumo/domain/calculations/registry/_detail_record_bindings.py:668-677`. The accepted M720 row-carrier decision rejects synthetic scalar IDs and unrelated detail-row DTO reuse in favor of this structured coordinate: `2026-07-05-modelo-720-row-carrier-adr`.
 
 M303 provides a complementary typed-row precedent: runtime activity rows carry durable `activity_id` values, and projection selects an exact matching immutable calculation activity rather than consuming an undifferentiated scalar. M349 demonstrates immutable row-template semantics and runtime field suppression through the row's active binding set. Evidence: `src/cadrumo/domain/iva/_regimen_simplificado_rows.py:268-303`, `src/cadrumo/domain/calculations/registry/_m303_regimen_simplificado_projection.py:248-266`, `src/cadrumo/domain/prorrata_register/__init__.py:181-198`, `src/cadrumo/application/filing/_record_renderer.py:232-243`, and `src/cadrumo/application/filing/_record_field_renderer.py:157-162`.
 
@@ -89,6 +89,7 @@ This research did not adjudicate production-cost composition, write-model change
 - `src/cadrumo/domain/contribuyente/inventory/__init__.py:406-476`
 - `src/cadrumo/application/inventory/_source_readiness.py:1-51`
 - `src/cadrumo/domain/calculations/registry/_inventory_bindings.py:42-69`
+- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/bindings/0065-renta-2025-inventory-activity-rows.toml:1`
 - `src/cadrumo/application/aggregation/_inventory.py:118-171`
 - `src/cadrumo/domain/calculations/registry/_schema.py:656-664`
 - `src/cadrumo/domain/calculations/registry/_schema.py:716-732`
