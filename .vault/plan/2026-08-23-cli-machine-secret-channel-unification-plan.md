@@ -4,7 +4,7 @@ tags:
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
 modified: '2026-08-23'
-body_hash: 'sha256:88f0eaa92c28b6443a1fd00d80e376538cfa0a76be07ad1262ca29f4ae4ae59c'
+body_hash: 'sha256:aa28aea248618c19a910c6ab494baf578fef6808db946f9bb1da4bf9f3f1c971'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
@@ -36,7 +36,7 @@ Build the reusable parser, selector, option declarations, and descriptor reader.
 
 Define the authoritative adopter inventory and value-free metadata contract.
 
-- [ ] `W01.P02.S03` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and define the exact five-command machine-secret inventory, command-model registration, safe field and type schemas, conditional restore variants, and conformance API; `src/cadrumo/entrypoints/cli/_machine_secret_contract.py`.
+- [x] `W01.P02.S03` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and define the exact five-command machine-secret inventory, command-model registration, safe field and type schemas, conditional restore variants, and conformance API; `src/cadrumo/entrypoints/cli/_machine_secret_contract.py`.
 - [ ] `W01.P02.S04` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and project value-free machine-secret payload variants into verb input and command schemas; `src/cadrumo/entrypoints/cli/_verb_input_schema.py and src/cadrumo/entrypoints/cli/_command_schema.py`.
 - [ ] `W01.P02.S05` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and prove exact inventory membership, single identical flag declarations across help, Click, metadata, and schema, safe field types without values, and no outside adopters; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_metadata.py`.
 
@@ -103,7 +103,6 @@ Review, remediate, audit honestly, and reconcile the feature corpus.
 ## Parallelization
 
 W01 is foundational. S01 precedes S02 and every command migration; S03 precedes metadata work and migration closure. After S01 and S03, S06-S10 may proceed in parallel only with exclusive module ownership, with S07 owning both dynamic profile-creation files. S11-S12 follow all migrations. S04 may proceed after S03, while S05 and S15 wait for declarations to settle. Runtime matrices S13-S14 follow S06-S12. Documentation generation follows S15. S17 and S18 are strictly sequential closure work.
-
 
 ## Verification
 
