@@ -6,9 +6,13 @@ from decimal import Decimal
 
 import pytest
 
+from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....core import Period
 from ....domain.buckets import BucketEventType
 from ....domain.modelos import CalculationRevisionAmendmentKind, ExternalEvidenceKind
+from ...calculations import CalculationObservationRepository, ObservationSourceKind
+from ...calculations._cross_period_clean_state import _filing_external_evidence_blockers
+from ...calculations._cross_period_models import CrossPeriodCleanStateBlocker
 from .. import (
     ExternalFilingBaselineSource,
     amend_modelo_revision,
@@ -92,6 +96,18 @@ def test_source_payload_import_creates_exact_amendable_baseline(
         _IMPORT_INCOME_CASILLA: Decimal("1500.00"),
         _IMPORT_EXPENSE_CASILLA: Decimal("300.0"),
     }
+    observed = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
+    assert observed is not None
+    assert observed.source_kind is ObservationSourceKind.AEAT_CSV_REGISTER
+    assert observed.source_metadata["external_evidence_reference_id"] == reference_id
+    assert observed.source_metadata["filing_record_id"] == filing.filing_record_id
+    assert not _filing_external_evidence_blockers(
+        filing,
+        observed.source_kind.value,
+        justificante_repository=JustificanteRepository(),
+        taxpayer_tax_id=_TAX_ID,
+        observation_source_metadata=observed.source_metadata,
+    )
 
     amended = amend_modelo_revision(
         from_filing_record_id=filing.filing_record_id,
@@ -133,6 +149,45 @@ def test_public_source_import_refuses_partial_required_manifest_without_writes(r
         _PROFILE_ID,
         event_types=(BucketEventType.MODELO_WORK_UNIT_CREATED,),
     )
+    assert CalculationObservationRepository().load_observation(
+        "130",
+        Period.from_year_and_code(2026, "1T"),
+    ) is None
+
+
+def test_csv_filing_refuses_tampered_observation_evidence_binding(repos: _Repos) -> None:
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    filing = import_external_filing_source(
+        ExternalFilingBaselineSource(
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
+            evidence_reference_id="TAMPERCSV001",
+            tax_id=_TAX_ID,
+            casilla_lexicals={
+                _IMPORT_INCOME_CASILLA: "1500",
+                _IMPORT_EXPENSE_CASILLA: "300",
+            },
+        ),
+        bucket_id=_PROFILE_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    blockers = _filing_external_evidence_blockers(
+        filing,
+        ObservationSourceKind.AEAT_CSV_REGISTER.value,
+        justificante_repository=JustificanteRepository(),
+        taxpayer_tax_id=_TAX_ID,
+        observation_source_metadata={
+            "external_evidence_reference_id": "OTHERCSV001",
+            "filing_record_id": filing.filing_record_id,
+        },
+    )
+    assert blockers == [CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD]
 
 
 def test_failed_receipt_evidence_validation_leaves_no_work_unit_or_event(repos: _Repos) -> None:

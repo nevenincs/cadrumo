@@ -281,3 +281,44 @@ accepts the CSV-bound filing evidence that the import path just committed.
 baselines into the cross-period observation/read model and distinguish
 CSV-bound evidence from receipt-bound PDF/live evidence in clean-state
 evaluation. No verifier gate was weakened and no AEAT call was made.
+
+## Cross-period provenance projection correction — 2026-08-23
+
+CSV import now prepares an `AEAT_CSV_REGISTER` calculation-observation envelope
+from the imported revision and co-commits it with the revision, filing record,
+work-unit pointers, and bucket event. Its encrypted provenance binds ALTA state,
+authenticated profile identity, external evidence reference, filing-record id,
+and stamped registry revision. A partial/refused import leaves this repository
+empty as part of the existing atomic unit.
+
+Clean-state evaluation now distinguishes receipt-bound evidence from the wider
+set of accepted external filing evidence. PDF Justificante and live capture
+still require matching persisted Justificante metadata. CSV requires the
+official CSV observation source plus exact evidence-reference and filing-id
+agreement; a tampered reference fails with
+`mismatched_external_evidence_record`.
+
+Focused evidence:
+
+```text
+uv run pytest -n 0 \
+  src/cadrumo/application/modelo/tests/test_external_source_import.py -q
+# 6 passed in 40.77s
+
+uv run pytest -m integration -n 0 \
+  src/cadrumo/entrypoints/cli/tests/test_modelo_external_source_file_cli.py -q
+# 2 passed in 44.45s
+```
+
+A fresh `.journey4/` rerun proved the observation seam is live: after importing
+M130 1T with its full zero filing/carry manifest, Q2 calculation resolved both
+M130 previous-period bindings from the imported observation. It next requested
+M100 2025 casilla 1479 for
+`irpf.previous_year_economic_activity_net_income`. The bundled synthetic
+M100-2025 declaration fixture has exactly 21 parser-grounded casillas and does
+not contain 1479. No authoritative synthetic value exists in the fixture to
+add without invention. This is the current external/fixture-authority boundary
+(also relevant to the separately audited M100 full-form work in #455), not a
+remaining CSV persistence defect. Per operator-gate policy, calculate stopped;
+verify/approve/export were not fabricated. `.journey4/` was removed and no AEAT
+call occurred.
