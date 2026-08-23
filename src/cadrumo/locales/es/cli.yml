@@ -49,6 +49,11 @@ cli:
           la respuesta anterior era incorrecta.
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
+        attachment_id_help: Identificador del adjunto direccionado por contenido.
+        attachment_queue_help: Listar adjuntos de Drive pendientes de revisión de
+          factura.
+        attachment_view_help: Inspeccionar los metadatos y la procedencia del adjunto
+          almacenado.
         batch_directory_help: Directorio cuyos ficheros se ingresan. Combínalo con
           --file repetido o sustitúyelo por él.
         batch_file_help: Un documento a ingresar. Repite la opción una vez por documento;
@@ -2249,8 +2254,9 @@ cli:
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
       manager_closed: Los cambios en '{profile}' están guardados.
-      manager_closed_created: Perfil '{profile}' creado. Declara que la configuración está completa con `aeat config profile complete-setup` antes de trabajar con modelos. Vuelve a abrirlo
-        cuando quieras con 'aeat config profile edit'.
+      manager_closed_created: Perfil '{profile}' creado. Declara que la configuración
+        está completa con `aeat config profile complete-setup` antes de trabajar con
+        modelos. Vuelve a abrirlo cuando quieras con 'aeat config profile edit'.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
       preflight:

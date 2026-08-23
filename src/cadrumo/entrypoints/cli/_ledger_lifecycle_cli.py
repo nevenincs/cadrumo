@@ -409,7 +409,7 @@ def ledger_pull_folder(
     fetched_count = 0
     refused_count = 0
     for document in listing.documents:
-        reference = f"https://drive.google.com/file/d/{document.file_id}/view"
+        reference = f"https://drive.google.com/file/d/{document.file_id}"
         data = resolve_document_link(
             source=AttachmentSource.GOOGLE_DRIVE,
             reference=reference,
