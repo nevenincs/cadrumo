@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#source-casilla-integration'
 date: '2026-08-22'
+modified: '2026-08-23'
+body_hash: 'sha256:92a70fbf4c89f5d40754a51fa76074bf333b83ed0e97a8462729851a1d9a379a'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -12,8 +14,6 @@ related:
   - '[[2026-08-23-amortization-casilla-mapping-adr]]'
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
-modified: '2026-08-23'
-body_hash: 'sha256:bcf3785c4a6b6df6055f04f65e20154e75f5f7134e12d4019d2e0be92486cb8d'
 ---
 
 # `source-casilla-integration` plan
@@ -158,7 +158,7 @@ Add inventory to the canonical taxonomy and resolution mesh without bypassing se
 
 Declare only the revision-specific facts established by adjudication.
 
-- [ ] `W02.P08.S170` - add typed row-source identity coordinates to the canonical source-resolution carrier and collision merge; `src/cadrumo/application/aggregation/_source_mesh.py`.
+- [x] `W02.P08.S170` - add typed row-source identity coordinates to the canonical source-resolution carrier and collision merge; `src/cadrumo/application/aggregation/_source_mesh.py`.
 - [ ] `W02.P08.S171` - persist typed row-source identity coordinates on encrypted CalculationRevision state; `src/cadrumo/domain/modelos/_calculation_revision.py`.
 - [ ] `W02.P08.S172` - define validated inventory operation row-template selectors without taxpayer activity identities; `src/cadrumo/domain/calculations/registry/_inventory_bindings.py`.
 - [ ] `W02.P08.S173` - carry typed row-source identity coordinates through ModeloBindingValue filing state; `src/cadrumo/domain/filing/_schema.py`.
