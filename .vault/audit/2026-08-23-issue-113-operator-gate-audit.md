@@ -322,3 +322,20 @@ add without invention. This is the current external/fixture-authority boundary
 remaining CSV persistence defect. Per operator-gate policy, calculate stopped;
 verify/approve/export were not fabricated. `.journey4/` was removed and no AEAT
 call occurred.
+
+### Observation-batch rollback proof
+
+The enlarged import transaction is pinned by a real secure-store CAS-conflict
+regression. After priming a complete external baseline, the test injects a
+stale expected revision on the observation write of a replacement import. The
+storage batch raises `SecureObjectRevisionConflictError`, and reads prove the
+filing catalogue, calculation catalogue, WorkUnit pointers, bucket-event
+history, and observation envelope all remain byte-for-byte at their baseline
+state.
+
+```text
+uv run pytest -n 0 \
+  src/cadrumo/application/modelo/tests/test_external_source_import.py \
+  -k observation_write_failure -q
+# 1 passed in 32.03s
+```
