@@ -103,6 +103,144 @@ modelo:
                 Research
             x-agp34c1g6d0j0c1q60o3edhh:
               label: Consolidated balance sheet. Assets. Other
+            x-agp34c1g6d0j0chq60o32c1h:
+              label: Consolidated balance sheet. Assets. Cash and other equivalent
+                liquid assets
+            x-agp34c1g6d0j0chq60o32c1i:
+              label: Consolidated balance sheet. Assets. Financial assets held for
+                trading
+            x-agp34c1g6d0j0chq60o32c1j:
+              label: Consolidated balance sheet. Assets. Financial assets held for
+                trading. Equity instruments
+            x-agp34c1g6d0j0chq60o32c1k:
+              label: Consolidated balance sheet. Assets. Financial assets held for
+                trading. Debt securities
+            x-agp34c1g6d0j0chq60o32c1l:
+              label: Consolidated balance sheet. Assets. Financial assets held for
+                trading. Derivatives
+            x-agp34c1g6d0j0chq60o32c1m:
+              label: Consolidated balance sheet. Assets. Financial assets held for
+                trading. Other
+            x-agp34c1g6d0j0chq60o32c1n:
+              label: Consolidated balance sheet. Assets. Other financial assets at
+                fair value through profit or loss
+            x-agp34c1g6d0j0chq60o32c1o:
+              label: Consolidated balance sheet. Assets. Other financial assets at
+                fair value through profit or loss. Equity instruments
+            x-agp34c1g6d0j0chq60o32c1p:
+              label: Consolidated balance sheet. Assets. Other financial assets at
+                fair value through profit or loss. Debt securities
+            x-agp34c1g6d0j0chq60o32c9g:
+              label: Consolidated balance sheet. Assets. Other financial assets at
+                fair value through profit or loss. Hybrid instruments
+            x-agp34c1g6d0j0chq60o32c9h:
+              label: Consolidated balance sheet. Assets. Other financial assets at
+                fair value through profit or loss. Investments on behalf of life policyholders
+                bearing the investment risk
+            x-agp34c1g6d0j0chq60o32c9i:
+              label: Consolidated balance sheet. Assets. Other financial assets at
+                fair value through profit or loss. Other
+            x-agp34c1g6d0j0chq60o32c9j:
+              label: Consolidated balance sheet. Assets. Available-for-sale financial
+                assets
+            x-agp34c1g6d0j0chq60o32c9k:
+              label: Consolidated balance sheet. Assets. Available-for-sale financial
+                assets. Equity instruments
+            x-agp34c1g6d0j0chq60o32c9l:
+              label: Consolidated balance sheet. Assets. Available-for-sale financial
+                assets. Debt securities
+            x-agp34c1g6d0j0chq60o32c9m:
+              label: Consolidated balance sheet. Assets. Available-for-sale financial
+                assets. Investments on behalf of life policyholders bearing the investment
+                risk
+            x-agp34c1g6d0j0chq60o32c9n:
+              label: Consolidated balance sheet. Assets. Available-for-sale financial
+                assets. Other
+            x-agp34c1g6d0j0chq60o32c9o:
+              label: Consolidated balance sheet. Assets. Loans and receivables
+            x-agp34c1g6d0j0chq60o32c9p:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Debt
+                securities
+            x-agp34c1g6d0j0chq60o32chg:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Loans
+            x-agp34c1g6d0j0chq60o32chh:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Advances
+                on policies
+            x-agp34c1g6d0j0chq60o32chi:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Loans
+                to group and associated entities
+            x-agp34c1g6d0j0chq60o32chj:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Loans
+                to other related parties
+            x-agp34c1g6d0j0chq60o32chk:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Deposits
+                with credit institutions
+            x-agp34c1g6d0j0chq60o32chl:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Deposits
+                established for accepted reinsurance
+            x-agp34c1g6d0j0chq60o32chm:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Receivables
+                from direct insurance operations
+            x-agp34c1g6d0j0chq60o32chn:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Policyholders
+            x-agp34c1g6d0j0chq60o32cho:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Intermediaries
+            x-agp34c1g6d0j0chq60o32chp:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Receivables
+                from reinsurance operations
+            x-agp34c1g6d0j0chq60o32cpg:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Receivables
+                from coinsurance operations
+            x-agp34c1g6d0j0chq60o32cph:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Called-up
+                capital
+            x-agp34c1g6d0j0chq60o32cpi:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Other
+                receivables
+            x-agp34c1g6d0j0chq60o32cpj:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Receivables
+                from public administrations
+            x-agp34c1g6d0j0chq60o32cpk:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Remaining
+                receivables
+            x-agp34c1g6d0j0chq60o32cpl:
+              label: Consolidated balance sheet. Assets. Held-to-maturity investment
+                portfolio
+            x-agp34c1g6d0j0chq60o32cpm:
+              label: Consolidated balance sheet. Assets. Hedging derivatives
+            x-agp34c1g6d0j0chq60o32cpn:
+              label: Consolidated balance sheet. Assets. Reinsurance share of technical
+                provisions
+            x-agp34c1g6d0j0chq60o32cpo:
+              label: Consolidated balance sheet. Assets. Reinsurance share of technical
+                provisions. Provision for unearned premiums
+            x-agp34c1g6d0j0chq60o32cpp:
+              label: Consolidated balance sheet. Assets. Reinsurance share of technical
+                provisions. Life insurance provision
+            x-agp34c1g6d0j0chq60o32d1g:
+              label: Consolidated balance sheet. Assets. Reinsurance share of technical
+                provisions. Provision for claims outstanding
+            x-agp34c1g6d0j0chq60o32d1h:
+              label: Consolidated balance sheet. Assets. Reinsurance share of technical
+                provisions. Other technical provisions
+            x-agp34c1g6d0j0chq60o32d1i:
+              label: Consolidated balance sheet. Assets. Tangible fixed assets and
+                investment property
+            x-agp34c1g6d0j0chq60o32d1j:
+              label: Consolidated balance sheet. Assets. Tangible fixed assets and
+                investment property. Tangible fixed assets
+            x-agp34c1g6d0j0chq60o32d1k:
+              label: Consolidated balance sheet. Assets. Tangible fixed assets and
+                investment property. Investment property
+            x-agp34c1g6d0j0chq60o3ec1g:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Loans.
+                Associated entities
+            x-agp34c1g6d0j0chq60o3ec1h:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Loans.
+                Jointly controlled entities
+            x-agp34c1g6d0j0chq60o3ec1i:
+              label: Consolidated balance sheet. Assets. Loans and receivables. Loans.
+                Other
             x-agp34c1g6d130c1q60o30c1j:
               label: Consolidated balance sheet. Equity and liabilities. Legal and
                 statutory reserve

@@ -101,6 +101,143 @@ modelo:
               label: Konszolidalt merleg. Eszkozok. Immaterialis javak. Kutatas
             x-agp34c1g6d0j0c1q60o3edhh:
               label: Konszolidalt merleg. Eszkozok. Egyeb
+            x-agp34c1g6d0j0chq60o32c1h:
+              label: Konszolidalt merleg. Eszkozok. Penzeszkozok es egyeb likvid eszkozok
+            x-agp34c1g6d0j0chq60o32c1i:
+              label: Konszolidalt merleg. Eszkozok. Kereskedesi celu penzugyi eszkozok
+            x-agp34c1g6d0j0chq60o32c1j:
+              label: Konszolidalt merleg. Eszkozok. Kereskedesi celu penzugyi eszkozok.
+                Tokeinstrumentumok
+            x-agp34c1g6d0j0chq60o32c1k:
+              label: Konszolidalt merleg. Eszkozok. Kereskedesi celu penzugyi eszkozok.
+                Hitelviszonyt megtestesito ertekpapirok
+            x-agp34c1g6d0j0chq60o32c1l:
+              label: Konszolidalt merleg. Eszkozok. Kereskedesi celu penzugyi eszkozok.
+                Derivativak
+            x-agp34c1g6d0j0chq60o32c1m:
+              label: Konszolidalt merleg. Eszkozok. Kereskedesi celu penzugyi eszkozok.
+                Egyeb
+            x-agp34c1g6d0j0chq60o32c1n:
+              label: Konszolidalt merleg. Eszkozok. Egyeb, az eredmennyel szemben
+                valos erteken ertekelt penzugyi eszkozok
+            x-agp34c1g6d0j0chq60o32c1o:
+              label: Konszolidalt merleg. Eszkozok. Egyeb, az eredmennyel szemben
+                valos erteken ertekelt penzugyi eszkozok. Tokeinstrumentumok
+            x-agp34c1g6d0j0chq60o32c1p:
+              label: Konszolidalt merleg. Eszkozok. Egyeb, az eredmennyel szemben
+                valos erteken ertekelt penzugyi eszkozok. Hitelviszonyt megtestesito
+                ertekpapirok
+            x-agp34c1g6d0j0chq60o32c9g:
+              label: Konszolidalt merleg. Eszkozok. Egyeb, az eredmennyel szemben
+                valos erteken ertekelt penzugyi eszkozok. Hibrid instrumentumok
+            x-agp34c1g6d0j0chq60o32c9h:
+              label: Konszolidalt merleg. Eszkozok. Egyeb, az eredmennyel szemben
+                valos erteken ertekelt penzugyi eszkozok. A befektetesi kockazatot
+                vallalo eletbiztositasi szerzodok javara torteno befektetesek
+            x-agp34c1g6d0j0chq60o32c9i:
+              label: Konszolidalt merleg. Eszkozok. Egyeb, az eredmennyel szemben
+                valos erteken ertekelt penzugyi eszkozok. Egyeb
+            x-agp34c1g6d0j0chq60o32c9j:
+              label: Konszolidalt merleg. Eszkozok. Ertekesitheto penzugyi eszkozok
+            x-agp34c1g6d0j0chq60o32c9k:
+              label: Konszolidalt merleg. Eszkozok. Ertekesitheto penzugyi eszkozok.
+                Tokeinstrumentumok
+            x-agp34c1g6d0j0chq60o32c9l:
+              label: Konszolidalt merleg. Eszkozok. Ertekesitheto penzugyi eszkozok.
+                Hitelviszonyt megtestesito ertekpapirok
+            x-agp34c1g6d0j0chq60o32c9m:
+              label: Konszolidalt merleg. Eszkozok. Ertekesitheto penzugyi eszkozok.
+                A befektetesi kockazatot vallalo eletbiztositasi szerzodok javara
+                torteno befektetesek
+            x-agp34c1g6d0j0chq60o32c9n:
+              label: Konszolidalt merleg. Eszkozok. Ertekesitheto penzugyi eszkozok.
+                Egyeb
+            x-agp34c1g6d0j0chq60o32c9o:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek
+            x-agp34c1g6d0j0chq60o32c9p:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Hitelviszonyt
+                megtestesito ertekpapirok
+            x-agp34c1g6d0j0chq60o32chg:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Hitelek
+            x-agp34c1g6d0j0chq60o32chh:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Kotvenyekre
+                nyujtott eloelegek
+            x-agp34c1g6d0j0chq60o32chi:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Csoporttagoknak
+                es tarsult vallalkozasoknak nyujtott hitelek
+            x-agp34c1g6d0j0chq60o32chj:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Egyeb
+                kapcsolt feleknek nyujtott hitelek
+            x-agp34c1g6d0j0chq60o32chk:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Hitelintezeti
+                betetek
+            x-agp34c1g6d0j0chq60o32chl:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Elfogadott
+                viszontbiztositasra kepzett betetek
+            x-agp34c1g6d0j0chq60o32chm:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Kozvetlen
+                biztositasi ugyletekbol szarmazo kovetelesek
+            x-agp34c1g6d0j0chq60o32chn:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Biztositasi
+                szerzodok
+            x-agp34c1g6d0j0chq60o32cho:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Kozvetitok
+            x-agp34c1g6d0j0chq60o32chp:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Viszontbiztositasi
+                ugyletekbol szarmazo kovetelesek
+            x-agp34c1g6d0j0chq60o32cpg:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Egyuttbiztositasi
+                ugyletekbol szarmazo kovetelesek
+            x-agp34c1g6d0j0chq60o32cph:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Befizetesre
+                felszolitott toke
+            x-agp34c1g6d0j0chq60o32cpi:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Egyeb
+                kovetelesek
+            x-agp34c1g6d0j0chq60o32cpj:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Kozigazgatasi
+                szervekkel szembeni kovetelesek
+            x-agp34c1g6d0j0chq60o32cpk:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Tovabbi
+                kovetelesek
+            x-agp34c1g6d0j0chq60o32cpl:
+              label: Konszolidalt merleg. Eszkozok. Lejaratig tartott befektetesi
+                portfolio
+            x-agp34c1g6d0j0chq60o32cpm:
+              label: Konszolidalt merleg. Eszkozok. Fedezeti derivativak
+            x-agp34c1g6d0j0chq60o32cpn:
+              label: Konszolidalt merleg. Eszkozok. A viszontbiztosito reszesedese
+                a biztositastechnikai tartalekokbol
+            x-agp34c1g6d0j0chq60o32cpo:
+              label: Konszolidalt merleg. Eszkozok. A viszontbiztosito reszesedese
+                a biztositastechnikai tartalekokbol. Meg meg nem szolgalt dijak tartaleka
+            x-agp34c1g6d0j0chq60o32cpp:
+              label: Konszolidalt merleg. Eszkozok. A viszontbiztosito reszesedese
+                a biztositastechnikai tartalekokbol. Eletbiztositasi tartalek
+            x-agp34c1g6d0j0chq60o32d1g:
+              label: Konszolidalt merleg. Eszkozok. A viszontbiztosito reszesedese
+                a biztositastechnikai tartalekokbol. Karkifizetesi tartalek
+            x-agp34c1g6d0j0chq60o32d1h:
+              label: Konszolidalt merleg. Eszkozok. A viszontbiztosito reszesedese
+                a biztositastechnikai tartalekokbol. Egyeb biztositastechnikai tartalekok
+            x-agp34c1g6d0j0chq60o32d1i:
+              label: Konszolidalt merleg. Eszkozok. Targyi eszkozok es befektetesi
+                celu ingatlanok
+            x-agp34c1g6d0j0chq60o32d1j:
+              label: Konszolidalt merleg. Eszkozok. Targyi eszkozok es befektetesi
+                celu ingatlanok. Targyi eszkozok
+            x-agp34c1g6d0j0chq60o32d1k:
+              label: Konszolidalt merleg. Eszkozok. Targyi eszkozok es befektetesi
+                celu ingatlanok. Befektetesi celu ingatlanok
+            x-agp34c1g6d0j0chq60o3ec1g:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Hitelek.
+                Tarsult vallalkozasok
+            x-agp34c1g6d0j0chq60o3ec1h:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Hitelek.
+                Kozos vezetesu vallalkozasok
+            x-agp34c1g6d0j0chq60o3ec1i:
+              label: Konszolidalt merleg. Eszkozok. Hitelek es kovetelesek. Hitelek.
+                Egyeb
             x-agp34c1g6d130c1q60o30c1j:
               label: Konszolidalt merleg. Sajat toke es kotelezettsegek. Torvenyi
                 es alapszabaly szerinti tartalek

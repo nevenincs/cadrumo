@@ -11,17 +11,13 @@ and a passphrase, and the flow collects neither. The refusal was correct
 about the flow and wrong about the operator, who was told to "register with
 credentials" by a surface that offered no way to do it.
 
-The credential channel is resolved in one declared order, and every step of
-it is a channel the operator chose:
+The credential channel is resolved in one declared order, and every step is a
+channel the operator chose:
 
-1. the bounded strict-JSON ``--secrets-stdin`` payload for machine callers;
-2. the hardened no-echo console prompt, when a real console is attached and
-   the invocation is not already consuming a machine secret channel;
-3. ``CADRUMO_SECRET_PASSPHRASE``, the sanctioned secrets environment surface
-   that :func:`~cadrumo.application.user_profile.login_profile` already
-   resolves the profile passphrase from, so creation and login read one
-   variable with one meaning rather than growing a second;
-4. otherwise an instructive refusal naming the supported channels, because silently creating a
+1. one bounded strict-JSON ``--secrets-stdin`` or ``--secrets-fd`` payload for
+   machine callers;
+2. the hardened no-echo console prompt when a real console is attached;
+3. otherwise an instructive refusal naming the supported channels, because silently creating a
    profile under a passphrase nobody chose is worse than refusing.
 
 The passphrase is never accepted as an ``argv`` value, on this verb or any
@@ -33,12 +29,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 import typer
-from pydantic import BaseModel, ConfigDict, SecretStr
+from pydantic import SecretStr
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
+from .._machine_secret_contract import register_machine_secret_payload_model
+from ._secure_input import MachineSecretPayload
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -48,27 +46,33 @@ if TYPE_CHECKING:
     from ....application.user_profile import ProfileRecoveryEnrollment
 
 
-class _CreationSecrets(BaseModel):
+class _CreationSecrets(MachineSecretPayload):
     """Strict machine-channel payload for profile creation."""
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
     passphrase: SecretStr
     passphrase_confirmation: SecretStr
 
 
-def resolve_creation_passphrase(*, secrets_stdin: bool = False) -> str:
+register_machine_secret_payload_model("config.profile.create", "passphrase", _CreationSecrets)
+
+
+def resolve_creation_passphrase(*, secrets_stdin: bool = False, secrets_fd: int | None = None) -> str:
     """Return the passphrase for a scripted registration, or refuse.
 
-    An explicitly requested bounded stdin payload wins. Without it, a real
-    interactive terminal receives the no-echo prompt; the configured
-    ``CADRUMO_SECRET_PASSPHRASE`` value (which may be supplied by the sanctioned
-    environment/keyring configuration path) is the unattended fallback.
+    Exactly one explicit bounded machine payload wins. Without one, a real
+    interactive terminal receives the no-echo prompt; a non-interactive caller
+    must choose one of the explicit channels.
     """
-    from .. import _headless_secret_channel_active
-    from ._secure_input import prompt_secret_no_echo, read_secrets_stdin, terminal_can_prompt_for_secrets
+    from ._secure_input import (
+        prompt_secret_no_echo,
+        read_machine_secret_payload,
+        select_machine_secret_channel,
+        terminal_can_prompt_for_secrets,
+    )
 
-    if secrets_stdin:
-        secrets = read_secrets_stdin(_CreationSecrets)
+    selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+    if selection is not None:
+        secrets = read_machine_secret_payload(_CreationSecrets, selection=selection)
         first = secrets.passphrase.get_secret_value()
         if first != secrets.passphrase_confirmation.get_secret_value():
             raise CliRefusedBoundaryError(
@@ -76,7 +80,7 @@ def resolve_creation_passphrase(*, secrets_stdin: bool = False) -> str:
             )
         return first
 
-    if not _headless_secret_channel_active() and terminal_can_prompt_for_secrets():
+    if terminal_can_prompt_for_secrets():
         first = prompt_secret_no_echo(tr("cli.config.profile.create_passphrase_prompt"))
         again = prompt_secret_no_echo(tr("cli.config.profile.create_confirm_passphrase_prompt"))
         if first != again:
@@ -85,14 +89,9 @@ def resolve_creation_passphrase(*, secrets_stdin: bool = False) -> str:
             )
         return first
 
-    from ....core.config import load_settings
-
-    configured = load_settings().cadrumo_secret_passphrase
-    if configured is None:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.profile.create_passphrase_channel_absent",
-        )
-    return configured.get_secret_value()
+    raise CliRefusedBoundaryError(
+        translated_message="cli.config.profile.create_passphrase_channel_absent",
+    )
 
 
 def _recovery_handover_or_none() -> Callable[[ProfileRecoveryEnrollment], None] | None:
@@ -153,7 +152,11 @@ def register_profile_from_scripted_invocation(
     # transaction, which already holds the record session, rather than being
     # written through a second unlock once registration has closed it.
     facts = scripted_profile_facts(get_setup_flow(), kwargs)
-    passphrase = resolve_creation_passphrase(secrets_stdin=bool(kwargs.get("secrets_stdin")))
+    raw_secrets_fd = kwargs.get("secrets_fd")
+    passphrase = resolve_creation_passphrase(
+        secrets_stdin=bool(kwargs.get("secrets_stdin")),
+        secrets_fd=raw_secrets_fd if isinstance(raw_secrets_fd, int) else None,
+    )
     try:
         outcome = register_profile_with_credentials(
             label=label,

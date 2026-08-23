@@ -1,0 +1,628 @@
+# Modelo 220 RECORD T22003A02 -- BALANCE CONSOLIDADO, ACTIVO, in the shape used by entidades aseguradoras:
+# the financial-asset portfolios by measurement category, prestamos y
+# partidas a cobrar with its long breakdown, the participacion del
+# reaseguro en las provisiones tecnicas, and inmovilizado material.
+#
+# 47 casillas describe all 57 design fields -- 47 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position. Every box carries AEAT's own five-digit
+# number, so not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# THE SECTOR ATTRIBUTION IN THE SECTION SLUG IS INFERRED. AEAT heads this record
+# "ACTIVO" exactly as it heads T22003A00 and names no sector. The slug says
+# "aseguradoras" because the line vocabulary is the insurance accounting plan's
+# -- tomadores de seguro, reaseguro aceptado, anticipos sobre polizas,
+# provisiones tecnicas. THAT READING IS NOT STATED BY THE DESIGN, and the
+# operator-facing labels claim no sector.
+#
+# AEAT GETS THE SEPARATOR WRONG IN BOTH DIRECTIONS ON THIS ONE RECORD: NONE at
+# @50 and @84 ("para negociar.Instrumentos de patrimonio") and TWO at @696 and
+# @730 ("provisiones tecnicas.. Provision para prestaciones"). Both are repaired
+# only after an ATTESTED standalone line of this record and every repair is
+# listed below; a stray period elsewhere in a line is left alone.
+#
+# THE NESTING REACHES THREE LEVELS HERE and AEAT prints every level inline:
+# "Prestamos y partidas a cobrar. Prestamos. Entidades asociadas" [00700]. That
+# is why this record can be authored with distinct labels at all -- the depth is
+# in the text, not inferred from the order of the rows.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
+# intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is
+# derived as the common prefix of every numbered line and the remainder is stripped, so
+# both spellings land on the same heading. 5 parent-child separator repair(s)
+# applied:
+#   after 'Activos financieros mantenidos para negociar'
+#   after 'Activos financieros mantenidos para negociar'
+#   after 'Participación del reaseguro en las provisiones técnicas'
+#   after 'Participación del reaseguro en las provisiones técnicas'
+#   after 'Participación del reaseguro en las provisiones técnicas'
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 0
+# rejoin(s) applied: none.
+
+# AEAT PRINTS '. nversiones por cuenta'; the label reads '. Inversiones por cuenta'. Corrected by name, never by a general rule.
+#
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22003A02 tiles
+# 1..976 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @815+150 RESERVADO PARA LA ADMINISTRACION; and
+# @965+12 Fin de registro.
+#
+# NOT CLAIMED: THIS BALANCE SHEET DOES NOT BALANCE HERE. Every subtotal and the TOTAL are
+# DECLARED, not computed: no formula, construct or binding sums a group into its head or
+# the heads into the total, and nothing checks activo against patrimonio neto plus pasivo.
+# Every box is a manual input.
+
+# @16+17 N. ACTIVO. Efectivo y otros activos líquidos equivalentes. [00101]
+[[revisions."2024".casillas]]
+id = "T22003A02:00101"
+number = "00101"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. ACTIVO. Activos financieros mantenidos para negociar. [00102]
+[[revisions."2024".casillas]]
+id = "T22003A02:00102"
+number = "00102"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. ACTIVO. Activos financieros mantenidos para negociar.Instrumentos de patrimonio. [00103]
+[[revisions."2024".casillas]]
+id = "T22003A02:00103"
+number = "00103"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. ACTIVO. Activos financieros mantenidos para negociar. Valores representativos de deuda. [00104]
+[[revisions."2024".casillas]]
+id = "T22003A02:00104"
+number = "00104"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. ACTIVO. Activos financieros mantenidos para negociar.Derivados. [00105]
+[[revisions."2024".casillas]]
+id = "T22003A02:00105"
+number = "00105"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. ACTIVO. Activos financieros mantenidos para negociar. Otros. [00106]
+[[revisions."2024".casillas]]
+id = "T22003A02:00106"
+number = "00106"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. ACTIVO. Otros activos financieros a valor razonable con cambios en pérdidas y ganancias. [00107]
+[[revisions."2024".casillas]]
+id = "T22003A02:00107"
+number = "00107"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. ACTIVO. Otros activos financieros a valor razonable con cambios en pérdidas y ganancias. Instrumentos de patrimonio. [00108]
+[[revisions."2024".casillas]]
+id = "T22003A02:00108"
+number = "00108"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. ACTIVO. Otros activos financieros a valor razonable con cambios en pérdidas y ganancias. Valores representativos de deuda. [00109]
+[[revisions."2024".casillas]]
+id = "T22003A02:00109"
+number = "00109"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. ACTIVO. Otros activos financieros a valor razonable con cambios en pérdidas y ganancias. Instrumentos híbridos. [00110]
+[[revisions."2024".casillas]]
+id = "T22003A02:00110"
+number = "00110"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. ACTIVO. Otros activos financieros a valor razonable con cambios en pérdidas y ganancias. nversiones por cuenta de los tomadores de seguros de vida que asuman el riesgo de la inversión. [00111]
+[[revisions."2024".casillas]]
+id = "T22003A02:00111"
+number = "00111"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. ACTIVO. Otros activos financieros a valor razonable con cambios en pérdidas y ganancias. Otros. [00112]
+[[revisions."2024".casillas]]
+id = "T22003A02:00112"
+number = "00112"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. ACTIVO. Activos financieros disponibles para la venta. [00113]
+[[revisions."2024".casillas]]
+id = "T22003A02:00113"
+number = "00113"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. ACTIVO. Activos financieros disponibles para la venta. Instrumentos de patrimonio. [00114]
+[[revisions."2024".casillas]]
+id = "T22003A02:00114"
+number = "00114"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. ACTIVO. Activos financieros disponibles para la venta. Valores representativos de deuda. [00115]
+[[revisions."2024".casillas]]
+id = "T22003A02:00115"
+number = "00115"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. ACTIVO. Activos financieros disponibles para la venta. Inversiones por cuenta de los tomadores de seguros de vida que asuman el riesgo de la inversión. [00116]
+[[revisions."2024".casillas]]
+id = "T22003A02:00116"
+number = "00116"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. ACTIVO. Activos financieros disponibles para la venta. Otros. [00117]
+[[revisions."2024".casillas]]
+id = "T22003A02:00117"
+number = "00117"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 N. ACTIVO. Préstamos y partidas a cobrar. [00118]
+[[revisions."2024".casillas]]
+id = "T22003A02:00118"
+number = "00118"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 N. ACTIVO. Préstamos y partidas a cobrar. Valores representativos de deuda. [00119]
+[[revisions."2024".casillas]]
+id = "T22003A02:00119"
+number = "00119"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 N. ACTIVO. Préstamos y partidas a cobrar. Préstamos. [00120]
+[[revisions."2024".casillas]]
+id = "T22003A02:00120"
+number = "00120"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 N. ACTIVO. Préstamos y partidas a cobrar. Anticipos sobre pólizas. [00121]
+[[revisions."2024".casillas]]
+id = "T22003A02:00121"
+number = "00121"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17 N. ACTIVO. Préstamos y partidas a cobrar. Préstamos a entidades del grupo y asociadas. [00122]
+[[revisions."2024".casillas]]
+id = "T22003A02:00122"
+number = "00122"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17 N. ACTIVO. Préstamos y partidas a cobrar. Préstamos. Entidades asociadas [00700]
+[[revisions."2024".casillas]]
+id = "T22003A02:00700"
+number = "00700"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17 N. ACTIVO. Préstamos y partidas a cobrar. Préstamos. Entidades multigrupo [00701]
+[[revisions."2024".casillas]]
+id = "T22003A02:00701"
+number = "00701"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17 N. ACTIVO. Préstamos y partidas a cobrar. Préstamos. Otros [00702]
+[[revisions."2024".casillas]]
+id = "T22003A02:00702"
+number = "00702"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17 N. ACTIVO. Préstamos y partidas a cobrar. Préstamos a otras partes vinculadas. [00123]
+[[revisions."2024".casillas]]
+id = "T22003A02:00123"
+number = "00123"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17 N. ACTIVO. Préstamos y partidas a cobrar. Depósitos en entidades de crédito. [00124]
+[[revisions."2024".casillas]]
+id = "T22003A02:00124"
+number = "00124"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @475+17 N. ACTIVO. Préstamos y partidas a cobrar. Depósitos constituídos por reaseguro aceptado. [00125]
+[[revisions."2024".casillas]]
+id = "T22003A02:00125"
+number = "00125"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @492+17 N. ACTIVO. Préstamos y partidas a cobrar. Créditos por operaciones de seguro directo. [00126]
+[[revisions."2024".casillas]]
+id = "T22003A02:00126"
+number = "00126"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @509+17 N. ACTIVO. Préstamos y partidas a cobrar. Tomadores de seguro. [00127]
+[[revisions."2024".casillas]]
+id = "T22003A02:00127"
+number = "00127"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @526+17 N. ACTIVO. Préstamos y partidas a cobrar. Mediadores. [00128]
+[[revisions."2024".casillas]]
+id = "T22003A02:00128"
+number = "00128"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @543+17 N. ACTIVO. Préstamos y partidas a cobrar. Créditos por operaciones de reaseguro. [00129]
+[[revisions."2024".casillas]]
+id = "T22003A02:00129"
+number = "00129"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @560+17 N. ACTIVO. Préstamos y partidas a cobrar. Créditos por operaciones de coaseguro. [00130]
+[[revisions."2024".casillas]]
+id = "T22003A02:00130"
+number = "00130"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @577+17 N. ACTIVO. Préstamos y partidas a cobrar. Desembolsos exigidos. [00131]
+[[revisions."2024".casillas]]
+id = "T22003A02:00131"
+number = "00131"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @594+17 N. ACTIVO. Préstamos y partidas a cobrar. Otros créditos. [00132]
+[[revisions."2024".casillas]]
+id = "T22003A02:00132"
+number = "00132"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @611+17 N. ACTIVO. Préstamos y partidas a cobrar. Créditos con las Administraciones Públicas. [00133]
+[[revisions."2024".casillas]]
+id = "T22003A02:00133"
+number = "00133"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @628+17 N. ACTIVO. Préstamos y partidas a cobrar. Resto de créditos. [00134]
+[[revisions."2024".casillas]]
+id = "T22003A02:00134"
+number = "00134"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @645+17 N. ACTIVO. Cartera de inversión a vencimiento. [00135]
+[[revisions."2024".casillas]]
+id = "T22003A02:00135"
+number = "00135"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @662+17 N. ACTIVO. Derivados de cobertura. [00136]
+[[revisions."2024".casillas]]
+id = "T22003A02:00136"
+number = "00136"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @679+17 N. ACTIVO. Participación del reaseguro en las provisiones técnicas. [00137]
+[[revisions."2024".casillas]]
+id = "T22003A02:00137"
+number = "00137"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @696+17 N. ACTIVO. Participación del reaseguro en las provisiones técnicas.. Provisión para primas no consumidas. [00138]
+[[revisions."2024".casillas]]
+id = "T22003A02:00138"
+number = "00138"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @713+17 N. ACTIVO. Participación del reaseguro en las provisiones técnicas.Provisión de seguros de vida. [00139]
+[[revisions."2024".casillas]]
+id = "T22003A02:00139"
+number = "00139"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @730+17 N. ACTIVO. Participación del reaseguro en las provisiones técnicas.. Provisión para prestaciones. [00140]
+[[revisions."2024".casillas]]
+id = "T22003A02:00140"
+number = "00140"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @747+17 N. ACTIVO. Participación del reaseguro en las provisiones técnicas. Otras provisiones técnicas. [00141]
+[[revisions."2024".casillas]]
+id = "T22003A02:00141"
+number = "00141"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @764+17 N. ACTIVO. Inmovilizado material e inversiones inmobiliarias. [00142]
+[[revisions."2024".casillas]]
+id = "T22003A02:00142"
+number = "00142"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @781+17 N. ACTIVO. Inmovilizado material e inversiones inmobiliarias. Inmovilizado material. [00143]
+[[revisions."2024".casillas]]
+id = "T22003A02:00143"
+number = "00143"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @798+17 N. ACTIVO. Inmovilizado material e inversiones inmobiliarias. Inversiones inmobiliarias. [00144]
+[[revisions."2024".casillas]]
+id = "T22003A02:00144"
+number = "00144"
+segmento = "T22003A02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

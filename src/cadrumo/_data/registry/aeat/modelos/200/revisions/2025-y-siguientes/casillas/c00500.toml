@@ -1,0 +1,11 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "00500"
+number = "00500"
+section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_interrumpidas"]
+data_type = "money"
+semantic_role = "is_pyg_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200008.f0044", "m200-2025.dp200009.f0006", "m200-2025.dp200012.f0006", "m200-2025.dp200024.f0007", "m200-2025.dp200030.f0043", "m200-2025.dp200031.f0006", "m200-2025.dp200040.f0054", "m200-2025.dp200041.f0006", "m200-2025.dp200046.f0044", "m200-2025.dp200051.f0034", "m200-2025.dp200052.f0006"]

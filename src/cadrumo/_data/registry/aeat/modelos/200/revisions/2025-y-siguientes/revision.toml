@@ -1,0 +1,128 @@
+[revisions."2025-y-siguientes"]
+# Prepared and reviewed by an agent against the bundled diseno de registros
+# (aeat-dr-200-2025) and the ordenes it cites; NO human operator has
+# countersigned it, and 'agent_reviewed' plus this reviewer token record that
+# state honestly rather than claiming the operator's own sign-off.
+#
+# What the review covered: every one of the 6,800 design fields was classified
+# and its kind justified -- casilla from the field's own printed token, literal
+# from its Constante cell, projection slot and member from the printed slot
+# token, filler where the design reserves the run -- and the thirteen repeated
+# blocks were each checked for exact geometry agreement against the projection
+# models. That check found and corrected a real modelling error, section G
+# conflating the secretario del consejo with the representantes legales.
+#
+# An operator re-stamping this to 'operator_reviewed' is what promotes the
+# revision to a countersigned filing grade.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
+authority_grade = "filing"
+# valid_from is 2025-01-01 because this revision IS the 2025 revision. That was
+# established by measurement rather than by reading the label: of its 3,427
+# numbered casillas, 246 are boxes only the 2025 diseno carries and ZERO are
+# boxes only the 2024 diseno carries, and its export layout cites
+# aeat-dr-200-2025 alone. It never described ejercicio 2024.
+#
+# THE HAZARD THIS BLOCK USED TO CALL LATENT HAD ALREADY BITTEN. The earlier note
+# recorded that the revision spanned two designs but declared no export layout,
+# so no wrong-era bytes could be produced, and warned that authoring a layout is
+# what makes it bite. A layout WAS since authored, on the 2025 design, while the
+# revision still claimed 2024 -- so ejercicio 2024 would have been written at
+# 2025 offsets, with 1,140 of the 3,194 shared boxes at different positions, 246
+# boxes declared that did not yet exist, and the 142 that did omitted entirely.
+#
+# Narrowing removes that. Ejercicio 2024 is now UNSERVED rather than served
+# wrongly, and aeat-dr-200-2024 is no longer cited here. Authoring a real 2024
+# revision is a separate job: a (length, description) derivation carries 93.6% of
+# its fields and box number resolves 197 more, but 142 fields are 2024-only boxes
+# needing their own casillas and 87 are ambiguous, so it is per-box work, not a
+# derivation.
+valid_from = 2025-01-01
+period_selector = { year_from = 2025, periods = ["0A"] }
+legal_refs = [
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-124",
+    "ley-27-2014:art-10",
+    "ley-27-2014:art-11",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-36",
+    "ley-27-2014:art-100",
+    "ley-27-2014:art-101",
+    "ley-27-2014:art-12",
+    "rd-634-2015:art-3",
+    "ley-27-2014:art-15",
+    "ley-27-2014:art-21",
+    "ley-27-2014:art-22",
+    "ley-27-2014:art-31",
+    "ley-27-2014:art-32",
+    "ley-27-2014:art-13",
+    "ley-27-2014:art-16",
+    "ley-27-2014:art-25",
+    "ley-27-2014:art-26",
+    "ley-27-2014:art-105",
+    "ley-27-2014:dt-44",
+    "ley-49-2002:art-10",
+    "orden-hac-657-2025:modelo-200",
+]
+orden_aplicabilidad = [
+    "orden-hac-657-2025:modelo-200",
+]
+source_refs = [
+    "aeat-dr-200-2025",
+    "aeat-modelo-200-manual-2024",
+    "aeat-modelo-200-manual-2025",
+    "boe-modelo-200-2025-form",
+]
+
+
+[revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2024-y-siguientes' of modelo 200 has no strictly-earlier sibling revision of this modelo (valid_from 2024-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
+legal_refs = [
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-124",
+    "ley-27-2014:art-10",
+    "ley-27-2014:art-11",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-36",
+    "ley-27-2014:art-100",
+    "ley-27-2014:art-101",
+    "ley-27-2014:art-12",
+    "rd-634-2015:art-3",
+    "ley-27-2014:art-15",
+    "ley-27-2014:art-21",
+    "ley-27-2014:art-22",
+    "ley-27-2014:art-31",
+    "ley-27-2014:art-32",
+    "ley-27-2014:art-13",
+    "ley-27-2014:art-16",
+    "ley-27-2014:art-25",
+    "ley-27-2014:art-26",
+    "ley-27-2014:art-105",
+    "ley-27-2014:dt-44",
+    "ley-49-2002:art-10",
+    "orden-hac-657-2025:modelo-200",
+]
+source_refs = [
+    "aeat-dr-200-2025",
+    "aeat-modelo-200-manual-2024",
+    "aeat-modelo-200-manual-2025",
+    "boe-modelo-200-2025-form",
+]
+
+[revisions."2025-y-siguientes".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. Modelo 200's corpus carries its diseno de registro workbook, which describes the fichero layout rather than the labels the declaracion prints, and no declaracion specimen. The label dictionary that grounds modelo 100's profiles is bundled for modelo 100 alone -- a sweep for \
+.properties field dictionaries across the whole corpus returns that modelo and no other. Authoring patterns without such a document would invent them. Modelo 100's 2020 revision disposes this family on exactly this ground while its 2021-2024 siblings populate theirs, so the family is evidence-scoped by revision rather than absent by nature: acquire a label-printing artefact and it becomes applicable, at which point this disposition must be revisited rather than inherited."""
+legal_refs = ["ley-27-2014:art-124", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

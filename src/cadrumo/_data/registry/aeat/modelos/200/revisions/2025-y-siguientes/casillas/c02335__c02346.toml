@@ -1,0 +1,132 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "02335"
+number = "02335"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0056"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02336"
+number = "02336"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0057"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02337"
+number = "02337"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0058"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02338"
+number = "02338"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_generado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0059"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02339"
+number = "02339"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0060"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02340"
+number = "02340"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0061"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02341"
+number = "02341"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_generado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0062"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02342"
+number = "02342"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0063"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02343"
+number = "02343"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0064"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02344"
+number = "02344"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_generado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0065"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02345"
+number = "02345"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0066"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "02346"
+number = "02346"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+data_type = "money"
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+export_refs = ["m200-2025.dp200016b.f0067"]
