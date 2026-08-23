@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:71f2fea4e1bac63501d1d7d8cf3e21c055558541f9cc69aa359299cbac6eda9b'
+body_hash: 'sha256:38d2c6914987fbaf34df8b5c4d7036e950ecdf8785eacc71793859a27192ef58'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7533,3 +7533,34 @@ the KDF keys or the new guidance anywhere in the output -- and are attributable 
 editing `_config/_secure_input.py` and `_config/_root_cli.py`, both modified one minute before
 the run, which is exactly the path deciding the `INTERNAL` versus `REFUSED` classification the
 failures assert on.
+
+### Ruling: `runbook_id` should be deleted, and this campaign cannot be the one to do it
+
+On the merits it is a design-only implementation shell, which the architecture rules say not to
+land: 636 of 636 registered error codes carry `runbook_id=None`, no runbook corpus exists in
+authored docs (the only hits are generated `.doctrees`), the agent harness never mentions it,
+and unlike its neighbour `retryable` -- which carries a long docstring earned by this very
+campaign questioning it -- the field has no docstring at all. Nothing populates it, nothing
+reads it, nothing documents it.
+
+Execution is blocked, and the blocker is in `cadrumo-harness`, an excluded tree.
+`mcp/_transport.py:127` CONSTRUCTS `ErrorEnvelope(..., runbook_id=None, ...)`, which breaks
+against a strict model the moment the field goes; and `mcp/_tools.py:208` publishes
+`ErrorEnvelope.model_json_schema()` as the error schema ADVERTISED TO MCP CLIENTS. So the field
+is part of a published contract after all, and removing it is a coordinated cross-distribution
+change rather than a mechanical sweep of nine registry files.
+
+**The method error is the part worth keeping.** This campaign first concluded "no published
+schema artifact, so this is mechanical" after grepping `*.json` and `*.md` for the field name
+and checking the CLI schema-conformance gate. That evidence was real and the conclusion was
+wrong, because the schema is GENERATED from the pydantic model at runtime -- there is no file
+anywhere containing the string `runbook_id` in a schema context, and no text search could have
+found it. The check that works is to ask who CONSTRUCTS the model and who calls
+`model_json_schema()` on it. Had the sweep gone ahead on the first answer, 636 lines across
+nine shared files would have landed and broken an MCP client contract.
+
+Handover for whoever owns the harness: delete `runbook_id` from `ErrorCode` and `ErrorEnvelope`
+in `core/errors/_registry.py`, the `runbook_id=code.runbook_id` line in `build_error_envelope`,
+636 `runbook_id=None,` lines across the nine `core/errors/registry/_*.py` files, four test files
+under `src/cadrumo`, and the two harness sites above -- one atomic commit, since a partial
+landing breaks envelope construction everywhere.
