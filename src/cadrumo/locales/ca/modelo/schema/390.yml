@@ -1439,26 +1439,39 @@ modelo:
         '2021':
           casilla:
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              help: Casella 26 del model 390, exercici 2021.
               label: IVA meritat per adquisicions intracomunitàries de béns al tipus
                 21% - quota
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              help: 'Dada del model 390, exercici 2021: saldo a compensar generat
+                en l''exercici.'
               label: Saldo a compensar generat en l'exercici
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              help: Casella 97 del model 390, exercici 2021.
               label: Quotes a compensar de l'últim període de liquidació
             x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              help: Casella 64 del model 390, exercici 2021.
               label: Total quota d'IVA deduïble de l'exercici
             x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              help: Casella 47 del model 390, exercici 2021.
               label: Total quota d'IVA meritada de l'exercici
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              help: Casella 06 del model 390, exercici 2021.
               label: Quota IVA repercutit al tipus general (21%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              help: Casella 04 del model 390, exercici 2021.
               label: Quota d'IVA repercutit al tipus reduït (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              help: Casella 02 del model 390, exercici 2021.
               label: Quota d'IVA repercutit al tipus superreduït (4%)
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              help: Casella 65 del model 390, exercici 2021.
               label: Resultat del règim general
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              help: Casella 49 del model 390, exercici 2021.
               label: Quota IVA suportat en operacions interiors corrents
+          field:
+            label: Model 390 exercici 2021 (Orden EHA/3111/2009)
         '2022':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

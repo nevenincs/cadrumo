@@ -121,72 +121,114 @@ modelo:
         2026-y-siguientes:
           casilla:
             base_imponible:
+              help: Casilla 8 del modelo 210, ejercicio 2026.
               label: Base imponible
             base_imponible_directa_g:
+              help: Casilla 18 del modelo 210, ejercicio 2026.
               label: Base imponible (210 G)
             base_imponible_directa_i:
+              help: Casilla 4 del modelo 210, ejercicio 2026.
               label: Base imponible (210 I)
             base_imponible_ganancias_h:
+              help: Casilla 17 del modelo 210, ejercicio 2026.
               label: Base imponible ([12]+[16]) (210 H)
             coeficiente_imputacion_inmobiliaria:
+              help: 'Dato del modelo 210, ejercicio 2026: Coeficiente de imputación
+                inmobiliaria.'
               label: Coeficiente de imputación inmobiliaria
             convenio_indicador:
+              help: Casilla 20 del modelo 210, ejercicio 2026.
               label: Convenio
             cuota_diferencial:
+              help: Casilla 31 del modelo 210, ejercicio 2026.
               label: Cuota diferencial
             cuota_integra:
+              help: Casilla 22 del modelo 210, ejercicio 2026.
               label: Cuota íntegra
             cuota_integra_reducida:
+              help: Casilla 28 del modelo 210, ejercicio 2026.
               label: Cuota íntegra reducida ([24]-[27])
             cuota_ley_irnr:
+              help: Casilla 24 del modelo 210, ejercicio 2026.
               label: Cuota Ley IRNR ([22]-[23])
             deduccion_donativos:
+              help: Casilla 23 del modelo 210, ejercicio 2026.
               label: Deducción por donativos
             dias_imputacion:
+              help: 'Dato del modelo 210, ejercicio 2026: Días de imputación.'
               label: Días de imputación
             exencion_dividendos:
+              help: Casilla 6 del modelo 210, ejercicio 2026.
               label: Exención aplicada dividendos (límite anual 1.500 euros) (210
                 R)
             exenciones_ley_irnr_indicador:
+              help: Casilla 19 del modelo 210, ejercicio 2026.
               label: Exenciones Ley IRNR, excepto dividendos (límite anual 1.500 euros)
             ganancia_diferencia:
+              help: Casilla 11 del modelo 210, ejercicio 2026.
               label: Adquisición. Diferencia (210 H)
             ganancia_importe:
+              help: Casilla 12 del modelo 210, ejercicio 2026.
               label: Adquisición. Ganancia (210 H)
             ganancia_valor_adquisicion:
+              help: Casilla 10 del modelo 210, ejercicio 2026.
               label: Adquisición. Valor de adquisición (actualizado) (210 H)
             ganancia_valor_transmision:
+              help: Casilla 9 del modelo 210, ejercicio 2026.
               label: Adquisición. Valor de transmisión (210 H)
             gastos_deducibles:
+              help: Casilla 7 del modelo 210, ejercicio 2026.
               label: Gastos deducibles
             ingreso_devolucion_anterior:
+              help: Casilla 30 del modelo 210, ejercicio 2026.
               label: Ingreso/Devolución anterior (exclusivamente autoliquidación complementaria)
             limite_convenio:
+              help: Casilla 26 del modelo 210, ejercicio 2026.
               label: Límite Convenio
             mejora_diferencia:
+              help: Casilla 15 del modelo 210, ejercicio 2026.
               label: Mejora o 2ª adquisición. Diferencia (210 H)
             mejora_ganancia:
+              help: Casilla 16 del modelo 210, ejercicio 2026.
               label: Mejora o 2ª adquisición. Ganancia (210 H)
             mejora_valor_adquisicion:
+              help: Casilla 14 del modelo 210, ejercicio 2026.
               label: Mejora o 2ª adquisición. Valor de adquisición (actualizado) (210
                 H)
             mejora_valor_transmision:
+              help: Casilla 13 del modelo 210, ejercicio 2026.
               label: Mejora o 2ª adquisición. Valor de transmisión (210 H)
             porcentaje_convenio:
+              help: Casilla 25 del modelo 210, ejercicio 2026.
               label: Porcentaje Convenio (%)
             reduccion_convenio:
+              help: Casilla 27 del modelo 210, ejercicio 2026.
               label: Reducción por Convenio ([24]-[26])
             rendimientos_integros:
+              help: Casilla 5 del modelo 210, ejercicio 2026.
               label: Rendimientos íntegros
             retencion_practicada:
+              help: Casilla 29 del modelo 210, ejercicio 2026.
               label: Retención practicada
             tipo_gravamen:
+              help: Casilla 21 del modelo 210, ejercicio 2026.
               label: Tipo de gravamen
             tipo_renta:
+              help: 'Dato del modelo 210, ejercicio 2026: Tipo de renta.'
               label: Tipo de renta
             valor_adquisicion:
+              help: 'Dato del modelo 210, ejercicio 2026: Valor de adquisición.'
               label: Valor de adquisición
             valor_catastral:
+              help: 'Dato del modelo 210, ejercicio 2026: Valor catastral.'
               label: Valor catastral
             valor_comprobado_administracion:
+              help: 'Dato del modelo 210, ejercicio 2026: Valor comprobado por la
+                Administración.'
               label: Valor comprobado por la Administración
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: Cálculo del IRNR del modelo 210
+          field:
+            label: Ejercicio 2026 y siguientes
