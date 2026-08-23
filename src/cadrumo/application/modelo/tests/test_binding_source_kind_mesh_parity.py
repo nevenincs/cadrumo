@@ -25,7 +25,10 @@ from ...aggregation import (
     RESERVED_SOURCE_KINDS,
     BindingSourceDisposition,
 )
-from .._calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from .._calculation_route import (
+    CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
+    CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
+)
 from .._calculation_source_policy import BUCKET_AGGREGATION_OWNED_SOURCES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -100,6 +103,21 @@ def test_borrador_and_iva_wallet_decision_are_routed_owned_sources() -> None:
     """
     assert BindingSourceKind.BORRADOR.value in BUCKET_AGGREGATION_OWNED_SOURCES
     assert BindingSourceKind.IVA_WALLET_DECISION.value in BUCKET_AGGREGATION_OWNED_SOURCES
+
+
+def test_inventory_has_one_mesh_owner_and_is_no_longer_deferred() -> None:
+    """Inventory is enrolled exactly once without claiming runtime composition."""
+    owners = tuple(
+        row
+        for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP
+        if BindingSourceKind.INVENTORY in row.owned_sources
+    )
+
+    assert len(owners) == 1
+    assert owners[0].stage == "mesh"
+    assert owners[0].resolver_id == "inventory"
+    assert BindingSourceKind.INVENTORY not in DEFERRED_SOURCE_KINDS
+    assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[BindingSourceKind.INVENTORY] is BindingSourceDisposition.ENROLLED
 
 
 def test_reserved_mesh_members_are_not_routed_or_deferred() -> None:
