@@ -1,9 +1,0 @@
-[[revisions."2008-2023".filing_schedules]]
-id = "modelo-322-mensual"
-period_kind = "monthly"
-periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-profile_condition_mode = "all"
-legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
-source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure"]
-
-# January period closes on last day of February (special case in art 8)

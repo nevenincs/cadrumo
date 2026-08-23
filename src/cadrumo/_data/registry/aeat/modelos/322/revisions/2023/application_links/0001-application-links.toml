@@ -1,0 +1,84 @@
+[[revisions."2023".application_links]]
+id = "modelo-322-portal"
+surface = "portal"
+consumer = "portal_m322_iva_grupo_individual"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-322-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-322-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-322-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-322-extractor"
+surface = "extractor"
+consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-322-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-322-review"
+surface = "review"
+consumer = "cadrumo.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-322-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-322-approval"
+surface = "approval"
+consumer = "cadrumo.application.filing.approval"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-322-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-322-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
+
+[[revisions."2023".application_links]]
+id = "modelo-322-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-322-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-322-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-322-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
+
+# Export consumer for the generated fichero-BOE layout. Required by the registry
+# validator whenever a revision declares export layouts. Grounded on Orden
+# EHA/3434/2007 art. 1, which approves the modelo 322 individual autoliquidación
+# for a grupo de entidades member, and cites the exact record design the layout
+# was generated from.
+[[revisions."2023".application_links]]
+id = "modelo-322-2008-2025-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2023", "aeat-modelo-322-procedure"]
