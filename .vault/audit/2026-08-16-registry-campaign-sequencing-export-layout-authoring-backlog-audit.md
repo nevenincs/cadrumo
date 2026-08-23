@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:18c04043b062b2a66d8907566946f4aad51f42905001025935a209448ba3f0ae'
+body_hash: 'sha256:83e7336303cb365c7717276d4c747a440a78722cf3b5bb22075afd6371653e6b'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -18124,3 +18124,177 @@ Modelo 180 and 349 remain form diagrams needing AEAT acquisition, which is
 operator-side and unchanged.
 
 Three splits remain: modelo 200, 322 and 347.
+
+## Tick: every parser-recoverable design in the corpus now reads whole
+
+Re-measured at tick start: authority CLEAN at `0de356aa96`, inventory at 3 of
+218 with one modelo 200 design still holed.
+
+### The last hole was the dangerous kind: a row that PARSED
+
+`03-200`'s `Pag. 44` was missing ordinal 18 at 215-231. Every other row this
+module has rescued failed to parse, so its damage announced itself. This one
+did not::
+
+    17 198 17 N  Inst. inversion colectiva - Cuenta perdidas y ganancias ...
+    18 21 17 N   Inst. inversion colectiva - Cuenta perdidas y ganancias ...
+    18 215
+    19 232 17 N  Inst. inversion colectiva - Cuenta perdidas y ganancias ...
+
+The position lost a digit -- 215 became 21 -- and the row reads as a perfectly
+well-formed field at position 21. Position 215 was then a hole that skipped the
+record, while the row silently claimed bytes 21-37 belonging to other fields.
+The true pair sits stranded on the line below, carrying no casilla tag, which is
+why the existing stutter recovery passed over it.
+
+### Settled by the neighbours, three ways at once
+
+`_repair_truncated_offset_rows` rewrites the position only when the stranded
+pair repeats the parsed row's OWN ordinal, AND the position it states resumes
+exactly where the row above ends, AND the position the row currently claims does
+NOT. The third condition is the one that keeps a healthy row sitting above a
+stray pair untouched, and it has its own refusal test.
+
+### The control that mattered here
+
+Unlike every other repair in this series, this one MUTATES a row rather than
+rescuing an unparsed one, so a wrong rewrite would move a field silently and
+show up in no skipped-record count. Counting the rewrites is therefore the
+control, and it was run across the whole corpus: **exactly ONE line is rewritten
+in 218 designs**, the one above. That figure is pinned in the module docstring
+and in the test.
+
+Corpus-wide outcome control, two processes: 216 designs, 1 improved, 0
+regressed, 215 unchanged.
+
+### Where the inventory stands
+
+**2 of 218**, and neither remaining entry is a parser gap:
+
+* modelo 180 `02-180-orden-de-20-de-noviembre-de-2000` -- DIAGRAM, 8 position
+  rulers, 0 parseable field rows;
+* modelo 349 `03-349-orden-hac-360-2002` -- DIAGRAM, 16 position rulers, 0
+  parseable field rows.
+
+Both are form diagrams rather than record tables, and closing them needs AEAT to
+publish a tabular diseno -- an operator-side acquisition, unchanged for many
+ticks.
+
+Across four ticks the three modelo 200 tables went 2, 3 and 2 skipped records to
+**0, 0 and 0**, through four distinct and separately-controlled repairs: the
+bare coordinate rejoin in both orientations, the fused ordinal/position prefix,
+the glued naturaleza, and this truncated position.
+
+### Verified
+
+* the new regression: 7 passed, including all three refusal conditions
+  separately;
+* it bites: disabling the repair reds 4 of the 7, the three survivors being the
+  refusals, which is correct;
+* 54 passed across the record-design and modelo 200 gates together;
+* authority loads CLEAN; the three ruff findings sit at 3423, 3863 and 4068,
+  none in the new function at 1026.
+
+### Still open
+
+The partly-read inventory is now entirely operator-side.
+
+Three splits remain: modelo 200, 322 and 347, each needing a semantic mapping
+authored against a design that does not correspond one-to-one to an existing
+one.
+
+## Tick: the remaining campaign scoped, and two plausible shortcuts disproved
+
+Re-measured at tick start: authority CLEAN at `0e3f33eded`. The partly-read
+inventory is now entirely operator-side, so this tick went to the filing
+capability worklist.
+
+### What the worklist actually contains
+
+Fourteen revisions across thirteen modelos, and they are not one kind of work:
+
+* **AUTHORABLE (4)** -- modelo 390/2021, 840/2003-y-siguientes, 036/2025 and
+  220/2024. Each needs a fixed-width layout authored;
+* **BLOCKED on corpus (2)** -- modelos 136 and 721 have no bundled design at
+  all;
+* **BLOCKED on design coverage or era (7)** -- modelos 182, 185, 187, 188, 194,
+  220/2025 and 763 cite designs whose era does not reach the years the revision
+  claims;
+* **BLOCKED on design extraction (1)** -- modelo 038's bundled artefact is a
+  form diagram.
+
+None of the four authorable ones is a tick. Measured by the design they must be
+authored against: modelo 840 has 381 fields over 3 sheets, 390/2021 has 506 over
+9, 036/2025 has 1047 over 13. Modelo 390's existing 2022 layout is HAND-AUTHORED
+across 6277 lines in fourteen files, and no semantic map exists for that modelo,
+so its 2021 sibling cannot be re-anchored the way modelo 210's 2026 mapping was.
+
+Modelo 185 was checked separately because its entry reads like a missing
+citation rather than missing work: "1 registered design, none cited by this
+revision". It is genuinely blocked -- the only bundled design for that modelo
+starts 2026-01-01 and the revision covers 2003-2025.
+
+### Two shortcuts, both proposed and both killed by measurement
+
+Modelo 390's 2021 revision invites an argument that it is a declaration PARSER
+rather than a filing gap, and should leave the worklist rather than be authored.
+Two versions of that argument were tested:
+
+* **By authority grade.** It is `applicability` grade and its review note says
+  "filing layout authority is not claimed". But applicability-grade revisions
+  split **21 WITH a layout against 14 without**, and all 66 filing-grade
+  revisions have one. The grade is an EFFECT of carrying a layout, so excusing
+  an entry by it is circular;
+* **By casilla kind.** All ten of its casillas are `input_kind =
+  informational`. But modelo 840's revision is all-informational too -- 121 of
+  121 -- and is a genuine filing gap the worklist correctly calls authorable. An
+  all-informational casilla set is not a parser fingerprint.
+
+Both would have shortened a red gate by argument rather than work, which is what
+the method warns about, and both were measured before being proposed rather
+than after.
+
+### What was landed
+
+`test_filing_capability_has_no_shortcut_excuse.py` fixes the two disproofs so a
+later reader meets the evidence instead of the temptation. It asserts both
+populations of applicability-grade revisions stay non-empty, records the
+one-way implication that does hold -- no filing-grade revision lacks a layout --
+and names modelo 840 as the load-bearing counterexample, failing if it ever
+stops being one.
+
+It takes no position on whether modelo 390's 2021 layout should be authored.
+That is a real decision; it just cannot be settled by either cheap argument.
+
+### Verified
+
+* the guard: 3 passed; it bites -- simulating the world the grade shortcut
+  assumes, where applicability-grade partitions cleanly, reds it by name;
+* authority loads CLEAN, ruff clean.
+
+### Still open
+
+The campaign's remaining registry work is now large and well-characterised:
+four layouts to author, three splits needing per-box semantic mapping, and nine
+entries blocked on corpus or era that need AEAT artefacts rather than authoring.
+
+### Addendum: a stale assertion of my own, absorbed
+
+The full registry run finished at **10 failed, 5316 passed**, and one failure
+was mine rather than an inventory:
+`test_record_design_coordinate_stutter_recovery::test_the_recovered_record_is_no_longer_skipped`.
+
+That test was written several ticks ago and asserted the design's remaining
+skips were EXACTLY `{"21", "22"}`, describing them in its docstring as rows that
+"arrive carrying no numbers at all". Both halves have since been proved wrong by
+this campaign's own work -- the numbers were present, split across lines in three
+different ways, and all three shapes now have repairs. The design reads whole.
+
+So the assertion was pinning a defect as if it were the contract, which is the
+exact failure this campaign has warned about elsewhere. It now asserts that
+nothing is skipped, and its docstring records what it used to claim and why that
+was wrong.
+
+Nine of the remaining ten failures are the declared inventories; the tenth is
+modelo 220's label gap, still its author's. The run's single ERROR is this
+session's own `-p no:logging` flag, not a defect.
