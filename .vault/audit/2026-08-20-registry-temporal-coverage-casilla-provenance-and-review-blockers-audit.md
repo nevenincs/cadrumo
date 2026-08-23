@@ -5153,3 +5153,76 @@ guess. The useful contribution here is the precise locator, not a fix.
 
 **9889 of 11603 slots remain** across 96 of 134 numbered records; 1714 modelled, zero
 orphaned. Corpus re-derivation after the record landed: **zero problems**.
+
+## 2026-08-23 — T22004B02, a guard that became a spelling rule, and prose that stopped being checked
+
+### What landed
+
+Record **T22004B02** — the *cuenta técnica del seguro no vida*, gastos del inmovilizado
+material y de las inversiones, in the aseguradoras shape, down to the closing subtotal
+`[00288]`. **16 casillas describing all 26 design fields**; revision 1881 → **1897**,
+thirty-seven of 137 record sheets. Suite: **identical FAILED list, zero regressions.**
+
+Two defects in the campaign's own prior output were found and fixed on the way.
+
+### A guard adopted for one purpose silently became a rule about another
+
+Every locale manifest in this campaign has asserted `v.isascii()` on each catalogue value.
+It was adopted as a guard against **mojibake** — reasonable, since the design is read out
+of a workbook and this console decodes as cp1252.
+
+It has been functioning as a **spelling rule for Spanish**. `gestión` shipped as
+`gestion`, `deducción` as `deduccion`, `pérdidas` as `perdidas` — **1739 of this
+revision's 1897 Spanish labels**, across 33 records, in the *mandatory source locale*, on
+filing-grade operator labels.
+
+Nothing in the tree ever required it. The catalogues already carried `á é í ó ő à è ü`
+from other hands, and the suite is unchanged with accents present. **The assertion was
+never wrong about what it tested; it was wrong about what it was standing in for.** A
+mojibake guard should test for the replacement character and for normalisation — which is
+what now replaces it — and neither has anything to do with whether a word is spelled
+correctly.
+
+This record's Spanish is now taken **verbatim from the design** rather than retyped beside
+it, and asserted to equal the text the generator derived from AEAT. The other three
+languages are written in their own orthography.
+
+**1739 labels remain wrong.** Mechanical for the twelve flat-generated records, whose
+accented design text already sits in each fragment's verbatim comment; hand re-accenting
+for the rest. Recorded as owed work, not as an acceptable state.
+
+### A claim written as a constant is a claim that stopped being checked
+
+The flat generator's header asserted, in fixed prose, *"every box carries AEAT's own
+five-digit number, so not one number here is minted."* True of the records it was written
+for. **False for two that shipped saying it anyway** — T22003C01 carries five four-digit
+boxes, and T22007000 four byte spans AEAT numbers nowhere (which the same header then
+described correctly, three paragraphs later, contradicting itself).
+
+The same header closed **every** record with *"THIS BALANCE SHEET DOES NOT BALANCE HERE"*.
+T22007000 is not a balance sheet; it is a settlement chain.
+
+The counts in that header — casillas, fields, extent, rejoins — have always been derived,
+and none of them was ever wrong. **The sentences were the only assertions written as
+literals, and they were the only ones that went stale.** So:
+
+- the number sentence is now **derived** from the emitted numbers, like the counts;
+- the closing paragraph is a **required per-record field**, so a record that does not state
+  what it leaves uncomputed fails to generate rather than inheriting a neighbour's sentence;
+- two paragraphs citing another record's `ACTIVO` example were made generic — one of them
+  directly contradicted what this record's own notes say about its heading.
+
+All twelve flat records regenerated: **the diff is comments only**, not one casilla
+definition changed, verified by counting non-comment changed lines rather than by reading.
+
+### A note on tooling, twice paid for in one iteration
+
+Two edits to the generator were mangled by writing them through a shell heredoc, which ate
+the escaped newlines and left the file unparseable. The campaign already knows not to pass
+**legal text** through a shell. The same applies to **source**: the second occurrence is
+what makes it a rule rather than an accident.
+
+### Scale
+
+**9873 of 11603 slots remain** across 95 of 134 numbered records; 1730 modelled, zero
+orphaned. Corpus re-derivation after the record landed: **zero problems**.
