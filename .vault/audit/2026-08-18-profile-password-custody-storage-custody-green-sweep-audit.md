@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:578d4f3d3dc7714b1030a26939314834708ad2a3f6ed03c9b37cb36c5541846d'
+body_hash: 'sha256:96ee6a6b71892b7420e6a0e6ab9152531af2ba9fb0f33c6e76393a4d25a17142'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7139,3 +7139,37 @@ Left alone deliberately: four `pytest.raises(Exception) as refused` sites that b
 exception and assert on its value afterwards, where the breadth is closed by the later
 assertions, and two `pytest.raises(OSError)` sites which are already specific. Narrowing those
 would be churn, not a fix.
+
+### The narrowing shipped last iteration was itself still satisfiable by the wrong cause
+
+Turning the sweep on this campaign's own work from the previous iteration. Replacing
+`pytest.raises(Exception)` with `pytest.raises(ProfileCustodyRecordError)` in the lock
+exclusivity proof was an improvement and NOT a fix, because that one class carries ten distinct
+refusals in the lock module alone: a non-positive timeout, root-lock ownership not live,
+ownership changed before release, absent flock support, a no-follow open failure, an
+identity-verification failure, a leaf that is a reparse point, an atomic-write failure, and the
+exclusivity refusal the proof is actually about.
+
+Naming the type moved the hole rather than closing it. The concrete way it bites: the proof
+passes `timeout_seconds=0.5`, and a later edit setting that to `0` would raise "local custody
+lock timeout must be positive" -- same class, green test, and the exclusivity claim silently
+replaced by an argument-validation claim, under a test name that still says the lock refuses a
+second acquire.
+
+Closed by matching the message as well as the type,
+`match="cannot be exclusively opened"`. Both the POSIX and the Windows branch raise that exact
+wording, so the match is platform-neutral rather than pinning this host. This is the
+established practice for this class in the same package -- `custody/tests/test_capsule.py`
+matches on "created exclusively", "UUID or DEK epoch", "reparse" and others -- so it follows
+the neighbours rather than inventing a convention.
+
+Proven from outside the repo in the new dimension specifically: the plugin let the first
+acquire run for real and made the second raise the RIGHT class with the WRONG cause. The proof
+now refuses it, reporting the expected regex against the actual message. The previous
+iteration's version would have accepted it.
+
+Durable lesson: an exception class is only as discriminating as the number of ways it can be
+raised. Narrowing `Exception` to a project class feels like the fix and often is not -- the
+question to ask is how many distinct conditions raise the class chosen, and if the answer is
+more than one, the cause has to be named too. Two rounds were needed here because the first
+round asked "which type" and stopped, rather than "what else raises this type".
