@@ -45,10 +45,8 @@ _REPO_ROOT = REPO_ROOT
 _JUSTFILE = _REPO_ROOT / "justfile"
 _WORKFLOWS = _REPO_ROOT / ".github" / "workflows"
 
-#: The publishing verbs. Membership is asserted below rather than trusted, so a
-#: third verb cannot join the file without joining this set. `frontend-deploy`
-#: was a member until the website was rehomed to the cadrumo-marketing
-#: repository; this repository no longer publishes to the site root at all.
+#: The publishing verbs. Membership is asserted rather than trusted, so an
+#: undeclared publisher cannot join the command surface.
 _DEPLOY_RECIPES = frozenset({"docs-deploy", "docs-stack-deploy"})
 
 #: The prefixes that name a development check surface. Deliberately broad: the
@@ -264,20 +262,7 @@ def test_only_the_delivery_workflow_runs_a_publisher() -> None:
 
 
 def test_no_publisher_here_reaches_the_site_root() -> None:
-    """The site root belongs to another repository now.
-
-    `test_the_landing_publisher_has_no_automated_caller_anywhere` stood here
-    and asserted the posture asymmetry between the two publishers: the landing
-    publisher refused every automated run absolutely, the docs publisher
-    accepted a provisioned authority, and the observable consequence was that
-    one had a workflow caller and the other had none.
-
-    That asymmetry is no longer expressible in one repository: the landing
-    publisher left with the website. What survives is the half this repository
-    can still be wrong about — publishing to the site root from here would now
-    race the cadrumo-marketing publisher over the same bucket, so no module and
-    no workflow step may reach it.
-    """
+    """Only the documentation publisher may be reachable from this repository."""
     text = "\n".join(path.read_text(encoding="utf-8") for path in scan_directory(_WORKFLOWS, pattern="*.yml"))
     invoked = {
         module
@@ -288,7 +273,6 @@ def test_no_publisher_here_reaches_the_site_root() -> None:
         f"workflow-invoked publishers: {sorted(invoked)}; only the documentation publisher lives here"
     )
     assert not (_REPO_ROOT / "dev" / "deploy" / "frontend_static_site.py").exists(), (
-        "the site publisher returned to the product repository; it belongs to cadrumo-marketing"
+        "an external-site publisher entered the product repository"
     )
-
 

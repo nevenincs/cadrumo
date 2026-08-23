@@ -994,12 +994,8 @@ def _dry_run(repo_root: Path, *, build: Callable[[Path], Path] = _build_site_roo
     index could not run until the moment bytes were already being written to a
     live destination.
 
-    The sibling landing-page publisher's dry run authenticates because its
-    subject IS the S3 sync. This one's subject is entirely the built tree and
-    every check it runs reads the filesystem, so it deliberately requires no
-    AWS session and no publish authorization: a pre-publish check available
-    only to a credentialed caller is unavailable exactly where it is most
-    useful.
+    Its subject is entirely the built tree and every check reads the filesystem,
+    so it deliberately requires no AWS session or publish authorization.
 
     Args:
         repo_root: Repository root the build commands run from.

@@ -43,11 +43,6 @@ _DOCS: Final = _WORKFLOWS_DIR / "docs.yml"
 # its own — which is what docs.yml is, and what
 # `test_every_code_lane_carve_out_path_has_a_lane_of_its_own` enforces so the
 # set cannot become a silent dumping ground.
-#
-# `frontend/**` was a second lane-owned member, paired with frontend.yml, until
-# the website was rehomed to the cadrumo-marketing repository. Both left
-# together: a carve-out for a surface this repository no longer contains would
-# carve out nothing, and the lane that owned it has no subproject to verify.
 _CODE_LANE_CARVE_OUT: Final = frozenset(
     {
         ".vault/**",
@@ -200,25 +195,12 @@ def test_the_docs_verification_lane_never_publishes() -> None:
 
 
 def test_no_lane_verifies_a_website_this_repository_does_not_contain() -> None:
-    """The website is gone; nothing here may claim to verify it.
-
-    `test_the_frontend_lane_verifies_the_subproject_it_claims` stood here and
-    asserted that frontend.yml typechecked, built, and tested `frontend/`. The
-    website was rehomed to the cadrumo-marketing repository, which runs that
-    lane now. This replaces the assertion with its inverse so the surface
-    cannot quietly come back: a `frontend/` tree or a lane claiming one would
-    mean the split half-reverted, with two repositories both believing they own
-    the site.
-    """
-    # Keyed on the source marker, not on the bare directory: `frontend/` is in
-    # .gitignore's history and a stale checkout can still hold an orphaned
-    # node_modules/dist tree, which is regenerable residue rather than a
-    # returned surface. A tracked package.json is the thing that would mean the
-    # site came back.
+    """Refuse external-site source or CI ownership in the product repository."""
+    # Check the tracked source marker rather than ignored build residue.
     assert not (REPO_ROOT / "frontend" / "package.json").exists(), (
-        "the website was rehomed to cadrumo-marketing; this repository must not carry one"
+        "external-site source does not belong in the product repository"
     )
-    assert not (_WORKFLOWS_DIR / "frontend.yml").exists(), "a website lane returned to the product repository"
+    assert not (_WORKFLOWS_DIR / "frontend.yml").exists(), "an external-site lane entered the product repository"
 
 
 def test_no_workflow_installs_python_dependencies_unfrozen() -> None:

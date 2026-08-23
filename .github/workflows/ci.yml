@@ -26,11 +26,6 @@ name: Cadrumo CI
 # because `docs-check` runs only in the dispatch-only full lane. The carve-out
 # set is byte-identical to packaging-quick.yml's and pinned equal by
 # test_change_class_tiers.py.
-#
-# `frontend/**` was a third carved-out surface with its own lane (frontend.yml)
-# until the website was rehomed to the cadrumo-marketing repository. There is
-# nothing left here to carve out: this repository holds no website source, so
-# the tier, the lane, and the filter all went with it.
 on:
   workflow_dispatch:
   push:

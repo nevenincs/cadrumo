@@ -408,6 +408,45 @@ def test_a_rehearsal_never_dispatches_the_publication_authority() -> None:
     assert "not dispatching publish-release.yml" in surface, "the skip must be visible in the run log, not silent"
 
 
+def test_a_real_release_waits_for_its_own_publication_before_consuming_the_candidate() -> None:
+    """Only a conclusively green publication may retire the selectable draft.
+
+    A bare ``gh workflow run`` proves only that GitHub accepted the dispatch;
+    it says nothing about Gate 2/Gate 3 or publication. The tested resolver
+    identifies this dispatch by immutable commit, waits for its conclusion,
+    and exits non-zero on failure. Shell fail-fast ordering then guarantees the
+    consumption primitive is unreachable after a rejected or failed publish.
+    """
+    surface = _invocation_surface(_document(), "seal")
+
+    dispatch = surface.index("dev.release.run_resolution")
+    consume = surface.index("mark_candidate_consumed")
+    assert dispatch < consume, "the candidate must remain selectable until publication succeeds"
+    assert '.github/workflows/publish-release.yml' in surface
+    assert '--head-sha "${HEAD_SHA}"' in surface
+    assert "--conclude-seconds 7200" in surface, "the publication conclusion must be awaited"
+    assert "dev.release.release_candidate import candidate_tag, mark_candidate_consumed" in surface
+    assert "gh workflow run publish-release.yml" not in surface, "fire-and-forget cannot prove publication success"
+
+
+def test_candidate_consumption_uses_the_packaging_run_identity() -> None:
+    """The retired draft must be the candidate sealed by this exact campaign."""
+    seal = _document()["jobs"]["seal"]
+    surface = _run_surface(_document(), "seal")
+
+    assert "needs.campaign.outputs.head_sha" in str(seal)
+    assert 'candidate_tag(os.environ["PACKAGING_RUN_ID"])' in surface
+
+
+def test_a_rehearsal_does_not_consume_its_candidate() -> None:
+    """The existing dry-run exit remains ahead of both publication and retirement."""
+    surface = _invocation_surface(_document(), "seal")
+
+    rehearsal_exit = surface.index('DRY_RUN}" == "true"')
+    consume = surface.index("mark_candidate_consumed")
+    assert rehearsal_exit < consume
+
+
 _BUMP_BRANCH = re.compile(
     r'if\s*\[\[\s*"\$\{DRY_RUN\}"\s*==\s*"true"\s*\]\]\s*;\s*then\s+'
     r"bump_mode=\((?P<rehearsal>[^)]*)\)\s+"
