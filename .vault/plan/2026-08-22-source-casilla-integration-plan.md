@@ -8,9 +8,9 @@ related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-research]]'
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
-modified: '2026-08-22'
+modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:e7c56b50511ef43675f5a5603c4c6dd4e46bb30b03bde7851ed5fc4d26a8890b'
+body_hash: 'sha256:14cf5a5ff6ac08b4d90f36e45382a841b0e941467e80572212c68b62be77dcba'
 ---
 
 # `source-casilla-integration` plan
@@ -52,6 +52,12 @@ Define the typed candidate identity, evidence, ownership, disposition, expiry, a
 - [x] `W01.P01.S142` - attach canonical calculation-route identity to reconciled supported operator workflows; `src/cadrumo/application/operator_surface`.
 - [x] `W01.P01.S143` - derive live proof enrollment and exact workflow reachability from canonical calculation-route ownership; `src/cadrumo/application/registry`.
 - [x] `W01.P01.S144` - make repository evidence digest verification descriptor-safe against path replacement races; `src/cadrumo/application/registry`.
+- [ ] `W01.P01.S149` - define the canonical primary/contributor lineage role and replace the calculation-source provenance shape atomically with separate resolved and contributor axes; `src/cadrumo/core; src/cadrumo/domain/modelos`.
+- [ ] `W01.P01.S150` - migrate every calculation-source provenance constructor, serializer, merge, and revision-identity payload without defaults, aliases, or dual-read compatibility; `src/cadrumo/application; src/cadrumo/adapters; src/cadrumo/domain`.
+- [ ] `W01.P01.S151` - emit IVA wallet decisions as immutable event-key primaries and parent their authority-source contributors to the decision provenance node; `src/cadrumo/application/calculations; src/cadrumo/application/aggregation`.
+- [ ] `W01.P01.S152` - classify the M720 foreign-asset composite as grounding-blocked until a typed unique resolved-asset identity or separately approved uniqueness-enforced key exists; `src/cadrumo/application/aggregation; .vault`.
+- [ ] `W01.P01.S153` - make live connectivity authority accept exactly one resolver-matching primary and reject contributor-only, ambiguous, orphaned, drifted, or malformed provenance graphs; `src/cadrumo/application/registry`.
+- [ ] `W01.P01.S154` - verify composite and direct provenance identity, encrypted round trips, mutation refusal, wallet lineage, foreign-asset blocking, and semantic sentinel non-duplication; `src/cadrumo`.
 - [ ] `W01.P01.S135` - replace the configurable proof fake with real authority and encrypted-revision mutation coverage; `src/cadrumo/application/registry/tests/test_source_connectivity_authority.py`.
 
 ### Phase `W01.P02` - derive the registry-side inventory
