@@ -11,26 +11,44 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from ...core import CasillaId
+from ...core import BindingSourceKind, CasillaId
 from ...domain.calculations.registry import (
     BindingId,
     DataBindingDefinition,
+    FormulaDefinition,
+    FormulaId,
     InputKind,
     InputKindValue,
     LegalRefId,
     ModeloId,
     RegistrySnapshot,
+    RelationConsumptionChannel,
+    RelationDefinition,
+    RelationId,
     RevisionId,
     SourceRefId,
     casillas_by_binding,
+    expression_binding_refs,
+    expression_casilla_refs,
+    expression_relation_refs,
+    relation_consumption_channels,
+    relation_consumption_index,
 )
+from ..aggregation import BindingSourceDisposition
+from ..modelo import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 
 __all__ = [
     "ManualCasillaRequirement",
     "RegistryBindingRecord",
     "RegistryDestinationRecord",
+    "RegistryFormulaRecord",
+    "RegistryRelationRecord",
+    "RegistrySourceDispositionRecord",
     "derive_registry_binding_records",
     "derive_registry_destination_records",
+    "derive_registry_formula_records",
+    "derive_registry_relation_records",
+    "derive_registry_source_disposition_records",
 ]
 
 type ManualCasillaRequirement = Literal["required", "optional"]
@@ -75,6 +93,40 @@ class RegistryBindingRecord:
     binding_id: BindingId
     binding: DataBindingDefinition
     target_casilla_ids: tuple[CasillaId, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryFormulaRecord:
+    """One formula declaration with dependencies from canonical expression walkers."""
+
+    modelo_id: ModeloId
+    revision_id: RevisionId
+    formula_id: FormulaId
+    formula: FormulaDefinition
+    casilla_dependency_ids: tuple[CasillaId, ...]
+    binding_dependency_ids: tuple[BindingId, ...]
+    relation_dependency_ids: tuple[RelationId, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryRelationRecord:
+    """One relation declaration and its canonical consumption channels."""
+
+    modelo_id: ModeloId
+    revision_id: RevisionId
+    relation_id: RelationId
+    relation: RelationDefinition
+    consumption_channels: tuple[RelationConsumptionChannel, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class RegistrySourceDispositionRecord:
+    """One binding source used by the revision and its live route disposition."""
+
+    modelo_id: ModeloId
+    revision_id: RevisionId
+    source_kind: BindingSourceKind
+    disposition: BindingSourceDisposition
 
 
 def derive_registry_destination_records(snapshot: RegistrySnapshot) -> tuple[RegistryDestinationRecord, ...]:
@@ -122,4 +174,51 @@ def derive_registry_binding_records(snapshot: RegistrySnapshot) -> tuple[Registr
             target_casilla_ids=tuple(sorted(targets_by_binding.get(binding.id, ()))),
         )
         for binding in sorted(snapshot.revision.bindings, key=lambda item: item.id)
+    )
+
+
+def derive_registry_formula_records(snapshot: RegistrySnapshot) -> tuple[RegistryFormulaRecord, ...]:
+    """Project formulas and all typed dependency axes without parsing expressions anew."""
+    return tuple(
+        RegistryFormulaRecord(
+            modelo_id=snapshot.modelo.id,
+            revision_id=snapshot.revision.id,
+            formula_id=formula.id,
+            formula=formula,
+            casilla_dependency_ids=tuple(sorted(set(expression_casilla_refs(formula.expression)))),
+            binding_dependency_ids=tuple(sorted(set(expression_binding_refs(formula.expression)))),
+            relation_dependency_ids=tuple(sorted(set(expression_relation_refs(formula.expression)))),
+        )
+        for formula in sorted(snapshot.revision.formulas, key=lambda item: (item.id, item.target_casilla_id))
+    )
+
+
+def derive_registry_relation_records(snapshot: RegistrySnapshot) -> tuple[RegistryRelationRecord, ...]:
+    """Project relations with consumption derived by the canonical registry index."""
+    consumption_index = relation_consumption_index(snapshot.revision)
+    return tuple(
+        RegistryRelationRecord(
+            modelo_id=snapshot.modelo.id,
+            revision_id=snapshot.revision.id,
+            relation_id=relation.id,
+            relation=relation,
+            consumption_channels=relation_consumption_channels(relation, consumption_index),
+        )
+        for relation in sorted(snapshot.revision.relations, key=lambda item: item.id)
+    )
+
+
+def derive_registry_source_disposition_records(
+    snapshot: RegistrySnapshot,
+) -> tuple[RegistrySourceDispositionRecord, ...]:
+    """Project live dispositions for every binding source used by the revision."""
+    source_kinds = sorted({binding.source for binding in snapshot.revision.bindings}, key=lambda item: item.value)
+    return tuple(
+        RegistrySourceDispositionRecord(
+            modelo_id=snapshot.modelo.id,
+            revision_id=snapshot.revision.id,
+            source_kind=source_kind,
+            disposition=CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source_kind],
+        )
+        for source_kind in source_kinds
     )

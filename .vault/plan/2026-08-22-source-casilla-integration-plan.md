@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:8f94970b6905796420ff07e807c21a8ac2e80e3cd391022f24545afaf983770d'
+body_hash: 'sha256:de0329e6ac71d4af3ba4b068dbd68b8046db38978d864813847d0bd385ce53a3'
 ---
 
 # `source-casilla-integration` plan
@@ -68,7 +68,7 @@ Produce deterministic records for every validated manual casilla, binding, relat
 - [x] `W01.P02.S06` - derive registry destination records from validated revision snapshots; `src/cadrumo/application/registry/source_connectivity.py`.
 - [x] `W01.P02.S07` - classify manual casillas without inferring substitutability from labels or numeric identifiers; `src/cadrumo/application/registry/source_connectivity.py`.
 - [x] `W01.P02.S08` - project declared bindings, typed selectors, aggregation operations, and target casillas; `src/cadrumo/application/registry/source_connectivity.py`.
-- [ ] `W01.P02.S09` - project relations, formula dependencies, and existing source dispositions; `src/cadrumo/application/registry/source_connectivity.py`.
+- [x] `W01.P02.S09` - project relations, formula dependencies, and existing source dispositions; `src/cadrumo/application/registry/source_connectivity.py`.
 - [ ] `W01.P02.S10` - verify all loaded modelo revisions produce deterministic registry-side census records; `src/cadrumo/application/registry/tests/test_source_connectivity_inventory.py`.
 
 ### Phase `W01.P03` - derive the source-capability inventory
