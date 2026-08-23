@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:a8156fbb11cb0b2e78f206dbed53bbfb283101ff0eac102c2d33b5db83386320'
+body_hash: 'sha256:4598f207c5daec3cbe7b26c93f8b156416568a7b40037c6c453698fd8be43616'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -58,7 +58,7 @@ Attribute cost per live CLI path using real subprocesses.
 - [x] `W01.P02.S05` - Add a reusable fresh-process profiler for resolution, invocation, imports, Pydantic construction, filesystem changes, and storage operations; `src/cadrumo/tests/cli_performance.py`.
 - [x] `W01.P02.S06` - Add quiet-runner calibration and median and ratio budget support without single-sample pass conditions; `src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py`.
 - [x] `W01.P02.S07` - Capture baseline distributions and ranked outliers for every enrolled node as execution evidence; `dev/benchmarks/cli/`.
-- [ ] `W01.P02.S08` - Prove profiler and census gates bite on injected registry loading, filesystem materialization, and unclassified nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py`.
+- [x] `W01.P02.S08` - Prove profiler and census gates bite on injected registry loading, filesystem materialization, and unclassified nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py`.
 
 ## Wave `W02` - Make command loading proportional to the selected path
 
