@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:fa841c4d1fdb739ab572d5834d32343380e7f89905c5a0e5f0f4bea8e44fa7a4'
+body_hash: 'sha256:b481f3bc32badb7be49f3c5f76fcc45b669957c1ec41a343d86533273956f946'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -12,6 +12,8 @@ related:
   - '[[2026-08-23-cli-runtime-resource-architecture-convergence-research]]'
   - '[[2026-08-22-secure-storage-performance-hardening-research]]'
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
+  - '[[2026-08-23-external-client-boundary-adr]]'
+  - '[[2026-08-23-external-client-boundary-research]]'
 ---
 
 # `secure-storage-performance-hardening` plan
@@ -58,9 +60,9 @@ Generalize lazy loading to nested groups and leaves.
 - [x] `W02.P03.S10` - Preserve root help, completion, version, error-envelope, and suggestion contracts through metadata-only traversal; `src/cadrumo/entrypoints/cli/_common.py`.
 - [x] `W02.P03.S12` - Extend lazy import failure coverage across nested groups and leaves for required and optional dependencies; `src/cadrumo/entrypoints/cli/tests/`.
 
-### Phase `W02.P03a` - Urgent command-authority correction
+### Phase `W02.P03a` - Urgent command-authority and external-client boundary correction
 
-Correct the nonconforming generated-resource design before any further command-loading or performance work, then make one atomic hard cut to production-authored CommandSpec authority and prove every source, build, shipping, and installed-runtime lane.
+Correct the nonconforming generated-resource design through one production-authored CommandSpec authority, then enforce the accepted client-blind base boundary and prove only base-owned source, build, shipping, and installed-runtime lanes before the remaining performance campaign resumes.
 
 - [x] `W02.P03a.S54` - Atomically hard-cut the complete root, group, and leaf surface to distributed production-authored CommandSpec as sole structural authority, project runtime assembly, help, completion, census, schema, operator, MCP/HITL, execution policy, and write routing from specs, make handlers behavior-only, and delete callback/decorator authority, lazy and path mirrors, both runtime JSON readers, both development generators, ignore entries, cache-parity tests, and stale prose with no fallback, shim, or partial coexistence; `repository CLI command-authority surface`.
 - [x] `W02.P03a.S11` - Correct the reopened S11 execution and review evidence, preserving its latency observations while re-proving schema and operator-help discovery exclusively from production CommandSpec after the atomic cutover; `.vault/exec/2026-08-22-secure-storage-performance-hardening/ and .vault/audit/`.
@@ -68,7 +70,12 @@ Correct the nonconforming generated-resource design before any further command-l
 - [x] `W02.P03a.S55` - Add dynamic CommandSpec exact-set, uniqueness, parent-edge, target, locale-key, schema, policy, side-effect, performance-class, and write-route gates for every current and future root, group, and leaf, forbid every former structural authority and runtime artifact edge, and prove each detector with independently constructed missing, duplicate, orphan, malformed, forbidden-import, and undeclared-node negatives; `src/cadrumo/entrypoints/cli/tests/ and dev/ci/tests/`.
 - [x] `W02.P03a.S56` - Prove clean-checkout direct-source and editable-install CLI assembly, help, completion, census, schema, operator, MCP/HITL, and write-routing behavior from tracked CommandSpec modules without generation or development imports, including explicit absence of both command JSON names and generator paths; `src/cadrumo/entrypoints/cli/tests/ and dev/packaging/`.
 - [x] `W02.P03a.S57` - Prove direct-wheel, direct-sdist, and sdist-to-wheel contents and installed behavior include every production CommandSpec module, exclude both command JSON names and development generators, and materialize the complete localized root, group, and leaf surface with resolvable public handler and schema targets; `src/cadrumo/tests/test_wheel_content_boundary.py and dev/packaging/`.
-- [x] `W02.P03a.S58` - Bind one immutable Git-archive Python cohort to exhaustive installed-runtime CommandSpec identities, locale metadata, policy, schema, selected-path import budgets, and artifact absence, then require downstream smoke, Scoop, Homebrew, MCPB, marketplace, and publish lanes to consume that sealed cohort without rebuilding or regenerating command authority; `dev/packaging/ and dev/release/`.
+- [ ] `W02.P03a.S60` - Delete the embedded external-client harness workspace and Python package, including its server entrypoint, build metadata, lock membership, fixtures, and tests, with no package, alias, re-export, shim, or fallback remaining; `src/cadrumo-harness/, pyproject.toml, and uv.lock`.
+- [ ] `W02.P03a.S61` - Delete all Claude plugin and marketplace materializers, source templates, packaged artifacts, descriptors, acquisition, publication, smoke tooling, and tests, with no generated or fallback surface remaining; `packaging/marketplace/ and dev/packaging/`.
+- [ ] `W02.P03a.S62` - Delete all MCPB builders, manifests, bundled artifacts, acquisition and smoke tooling, launch fallbacks, fixtures, and tests; `packaging/mcpb/ and dev/packaging/`.
+- [ ] `W02.P03a.S63` - Delete every external-client workflow, job, runner hook, release credential, and recipe for the harness, Claude, plugin, marketplace, or MCPB lanes; `.github/workflows/ and justfile`.
+- [ ] `W02.P03a.S64` - Remove every harness, Claude, plugin, marketplace, and MCPB artifact kind, cohort record, member, builder, publication input, readiness requirement, promotion path, and release destination while preserving the base Cadrumo, data, source, wheelhouse, Scoop, Homebrew, GitHub, and PyPI cohort; `dev/packaging/ and dev/release/`.
+- [ ] `W02.P03a.S58` - Re-prove one immutable Git-archive base-only Python cohort against exhaustive installed-runtime CommandSpec identities, locale metadata, policy, schema, selected-path import budgets, and forbidden-artifact absence, then require only base-owned smoke, Scoop, Homebrew, PyPI, and GitHub release lanes to consume the sealed Cadrumo, data, source, and wheelhouse artifacts without rebuilding or regenerating command authority, with every external-client artifact and destination absent; `dev/packaging/ and dev/release/`.
 - [ ] `W02.P03a.S59` - Run two independent post-cutover architecture reviews and reconcile all command-authority, production-development boundary, build-lane, shipping-lane, and installed-runtime findings before resuming the remaining performance campaign; `.vault/audit/`.
 
 ### Phase `W02.P04` - Enroll every command subtree

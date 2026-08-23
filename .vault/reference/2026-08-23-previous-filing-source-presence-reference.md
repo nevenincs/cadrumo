@@ -5,28 +5,9 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:5cbe50099eb8f7eafcc88536a2c01230669466f80021246a33c184486b8bfaea'
+body_hash: 'sha256:9fc147c14e5d93aaace536c9f0e58b81fbd5cb46d50752badece3875c76908c8'
 related: []
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #reference) and one feature tag.
-     Replace previous-filing-source-presence with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `previous-filing-source-presence` reference: `Canonical previous-filing source presence`
 
@@ -58,6 +39,13 @@ M130 annual binding declares an empty required set; the prior-payment binding
 declares only casilla 07 required, allowing absent casilla 16. Missing optional
 sources contribute the aggregation identity zero. Missing required sources, or
 a matched observation containing none of the declared candidates, fail closed.
+
+When bindings share one source filing coordinate, each optional-any binding
+contributes its own `source_presence_groups` row. The coalesced typed
+requirement therefore retains "at least one from each binding" rather than
+weakening it to "at least one from the union". The canonical
+`source_presence_gaps` primitive enforces the derived groups for live capture
+and cross-period clean-state evaluation.
 
 All candidate ids remain in `source_casilla_ids` and continue through registry
 cross-model validation and observation requirements. Fixtures and tests do not

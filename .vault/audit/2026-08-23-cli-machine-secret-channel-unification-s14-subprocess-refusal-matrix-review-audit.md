@@ -139,6 +139,60 @@ therefore does not prove that an exact target is required before source
 consumption while valid targets with bad secrets actually reach bounded read
 and authentication.
 
+### parse-precedence-oracle | medium | The parse-error row can read the root descriptor and still pass
+
+The parse-error case supplies only the closed number `999999`, expects exit
+code 2, and asserts that the word `unreadable` is absent. The live English
+descriptor diagnostic is “not an inherited readable profile authentication
+channel,” which does not contain that substring. If parse precedence regresses
+and dispatch attempts the descriptor read, the resulting typed descriptor
+refusal still has exit code 2 and satisfies every assertion; the planted secret
+absence is vacuous because no bytes were supplied. The row also does not scan
+the prompt catalogue. Help's expected exit code 0 is useful, but the parse arm
+does not prove source-read or prompt precedence.
+
+### refusal-envelope-shape | medium | Most JSON refusal rows never validate a typed JSON envelope
+
+`_assert_refused` checks exit code, prompt/secret absence, log contents, and an
+optional storage snapshot, but does not parse the `--format json` error stream
+or require its `status`, typed error object, code, and message fields. Only the
+conflict callers add a raw status substring, and even that is not structural.
+Consequently a regression to plain text, malformed JSON, a Click usage error,
+or an unrelated typed refusal can leave most descriptor, payload, retired-field,
+environment, target, and self-authentication rows green. This weakens the
+matrix's claim to exercise the public typed refusal surfaces.
+
+### non-tty-prompt-topology | medium | The only no-channel subprocess inherits the runner stdin instead of forcing a non-terminal
+
+The hostile-environment row is also the only S14 leaf invocation with neither
+explicit secret channel, but it calls `_run` with `stdin=None`. `subprocess.run`
+therefore inherits the pytest process's stdin rather than creating a captured
+pipe. On an interactive developer host, the production contract correctly sees
+a verified terminal and prompts, causing this purported refusal test to block
+or consume operator input; on the current non-interactive runner it happens to
+refuse. The row must force a non-TTY/EOF input and assert the non-interactive
+diagnostic and prompt absence to provide deterministic prompt-only-TTY proof.
+
+### descriptor-refusal-partition | medium | Reserved and unreadable descriptor cases accept the same generic refusal
+
+The leaf and root descriptor tables assert only exit code 2, generic leak and
+prompt absence, and state equality for `-1`, `1`, `2`, and `999999`. If the
+reserved-stream guard is deleted, reads of `-1`, stdout, and stderr fail as
+ordinary unreadable descriptors under this captured subprocess topology and
+still satisfy every assertion. The cases therefore do not prove the required
+negative/1/2 reserved refusal separately from the genuinely unreadable-number
+path; their test names' “typed” claim has no diagnostic oracle.
+
+### retired-restore-field-oracle | medium | Reaccepting the legacy password field still leaves its test green
+
+The restore hard-cut row supplies `{"password": _REFUSAL_SECRET}`, while the
+source capsule is protected by `_PROFILE_SECRET`, and asserts only an eventual
+refusal and no publication. If production reintroduces `password` as an alias,
+the payload is accepted but the application rejects the deliberately wrong
+credential, producing the same exit code 2, no mutation, and no leak. Without
+the correct capsule passphrase under the retired name or an exact
+unexpected-field diagnostic, this test does not prove the required hard cut.
+
 ## Recommendations
 
 <!-- Actionable recommendations, each tied to a finding above. An

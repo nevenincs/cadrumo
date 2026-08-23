@@ -1,18 +1,20 @@
 ---
 tags:
-  - '#adr'
-  - '#issue-620-external-pdf-signal'
+  - "#adr"
+  - "#issue-620-external-pdf-signal"
 date: '2026-08-23'
-modified: '2026-08-23'
-body_schema: 'body-v1'
-body_hash: 'sha256:2fab1f90096c3cc0141736010b928bcbd0db7721b7effdb7b42f047ffeb46231'
 related:
   - "[[2026-08-23-issue-620-external-pdf-signal-research]]"
   - "[[2026-07-26-declaracion-real-render-verification-adr]]"
   - "[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]"
   - "[[2026-06-01-verification-fixture-roles-adr]]"
+  - "[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-research]]"
+superseded_by: '2026-08-23-issue-620-external-pdf-signal-authority-adjudication-adr'
+modified: '2026-08-23'
+body_schema: 'body-v1'
+body_hash: 'sha256:468b3c753923ba253fcfe8071d88e88ddd307b59b4eafba3b89832ec38f2a095'
 ---
-# `issue-620-external-pdf-signal` adr: `third-party-hosted PDFs as adversarial external layout evidence` | (**status:** `accepted`)
+# `issue-620-external-pdf-signal` adr: `third-party-hosted PDFs as adversarial external layout evidence` | (**status:** `superseded`)
 
 ## Problem Statement
 

@@ -3,14 +3,15 @@ tags:
   - '#plan'
   - '#issue-620-external-pdf-signal'
 date: '2026-08-23'
-modified: '2026-08-23'
-body_hash: 'sha256:cddeccc555b7b01d3bf23b1e43c12d7c1921e7ff18c55ffdc5034b0bd7bba5ed'
 tier: L1
 related:
   - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-research]]'
   - '[[2026-07-26-declaracion-real-render-verification-adr]]'
   - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-adr]]'
+modified: '2026-08-23'
+body_hash: 'sha256:fb797236b3c678574d00c331f6531d4a49492092c3f674a69be252e8a031bbcd'
 ---
 
 # `issue-620-external-pdf-signal` plan
@@ -33,6 +34,11 @@ The accepted real-render verification decision requires render-dependent claims 
 - [x] `S08` - Add the cross-model external-layout outcome matrix with exact blank and unsupported results; `src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py`.
 - [x] `S09` - Correct Modelo 130 extraction-profile evidence claims and lock the operator advisory; `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/extraction_profiles/`.
 - [x] `S10` - Resolve final review findings for the M036 route, exact candidate topology, and synthetic-corpus terminology; `src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py; src/cadrumo/tests/fixtures/external_layout_candidates/tests/test_candidate_contract.py; src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `S11` - Define the three-axis authority-adjudication contract and offline official-source evidence schema; `src/cadrumo/tests/fixtures/external_layout_candidates/__init__.py; src/cadrumo/tests/fixtures/external_layout_candidates/tests/test_candidate_contract.py`.
+- [ ] `S12` - Adjudicate all ten candidates against pinned official bases and registry applicability; `src/cadrumo/tests/fixtures/external_layout_candidates/{036,130,131,303,349}/*.json`.
+- [ ] `S13` - Correct cross-model outcomes to select applicable revisions or refuse current-form alignment; `src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py`.
+- [ ] `S14` - Verify authority adjudication through only the affected registry and parser unit modules; `src/cadrumo/tests/fixtures/external_layout_candidates/tests/; src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py`.
+- [ ] `S15` - Run fresh review, feature-surface gates, and close issue 620 with the candidate verdict matrix; `.vault/audit/; .vault/exec/; GitHub issue #620`.
 
 ## Parallelization
 
