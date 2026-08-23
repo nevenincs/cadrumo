@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:f147f33a8fd894e6622de5c9568c9e2d4ab2e9c27af2958c88cdd6dd5bd7b1de'
+body_hash: 'sha256:e35e2ad3c2eac7f926d65daf68f19f3ccac7150940f8b84038f956fb2d572804'
 ---
 
 # `source-casilla-integration` plan
@@ -87,7 +87,7 @@ Enumerate typed secure domains, repositories, ingress, assemblers, helpers, and 
 Join both inventories through reviewed evidence-backed records and establish the initial complete classification.
 
 - [x] `W01.P04.S17` - define the canonical machine-readable census manifest; `src/cadrumo/_data/source_connectivity/census.toml`.
-- [ ] `W01.P04.S18` - load and validate the census against the closed contract; `src/cadrumo/application/registry/source_connectivity.py`.
+- [x] `W01.P04.S18` - load and validate the census against the closed contract; `src/cadrumo/application/registry/source_connectivity.py`.
 - [ ] `W01.P04.S19` - classify inventory as the first adjudication candidate with the obsolete 0155 hazard recorded; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W01.P04.S20` - classify amortization as the mandatory second adjudication candidate; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W01.P04.S21` - classify assets and fincas with separate evidence, grain, and substitutability questions; `src/cadrumo/_data/source_connectivity/census.toml`.

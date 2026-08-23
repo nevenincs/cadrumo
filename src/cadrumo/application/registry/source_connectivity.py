@@ -8,10 +8,22 @@ declarations.
 
 from __future__ import annotations
 
+import tomllib
+from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
-from ...core import BindingSourceKind, CasillaId
+from pydantic import BaseModel, model_validator
+
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    BindingSourceKind,
+    CasillaId,
+    SourceConnectivityCensusRow,
+    SourceConnectivityProofAuthority,
+)
+from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
     BindingId,
     DataBindingDefinition,
@@ -44,14 +56,54 @@ __all__ = [
     "RegistryFormulaRecord",
     "RegistryRelationRecord",
     "RegistrySourceDispositionRecord",
+    "SourceConnectivityCensusManifest",
     "derive_registry_binding_records",
     "derive_registry_destination_records",
     "derive_registry_formula_records",
     "derive_registry_relation_records",
     "derive_registry_source_disposition_records",
+    "load_source_connectivity_census",
 ]
 
 type ManualCasillaRequirement = Literal["required", "optional"]
+
+
+class SourceConnectivityCensusManifest(BaseModel):
+    """Versioned reviewed decisions over the generated connectivity inventories."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: Literal[1]
+    census_id: Literal["source-domain-to-casilla-connectivity"]
+    entries: tuple[SourceConnectivityCensusRow, ...] = ()
+
+    @model_validator(mode="after")
+    def _candidate_ids_are_unique(self) -> SourceConnectivityCensusManifest:
+        candidate_ids = tuple(row.candidate_id for row in self.entries)
+        if len(set(candidate_ids)) != len(candidate_ids):
+            raise ValueError("source-connectivity census candidate ids must be unique")
+        return self
+
+
+def load_source_connectivity_census(
+    path: Path | None = None,
+    *,
+    proof_authority: SourceConnectivityProofAuthority | None = None,
+) -> SourceConnectivityCensusManifest:
+    """Load the canonical TOML census and enforce its closed typed contract."""
+    census_path = path or bundled_path("source_connectivity", "census.toml")
+    raw = _freeze_toml_arrays(tomllib.loads(census_path.read_text(encoding="utf-8")))
+    context = {} if proof_authority is None else {"source_connectivity_proof_authority": proof_authority}
+    return SourceConnectivityCensusManifest.model_validate(raw, context=context)
+
+
+def _freeze_toml_arrays(value: object) -> object:
+    """Hydrate TOML arrays into the canonical strict immutable tuple shape."""
+    if isinstance(value, list):
+        return tuple(_freeze_toml_arrays(item) for item in value)
+    if isinstance(value, Mapping):
+        return {key: _freeze_toml_arrays(item) for key, item in value.items()}
+    return value
 
 
 @dataclass(frozen=True, slots=True)

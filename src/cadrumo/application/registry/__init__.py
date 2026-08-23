@@ -174,11 +174,13 @@ from .source_connectivity import (
     RegistryFormulaRecord,
     RegistryRelationRecord,
     RegistrySourceDispositionRecord,
+    SourceConnectivityCensusManifest,
     derive_registry_binding_records,
     derive_registry_destination_records,
     derive_registry_formula_records,
     derive_registry_relation_records,
     derive_registry_source_disposition_records,
+    load_source_connectivity_census,
 )
 
 _import_module("cadrumo.domain.renta")
@@ -619,6 +621,7 @@ __all__ = [
     "RevisionConstructEvidence",
     "RevisionGovernanceStamp",
     "RevisionModelLawCoverage",
+    "SourceConnectivityCensusManifest",
     "audit_bundled_registry_conformance",
     "build_calculation_route_source_ownership_catalogue",
     "build_registry_conformance_profile",
@@ -634,6 +637,7 @@ __all__ = [
     "list_registry_citations",
     "list_registry_manual_rules",
     "list_registry_manuals",
+    "load_source_connectivity_census",
     "registry_manual_id",
     "show_registry_citation",
     "show_registry_manual",
