@@ -5,7 +5,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:1f6c7d9ac16f58ea75d753bb4e6c4ed4da322435a31f99604d23da9bf096709e'
+body_hash: 'sha256:b526a4d554cc7d0611840d489768909c2d4b16d9a73db22d0be2287fabe25187'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -7664,3 +7664,26 @@ regressions and invite a "fix" that overwrites correct content.
 Everything checked is intact at HEAD: the dunder-init gate, the os-keychain lane-scope gate,
 the interpreter-exit sealing proof, the `retryable` ruling comment at the ErrorCode entry, and
 the KDF guidance in all four catalogues.
+
+### Running the code measures the WORKING TREE too, not just grepping it
+
+Chasing the one case still failing in the peer's own module, the trail led somewhere alarming:
+`config profile show --format json` emitted nothing on stdout and refused with
+`REFUSED_OPERATOR_SURFACE_CONTRACT`, reason "ambiguous CLI path config profile descendiente".
+A duplicate path registration would break the profile verbs generally -- the primary onboarding
+surface -- and it reproduced cleanly on demand.
+
+It is working-tree only. `git status` reported 1,215 dirty files including a DELETED
+`_config/_passphrase_command_specs.py`, and that file is present at HEAD; the ambiguity is
+specs double-registered while the peer moves them between modules mid-restructure.
+
+The method note is that this campaign's existing rule -- "claims about HEAD must be read from
+HEAD" -- was written against TEXT SEARCHES, and here the misleading instrument was EXECUTION.
+Running the CLI in-process, reproducing a failure, and watching it fail identically every time
+feels like far stronger evidence than a grep, and it is evidence about exactly the same thing:
+the working tree. A clean, deterministic reproduction during churn proves nothing about the
+committed state. The rule generalises: any observation of behaviour is an observation of the
+tree on disk, and only `git show HEAD:path` / `git grep ... HEAD` speak for HEAD.
+
+Third near-miss of this class here, and the most persuasive of the three, precisely because it
+was reproducible rather than inferred.
