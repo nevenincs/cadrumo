@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:0bb65658b18e0c0fbcffb5942fa2bb58e2b9ec66c9ec68e323277d284a0eb70f'
+body_hash: 'sha256:e8eed1568cb63e5929abecad63ffad7906f28e5ec9cd18c0fdc468d62763b089'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -18367,3 +18367,74 @@ semantic mapping, nine worklist entries blocked on corpus or era, and two form
 diagrams needing AEAT acquisition. What moved is that three of the four layouts
 now have a proven, grounded key to author against, and the fourth has its gap
 measured and bounded.
+
+## Tick: "AUTHORABLE" overstates three of the four -- the casillas come before the map
+
+Re-measured at tick start: authority CLEAN at `692553aec4`. Modelo 840 was
+picked to author, being the smallest of the four and the one whose box-number
+key was proved total last tick.
+
+### Why it was not authored, measured rather than guessed
+
+A fixed-width layout writes a value into every data position the design
+declares, and it can only write a position the registry has a casilla for.
+Measured against the cited designs:
+
+    revision                        design  struct    data  mapped  unmapped
+    840/2003-y-siguientes              381      74     307     130       177
+    390/2021                           506      78     428       9       419
+    036/2025-02-03-y-siguientes       1047     214     833     457       376
+    220/2024                         16079     555   15524    2418     13106
+
+Authoring any of these layouts against the current casilla sets would leave real
+AEAT data positions blank behind a structurally valid file -- the exact failure
+`modelo-export-mirrors-official-structure` names, "every required, representable
+casilla must be exportable, not silently blank". So the worklist's "needs its
+semantic map and layout" is true but incomplete: each needs CASILLAS first, and
+that is casilla-schema authoring rather than mapping.
+
+The unmapped figures were checked rather than trusted. Sampling modelo 840's 177
+showed genuine form fields -- `Delegacion. Tabla`, `Relacion de locales.
+Municipio / Cod. Postal / Piso / Km. / Nombre de la via publica`.
+
+### The four are not equally far off, and the difference is structural
+
+De-duplicating the unmapped descriptions separates them cleanly:
+
+* **modelo 840: 177 fields, 65 distinct.** Its `Anexo` repeats ONE "Relacion de
+  locales" block nine times, so 126 of the 177 are repetitions. The distinct
+  surface is a fraction of the raw count, and the repetition belongs on a repeat
+  axis rather than one casilla per row;
+* **modelo 390/2021: 419 fields, 419 distinct.** No repetition at all. Nine
+  casillas mapped against a 428-data-field design;
+* **modelo 036: 376 fields, 376 distinct.** Likewise.
+
+Modelo 840 is therefore the one worth starting, by a wide margin, and 390/2021 --
+which looked smallest at ten casillas -- is among the largest once the design is
+counted rather than the revision.
+
+### What was landed
+
+`test_layout_needs_casillas_before_it_needs_a_map.py` pins the precondition as a
+SHAPE, not a tally: that each of the three carries design data fields no casilla
+covers, and that only modelo 840's unmapped surface collapses under
+de-duplication while the other two do not collapse at all. A count would freeze a
+moment and teach the next author to update a constant; the collapse ratio is what
+actually decides where to start.
+
+### Verified
+
+* the new module: 4 passed;
+* it bites: simulating full casilla coverage reds all four assertions by name,
+  including the collapse check;
+* authority loads CLEAN, ruff clean, and the working tree carries only this file.
+
+### Still open
+
+Unchanged, but better ordered. The four layouts are really four casilla-authoring
+jobs followed by a map: modelo 840 first at roughly 65 distinct concepts plus a
+repeat axis, then modelo 036 and modelo 390/2021 at several hundred distinct
+concepts each, and modelo 220 far larger still.
+
+Three splits, nine worklist entries blocked on corpus or era, and two form
+diagrams needing AEAT acquisition remain as before.

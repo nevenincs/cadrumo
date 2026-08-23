@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
 modified: '2026-08-23'
-body_hash: 'sha256:b41857e16066b375249c3415ac7b0062de6cace3f3bc037921cc5bce550990b4'
+body_hash: 'sha256:685d84e9420527a7270ddf576a2e1c835822cc845a0bdb8d41f06cf381df8dc6'
 tier: L3
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -69,7 +69,7 @@ Ensure resolution of any CLI path loads only lightweight metadata plus the capab
 Generalize lazy loading to nested groups and leaves.
 
 - [x] `W02.P03.S09` - Refactor lazy registration into a reusable node loader with explicit targets and fail-loud dependency classification; `src/cadrumo/entrypoints/cli/_command_suggestions.py`.
-- [ ] `W02.P03.S10` - Preserve root help, completion, version, error-envelope, and suggestion contracts through metadata-only traversal; `src/cadrumo/entrypoints/cli/_common.py`.
+- [x] `W02.P03.S10` - Preserve root help, completion, version, error-envelope, and suggestion contracts through metadata-only traversal; `src/cadrumo/entrypoints/cli/_common.py`.
 - [ ] `W02.P03.S11` - Make schema and operator-help discovery consume registration metadata without materializing handler subtrees; `src/cadrumo/entrypoints/cli/_command_schema.py`.
 - [ ] `W02.P03.S12` - Extend lazy import failure coverage across nested groups and leaves for required and optional dependencies; `src/cadrumo/entrypoints/cli/tests/`.
 
