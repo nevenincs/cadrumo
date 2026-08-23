@@ -15,7 +15,7 @@ def config_root(
     if not help_ and ctx.invoked_subcommand is not None:
         return
     from ....application.operator_surface import build_help_document, render_help_text
-    from .._config_payloads import ConfigHelpEntryPayload, ConfigHelpSectionPayload, ConfigRootResult
+    from .._config_help_payloads import ConfigHelpEntryPayload, ConfigHelpSectionPayload, ConfigRootResult
 
     document = build_help_document("config")
     result = ConfigRootResult(

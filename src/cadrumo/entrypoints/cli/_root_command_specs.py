@@ -223,7 +223,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._config_payloads", "ConfigRootResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli._config_help_payloads", "ConfigRootResult"),
             identity="root.config",
         ),
     ),
