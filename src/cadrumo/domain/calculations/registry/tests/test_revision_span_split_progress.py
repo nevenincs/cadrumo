@@ -67,10 +67,14 @@ _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
 #: module does not report. Between the 2010 and 2011 designs AEAT widened
 #: IMPORTE TOTAL ANUAL on the declarante from 15 bytes to 16 and shifted
 #: everything after it by one (NUMERO TOTAL DE INMUEBLES 160 -> 161); the
-#: declarado shifts the same way. Eleven fields straddle. The detector cannot
-#: see it because its signals key on box numbers moving -- and these designs
-#: print none -- and on the field SET changing, which a one-byte widening
-#: leaves identical. So this revision needs THREE revisions, not two.
+#: The detector does not report it, and the cause is NOT that its signals are
+#: blind -- run directly on the two designs the comparator returns three
+#: pieces of evidence. The PAIR IS NEVER FORMED: the 2011 design is named for
+#: its orden, states no ejercicio, so it attributes to no year and is not
+#: claimed by the revision, even though the revision cites it and the source
+#: catalogue declares applies_from 2011-01-01 / applies_to 2024-12-31 for it.
+#: So this revision needs THREE revisions, not two, and an unattributed
+#: design is a hole in detection rather than only a ledger entry.
 #: Measured in test_modelo_347_second_undetected_boundary.py.
 #:
 #: `("322", "2008-2025")` became `("322", "2008-2023")`: the LATER of its two
