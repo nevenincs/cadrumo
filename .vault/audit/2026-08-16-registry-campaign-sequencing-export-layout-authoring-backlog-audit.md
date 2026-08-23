@@ -18517,3 +18517,90 @@ anywhere, which needs no per-field attribution.
 The four layouts, three splits, nine blocked worklist entries and two form
 diagrams, unchanged -- but the four layouts are no longer characterised as
 casilla-authoring jobs, because that characterisation was not established.
+
+## Tick: modelo 840's position map found, proved, and gated -- and what it says the real blocker is
+
+Re-measured at tick start: authority loads CLEAN, nine standing registry
+failures, all declared inventories.
+
+### The attribution existed already, as prose
+
+Modelo 840 has no export layout, so nothing consumes a casilla-to-byte
+attribution. It nonetheless HAS one. Every casilla in the revision is preceded
+by a comment naming its exact span, in the form
+`# @530+1, type_code An. Clase de cuota (M, N, P o blanco). [33].` That is
+precisely the input a semantic map needs, and it was unparsed and unchecked.
+
+Extracted and measured: **119 of 121 casillas declare a span, with zero
+duplicates, and 118 match a design field exactly.** The two without a comment --
+`decl.ejercicio` and `decl.tipo-declaracion` -- are positioned in their own
+fragment's header prose (`[14]` at `@270+4`, `[15]` at `@274+1`). The single
+non-matching one is not an error: `act.fecha-inicio-variacion-cese` is
+documented as one casilla over `@810+8`, which AEAT prints as three fields --
+`@810+2` Dia, `@812+2` Mes, `@814+4` Ano, all three tagged `[62]`.
+
+### What the map says about the layout backlog
+
+With a grounded position map the per-sheet coverage can be measured properly,
+which the withdrawn tag-based measure could not do:
+
+* `Pag. 1` -- 94 of 106 fields casilla-covered. Substantially complete; the
+  remainder is the record identifier, the complementaria indicator and the
+  Delegacion/Administracion tables.
+* `Pag. 2` -- 29 of 110.
+* `Anexo` -- 1 of 165.
+
+The uncovered remainder is NOT filler. It is the repeating *Elementos
+Tributarios* groups on `Pag. 2` and the *Relacion de locales* annex, and this
+registry models repeating record structures as **bindings**, not as casillas.
+So modelo 840's layout is blocked on the `bindings` its worklist entry already
+names, and the earlier withdrawal of "these layouts are casilla-authoring jobs"
+is confirmed with a measurement rather than an intuition.
+
+Feasibility was checked rather than assumed: seven of the 22 existing semantic
+maps are PDF-sourced, so the pipeline supports a PDF design, and the design
+intermediate loads for 840 with three records and 381 fields carrying ordinal,
+offset, length and source row. Nothing structural bars the map; the missing
+input is the binding set.
+
+### The gate, and the two wrong rules behind it
+
+`test_modelo_840_casilla_positions_are_real.py` asserts every declared span
+resolves against the bundled design and no two casillas claim the same bytes.
+No offset is typed into the module: the expectations are read from the PDF, so
+it asserts "the comments agree with AEAT".
+
+Two earlier versions of the resolution rule were wrong, and both failed
+SILENTLY, which is why they are recorded here rather than quietly fixed:
+
+* **Admitting every tiling run.** The design tiles almost completely, so nearly
+  any boundary-to-boundary span resolved and the check could not fail on a wrong
+  pairing -- only on one starting or ending mid-field. Caught by the bite proof,
+  which reported NOT BITTEN on a deliberately corrupted span.
+* **Requiring an identical description.** This rejected the real composite,
+  whose three fields differ by the trailing `Dia` / `Mes` / `Ano`.
+
+The rule that holds is AEAT's own grouping signal, the same one established last
+tick: a multi-field run is justified when its fields share one bracketed tag.
+`[62]` binds the three date fields; `@530` `[33]` and the untagged `@531` beside
+it are correctly kept apart. That separation is asserted directly, so the
+tolerance cannot silently widen back out.
+
+### Verified
+
+* the new module: 3 passed; ruff check and format clean.
+* the bite proof runs from OUTSIDE the repo, patching the parse rather than
+  editing a tracked fragment: a fabricated span, a duplicated span and a
+  collapsed parse each red the module, and the run-tolerance control passes
+  against the real design.
+* registry package: 9 failed, 5332 passed. All nine are the standing declared
+  inventories and none names the new module.
+* authority loads CLEAN.
+
+### Still open
+
+Unchanged, with one entry now precisely characterised: modelo 840's layout waits
+on bindings for `Pag. 2` and the Anexo, not on casillas. Three relayout splits
+(200, 322, 347 -- the last needing three revisions), three other layouts on the
+filing-capability worklist, nine entries blocked on corpus or era, and two form
+diagrams needing AEAT acquisition.
