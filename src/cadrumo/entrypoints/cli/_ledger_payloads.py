@@ -51,6 +51,9 @@ from ...core.identity import (
 )
 from ...core.json_contract import OutputRootSchema, OutputSchema, register_schema
 from ._ledger_business_payloads import (
+    AttachmentReviewPayload,
+    AttachmentReviewQueueResult,
+    AttachmentReviewViewResult,
     EvidenceAddResult,
     EvidenceConfirmResult,
     EvidenceExtractResult,
@@ -88,6 +91,9 @@ from ._ledger_rule_payloads import (
 )
 
 _LEDGER_BUSINESS_PAYLOAD_EXPORTS = (
+    AttachmentReviewPayload,
+    AttachmentReviewQueueResult,
+    AttachmentReviewViewResult,
     EvidenceAddResult,
     EvidenceConfirmResult,
     EvidenceExtractResult,
