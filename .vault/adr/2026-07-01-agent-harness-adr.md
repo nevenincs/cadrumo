@@ -1,16 +1,16 @@
 ---
 tags:
-  - '#adr'
-  - '#agent-harness'
+  - "#adr"
+  - "#agent-harness"
 date: '2026-07-01'
-modified: '2026-07-10'
-body_hash: 'sha256:73bebaf19a623c32a2919a94fa9cf2407f32f9106ec4c90f3b9752e12a6dfc6d'
 related:
   - "[[2026-07-01-agent-harness-research]]"
   - "[[2026-06-30-agent-harness-adr]]"
+superseded_by: '2026-08-23-external-client-boundary-adr'
+modified: '2026-08-23'
+body_hash: 'sha256:861add53179f4fb4ca4ce9031433c65f40e89ebec14ee500becd427fcc7853ba'
 ---
-
-# `agent-harness` adr: `harness content: rules, personas, skills` | (**status:** `accepted`)
+# `agent-harness` adr: `harness content: rules, personas, skills` | (**status:** `superseded`)
 
 ## Problem Statement
 

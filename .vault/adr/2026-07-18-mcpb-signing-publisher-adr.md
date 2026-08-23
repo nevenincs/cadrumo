@@ -1,15 +1,15 @@
 ---
 tags:
-  - '#adr'
-  - '#mcpb-signing-publisher'
+  - "#adr"
+  - "#mcpb-signing-publisher"
 date: '2026-07-18'
-modified: '2026-07-19'
-body_hash: 'sha256:c44ce7bd43135b3b717b3d2a37994954aebd740f0fdc3997805acee315a6bf28'
 related:
   - "[[2026-07-17-mcpb-signing-publisher-research]]"
+superseded_by: '2026-08-23-external-client-boundary-adr'
+modified: '2026-08-23'
+body_hash: 'sha256:8192a4b174558da01f874c59747fdafe75bbaa037f1d96a107c0bdcb9537d12f'
 ---
-
-# `mcpb-signing-publisher` adr: `Unsigned MCPB publication posture` | (**status:** `accepted`)
+# `mcpb-signing-publisher` adr: `Unsigned MCPB publication posture` | (**status:** `superseded`)
 
 ## Problem Statement
 

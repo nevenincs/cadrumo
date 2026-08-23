@@ -1,18 +1,18 @@
 ---
 tags:
-  - '#adr'
-  - '#agent-harness-refoundation'
+  - "#adr"
+  - "#agent-harness-refoundation"
 date: '2026-07-02'
-modified: '2026-08-01'
-body_hash: 'sha256:53459b847dea3900efd61fb641aa64fd7bf0f960f3c1d573b13c1ea9318f5c33'
 related:
   - "[[2026-07-02-agent-harness-refoundation-research]]"
   - "[[2026-07-03-claude-ecosystem-packaging-adr]]"
   - "[[2026-07-08-mcp-progressive-discovery-adr]]"
   - "[[2026-07-08-mcp-protocol-hardening-adr]]"
+superseded_by: '2026-08-23-external-client-boundary-adr'
+modified: '2026-08-23'
+body_hash: 'sha256:6fc3f32919dcaeb6307177f5f35527c1bdaebc85a7cec42d5919fa5e0154d031'
 ---
-
-# `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
+# `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `superseded`)
 
 ## Problem Statement
 

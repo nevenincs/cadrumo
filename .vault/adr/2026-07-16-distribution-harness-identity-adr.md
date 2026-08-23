@@ -1,20 +1,20 @@
 ---
 tags:
-  - '#adr'
-  - '#distribution-harness-identity'
+  - "#adr"
+  - "#distribution-harness-identity"
 date: '2026-07-16'
-modified: '2026-07-17'
-body_hash: 'sha256:7a7e4815ed059adcab93912ce4b0f609fb48e04b4c2503fb8d499b6ec62ee03c'
 related:
-  - '[[2026-07-16-distribution-harness-identity-research]]'
-  - '[[2026-07-15-distribution-installation-readiness-adr]]'
-  - '[[2026-07-12-cadrumo-cli-executable-adr]]'
-  - '[[2026-07-08-mcp-protocol-hardening-adr]]'
-  - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
-  - '[[2026-07-02-agent-harness-refoundation-adr]]'
+  - "[[2026-07-16-distribution-harness-identity-research]]"
+  - "[[2026-07-15-distribution-installation-readiness-adr]]"
+  - "[[2026-07-12-cadrumo-cli-executable-adr]]"
+  - "[[2026-07-08-mcp-protocol-hardening-adr]]"
+  - "[[2026-07-03-claude-ecosystem-packaging-adr]]"
+  - "[[2026-07-02-agent-harness-refoundation-adr]]"
+superseded_by: '2026-08-23-external-client-boundary-adr'
+modified: '2026-08-23'
+body_hash: 'sha256:441f22ac857cbaab50848f3301e61afea1954532b02084f14f37e91e47685fcf'
 ---
-
-# `distribution-harness-identity` adr: `Cadrumo-prefixed harness namespace and bilingual Model Context Protocol product description` | (**status:** `accepted`)
+# `distribution-harness-identity` adr: `Cadrumo-prefixed harness namespace and bilingual Model Context Protocol product description` | (**status:** `superseded`)
 
 ## Problem statement
 
