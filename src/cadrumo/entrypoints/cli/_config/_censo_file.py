@@ -41,10 +41,8 @@ import typer
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, _state
 from ._censo_payloads import CensoFactPayload, CensoFileIngestResult, CensoPullDivergencePayload, CensoPullResult
-from ._execution_policies import ENCRYPTED_WRITE, LIVE_PROFILE_WRITE, declare_metadata_group
 
 # The divergence helper selects one of these keys by data rather than passing a
 # literal directly to ``tr()``. Keep the bounded selection scanner-visible so
@@ -61,41 +59,11 @@ if TYPE_CHECKING:
     from ....application.user_profile import CensalReconciliation
     from ....domain.user_profile import UserProfileFact
 
-censo_app = typer.Typer(
-    help=tr(
-        "cli.config.profile.censo.help",
-    ),
-    no_args_is_help=True,
-)
 
-
-def register_censo_commands(profile_app: typer.Typer) -> None:
-    """Attach the ``censo`` sub-surface to ``config profile``."""
-    profile_app.add_typer(censo_app, name="censo")
-
-
-@censo_app.command(
-    "file",
-    help=tr("cli.config.profile.censo.file_help"),
-)
-@command_execution_policy(ENCRYPTED_WRITE)
 def censo_file(
     ctx: typer.Context,
-    file: Path = typer.Option(
-        ...,
-        "--file",
-        exists=True,
-        dir_okay=False,
-        readable=True,
-        help=tr("cli.config.profile.censo.file_option_help"),
-    ),
-    apply: bool = typer.Option(
-        False,
-        "--apply",
-        help=tr(
-            "cli.config.profile.censo.apply_help",
-        ),
-    ),
+    file: Path,
+    apply: bool = False,
 ) -> None:
     """Parse the certificate and preview — or with ``--apply``, enroll — its censal facts."""
     from ....adapters.inbound.censo import parse_certificado_censal_bytes
@@ -133,22 +101,9 @@ def censo_file(
     _emit_envelope(ctx, command="config.profile.censo.file", result=result, lines=lines, notices=notices)
 
 
-@censo_app.command(
-    "pull",
-    help=tr(
-        "cli.config.profile.censo.pull_help",
-    ),
-)
-@command_execution_policy(LIVE_PROFILE_WRITE)
 def censo_pull(
     ctx: typer.Context,
-    apply: bool = typer.Option(
-        False,
-        "--apply",
-        help=tr(
-            "cli.config.profile.censo.apply_help",
-        ),
-    ),
+    apply: bool = False,
 ) -> None:
     """Read the censal consulta and preview — or with ``--apply``, enroll — its facts."""
     import asyncio
@@ -410,6 +365,4 @@ def _tier_notices(*, applied: bool, adopted: tuple[CensoFactPayload, ...]) -> li
     return notices
 
 
-declare_metadata_group(censo_app)
-
-__all__ = ["censo_app", "register_censo_commands"]
+__all__ = ["censo_file", "censo_pull"]

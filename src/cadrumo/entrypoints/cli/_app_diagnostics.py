@@ -47,8 +47,6 @@ from datetime import date as _date
 import typer
 
 from ...core.i18n import tr
-from ._app_execution_policies import LOCAL_STORAGE_READ
-from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, optional_decimal_text
 from ._diagnostics_payloads import (
     ErrorKindCountPayload,
@@ -65,16 +63,8 @@ from ._diagnostics_payloads import (
     RunsListResult,
 )
 
-app = typer.Typer(
-    name="diagnostics",
-    help=tr("cli.diagnostics.app_help"),
-    no_args_is_help=True,
-    invoke_without_command=True,
-)
 
-
-@app.callback()
-def _diagnostics_root(ctx: typer.Context) -> None:
+def diagnostics_root(ctx: typer.Context) -> None:
     """Render the ``aeat app diagnostics`` group help when invoked bare.
 
     A real (non-collapsing) group callback is required here: a Typer
@@ -102,39 +92,11 @@ def _parse_iso_date(value: str | None, option: str) -> _date | None:
     )
 
 
-@app.command(
-    "run-health",
-    help=tr(
-        "cli.diagnostics.run_health.help",
-        default="Report recent local LLM run timing and persisted AEAT session staleness.",
-    ),
-)
 def diagnostics_run_health(
     ctx: typer.Context,
-    since: str | None = typer.Option(
-        None,
-        "--since",
-        help=tr(
-            "cli.diagnostics.run_health.since_help",
-            default="Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.",
-        ),
-    ),
-    until: str | None = typer.Option(
-        None,
-        "--until",
-        help=tr(
-            "cli.diagnostics.run_health.until_help",
-            default="Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.",
-        ),
-    ),
-    provider: str | None = typer.Option(
-        None,
-        "--provider",
-        help=tr(
-            "cli.diagnostics.run_health.provider_help",
-            default="Restrict the LLM run-timing section to this provider label (e.g. claude, antigravity, codex).",
-        ),
-    ),
+    since: str | None = None,
+    until: str | None = None,
+    provider: str | None = None,
 ) -> None:
     """Report recent local LLM run timing and persisted AEAT session staleness."""
     from ...application.diagnostics_run_health import build_run_health_report
@@ -229,48 +191,12 @@ def diagnostics_run_health(
     _emit_envelope(ctx, command="diagnostics.run_health", result=result, lines=lines, notices=notices)
 
 
-@app.command(
-    "runs",
-    help=tr(
-        "cli.diagnostics.runs.help",
-        default="List recent local LLM run-timing records, most-recent-first.",
-    ),
-)
 def diagnostics_runs(
     ctx: typer.Context,
-    since: str | None = typer.Option(
-        None,
-        "--since",
-        help=tr(
-            "cli.diagnostics.runs.since_help",
-            default="Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.",
-        ),
-    ),
-    until: str | None = typer.Option(
-        None,
-        "--until",
-        help=tr(
-            "cli.diagnostics.runs.until_help",
-            default="Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.",
-        ),
-    ),
-    provider: str | None = typer.Option(
-        None,
-        "--provider",
-        help=tr(
-            "cli.diagnostics.runs.provider_help",
-            default="Restrict the listing to this provider label (e.g. claude, antigravity, codex).",
-        ),
-    ),
-    limit: int | None = typer.Option(
-        None,
-        "--limit",
-        min=1,
-        help=tr(
-            "cli.diagnostics.runs.limit_help",
-            default="Cap the listing to this many most-recent runs.",
-        ),
-    ),
+    since: str | None = None,
+    until: str | None = None,
+    provider: str | None = None,
+    limit: int | None = None,
 ) -> None:
     """List recent local LLM run-timing records, most-recent-first."""
     from ...application.diagnostics_run_health import list_recent_runs
@@ -334,39 +260,11 @@ def diagnostics_runs(
     _emit_envelope(ctx, command="diagnostics.runs", result=result, lines=lines, notices=notices)
 
 
-@app.command(
-    "latency",
-    help=tr(
-        "cli.diagnostics.latency.help",
-        default="Report P50/P95/P99 duration percentiles over recent local LLM runs.",
-    ),
-)
 def diagnostics_latency(
     ctx: typer.Context,
-    since: str | None = typer.Option(
-        None,
-        "--since",
-        help=tr(
-            "cli.diagnostics.latency.since_help",
-            default="Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.",
-        ),
-    ),
-    until: str | None = typer.Option(
-        None,
-        "--until",
-        help=tr(
-            "cli.diagnostics.latency.until_help",
-            default="Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.",
-        ),
-    ),
-    provider: str | None = typer.Option(
-        None,
-        "--provider",
-        help=tr(
-            "cli.diagnostics.latency.provider_help",
-            default="Restrict the report to this provider label (e.g. claude, antigravity, codex).",
-        ),
-    ),
+    since: str | None = None,
+    until: str | None = None,
+    provider: str | None = None,
 ) -> None:
     """Report P50/P95/P99 duration percentiles over recent local LLM runs."""
     from ...application.diagnostics_run_health import build_latency_report
@@ -436,39 +334,11 @@ def diagnostics_latency(
     _emit_envelope(ctx, command="diagnostics.latency", result=result, lines=lines, notices=notices)
 
 
-@app.command(
-    "errors",
-    help=tr(
-        "cli.diagnostics.errors.help",
-        default="Break down recent failed local LLM runs by provider and error kind.",
-    ),
-)
 def diagnostics_errors(
     ctx: typer.Context,
-    since: str | None = typer.Option(
-        None,
-        "--since",
-        help=tr(
-            "cli.diagnostics.errors.since_help",
-            default="Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.",
-        ),
-    ),
-    until: str | None = typer.Option(
-        None,
-        "--until",
-        help=tr(
-            "cli.diagnostics.errors.until_help",
-            default="Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.",
-        ),
-    ),
-    provider: str | None = typer.Option(
-        None,
-        "--provider",
-        help=tr(
-            "cli.diagnostics.errors.provider_help",
-            default="Restrict the breakdown to this provider label (e.g. claude, antigravity, codex).",
-        ),
-    ),
+    since: str | None = None,
+    until: str | None = None,
+    provider: str | None = None,
 ) -> None:
     """Break down recent failed local LLM runs by provider and error kind."""
     from ...application.diagnostics_run_health import build_error_breakdown
@@ -508,39 +378,11 @@ def diagnostics_errors(
     _emit_envelope(ctx, command="diagnostics.errors", result=result, lines=lines, notices=notices)
 
 
-@app.command(
-    "llm-usage",
-    help=tr(
-        "cli.diagnostics.llm_usage.help",
-        default="Report LLM run-usage totals (counts, durations, success rate) by provider and model.",
-    ),
-)
 def diagnostics_llm_usage(
     ctx: typer.Context,
-    since: str | None = typer.Option(
-        None,
-        "--since",
-        help=tr(
-            "cli.diagnostics.llm_usage.since_help",
-            default="Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.",
-        ),
-    ),
-    until: str | None = typer.Option(
-        None,
-        "--until",
-        help=tr(
-            "cli.diagnostics.llm_usage.until_help",
-            default="Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.",
-        ),
-    ),
-    provider: str | None = typer.Option(
-        None,
-        "--provider",
-        help=tr(
-            "cli.diagnostics.llm_usage.provider_help",
-            default="Restrict the summary to this provider label (e.g. claude, antigravity, codex).",
-        ),
-    ),
+    since: str | None = None,
+    until: str | None = None,
+    provider: str | None = None,
 ) -> None:
     """Report LLM run-usage totals (counts, durations, success rate) by provider and model."""
     from ...application.diagnostics_run_health import build_llm_usage_report
@@ -616,12 +458,11 @@ def diagnostics_llm_usage(
 
 
 
-for _callback in (
-    _diagnostics_root,
-    diagnostics_run_health,
-    diagnostics_runs,
-    diagnostics_latency,
-    diagnostics_errors,
-    diagnostics_llm_usage,
-):
-    command_execution_policy(LOCAL_STORAGE_READ)(_callback)
+__all__ = [
+    "diagnostics_errors",
+    "diagnostics_latency",
+    "diagnostics_llm_usage",
+    "diagnostics_root",
+    "diagnostics_run_health",
+    "diagnostics_runs",
+]

@@ -36,7 +36,6 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import typer
@@ -44,11 +43,9 @@ import typer
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....domain.contribuyente import DescendantInfo, serialise_meses_trabajo
-from .._command_policy import command_execution_policy
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from ._execution_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -58,39 +55,11 @@ if TYPE_CHECKING:
     from ....application.workflow import ProfileBucketPointer
     from ....core.json_contract import Notice
 
-descendiente_app = typer.Typer(
-    name="descendiente",
-    help=tr(
-        "cli.config.profile.descendiente.help",
-    ),
-    no_args_is_help=False,
-    invoke_without_command=True,
-)
-
-_resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None] | None = None
-_mounted_profile_app_ids: set[int] = set()
-
-
-def register_descendiente_commands(
-    profile_app: typer.Typer,
-    *,
-    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
-) -> None:
-    """Mount the ``descendiente`` sub-app on ``config profile``."""
-    global _resolve_active_profile_pointer
-
-    _resolve_active_profile_pointer = resolve_active_profile_pointer
-    profile_app_id = id(profile_app)
-    if profile_app_id in _mounted_profile_app_ids:
-        return
-    profile_app.add_typer(descendiente_app, name="descendiente")
-    _mounted_profile_app_ids.add(profile_app_id)
-
 
 def _active_profile_pointer() -> ProfileBucketPointer:
-    if _resolve_active_profile_pointer is None:
-        raise RuntimeError("descendiente commands were not registered")
-    pointer = _resolve_active_profile_pointer()
+    from ._profile_support import resolve_active_profile_pointer
+
+    pointer = resolve_active_profile_pointer()
     if pointer is None:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.no_active_profile",
@@ -299,16 +268,9 @@ def _emit_descendiente_list(
     emit_envelope(ctx, command="config.profile.descendiente.list", result=result, lines=lines)
 
 
-@descendiente_app.callback()
-@command_execution_policy(ENCRYPTED_READ)
 def descendiente_door(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Open the paged descendant door, or dispatch to a flag subcommand.
 
@@ -489,34 +451,10 @@ def _check_count(candidate: str) -> str | None:
     return _tr("wizard.setup.format.units-count")
 
 
-@descendiente_app.command(
-    "add",
-    help=tr(
-        "cli.config.profile.descendiente.add_help",
-    ),
-)
-@command_execution_policy(ENCRYPTED_WRITE)
 def descendiente_add(
     ctx: typer.Context,
-    descendiente: list[str] = typer.Option(
-        ...,
-        "--descendiente",
-        # The key TOKENS are part of the parse contract and stay untranslated in
-        # every locale: the parser upper-cases and compares them literally, so a
-        # translated token is silently DROPPED rather than refused. Only the
-        # trailing sentence is translatable prose. No euro figure appears here --
-        # the ceilings live in the registry and copy naming one would drift the
-        # moment a revision moved it.
-        help=tr(
-            "cli.config.profile.descendiente.add_flag_help",
-        ),
-    ),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    descendiente: list[str],
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Append one or more ``--descendiente`` rows to the active profile.
 
@@ -590,21 +528,9 @@ def descendiente_add(
     )
 
 
-@descendiente_app.command(
-    "list",
-    help=tr(
-        "cli.config.profile.descendiente.list_help",
-    ),
-)
-@command_execution_policy(ENCRYPTED_READ)
 def descendiente_list(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """List every ``DescendantInfo`` row declared on the active profile."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -612,22 +538,10 @@ def descendiente_list(
     _emit_descendiente_list(ctx, pointer, _load_descendientes(pointer.bucket_id))
 
 
-@descendiente_app.command(
-    "remove",
-    help=tr(
-        "cli.config.profile.descendiente.remove_help",
-    ),
-)
-@command_execution_policy(ENCRYPTED_DESTRUCTIVE)
 def descendiente_remove(
     ctx: typer.Context,
-    index: int = typer.Argument(..., help=tr("cli.config.profile.descendiente.remove_index_help")),
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    index: int,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Remove the descendant at ``index`` and re-index the remaining rows."""
     _activate_subcommand_output_language(ctx, output_language)
@@ -660,4 +574,4 @@ def descendiente_remove(
     )
 
 
-__all__ = ["descendiente_app", "register_descendiente_commands"]
+__all__ = ["descendiente_add", "descendiente_door", "descendiente_list", "descendiente_remove"]

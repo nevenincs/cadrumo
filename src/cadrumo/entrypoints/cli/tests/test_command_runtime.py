@@ -1,9 +1,16 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 from typer.testing import CliRunner
 
-from .._command_runtime import build_command_app, command_schema_targets, resolve_deferred_target
+from .._command_runtime import (
+    build_command_app,
+    build_command_subtree,
+    command_schema_targets,
+    resolve_deferred_target,
+)
 from .._command_spec import (
     CommandSpec,
     CommandSpecGraph,
@@ -22,6 +29,7 @@ from .._command_spec import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _SEEN: list[tuple[object, str]] = []
+_SEEN_MULTIPLE: list[list[str]] = []
 _POLICY = ExecutionPolicySpec(
     capabilities=frozenset({"state-free"}),
     side_effects=frozenset({"none"}),
@@ -33,6 +41,11 @@ _NO_SCHEMA = ResultSchemaSpec(SchemaState.NOT_SUPPORTED)
 
 def public_behavior(ctx: object, *, name: str) -> None:
     _SEEN.append((ctx, name))
+
+
+def public_multiple_behavior(ctx: object, *, name: list[str]) -> None:
+    del ctx
+    _SEEN_MULTIPLE.append(name)
 
 
 def _graph() -> CommandSpecGraph:
@@ -91,3 +104,55 @@ def test_runtime_compiles_help_and_invokes_public_behavior_from_specs() -> None:
 def test_runtime_schema_projection_and_public_target_boundary() -> None:
     assert command_schema_targets(_graph()) == (("root.greet", DeferredTarget("builtins", "dict")),)
     assert resolve_deferred_target(DeferredTarget("builtins", "str")) is str
+    assert build_command_subtree(_graph(), "greet").registered_commands[0].name == "greet"
+
+
+def test_runtime_preserves_an_option_with_no_help_text() -> None:
+    graph = _graph()
+    leaf = graph.by_key()["greet"]
+    option = leaf.parameters[0]
+    assert isinstance(option, OptionSpec)
+    exact_graph = CommandSpecGraph(
+        tuple(
+            replace(spec, parameters=(replace(option, help_key=None),)) if spec.key == "greet" else spec
+            for spec in graph.specs
+        )
+    )
+
+    result = CliRunner().invoke(build_command_app(exact_graph), ["greet", "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert "--name" in result.output
+
+
+def test_runtime_preserves_repeated_options_as_a_list_of_items() -> None:
+    graph = _graph()
+    leaf = graph.by_key()["greet"]
+    option = leaf.parameters[0]
+    assert isinstance(option, OptionSpec)
+    exact_graph = CommandSpecGraph(
+        tuple(
+            replace(
+                spec,
+                parameters=(replace(option, multiple=True),),
+                handler=LazyBinding.available(
+                    DeferredTarget(
+                        "cadrumo.entrypoints.cli.tests.test_command_runtime",
+                        "public_multiple_behavior",
+                    )
+                ),
+            )
+            if spec.key == "greet"
+            else spec
+            for spec in graph.specs
+        )
+    )
+    _SEEN_MULTIPLE.clear()
+
+    result = CliRunner().invoke(
+        build_command_app(exact_graph),
+        ["greet", "--name", "Ada", "--name", "Grace"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert _SEEN_MULTIPLE == [["Ada", "Grace"]]

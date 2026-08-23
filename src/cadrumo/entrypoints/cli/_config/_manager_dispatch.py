@@ -37,7 +37,9 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypedDict, cast
+from collections.abc import Callable
+from functools import cache
+from typing import TYPE_CHECKING, cast
 
 import typer
 from typer._click.core import Context as _TyperClickContext
@@ -47,15 +49,8 @@ from ....core.i18n import tr
 from ....core.json_contract import Notice as _Notice
 from ....core.json_contract import NoticeSeverity as _NoticeSeverity
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
-from .._command_policy import command_execution_policy as _command_execution_policy
-from .._command_suggestions import LazyFactoryTarget as _LazyFactoryTarget
-from .._command_suggestions import LazySubcommand as _LazySubcommand
-from .._command_suggestions import register_lazy_subcommand as _register_lazy_subcommand
 from .._common import _emit_envelope, activate_subcommand_output_language, active_profile_label
 from .._errors import command_error_boundary as _command_error_boundary
-from .._errors import decorate_typer_app as _decorate_typer_app
-from ._execution_policies import BOOTSTRAP_WRITE as _BOOTSTRAP_WRITE
-from ._execution_policies import ENCRYPTED_WRITE as _ENCRYPTED_WRITE
 
 if TYPE_CHECKING:
     from typing import Literal
@@ -163,20 +158,6 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
         emit_manager_closed(ctx, label, created=False)
         return None
 
-    if mode == "create":
-        import inspect
-
-        signature = inspect.signature(_dispatch)
-        parameters = list(signature.parameters.values())
-        parameters.append(
-            inspect.Parameter(
-                "secrets_stdin",
-                kind=inspect.Parameter.KEYWORD_ONLY,
-                annotation=bool,
-                default=typer.Option(False, "--secrets-stdin", help=tr("cli.config.custody.secrets_stdin_help")),
-            )
-        )
-        cast(Any, _dispatch).__signature__ = signature.replace(parameters=parameters)
     return _dispatch
 
 
@@ -317,75 +298,38 @@ def emit_manager_closed(ctx: _TyperClickContext, label: str, *, created: bool) -
     )
 
 
-class _LeafPassthrough(TypedDict):
-    """The exact Typer passthrough this registrar forwards.
-
-    A TypedDict rather than a plain mapping so the splat below is checked
-    against Typer's real parameter types: a ``dict[str, str | None]`` could
-    supply any keyword, including the boolean ones, which a type checker must
-    reject at the call.
-    """
-
-    help: str
-    epilog: str | None
-
-
-def register_lazy_wizard_leaf(
-    name: str,
-    mode: WizardPersistMode,
-    *,
-    # `help` shadows the builtin deliberately: it is Typer's own parameter
-    # name, and renaming it here would break the passthrough at the call site.
-    help: str,
-    epilog: str | None = None,
-) -> None:
-    """Register the `profile` wizard verb `name` as a deferred leaf.
-
-    The factory returns a single-command Typer carrying no callback, which
-    Typer materialises as a plain :class:`click.Command` rather than a
-    group — so the leaf resolves exactly as an eagerly-registered one,
-    having imported the wizard only when the operator asks for it.
-
-    ``help`` and ``epilog`` are named on THIS signature rather than collected
-    into an untyped bag, so a caller passing the wrong thing is caught here.
-    They are then forwarded to Typer as a mapping rather than as literal
-    keywords, and that is deliberate: the help-source gate requires every
-    ``help=`` written at a Typer call to be a direct ``tr("...")`` literal, and
-    this function cannot satisfy that because it does not author help text — it
-    forwards text its callers already translated. Both registration sites pass
-    ``tr(...)`` literals, so the property the gate protects holds where it is
-    actually decided.
-    """
-
-    def _factory() -> typer.Typer:
-        return build_wizard_leaf_app(name, mode, help=help, epilog=epilog)
-
-    _register_lazy_subcommand(
-        "profile",
-        _LazySubcommand(name, _LazyFactoryTarget(_factory), decorate=_decorate_typer_app),
-    )
-
-
-def build_wizard_leaf_app(
-    name: str,
-    mode: WizardPersistMode,
-    *,
-    help: str,
-    epilog: str | None = None,
-) -> typer.Typer:
-    """Build one wizard leaf for any owning lazy-registry key."""
+@cache
+def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
+    """Build the behavior-only wizard callable for one profile verb."""
     from ....application.wizard import build_wizard_command
 
-    leaf = typer.Typer()
-    passthrough: _LeafPassthrough = {"help": help, "epilog": epilog}
-    leaf.command(name, **passthrough)(
-        _command_execution_policy(_BOOTSTRAP_WRITE if mode == "create" else _ENCRYPTED_WRITE)(
-            _command_error_boundary(
-                with_manager_frontend(
-                    build_wizard_command(_get_setup_flow(), mode=mode),
-                    mode=mode,
-                ),
-            )
+    return cast(
+        "Callable[..., None]",
+        _command_error_boundary(
+            with_manager_frontend(
+                build_wizard_command(_get_setup_flow(), mode=mode),
+                mode=mode,
+            ),
         ),
     )
-    return leaf
+
+
+def profile_create(ctx: typer.Context, **parameters: object) -> None:
+    """Run the create-mode profile wizard behavior."""
+    profile_wizard_behavior("create")(ctx=ctx, **parameters)
+
+
+def profile_edit(ctx: typer.Context, **parameters: object) -> None:
+    """Run the edit-mode profile wizard behavior."""
+    profile_wizard_behavior("edit")(ctx=ctx, **parameters)
+
+
+__all__ = [
+    "emit_manager_closed",
+    "emit_registration_abandoned",
+    "open_the_edit_target_or_refuse",
+    "profile_create",
+    "profile_edit",
+    "profile_wizard_behavior",
+    "with_manager_frontend",
+]

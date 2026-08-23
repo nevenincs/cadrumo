@@ -41,10 +41,10 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
 def test_committed_modelo_347_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_347()
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
-    assert set(modelo.revisions) == {"2008-2024", "2025-y-siguientes"}
+    assert set(modelo.revisions) == {"2011-2024", "2025-y-siguientes"}
 
 
-@pytest.mark.parametrize("filing_year", [2008, 2018, 2024, 2026])
+@pytest.mark.parametrize("filing_year", [2011, 2018, 2024, 2026])
 def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int) -> None:
     modelo, catalogues = _load_modelo_347()
     snapshot = build_snapshot(
@@ -58,7 +58,7 @@ def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int)
     # that is the fact worth pinning: the two carry different byte layouts, so a
     # year resolving to the wrong one would build cleanly and file at the wrong
     # offsets.
-    assert snapshot.revision.id == ("2025-y-siguientes" if filing_year >= 2025 else "2008-2024")
+    assert snapshot.revision.id == ("2025-y-siguientes" if filing_year >= 2025 else "2011-2024")
     # Orden HAC/1431/2025 takes effect in December 2025, so it applies to the
     # later half only. Asserting both on every year would credit the earlier
     # revision with an orden that post-dates every filing it governs.
@@ -66,6 +66,35 @@ def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int)
         ("orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1")
         if filing_year >= 2025
         else ("orden-eha-3012-2008:art-1",)
+    )
+
+
+@pytest.mark.parametrize("filing_year", [2008, 2009, 2010])
+def test_the_pre_2011_ejercicios_resolve_to_no_revision(filing_year: int) -> None:
+    """2008-2010 are deliberately unserved, and must REFUSE rather than resolve.
+
+    The revision covering them cited ``aeat-dr-347-2011`` -- a design AEAT
+    published for ejercicio 2011 onward -- so those years were being written at
+    2011 offsets. Narrowing it to 2011-2024 removed that, and the years are now
+    uncovered until their own designs are authored.
+
+    Asserted rather than dropped from the parametrisation above, because a year
+    that silently resolves to a NEIGHBOURING revision is the exact failure the
+    narrowing exists to prevent: it would build cleanly and file wrong bytes.
+    """
+    modelo, catalogues = _load_modelo_347()
+
+    with pytest.raises(Exception) as caught:
+        build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=filing_year,
+            period="0A",
+        )
+
+    assert "347" in str(caught.value) or str(filing_year) in str(caught.value), (
+        f"the refusal must name the modelo or the year it could not serve: {caught.value}"
     )
 
 

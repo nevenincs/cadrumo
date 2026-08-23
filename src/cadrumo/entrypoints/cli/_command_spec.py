@@ -295,7 +295,7 @@ class ArgumentSpec:
     name: str
     value: ValueContract
     default: ParameterDefault
-    help_key: TranslationKey
+    help_key: TranslationKey | None
     metavar: str | None = None
     show_default: bool = True
     hidden: bool = False
@@ -317,7 +317,7 @@ class OptionSpec:
     declarations: tuple[str, ...]
     value: ValueContract
     default: ParameterDefault
-    help_key: TranslationKey
+    help_key: TranslationKey | None
     metavar: str | None = None
     show_default: bool = True
     hidden: bool = False

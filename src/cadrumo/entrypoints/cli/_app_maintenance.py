@@ -32,60 +32,20 @@ from ...application.operator_actions import ActionReference
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ._app_execution_policies import METADATA, PROFILE_LOCAL_DESTRUCTIVE
 from ._app_maintenance_payloads import (
     ProfileBundleReconcileResult,
     ReconciledProfileExportPayload,
     UnreconciledProfileExportPayload,
 )
-from ._command_policy import command_execution_policy
 from ._common import _emit_envelope, resolve_notice_action
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
 
 if TYPE_CHECKING:
     from ...application.user_profile import ProfileBundleExportReconciliation
 
-app = typer.Typer(
-    name="maintenance",
-    help=tr(
-        "cli.app.maintenance.help",
-        default="Recover local state left behind by an interrupted operation.",
-    ),
-    no_args_is_help=True,
-)
-
-
-@app.callback()
-@command_execution_policy(METADATA)
-def maintenance() -> None:
-    """Keep ``maintenance`` a command group rather than a single collapsed verb.
-
-    Typer folds a single-command app into that command, which would mount the
-    verb as ``aeat app maintenance`` and strand its name. This callback pins the
-    group so the family can grow further recovery verbs without renaming the
-    first one.
-    """
-
-
-@app.command(
-    "reconcile",
-    help=tr(
-        "cli.app.maintenance.reconcile_help",
-        default=(
-            "Clear profile-bundle exports left unfinished by a crash, removing "
-            "any leftover cleartext staged file and recording owed audit events."
-        ),
-    ),
-)
-@command_execution_policy(PROFILE_LOCAL_DESTRUCTIVE)
 def app_maintenance_reconcile(
     ctx: typer.Context,
-    output_language: OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Resolve crash-interrupted portable profile-bundle publications."""
     from ...application.user_profile import reconcile_prepared_exports
@@ -196,4 +156,4 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
     return tuple(notices)
 
 
-__all__ = ["app"]
+__all__ = ["app_maintenance_reconcile"]

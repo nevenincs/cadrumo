@@ -323,7 +323,7 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(InvoiceCatalogue.from_invoices((collectible, payable, floor_control)))
     resolver = InvoiceCatalogueSourceResolver(invoice_repository=repository)
-    m347_revision = _modelo_revision("347", "2008-2024")
+    m347_revision = _modelo_revision("347", "2011-2024")
 
     m347_resolution = resolver.resolve(
         CalculationSourceContext(
@@ -828,7 +828,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         modelo="347",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "0A"),
-        revision=_modelo_revision("347", "2008-2024"),
+        revision=_modelo_revision("347", "2011-2024"),
     )
 
     # Pinned for the same reason as the M349 proof above: these are the facts
@@ -1095,7 +1095,7 @@ def test_capability_parity_m347_declares_only_the_domestic_party(
             modelo="347",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "0A"),
-            revision=_modelo_revision("347", "2008-2024"),
+            revision=_modelo_revision("347", "2011-2024"),
         ),
     )
 
@@ -1305,7 +1305,7 @@ def test_the_informativas_are_unaffected_by_that_divergence(
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2008-2024"),
+        revision=_modelo_revision("347", "2011-2024"),
     )
 
     resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(context)

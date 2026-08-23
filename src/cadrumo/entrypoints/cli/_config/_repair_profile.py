@@ -13,17 +13,14 @@ import typer
 
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import CadrumoError as _CadrumoError
-from ....core.i18n import tr
 from ....core.redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,
     redact_structured_for_cli_output,
 )
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
-from ._execution_policies import BOOTSTRAP_WRITE
 from ._status_rendering import precondition_action_lines
 
 if typing.TYPE_CHECKING:
@@ -35,49 +32,31 @@ ProfileResolver = Callable[[str], "ProfileBucketPointer"]
 ProfileRecordReader = Callable[..., "UserProfileRecord"]
 
 
-def register_repair_profile_command(
-    repair_app: typer.Typer,
-    *,
-    resolve_profile_by_label: ProfileResolver,
-    read_profile_record: ProfileRecordReader,
+def repair_profile(
+    ctx: typer.Context,
+    profile: str | None = None,
+    clear_active: bool = False,
+    yes: bool = False,
 ) -> None:
-    """Register profile repair and health commands."""
+    """Inspect profile health or safely repair a degraded active-profile pointer."""
+    from ._profile_readiness import _read_profile_record as read_profile_record
+    from ._profile_support import resolve_profile_by_label
 
-    @repair_app.command(
-        "profile",
-        help=tr("cli.config.repair.profile_help"),
-    )
-    @command_execution_policy(BOOTSTRAP_WRITE)
-    def repair_profile(
-        ctx: typer.Context,
-        profile: str | None = typer.Option(
-            None,
-            "--profile",
-            help=tr("cli.config.repair.profile_name_help"),
-        ),
-        clear_active: bool = typer.Option(
-            False,
-            "--clear-active",
-            help=tr("cli.config.repair.profile_clear_active_help"),
-        ),
-        yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help")),
-    ) -> None:
-        """Inspect profile health or safely repair a degraded active-profile pointer."""
-        if profile is not None and not clear_active:
-            _emit_profile_record_status(
-                ctx,
-                profile,
-                resolve_profile_by_label=resolve_profile_by_label,
-                read_profile_record=read_profile_record,
-            )
-            return
-        _validate_repair_action_preconditions(
-            profile=profile,
-            clear_active=clear_active,
-            yes=yes,
+    if profile is not None and not clear_active:
+        _emit_profile_record_status(
+            ctx,
+            profile,
             resolve_profile_by_label=resolve_profile_by_label,
+            read_profile_record=read_profile_record,
         )
-        _emit_pointer_repair(ctx, clear_active=clear_active, confirmed=yes)
+        return
+    _validate_repair_action_preconditions(
+        profile=profile,
+        clear_active=clear_active,
+        yes=yes,
+        resolve_profile_by_label=resolve_profile_by_label,
+    )
+    _emit_pointer_repair(ctx, clear_active=clear_active, confirmed=yes)
 
 
 def _validate_repair_action_preconditions(
@@ -315,6 +294,4 @@ def _emit_profile_record_unreadable_repair(
     )
 
 
-__all__ = [
-    "register_repair_profile_command",
-]
+__all__ = ["repair_profile"]

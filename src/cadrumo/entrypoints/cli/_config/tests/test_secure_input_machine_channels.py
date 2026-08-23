@@ -11,11 +11,7 @@ from contextlib import contextmanager
 from typing import cast
 
 import pytest
-import typer
 from pydantic import BaseModel, SecretStr, ValidationError
-from typer.core import TyperOption
-from typer.main import get_command
-from typer.testing import CliRunner
 
 from ..._errors import CliRefusedBoundaryError
 from .._secure_input import (
@@ -23,8 +19,6 @@ from .._secure_input import (
     MachineSecretChannel,
     MachineSecretPayload,
     MachineSecretSelection,
-    MachineSecretsFdOption,
-    MachineSecretsStdinOption,
     _validate_secrets_payload,
     read_machine_secret_payload,
     read_secrets_fd,
@@ -100,40 +94,6 @@ def _validation_refusal(raw: bytes) -> CliRefusedBoundaryError:
             missing_fields_key="cli.config.custody.errors.secrets_stdin_missing_fields",
         )
     return caught.value
-
-
-def test_shared_options_have_one_exact_alias_default_order_and_help() -> None:
-    """The reusable annotations materialise one transferable Click contract."""
-    app = typer.Typer()
-
-    @app.command()
-    def probe(
-        secrets_stdin: MachineSecretsStdinOption = False,
-        secrets_fd: MachineSecretsFdOption = None,
-    ) -> None:
-        del secrets_stdin, secrets_fd
-
-    command = get_command(app)
-    parameters = [
-        parameter
-        for parameter in command.params
-        if isinstance(parameter, TyperOption)
-        and parameter.name is not None
-        and parameter.name.startswith("secrets_")
-    ]
-    assert [parameter.name for parameter in parameters] == ["secrets_stdin", "secrets_fd"]
-    assert [parameter.opts for parameter in parameters] == [["--secrets-stdin"], ["--secrets-fd"]]
-    assert [parameter.default for parameter in parameters] == [False, None]
-    assert parameters[0].is_flag is True
-    assert parameters[1].is_flag is False
-
-    result = CliRunner().invoke(app, ["--help"])
-    assert result.exit_code == 0, result.output
-    assert result.output.count("--secrets-stdin") == 1
-    assert result.output.count("--secrets-fd") == 1
-    assert parameters[0].help
-    assert parameters[1].help
-    assert str(parameters[1].help) != str(parameters[0].help)
 
 
 def test_payload_base_is_strict_and_frozen() -> None:

@@ -34,28 +34,19 @@ would destroy every other profile to reach this one.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING
 
 import typer
 
 from ....core.i18n import OutputLanguage, tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._command_policy import command_execution_policy
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError
-from ._execution_policies import BOOTSTRAP_DESTRUCTIVE
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from ....application.bucket_maintenance import BucketDeletionAssessment
-    from ....application.workflow import ProfileBucketPointer
     from .._config_payloads import ConfigProfileDeleteResult
-
-
-_NameArg = Annotated[str, typer.Argument(help=tr("cli.config.profile.delete.name_help"))]
-_YesOpt = Annotated[bool, typer.Option("--yes", help=tr("cli.config.profile.delete.yes_help"))]
 
 
 def _refuse_deleting_the_active_profile(*, bucket_id: str, label: str) -> None:
@@ -196,50 +187,33 @@ def _result_and_lines(
     return result, lines, (notice,)
 
 
-def register_profile_delete_command(
-    app: typer.Typer,
-    *,
-    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
+def config_profile_delete(
+    ctx: typer.Context,
+    name: str,
+    yes: bool = False,
+    output_language: OutputLanguage | None = None,
 ) -> None:
-    """Register ``config profile delete`` on the profile sub-app.
+    from ._profile_support import resolve_profile_by_label
 
-    The label resolver is injected rather than imported so this module carries
-    no dependency on the package facade that mounts it, matching the shape the
-    sibling profile registrars already use.
-    """
-
-    @app.command("delete", help=tr("cli.config.profile.delete.help"))
-    @command_execution_policy(BOOTSTRAP_DESTRUCTIVE)
-    def config_profile_delete(
-        ctx: typer.Context,
-        name: _NameArg,
-        yes: _YesOpt = False,
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """Destroy one named profile capsule, after a preflight the operator confirms."""
-        _activate_subcommand_output_language(ctx, output_language)
-        pointer = resolve_profile_by_label(name)
-        _refuse_deleting_the_active_profile(bucket_id=pointer.bucket_id, label=pointer.label)
-        assessment = _assess(pointer.bucket_id)
-        _refuse_erase_inside_the_retention_floor(assessment)
-        completed_at = _destroy(pointer.bucket_id) if yes else None
-        result, lines, notices = _result_and_lines(
-            assessment,
-            label=pointer.label,
-            completed_at=completed_at,
-        )
-        _emit_envelope(
-            ctx,
-            command="config.profile.delete",
-            result=result,
-            lines=lines,
-            notices=notices,
-        )
+    """Destroy one named profile capsule, after a preflight the operator confirms."""
+    _activate_subcommand_output_language(ctx, output_language)
+    pointer = resolve_profile_by_label(name)
+    _refuse_deleting_the_active_profile(bucket_id=pointer.bucket_id, label=pointer.label)
+    assessment = _assess(pointer.bucket_id)
+    _refuse_erase_inside_the_retention_floor(assessment)
+    completed_at = _destroy(pointer.bucket_id) if yes else None
+    result, lines, notices = _result_and_lines(
+        assessment,
+        label=pointer.label,
+        completed_at=completed_at,
+    )
+    _emit_envelope(
+        ctx,
+        command="config.profile.delete",
+        result=result,
+        lines=lines,
+        notices=notices,
+    )
 
 
-__all__ = ["register_profile_delete_command"]
+__all__ = ["config_profile_delete"]

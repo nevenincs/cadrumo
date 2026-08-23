@@ -30,6 +30,8 @@ from functools import cache
 from importlib.resources import files
 from typing import TYPE_CHECKING, Literal, cast, get_args
 
+from ._machine_secret_contract import MACHINE_SECRET_COMMANDS
+
 if TYPE_CHECKING:
     from ...application.operator_surface import CommandSchemaRef
     from ._command_policy import CommandExecutionPolicy, CommandWriteRouteScope
@@ -68,6 +70,7 @@ CommandPerformanceClass = Literal["metadata", "local-io", "compute", "external-i
 _COMMAND_CAPABILITIES = frozenset(get_args(CommandCapability))
 _COMMAND_SIDE_EFFECT_CLASSES = frozenset(get_args(CommandSideEffectClass))
 _COMMAND_PERFORMANCE_CLASSES = frozenset(get_args(CommandPerformanceClass))
+_MACHINE_SECRET_CONTRACT_BY_COMMAND = {contract.command_key: contract for contract in MACHINE_SECRET_COMMANDS}
 
 _IMPLIED_CAPABILITIES: dict[CommandCapability, frozenset[CommandCapability]] = {
     "encrypted-facts": frozenset({"profile-custody"}),
@@ -175,6 +178,53 @@ class CommandParameterMetadata:
 
 
 @dataclass(frozen=True, slots=True)
+class MachineSecretFieldMetadata:
+    """Value-free JSON field declaration for one machine-secret payload."""
+
+    name: str
+    json_type: Literal["string"]
+
+
+@dataclass(frozen=True, slots=True)
+class MachineSecretVariantConditionMetadata:
+    """Public option-presence discriminator for one payload variant."""
+
+    option_name: str
+    presence: Literal["absent", "present"]
+
+
+@dataclass(frozen=True, slots=True)
+class MachineSecretPayloadMetadata:
+    """Strict, value-free machine-secret payload variant metadata."""
+
+    key: str
+    fields: tuple[MachineSecretFieldMetadata, ...]
+    condition: MachineSecretVariantConditionMetadata | None
+
+
+def machine_secret_payload_metadata(command: str) -> tuple[MachineSecretPayloadMetadata, ...]:
+    """Project the closed command contract without secret values or examples."""
+    contract = _MACHINE_SECRET_CONTRACT_BY_COMMAND.get(command)
+    if contract is None:
+        return ()
+    return tuple(
+        MachineSecretPayloadMetadata(
+            key=variant.key,
+            fields=tuple(
+                MachineSecretFieldMetadata(name=field.name, json_type=field.json_type.value) for field in variant.fields
+            ),
+            condition=MachineSecretVariantConditionMetadata(
+                option_name=variant.condition.option_name,
+                presence=variant.condition.presence.value,
+            )
+            if variant.condition is not None
+            else None,
+        )
+        for variant in contract.variants
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class CommandPolicyMetadata:
     """Immutable serialization of one callback-attached execution policy."""
 
@@ -211,6 +261,7 @@ class CommandRegistrationMetadata:
     policy: CommandPolicyMetadata | None
     handler_owner: str | None
     source_sha256: str | None
+    machine_secret_payloads: tuple[MachineSecretPayloadMetadata, ...] = ()
 
     @property
     def help(self) -> dict[str, str]:
@@ -309,6 +360,7 @@ def command_registration_projection() -> CommandRegistrationProjection:
             policy=_policy_metadata(row["policy"]),
             handler_owner=row["handler_owner"],
             source_sha256=row["source_sha256"],
+            machine_secret_payloads=machine_secret_payload_metadata(row["command"]),
         )
         for row in payload["commands"]
     )
@@ -443,9 +495,13 @@ __all__ = [
     "CommandRegistrationProjection",
     "CommandSideEffectClass",
     "LiveNodeRegistrationMetadata",
+    "MachineSecretFieldMetadata",
+    "MachineSecretPayloadMetadata",
+    "MachineSecretVariantConditionMetadata",
     "SchemaModuleLoadFailure",
     "command_registration_metadata",
     "command_registration_policy",
     "command_registration_projection",
     "command_schema_refs",
+    "machine_secret_payload_metadata",
 ]

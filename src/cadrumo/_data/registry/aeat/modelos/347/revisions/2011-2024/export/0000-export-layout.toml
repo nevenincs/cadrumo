@@ -1,0 +1,11 @@
+[[revisions.2011-2024.export_layouts]]
+id = 'generated-modelo-347-2011-2024-fichero'
+format = 'fixed_width'
+source_refs = ['aeat-dr-347-2011']
+legal_refs = [
+    'ley-58-2003:art-93',
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'rd-1065-2007:art-31',
+]
+dictionary_path_overrides = []

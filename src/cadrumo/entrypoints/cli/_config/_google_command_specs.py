@@ -30,7 +30,6 @@ from ._spec_policies import (
 
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
-_LIST = ValueContract(DeferredTarget("builtins", "list"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _CREDENTIAL_KIND = ValueContract(DeferredTarget("cadrumo.core", "GoogleCredentialSourceKind"))
@@ -228,17 +227,15 @@ GOOGLE_COMMAND_SPECS = (
             _option(
                 "scopes",
                 ("--scope",),
-                _LIST,
+                _STR,
                 "cli.config.google.credential_source.scope_help",
-                default=(),
                 multiple=True,
             ),
             _option(
                 "delegates",
                 ("--delegate",),
-                _LIST,
+                _STR,
                 "cli.config.google.credential_source.delegate_help",
-                default=(),
                 multiple=True,
             ),
             _option("subject", ("--subject",), _STR, "cli.config.google.credential_source.subject_help"),

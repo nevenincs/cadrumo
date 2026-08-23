@@ -1,0 +1,93 @@
+[[revisions."2011-2024".constructs]]
+id = "modelo-347-informative"
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-eha-3012-2008:art-10",
+    "rd-1065-2007:art-31",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-347-2011",
+    "aeat-modelo-347-procedure",
+    "boe-modelo-347-2008-form",
+    "boe-modelo-347-2011-amendment",
+]
+casilla_ids = [
+    # The construct must collect EVERY casilla of the revision. It held the
+    # first ten and the other 34 -- the contraparte detail block and the
+    # inmueble rows -- were authored later without being enrolled. Their
+    # legal_refs and source_refs are already covered by the construct's own,
+    # so nothing is widened by adding them. Order follows the revision.
+    "contraparte.representante-legal-nif",
+    "contraparte.importe-anual",
+    "contraparte.operacion-seguro",
+    "contraparte.arrendamiento-local-negocio",
+    "contraparte.importe-metalico",
+    "contraparte.importe-transmisiones-inmuebles",
+    "contraparte.ejercicio-operacion",
+    "contraparte.importe-transmisiones-Q1",
+    "contraparte.importe-transmisiones-Q2",
+    "contraparte.importe-transmisiones-Q3",
+    "contraparte.importe-transmisiones-Q4",
+    "contraparte.nif-operador-comunitario",
+    "decl.numero-justificante",
+    "decl.complementaria-sustitutiva",
+    "decl.total-personas-entidades",
+    "decl.importe-total-anual",
+    "decl.total-inmuebles",
+    "decl.importe-total-arrendamiento-locales",
+    "decl.persona-relacion",
+    "decl.persona-relacion-telefono",
+    "decl.representante-legal-nif",
+    "decl.tipo-soporte",
+    "decl.ejercicio",
+    "decl.tipo-declaracion",
+    "contraparte.nif",
+    "contraparte.nombre",
+    "contraparte.clave-operacion",
+    "contraparte.importe-Q1",
+    "contraparte.importe-Q2",
+    "contraparte.importe-Q3",
+    "contraparte.importe-Q4",
+    "contraparte.pais-codigo",
+    "inmueble.arrendatario-nif",
+    "inmueble.representante-legal-nif",
+    "inmueble.arrendatario-nombre",
+    "inmueble.importe-operacion",
+    "inmueble.situacion",
+    "inmueble.referencia-catastral",
+    "inmueble.direccion",
+]
+bindings = [
+    "modelo-347-declarante-numero-personas-entidades",
+    "modelo-347-declarante-importe-total-anual-operaciones",
+]
+workbook_parity_refs = ["modelo-347-dr-2025", "modelo-347-dr-2011"]
+live_cross_references = [
+    "modelo-347-static-documentation",
+    "modelo-347-filed-declarations-read",
+]
+application_links = [
+    "modelo-347-portal",
+    "modelo-347-filing",
+    "modelo-347-deadline",
+    "modelo-347-extractor",
+    # Authored with this revision's export layout and never enrolled.
+    "modelo-347-export",
+]
+# The construct must close over every family the revision declares. These two
+# were absent entirely: the verification expectation and the generated export
+# layout both landed after the construct was written.
+verification_expectations = ["modelo-347-informative-summary-verification"]
+export_layouts = ["generated-modelo-347-2011-2024-fichero"]
+filing_schedules = ["modelo-347-anual"]
+extraction_profiles = ["modelo-347-declaracion-pdf"]
+deadline_windows = [
+    "modelo-347-2018-0a",
+    "modelo-347-2019-0a",
+    "modelo-347-2020-0a",
+    "modelo-347-2021-0a",
+    "modelo-347-2022-0a",
+    "modelo-347-2023-0a",
+    "modelo-347-2024-0a",
+]

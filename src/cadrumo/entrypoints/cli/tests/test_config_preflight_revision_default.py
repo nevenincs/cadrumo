@@ -306,7 +306,7 @@ def test_ambiguous_resolution_carries_candidates_on_typed_field_not_message() ->
     asserts the refusal context carries both candidate ids verbatim.
     """
     from ....domain.calculations.registry import AmbiguousRevisionSelectionError
-    from .._config import _resolve_preflight_revision_id
+    from .._config._profile_inspect import _resolve_preflight_revision_id
     from .._errors import CliRefusedBoundaryError
 
     authority = resources().modelos.authority

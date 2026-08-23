@@ -27,15 +27,11 @@ from uuid import UUID
 
 import typer
 
-from ....core.i18n import OutputLanguage, tr
-from .._command_policy import command_execution_policy
+from ....core.i18n import OutputLanguage
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from ._execution_policies import BOOTSTRAP_WRITE, PROFILE_READ, declare_metadata_group
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from ....application.user_profile import (
         ProfileCapsuleArchiveInspection,
         ProfileCapsuleArchiveReceipt,
@@ -69,109 +65,65 @@ def _inspect_lines(inspection: ProfileCapsuleArchiveInspection) -> tuple[str, ..
     )
 
 
-def register_archive_commands(
-    profile_app: typer.Typer,
-    *,
-    resolve_profile_by_label: Callable[[str], object],
+def archive_export(
+    ctx: typer.Context,
+    name: str,
+    output: Path,
+    output_language: OutputLanguage | None = None,
 ) -> None:
-    """Mount the ``config profile archive`` group on ``profile_app``.
+    from ._profile_support import resolve_profile_by_label
 
-    ``resolve_profile_by_label`` is injected rather than imported so this
-    module does not grow its own opinion about how profiles are named; it is
-    the same resolver the delete verb uses, so an ambiguous or unknown label
-    refuses identically across the surface.
-    """
-    archive_app = typer.Typer(
-        help=tr("cli.config.profile.archive.help"),
-        no_args_is_help=True,
+    """Write a named profile's capsule to a sealed archive."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile import export_profile_capsule_archive
+    from .._config_payloads import ConfigProfileArchiveExportResult
+
+    # The archive service takes a UUID and deliberately holds no opinion
+    # about labels, so the label is resolved here through the one shared
+    # resolver rather than inside the service.
+    pointer = resolve_profile_by_label(name)
+    receipt = export_profile_capsule_archive(
+        profile_id=UUID(str(pointer.bucket_id)),  # type: ignore[attr-defined]  # reason: the injected resolver returns a ProfileBucketPointer; typing it here would import the workflow package into this module's import-time surface
+        target=output,
     )
 
-    @archive_app.command("export", help=tr("cli.config.profile.archive.export_help"))
-    @command_execution_policy(BOOTSTRAP_WRITE)
-    def archive_export(
-        ctx: typer.Context,
-        name: str = typer.Argument(..., help=tr("cli.config.profile.archive.export_name_help")),
-        output: Path = typer.Option(
-            ...,
-            "--output",
-            help=tr("cli.config.profile.archive.export_out_help"),
-            dir_okay=False,
-            writable=True,
+    _emit_envelope(
+        ctx,
+        command="config.profile.archive.export",
+        result=ConfigProfileArchiveExportResult(
+            bucket_id=receipt.bucket_id,
+            target=receipt.target,
+            archive_schema_version=receipt.archive_schema_version,
+            recovery_enrolled=receipt.recovery_enrolled,
         ),
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
+        lines=list(_export_lines(receipt)),
+    )
+
+
+def archive_inspect(
+    ctx: typer.Context,
+    file: Path,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Report an archive's plaintext header without decrypting it."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile import inspect_profile_capsule_archive
+    from .._config_payloads import ConfigProfileArchiveInspectResult
+
+    inspection = inspect_profile_capsule_archive(file)
+
+    _emit_envelope(
+        ctx,
+        command="config.profile.archive.inspect",
+        result=ConfigProfileArchiveInspectResult(
+            product=inspection.product,
+            bucket_id=inspection.bucket_id,
+            archive_schema_version=inspection.archive_schema_version,
+            created_at=inspection.created_at,
+            manifest_digest=inspection.manifest_digest,
         ),
-    ) -> None:
-        """Write a named profile's capsule to a sealed archive."""
-        _activate_subcommand_output_language(ctx, output_language)
-        from ....application.user_profile import export_profile_capsule_archive
-        from .._config_payloads import ConfigProfileArchiveExportResult
-
-        # The archive service takes a UUID and deliberately holds no opinion
-        # about labels, so the label is resolved here through the one shared
-        # resolver rather than inside the service.
-        pointer = resolve_profile_by_label(name)
-        receipt = export_profile_capsule_archive(
-            profile_id=UUID(str(pointer.bucket_id)),  # type: ignore[attr-defined]  # reason: the injected resolver returns a ProfileBucketPointer; typing it here would import the workflow package into this module's import-time surface
-            target=output,
-        )
-
-        _emit_envelope(
-            ctx,
-            command="config.profile.archive.export",
-            result=ConfigProfileArchiveExportResult(
-                bucket_id=receipt.bucket_id,
-                target=receipt.target,
-                archive_schema_version=receipt.archive_schema_version,
-                recovery_enrolled=receipt.recovery_enrolled,
-            ),
-            lines=list(_export_lines(receipt)),
-        )
-
-    @archive_app.command("inspect", help=tr("cli.config.profile.archive.inspect_help"))
-    @command_execution_policy(PROFILE_READ)
-    def archive_inspect(
-        ctx: typer.Context,
-        file: Path = typer.Option(
-            ...,
-            "--file",
-            help=tr("cli.config.profile.archive.inspect_path_help"),
-            exists=True,
-            dir_okay=False,
-            readable=True,
-        ),
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """Report an archive's plaintext header without decrypting it."""
-        _activate_subcommand_output_language(ctx, output_language)
-        from ....application.user_profile import inspect_profile_capsule_archive
-        from .._config_payloads import ConfigProfileArchiveInspectResult
-
-        inspection = inspect_profile_capsule_archive(file)
-
-        _emit_envelope(
-            ctx,
-            command="config.profile.archive.inspect",
-            result=ConfigProfileArchiveInspectResult(
-                product=inspection.product,
-                bucket_id=inspection.bucket_id,
-                archive_schema_version=inspection.archive_schema_version,
-                created_at=inspection.created_at,
-                manifest_digest=inspection.manifest_digest,
-            ),
-            lines=list(_inspect_lines(inspection)),
-        )
-
-    declare_metadata_group(archive_app)
-    profile_app.add_typer(archive_app, name="archive")
+        lines=list(_inspect_lines(inspection)),
+    )
 
 
-__all__ = ["register_archive_commands"]
+__all__ = ["archive_export", "archive_inspect"]

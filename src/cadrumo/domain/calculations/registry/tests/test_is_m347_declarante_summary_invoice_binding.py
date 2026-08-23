@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _modelo_347_revision():
     modelo, _catalogues = _committed_modelo("347")
-    return modelo.revisions["2008-2024"]
+    return modelo.revisions["2011-2024"]
 
 
 _M347_COUNT_BINDING = "modelo-347-declarante-numero-personas-entidades"

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable
+from functools import cache
 from importlib import import_module
 from types import GenericAlias
 from typing import Any, cast
@@ -34,6 +35,26 @@ from ._command_suggestions import (
     LazySubcommand,
     register_lazy_subcommand,
 )
+
+_SPEC_REGISTRY_PREFIX = "command-spec:"
+
+
+class CommandSpecTyperGroup(CadrumoTyperGroup):
+    """Runtime group whose lazy table is namespaced to CommandSpec authority."""
+
+
+def _registry_key(graph: CommandSpecGraph, key: str) -> str:
+    """Return process-local runtime state for one immutable authority graph."""
+    return f"{_SPEC_REGISTRY_PREFIX}{id(graph)}:{key}"
+
+
+@cache
+def _group_class(graph: CommandSpecGraph, key: str) -> type[CommandSpecTyperGroup]:
+    return type(
+        f"CommandSpecTyperGroup_{key}",
+        (CommandSpecTyperGroup,),
+        {"__cadrumo_lazy_group_key__": _registry_key(graph, key)},
+    )
 
 
 def resolve_deferred_target(target: DeferredTarget) -> object:
@@ -79,7 +100,7 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
     default, default_factory = _parameter_default(spec.default)
     annotation = _annotation(spec.value.annotation)
     if isinstance(spec, OptionSpec) and spec.multiple:
-        annotation = GenericAlias(tuple, (annotation, ...))
+        annotation = GenericAlias(list, (annotation,))
     parser = None if spec.value.parser is None else resolve_deferred_target(spec.value.parser)
     click_type = None if spec.value.click_type is None else resolve_deferred_target(spec.value.click_type)
     if isinstance(click_type, type):
@@ -88,7 +109,7 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
         argument_factory = cast(Any, typer.Argument)
         argument_kwargs: dict[str, object] = {
             "default_factory": default_factory,
-            "help": tr(spec.help_key.value),
+            "help": None if spec.help_key is None else tr(spec.help_key.value),
             "metavar": spec.metavar,
             "show_default": spec.show_default,
             "hidden": spec.hidden,
@@ -116,13 +137,17 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
         option_factory = cast(Any, typer.Option)
         option_kwargs: dict[str, object] = {
             "default_factory": default_factory,
-            "help": tr(spec.help_key.value),
+            "help": None if spec.help_key is None else tr(spec.help_key.value),
             "metavar": spec.metavar,
             "show_default": spec.show_default,
             "hidden": spec.hidden,
             "count": spec.count,
             "prompt": None if spec.prompt_key is None else tr(spec.prompt_key.value),
-            "confirmation_prompt": spec.confirmation_prompt_key is not None,
+            "confirmation_prompt": (
+                False
+                if spec.confirmation_prompt_key is None
+                else tr(spec.confirmation_prompt_key.value)
+            ),
             "envvar": list(spec.envvar) or None,
             "is_eager": spec.eager,
             "callback": callback,
@@ -212,7 +237,7 @@ class _SpecNodeFactory:
 
 def _register_children(graph: CommandSpecGraph, parent: CommandSpec) -> None:
     children = tuple(spec for spec in graph.specs if spec.parent_key == parent.key)
-    registry_key = parent.token if parent.kind == "root" else parent.key
+    registry_key = _registry_key(graph, parent.key)
     for child in children:
         register_lazy_subcommand(
             registry_key,
@@ -224,7 +249,7 @@ def _register_children(graph: CommandSpecGraph, parent: CommandSpec) -> None:
                     if child.handler is not None
                     else frozenset(),
                 ),
-                child_registry_key=child.key,
+                child_registry_key=_registry_key(graph, child.key),
                 help=tr(child.help_key.value),
                 short_help=None if child.short_help_key is None else tr(child.short_help_key.value),
                 hidden=child.invocation.hidden,
@@ -240,12 +265,13 @@ def _node_app(graph: CommandSpecGraph, key: str) -> typer.Typer:
         raise RuntimeError(tr(reason.value) if reason is not None else f"command {key!r} is unavailable")
     if spec.kind == "leaf":
         app = typer.Typer()
-        app.command(
+        command_factory = cast(Any, app.command)
+        command_factory(
             spec.token,
             help=tr(spec.help_key.value),
             short_help=None if spec.short_help_key is None else tr(spec.short_help_key.value),
             hidden=spec.invocation.hidden,
-            deprecated=bool(spec.invocation.deprecated_key),
+            deprecated=_deprecated(spec),
         )(_behavior_wrapper(spec))
         return app
 
@@ -257,7 +283,7 @@ def _node_app(graph: CommandSpecGraph, key: str) -> typer.Typer:
         chain=spec.invocation.chain,
         add_help_option=spec.invocation.add_help_option,
         add_completion=spec.invocation.add_completion,
-        cls=CadrumoTyperGroup,
+        cls=_group_class(graph, key),
     )
     if spec.invocation.invoke_without_command:
         app.callback(invoke_without_command=True)(_behavior_wrapper(spec))
@@ -274,10 +300,20 @@ def _node_app(graph: CommandSpecGraph, key: str) -> typer.Typer:
     return app
 
 
+@cache
 def build_command_app(graph: CommandSpecGraph) -> typer.Typer:
     """Compile the sole production command graph into a demand-loaded app."""
     root = next(spec for spec in graph.specs if spec.kind == "root")
     return _node_app(graph, root.key)
+
+
+@cache
+def build_command_subtree(graph: CommandSpecGraph, key: str) -> typer.Typer:
+    """Compile one declared subtree for an atomic family migration."""
+    spec = graph.by_key().get(key)
+    if spec is None:
+        raise LookupError(f"unknown command spec key: {key!r}")
+    return _node_app(graph, key)
 
 
 def command_schema_targets(graph: CommandSpecGraph) -> tuple[tuple[str, DeferredTarget], ...]:
@@ -294,4 +330,10 @@ def command_schema_targets(graph: CommandSpecGraph) -> tuple[tuple[str, Deferred
     return tuple(rows)
 
 
-__all__ = ["build_command_app", "command_schema_targets", "resolve_deferred_target"]
+__all__ = [
+    "CommandSpecTyperGroup",
+    "build_command_app",
+    "build_command_subtree",
+    "command_schema_targets",
+    "resolve_deferred_target",
+]

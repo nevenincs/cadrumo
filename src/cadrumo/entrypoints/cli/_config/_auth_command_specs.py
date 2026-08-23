@@ -19,7 +19,6 @@ from .._command_spec import (
 from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, STATE_FREE
 
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
-_LIST = ValueContract(DeferredTarget("builtins", "list"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
@@ -285,7 +284,7 @@ AUTH_COMMAND_SPECS = (
                 _STR,
                 "cli.config.auth.apoderado.configure.represented_nif_help",
             ),
-            _option("scope", ("--scope",), _LIST, "cli.config.auth.apoderado.configure.scope_help", multiple=True),
+            _option("scope", ("--scope",), _STR, "cli.config.auth.apoderado.configure.scope_help", multiple=True),
         ),
     ),
     _leaf(
