@@ -704,14 +704,21 @@ def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
     row (``./packaging/cadrumo_data_manuals``) rather than a requirement string;
     resolve such a row to the referenced project's own ``[project].name`` so the
     surface checks see the real package name.
+
+    A WORKSPACE MEMBER exports differently again -- ``-e ./src/cadrumo-harness``,
+    an editable row -- so the ``-e`` marker is stripped before the path is
+    resolved. Without that the row fell through to requirement parsing, the
+    member's name never entered the surface, and the dev export was reported as
+    missing a package that was in fact present and editable.
     """
     names: set[str] = set()
     for line in output.splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        if stripped.startswith(("./", "../")) and repo_root is not None:
-            local_pyproject = (repo_root / stripped / "pyproject.toml").resolve()
+        candidate = stripped.removeprefix("-e ").strip() if stripped.startswith("-e ") else stripped
+        if candidate.startswith(("./", "../")) and repo_root is not None:
+            local_pyproject = (repo_root / candidate / "pyproject.toml").resolve()
             if local_pyproject.is_file():
                 local = tomllib.loads(local_pyproject.read_text(encoding=_UTF_8))
                 names.add(normalise_distribution_name(local["project"]["name"]))

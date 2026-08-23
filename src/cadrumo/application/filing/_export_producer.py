@@ -74,6 +74,7 @@ _MODELO_PRODUCER_NAMESPACE_OWNERS = {
     "m303": "modelo_303",
     "m353": "modelo_353",
     "m360": "modelo_360",
+    "m840": "modelo_840",
     "presenter": "modelo_specific_presenter",
     "filing": "modelo_specific_filing",
     "prior_domiciliation": "modelo_specific_domiciliation",
