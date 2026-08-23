@@ -1,3 +1,4 @@
+# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Typer registration for modelo maritime preview commands.
 
 This module is the transport boundary for
@@ -17,11 +18,12 @@ See Also:
 """
 
 from __future__ import annotations
+
 import typer
+
 from ...application.modelo import preview_maritime_exemption_for_active_profile
 from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
-from ...core.i18n import tr
 from ...domain.renta import RentaValidationError
 from ._common import _emit_envelope, activate_subcommand_output_language
 from ._modelo_behavior_support import require_active_profile

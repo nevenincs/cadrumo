@@ -1,7 +1,10 @@
+# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Typer registrations for Modelo 036 declarative-recording commands."""
 
 from __future__ import annotations
+
 import typer
+
 from ...application.modelo import (
     M036DeclarationCommand,
     M036DeclarationResult,
@@ -149,18 +152,16 @@ def m036_list(ctx: typer.Context) -> None:
     if declarations:
         lines.append("declaration_id\tevent_kind\tdeclared_on\trecorded_at\tjustificante_present")
         lines.extend(
-            (
-                "\t".join(
-                    (
-                        declaration.declaration_id,
-                        declaration.event_kind.value,
-                        declaration.declared_on.isoformat(),
-                        declaration.recorded_at.isoformat(),
-                        "yes" if declaration.sede_justificante is not None else "no",
-                    )
+            "\t".join(
+                (
+                    declaration.declaration_id,
+                    declaration.event_kind.value,
+                    declaration.declared_on.isoformat(),
+                    declaration.recorded_at.isoformat(),
+                    "yes" if declaration.sede_justificante is not None else "no",
                 )
-                for declaration in declarations
             )
+            for declaration in declarations
         )
     else:
         lines.append(tr("cli.app.modelo.m036.list_empty", default="No M036 declarations recorded yet."))

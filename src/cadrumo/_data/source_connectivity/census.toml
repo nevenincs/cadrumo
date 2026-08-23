@@ -10,20 +10,18 @@ census_id = "source-domain-to-casilla-connectivity"
 candidate_id = "inventory.stock-valuation"
 disposition = "connect_candidate"
 owner = "source-connectivity-campaign"
-review_condition = "Official AEAT and BOE evidence must settle opening stock, purchases, closing stock, activity grain, sign, units, rounding, absence semantics, and override policy before any binding is authored. The dormant helper's Anexo D casilla 0155 wording is obsolete: current Modelo 100 uses 0155 for a different computed real-estate concept, while inventory-related presentation includes 0177, 0181, and 0182."
+review_condition = "The accepted 2025 adjudication authorizes split inventory-variation outputs for 0177 and 0182, but complete acquisition cost for 0181 and provenance-bearing explicit-closing authority remain blocking prerequisites before any inventory binding is authored."
 capability_locators = [
   "src/cadrumo/adapters/persistence/profile/inventory.py:108",
   "src/cadrumo/application/inventory/_source_readiness.py:34",
-  "src/cadrumo/domain/contribuyente/inventory/__init__.py:322",
-  "src/cadrumo/domain/contribuyente/inventory/__init__.py:365",
+  "src/cadrumo/domain/contribuyente/inventory/__init__.py:374",
   "src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:102",
   "src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:152",
 ]
 capability_ids = [
   "secure_repository:src/cadrumo/adapters/persistence/profile/inventory.py:InventoryLedgerRepository",
   "source_readiness:src/cadrumo/application/inventory/_source_readiness.py:inventory_source_readiness",
-  "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:compute_inventory_variation",
-  "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:compute_anexo_d_inventory_variation",
+  "calculation_helper:src/cadrumo/domain/contribuyente/inventory/__init__.py:compute_inventory_anexo_d_projection",
   "ingress:src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:inventory_create",
   "ingress:src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:inventory_movement_add",
 ]
@@ -50,14 +48,14 @@ summary = "Executable readiness declaration states that inventory does not yet c
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/domain/contribuyente/inventory/__init__.py:365"
-summary = "Dormant Anexo D helper carries the obsolete casilla 0155 wording that must not be treated as current mapping authority."
+reference = "src/cadrumo/domain/contribuyente/inventory/__init__.py:374"
+summary = "The 2025 projection splits audited opening-to-closing variation between 0177 and 0182 while deliberately exposing no 0181 acquisition-cost output."
 
 [entries.bounded_follow_up]
 action_id = "source-casilla.inventory-grounding"
 owner = "source-connectivity-campaign"
 deadline = 2026-10-31
-completion_criterion = "Accepted official-source adjudication identifies or rejects each inventory destination and authorizes a bounded vertical slice without relying on the obsolete 0155 label."
+completion_criterion = "Complete acquisition-cost and explicit-closing authority prerequisites, then deliver the accepted 2025 inventory vertical slice through the canonical resolver and encrypted calculation-revision boundary."
 
 [[entries]]
 candidate_id = "assets.amortization-ledger"

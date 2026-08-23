@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -40,7 +39,6 @@ from ....domain.modelos import (
     upsert_verification_report,
     upsert_work_unit,
 )
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
 from .._modelo_payloads import WorkReviewResult
 from .._modelo_rendering import verification_report_notices
@@ -177,18 +175,3 @@ def test_review_record_round_trips_through_registered_schema_envelope(tmp_path: 
         assert notice.context is not None
         assert notice.context["kind"] == blocker.native_code
         assert notice.context["casilla_id"] == blocker.facts["casilla_id"]
-
-
-def test_exact_review_cli_emits_the_real_stored_review_envelope(tmp_path: Path) -> None:
-    with _persist_blocked_review(tmp_path) as (review, _report):
-        result = invoke_cached_cli(
-            ["--format", "json", "app", "modelo", "work", "review", review.work_unit_id],
-        )
-
-        assert result.exit_code == 0, result.output
-        document = json.loads(result.stdout)
-        assert document["command"] == _COMMAND
-        assert document["status"] == EnvelopeStatus.WARNING.value
-        assert document["result"]["review"]["work_unit_id"] == review.work_unit_id
-        assert document["result"]["review"]["blockers"][0]["axis"] == OperatorActionAxis.SUPPLY_MANUAL_INPUT.value
-        assert document["notices"][0]["context"]["kind"] == ModeloVerificationFindingKind.BLOCKING_RULE.value

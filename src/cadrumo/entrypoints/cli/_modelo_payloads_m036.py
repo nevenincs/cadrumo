@@ -26,12 +26,9 @@ from pydantic import Field
 from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationVerdict
 from ...core import IvaCompensationStateProvenance, Period
 from ...core.identity import BucketId, ProfileId, WorkUnitId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 
 
-@register_schema("modelo.m036.alta")
-@register_schema("modelo.m036.modificacion")
-@register_schema("modelo.m036.baja")
 class M036DeclarationRecordResult(OutputSchema):
     """Envelope payload for the ``aeat app modelo m036 {alta,modificacion,baja}`` verbs.
 
@@ -72,7 +69,6 @@ class M036DeclarationRowPayload(OutputSchema):
     recorded_at: str
 
 
-@register_schema("modelo.m036.list")
 class M036DeclarationListResult(OutputSchema):
     """Listing returned by ``aeat app modelo m036 list``.
 
@@ -87,7 +83,6 @@ class M036DeclarationListResult(OutputSchema):
     declarations: list[M036DeclarationRowPayload]
 
 
-@register_schema("modelo.m036.view")
 class M036DeclarationShowResult(OutputSchema):
     """Detail returned by ``aeat app modelo m036 view``."""
 
@@ -125,7 +120,6 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
     reconciled_at: datetime
 
 
-@register_schema("modelo.reconcile.history")
 class ModeloReconciliationHistoryResult(OutputSchema):
     """Listing returned by ``aeat app modelo reconcile history``.
 
@@ -141,7 +135,6 @@ class ModeloReconciliationHistoryResult(OutputSchema):
     reconciliations: list[ModeloReconciliationHistoryRowPayload]
 
 
-@register_schema("modelo.iva_wallet.correct")
 class IvaWalletCorrectResult(OutputSchema):
     """Confirmation returned by ``aeat app modelo iva-wallet correct``.
 

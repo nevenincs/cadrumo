@@ -23,7 +23,9 @@ See Also:
 """
 
 from __future__ import annotations
+
 import typer
+
 from ...adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
 from ...application.modelo import (
     M145CommunicationPeriod,

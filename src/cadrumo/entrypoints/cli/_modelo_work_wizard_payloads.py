@@ -1,4 +1,4 @@
-"""Registered payload for the guided ``aeat app modelo work wizard`` command.
+"""Payload for the guided ``aeat app modelo work wizard`` command.
 
 The wizard walks an operator through a work unit's outstanding manual-input
 casillas and bindings/relations in plain language, then calls the same
@@ -6,7 +6,7 @@ casillas and bindings/relations in plain language, then calls the same
 path :mod:`_modelo_work_calculate_cli` uses. This module documents the JSON
 transport shape only; the wizard's step-by-step prompting and calculation
 delegation live in :mod:`_modelo_work_wizard_cli`. Every payload here is an
-:class:`OutputSchema` subclass registered on the JSON-contract surface.
+:class:`OutputSchema` subclass exposed through the command specification.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from typing import Literal
 from pydantic import Field
 
 from ...core import CasillaId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry import LegalRefId, SourceRefId
 from ._modelo_revision_payload_parts import CalculationRevisionProjectionFields
 
@@ -49,7 +49,6 @@ class WizardPromptedCasillaPayload(OutputSchema):
     help_text: str | None = None
 
 
-@register_schema("modelo.work.wizard")
 class WorkWizardResult(CalculationRevisionProjectionFields):
     """Successful ``aeat app modelo work wizard`` result payload.
 

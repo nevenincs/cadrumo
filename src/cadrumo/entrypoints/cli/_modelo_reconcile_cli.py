@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from pathlib import Path
 
 import typer
@@ -24,24 +23,17 @@ import typer
 from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationReport
 from ...core.i18n import tr
 from ...domain.modelos import WorkUnit
-from ._common import _emit_envelope
-
-_require_active_profile: Callable[[], None] | None = None
-_resolve_work_unit_for_cli: Callable[..., WorkUnit] | None = None
-_resolve_default_actor: Callable[[], str] | None = None
-_active_bucket_id: Callable[[], str] | None = None
+from ._common import _emit_envelope, active_bucket_id_or_refuse
+from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
+from ._modelo_cli_support import resolve_default_actor
 
 
 def _require_profile() -> None:
-    if _require_active_profile is None:
-        raise RuntimeError("modelo reconcile commands were not registered")
-    _require_active_profile()
+    require_active_profile()
 
 
 def _resolve_default_actor_value() -> str:
-    if _resolve_default_actor is None:
-        raise RuntimeError("modelo reconcile commands were not registered")
-    return _resolve_default_actor()
+    return resolve_default_actor()
 
 
 def _resolve_work_unit(
@@ -53,17 +45,13 @@ def _resolve_work_unit(
     revision: str | None,
     bucket_id: str | None,
 ) -> WorkUnit:
-    if _resolve_work_unit_for_cli is None:
-        raise RuntimeError("modelo reconcile commands were not registered")
-    return _resolve_work_unit_for_cli(
+    return resolve_work_unit_for_cli(
         work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
     )
 
 
 def _active_bucket() -> str:
-    if _active_bucket_id is None:
-        raise RuntimeError("modelo reconcile commands were not registered")
-    return _active_bucket_id()
+    return active_bucket_id_or_refuse()
 
 
 def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliationReport, *, command: str) -> None:
@@ -84,18 +72,16 @@ def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliati
         source_path=report.source_path,
         verdict=report.verdict,
         diffs=tuple(
-
-                ModeloReconciliationDiffPayload(
-                    field_name=diff.field_name,
-                    work_unit_value=diff.work_unit_value,
-                    evidence_value=diff.evidence_value,
-                    kind=diff.kind,
-                    diff_kind=diff.diff_kind,
-                    legal_refs=diff.legal_refs,
-                    source_refs=diff.source_refs,
-                )
-                for diff in report.diffs
-
+            ModeloReconciliationDiffPayload(
+                field_name=diff.field_name,
+                work_unit_value=diff.work_unit_value,
+                evidence_value=diff.evidence_value,
+                kind=diff.kind,
+                diff_kind=diff.diff_kind,
+                legal_refs=diff.legal_refs,
+                source_refs=diff.source_refs,
+            )
+            for diff in report.diffs
         ),
         reconciled_at=report.reconciled_at,
         narrative=report.narrative,
@@ -212,19 +198,17 @@ def reconcile_history_verb(ctx: typer.Context, work_unit_id: str | None = None) 
     if entries:
         lines.append("reconciled_at\twork_unit_id\tsource_kind\tverdict\tdiff_count\tactor")
         lines.extend(
-
-                "\t".join(
-                    (
-                        entry.reconciled_at.isoformat(),
-                        entry.work_unit_id,
-                        entry.source_kind.value,
-                        entry.verdict.value,
-                        str(entry.diff_count),
-                        entry.actor,
-                    )
+            "\t".join(
+                (
+                    entry.reconciled_at.isoformat(),
+                    entry.work_unit_id,
+                    entry.source_kind.value,
+                    entry.verdict.value,
+                    str(entry.diff_count),
+                    entry.actor,
                 )
-                for entry in entries
-
+            )
+            for entry in entries
         )
     else:
         lines.append(tr("cli.app.modelo.reconcile.history_empty", default="No reconciliations recorded yet."))

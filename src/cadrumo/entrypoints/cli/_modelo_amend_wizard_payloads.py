@@ -15,7 +15,7 @@ from pydantic import Field
 
 from ...core import CasillaId
 from ...core.identity import FilingRecordId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry import LegalRefId, SourceRefId
 from ...domain.modelos import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from ._modelo_payloads import ModeloRecordPayload
@@ -39,7 +39,6 @@ class AmendWizardCorrectedCasillaPayload(OutputSchema):
     source_refs: tuple[SourceRefId, ...] = ()
 
 
-@register_schema("modelo.work.amend_wizard")
 class WorkAmendWizardResult(ModeloRecordPayload):
     """Successful ``aeat app modelo work amend-wizard`` result payload.
 

@@ -31,10 +31,9 @@ from pydantic import Field, field_validator
 
 from ...core import IvaCompensationStateProvenance, Period
 from ...core.decimal import try_parse_canonical_decimal
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema
 
 
-@register_schema("modelo.iva_wallet.balance")
 class IvaWalletBalanceResult(OutputSchema):
     """IVA compensation carry-forward wallet balance.
 
@@ -74,7 +73,6 @@ class IvaWalletBalanceResult(OutputSchema):
         return value
 
 
-@register_schema("modelo.iva_wallet.seed")
 class IvaWalletSeedResult(OutputSchema):
     """IVA compensation period seed confirmation."""
 
@@ -87,7 +85,6 @@ class IvaWalletSeedResult(OutputSchema):
     register_status: str | None = None
 
 
-@register_schema("modelo.iva_wallet.override")
 class IvaWalletOverrideResult(OutputSchema):
     """IVA compensation taxpayer-override decision confirmation.
 

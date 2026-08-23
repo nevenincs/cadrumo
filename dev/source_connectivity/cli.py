@@ -18,6 +18,10 @@ from .check import (
     check_capability_census,
 )
 from .discovery import discovered_source_capability_ids
+from .live_proof import (
+    ConnectedProofCompositionError,
+    canonical_live_connected_proof_authority,
+)
 
 app = typer.Typer(
     name="source-connectivity",
@@ -81,8 +85,9 @@ def generate(repo_root: _RepoRoot = _DEFAULT_REPO_ROOT) -> None:
 def compare(repo_root: _RepoRoot = _DEFAULT_REPO_ROOT) -> None:
     """Compare live discovery with the canonical reviewed census and fail on drift."""
     try:
-        result = check_capability_census(repo_root)
-    except SourceConnectivityCheckError as error:
+        with canonical_live_connected_proof_authority(repo_root) as proof_authority:
+            result = check_capability_census(repo_root, proof_authority=proof_authority)
+    except (ConnectedProofCompositionError, SourceConnectivityCheckError) as error:
         typer.echo(f"source-connectivity census mismatch: {error}", err=True)
         raise typer.Exit(code=1) from error
     typer.echo(

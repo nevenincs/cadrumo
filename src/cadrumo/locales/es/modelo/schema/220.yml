@@ -614,6 +614,146 @@ modelo:
               help: null
               label: Balance consolidado. Activo (pag. 3B hoja 02). Inmovilizado intangible.
                 Fondo de comercio de consolidacion
+            x-agp34c1g6d1j0chq60o32dhj:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Pasivos financieros
+                mantenidos para negociar
+            x-agp34c1g6d1j0chq60o32dhk:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Otros pasivos
+                financieros a valor razonable con cambios en perdidas y ganancias
+            x-agp34c1g6d1j0chq60o32dhl:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar
+            x-agp34c1g6d1j0chq60o32dhm:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Pasivos subordinados
+            x-agp34c1g6d1j0chq60o32dhn:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Depositos recibidos por reaseguro cedido
+            x-agp34c1g6d1j0chq60o32dho:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Deudas por operaciones de seguro
+            x-agp34c1g6d1j0chq60o32dhp:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Deudas con asegurados
+            x-agp34c1g6d1j0chq60o32dpg:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Deudas con mediadores
+            x-agp34c1g6d1j0chq60o32dph:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Deudas condicionadas
+            x-agp34c1g6d1j0chq60o32dpi:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Deudas por operaciones de reaseguro
+            x-agp34c1g6d1j0chq60o32dpj:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Deudas por operaciones de coaseguro
+            x-agp34c1g6d1j0chq60o32dpk:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Obligaciones y otros valores negociables
+            x-agp34c1g6d1j0chq60o32dpl:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Deudas con entidades de credito
+            x-agp34c1g6d1j0chq60o32dpm:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Deudas por operaciones preparatorias de contratos de seguro
+            x-agp34c1g6d1j0chq60o32dpn:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Otras deudas
+            x-agp34c1g6d1j0chq60o32dpo:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Otras deudas. Deudas con las Administraciones Publicas
+            x-agp34c1g6d1j0chq60o32dpp:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Otras deudas. Otras deudas con entidades del grupo y asociadas
+            x-agp34c1g6d1j0chq60o32e1g:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Otras deudas. Resto de otras deudas
+            x-agp34c1g6d1j0chq60o32e1h:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Derivados de cobertura
+            x-agp34c1g6d1j0chq60o32e1i:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones tecnicas
+            x-agp34c1g6d1j0chq60o32e1j:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones tecnicas.
+                Provision para primas no consumidas
+            x-agp34c1g6d1j0chq60o32e1k:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones tecnicas.
+                Provision para riesgos en curso
+            x-agp34c1g6d1j0chq60o32e1l:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones tecnicas.
+                Provision de seguros de vida
+            x-agp34c1g6d1j0chq60o32e1m:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones tecnicas.
+                Provision de seguros de vida. Provision para primas no consumidas
+            x-agp34c1g6d1j0chq60o32e1n:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones tecnicas.
+                Provision de seguros de vida. Provision para riesgos en curso
+            x-agp34c1g6d1j0chq60o32e1o:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones tecnicas.
+                Provision de seguros de vida. Provision matematica
+            x-agp34c1g6d1j0chq60o32e1p:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones tecnicas.
+                Provision de seguros de vida. Provision de seguros de vida cuando
+                el riesgo de la inversion lo asuma el tomador
+            x-agp34c1g6d1j0chq60o32e9g:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones tecnicas.
+                Provision para prestaciones
+            x-agp34c1g6d1j0chq60o32e9h:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones tecnicas.
+                Provision para participacion en beneficios y para extornos
+            x-agp34c1g6d1j0chq60o32e9i:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones tecnicas.
+                Otras provisiones tecnicas
+            x-agp34c1g6d1j0chq60o32e9j:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones no
+                tecnicas
+            x-agp34c1g6d1j0chq60o32e9k:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones no
+                tecnicas. Provisiones para impuestos y otras contingencias legales
+            x-agp34c1g6d1j0chq60o32e9l:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones no
+                tecnicas. Provision para pensiones y obligaciones similares
+            x-agp34c1g6d1j0chq60o32e9m:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones no
+                tecnicas. Provision para pagos por convenios de liquidacion
+            x-agp34c1g6d1j0chq60o32e9n:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Provisiones no
+                tecnicas. Otras provisiones no tecnicas
+            x-agp34c1g6d1j0chq60o32e9o:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Pasivos fiscales
+            x-agp34c1g6d1j0chq60o32e9p:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Pasivos fiscales.
+                Pasivos por impuesto corriente
+            x-agp34c1g6d1j0chq60o34c1g:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Pasivos fiscales.
+                Pasivos por impuesto diferido
+            x-agp34c1g6d1j0chq60o34c1h:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Resto de pasivos
+            x-agp34c1g6d1j0chq60o34c1i:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Resto de pasivos.
+                Periodificaciones
+            x-agp34c1g6d1j0chq60o34c1j:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Resto de pasivos.
+                Pasivos por asimetrias contables
+            x-agp34c1g6d1j0chq60o34c1k:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Resto de pasivos.
+                Comisiones y otros costes de adquisicion del reaseguro cedido
+            x-agp34c1g6d1j0chq60o34c1l:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Resto de pasivos.
+                Otros pasivos
+            x-agp34c1g6d1j0chq60o34c1m:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Pasivos vinculados
+                con activos mantenidos para la venta
+            x-agp34c1g6d1j0chq60o34c1n:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Total pasivo
+            x-agp34c1g6d1j0chq60o3ec1j:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Otras deudas. Entidades asociadas
+            x-agp34c1g6d1j0chq60o3ec1k:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Otras deudas. Entidades multigrupo
+            x-agp34c1g6d1j0chq60o3ec1l:
+              label: Balance consolidado. Pasivo (pag. 3C hoja 02). Debitos y partidas
+                a pagar. Otras deudas. Otros
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: Estado de ingresos y gastos consolidados reconocidos. Total de

@@ -22,15 +22,13 @@ from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Never, cast
+from typing import TYPE_CHECKING, cast
 
 import typer
 from typer._click.core import Command as _TyCommand
 
 if TYPE_CHECKING:
     import click
-
-    from ...core import OptionalExtra
 
     # Type-checking-only: gives static consumers of the lazy `command_schema_refs`
     # re-export (below, via `__getattr__`) its real signature without paying the
@@ -39,8 +37,6 @@ if TYPE_CHECKING:
     from ._config._google import OAuthClientPayload as OAuthClientPayload
     from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
     from ._verb_input_schema import cli_path_for_command_key as cli_path_for_command_key
-from typer._types import TyperChoice as _TyperChoice
-
 from ._stdio import _disable_rich_cli_rendering as _disable_rich_cli_rendering
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 
@@ -63,28 +59,12 @@ from ...core import ProfileSessionRefusalReason as _ProfileSessionRefusalReason
 from ...core import StorageCategory as _StorageCategory
 from ...core import storage_location as _storage_location
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
-from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
-from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip as _strict_round_trip
 from ...core.output_rendering import OutputFormat as _OutputFormat
-from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
-from ._app_execution_policies import CALCULATION_READ as _ROOT_STATUS_POLICY
-from ._app_execution_policies import METADATA as _APP_HELP_POLICY
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
-from ._command_policy import command_execution_policy as _command_execution_policy
+from ._command_runtime import build_command_app as _build_command_app
 from ._command_spec import ExecutionPolicySpec as _ExecutionPolicySpec
-from ._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
-from ._command_suggestions import (
-    LazyImportTarget as _LazyImportTarget,
-)
-from ._command_suggestions import LazyOptionalDependencyProvider as _LazyOptionalDependencyProvider
-from ._command_suggestions import (
-    LazySubcommand as _LazySubcommand,
-)
-from ._command_suggestions import execution_policy_for_cli_path as _execution_policy_for_cli_path
-from ._command_suggestions import (
-    register_lazy_subcommand as _register_lazy_subcommand,
-)
+from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 from ._common import (
     _emit_envelope,
     active_profile_label,
@@ -96,7 +76,6 @@ from ._common import (
     requested_cli_leaf,
     resolve_cli_precondition_action,
 )
-from ._errors import CliCommandGroupUnavailableError as _CliCommandGroupUnavailableError
 from ._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._errors import decorate_typer_app as _decorate_typer_app
 from ._framework_localisation import (
@@ -125,62 +104,17 @@ from ._root_payloads import AppRootResult, RootStatusResult
 # ---------------------------------------------------------------------
 
 
-app = typer.Typer(
-    name=_PRODUCT_IDENTITY.cli_executable,
-    help=tr("cli.root.app_help"),
-    no_args_is_help=False,
-    invoke_without_command=True,
-    add_help_option=False,
-    add_completion=True,
-    cls=_CadrumoTyperGroup,
-)
-
-
-@app.callback()
-@_command_execution_policy(_ROOT_STATUS_POLICY)
-def _root(
+def root_command(
     ctx: typer.Context,
-    language: str | None = typer.Option(
-        None,
-        "--language",
-        "--lang",
-        click_type=_TyperChoice(_SUPPORTED_OUTPUT_LANGUAGES),
-        help=tr("cli.root.language_help"),
-        is_eager=True,
-    ),
-    profile: str | None = typer.Option(
-        None,
-        "--profile",
-        help=tr("cli.root.profile_help"),
-    ),
-    version: bool = typer.Option(
-        False,
-        "--version",
-        "-V",
-        help=tr("cli.root.version_help"),
-        is_eager=True,
-    ),
-    detail: bool = typer.Option(
-        False,
-        "--detail",
-        help=tr("cli.root.detail_help"),
-        is_eager=True,
-    ),
-    help_: bool = typer.Option(
-        False,
-        "--help",
-        "-h",
-        help=tr("cli.root.help_help"),
-        is_eager=True,
-    ),
-    format_: _OutputFormat = typer.Option(
-        _OutputFormat.TEXT,
-        "--format",
-        help=tr("cli.root.format_help"),
-    ),
-    quiet: bool = typer.Option(False, "--quiet", help=tr("cli.root.quiet_help")),
-    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.root.verbose_help")),
-    debug: bool = typer.Option(False, "--debug", help=tr("cli.root.debug_help")),
+    language: str | None = None,
+    profile: str | None = None,
+    version: bool = False,
+    detail: bool = False,
+    help_: bool = False,
+    format_: _OutputFormat = _OutputFormat.TEXT,
+    quiet: bool = False,
+    verbose: bool = False,
+    debug: bool = False,
 ) -> None:
     """Capture root-level CLI flags into the Typer context."""
     if language is not None:
@@ -1021,223 +955,14 @@ def _full_invocation_tokens() -> tuple[str, ...]:
     return tuple(sys.argv[1:])
 
 
-def _surface_for_import_failure(name: str, error: ModuleNotFoundError) -> typer.Typer:
-    """Classify ``error`` and either degrade gracefully or refuse loudly.
-
-    A command group's module imports lazily, so its failure has to be
-    classified before it can be reported. Exactly one class of failure may be
-    presented as an unavailable command: the missing module belongs to a
-    registered :data:`~core.OPTIONAL_EXTRAS` capability package, which a bare
-    install legitimately omits. The group then answers with a placeholder whose
-    help and refusal both name the extra and its install command.
-
-    Every other missing module is a REQUIRED dependency (or a first-party
-    module) whose absence means a broken installation, so it raises
-    :exc:`CliCommandGroupUnavailableError` here — during command resolution,
-    before any subcommand can be dispatched — rather than degrading. Presenting
-    it as an unavailable command would convert a hard dependency failure into an
-    invisible capability loss: the whole subtree would answer ``--help`` with a
-    plausible placeholder and every subcommand with "no such command", naming no
-    cause. Import failures that are not :exc:`ModuleNotFoundError` at all (a
-    syntax error, a circular import, a module-level bug) never reach this
-    helper; they propagate to the crash boundary unchanged.
-
-    Args:
-        name: The command-group name whose subtree failed to load.
-        error: The import failure raised by the group's module.
-
-    Returns:
-        A placeholder Typer group, only for a registered optional extra.
-
-    Raises:
-        CliCommandGroupUnavailableError: If the missing module is not owned by
-            a registered optional extra.
-    """
-    from ...core import optional_extra_for_module
-
-    missing = _missing_dependency_name(error)
-    extra = optional_extra_for_module(missing)
-    if extra is None:
-        # Redact only the operator-facing value: classification above must see
-        # the real module name, but a module name can carry a profile id.
-        raise _CliCommandGroupUnavailableError(group=name, module=_redact_for_cli_output(missing)) from error
-    return _optional_extra_surface(name, extra)
-
-
-def _optional_extra_surface(name: str, extra: OptionalExtra) -> typer.Typer:
-    """Return the placeholder group for a legitimately-absent optional extra.
-
-    The group's help names the feature and the extra that supplies it, and
-    invoking it refuses through :exc:`~core.MissingOptionalExtraError` — the
-    canonical optional-extra refusal, which carries the exact
-    ``pip install cadrumo[<extra>]`` remedy — so neither surface is a bare
-    "unavailable".
-
-    The help deliberately names the extra rather than the bracketed install
-    command: Typer renders group help through Rich, which parses ``[browser]``
-    as a style tag and silently drops it. The refusal is plain-rendered, so it
-    carries the literal command.
-    """
-    failed_app = typer.Typer(
-        name=name,
-        help=tr("cli.root.unavailable_optional_extra_help", feature=extra.feature, extra=extra.extra),
-        no_args_is_help=False,
-        invoke_without_command=True,
-    )
-
-    @failed_app.callback()
-    def _failed() -> None:
-        from ...core import MissingOptionalExtraError
-
-        raise MissingOptionalExtraError(extra)
-
-    return failed_app
-
-
-def _missing_dependency_name(error: ModuleNotFoundError) -> str:
-    if error.name:
-        return error.name
-    text = str(error).strip()
-    if text:
-        return text
-    return type(error).__name__
-
-
-# ---------------------------------------------------------------------
-# `aeat app` — workflow aggregator
-# ---------------------------------------------------------------------
-
-
-app_app = typer.Typer(
-    name="app",
-    help=tr("cli.root.app_app_help"),
-    no_args_is_help=False,
-    invoke_without_command=True,
-    add_help_option=False,
-    cls=_CadrumoTyperGroup,
-)
-
-
-@app_app.callback()
-@_command_execution_policy(_APP_HELP_POLICY)
-def _app_root(
-    ctx: typer.Context,
-    help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.root.app_help_help"), is_eager=True),
-) -> None:
-    """Render app-level workflow help when requested."""
-    if help_ or ctx.invoked_subcommand is None:
-        from ...application.operator_surface import build_help_document, render_help_text
-
-        document = build_help_document("app")
-        typed_app = _strict_round_trip(AppRootResult, document)
-        _emit_envelope(ctx, command="root.app", result=typed_app, lines=render_help_text(document).splitlines())
-        raise typer.Exit()
-
-
-_LAZY_COMMAND_REGISTRATIONS: tuple[tuple[str, str, str, str], ...] = (
-    ("app", "overview", "._app_lazy_families", "cli.overview.app_help"),
-    ("app", "diagnostics", "._app_lazy_families", "cli.diagnostics.app_help"),
-    ("app", "ledger", "._app_lazy_families", "cli.ledger.app_help"),
-    ("app", "live", "._app_lazy_families", "cli.app.live.app_help"),
-    ("app", "maintenance", "._app_lazy_families", "cli.app.maintenance.help"),
-    ("app", "modelo", "._app_lazy_families", "cli.app.modelo.app_help"),
-    ("app", "quickfile", "._app_quickfile", "cli.app.quickfile.app_help"),
-    ("app", "registry", "._app_lazy_families", "cli.registry.app_help"),
-    ("app", "review", "._app_lazy_families", "cli.review.app_help"),
-)
-
-# The dynamic-import guard is derived from the same registrations that wire
-# the command tree, so adding a command cannot leave one security list stale.
-_LAZY_COMMAND_MODULES: frozenset[str] = frozenset(
-    module for _group, _name, module, _help_key in _LAZY_COMMAND_REGISTRATIONS
-)
-
-
-def _required_import_failure(name: str, error: ModuleNotFoundError) -> Never:
-    """Refuse a required or unclassified lazy-target dependency failure."""
-    missing = _missing_dependency_name(error)
-    raise _CliCommandGroupUnavailableError(group=name, module=_redact_for_cli_output(missing)) from error
-
-
-def _optional_import_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
-    """Build the canonical unavailable surface for an explicit optional extra."""
-    from ...core import optional_extra_for_module
-
-    extra = optional_extra_for_module(_missing_dependency_name(error))
-    if extra is None:
-        raise RuntimeError("lazy loader classified an undeclared dependency as optional") from error
-    return _optional_extra_surface(name, extra)
-
-
-def _optional_dependency_names() -> frozenset[str]:
-    """Read the canonical optional-extra registry only after an import fails."""
-    from ...core import OPTIONAL_EXTRAS
-
-    return frozenset(extra.import_name for extra in OPTIONAL_EXTRAS)
-
-
-def _lazy(group_name: str, name: str, module_name: str, help_key: str) -> None:
-    """Register ``module_name`` as a lazily-loaded subcommand of ``group_name``."""
-    if module_name not in _LAZY_COMMAND_MODULES:
-        raise RuntimeError(f"unregistered lazy CLI module: {module_name}")
-    _register_lazy_subcommand(
-        group_name,
-        _LazySubcommand(
-            name,
-            _LazyImportTarget(
-                module=module_name,
-                attribute=f"{name}_app" if module_name == "._app_lazy_families" else "app",
-                package=__name__,
-                optional_dependencies=_LazyOptionalDependencyProvider(_optional_dependency_names),
-            ),
-            child_registry_key=(
-                f"app.{name}" if group_name == "app" and module_name == "._app_lazy_families" else None
-            ),
-            decorate=_decorate_typer_app,
-            optional_unavailable=_optional_import_surface,
-            required_unavailable=_required_import_failure,
-            help=tr(help_key),
-        ),
-    )
-
-
-# ---------------------------------------------------------------------
-# Wiring — every heavy subcommand module is registered lazily so the
-# Cadrumo app object can be constructed without importing the command
-# tree (and therefore without the registry parse).
-# ---------------------------------------------------------------------
-
-
-for _group_name, _command_name, _module_name, _help_key in _LAZY_COMMAND_REGISTRATIONS:
-    _lazy(_group_name, _command_name, _module_name, _help_key)
-from ._config import app as _config_app
-
-app.add_typer(_config_app, name="config")
-app.add_typer(app_app, name="app")
+app = _build_command_app(_COMMAND_GRAPH)
 _decorate_typer_app(app)
 
 
 def full_command_tree() -> _TyCommand:
-    """Materialise the whole CLI as one fully-loaded Click command tree.
-
-    Drains every lazily-registered subtree reachable from :data:`app`, converts
-    the root Typer application to its Click command, and pins the root name to
-    the ``aeat`` executable token so a walker reports operator-facing paths.
-
-    Callers outside this distribution — a conformance gate over the shipped
-    operator harness, a reference generator, a capability projection — need the
-    COMPLETE tree, and the lazy registry means the naively converted root is
-    missing whole command families. This is the one supported way to obtain the
-    complete tree; nothing outside this package reads the lazy registry.
-
-    Returns:
-        The root Click command with every subtree loaded.
-    """
+    """Materialise the immutable production command graph as a Click tree."""
     from typer.main import get_command
 
-    from ._command_suggestions import materialise_lazy_subcommands
-
-    materialise_lazy_subcommands(app)
     root = get_command(app)
     root.name = app.info.name or _PRODUCT_IDENTITY.cli_executable
     return root
@@ -1246,11 +971,7 @@ def full_command_tree() -> _TyCommand:
 def _declared_execution_policy_for_cli_path(
     cli_path: tuple[str, ...],
 ) -> _CommandExecutionPolicy | _ExecutionPolicySpec:
-    if cli_path[:1] == ("config",):
-        from ._config import CONFIG_COMMAND_GRAPH
-
-        return CONFIG_COMMAND_GRAPH.resolve_path((_PRODUCT_IDENTITY.cli_executable, *cli_path)).policy
-    return _execution_policy_for_cli_path(app, cli_path)
+    return _COMMAND_GRAPH.resolve_path((_PRODUCT_IDENTITY.cli_executable, *cli_path)).policy
 
 
 def command_execution_policy_for_cli_path(

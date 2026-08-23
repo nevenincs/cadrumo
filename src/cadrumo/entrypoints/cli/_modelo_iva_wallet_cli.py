@@ -1,8 +1,12 @@
+# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Typer registrations for modelo IVA wallet commands."""
 
 from __future__ import annotations
+
 from decimal import Decimal
+
 import typer
+
 from ...application.calculations import query_iva_wallet_balance
 from ...application.modelo import (
     ModeloIvaWalletCorrectionNoRecordError,
@@ -278,16 +282,16 @@ def iva_wallet_override_cmd(
                 default="Active profile has no identity.tax_id configured. Set it via config profile.",
             )
         ) from exc
-    selected_amount = getattr(decision, "selected_amount", None)
+    selected_amount = decision.selected_amount
     override_result = IvaWalletOverrideResult(
         filing_year=filing_year,
         period=filing_period,
-        taxpayer_nif=str(getattr(decision, "taxpayer_nif", "")),
+        taxpayer_nif=str(decision.taxpayer_nif),
         amount=str(selected_amount if selected_amount is not None else override_amount),
         reason=clean_reason,
         evidence_locator=clean_locator,
-        selected_authority=str(getattr(decision, "selected_authority", "taxpayer_override")),
-        divergence=str(getattr(decision, "divergence", "override")),
+        selected_authority=str(decision.selected_authority),
+        divergence=str(decision.divergence),
     )
     lines = [
         "operation\tmodelo.iva-wallet.override",

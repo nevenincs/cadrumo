@@ -1,10 +1,14 @@
+# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Typer registration for modelo registry discovery commands."""
 
 from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
+
 import typer
+
 from ...application.modelo import (
     DataInventoryCasilla,
     DataInventoryChecklist,
@@ -41,6 +45,8 @@ from ...domain.calculations.registry import (
 )
 from ...domain.user_profile import ProfileNotFoundError
 from ._common import _emit_envelope, _parse_iso_date, resolve_notice_action
+from ._modelo_behavior_support import bare_period_error, resolve_year_period
+from ._modelo_cli_support import bad_parameter_from_error, parse_binding_override
 from ._modelo_payloads import (
     BindingListRowPayload,
     BindingPreviewRowPayload,
@@ -70,6 +76,14 @@ class _DiscoveryDeps:
     bare_period_error: Callable[..., str]
     parse_binding_override: Callable[[str], tuple[str, str]]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
+
+
+deps = _DiscoveryDeps(
+    resolve_year_period=resolve_year_period,
+    bare_period_error=bare_period_error,
+    parse_binding_override=parse_binding_override,
+    bad_parameter_from_error=bad_parameter_from_error,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,7 +185,7 @@ def _profile_requirement_notice(checklist: DataInventoryChecklist) -> Notice | N
         )
     if not checklist.unresolved_profile_bindings:
         return None
-    binding_ids = ", ".join(sorted((str(binding_id) for binding_id in checklist.unresolved_profile_bindings)))
+    binding_ids = ", ".join(sorted(str(binding_id) for binding_id in checklist.unresolved_profile_bindings))
     missing = _unresolved_profile_requirements(checklist) or binding_ids
     return Notice(
         severity=NoticeSeverity.WARNING,
@@ -190,7 +204,7 @@ def _unbucketed_source_notice(checklist: DataInventoryChecklist) -> Notice | Non
         return None
     source_kinds = ", ".join(sorted({entry.binding_source or "" for entry in checklist.unbucketed_sources}))
     binding_ids = ", ".join(
-        sorted((str(entry.binding_id) for entry in checklist.unbucketed_sources if entry.binding_id is not None))
+        sorted(str(entry.binding_id) for entry in checklist.unbucketed_sources if entry.binding_id is not None)
     )
     casilla_ids = ", ".join(sorted({str(entry.casilla_id) for entry in checklist.unbucketed_sources}))
     return Notice(
@@ -243,7 +257,7 @@ def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
     its ``target_binding``), so this guidance generalises to any modelo
     instead of enumerating a per-form channel table.
     """
-    relation_fed = tuple((row for row in rows if row.relation_inputs))
+    relation_fed = tuple(row for row in rows if row.relation_inputs)
     if not relation_fed:
         return ()
     lines = [
@@ -268,7 +282,7 @@ def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
 
 
 def _profile_resolved_binding_ids(report, *, as_of: date | None) -> frozenset[str]:
-    filing_year = getattr(report, "filing_year", None)
+    filing_year = report.filing_year
     if filing_year is None:
         return frozenset[str]()
     bucket_id = resolve_active_bucket_id()
@@ -280,7 +294,7 @@ def _profile_resolved_binding_ids(report, *, as_of: date | None) -> frozenset[st
                 modelo=str(report.code),
                 bucket_id=bucket_id,
                 filing_year=int(filing_year),
-                period=getattr(report, "filing_period", None),
+                period=report.filing_period,
                 as_of=as_of,
                 revision_id=str(report.revision),
             )
@@ -327,13 +341,7 @@ def _binding_list_rows_for_report(
     rows = report.rows
     if missing:
         profile_resolved = _profile_resolved_binding_ids(report, as_of=as_of)
-        rows = tuple(
-            (
-                row
-                for row in rows
-                if row.binding_id not in profile_resolved and getattr(row, "operator_input_required", True)
-            )
-        )
+        rows = tuple(row for row in rows if row.binding_id not in profile_resolved and row.operator_input_required)
     merged_rows: list[BindingListRowPayload] = []
     text_rows: list[str] = []
     for row in rows:
@@ -435,7 +443,7 @@ def _notice_text_lines(notices: tuple[Notice, ...]) -> list[str]:
         action_reference = notice_action.action if notice_action is not None else None
         target = action_reference.target_command_key if action_reference is not None else "-"
         bindings = (
-            ",".join((f"{binding.argument_name}={binding.value}" for binding in notice_action.argument_bindings))
+            ",".join(f"{binding.argument_name}={binding.value}" for binding in notice_action.argument_bindings)
             if notice_action is not None
             else "-"
         )
@@ -632,7 +640,7 @@ def casillas(
         report = report.model_copy(
             update={
                 "rows": tuple(
-                    (row for row in report.rows if row.number == number_filter or row.casilla_id == number_filter)
+                    row for row in report.rows if row.number == number_filter or row.casilla_id == number_filter
                 )
             }
         )
@@ -858,7 +866,7 @@ def bindings_resolve(
     assert modelo is not None
     assert year is not None
     assert period is not None
-    overrides = dict((deps.parse_binding_override(spec) for spec in binding or ()))
+    overrides = dict(deps.parse_binding_override(spec) for spec in binding or ())
     typed_period = deps.resolve_year_period(year, period, modelo=modelo)
     report = _run_query(
         lambda: registry_bindings_for_scope(modelo, period=typed_period, as_of=_as_of(as_of)),
@@ -952,20 +960,18 @@ def formulas(
         period=report.period,
         formula_count=len(report.rows),
         rows=tuple(
-            (
-                FormulaPayload(
-                    formula_id=row.formula_id,
-                    target_casilla_id=row.target_casilla_id,
-                    input_casilla_ids=tuple(row.input_casilla_ids),
-                    input_bindings=tuple(row.input_bindings),
-                    input_parameters=tuple(row.input_parameters),
-                    input_relations=tuple(row.input_relations),
-                    expression=dict(row.expression) if hasattr(row, "expression") else {},
-                    legal_refs=tuple(row.legal_refs),
-                    source_refs=tuple(row.source_refs),
-                )
-                for row in report.rows
+            FormulaPayload(
+                formula_id=row.formula_id,
+                target_casilla_id=row.target_casilla_id,
+                input_casilla_ids=tuple(row.input_casilla_ids),
+                input_bindings=tuple(row.input_bindings),
+                input_parameters=tuple(row.input_parameters),
+                input_relations=tuple(row.input_relations),
+                expression=dict(row.expression) if hasattr(row, "expression") else {},
+                legal_refs=tuple(row.legal_refs),
+                source_refs=tuple(row.source_refs),
             )
+            for row in report.rows
         ),
     )
     _emit_envelope(ctx, command="modelo.formulas", result=result, lines=lines)

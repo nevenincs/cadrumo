@@ -615,6 +615,156 @@ modelo:
               help: null
               label: Konszolidalt merleg. Eszkozok (pag. 3B hoja 02). Immaterialis
                 javak. Konszolidacios uzleti vagy cegertek
+            x-agp34c1g6d1j0chq60o32dhj:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Kereskedesi
+                celu penzugyi kotelezettsegek
+            x-agp34c1g6d1j0chq60o32dhk:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Egyeb,
+                az eredmennyel szemben valos erteken ertekelt penzugyi kotelezettsegek
+            x-agp34c1g6d1j0chq60o32dhl:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek
+            x-agp34c1g6d1j0chq60o32dhm:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Alarendelt kotelezettsegek
+            x-agp34c1g6d1j0chq60o32dhn:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Atadott viszontbiztositasra kapott betetek
+            x-agp34c1g6d1j0chq60o32dho:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Biztositasi ugyletekbol eredo tartozasok
+            x-agp34c1g6d1j0chq60o32dhp:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Biztositottakkal szembeni tartozasok
+            x-agp34c1g6d1j0chq60o32dpg:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Kozvetitokkel szembeni tartozasok
+            x-agp34c1g6d1j0chq60o32dph:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Feltetelhez kotott tartozasok
+            x-agp34c1g6d1j0chq60o32dpi:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Viszontbiztositasi ugyletekbol eredo tartozasok
+            x-agp34c1g6d1j0chq60o32dpj:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Egyuttbiztositasi ugyletekbol eredo tartozasok
+            x-agp34c1g6d1j0chq60o32dpk:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Kotvenyek es egyeb forgalomkepes ertekpapirok
+            x-agp34c1g6d1j0chq60o32dpl:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Hitelintezetekkel szembeni tartozasok
+            x-agp34c1g6d1j0chq60o32dpm:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Biztositasi szerzodeseket elokeszito ugyletekbol
+                eredo tartozasok
+            x-agp34c1g6d1j0chq60o32dpn:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Egyeb tartozasok
+            x-agp34c1g6d1j0chq60o32dpo:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Egyeb tartozasok. Kozigazgatasi szervekkel szembeni
+                tartozasok
+            x-agp34c1g6d1j0chq60o32dpp:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Egyeb tartozasok. Egyeb tartozasok csoporttagokkal
+                es tarsult vallalkozasokkal
+            x-agp34c1g6d1j0chq60o32e1g:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Egyeb tartozasok. Tovabbi egyeb tartozasok
+            x-agp34c1g6d1j0chq60o32e1h:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Fedezeti
+                derivativak
+            x-agp34c1g6d1j0chq60o32e1i:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Biztositastechnikai
+                tartalekok
+            x-agp34c1g6d1j0chq60o32e1j:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Biztositastechnikai
+                tartalekok. Meg nem szolgalt dijak tartaleka
+            x-agp34c1g6d1j0chq60o32e1k:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Biztositastechnikai
+                tartalekok. Folyamatban levo kockazatok tartaleka
+            x-agp34c1g6d1j0chq60o32e1l:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Biztositastechnikai
+                tartalekok. Eletbiztositasi tartalek
+            x-agp34c1g6d1j0chq60o32e1m:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Biztositastechnikai
+                tartalekok. Eletbiztositasi tartalek. Meg nem szolgalt dijak tartaleka
+            x-agp34c1g6d1j0chq60o32e1n:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Biztositastechnikai
+                tartalekok. Eletbiztositasi tartalek. Folyamatban levo kockazatok
+                tartaleka
+            x-agp34c1g6d1j0chq60o32e1o:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Biztositastechnikai
+                tartalekok. Eletbiztositasi tartalek. Matematikai tartalek
+            x-agp34c1g6d1j0chq60o32e1p:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Biztositastechnikai
+                tartalekok. Eletbiztositasi tartalek. Eletbiztositasi tartalek, ha
+                a befektetesi kockazatot a szerzodo viseli
+            x-agp34c1g6d1j0chq60o32e9g:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Biztositastechnikai
+                tartalekok. Karkifizetesi tartalek
+            x-agp34c1g6d1j0chq60o32e9h:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Biztositastechnikai
+                tartalekok. Nyeresegreszesedesi es dijvisszateritesi tartalek
+            x-agp34c1g6d1j0chq60o32e9i:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Biztositastechnikai
+                tartalekok. Egyeb biztositastechnikai tartalekok
+            x-agp34c1g6d1j0chq60o32e9j:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Nem biztositastechnikai
+                tartalekok
+            x-agp34c1g6d1j0chq60o32e9k:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Nem biztositastechnikai
+                tartalekok. Adokra es egyeb jogi fuggo tetelekre kepzett tartalekok
+            x-agp34c1g6d1j0chq60o32e9l:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Nem biztositastechnikai
+                tartalekok. Nyugdijakra es hasonlo kotelezettsegekre kepzett tartalek
+            x-agp34c1g6d1j0chq60o32e9m:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Nem biztositastechnikai
+                tartalekok. Elszamolasi megallapodasok szerinti kifizetesekre kepzett
+                tartalek
+            x-agp34c1g6d1j0chq60o32e9n:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Nem biztositastechnikai
+                tartalekok. Egyeb nem biztositastechnikai tartalekok
+            x-agp34c1g6d1j0chq60o32e9o:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Adokotelezettsegek
+            x-agp34c1g6d1j0chq60o32e9p:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Adokotelezettsegek.
+                Tenyleges adokotelezettsegek
+            x-agp34c1g6d1j0chq60o34c1g:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Adokotelezettsegek.
+                Halasztott adokotelezettsegek
+            x-agp34c1g6d1j0chq60o34c1h:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tovabbi
+                kotelezettsegek
+            x-agp34c1g6d1j0chq60o34c1i:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tovabbi
+                kotelezettsegek. Idobeli elhatarolasok
+            x-agp34c1g6d1j0chq60o34c1j:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tovabbi
+                kotelezettsegek. Szamviteli aszimmetriakbol eredo kotelezettsegek
+            x-agp34c1g6d1j0chq60o34c1k:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tovabbi
+                kotelezettsegek. Atadott viszontbiztositas jutalekai es egyeb szerzesi
+                koltsegei
+            x-agp34c1g6d1j0chq60o34c1l:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tovabbi
+                kotelezettsegek. Egyeb kotelezettsegek
+            x-agp34c1g6d1j0chq60o34c1m:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Ertekesitesre
+                tartott eszkozokhoz kapcsolodo kotelezettsegek
+            x-agp34c1g6d1j0chq60o34c1n:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Kotelezettsegek
+                osszesen
+            x-agp34c1g6d1j0chq60o3ec1j:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Egyeb tartozasok. Tarsult vallalkozasok
+            x-agp34c1g6d1j0chq60o3ec1k:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Egyeb tartozasok. Kozos vezetesu vallalkozasok
+            x-agp34c1g6d1j0chq60o3ec1l:
+              label: Konszolidalt merleg. Kotelezettsegek (pag. 3C hoja 02). Tartozasok
+                es kotelezettsegek. Egyeb tartozasok. Egyeb
             x-agp34c1g6l0j0c1q60o36cpj:
               help: null
               label: A konszolidalt elszamolt bevetelek es raforditasok kimutatasa.

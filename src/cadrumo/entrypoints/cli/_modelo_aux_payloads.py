@@ -207,7 +207,6 @@ class ModeloRowPayload(OutputSchema):
     local_work_guidance: str | None = None
 
 
-@register_schema("modelo.list")
 class ModeloListResult(OutputSchema):
     """List modelos result."""
 
@@ -218,7 +217,6 @@ class ModeloListResult(OutputSchema):
     modelos: list[ModeloRowPayload]
 
 
-@register_schema("modelo.describe")
 class ModeloDescribeResult(OutputSchema):
     """Describe modelo result.
 

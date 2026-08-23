@@ -1,4 +1,5 @@
-"""Typer registration for modelo work verification and internal filing.
+# ruff: noqa: E501
+"""Behavior for modelo work verification and internal filing.
 
 This transport module resolves operator revision targets, calls
 :func:`verify_modelo_revision_with_preconditions` or
@@ -47,14 +48,8 @@ from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError, derive_taxpayer_files_economic_activity
 from ...domain.modelos import CalculationRevisionState
 from ._common import _emit_envelope, _filing_taxpayer_or_refuse, activate_subcommand_output_language
-from ._modelo_behavior_support import (
-    require_active_profile,
-    resolve_revision_for_cli,
-)
-from ._modelo_cli_support import (
-    bad_parameter_from_error,
-    resolve_default_actor,
-)
+from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli
+from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
 from ._modelo_payloads import (
     CrossPeriodCleanStatePayload,
     CrossPeriodDependencyEvidencePayload,
@@ -72,34 +67,11 @@ from ._modelo_rendering import (
     verification_report_notices,
     verification_report_payload,
 )
-from ._modelo_work_options import (
-    _ActorOpt,
-    _BucketIdOpt,
-    _CalculationRevisionIdArg,
-    _ModeloOpt,
-    _PaymentElectionOpt,
-    _PeriodOpt,
-    _PriorDomiciliationElectionOpt,
-    _RefundElectionOpt,
-    _RevisionOpt,
-    _RevisionSelectorOpt,
-    _WorkUnitIdOpt,
-    _YearOpt,
-)
 
 
-# KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected
-# resolver callable whose concrete return type varies by call site;
-# Callable[..., Any] is the DI composition seam.
 @dataclass(frozen=True, slots=True)
 class _VerificationDeps:
-    """The CLI callables the verification/filing sub-registrars are composed with.
-
-    Bundled so the per-command sub-registrars share one injection seam instead of
-    re-declaring the same callable block each (the ``_WizardDeps`` pattern). The
-    public :func:`register_work_verification_commands` keeps its explicit keyword
-    signature — this bundle is internal composition only.
-    """
+    """Typed behavior dependencies shared by verification and filing."""
 
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
     require_active_profile: Callable[[], None]
@@ -107,20 +79,17 @@ class _VerificationDeps:
     resolve_default_actor: Callable[[], str]
 
 
-# KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected
-# resolver callable whose concrete return type varies by call site;
-# Callable[..., Any] is the DI composition seam.
-
-
 def _profile_expected_member_sets(profile: object) -> tuple[CrossPeriodExpectedMemberSet, ...]:
     return tuple(
-        CrossPeriodExpectedMemberSet(
-            source_modelo=roster.source_modelo,
-            filing_year=roster.filing_year,
-            period=roster.period,
-            member_nifs=roster.member_nifs,
-        )
-        for roster in getattr(profile, "cross_period_group_member_rosters", ())
+
+            CrossPeriodExpectedMemberSet(
+                source_modelo=roster.source_modelo,
+                filing_year=roster.filing_year,
+                period=roster.period,
+                member_nifs=roster.member_nifs,
+            )
+            for roster in getattr(profile, "cross_period_group_member_rosters", ())
+
     )
 
 
@@ -135,16 +104,18 @@ def _dependency_inventory_item_payload(
         dependency_count=len(item.dependencies),
         source_modelos=item.source_modelos,
         dependencies=tuple(
-            CrossPeriodDependencyRequirementPayload(
-                source_modelo=requirement.source_modelo,
-                filing_year=requirement.filing_year,
-                period=requirement.period,
-                source_casilla_ids=requirement.source_casilla_ids,
-                origin=requirement.origin.value,
-                origin_ids=requirement.origin_ids,
-                requires_member_fan_in=requirement.requires_member_fan_in,
-            )
-            for requirement in item.dependencies
+
+                CrossPeriodDependencyRequirementPayload(
+                    source_modelo=requirement.source_modelo,
+                    filing_year=requirement.filing_year,
+                    period=requirement.period,
+                    source_casilla_ids=requirement.source_casilla_ids,
+                    origin=requirement.origin.value,
+                    origin_ids=requirement.origin_ids,
+                    requires_member_fan_in=requirement.requires_member_fan_in,
+                )
+                for requirement in item.dependencies
+
         ),
     )
 
@@ -158,22 +129,24 @@ def _clean_state_payload(verdict: CrossPeriodCleanStateVerdict) -> CrossPeriodCl
         clean=verdict.clean,
         blockers=tuple(blocker.value for blocker in verdict.blockers),
         dependencies=tuple(
-            CrossPeriodDependencyEvidencePayload(
-                source_modelo=evidence.requirement.source_modelo,
-                filing_year=evidence.requirement.filing_year,
-                period=evidence.requirement.period,
-                clean=evidence.clean,
-                blockers=tuple(blocker.value for blocker in evidence.blockers),
-                observation_source_kind=evidence.observation_source_kind,
-                filing_record_id=evidence.filing_record_id,
-                calculation_revision_id=evidence.calculation_revision_id,
-                external_evidence_kind=evidence.external_evidence_kind,
-                expected_member_nifs=evidence.expected_member_nifs,
-                observed_member_nifs=evidence.observed_member_nifs,
-                missing_member_nifs=evidence.missing_member_nifs,
-                unexpected_member_nifs=evidence.unexpected_member_nifs,
-            )
-            for evidence in verdict.dependencies
+
+                CrossPeriodDependencyEvidencePayload(
+                    source_modelo=evidence.requirement.source_modelo,
+                    filing_year=evidence.requirement.filing_year,
+                    period=evidence.requirement.period,
+                    clean=evidence.clean,
+                    blockers=tuple(blocker.value for blocker in evidence.blockers),
+                    observation_source_kind=evidence.observation_source_kind,
+                    filing_record_id=evidence.filing_record_id,
+                    calculation_revision_id=evidence.calculation_revision_id,
+                    external_evidence_kind=evidence.external_evidence_kind,
+                    expected_member_nifs=evidence.expected_member_nifs,
+                    observed_member_nifs=evidence.observed_member_nifs,
+                    missing_member_nifs=evidence.missing_member_nifs,
+                    unexpected_member_nifs=evidence.unexpected_member_nifs,
+                )
+                for evidence in verdict.dependencies
+
         ),
     )
 
@@ -190,67 +163,66 @@ def _dependency_inventory_lines(result: WorkDependenciesResult) -> list[str]:
         "target_modelo\tyear\tperiod\trevision\tdependency_count\tsource_modelos",
     ]
     lines.extend(
-        "\t".join(
-            (
-                item.target_modelo,
-                str(item.target_filing_year),
-                item.target_period.registry_token,
-                item.target_revision_id,
-                str(item.dependency_count),
-                ", ".join(item.source_modelos),
-            ),
-        )
-        for item in result.items
+
+            "\t".join(
+                (
+                    item.target_modelo,
+                    str(item.target_filing_year),
+                    item.target_period.registry_token,
+                    item.target_revision_id,
+                    str(item.dependency_count),
+                    ", ".join(item.source_modelos),
+                )
+            )
+            for item in result.items
+
     )
     if result.clean_state is None:
         return lines
     lines.extend(
         [
             "clean_state",
-            "target\t"
-            f"{result.clean_state.target_modelo} "
-            f"{result.clean_state.target_filing_year} "
-            f"{result.clean_state.target_period.registry_token}",
+            f"target\t{result.clean_state.target_modelo} {result.clean_state.target_filing_year} {result.clean_state.target_period.registry_token}",
             f"requires_clean_state\t{result.clean_state.requires_clean_state}",
             f"clean\t{result.clean_state.clean}",
             f"blockers\t{', '.join(result.clean_state.blockers)}",
             "source_modelo\tyear\tperiod\tclean\tblockers\tevidence_kind\tfiling_record_id",
-        ],
+        ]
     )
     lines.extend(
-        "\t".join(
-            (
-                evidence.source_modelo,
-                str(evidence.filing_year),
-                evidence.period.registry_token,
-                str(evidence.clean),
-                ", ".join(evidence.blockers),
-                evidence.external_evidence_kind or "",
-                evidence.filing_record_id or "",
-            ),
-        )
-        for evidence in result.clean_state.dependencies
+
+            "\t".join(
+                (
+                    evidence.source_modelo,
+                    str(evidence.filing_year),
+                    evidence.period.registry_token,
+                    str(evidence.clean),
+                    ", ".join(evidence.blockers),
+                    evidence.external_evidence_kind or "",
+                    evidence.filing_record_id or "",
+                )
+            )
+            for evidence in result.clean_state.dependencies
+
     )
     return lines
 
 
-__all__ = ["register_work_verification_commands"]
+__all__ = ["work_dependencies", "work_file", "work_verify"]
 
 
 def work_verify(
     ctx: typer.Context,
-    calculation_revision_id: _CalculationRevisionIdArg = None,
-    modelo: _ModeloOpt = None,
-    year: _YearOpt = None,
-    period: _PeriodOpt = None,
-    revision: _RevisionOpt = None,
-    work_unit_id: _WorkUnitIdOpt = None,
+    calculation_revision_id: str | None = None,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    revision: str | None = None,
+    work_unit_id: str | None = None,
     select: ModeloVerifySelector = ModeloVerifySelector.CURRENT,
-    bucket_id: _BucketIdOpt = None,
-    actor: _ActorOpt = None,
-    output_language: OutputLanguage | None = typer.Option(
-        None, "--output-language", "--language", help=tr("cli.config.auth.output_language_help")
-    ),
+    bucket_id: str | None = None,
+    actor: str | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Persist a :class:`VerificationReport` for the selected draft revision."""
     activate_subcommand_output_language(ctx, output_language)
@@ -309,11 +281,9 @@ def work_verify(
 def work_dependencies(
     ctx: typer.Context,
     year: int,
-    modelo: _ModeloOpt = None,
-    period: _PeriodOpt = None,
-    output_language: OutputLanguage | None = typer.Option(
-        None, "--output-language", "--language", help=tr("cli.config.auth.output_language_help")
-    ),
+    modelo: str | None = None,
+    period: str | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Show cross-period dependency inventory and clean-state blockers."""
     activate_subcommand_output_language(ctx, output_language)
@@ -360,22 +330,20 @@ def work_dependencies(
 
 def work_file(
     ctx: typer.Context,
-    calculation_revision_id: _CalculationRevisionIdArg = None,
-    modelo: _ModeloOpt = None,
-    year: _YearOpt = None,
-    period: _PeriodOpt = None,
-    revision: _RevisionOpt = None,
-    work_unit_id: _WorkUnitIdOpt = None,
-    select: _RevisionSelectorOpt = ModeloCalculationRevisionSelector.CURRENT.value,
-    bucket_id: _BucketIdOpt = None,
-    actor: _ActorOpt = None,
+    calculation_revision_id: str | None = None,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    revision: str | None = None,
+    work_unit_id: str | None = None,
+    select: str = ModeloCalculationRevisionSelector.CURRENT.value,
+    bucket_id: str | None = None,
+    actor: str | None = None,
     notes: str | None = None,
-    refund_election: _RefundElectionOpt = RefundElection.COMPENSAR,
-    payment_election: _PaymentElectionOpt = PaymentElection.INGRESO,
-    prior_domiciliation_election: _PriorDomiciliationElectionOpt = PriorDomiciliationElection.KEEP,
-    output_language: OutputLanguage | None = typer.Option(
-        None, "--output-language", "--language", help=tr("cli.config.auth.output_language_help")
-    ),
+    refund_election: RefundElection = RefundElection.COMPENSAR,
+    payment_election: PaymentElection = PaymentElection.INGRESO,
+    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Create an internal :class:`ModeloRecord` for a verified revision."""
     activate_subcommand_output_language(ctx, output_language)
