@@ -10,7 +10,7 @@ from pathlib import Path, PurePosixPath
 
 from dev._paths import UTF_8
 
-_GENERATED_METADATA = frozenset({"INSTALLER", "RECORD", "direct_url.json", "REQUESTED"})
+_GENERATED_METADATA = frozenset({"INSTALLER", "RECORD", "REQUESTED", "direct_url.json", "uv_cache.json"})
 
 
 def _projection_digest(rows: list[tuple[str, str]]) -> str:
@@ -74,7 +74,12 @@ dist = importlib.metadata.distribution(__import__("sys").argv[1])
 rows = []
 for item in dist.files or ():
     path = item.as_posix()
-    if item.name in generated or path.endswith(".pyc") or "/__pycache__/" in path:
+    if (
+        item.name in generated | {"uv_cache.json"}
+        or ".." in item.parts
+        or path.endswith(".pyc")
+        or "/__pycache__/" in path
+    ):
         continue
     resolved = dist.locate_file(item).resolve(strict=True)
     if resolved.is_file():

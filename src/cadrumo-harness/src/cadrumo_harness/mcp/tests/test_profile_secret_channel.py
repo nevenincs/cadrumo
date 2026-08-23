@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from .. import _profile_secret_channel as channel_module
 from .._profile_secret_channel import (
     clear_profile_secret,
     load_profile_secret_file,
@@ -21,12 +22,17 @@ def _clear_channel() -> None:
     clear_profile_secret()
 
 
-def test_channel_consumes_unlinks_and_frames_the_commandspec_fields(tmp_path: Path) -> None:
+def test_channel_consumes_unlinks_and_frames_the_commandspec_fields(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    resumed: list[str] = []
+    monkeypatch.setattr(channel_module, "_resume_active_profile", resumed.append)
     channel = tmp_path / "profile-secret.json"
     channel.write_text(json.dumps({"profile_passphrase": "local-only"}), encoding="utf-8")
     load_profile_secret_file(channel)
     assert not channel.exists()
     assert json.loads(profile_secret_stdin_payload() or "null") == {"profile_passphrase": "local-only"}
+    assert resumed == ["local-only"]
 
 
 @pytest.mark.parametrize(
@@ -39,7 +45,10 @@ def test_channel_consumes_unlinks_and_frames_the_commandspec_fields(tmp_path: Pa
         b'{"profile_passphrase":7}',
     ),
 )
-def test_channel_fails_closed_on_malformed_or_unexpected_payloads(tmp_path: Path, payload: bytes) -> None:
+def test_channel_fails_closed_on_malformed_or_unexpected_payloads(
+    tmp_path: Path, payload: bytes, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(channel_module, "_resume_active_profile", lambda _: None)
     channel = tmp_path / "profile-secret.json"
     channel.write_bytes(payload)
     with pytest.raises(RuntimeError):

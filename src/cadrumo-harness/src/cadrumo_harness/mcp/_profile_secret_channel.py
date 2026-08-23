@@ -18,6 +18,16 @@ _profile_passphrase: str | None = None
 _profile_field: str | None = None
 
 
+def _resume_active_profile(passphrase: str) -> None:
+    from cadrumo.application.user_profile import login_profile
+    from cadrumo.application.workflow import assess_active_profile_health
+
+    profile_name = assess_active_profile_health().active_profile_label
+    if profile_name is None:
+        raise RuntimeError("profile-secret channel requires an active profile")
+    login_profile(name=profile_name, passphrase_callback=lambda: passphrase)
+
+
 def _authoritative_fields() -> tuple[str, ...]:
     command_keys = tuple(reference.command for reference in command_schema_refs())
     contracts = {
@@ -53,6 +63,7 @@ def load_profile_secret_file(path: Path) -> None:
     passphrase = pairs[0][1]
     if not isinstance(passphrase, str) or not passphrase:
         raise RuntimeError("profile-secret channel passphrase must be a non-empty string")
+    _resume_active_profile(passphrase)
     _profile_passphrase = passphrase
     _profile_field = expected[0]
 

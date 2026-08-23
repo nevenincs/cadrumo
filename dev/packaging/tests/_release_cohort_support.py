@@ -29,8 +29,11 @@ for every caller that never varies it.
 
 from __future__ import annotations
 
-import importlib.metadata
+import functools
 import platform
+import shutil
+import subprocess
+import tempfile
 import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
@@ -51,6 +54,44 @@ DEFAULT_COHORT_VERSION = "0.2.1"
 DEFAULT_COHORT_COMMIT = "c" * 40
 DEFAULT_COHORT_BUILD_CONSTRAINTS_SHA256 = "d" * 64
 DEFAULT_COHORT_CREATED_AT = datetime(2026, 1, 1, tzinfo=UTC)
+
+
+@functools.lru_cache(maxsize=1)
+def _real_product_wheels() -> dict[str, Path]:
+    """Build real wheel artifacts once; never counterfeit them from installed files."""
+    output = Path(tempfile.mkdtemp(prefix="cadrumo-real-cohort-wheels-"))
+    commands = (
+        ("cadrumo-wheel", ["uv", "build", "--wheel", "--out-dir", str(output)]),
+        (
+            "cadrumo-harness-wheel",
+            [
+                "uv",
+                "build",
+                "--wheel",
+                "--project",
+                str(REPO_ROOT / "src" / "cadrumo-harness"),
+                "--out-dir",
+                str(output),
+            ],
+        ),
+    )
+    result: dict[str, Path] = {}
+    for name, argv in commands:
+        completed = subprocess.run(  # noqa: S603 - fixed uv build argv over repository-owned paths.
+            argv,
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if completed.returncode != 0:
+            raise RuntimeError(f"real wheel fixture build failed: {completed.stderr}")
+        pattern = "cadrumo_harness-*.whl" if "harness" in name else "cadrumo-*.whl"
+        candidates = tuple(output.glob(pattern))
+        if len(candidates) != 1:
+            raise RuntimeError(f"real wheel fixture expected one {pattern}: {candidates!r}")
+        result[name] = candidates[0]
+    return result
 
 
 def release_cohort(
@@ -74,19 +115,10 @@ def release_cohort(
         path = root / "artifacts" / f"{name}.bin"
         path.parent.mkdir(exist_ok=True)
         if name in {"cadrumo-wheel", "cadrumo-harness-wheel"}:
-            distribution_name = "cadrumo" if name == "cadrumo-wheel" else "cadrumo-harness"
-            distribution = importlib.metadata.distribution(distribution_name)
-            with zipfile.ZipFile(path, "w") as archive:
-                for item in distribution.files or ():
-                    if item.name in {"INSTALLER", "RECORD", "direct_url.json", "REQUESTED"}:
-                        continue
-                    if item.as_posix().endswith(".pyc") or "/__pycache__/" in item.as_posix():
-                        continue
-                    source = Path(str(distribution.locate_file(item)))
-                    if source.is_file():
-                        archive.write(source, item.as_posix())
-                if payload_suffix:
-                    package = "cadrumo" if name == "cadrumo-wheel" else "cadrumo_harness"
+            shutil.copy2(_real_product_wheels()[name], path)
+            if payload_suffix:
+                package = "cadrumo" if name == "cadrumo-wheel" else "cadrumo_harness"
+                with zipfile.ZipFile(path, "a") as archive:
                     archive.writestr(f"{package}/_foreign_cohort_plant.py", payload_suffix)
         elif name == "mcpb":
             with zipfile.ZipFile(path, "w") as archive:
