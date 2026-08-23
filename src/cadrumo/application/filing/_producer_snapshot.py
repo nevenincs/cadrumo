@@ -161,6 +161,11 @@ class DeclarationContactFacts(BaseModel):
 
     phone: _NonBlankName | None = None
     full_name: _NonBlankName | None = None
+    #: AEAT reserves a second telephone and an e-mail beside the pair above on the
+    #: informativa header -- modelo 210 cites both. They were absent here, so the layout's
+    #: fields resolved to nothing and rendered blank.
+    secondary_phone: _NonBlankName | None = None
+    email: _NonBlankName | None = None
 
 
 class Modelo111ProfileFacts(BaseModel):
@@ -170,6 +175,317 @@ class Modelo111ProfileFacts(BaseModel):
 
     colegio_concertado: bool | None
 
+
+_GrupoNumber = Annotated[str, StringConstraints(min_length=1, max_length=7)]
+_ForalTerritory = Annotated[str, StringConstraints(min_length=1, max_length=2)]
+
+
+class Modelo222ProfileFacts(BaseModel):
+    """Fiscal-group identity and régimen facts a Modelo 222 filing declares.
+
+    Modelo 222 is the pago fraccionado of a *grupo fiscal*, so the group's own identity is
+    not optional context -- it is what the return is about. AEAT's design prescribes a
+    format for the número de grupo (``Nota 8``: ``----/--`` estatal, ``---/--A`` foral),
+    which is a rule about content, not about an empty field.
+
+    Before this type existed the twenty-three ``m222.*`` producer keys were declared in the
+    vocabulary and resolved by nothing, so every one of them rendered blank on a
+    non-required field and the return emitted with its group number and its entidad
+    dominante empty.
+
+    Every field below is optional EXCEPT the group identity, because AEAT's own design
+    leaves the régimen marks blank when they do not apply, and a mark that does not apply
+    is genuinely absent rather than unknown. The group number and the dominante are not in
+    that category.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    numero_grupo: _GrupoNumber
+    entidad_dominante_identificacion: str
+    entidad_dominante_razon_social: str
+    #: "1" representante (entidad no dominante), "2" dominante incluida en el grupo fiscal.
+    representante_o_dominante: str | None = None
+    normativa_territorio_foral: str | None = None
+    entidad_dominante_pais_territorio_foral: _ForalTerritory | None = None
+    fecha_inicio_periodo_impositivo: str | None = None
+    cnae_actividad_principal: _CnaeCode | None = None
+    regimen_entidades_navieras_tonelaje: str | None = None
+    regimen_reducida_dimension: str | None = None
+    cifra_negocios_grupo_doce_meses: str | None = None
+    cooperativa_fiscalmente_protegida: str | None = None
+    regimen_entidades_capital_riesgo: str | None = None
+    circunstancia_concurrente: str | None = None
+    cifra_negocios_periodo_anterior_tramo: str | None = None
+    multiples_tipos_impositivos: str | None = None
+    tipo_gravamen_impuesto_sociedades: str | None = None
+    importe_neto_cifra_negocios_tramo: str | None = None
+    modalidad_liquidacion: str | None = None
+    comunicacion_datos_adicionales: str | None = None
+    numero_referencia_sociedades: str | None = None
+    comunicacion_variacion_composicion_grupo: str | None = None
+    numero_referencia_sociedades_variacion: str | None = None
+
+
+_M353GrupoNumber = Annotated[str, StringConstraints(min_length=1, max_length=10)]
+_SiNoMark = Annotated[str, StringConstraints(pattern=r"^[12]$")]
+_XOrBlankMark = Annotated[str, StringConstraints(pattern=r"^X$")]
+
+
+class Modelo353ProfileFacts(BaseModel):
+    """Grupo de entidades IVA identity and régimen marks a Modelo 353 filing declares.
+
+    Modelo 353 is the *autoliquidación agregada* of the régimen especial del grupo de
+    entidades (LIVA art. 163 sexies), so the group's number is what the return is about
+    rather than optional colour.
+
+    Before this type existed the five ``m353.*`` producer keys were declared in the
+    vocabulary and resolved by nothing, so the número de grupo and the two marks rendered
+    from whatever the field's ``required`` flag allowed.
+
+    ``numero_grupo`` is required here. The two régimen marks are required too, and that is
+    a departure from the Modelo 222 shape for a grounded reason: AEAT's design gives them
+    ``1 -Sí, 2 -No`` and the published layout marks both ``required = true``, so there is
+    no blank state to represent -- a filer who is not inscrito declares ``"2"``, not
+    nothing. ``sin_actividad`` and ``grupo_normativa_foral`` are the genuinely optional
+    ones: the design reads ``X o blanco``.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    #: Identificación. Nº Grupo -- design offset 109, length 10.
+    numero_grupo: _M353GrupoNumber
+    #: Tipo régimen especial aplicable, art. 163 sexies.cinco: "1" sí, "2" no.
+    regimen_especial_avanzado_elected: _SiNoMark
+    #: Inscrito en el Registro de devolución mensual (art. 30 RIVA): "1" sí, "2" no.
+    regimen_especial_inscrito_redeme: _SiNoMark
+    #: "X o blanco" in the design; absent means the group had activity.
+    sin_actividad: _XOrBlankMark | None = None
+    #: "X o blanco" in the design; absent means the group is not sometido a normativa foral.
+    grupo_normativa_foral: _XOrBlankMark | None = None
+
+
+class Modelo210ContribuyenteFacts(BaseModel):
+    """Modelo 210 contribuyente facts, flat members named from the AEAT component vocabulary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    birth_city: str | None = None
+    birth_country_code: str | None = None
+    birth_date: str | None = None
+    foreign_address_city: str | None = None
+    foreign_address_complement: str | None = None
+    foreign_address_country_code: str | None = None
+    foreign_address_email: str | None = None
+    foreign_address_fax: str | None = None
+    foreign_address_mobile_phone: str | None = None
+    foreign_address_phone: str | None = None
+    foreign_address_postal_code: str | None = None
+    foreign_address_region: str | None = None
+    foreign_address_street: str | None = None
+    foreign_tax_id: str | None = None
+    full_name: str | None = None
+    person_type: str | None = None
+    tax_id: str | None = None
+    tax_residence_country_code: str | None = None
+
+
+class Modelo210DeclaracionFacts(BaseModel):
+    """Modelo 210 declaracion facts, flat members named from the AEAT component vocabulary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    tipo: str | None = None
+
+
+class Modelo210DeclaranteFacts(BaseModel):
+    """Modelo 210 declarante facts, flat members named from the AEAT component vocabulary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    capacity_contribuyente: str | None = None
+    capacity_depositario: str | None = None
+    capacity_gestor: str | None = None
+    capacity_pagador: str | None = None
+    capacity_representante: str | None = None
+    capacity_retenedor: str | None = None
+    full_name: str | None = None
+    tax_id: str | None = None
+
+
+class Modelo210DevengoFacts(BaseModel):
+    """Modelo 210 devengo facts, flat members named from the AEAT component vocabulary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    agrupacion: str | None = None
+    fecha_devengo: str | None = None
+
+
+class Modelo210DevolucionFacts(BaseModel):
+    """Modelo 210 devolucion facts, flat members named from the AEAT component vocabulary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    cuenta_resto_banco: str | None = None
+    cuenta_resto_ciudad: str | None = None
+    cuenta_resto_codigo_pais: str | None = None
+    cuenta_resto_direccion_banco: str | None = None
+    cuenta_resto_numero_cuenta: str | None = None
+    cuenta_resto_swift_bic: str | None = None
+    cuenta_sepa_iban: str | None = None
+    cuenta_sepa_swift_bic: str | None = None
+    cuenta_titular_full_name: str | None = None
+    cuenta_titular_tax_id: str | None = None
+    renuncia_a_favor_del_tesoro: str | None = None
+
+
+class Modelo210GananciaInmobiliariaFacts(BaseModel):
+    """Modelo 210 ganancia inmobiliaria facts, flat members named from the AEAT component vocabulary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    conyuge_full_name: str | None = None
+    conyuge_tax_id: str | None = None
+    cuota_participacion_contribuyente: str | None = None
+    cuota_participacion_conyuge: str | None = None
+    fecha_adquisicion: str | None = None
+    fecha_mejora: str | None = None
+    justificante_modelo_211: str | None = None
+    titularidad: str | None = None
+
+
+class Modelo210IngresoFacts(BaseModel):
+    """Modelo 210 ingreso facts, flat members named from the AEAT component vocabulary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    cuenta_resto_banco: str | None = None
+    cuenta_resto_ciudad: str | None = None
+    cuenta_resto_codigo_pais: str | None = None
+    cuenta_resto_direccion_banco: str | None = None
+    cuenta_resto_numero_cuenta: str | None = None
+    cuenta_resto_swift_bic: str | None = None
+    cuenta_sepa_iban: str | None = None
+    cuenta_sepa_swift_bic: str | None = None
+    cuenta_titular_full_name: str | None = None
+    cuenta_titular_tax_id: str | None = None
+    forma_pago: str | None = None
+
+
+class Modelo210InmuebleFacts(BaseModel):
+    """Modelo 210 inmueble facts, flat members named from the AEAT component vocabulary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    referencia_catastral: str | None = None
+    situacion_bloque: str | None = None
+    situacion_calificador_numero: str | None = None
+    situacion_codigo_ine_municipio: str | None = None
+    situacion_codigo_postal: str | None = None
+    situacion_codigo_provincia: str | None = None
+    situacion_datos_complementarios: str | None = None
+    situacion_escalera: str | None = None
+    situacion_localidad: str | None = None
+    situacion_nombre_via: str | None = None
+    situacion_numero_casa: str | None = None
+    situacion_planta: str | None = None
+    situacion_portal: str | None = None
+    situacion_puerta: str | None = None
+    situacion_tipo_numeracion: str | None = None
+    situacion_tipo_via: str | None = None
+
+
+class Modelo210PagadorFacts(BaseModel):
+    """Modelo 210 pagador facts, flat members named from the AEAT component vocabulary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    full_name: str | None = None
+    person_type: str | None = None
+    tax_id: str | None = None
+
+
+class Modelo210RentaFacts(BaseModel):
+    """Modelo 210 renta facts, flat members named from the AEAT component vocabulary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    clave_divisa: str | None = None
+
+
+class Modelo210RepresentanteFacts(BaseModel):
+    """Modelo 210 representante facts, flat members named from the AEAT component vocabulary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    appointment_kind: str | None = None
+    domicilio_bloque: str | None = None
+    domicilio_calificador_numero: str | None = None
+    domicilio_codigo_ine_municipio: str | None = None
+    domicilio_codigo_postal: str | None = None
+    domicilio_codigo_provincia: str | None = None
+    domicilio_datos_complementarios: str | None = None
+    domicilio_escalera: str | None = None
+    domicilio_localidad: str | None = None
+    domicilio_nombre_via: str | None = None
+    domicilio_numero_casa: str | None = None
+    domicilio_planta: str | None = None
+    domicilio_portal: str | None = None
+    domicilio_puerta: str | None = None
+    domicilio_tipo_numeracion: str | None = None
+    domicilio_tipo_via: str | None = None
+    fax: str | None = None
+    full_name: str | None = None
+    mobile_phone: str | None = None
+    person_type: str | None = None
+    phone: str | None = None
+    tax_id: str | None = None
+
+
+class Modelo210SinIngresoNiDevolucionFacts(BaseModel):
+    """Modelo 210 sin ingreso ni devolucion facts, flat members named from the AEAT component vocabulary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    cuota_cero: str | None = None
+
+
+class Modelo210ProfileFacts(BaseModel):
+    """The party, property and settlement facts modelo 210's export layout cites.
+
+    Modelo 210 is the non-resident income tax return. Its layout cites 102 ``irnr.*``
+    producer keys across twelve scopes; every one of them resolved to nothing, so the
+    contribuyente, the representante, the inmueble and the refund account all rendered
+    blank on a filed return.
+
+    Each scope declares its own FLAT members rather than sharing one address or account
+    model. That is the decision recorded in :mod:`cadrumo.core._address_components`:
+    AEAT reuses one address GRAMMAR but not one address SHAPE -- modelo 210 identifies the
+    municipio by INE code where modelo 360 writes its name -- so a shared type would assert
+    two shapes are interchangeable when they are not. The vocabulary fixes what the leaves
+    are CALLED; it does not merge them.
+
+    Every field is optional and absent stays absent: AEAT writes an alphanumeric header
+    field with no content to blancos, so an unsupplied scope is a legal filing rather than
+    a defect. Which scopes a given filing must carry is the caller's decision, not this
+    type's.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    contribuyente: Modelo210ContribuyenteFacts | None = None
+    declaracion: Modelo210DeclaracionFacts | None = None
+    declarante: Modelo210DeclaranteFacts | None = None
+    devengo: Modelo210DevengoFacts | None = None
+    devolucion: Modelo210DevolucionFacts | None = None
+    ganancia_inmobiliaria: Modelo210GananciaInmobiliariaFacts | None = None
+    ingreso: Modelo210IngresoFacts | None = None
+    inmueble: Modelo210InmuebleFacts | None = None
+    pagador: Modelo210PagadorFacts | None = None
+    renta: Modelo210RentaFacts | None = None
+    representante: Modelo210RepresentanteFacts | None = None
+    sin_ingreso_ni_devolucion: Modelo210SinIngresoNiDevolucionFacts | None = None
 
 class GeneralFilingProfileFacts(BaseModel):
     """Explicit absence of modelo-specific producer facts for a layout."""
@@ -207,12 +523,46 @@ M202_UNSUPPORTED_PRODUCER_IDS: tuple[M202UnsupportedProducerId, ...] = tuple(M20
 
 
 class Modelo202ProducerProfile(BaseModel):
-    """M202 producer view referencing the canonical taxpayer profile owner."""
+    """M202 producer view referencing the canonical taxpayer profile owner.
+
+    The régimen marks and the principal CNAE below are what modelo 202's export layout
+    cites as header producers. Before they existed the eighteen ``m202.*`` keys were
+    declared in the vocabulary and resolved by nothing, so each one rendered blank on a
+    filed pago fraccionado.
+
+    ``principal_cnae`` is DECLARED, never inferred from ``activities``:
+    :class:`Modelo202ActivityFacts` is documented as "one repeatable M202 activity fact,
+    without claiming primacy", so picking the first or the largest would invent a primacy
+    the substrate deliberately does not carry. AEAT asks which activity is principal, so
+    the operator answers it.
+
+    Every mark is optional and absent stays absent -- AEAT leaves a régimen mark blank when
+    the régimen does not apply, and a mark that does not apply is genuinely absent rather
+    than unknown.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_profile: TaxpayerProfile
     activities: tuple[Modelo202ActivityFacts, ...]
+    principal_cnae: _CnaeCode | None = None
+    regimen_ley_49_2002_sin_fines_lucrativos: str | None = None
+    regimen_ley_11_2009_socimi: str | None = None
+    regimen_entidades_navieras_tonelaje: str | None = None
+    regimen_articulo_101_lis_reducida_dimension: str | None = None
+    regimen_entidad_capital_riesgo: str | None = None
+    cifra_negocios_doce_meses_umbral: str | None = None
+    cifra_negocios_periodo_anterior_bajo_umbral: str | None = None
+    cooperativa_o_multiples_tipos: str | None = None
+    cooperativa_fiscalmente_protegida: str | None = None
+    multiples_tipos_impositivos: str | None = None
+    tipo_gravamen_impuesto_sociedades: str | None = None
+    importe_neto_cifra_negocios_tramo: str | None = None
+    marca_instrumental: str | None = None
+    discriminante_declaracion_negativa: str | None = None
+    normativa_territorio_foral: str | None = None
+    comunicacion_datos_adicionales: str | None = None
+    numero_referencia_sociedades: str | None = None
 
     @property
     def unsupported_producer_ids(self) -> tuple[M202UnsupportedProducerId, ...]:
@@ -368,7 +718,13 @@ class ChargeAccountSelection(BaseModel):
 
 type SelectedFilingAccount = RefundAccountSelection | ChargeAccountSelection
 type FilingModelProfileFacts = (
-    GeneralFilingProfileFacts | Modelo111ProfileFacts | Modelo202ProducerProfile | ModeloIVAProfile
+    GeneralFilingProfileFacts
+    | Modelo111ProfileFacts
+    | Modelo202ProducerProfile
+    | Modelo210ProfileFacts
+    | Modelo222ProfileFacts
+    | Modelo353ProfileFacts
+    | ModeloIVAProfile
 )
 
 
@@ -415,10 +771,28 @@ def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo is Modelo.M202:
         _validate_modelo_202_snapshot(snapshot)
         return
+    if snapshot.modelo is Modelo.M222:
+        _validate_modelo_222_snapshot(snapshot)
+        return
     if snapshot.modelo is Modelo.M303:
         _validate_modelo_303_snapshot(snapshot)
         return
+    if snapshot.modelo is Modelo.M353:
+        _validate_modelo_353_snapshot(snapshot)
+        return
     _validate_general_modelo_snapshot(snapshot)
+
+
+def _validate_modelo_353_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    """Modelo 353 is the grupo de entidades aggregate; it cannot be filed without it."""
+    if not isinstance(snapshot.model_profile, Modelo353ProfileFacts):
+        raise ValueError("modelo 353 requires Modelo353ProfileFacts")
+
+
+def _validate_modelo_222_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    """Modelo 222 is a grupo fiscal return; it cannot be filed without the group."""
+    if not isinstance(snapshot.model_profile, Modelo222ProfileFacts):
+        raise ValueError("modelo 222 requires Modelo222ProfileFacts")
 
 
 def _validate_modelo_111_snapshot(snapshot: FilingProducerSnapshot) -> None:

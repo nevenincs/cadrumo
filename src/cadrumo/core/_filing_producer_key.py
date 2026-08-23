@@ -657,3 +657,140 @@ class FilingProducerKey(StrEnum):
     M296_PIN_NIF_DEL_PERCEPTOR = "m296.pin.nif_del_perceptor"
     M296_PIN_NIF_DEL_REPRESENTANTE_LEGAL = "m296.pin.nif_del_representante_legal"
     M296_PIN_RETENCIONES_E_INGRESOS_A_CUENTA_INGRES = "m296.pin.retenciones_e_ingresos_a_cuenta_ingres"
+
+    # Modelo 840 (IAE). Every identity below is TRANSCRIBED from the field text of
+    # the bundled diseño (Orden HAC/2572/2003), apartado and block included. AEAT's
+    # own labels for the local grid say only Total / Rectificada / Computable without
+    # naming the magnitude, so these keys say the same rather than asserting a
+    # surface figure the document does not state. The relación de locales repeats
+    # nine times in the Anexo record; nine repeats of one local are one identity.
+    #: Delegación. Tabla.
+    M840_DELEGACION_CODIGO = "m840.delegacion_codigo"
+    #: Administración. Tabla.
+    M840_ADMINISTRACION_CODIGO = "m840.administracion_codigo"
+    #: Apart. I: Datos ident. del sujeto pasivo. Municipio
+    M840_SUJETO_PASIVO_MUNICIPIO = "m840.sujeto_pasivo.municipio"
+    #: Apart. III: Representante. Municipio.
+    M840_REPRESENTANTE_MUNICIPIO = "m840.representante.municipio"
+    #: Apart. IV: Datos de la act. Provincial (provincia) Tabla
+    M840_ACTIVIDAD_PROVINCIA_CODIGO = "m840.actividad.provincia_codigo"
+    #: Apart. IV: Datos de la act. Municipio
+    M840_ACTIVIDAD_MUNICIPIO = "m840.actividad.municipio"
+    #: Apart. V: Local afecto indirectamente a la act. Municipio
+    M840_LOCAL_INDIRECTO_MUNICIPIO = "m840.local_indirecto.municipio"
+    #: Apartado II: Relación de locales. SG Tabla
+    M840_LOCALES_SG_TABLA = "m840.locales.sg_tabla"
+    #: Apartado II: Relación de locales. Nombre de la vía pública
+    M840_LOCALES_NOMBRE_VIA = "m840.locales.nombre_via"
+    #: Apartado II: Relación de locales. Núm.
+    M840_LOCALES_NUMERO = "m840.locales.numero"
+    #: Apartado II: Relación de locales. Km.
+    M840_LOCALES_KM = "m840.locales.km"
+    #: Apartado II: Relación de locales. Esc.
+    M840_LOCALES_ESCALERA = "m840.locales.escalera"
+    #: Apartado II: Relación de locales. Piso
+    M840_LOCALES_PISO = "m840.locales.piso"
+    #: Apartado II: Relación de locales. Pta.
+    M840_LOCALES_PUERTA = "m840.locales.puerta"
+    #: Apartado II: Relación de locales. Cód. Postal
+    M840_LOCALES_CODIGO_POSTAL = "m840.locales.codigo_postal"
+    #: Apartado II: Relación de locales. Provincia Tabla
+    M840_LOCALES_PROVINCIA_CODIGO = "m840.locales.provincia_codigo"
+    #: Apartado II: Relación de locales. Municipio Tabla
+    M840_LOCALES_MUNICIPIO_CODIGO = "m840.locales.municipio_codigo"
+    #: Apartado II: Relación de locales. Municipio
+    M840_LOCALES_MUNICIPIO_NOMBRE = "m840.locales.municipio_nombre"
+    #: Apartado II: Relación de locales. Total
+    M840_LOCALES_TOTAL = "m840.locales.total"
+    #: Apartado II: Relación de locales. Rectificada
+    M840_LOCALES_RECTIFICADA = "m840.locales.rectificada"
+    #: Apartado II: Relación de locales. Computable
+    M840_LOCALES_COMPUTABLE = "m840.locales.computable"
+    #: Apartado VI: Elem. Trib. del grupo o epígrafe. A) 1. Código
+    M840_ELEMENTOS_TRIBUTARIOS_GRUPO_A1_CODIGO = "m840.elementos_tributarios.grupo.a1.codigo"
+    #: Apartado VI: Elem. Trib. del grupo o epígrafe. A) 1. Número
+    M840_ELEMENTOS_TRIBUTARIOS_GRUPO_A1_NUMERO = "m840.elementos_tributarios.grupo.a1.numero"
+    #: Apartado VI: Elem. Trib. del grupo o epígrafe. A) 2. Código
+    M840_ELEMENTOS_TRIBUTARIOS_GRUPO_A2_CODIGO = "m840.elementos_tributarios.grupo.a2.codigo"
+    #: Apartado VI: Elem. Trib. del grupo o epígrafe. A) 2. Número
+    M840_ELEMENTOS_TRIBUTARIOS_GRUPO_A2_NUMERO = "m840.elementos_tributarios.grupo.a2.numero"
+    #: Apartado VI: Elem. Trib. del grupo o epígrafe. A) 3. Código
+    M840_ELEMENTOS_TRIBUTARIOS_GRUPO_A3_CODIGO = "m840.elementos_tributarios.grupo.a3.codigo"
+    #: Apartado VI: Elem. Trib. del grupo o epígrafe. A) 3. Número
+    M840_ELEMENTOS_TRIBUTARIOS_GRUPO_A3_NUMERO = "m840.elementos_tributarios.grupo.a3.numero"
+    #: Apartado VI: Elem. Trib. del grupo o epígrafe. A) 4. Código
+    M840_ELEMENTOS_TRIBUTARIOS_GRUPO_A4_CODIGO = "m840.elementos_tributarios.grupo.a4.codigo"
+    #: Apartado VI: Elem. Trib. del grupo o epígrafe. A) 4. Número
+    M840_ELEMENTOS_TRIBUTARIOS_GRUPO_A4_NUMERO = "m840.elementos_tributarios.grupo.a4.numero"
+    #: Apartado VI: Máquinas recreativas Tipo A. Número
+    M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_A_NUMERO = "m840.elementos_tributarios.maquinas_tipo_a.numero"
+    #: Apartado VI: Máquinas recreativas Tipo B. Número
+    M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_B_NUMERO = "m840.elementos_tributarios.maquinas_tipo_b.numero"
+    #: Apartado VI: Expositores para autoventa. Número
+    M840_ELEMENTOS_TRIBUTARIOS_EXPOSITORES_AUTOVENTA_NUMERO = "m840.elementos_tributarios.expositores_autoventa.numero"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 0.1. Total
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C0_1_TOTAL = "m840.elementos_tributarios.local.c0_1.total"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 0.1. Rectificada
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C0_1_RECTIFICADA = "m840.elementos_tributarios.local.c0_1.rectificada"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 0.1. Computable
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C0_1_COMPUTABLE = "m840.elementos_tributarios.local.c0_1.computable"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 0.2. Total
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C0_2_TOTAL = "m840.elementos_tributarios.local.c0_2.total"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 0.2. Rectificada
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C0_2_RECTIFICADA = "m840.elementos_tributarios.local.c0_2.rectificada"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 0.2. Computable
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C0_2_COMPUTABLE = "m840.elementos_tributarios.local.c0_2.computable"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.1. Total
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C1_1_TOTAL = "m840.elementos_tributarios.local.c1_1.total"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.1. Rectificada
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C1_1_RECTIFICADA = "m840.elementos_tributarios.local.c1_1.rectificada"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.1. Computable
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C1_1_COMPUTABLE = "m840.elementos_tributarios.local.c1_1.computable"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.2. Total
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C1_2_TOTAL = "m840.elementos_tributarios.local.c1_2.total"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.2. Rectificada
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C1_2_RECTIFICADA = "m840.elementos_tributarios.local.c1_2.rectificada"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.2. Computable
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C1_2_COMPUTABLE = "m840.elementos_tributarios.local.c1_2.computable"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.3. Total
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C1_3_TOTAL = "m840.elementos_tributarios.local.c1_3.total"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.3. Rectificada
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C1_3_RECTIFICADA = "m840.elementos_tributarios.local.c1_3.rectificada"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 1.3. Computable
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C1_3_COMPUTABLE = "m840.elementos_tributarios.local.c1_3.computable"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 2.0. Total
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C2_0_TOTAL = "m840.elementos_tributarios.local.c2_0.total"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 2.0. Rectificada
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C2_0_RECTIFICADA = "m840.elementos_tributarios.local.c2_0.rectificada"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 2.0. Computable
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C2_0_COMPUTABLE = "m840.elementos_tributarios.local.c2_0.computable"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 3.1. Total
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C3_1_TOTAL = "m840.elementos_tributarios.local.c3_1.total"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 3.1. Rectificada
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C3_1_RECTIFICADA = "m840.elementos_tributarios.local.c3_1.rectificada"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 3.1. Computable
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C3_1_COMPUTABLE = "m840.elementos_tributarios.local.c3_1.computable"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 3.2. Total
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C3_2_TOTAL = "m840.elementos_tributarios.local.c3_2.total"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 3.2. Rectificada
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C3_2_RECTIFICADA = "m840.elementos_tributarios.local.c3_2.rectificada"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 3.2. Computable
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C3_2_COMPUTABLE = "m840.elementos_tributarios.local.c3_2.computable"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 4.0. Total
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C4_0_TOTAL = "m840.elementos_tributarios.local.c4_0.total"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 4.0. Rectificada
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C4_0_RECTIFICADA = "m840.elementos_tributarios.local.c4_0.rectificada"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 4.0. Computable
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C4_0_COMPUTABLE = "m840.elementos_tributarios.local.c4_0.computable"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 5.0. Total
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C5_0_TOTAL = "m840.elementos_tributarios.local.c5_0.total"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 5.0. Rectificada
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C5_0_RECTIFICADA = "m840.elementos_tributarios.local.c5_0.rectificada"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 5.0. Computable
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C5_0_COMPUTABLE = "m840.elementos_tributarios.local.c5_0.computable"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 6.0. Total
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C6_0_TOTAL = "m840.elementos_tributarios.local.c6_0.total"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 6.0. Rectificada
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C6_0_RECTIFICADA = "m840.elementos_tributarios.local.c6_0.rectificada"
+    #: Apartado VI: Elem. Trib. Local (Cuota municipal). C) 6.0. Computable
+    M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C6_0_COMPUTABLE = "m840.elementos_tributarios.local.c6_0.computable"

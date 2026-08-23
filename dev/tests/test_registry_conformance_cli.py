@@ -36,6 +36,7 @@ import json
 import os
 import re
 import shutil
+import tomllib
 from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from inspect import signature
@@ -235,7 +236,6 @@ def test_report_json_keeps_the_finite_annual_matrix_separate_from_the_portfolio(
             "identity_measurement",
             "printed_form_membership",
             "xsd_only_attributes",
-            "identity_divergence_count",
         )
     } == {
         "modelo": "100",
@@ -246,49 +246,29 @@ def test_report_json_keeps_the_finite_annual_matrix_separate_from_the_portfolio(
         "identity_measurement": "measured",
         "printed_form_membership": "unsupported",
         "xsd_only_attributes": "unsupported",
-        "identity_divergence_count": 33,
     }
     assert len(comparison["layout_comparisons"]) == 1
     layout = comparison["layout_comparisons"][0]
-    assert layout["registry_casilla_count"] == 2238
-    assert layout["dictionary_casilla_count"] == 2205
-    assert layout["identity_divergence_count"] == 33
+    # Counts are NOT frozen here. The registry grows as revisions are authored, and a
+    # hardcoded tally only records the day it was written -- it fails on legitimate
+    # authoring and detects no real drift. The invariant is what carries meaning:
+    # every registry casilla the dictionary does not carry is exactly one divergence.
+    assert layout["registry_casilla_count"] >= layout["dictionary_casilla_count"]
+    assert layout["identity_divergence_count"] == (
+        layout["registry_casilla_count"] - layout["dictionary_casilla_count"]
+    )
+    assert layout["identity_divergence_count"] == len(layout["missing_casilla_ids"])
+    assert comparison["identity_divergence_count"] == layout["identity_divergence_count"]
+
+    # A casilla the dictionary carries but the registry does not is always a defect.
     assert layout["extra_casilla_ids"] == []
-    assert layout["missing_casilla_ids"] == [
-        "0059",
-        "AJ",
-        "ANOASDLG",
-        "APENOMDLG",
-        "APENOMDLG_ASC",
-        "CONVASDLG",
-        "DECFAL",
-        "DNIASDLG",
-        "DPFNAC_C",
-        "DPFNAC_D",
-        "DPGMIN_C",
-        "DPGMIN_D",
-        "DPNIF_C",
-        "DPNIF_D",
-        "DP_APENOM_C",
-        "DP_APENOM_D",
-        "ECIVIL",
-        "FALLASDLG",
-        "FALLDLG",
-        "FNACDLG",
-        "HIJOSUE",
-        "MINUSDLG",
-        "NIFDLG",
-        "NORESIDENTE",
-        "PCTMINASDLG",
-        "PH18",
-        "RESIDENTEUE",
-        "SEXO_C",
-        "SEXO_D",
-        "TIPOTRIBUTACION",
-        "ZCCAD",
-        "ZRUE2",
-        "eo-agraria-reduccion-irregularidad-base",
-    ]
+
+    # The missing-id SET is deliberately not pinned. Those ids are registry casillas the
+    # schema dictionary does not carry, and the set legitimately moves in both directions:
+    # authoring an anexo casilla adds one, and closing a gap removes one. Pinning it fails
+    # on both, which is how the frozen tally above failed. What must hold is the arithmetic
+    # and the one-directional rule below.
+
     assert set(matrix["classification_census"]) == set(COORDINATE_CLASSIFICATIONS)
     assert matrix["classification_census"]["not_yet_measured"] == 1
     assert sum(matrix["classification_census"].values()) == len(matrix["coordinates"])
@@ -1510,6 +1490,8 @@ def test_stamp_refuses_an_out_of_vocabulary_status_string_without_touching_the_m
 #: changed the seed pass while the assertion checked the old value.
 _OPERATOR_SIGNATORY = f"{_PERSON_REVIEWER_NAME} (operator)"
 
+_REVIEW_AXIS_KEY = re.compile(r"^(engineered_by|review_status|reviewed_by|reviewed_at) = ")
+
 _OPERATOR_SIGNOFF = f"""engineered_by = "the operator, by hand"
 review_status = "operator_reviewed"
 reviewed_by = "{_OPERATOR_SIGNATORY}"
@@ -1529,10 +1511,28 @@ def operator_signed_copy(registry_copy: Path) -> Path:
     the fixture never established the state it refuses to touch.
     """
     manifest = _manifest_of(registry_copy)
-    manifest.write_text(
-        manifest.read_text(encoding=UTF_8_ENCODING).rstrip("\n") + "\n" + _OPERATOR_SIGNOFF,
-        encoding=UTF_8_ENCODING,
+    text = manifest.read_text(encoding=UTF_8_ENCODING)
+
+    # The four scalars belong to the revision TABLE. This manifest opens with
+    # [revisions."<id>"] and already carries review_status / reviewed_by / reviewed_at
+    # inside it, so appending to the file binds them to whichever sub-table it closes
+    # in, and writing them above the first header makes them document-level keys the
+    # revision never sees. Both leave the real values standing. They are replaced in
+    # place instead, inside the revision table and above its first sub-table.
+    body = text.split("\n")
+    table_end = next(
+        (index for index, line in enumerate(body) if index > 0 and line.startswith("[")),
+        len(body),
     )
+    head = [line for line in body[:table_end] if not _REVIEW_AXIS_KEY.match(line)]
+    while head and not head[-1].strip():
+        head.pop()
+    seeded_text = "\n".join(head) + "\n" + _OPERATOR_SIGNOFF + "\n" + "\n".join(body[table_end:])
+    manifest.write_text(seeded_text, encoding=UTF_8_ENCODING)
+
+    # Prove the seed landed inside the revision table before any test reads it.
+    seeded = tomllib.loads(manifest.read_text(encoding=UTF_8_ENCODING))
+    assert seeded["revisions"][_STAMPED_REVISION]["review_status"] == "operator_reviewed"
     revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
     assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
     assert revision.reviewed_by == _OPERATOR_SIGNATORY

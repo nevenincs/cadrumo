@@ -1524,8 +1524,8 @@ published_at = 2026-05-13
 effective_from = 2026-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-22
-reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2026-11583 excerpt art 6.3, fetched from two BOE surfaces that agree verbatim; pending operator re-stamp)"
-notes = """Orden HAC/529/2026 is the approving order for the IS declaration models for períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025 -- the successor to orden-hac-657-2025, which covered períodos iniciados en 2024. Article 6.3 is the Modelo 220-specific plazo clause: it grounds the group declaration's deadline in art. 75.2 LIS (the plazo of the representative entity's individual declaration) rather than the general art. 124.1 plazo, and it names «el Modelo 220 de declaración aprobado en el artículo 1 de la presente orden», which is itself operative evidence that art. 1 approves Modelo 220. This is firmer grounding than the 2024-era citation, whose only bundled provision naming 220 is art. 3's domiciliación bancaria heading. Art. 1 itself is not bundled: no fetch returned its enumerated list without elision, and abridging it would repeat the defect corrected in orden-hac-510-2021 the same day."""
+reviewed_by = "agent-prepared; corpus-grounded vs BOE-A-2026-11583; pending operator re-stamp"
+notes = """Orden HAC/529/2026 is the approving order for the IS declaration models for períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025 -- the successor to orden-hac-657-2025, which covered períodos iniciados en 2024. Article 6.3 is the Modelo 220-specific plazo clause: it grounds the group declaration's deadline in art. 75.2 LIS (the plazo of the representative entity's individual declaration) rather than the general art. 124.1 plazo, and it names «el Modelo 220 de declaración aprobado en el artículo 1 de la presente orden», which is itself operative evidence that art. 1 approves Modelo 220. This is firmer grounding than the 2024-era citation, whose only bundled provision naming 220 is art. 3's domiciliación bancaria heading. Art. 1 itself is not bundled: no fetch returned its enumerated list without elision, and abridging it would repeat the defect corrected in orden-hac-510-2021 the same day. Review grounding: agent-prepared (corpus-grounded against the bundled BOE-A-2026-11583 excerpt art 6.3, fetched from two BOE surfaces that agree verbatim; pending operator re-stamp)"""
 required_text = [
     "el Modelo 220 de declaración aprobado en el artículo 1 de la presente orden",
     "dentro del plazo correspondiente a la declaración en régimen de tributación individual",
@@ -1544,8 +1544,8 @@ published_at = 2026-05-13
 effective_from = 2026-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-22
-reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2026-11583 excerpt disposición final segunda, fetched from two BOE surfaces that agree verbatim; pending operator re-stamp)"
-notes = """Orden HAC/529/2026 disposición final segunda: entrada en vigor el 1 de julio de 2026, aplicable a los modelos con períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025. This is the provision that fixes the temporal boundary of the 2025 IS declaration layout, and so the authority for splitting modelo 220's open-ended revision at the 2024/2025 re-layout."""
+reviewed_by = "agent-prepared; corpus-grounded vs BOE-A-2026-11583; pending operator re-stamp"
+notes = """Orden HAC/529/2026 disposición final segunda: entrada en vigor el 1 de julio de 2026, aplicable a los modelos con períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025. This is the provision that fixes the temporal boundary of the 2025 IS declaration layout, and so the authority for splitting modelo 220's open-ended revision at the 2024/2025 re-layout. Review grounding: agent-prepared (corpus-grounded against the bundled BOE-A-2026-11583 excerpt disposición final segunda, fetched from two BOE surfaces that agree verbatim; pending operator re-stamp)"""
 required_text = [
     "La presente orden entrará en vigor el día 1 de julio de 2026",
     "con períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025",

@@ -12,10 +12,15 @@ from ...domain.modelos import M303RectificativaMotive
 from ._producer_snapshot import (
     AmendmentEvidence,
     ChargeAccountSelection,
+    FilingModelProfileFacts,
     FilingProducerSnapshot,
     M303FilingFacts,
     M303InsolvencyFilingSubtype,
     Modelo111ProfileFacts,
+    Modelo202ProducerProfile,
+    Modelo210ProfileFacts,
+    Modelo222ProfileFacts,
+    Modelo353ProfileFacts,
     RefundAccountSelection,
 )
 
@@ -74,6 +79,7 @@ _MODELO_PRODUCER_NAMESPACE_OWNERS = {
     "m303": "modelo_303",
     "m353": "modelo_353",
     "m360": "modelo_360",
+    "m840": "modelo_840",
     "presenter": "modelo_specific_presenter",
     "filing": "modelo_specific_filing",
     "prior_domiciliation": "modelo_specific_domiciliation",
@@ -95,9 +101,114 @@ def filing_producer_ownership() -> dict[FilingProducerKey, str]:
         FilingProducerKey.TAXPAYER_SURNAMES_OR_LEGAL_NAME,
         FilingProducerKey.CONTACT_PERSON_PHONE,
         FilingProducerKey.CONTACT_PERSON_NAME,
+        FilingProducerKey.CONTACT_PERSON_SECONDARY_PHONE,
+        FilingProducerKey.CONTACT_PERSON_EMAIL,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_BIRTH_CITY,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_BIRTH_COUNTRY_CODE,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_BIRTH_DATE,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_CITY,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_COMPLEMENT,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_COUNTRY_CODE,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_EMAIL,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_FAX,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_MOBILE_PHONE,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_PHONE,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_POSTAL_CODE,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_REGION,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_STREET,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_TAX_ID,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_FULL_NAME,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_PERSON_TYPE,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_TAX_ID,
+        FilingProducerKey.IRNR_CONTRIBUYENTE_TAX_RESIDENCE_COUNTRY_CODE,
+        FilingProducerKey.IRNR_DECLARACION_TIPO,
+        FilingProducerKey.IRNR_DECLARANTE_CAPACITY_CONTRIBUYENTE,
+        FilingProducerKey.IRNR_DECLARANTE_CAPACITY_DEPOSITARIO,
+        FilingProducerKey.IRNR_DECLARANTE_CAPACITY_GESTOR,
+        FilingProducerKey.IRNR_DECLARANTE_CAPACITY_PAGADOR,
+        FilingProducerKey.IRNR_DECLARANTE_CAPACITY_REPRESENTANTE,
+        FilingProducerKey.IRNR_DECLARANTE_CAPACITY_RETENEDOR,
+        FilingProducerKey.IRNR_DECLARANTE_FULL_NAME,
+        FilingProducerKey.IRNR_DECLARANTE_TAX_ID,
+        FilingProducerKey.IRNR_DEVENGO_AGRUPACION,
+        FilingProducerKey.IRNR_DEVENGO_FECHA_DEVENGO,
+        FilingProducerKey.IRNR_DEVOLUCION_CUENTA_RESTO_BANCO,
+        FilingProducerKey.IRNR_DEVOLUCION_CUENTA_RESTO_CIUDAD,
+        FilingProducerKey.IRNR_DEVOLUCION_CUENTA_RESTO_CODIGO_PAIS,
+        FilingProducerKey.IRNR_DEVOLUCION_CUENTA_RESTO_DIRECCION_BANCO,
+        FilingProducerKey.IRNR_DEVOLUCION_CUENTA_RESTO_NUMERO_CUENTA,
+        FilingProducerKey.IRNR_DEVOLUCION_CUENTA_RESTO_SWIFT_BIC,
+        FilingProducerKey.IRNR_DEVOLUCION_CUENTA_SEPA_IBAN,
+        FilingProducerKey.IRNR_DEVOLUCION_CUENTA_SEPA_SWIFT_BIC,
+        FilingProducerKey.IRNR_DEVOLUCION_CUENTA_TITULAR_FULL_NAME,
+        FilingProducerKey.IRNR_DEVOLUCION_CUENTA_TITULAR_TAX_ID,
+        FilingProducerKey.IRNR_DEVOLUCION_RENUNCIA_A_FAVOR_DEL_TESORO,
+        FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_CONYUGE_FULL_NAME,
+        FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_CONYUGE_TAX_ID,
+        FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_CUOTA_PARTICIPACION_CONTRIBUYENTE,
+        FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_CUOTA_PARTICIPACION_CONYUGE,
+        FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_FECHA_ADQUISICION,
+        FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_FECHA_MEJORA,
+        FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_JUSTIFICANTE_MODELO_211,
+        FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_TITULARIDAD,
+        FilingProducerKey.IRNR_INGRESO_CUENTA_RESTO_BANCO,
+        FilingProducerKey.IRNR_INGRESO_CUENTA_RESTO_CIUDAD,
+        FilingProducerKey.IRNR_INGRESO_CUENTA_RESTO_CODIGO_PAIS,
+        FilingProducerKey.IRNR_INGRESO_CUENTA_RESTO_DIRECCION_BANCO,
+        FilingProducerKey.IRNR_INGRESO_CUENTA_RESTO_NUMERO_CUENTA,
+        FilingProducerKey.IRNR_INGRESO_CUENTA_RESTO_SWIFT_BIC,
+        FilingProducerKey.IRNR_INGRESO_CUENTA_SEPA_IBAN,
+        FilingProducerKey.IRNR_INGRESO_CUENTA_SEPA_SWIFT_BIC,
+        FilingProducerKey.IRNR_INGRESO_CUENTA_TITULAR_FULL_NAME,
+        FilingProducerKey.IRNR_INGRESO_CUENTA_TITULAR_TAX_ID,
+        FilingProducerKey.IRNR_INGRESO_FORMA_PAGO,
+        FilingProducerKey.IRNR_INMUEBLE_REFERENCIA_CATASTRAL,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_BLOQUE,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_CALIFICADOR_NUMERO,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_CODIGO_INE_MUNICIPIO,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_CODIGO_POSTAL,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_CODIGO_PROVINCIA,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_DATOS_COMPLEMENTARIOS,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_ESCALERA,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_LOCALIDAD,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_NOMBRE_VIA,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_NUMERO_CASA,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_PLANTA,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_PORTAL,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_PUERTA,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_TIPO_NUMERACION,
+        FilingProducerKey.IRNR_INMUEBLE_SITUACION_TIPO_VIA,
+        FilingProducerKey.IRNR_PAGADOR_FULL_NAME,
+        FilingProducerKey.IRNR_PAGADOR_PERSON_TYPE,
+        FilingProducerKey.IRNR_PAGADOR_TAX_ID,
+        FilingProducerKey.IRNR_RENTA_CLAVE_DIVISA,
+        FilingProducerKey.IRNR_REPRESENTANTE_APPOINTMENT_KIND,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_BLOQUE,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_CALIFICADOR_NUMERO,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_CODIGO_INE_MUNICIPIO,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_CODIGO_POSTAL,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_CODIGO_PROVINCIA,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_DATOS_COMPLEMENTARIOS,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_ESCALERA,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_LOCALIDAD,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_NOMBRE_VIA,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_NUMERO_CASA,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_PLANTA,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_PORTAL,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_PUERTA,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_TIPO_NUMERACION,
+        FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_TIPO_VIA,
+        FilingProducerKey.IRNR_REPRESENTANTE_FAX,
+        FilingProducerKey.IRNR_REPRESENTANTE_FULL_NAME,
+        FilingProducerKey.IRNR_REPRESENTANTE_MOBILE_PHONE,
+        FilingProducerKey.IRNR_REPRESENTANTE_PERSON_TYPE,
+        FilingProducerKey.IRNR_REPRESENTANTE_PHONE,
+        FilingProducerKey.IRNR_REPRESENTANTE_TAX_ID,
+        FilingProducerKey.IRNR_SIN_INGRESO_NI_DEVOLUCION_CUOTA_CERO,
         FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA,
         FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA,
         FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT,
+        FilingProducerKey.AMENDMENT_SUSTITUTIVA_OR_COMPLEMENTARIA_MARKER,
         FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES,
         FilingProducerKey.AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO,
         FilingProducerKey.SELECTED_ACCOUNT_IBAN,
@@ -123,6 +234,52 @@ def filing_producer_ownership() -> dict[FilingProducerKey, str]:
         FilingProducerKey.M303_EXONERADO_390_APPLICABLE,
         FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED,
         FilingProducerKey.M111_COLEGIO_CONCERTADO,
+        FilingProducerKey.M222_NUMERO_GRUPO,
+        FilingProducerKey.M222_REPRESENTANTE_O_DOMINANTE,
+        FilingProducerKey.M222_NORMATIVA_TERRITORIO_FORAL,
+        FilingProducerKey.M222_ENTIDAD_DOMINANTE_IDENTIFICACION,
+        FilingProducerKey.M222_ENTIDAD_DOMINANTE_PAIS_TERRITORIO_FORAL,
+        FilingProducerKey.M222_ENTIDAD_DOMINANTE_RAZON_SOCIAL,
+        FilingProducerKey.M222_FECHA_INICIO_PERIODO_IMPOSITIVO,
+        FilingProducerKey.M222_CNAE_ACTIVIDAD_PRINCIPAL,
+        FilingProducerKey.M222_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE,
+        FilingProducerKey.M222_REGIMEN_REDUCIDA_DIMENSION,
+        FilingProducerKey.M222_CIFRA_NEGOCIOS_GRUPO_DOCE_MESES,
+        FilingProducerKey.M222_COOPERATIVA_FISCALMENTE_PROTEGIDA,
+        FilingProducerKey.M222_REGIMEN_ENTIDADES_CAPITAL_RIESGO,
+        FilingProducerKey.M222_CIRCUNSTANCIA_CONCURRENTE,
+        FilingProducerKey.M222_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_TRAMO,
+        FilingProducerKey.M222_MULTIPLES_TIPOS_IMPOSITIVOS,
+        FilingProducerKey.M222_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES,
+        FilingProducerKey.M222_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO,
+        FilingProducerKey.M222_MODALIDAD_LIQUIDACION,
+        FilingProducerKey.M222_COMUNICACION_DATOS_ADICIONALES,
+        FilingProducerKey.M222_NUMERO_REFERENCIA_SOCIEDADES,
+        FilingProducerKey.M222_COMUNICACION_VARIACION_COMPOSICION_GRUPO,
+        FilingProducerKey.M222_NUMERO_REFERENCIA_SOCIEDADES_VARIACION,
+        FilingProducerKey.M353_NUMERO_GRUPO,
+        FilingProducerKey.M353_REGIMEN_ESPECIAL_AVANZADO_ELECTED,
+        FilingProducerKey.M353_REGIMEN_ESPECIAL_INSCRITO_REDEME,
+        FilingProducerKey.M353_SIN_ACTIVIDAD,
+        FilingProducerKey.M353_GRUPO_NORMATIVA_FORAL,
+        FilingProducerKey.M202_CNAE_ACTIVIDAD_PRINCIPAL,
+        FilingProducerKey.M202_REGIMEN_LEY_49_2002_SIN_FINES_LUCRATIVOS,
+        FilingProducerKey.M202_REGIMEN_LEY_11_2009_SOCIMI,
+        FilingProducerKey.M202_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE,
+        FilingProducerKey.M202_REGIMEN_ARTICULO_101_LIS_REDUCIDA_DIMENSION,
+        FilingProducerKey.M202_REGIMEN_ENTIDAD_CAPITAL_RIESGO,
+        FilingProducerKey.M202_CIFRA_NEGOCIOS_DOCE_MESES_UMBRAL,
+        FilingProducerKey.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL,
+        FilingProducerKey.M202_COOPERATIVA_O_MULTIPLES_TIPOS,
+        FilingProducerKey.M202_COOPERATIVA_FISCALMENTE_PROTEGIDA,
+        FilingProducerKey.M202_MULTIPLES_TIPOS_IMPOSITIVOS,
+        FilingProducerKey.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES,
+        FilingProducerKey.M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO,
+        FilingProducerKey.M202_MARCA_INSTRUMENTAL,
+        FilingProducerKey.M202_DISCRIMINANTE_DECLARACION_NEGATIVA,
+        FilingProducerKey.M202_NORMATIVA_TERRITORIO_FORAL,
+        FilingProducerKey.M202_COMUNICACION_DATOS_ADICIONALES,
+        FilingProducerKey.M202_NUMERO_REFERENCIA_SOCIEDADES,
     }
     owners = {key: "shared_snapshot" for key in shared}
     for key in FilingProducerKey:
@@ -134,6 +291,235 @@ def filing_producer_ownership() -> dict[FilingProducerKey, str]:
             raise FilingExportValidationError(f"filing producer key {key.value!r} has no declared owner")
         owners[key] = owner
     return owners
+
+
+_M222_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M222_NUMERO_GRUPO: "numero_grupo",
+    FilingProducerKey.M222_REPRESENTANTE_O_DOMINANTE: "representante_o_dominante",
+    FilingProducerKey.M222_NORMATIVA_TERRITORIO_FORAL: "normativa_territorio_foral",
+    FilingProducerKey.M222_ENTIDAD_DOMINANTE_IDENTIFICACION: "entidad_dominante_identificacion",
+    FilingProducerKey.M222_ENTIDAD_DOMINANTE_PAIS_TERRITORIO_FORAL: "entidad_dominante_pais_territorio_foral",
+    FilingProducerKey.M222_ENTIDAD_DOMINANTE_RAZON_SOCIAL: "entidad_dominante_razon_social",
+    FilingProducerKey.M222_FECHA_INICIO_PERIODO_IMPOSITIVO: "fecha_inicio_periodo_impositivo",
+    FilingProducerKey.M222_CNAE_ACTIVIDAD_PRINCIPAL: "cnae_actividad_principal",
+    FilingProducerKey.M222_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE: "regimen_entidades_navieras_tonelaje",
+    FilingProducerKey.M222_REGIMEN_REDUCIDA_DIMENSION: "regimen_reducida_dimension",
+    FilingProducerKey.M222_CIFRA_NEGOCIOS_GRUPO_DOCE_MESES: "cifra_negocios_grupo_doce_meses",
+    FilingProducerKey.M222_COOPERATIVA_FISCALMENTE_PROTEGIDA: "cooperativa_fiscalmente_protegida",
+    FilingProducerKey.M222_REGIMEN_ENTIDADES_CAPITAL_RIESGO: "regimen_entidades_capital_riesgo",
+    FilingProducerKey.M222_CIRCUNSTANCIA_CONCURRENTE: "circunstancia_concurrente",
+    FilingProducerKey.M222_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_TRAMO: "cifra_negocios_periodo_anterior_tramo",
+    FilingProducerKey.M222_MULTIPLES_TIPOS_IMPOSITIVOS: "multiples_tipos_impositivos",
+    FilingProducerKey.M222_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES: "tipo_gravamen_impuesto_sociedades",
+    FilingProducerKey.M222_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO: "importe_neto_cifra_negocios_tramo",
+    FilingProducerKey.M222_MODALIDAD_LIQUIDACION: "modalidad_liquidacion",
+    FilingProducerKey.M222_COMUNICACION_DATOS_ADICIONALES: "comunicacion_datos_adicionales",
+    FilingProducerKey.M222_NUMERO_REFERENCIA_SOCIEDADES: "numero_referencia_sociedades",
+    FilingProducerKey.M222_COMUNICACION_VARIACION_COMPOSICION_GRUPO: "comunicacion_variacion_composicion_grupo",
+    FilingProducerKey.M222_NUMERO_REFERENCIA_SOCIEDADES_VARIACION: "numero_referencia_sociedades_variacion",
+}
+
+
+def m222_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
+    """Resolve the grupo-fiscal producer identities Modelo 222's layout cites.
+
+    Every one of these keys was declared in the vocabulary and produced by nothing, so the
+    layout's twenty-three header fields -- numero de grupo and entidad dominante among
+    them -- rendered blank on a return that exists to identify a fiscal group.
+
+    A profile of the wrong type yields every key as ``None`` rather than raising: this
+    resolver runs for every modelo, and only Modelo 222's snapshot validator may decide
+    that a 222 filing without group facts is invalid.
+    """
+    profile = model_profile if isinstance(model_profile, Modelo222ProfileFacts) else None
+    return {
+        key: (getattr(profile, field) if profile is not None else None) for key, field in _M222_FIELD_BY_KEY.items()
+    }
+
+
+_M353_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M353_NUMERO_GRUPO: "numero_grupo",
+    FilingProducerKey.M353_REGIMEN_ESPECIAL_AVANZADO_ELECTED: "regimen_especial_avanzado_elected",
+    FilingProducerKey.M353_REGIMEN_ESPECIAL_INSCRITO_REDEME: "regimen_especial_inscrito_redeme",
+    FilingProducerKey.M353_SIN_ACTIVIDAD: "sin_actividad",
+    FilingProducerKey.M353_GRUPO_NORMATIVA_FORAL: "grupo_normativa_foral",
+}
+
+
+def m353_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
+    """Resolve the grupo de entidades producer identities Modelo 353's layout cites.
+
+    All five ``m353.*`` keys were declared in the vocabulary and produced by nothing, so
+    the número de grupo at offset 109 and the sin-actividad and normativa-foral marks
+    rendered blank on the aggregate return of a régimen especial del grupo de entidades.
+
+    A profile of the wrong type yields every key as ``None`` rather than raising: this
+    resolver runs for every modelo, and only Modelo 353's snapshot validator may decide
+    that a 353 filing without group facts is invalid.
+    """
+    profile = model_profile if isinstance(model_profile, Modelo353ProfileFacts) else None
+    return {
+        key: (getattr(profile, field) if profile is not None else None) for key, field in _M353_FIELD_BY_KEY.items()
+    }
+
+
+
+_M202_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M202_CNAE_ACTIVIDAD_PRINCIPAL: "principal_cnae",
+    FilingProducerKey.M202_REGIMEN_LEY_49_2002_SIN_FINES_LUCRATIVOS: "regimen_ley_49_2002_sin_fines_lucrativos",
+    FilingProducerKey.M202_REGIMEN_LEY_11_2009_SOCIMI: "regimen_ley_11_2009_socimi",
+    FilingProducerKey.M202_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE: "regimen_entidades_navieras_tonelaje",
+    FilingProducerKey.M202_REGIMEN_ARTICULO_101_LIS_REDUCIDA_DIMENSION: "regimen_articulo_101_lis_reducida_dimension",
+    FilingProducerKey.M202_REGIMEN_ENTIDAD_CAPITAL_RIESGO: "regimen_entidad_capital_riesgo",
+    FilingProducerKey.M202_CIFRA_NEGOCIOS_DOCE_MESES_UMBRAL: "cifra_negocios_doce_meses_umbral",
+    FilingProducerKey.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL: "cifra_negocios_periodo_anterior_bajo_umbral",
+    FilingProducerKey.M202_COOPERATIVA_O_MULTIPLES_TIPOS: "cooperativa_o_multiples_tipos",
+    FilingProducerKey.M202_COOPERATIVA_FISCALMENTE_PROTEGIDA: "cooperativa_fiscalmente_protegida",
+    FilingProducerKey.M202_MULTIPLES_TIPOS_IMPOSITIVOS: "multiples_tipos_impositivos",
+    FilingProducerKey.M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES: "tipo_gravamen_impuesto_sociedades",
+    FilingProducerKey.M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO: "importe_neto_cifra_negocios_tramo",
+    FilingProducerKey.M202_MARCA_INSTRUMENTAL: "marca_instrumental",
+    FilingProducerKey.M202_DISCRIMINANTE_DECLARACION_NEGATIVA: "discriminante_declaracion_negativa",
+    FilingProducerKey.M202_NORMATIVA_TERRITORIO_FORAL: "normativa_territorio_foral",
+    FilingProducerKey.M202_COMUNICACION_DATOS_ADICIONALES: "comunicacion_datos_adicionales",
+    FilingProducerKey.M202_NUMERO_REFERENCIA_SOCIEDADES: "numero_referencia_sociedades",
+}
+
+
+def m202_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
+    """Resolve the régimen marks and principal CNAE modelo 202's layout cites.
+
+    A profile of the wrong type yields every key as ``None`` rather than raising: this
+    runs for every modelo, and only modelo 202's own snapshot validator may decide that a
+    202 filing without these facts is invalid.
+    """
+    profile = model_profile if isinstance(model_profile, Modelo202ProducerProfile) else None
+    return {
+        key: (getattr(profile, field) if profile is not None else None)
+        for key, field in _M202_FIELD_BY_KEY.items()
+    }
+
+
+
+_M210_SCOPE_FIELD_BY_KEY: dict[FilingProducerKey, tuple[str, str]] = {
+    FilingProducerKey.IRNR_CONTRIBUYENTE_BIRTH_CITY: ("contribuyente", "birth_city"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_BIRTH_COUNTRY_CODE: ("contribuyente", "birth_country_code"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_BIRTH_DATE: ("contribuyente", "birth_date"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_CITY: ("contribuyente", "foreign_address_city"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_COMPLEMENT: ("contribuyente", "foreign_address_complement"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_COUNTRY_CODE: ("contribuyente", "foreign_address_country_code"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_EMAIL: ("contribuyente", "foreign_address_email"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_FAX: ("contribuyente", "foreign_address_fax"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_MOBILE_PHONE: ("contribuyente", "foreign_address_mobile_phone"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_PHONE: ("contribuyente", "foreign_address_phone"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_POSTAL_CODE: ("contribuyente", "foreign_address_postal_code"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_REGION: ("contribuyente", "foreign_address_region"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_ADDRESS_STREET: ("contribuyente", "foreign_address_street"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_FOREIGN_TAX_ID: ("contribuyente", "foreign_tax_id"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_FULL_NAME: ("contribuyente", "full_name"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_PERSON_TYPE: ("contribuyente", "person_type"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_TAX_ID: ("contribuyente", "tax_id"),
+    FilingProducerKey.IRNR_CONTRIBUYENTE_TAX_RESIDENCE_COUNTRY_CODE: ("contribuyente", "tax_residence_country_code"),
+    FilingProducerKey.IRNR_DECLARACION_TIPO: ("declaracion", "tipo"),
+    FilingProducerKey.IRNR_DECLARANTE_CAPACITY_CONTRIBUYENTE: ("declarante", "capacity_contribuyente"),
+    FilingProducerKey.IRNR_DECLARANTE_CAPACITY_DEPOSITARIO: ("declarante", "capacity_depositario"),
+    FilingProducerKey.IRNR_DECLARANTE_CAPACITY_GESTOR: ("declarante", "capacity_gestor"),
+    FilingProducerKey.IRNR_DECLARANTE_CAPACITY_PAGADOR: ("declarante", "capacity_pagador"),
+    FilingProducerKey.IRNR_DECLARANTE_CAPACITY_REPRESENTANTE: ("declarante", "capacity_representante"),
+    FilingProducerKey.IRNR_DECLARANTE_CAPACITY_RETENEDOR: ("declarante", "capacity_retenedor"),
+    FilingProducerKey.IRNR_DECLARANTE_FULL_NAME: ("declarante", "full_name"),
+    FilingProducerKey.IRNR_DECLARANTE_TAX_ID: ("declarante", "tax_id"),
+    FilingProducerKey.IRNR_DEVENGO_AGRUPACION: ("devengo", "agrupacion"),
+    FilingProducerKey.IRNR_DEVENGO_FECHA_DEVENGO: ("devengo", "fecha_devengo"),
+    FilingProducerKey.IRNR_DEVOLUCION_CUENTA_RESTO_BANCO: ("devolucion", "cuenta_resto_banco"),
+    FilingProducerKey.IRNR_DEVOLUCION_CUENTA_RESTO_CIUDAD: ("devolucion", "cuenta_resto_ciudad"),
+    FilingProducerKey.IRNR_DEVOLUCION_CUENTA_RESTO_CODIGO_PAIS: ("devolucion", "cuenta_resto_codigo_pais"),
+    FilingProducerKey.IRNR_DEVOLUCION_CUENTA_RESTO_DIRECCION_BANCO: ("devolucion", "cuenta_resto_direccion_banco"),
+    FilingProducerKey.IRNR_DEVOLUCION_CUENTA_RESTO_NUMERO_CUENTA: ("devolucion", "cuenta_resto_numero_cuenta"),
+    FilingProducerKey.IRNR_DEVOLUCION_CUENTA_RESTO_SWIFT_BIC: ("devolucion", "cuenta_resto_swift_bic"),
+    FilingProducerKey.IRNR_DEVOLUCION_CUENTA_SEPA_IBAN: ("devolucion", "cuenta_sepa_iban"),
+    FilingProducerKey.IRNR_DEVOLUCION_CUENTA_SEPA_SWIFT_BIC: ("devolucion", "cuenta_sepa_swift_bic"),
+    FilingProducerKey.IRNR_DEVOLUCION_CUENTA_TITULAR_FULL_NAME: ("devolucion", "cuenta_titular_full_name"),
+    FilingProducerKey.IRNR_DEVOLUCION_CUENTA_TITULAR_TAX_ID: ("devolucion", "cuenta_titular_tax_id"),
+    FilingProducerKey.IRNR_DEVOLUCION_RENUNCIA_A_FAVOR_DEL_TESORO: ("devolucion", "renuncia_a_favor_del_tesoro"),
+    FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_CONYUGE_FULL_NAME: ("ganancia_inmobiliaria", "conyuge_full_name"),
+    FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_CONYUGE_TAX_ID: ("ganancia_inmobiliaria", "conyuge_tax_id"),
+    FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_CUOTA_PARTICIPACION_CONTRIBUYENTE: ("ganancia_inmobiliaria", "cuota_participacion_contribuyente"),
+    FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_CUOTA_PARTICIPACION_CONYUGE: ("ganancia_inmobiliaria", "cuota_participacion_conyuge"),
+    FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_FECHA_ADQUISICION: ("ganancia_inmobiliaria", "fecha_adquisicion"),
+    FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_FECHA_MEJORA: ("ganancia_inmobiliaria", "fecha_mejora"),
+    FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_JUSTIFICANTE_MODELO_211: ("ganancia_inmobiliaria", "justificante_modelo_211"),
+    FilingProducerKey.IRNR_GANANCIA_INMOBILIARIA_TITULARIDAD: ("ganancia_inmobiliaria", "titularidad"),
+    FilingProducerKey.IRNR_INGRESO_CUENTA_RESTO_BANCO: ("ingreso", "cuenta_resto_banco"),
+    FilingProducerKey.IRNR_INGRESO_CUENTA_RESTO_CIUDAD: ("ingreso", "cuenta_resto_ciudad"),
+    FilingProducerKey.IRNR_INGRESO_CUENTA_RESTO_CODIGO_PAIS: ("ingreso", "cuenta_resto_codigo_pais"),
+    FilingProducerKey.IRNR_INGRESO_CUENTA_RESTO_DIRECCION_BANCO: ("ingreso", "cuenta_resto_direccion_banco"),
+    FilingProducerKey.IRNR_INGRESO_CUENTA_RESTO_NUMERO_CUENTA: ("ingreso", "cuenta_resto_numero_cuenta"),
+    FilingProducerKey.IRNR_INGRESO_CUENTA_RESTO_SWIFT_BIC: ("ingreso", "cuenta_resto_swift_bic"),
+    FilingProducerKey.IRNR_INGRESO_CUENTA_SEPA_IBAN: ("ingreso", "cuenta_sepa_iban"),
+    FilingProducerKey.IRNR_INGRESO_CUENTA_SEPA_SWIFT_BIC: ("ingreso", "cuenta_sepa_swift_bic"),
+    FilingProducerKey.IRNR_INGRESO_CUENTA_TITULAR_FULL_NAME: ("ingreso", "cuenta_titular_full_name"),
+    FilingProducerKey.IRNR_INGRESO_CUENTA_TITULAR_TAX_ID: ("ingreso", "cuenta_titular_tax_id"),
+    FilingProducerKey.IRNR_INGRESO_FORMA_PAGO: ("ingreso", "forma_pago"),
+    FilingProducerKey.IRNR_INMUEBLE_REFERENCIA_CATASTRAL: ("inmueble", "referencia_catastral"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_BLOQUE: ("inmueble", "situacion_bloque"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_CALIFICADOR_NUMERO: ("inmueble", "situacion_calificador_numero"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_CODIGO_INE_MUNICIPIO: ("inmueble", "situacion_codigo_ine_municipio"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_CODIGO_POSTAL: ("inmueble", "situacion_codigo_postal"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_CODIGO_PROVINCIA: ("inmueble", "situacion_codigo_provincia"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_DATOS_COMPLEMENTARIOS: ("inmueble", "situacion_datos_complementarios"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_ESCALERA: ("inmueble", "situacion_escalera"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_LOCALIDAD: ("inmueble", "situacion_localidad"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_NOMBRE_VIA: ("inmueble", "situacion_nombre_via"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_NUMERO_CASA: ("inmueble", "situacion_numero_casa"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_PLANTA: ("inmueble", "situacion_planta"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_PORTAL: ("inmueble", "situacion_portal"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_PUERTA: ("inmueble", "situacion_puerta"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_TIPO_NUMERACION: ("inmueble", "situacion_tipo_numeracion"),
+    FilingProducerKey.IRNR_INMUEBLE_SITUACION_TIPO_VIA: ("inmueble", "situacion_tipo_via"),
+    FilingProducerKey.IRNR_PAGADOR_FULL_NAME: ("pagador", "full_name"),
+    FilingProducerKey.IRNR_PAGADOR_PERSON_TYPE: ("pagador", "person_type"),
+    FilingProducerKey.IRNR_PAGADOR_TAX_ID: ("pagador", "tax_id"),
+    FilingProducerKey.IRNR_RENTA_CLAVE_DIVISA: ("renta", "clave_divisa"),
+    FilingProducerKey.IRNR_REPRESENTANTE_APPOINTMENT_KIND: ("representante", "appointment_kind"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_BLOQUE: ("representante", "domicilio_bloque"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_CALIFICADOR_NUMERO: ("representante", "domicilio_calificador_numero"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_CODIGO_INE_MUNICIPIO: ("representante", "domicilio_codigo_ine_municipio"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_CODIGO_POSTAL: ("representante", "domicilio_codigo_postal"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_CODIGO_PROVINCIA: ("representante", "domicilio_codigo_provincia"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_DATOS_COMPLEMENTARIOS: ("representante", "domicilio_datos_complementarios"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_ESCALERA: ("representante", "domicilio_escalera"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_LOCALIDAD: ("representante", "domicilio_localidad"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_NOMBRE_VIA: ("representante", "domicilio_nombre_via"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_NUMERO_CASA: ("representante", "domicilio_numero_casa"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_PLANTA: ("representante", "domicilio_planta"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_PORTAL: ("representante", "domicilio_portal"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_PUERTA: ("representante", "domicilio_puerta"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_TIPO_NUMERACION: ("representante", "domicilio_tipo_numeracion"),
+    FilingProducerKey.IRNR_REPRESENTANTE_DOMICILIO_TIPO_VIA: ("representante", "domicilio_tipo_via"),
+    FilingProducerKey.IRNR_REPRESENTANTE_FAX: ("representante", "fax"),
+    FilingProducerKey.IRNR_REPRESENTANTE_FULL_NAME: ("representante", "full_name"),
+    FilingProducerKey.IRNR_REPRESENTANTE_MOBILE_PHONE: ("representante", "mobile_phone"),
+    FilingProducerKey.IRNR_REPRESENTANTE_PERSON_TYPE: ("representante", "person_type"),
+    FilingProducerKey.IRNR_REPRESENTANTE_PHONE: ("representante", "phone"),
+    FilingProducerKey.IRNR_REPRESENTANTE_TAX_ID: ("representante", "tax_id"),
+    FilingProducerKey.IRNR_SIN_INGRESO_NI_DEVOLUCION_CUOTA_CERO: ("sin_ingreso_ni_devolucion", "cuota_cero"),
+}
+
+
+def m210_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
+    """Resolve the twelve party, property and settlement scopes modelo 210's layout cites.
+
+    A profile of the wrong type, or a scope the filing does not carry, yields ``None``
+    rather than raising: AEAT writes an empty alphanumeric header field to blancos, and
+    only a caller knows which scopes its filing has.
+    """
+    profile = model_profile if isinstance(model_profile, Modelo210ProfileFacts) else None
+    values: dict[FilingProducerKey, object] = {}
+    for key, (scope_name, field) in _M210_SCOPE_FIELD_BY_KEY.items():
+        scope = getattr(profile, scope_name, None) if profile is not None else None
+        values[key] = getattr(scope, field, None) if scope is not None else None
+    return values
 
 
 def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
@@ -164,9 +550,23 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
         # in AEAT's informativa header.
         FilingProducerKey.CONTACT_PERSON_PHONE: snapshot.declaration_contact.phone,
         FilingProducerKey.CONTACT_PERSON_NAME: snapshot.declaration_contact.full_name,
+        FilingProducerKey.CONTACT_PERSON_SECONDARY_PHONE: snapshot.declaration_contact.secondary_phone,
+        FilingProducerKey.CONTACT_PERSON_EMAIL: snapshot.declaration_contact.email,
         FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA: amendment.is_rectificativa if amendment else None,
         FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: amendment.is_complementaria if amendment else None,
         FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT: amendment.original_aeat_receipt if amendment else None,
+        # ONE official slot holding "S", "C" or blank. Derived from the amendment KIND,
+        # never from the boolean pair: rendering "S" because is_complementaria is false
+        # would assert a substitution nobody declared, which is why this is its own key.
+        FilingProducerKey.AMENDMENT_SUSTITUTIVA_OR_COMPLEMENTARIA_MARKER: (
+            None
+            if amendment is None
+            else "S"
+            if amendment.is_sustitutiva
+            else "C"
+            if amendment.is_complementaria
+            else None
+        ),
         FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES: m303_motive[
             FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES
         ],
@@ -227,6 +627,10 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
                 FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
             },
         )
+    values.update(m222_producer_values(snapshot.model_profile))
+    values.update(m202_producer_values(snapshot.model_profile))
+    values.update(m210_producer_values(snapshot.model_profile))
+    values.update(m353_producer_values(snapshot.model_profile))
     shared_owned = {key for key, owner in filing_producer_ownership().items() if owner == "shared_snapshot"}
     if set(values) != shared_owned:
         raise FilingExportValidationError("shared filing producer resolver is not exhaustive over its owned keys")
