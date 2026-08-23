@@ -1,0 +1,691 @@
+# Modelo 220 RECORD T22008B00 -- consolidacion de bases imponibles: el saldo de
+# ingresos y gastos del ejercicio, el Impuesto sobre Sociedades, las diferencias
+# permanentes y temporarias de las sociedades individuales y de los ajustes por
+# consolidacion, la compensacion de bases imponibles negativas y la base imponible.
+#
+# 55 casillas, every one carrying a real AEAT box number and a `segmento`.
+#
+# THE RECORD IS A GROUP x COLUMN GRID and the decomposition was checked before any
+# label was composed: eight concept groups against seven settlement columns (cuenta de
+# perdidas y ganancias in its aumentos and disminuciones variants, ingresos y gastos
+# imputados al patrimonio neto likewise, reservas likewise, and a total), plus two
+# standalone lines. The arithmetic closes exactly: the SALDO group carries only four
+# columns rather than seven, so 4 + 7x7 + 2 = 55, the numbered-field count.
+#
+# COLUMN MATCHING IS ORDER-DEPENDENT and the table says so: "Cuenta de Perdidas y
+# Ganancias" is a PREFIX of "Cuenta de Perdidas y Ganancias. Aumentos (A)", so the
+# variants must be tested first or every aumentos cell reads as the bare column. The
+# same shape caused a real defect on this modelo's family 12, where a lowercase
+# fragment shadowed its own superstring and would have mislabelled every 2024 cell.
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. The record tiles
+# 1..1112 exactly once with NO gap and NO PARTIAL OVERLAP, both checked, and every
+# number, offset, length and type was read from its own field description.
+#
+# NOT MODELLED, deliberately: the modelo and pagina identifier envelope, the
+# pagina-complementaria mechanics, the reservado run and the end-of-record marker.
+#
+# NOT CLAIMED: these casillas DECLARE the consolidation; none of them computes it.
+# Nothing here checks that a Total column equals the sum of its aumentos and
+# disminuciones, and no formula, construct or binding is attached.
+
+# @16+17. SALDO DE INGRESOS Y GASTOS DEL EJERCICIO. Cuenta de Pérdidas y Ganancias
+[[revisions."2024".casillas]]
+id = "T22008B00:00513"
+number = "00513"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17. SALDO DE INGRESOS Y GASTOS DEL EJERCICIO. Ingresos y gastos directamente imputados al patrimonio neto
+[[revisions."2024".casillas]]
+id = "T22008B00:00517"
+number = "00517"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17. SALDO DE INGRESOS Y GASTOS DEL EJERCICIO. Reservas
+[[revisions."2024".casillas]]
+id = "T22008B00:00518"
+number = "00518"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17. SALDO DE INGRESOS Y GASTOS DEL EJERCICIO. Total
+[[revisions."2024".casillas]]
+id = "T22008B00:00519"
+number = "00519"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17. IMPUESTO SOBRE SOCIEDADES. Cuenta de Pérdidas y Ganancias. Aumentos (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00520"
+number = "00520"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17. IMPUESTO SOBRE SOCIEDADES. Cuenta de Pérdidas y Ganancias. Disminuciones (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00521"
+number = "00521"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17. IMPUESTO SOBRE SOCIEDADES. Ingresos y gastos directamente imputados al patrimonio neto. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00522"
+number = "00522"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17. IMPUESTO SOBRE SOCIEDADES. Ingresos y gastos directamente imputados al patrimonio neto. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00523"
+number = "00523"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17. IMPUESTO SOBRE SOCIEDADES. Reservas (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00524"
+number = "00524"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17. IMPUESTO SOBRE SOCIEDADES. Reservas (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00525"
+number = "00525"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17. IMPUESTO SOBRE SOCIEDADES. Total
+[[revisions."2024".casillas]]
+id = "T22008B00:00526"
+number = "00526"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17. Diferencias permanentes. de las sociedades individuales. Cuenta de Pérdidas y Ganancias. Aumentos (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00527"
+number = "00527"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17. Diferencias permanentes. de las sociedades individuales. Cuenta de Pérdidas y Ganancias. Disminuciones (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00591"
+number = "00591"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17. Diferencias permanentes. de las sociedades individuales. Ingresos y gastos directamente imputados al patrimonio neto. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00607"
+number = "00607"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17. Diferencias permanentes. de las sociedades individuales. Ingresos y gastos directamente imputados al patrimonio neto. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00709"
+number = "00709"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17. Diferencias permanentes. de las sociedades individuales. Reservas. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00710"
+number = "00710"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17. Diferencias permanentes. de las sociedades individuales. Reservas. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00783"
+number = "00783"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17. Diferencias permanentes. de las sociedades individuales. Total
+[[revisions."2024".casillas]]
+id = "T22008B00:00784"
+number = "00784"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17. Diferencias permanentes. de los ajustes por consolidación. Cuenta de Pérdidas y Ganancias. Aumentos (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00785"
+number = "00785"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17. Diferencias permanentes. de los ajustes por consolidación. Cuenta de Pérdidas y Ganancias. Disminuciones (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00789"
+number = "00789"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17. Diferencias permanentes. de los ajustes por consolidación. Ingresos y gastos directamente imputados al patrimonio neto. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00801"
+number = "00801"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17. Diferencias permanentes. de los ajustes por consolidación. Ingresos y gastos directamente imputados al patrimonio neto. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00802"
+number = "00802"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17. Diferencias permanentes. de los ajustes por consolidación. Reservas. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00803"
+number = "00803"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17. Diferencias permanentes. de los ajustes por consolidación. Reservas. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00804"
+number = "00804"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17. Diferencias permanentes. de los ajustes por consolidación. Total
+[[revisions."2024".casillas]]
+id = "T22008B00:00805"
+number = "00805"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17. Diferencias temporarias de las sociedades individuales con origen en el ejercicio. Cuenta de Pérdidas y Ganancias. Aumentos (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00806"
+number = "00806"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17. Diferencias temporarias de las sociedades individuales con origen en el ejercicio. Cuenta de Pérdidas y Ganancias. Disminuciones (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00813"
+number = "00813"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @475+17. Diferencias temporarias de las sociedades individuales con origen en el ejercicio. Ingresos y gastos directamente imputados al patrimonio neto. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00814"
+number = "00814"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @492+17. Diferencias temporarias de las sociedades individuales con origen en el ejercicio. Ingresos y gastos directamente imputados al patrimonio neto. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00815"
+number = "00815"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @509+17. Diferencias temporarias de las sociedades individuales con origen en el ejercicio. Reservas. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00850"
+number = "00850"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @526+17. Diferencias temporarias de las sociedades individuales con origen en el ejercicio. Reservas. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00851"
+number = "00851"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @543+17. Diferencias temporarias de las sociedades individuales con origen en el ejercicio. Total
+[[revisions."2024".casillas]]
+id = "T22008B00:00888"
+number = "00888"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @560+17. Diferencias temporarias de las sociedades individuales con origen en ejercicios anteriores. Cuenta de Pérdidas y Ganancias. Aumentos (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00889"
+number = "00889"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @577+17. Diferencias temporarias de las sociedades individuales con origen en ejercicios anteriores. Cuenta de Pérdidas y Ganancias. Disminuciones (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00890"
+number = "00890"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @594+17. Diferencias temporarias de las sociedades individuales con origen en ejercicios anteriores. Ingresos y gastos directamente imputados al patrimonio neto. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00898"
+number = "00898"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @611+17. Diferencias temporarias de las sociedades individuales con origen en ejercicios anteriores. Ingresos y gastos directamente imputados al patrimonio neto. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00899"
+number = "00899"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @628+17. Diferencias temporarias de las sociedades individuales con origen en ejercicios anteriores. Reservas. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00935"
+number = "00935"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @645+17. Diferencias temporarias de las sociedades individuales con origen en ejercicios anteriores. Reservas. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00936"
+number = "00936"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @662+17. Diferencias temporarias de las sociedades individuales con origen en ejercicios anteriores. Total
+[[revisions."2024".casillas]]
+id = "T22008B00:00937"
+number = "00937"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @679+17. Diferencias temporarias de los ajustes por consolidación con origen en el ejercicio. Cuenta de Pérdidas y Ganancias. Aumentos (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00938"
+number = "00938"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @696+17. Diferencias temporarias de los ajustes por consolidación con origen en el ejercicio. Cuenta de Pérdidas y Ganancias. Disminuciones (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00961"
+number = "00961"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @713+17. Diferencias temporarias de los ajustes por consolidación con origen en el ejercicio. Ingresos y gastos directamente imputados al patrimonio neto. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00962"
+number = "00962"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @730+17. Diferencias temporarias de los ajustes por consolidación con origen en el ejercicio. Ingresos y gastos directamente imputados al patrimonio neto. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00979"
+number = "00979"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @747+17. Diferencias temporarias de los ajustes por consolidación con origen en el ejercicio. Reservas. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00980"
+number = "00980"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @764+17. Diferencias temporarias de los ajustes por consolidación con origen en el ejercicio. Reservas. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00981"
+number = "00981"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @781+17. Diferencias temporarias de los ajustes por consolidación con origen en el ejercicio. Total
+[[revisions."2024".casillas]]
+id = "T22008B00:00982"
+number = "00982"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @798+17. Diferencias temporarias de los ajustes por consolidación con origen en ejercicios anteriores. Cuenta de Pérdidas y Ganancias. Aumentos (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00983"
+number = "00983"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @815+17. Diferencias temporarias de los ajustes por consolidación con origen en ejercicios anteriores. Cuenta de Pérdidas y Ganancias. Disminuciones (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00984"
+number = "00984"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @832+17. Diferencias temporarias de los ajustes por consolidación con origen en ejercicios anteriores. Ingresos y gastos directamente imputados al patrimonio neto. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00985"
+number = "00985"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @849+17. Diferencias temporarias de los ajustes por consolidación con origen en ejercicios anteriores. Ingresos y gastos directamente imputados al patrimonio neto. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00986"
+number = "00986"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @866+17. Diferencias temporarias de los ajustes por consolidación con origen en ejercicios anteriores. Reservas. (A)
+[[revisions."2024".casillas]]
+id = "T22008B00:00987"
+number = "00987"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @883+17. Diferencias temporarias de los ajustes por consolidación con origen en ejercicios anteriores. Reservas. (D)
+[[revisions."2024".casillas]]
+id = "T22008B00:00988"
+number = "00988"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @900+17. Diferencias temporarias de los ajustes por consolidación con origen en ejercicios anteriores. Total
+[[revisions."2024".casillas]]
+id = "T22008B00:00989"
+number = "00989"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @917+17. Compensación de bases imponibles negativas de ejercicios anteriores
+[[revisions."2024".casillas]]
+id = "T22008B00:00990"
+number = "00990"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @934+17. Base imponible (resultado fiscal)
+[[revisions."2024".casillas]]
+id = "T22008B00:00991"
+number = "00991"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]

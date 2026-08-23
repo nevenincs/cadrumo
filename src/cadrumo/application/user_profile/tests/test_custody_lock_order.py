@@ -163,9 +163,26 @@ def test_the_probe_fails_when_the_profile_lock_is_genuinely_held(tmp_path: Path)
     target = _profile_lock_path(tmp_path)
     target.parent.mkdir(parents=True, exist_ok=True)
 
+    # The TYPE is named rather than accepting any exception. A bare
+    # `pytest.raises(Exception)` is satisfied by a missing parent directory, a
+    # typo in the leaf path, or an import error in the primitive -- every one of
+    # which would let this proof pass while proving nothing about exclusivity.
+    # Determined by observation, not assumption: the second acquire raises
+    # `ProfileCustodyRecordError("local custody lock cannot be exclusively
+    # opened")`.
+    #
+    # The MESSAGE is matched as well as the type, because this one class
+    # carries ten distinct refusals in the lock module alone -- a non-positive
+    # timeout, absent flock support, a leaf that is a reparse point, an
+    # identity-verification failure. Any of those satisfies the bare type while
+    # saying nothing about exclusivity, and a later edit passing
+    # `timeout_seconds=0` here would keep this proof green having tested
+    # argument validation instead. Both the POSIX and Windows paths raise this
+    # same wording, so the match is platform-neutral. Matching the message is
+    # the established practice for this class in `custody/tests/test_capsule.py`.
     with (
         custody.profile_custody_local_lock(target, timeout_seconds=_PROBE_SECONDS),
-        pytest.raises(Exception),  # noqa: B017 - the refusal type is the primitive's own
+        pytest.raises(custody.ProfileCustodyRecordError, match="cannot be exclusively opened"),
         custody.profile_custody_local_lock(target, timeout_seconds=0.5),
     ):
         pass

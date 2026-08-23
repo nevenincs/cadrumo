@@ -8,7 +8,7 @@
 # separately. There is no repetition to collapse and no field without a number.
 #
 # AEAT REUSES BOX NUMBERS ACROSS RECORDS, so this modelo is MULTI-SEGMENT. Number 00285
-# is a different declared cell in T22012B00 than it is in T22012000, T22012B10, T22012B20, and the two records
+# is a different declared cell in T22012B00 than it is in T22012000, T22012B10, T22012B20, T22012A01, T22012A11, and the two records
 # share many such numbers. Every casilla here therefore declares `segmento` and takes the
 # `<SEGMENTO>:<number>` id shape, which is the convention modelo 200 -- the other
 # multi-record Sociedades declaration -- already established. Both halves of the id are

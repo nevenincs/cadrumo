@@ -38,6 +38,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: these. It records which spans are known and owned, so a NEW one cannot arrive
 #: unnoticed inside an already-red gate, which is the way a red gate hides its
 #: own growth.
+#: NOT ON THIS SET, and cannot be: modelo 210's single revision `2025`
+#: declares BOTH aeat-dr-210-2022 and aeat-dr-210-2026 and spans a record
+#: LENGTH change between them -- Pagina 01 goes from 2700 positions to 4000
+#: as the tail reserved run grows 532 -> 1832 and the terminator moves
+#: 2692 -> 3992. The detector pairs designs by the ejercicios they cover and
+#: modelo 210's state DEVENGO spans, so the pair never forms; the straddle
+#: signal is silent too because no field is displaced, only the tail
+#: extended. Measured in test_modelo_210_spans_a_record_length_change.py.
+#: It is a genuine span needing a split, invisible to every signal here.
 _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
     {
         # The revisions that genuinely cite two designs across a YEAR boundary

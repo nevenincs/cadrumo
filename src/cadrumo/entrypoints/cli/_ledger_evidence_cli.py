@@ -15,6 +15,8 @@ from ...application.ledger import (
     PurchaseInvoiceEvidenceService,
     confirm_invoice_draft_from_evidence,
     extract_invoice_draft_from_evidence,
+    get_attachment_review_item,
+    list_attachment_review_queue,
 )
 from ...application.user_profile import cloud_evidence_upload_eligible_for_active_profile
 from ...core import IntracomOperationType
@@ -49,6 +51,8 @@ from ._ledger_execution_policies import (
     declare_metadata_group,
 )
 from ._ledger_payloads import (
+    AttachmentReviewQueueResult,
+    AttachmentReviewViewResult,
     EvidenceAddResult,
     EvidenceConfirmResult,
     EvidenceExtractResult,
@@ -79,6 +83,7 @@ def register_evidence_commands(app: typer.Typer) -> None:
     _register_evidence_add_command()
     _register_evidence_view_command()
     _register_evidence_list_command()
+    _register_attachment_review_commands()
     _register_evidence_update_command()
     _register_evidence_remove_command()
     _register_evidence_extract_command()
@@ -86,6 +91,69 @@ def register_evidence_commands(app: typer.Typer) -> None:
     register_evidence_batch_command(evidence_app)
     register_evidence_consent_commands(evidence_app)
     register_evidence_review_commands(evidence_app)
+
+
+def _attachment_store(bucket_id: str):
+    """Build the active bucket's encrypted attachment repository."""
+    from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
+
+    return AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, load_settings()))
+
+
+def _attachment_review_payload(item: object) -> dict[str, object]:
+    payload = item.model_dump(mode="json")
+    if not isinstance(payload, dict):
+        raise TypeError("attachment review payload must be a mapping")
+    return payload
+
+
+def _attachment_review_lines(payload: dict[str, object]) -> list[str]:
+    return [
+        f"attachment_id\t{payload['attachment_id']}",
+        f"sha256\t{payload['sha256']}",
+        f"mime_type\t{payload['mime_type']}",
+        f"bytes_size\t{payload['bytes_size']}",
+        f"source\t{payload['source']}",
+        f"provider_locator\t{payload['provider_locator']}",
+        f"captured_at\t{payload['captured_at']}",
+        f"pending_review\t{payload['pending_review']}",
+        f"linked_invoice_ids\t{','.join(payload['linked_invoice_ids'])}",
+    ]
+
+
+def _register_attachment_review_commands() -> None:
+    @evidence_app.command("attachment-queue", help=tr("cli.app.ledger.evidence.attachment_queue_help"))
+    @command_execution_policy(LEDGER_READ)
+    def attachment_queue(ctx: typer.Context) -> None:
+        """List Drive attachments that still require invoice review."""
+        bucket_id = _tx_repo(_state()).bucket_id
+        rows = list_attachment_review_queue(_attachment_store(bucket_id))
+        payloads = [_attachment_review_payload(row) for row in rows]
+        _emit_envelope(
+            ctx,
+            command="ledger.evidence.attachment_queue",
+            result=AttachmentReviewQueueResult.model_validate(
+                {"bucket_id": bucket_id, "count": len(payloads), "rows": payloads},
+            ),
+            lines=[line for payload in payloads for line in _attachment_review_lines(payload)],
+        )
+
+    @evidence_app.command("attachment-view", help=tr("cli.app.ledger.evidence.attachment_view_help"))
+    @command_execution_policy(LEDGER_READ)
+    def attachment_view(
+        ctx: typer.Context,
+        attachment_id: str = typer.Argument(..., help=tr("cli.app.ledger.evidence.attachment_id_help")),
+    ) -> None:
+        """Inspect non-secret metadata and provenance for one attachment."""
+        bucket_id = _tx_repo(_state()).bucket_id
+        item = get_attachment_review_item(_attachment_store(bucket_id), attachment_id)
+        payload = {"bucket_id": bucket_id, **_attachment_review_payload(item)}
+        _emit_envelope(
+            ctx,
+            command="ledger.evidence.attachment_view",
+            result=AttachmentReviewViewResult.model_validate(payload),
+            lines=[f"bucket_id\t{bucket_id}", *_attachment_review_lines(payload)],
+        )
 
 
 def _register_evidence_add_command() -> None:

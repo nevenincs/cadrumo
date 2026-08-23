@@ -7,6 +7,259 @@ modelo:
       revision:
         '2024':
           casilla:
+            x-agp34c1g710j0c1q60o34chl:
+              label: Consolidacio de resultats i bases imposables. D. Base imposable
+                previa del grup
+            x-agp34c1g710j0c1q60o34e9j:
+              label: Consolidacio de resultats i bases imposables. A. Resultats consolidats
+                del grup fiscal a l'exercici, abans d'impostos
+            x-agp34c1g710j0c1q60o36c1h:
+              label: Consolidacio de resultats i bases imposables. B. Suma dels resultats
+                de les societats del grup fiscal a l'exercici
+            x-agp34c1g710j0c1q60o36c1i:
+              label: Consolidacio de resultats i bases imposables. C. Diferencia per
+                consolidacio de resultats (= A - B)
+            x-agp34c1g710j0c1q60o36c1j:
+              label: Consolidacio de resultats i bases imposables. E. Suma de bases
+                imposables individuals
+            x-agp34c1g710j0c1q60o36c1k:
+              label: Consolidacio de resultats i bases imposables. F. Diferencia per
+                consolidacio de bases imposables (= D - E)
+            x-agp34c1g710j0c1q60o36c1l:
+              label: Consolidacio de resultats i bases imposables. G. Diferencies
+                entre les consolidacions de resultats i la de bases imposables
+            x-agp34c1g710j0c1q60o36c1m:
+              label: Consolidacio de resultats i bases imposables. Per operacions
+                internes de bens i serveis activats (primera)
+            x-agp34c1g710j0c1q60o36c1n:
+              label: Consolidacio de resultats i bases imposables. Per operacions
+                internes de bens i serveis activats (segona)
+            x-agp34c1g710j0c1q60o36c1o:
+              label: Consolidacio de resultats i bases imposables. Per operacions
+                internes de bens i serveis activats (tercera)
+            x-agp34c1g710j0c1q60o36c1p:
+              label: Consolidacio de resultats i bases imposables. Per transmissions
+                internes de drets de credit
+            x-agp34c1g710j0c1q60o36c9g:
+              label: Consolidacio de resultats i bases imposables. Per transmissions
+                internes de derivats (opcions i futurs)
+            x-agp34c1g710j0c1q60o36c9h:
+              label: Consolidacio de resultats i bases imposables. Per transmissions
+                internes d'actius financers
+            x-agp34c1g710j0c1q60o36c9i:
+              label: Consolidacio de resultats i bases imposables. Per operacions
+                internes no compreses als apartats anteriors
+            x-agp34c1g710j0c1q60o36c9j:
+              label: Consolidacio de resultats i bases imposables. G1. Total diferencies
+                per diferiment de resultats interns
+            x-agp34c1g710j0c1q60o36c9k:
+              label: Consolidacio de resultats i bases imposables. Per eliminacio
+                dels dividends interns del grup fiscal
+            x-agp34c1g710j0c1q60o36c9l:
+              label: Consolidacio de resultats i bases imposables. Per eliminacio
+                de deterioraments de valor de participacions en fons propis
+            x-agp34c1g710j0c1q60o36c9m:
+              label: Consolidacio de resultats i bases imposables. Per incorporacio
+                de deterioraments de valor de participacions en fons propis
+            x-agp34c1g710j0c1q60o36c9n:
+              label: Consolidacio de resultats i bases imposables. Per fons de comerc
+                de consolidacio i diferencia negativa de consolidacio
+            x-agp34c1g710j0c1q60o36c9o:
+              label: Consolidacio de resultats i bases imposables. Per altres conceptes
+                no compresos als apartats anteriors
+            x-agp34c1g710j0c1q60o36c9p:
+              label: Consolidacio de resultats i bases imposables. G2. Total diferencies
+                per altres conceptes
+            x-agp34c1g71130c1q60o3ac9j:
+              label: Consolidacio de resultats i bases imposables. Saldo d'ingressos
+                i despeses de l'exercici. compte de perdues i guanys
+            x-agp34c1g71130c1q60o3ac9n:
+              label: Consolidacio de resultats i bases imposables. Saldo d'ingressos
+                i despeses de l'exercici. ingressos i despeses imputats directament
+                al patrimoni net
+            x-agp34c1g71130c1q60o3ac9o:
+              label: Consolidacio de resultats i bases imposables. Saldo d'ingressos
+                i despeses de l'exercici. reserves
+            x-agp34c1g71130c1q60o3ac9p:
+              label: Consolidacio de resultats i bases imposables. Saldo d'ingressos
+                i despeses de l'exercici. total
+            x-agp34c1g71130c1q60o3achg:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                compte de perdues i guanys, augments
+            x-agp34c1g71130c1q60o3achh:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                compte de perdues i guanys, disminucions
+            x-agp34c1g71130c1q60o3achi:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                ingressos i despeses imputats al patrimoni net, augments
+            x-agp34c1g71130c1q60o3achj:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                ingressos i despeses imputats al patrimoni net, disminucions
+            x-agp34c1g71130c1q60o3achk:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                reserves, augments
+            x-agp34c1g71130c1q60o3achl:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                reserves, disminucions
+            x-agp34c1g71130c1q60o3achm:
+              label: Consolidacio de resultats i bases imposables. Impost sobre Societats.
+                total
+            x-agp34c1g71130c1q60o3achn:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. compte de perdues i guanys, augments
+            x-agp34c1g71130c1q60o3ae9h:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. compte de perdues i guanys, disminucions
+            x-agp34c1g71130c1q60o3cc1n:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. ingressos i despeses imputats al patrimoni
+                net, augments
+            x-agp34c1g71130c1q60o3ec1p:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. ingressos i despeses imputats al patrimoni
+                net, disminucions
+            x-agp34c1g71130c1q60o3ec9g:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. reserves, augments
+            x-agp34c1g71130c1q60o3ee1j:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. reserves, disminucions
+            x-agp34c1g71130c1q60o3ee1k:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                de les societats individuals. total
+            x-agp34c1g71130c1q60o3ee1l:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. compte de perdues i guanys, augments
+            x-agp34c1g71130c1q60o3ee1p:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. compte de perdues i guanys, disminucions
+            x-agp34c1g71130c1q60o3gc1h:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. ingressos i despeses imputats al patrimoni
+                net, augments
+            x-agp34c1g71130c1q60o3gc1i:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. ingressos i despeses imputats al patrimoni
+                net, disminucions
+            x-agp34c1g71130c1q60o3gc1j:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. reserves, augments
+            x-agp34c1g71130c1q60o3gc1k:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. reserves, disminucions
+            x-agp34c1g71130c1q60o3gc1l:
+              label: Consolidacio de resultats i bases imposables. Diferencies permanents
+                dels ajustos per consolidacio. total
+            x-agp34c1g71130c1q60o3gc1m:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. compte de perdues
+                i guanys, augments
+            x-agp34c1g71130c1q60o3gc9j:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. compte de perdues
+                i guanys, disminucions
+            x-agp34c1g71130c1q60o3gc9k:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. ingressos i
+                despeses imputats al patrimoni net, augments
+            x-agp34c1g71130c1q60o3gc9l:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. ingressos i
+                despeses imputats al patrimoni net, disminucions
+            x-agp34c1g71130c1q60o3gd9g:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. reserves, augments
+            x-agp34c1g71130c1q60o3gd9h:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. reserves, disminucions
+            x-agp34c1g71130c1q60o3ge1o:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen a l'exercici. total
+            x-agp34c1g71130c1q60o3ge1p:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. compte
+                de perdues i guanys, augments
+            x-agp34c1g71130c1q60o3ge9g:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. compte
+                de perdues i guanys, disminucions
+            x-agp34c1g71130c1q60o3ge9o:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. ingressos
+                i despeses imputats al patrimoni net, augments
+            x-agp34c1g71130c1q60o3ge9p:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. ingressos
+                i despeses imputats al patrimoni net, disminucions
+            x-agp34c1g71130c1q60o3icpl:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. reserves,
+                augments
+            x-agp34c1g71130c1q60o3icpm:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. reserves,
+                disminucions
+            x-agp34c1g71130c1q60o3icpn:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                de les societats individuals amb origen en exercicis anteriors. total
+            x-agp34c1g71130c1q60o3icpo:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. compte de perdues
+                i guanys, augments
+            x-agp34c1g71130c1q60o3idhh:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. compte de perdues
+                i guanys, disminucions
+            x-agp34c1g71130c1q60o3idhi:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. ingressos i
+                despeses imputats al patrimoni net, augments
+            x-agp34c1g71130c1q60o3idpp:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. ingressos i
+                despeses imputats al patrimoni net, disminucions
+            x-agp34c1g71130c1q60o3ie1g:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. reserves, augments
+            x-agp34c1g71130c1q60o3ie1h:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. reserves, disminucions
+            x-agp34c1g71130c1q60o3ie1i:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen a l'exercici. total
+            x-agp34c1g71130c1q60o3ie1j:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. compte
+                de perdues i guanys, augments
+            x-agp34c1g71130c1q60o3ie1k:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. compte
+                de perdues i guanys, disminucions
+            x-agp34c1g71130c1q60o3ie1l:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. ingressos
+                i despeses imputats al patrimoni net, augments
+            x-agp34c1g71130c1q60o3ie1m:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. ingressos
+                i despeses imputats al patrimoni net, disminucions
+            x-agp34c1g71130c1q60o3ie1n:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. reserves,
+                augments
+            x-agp34c1g71130c1q60o3ie1o:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. reserves,
+                disminucions
+            x-agp34c1g71130c1q60o3ie1p:
+              label: Consolidacio de resultats i bases imposables. Diferencies temporaries
+                dels ajustos per consolidacio amb origen en exercicis anteriors. total
+            x-agp34c1g71130c1q60o3ie9g:
+              label: Consolidacio de resultats i bases imposables. Compensacio de
+                bases imposables negatives d'exercicis anteriors
+            x-agp34c1g71130c1q60o3ie9h:
+              label: Consolidacio de resultats i bases imposables. Base imposable
+                (resultat fiscal)
             x-agp34c1h68o30c1q60o30c1h:
               label: Deduccions per doble imposicio internacional, RDLEG 4/2004. exercici
                 de generacio 2009. deduccio pendent el 2024 (registre T22012000)
@@ -674,6 +927,420 @@ modelo:
             x-agp34c1h68o30c1q60pj4dhi:
               label: Deduccions per doble imposicio internacional, LIS. total de l'exercici
                 2024. pendent d'aplicacio en periodes futurs (registre T22012000)
+            x-agp34c1h690j0c9q60o34d9o:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2017. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60o34dhi:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2017. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60o34dhj:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2017. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60o34dhk:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2017. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60o34dhl:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2017. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60o3ie1k:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2019. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60o3ie1o:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2019. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60o3ie1p:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2019. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60o3ie9g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2019. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60o3ie9h:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2019. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60ojie1j:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2016. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60ojie9n:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2016. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60ojie9o:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2016. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60ojie9p:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2016. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60p30c1g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2016. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60p32c9g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2023. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60p32c9k:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2023. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60p32c9l:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2023. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60p32c9m:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2023. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60p32c9n:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2023. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60p3cd1j:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2024. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60p3cdpn:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2024. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60p3cdpo:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2024. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60p3cdpp:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2024. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60p3ce1g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2024. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60pj4d1l:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2015. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60pj6e1m:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2018. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60pj6e9h:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2018. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60pj6e9i:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2018. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60pj6e9j:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2018. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60pj6e9k:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2018. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60pjce9l:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2022. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60pjce9p:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2022. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60pjec1g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2022. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60pjec1h:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2022. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60pjec1i:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2022. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60q30c1j:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2020. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60q30c1n:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2020. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60q30c1o:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2020. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60q30c1p:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2020. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60q30c9g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2020. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60q3ac1k:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2021. tipus de gravamen del periode
+                de generacio (registre T22012A01)
+            x-agp34c1h690j0c9q60q3ac1o:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2021. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60q3ac1p:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2021. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60q3ac9g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2021. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60q3ac9h:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2021. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1g:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2015. deduccio pendent de periodes anteriors
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1h:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2015. deduccio pendent el 2024 (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60qjad1i:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2015. aplicat en aquesta liquidacio
+                (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1j:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. doble imposicio de 2015. pendent d'aplicacio en periodes
+                futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1k:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. total. deduccio pendent de periodes anteriors (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60qjad1l:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. total. deduccio pendent el 2024 (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1m:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. total. aplicat en aquesta liquidacio (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1n:
+              label: Deduccions per doble imposicio internacional, LIS. exercicis
+                anteriors. total. pendent d'aplicacio en periodes futurs (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60qjad1o:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                juridica, impost suportat pel contribuent (art. 31 LIS). doble imposicio
+                de 2024. deduccio generada (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad1p:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                juridica, impost suportat pel contribuent (art. 31 LIS). doble imposicio
+                de 2024. aplicat en aquesta liquidacio (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad9g:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                juridica, impost suportat pel contribuent (art. 31 LIS). doble imposicio
+                de 2024. pendent d'aplicacio en periodes futurs (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad9h:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                economica, dividends i participacions en beneficis (art. 32 LIS).
+                doble imposicio de 2024. deduccio generada (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad9i:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                economica, dividends i participacions en beneficis (art. 32 LIS).
+                doble imposicio de 2024. aplicat en aquesta liquidacio (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad9j:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                economica, dividends i participacions en beneficis (art. 32 LIS).
+                doble imposicio de 2024. pendent d'aplicacio en periodes futurs (registre
+                T22012A01)
+            x-agp34c1h690j0c9q60qjad9k:
+              label: Deduccions per doble imposicio internacional, LIS. total de l'exercici
+                2024. deduccio generada (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad9l:
+              label: Deduccions per doble imposicio internacional, LIS. total de l'exercici
+                2024. aplicat en aquesta liquidacio (registre T22012A01)
+            x-agp34c1h690j0c9q60qjad9m:
+              label: Deduccions per doble imposicio internacional, LIS. total de l'exercici
+                2024. pendent d'aplicacio en periodes futurs (registre T22012A01)
+            x-agp34c1h690j2c9q60o34dpg:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2017. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60o34dph:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2017. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60o34dpi:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2017. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60o34dpj:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2017. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60o3ie9m:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2019. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60o3ie9n:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2019. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60o3ie9o:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2019. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60o3ie9p:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2019. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60p30chi:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2016. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60p30chj:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2016. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60p30chk:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2016. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60p30chl:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2016. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60p32d1n:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2023. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60p32d1o:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2023. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60p32d1p:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2023. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60p32d9g:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2023. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60p3ce1l:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2024. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60p3ce1m:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2024. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60p3gchj:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2024. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60p3gchk:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2024. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60pj6e9p:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2018. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60pj8c1g:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2018. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60pj8c1h:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2018. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60pj8c1i:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2018. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60pjec1n:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2022. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60pjec1o:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2022. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60pjec1p:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2022. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60q30c9l:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2020. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60q30c9m:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2020. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60q30c9n:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2020. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60q30c9o:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2020. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60q3ac9m:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2021. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60q3ac9n:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2021. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60q3ac9o:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2021. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60q3ac9p:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2021. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60qjachj:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2015. deduccio pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60qjachk:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2015. deduccio pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60qjachl:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2015. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60qjachm:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2015. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60qjachn:
+              label: Deduccions per doble imposicio internacional, LIS. total. deduccio
+                pendent de periodes anteriors (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacho:
+              label: Deduccions per doble imposicio internacional, LIS. total. deduccio
+                pendent el 2024 (registre T22012A11)
+            x-agp34c1h690j2c9q60qjachp:
+              label: Deduccions per doble imposicio internacional, LIS. total. aplicat
+                en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpg:
+              label: Deduccions per doble imposicio internacional, LIS. total. pendent
+                d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacph:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                juridica, impost suportat pel contribuent (art. 31 LIS). doble imposicio
+                de 2024. deduccio generada (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpi:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                juridica, impost suportat pel contribuent (art. 31 LIS). doble imposicio
+                de 2024. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpj:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                juridica, impost suportat pel contribuent (art. 31 LIS). doble imposicio
+                de 2024. pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpk:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                economica, dividends i participacions en beneficis (art. 32 LIS).
+                doble imposicio de 2024. deduccio generada (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpl:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                economica, dividends i participacions en beneficis (art. 32 LIS).
+                doble imposicio de 2024. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpm:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                economica, dividends i participacions en beneficis (art. 32 LIS).
+                doble imposicio de 2024. pendent d'aplicacio en periodes futurs (registre
+                T22012A11)
+            x-agp34c1h690j2c9q60qjacpn:
+              label: Deduccions per doble imposicio internacional, LIS. total de l'exercici
+                2024. deduccio generada (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpo:
+              label: Deduccions per doble imposicio internacional, LIS. total de l'exercici
+                2024. aplicat en aquesta liquidacio (registre T22012A11)
+            x-agp34c1h690j2c9q60qjacpp:
+              label: Deduccions per doble imposicio internacional 2024. total 2024.
+                pendent d'aplicacio en periodes futurs (registre T22012A11)
+            x-agp34c1h690j2c9q60r32cpg:
+              label: Deduccions per doble imposicio internacional, LIS. doble imposicio
+                de 2022. pendent d'aplicacio en periodes futurs (registre T22012A11)
             x-agp34c1h69130c1q60o34dpk:
               label: Deduccions per doble imposicio interna, DT 23a LIS. exercicis
                 anteriors. doble imposicio de 2017. deduccio pendent de periodes anteriors
@@ -2552,6 +3219,458 @@ modelo:
               label: Deduccions per doble imposicio internacional, LIS. doble imposicio
                 interna, periodes anteriors. doble imposicio de 2022. pendent d'aplicacio
                 en periodes futurs (registre T22012B20)
+            x-agp34c1h6oo30c1q60o30d9i:
+              label: Repartiment entre Administracions forals. Total. Araba
+            x-agp34c1h6oo30c1q60o30d9j:
+              label: Repartiment entre Administracions forals. Total. Gipuzkoa
+            x-agp34c1h6oo30c1q60o30d9k:
+              label: Repartiment entre Administracions forals. Total. Bizkaia
+            x-agp34c1h6oo30c1q60o30d9l:
+              label: Repartiment entre Administracions forals. Total. Navarra
+            x-agp34c1h6oo30c1q60o30d9m:
+              label: Repartiment entre Administracions forals. Total. Territori comu
+            x-agp34c1h6oo30c1q60o38c1i:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                1o pagament fraccionat. Araba
+            x-agp34c1h6oo30c1q60o38chg:
+              label: Repartiment entre Administracions forals. Quota de l'exercici
+                a ingressar o retornar. Araba
+            x-agp34c1h6oo30c1q60o38chh:
+              label: Repartiment entre Administracions forals. Quota de l'exercici
+                a ingressar o retornar. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38chm:
+              label: Repartiment entre Administracions forals. Quota de l'exercici
+                a ingressar o retornar. Bizkaia
+            x-agp34c1h6oo30c1q60o38chn:
+              label: Repartiment entre Administracions forals. Quota de l'exercici
+                a ingressar o retornar. Navarra
+            x-agp34c1h6oo30c1q60o38d1i:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                1o pagament fraccionat. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38d1j:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                1o pagament fraccionat. Bizkaia
+            x-agp34c1h6oo30c1q60o38d1k:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                1o pagament fraccionat. Navarra
+            x-agp34c1h6oo30c1q60o38d1l:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                2o pagament fraccionat. Araba
+            x-agp34c1h6oo30c1q60o38d1m:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                2o pagament fraccionat. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38d1n:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                2o pagament fraccionat. Bizkaia
+            x-agp34c1h6oo30c1q60o38d1o:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                2o pagament fraccionat. Navarra
+            x-agp34c1h6oo30c1q60o38d1p:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                3o pagament fraccionat. Araba
+            x-agp34c1h6oo30c1q60o38d9g:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                3o pagament fraccionat. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38d9h:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                3o pagament fraccionat. Bizkaia
+            x-agp34c1h6oo30c1q60o38dhl:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                3o pagament fraccionat. Navarra
+            x-agp34c1h6oo30c1q60o38dpk:
+              label: Repartiment entre Administracions forals. Quota diferencial.
+                Araba
+            x-agp34c1h6oo30c1q60o38dpl:
+              label: Repartiment entre Administracions forals. Quota diferencial.
+                Gipuzkoa
+            x-agp34c1h6oo30c1q60o38dpm:
+              label: Repartiment entre Administracions forals. Quota diferencial.
+                Bizkaia
+            x-agp34c1h6oo30c1q60o38dpn:
+              label: Repartiment entre Administracions forals. Quota diferencial.
+                Navarra
+            x-agp34c1h6oo30c1q60o38e1i:
+              label: Repartiment entre Administracions forals. Increment per perdua
+                de beneficis fiscals de periodes anteriors. Araba
+            x-agp34c1h6oo30c1q60o38e1j:
+              label: Repartiment entre Administracions forals. Increment per perdua
+                de beneficis fiscals de periodes anteriors. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38e1k:
+              label: Repartiment entre Administracions forals. Increment per perdua
+                de beneficis fiscals de periodes anteriors. Bizkaia
+            x-agp34c1h6oo30c1q60o38e1l:
+              label: Repartiment entre Administracions forals. Increment per perdua
+                de beneficis fiscals de periodes anteriors. Navarra
+            x-agp34c1h6oo30c1q60o38e1m:
+              label: Repartiment entre Administracions forals. Interessos de demora.
+                Araba
+            x-agp34c1h6oo30c1q60o38e1n:
+              label: Repartiment entre Administracions forals. Interessos de demora.
+                Gipuzkoa
+            x-agp34c1h6oo30c1q60o38e1o:
+              label: Repartiment entre Administracions forals. Interessos de demora.
+                Bizkaia
+            x-agp34c1h6oo30c1q60o38e1p:
+              label: Repartiment entre Administracions forals. Interessos de demora.
+                Navarra
+            x-agp34c1h6oo30c1q60o38e9k:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                o a retornar. Araba
+            x-agp34c1h6oo30c1q60o38e9l:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                o a retornar. Gipuzkoa
+            x-agp34c1h6oo30c1q60o38e9m:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                o a retornar. Bizkaia
+            x-agp34c1h6oo30c1q60o38e9n:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                o a retornar. Navarra
+            x-agp34c1h6oo30c1q60o3cc1g:
+              label: Repartiment entre Administracions forals. Quota de l'exercici
+                a ingressar o retornar. Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cc1i:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                1o pagament fraccionat. Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cc1k:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                2o pagament fraccionat. Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cc1m:
+              label: Repartiment entre Administracions forals. Pagaments fraccionats.
+                3o pagament fraccionat. Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cc9i:
+              label: Repartiment entre Administracions forals. Quota diferencial.
+                Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cc9m:
+              label: Repartiment entre Administracions forals. Increment per perdua
+                de beneficis fiscals de periodes anteriors. Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cc9o:
+              label: Repartiment entre Administracions forals. Interessos de demora.
+                Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cchi:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                o a retornar. Total de territoris forals
+            x-agp34c1h6oo30c1q60o3cchl:
+              label: Repartiment entre Administracions forals. Percentatges de tributacio.
+                Territori comu
+            x-agp34c1h6oo30c1q60o3cchm:
+              label: Repartiment entre Administracions forals. Percentatges de tributacio.
+                Araba
+            x-agp34c1h6oo30c1q60o3cchn:
+              label: Repartiment entre Administracions forals. Percentatges de tributacio.
+                Gipuzkoa
+            x-agp34c1h6oo30c1q60o3ccho:
+              label: Repartiment entre Administracions forals. Percentatges de tributacio.
+                Bizkaia
+            x-agp34c1h6oo30c1q60o3cchp:
+              label: Repartiment entre Administracions forals. Percentatges de tributacio.
+                Navarra
+            x-agp34c1h6oo30c1q60ojccpi:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres a Canaries (art. 39.3
+                LIS i DA 14a Llei 19/1994). Total de territoris forals
+            x-agp34c1h6oo30c1q60p30dhm:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres a Canaries (art. 39.3
+                LIS i DA 14a Llei 19/1994). Araba
+            x-agp34c1h6oo30c1q60p30dhn:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres a Canaries (art. 39.3
+                LIS i DA 14a Llei 19/1994). Gipuzkoa
+            x-agp34c1h6oo30c1q60p30dho:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres a Canaries (art. 39.3
+                LIS i DA 14a Llei 19/1994). Bizkaia
+            x-agp34c1h6oo30c1q60p30dhp:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres a Canaries (art. 39.3
+                LIS i DA 14a Llei 19/1994). Navarra
+            x-agp34c1h6oo30c1q60p3acpp:
+              label: Repartiment entre Administracions forals. Resultat de l'autoliquidacio.
+                Total de territoris forals
+            x-agp34c1h6oo30c1q60p3ad1h:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultats
+                a ingressar procedents d''autoliquidacions anteriors corresponents
+                al periode impositiu 2024. Total de territoris forals'
+            x-agp34c1h6oo30c1q60p3ee1p:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucions
+                acordades procedents d''autoliquidacions anteriors corresponents al
+                periode impositiu 2024. Total de territoris forals'
+            x-agp34c1h6oo30c1q60p3ee9h:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: import integrat a la base imposable. Total de territoris
+                forals'
+            x-agp34c1h6oo30c1q60p3ee9j:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: deute tributari resultant del fraccionament. Total
+                de territoris forals'
+            x-agp34c1h6oo30c1q60p3ee9l:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: 1r fraccionament. Total de territoris forals'
+            x-agp34c1h6oo30c1q60p3ee9n:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: resultat de l''autoliquidacio incloent el 1r fraccionament.
+                Total de territoris forals'
+            x-agp34c1h6oo30c1q60p3ee9p:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultat
+                de l''autoliquidacio incloent el 1r fraccionament de l''art. 19.1
+                LIS, procedent d''autoliquidacions anteriors corresponents al periode
+                impositiu 2024. cinquena columna, territori no anomenat al disseny'
+            x-agp34c1h6oo30c1q60p3gc1h:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                incloent el 1r fraccionament de l'art. 19.1 LIS. cinquena columna,
+                territori no anomenat al disseny
+            x-agp34c1h6oo30c1q60pj2e9i:
+              label: Repartiment entre Administracions forals. Resultat de l'autoliquidacio.
+                Araba
+            x-agp34c1h6oo30c1q60pj2e9j:
+              label: Repartiment entre Administracions forals. Resultat de l'autoliquidacio.
+                Gipuzkoa
+            x-agp34c1h6oo30c1q60pj2e9k:
+              label: Repartiment entre Administracions forals. Resultat de l'autoliquidacio.
+                Bizkaia
+            x-agp34c1h6oo30c1q60pj2e9l:
+              label: Repartiment entre Administracions forals. Resultat de l'autoliquidacio.
+                Navarra
+            x-agp34c1h6oo30c1q60pj4e9j:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultats
+                a ingressar procedents d''autoliquidacions anteriors corresponents
+                al periode impositiu 2024. Araba'
+            x-agp34c1h6oo30c1q60pj4e9k:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultats
+                a ingressar procedents d''autoliquidacions anteriors corresponents
+                al periode impositiu 2024. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj4e9l:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultats
+                a ingressar procedents d''autoliquidacions anteriors corresponents
+                al periode impositiu 2024. Bizkaia'
+            x-agp34c1h6oo30c1q60pj4e9m:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultats
+                a ingressar procedents d''autoliquidacions anteriors corresponents
+                al periode impositiu 2024. Navarra'
+            x-agp34c1h6oo30c1q60pj4e9n:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucions
+                acordades procedents d''autoliquidacions anteriors corresponents al
+                periode impositiu 2024. Araba'
+            x-agp34c1h6oo30c1q60pj4e9o:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucions
+                acordades procedents d''autoliquidacions anteriors corresponents al
+                periode impositiu 2024. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj4e9p:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucions
+                acordades procedents d''autoliquidacions anteriors corresponents al
+                periode impositiu 2024. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c1g:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucions
+                acordades procedents d''autoliquidacions anteriors corresponents al
+                periode impositiu 2024. Navarra'
+            x-agp34c1h6oo30c1q60pj6c1h:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: import integrat a la base imposable. Araba'
+            x-agp34c1h6oo30c1q60pj6c1i:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: import integrat a la base imposable. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c1j:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: import integrat a la base imposable. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c1k:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: import integrat a la base imposable. Navarra'
+            x-agp34c1h6oo30c1q60pj6c1l:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: deute tributari resultant del fraccionament. Araba'
+            x-agp34c1h6oo30c1q60pj6c1m:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: deute tributari resultant del fraccionament. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c1n:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: deute tributari resultant del fraccionament. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c1o:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: deute tributari resultant del fraccionament. Navarra'
+            x-agp34c1h6oo30c1q60pj6c1p:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: 1r fraccionament. Araba'
+            x-agp34c1h6oo30c1q60pj6c9g:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: 1r fraccionament. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c9h:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: 1r fraccionament. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c9i:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: 1r fraccionament. Navarra'
+            x-agp34c1h6oo30c1q60pj6c9j:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: resultat de l''autoliquidacio incloent el 1r fraccionament.
+                Araba'
+            x-agp34c1h6oo30c1q60pj6c9k:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: resultat de l''autoliquidacio incloent el 1r fraccionament.
+                Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c9l:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: resultat de l''autoliquidacio incloent el 1r fraccionament.
+                Bizkaia'
+            x-agp34c1h6oo30c1q60pj6c9m:
+              label: 'Repartiment entre Administracions forals. Opcio de fraccionament
+                art. 19.1 LIS: resultat de l''autoliquidacio incloent el 1r fraccionament.
+                Navarra'
+            x-agp34c1h6oo30c1q60pj6c9n:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultat
+                de l''autoliquidacio incloent el 1r fraccionament de l''art. 19.1
+                LIS, procedent d''autoliquidacions anteriors corresponents al periode
+                impositiu 2024. Araba'
+            x-agp34c1h6oo30c1q60pj6c9o:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultat
+                de l''autoliquidacio incloent el 1r fraccionament de l''art. 19.1
+                LIS, procedent d''autoliquidacions anteriors corresponents al periode
+                impositiu 2024. Gipuzkoa'
+            x-agp34c1h6oo30c1q60pj6c9p:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultat
+                de l''autoliquidacio incloent el 1r fraccionament de l''art. 19.1
+                LIS, procedent d''autoliquidacions anteriors corresponents al periode
+                impositiu 2024. Bizkaia'
+            x-agp34c1h6oo30c1q60pj6chg:
+              label: 'Repartiment entre Administracions forals. Complementaria: resultat
+                de l''autoliquidacio incloent el 1r fraccionament de l''art. 19.1
+                LIS, procedent d''autoliquidacions anteriors corresponents al periode
+                impositiu 2024. Navarra'
+            x-agp34c1h6oo30c1q60pj6chh:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                incloent el 1r fraccionament de l'art. 19.1 LIS. Araba
+            x-agp34c1h6oo30c1q60pj6chi:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                incloent el 1r fraccionament de l'art. 19.1 LIS. Gipuzkoa
+            x-agp34c1h6oo30c1q60pj6chj:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                incloent el 1r fraccionament de l'art. 19.1 LIS. Bizkaia
+            x-agp34c1h6oo30c1q60pj6chk:
+              label: Repartiment entre Administracions forals. Liquid a ingressar
+                incloent el 1r fraccionament de l'art. 19.1 LIS. Navarra
+            x-agp34c1h6oo30c1q60pj6e1p:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                R+D+i per insuficiencia de quota (opcio art. 39.2 LIS). Araba
+            x-agp34c1h6oo30c1q60pj6e9g:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                R+D+i per insuficiencia de quota (opcio art. 39.2 LIS). Gipuzkoa
+            x-agp34c1h6oo30c1q60pj6e9h:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                R+D+i per insuficiencia de quota (opcio art. 39.2 LIS). Bizkaia
+            x-agp34c1h6oo30c1q60pj6e9i:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                R+D+i per insuficiencia de quota (opcio art. 39.2 LIS). Navarra
+            x-agp34c1h6oo30c1q60pj6e9j:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                R+D+i per insuficiencia de quota (opcio art. 39.2 LIS). Total de territoris
+                forals
+            x-agp34c1h6oo30c1q60pj6e9k:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres (art. 39.3 LIS). Araba
+            x-agp34c1h6oo30c1q60pj6e9l:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres (art. 39.3 LIS). Gipuzkoa
+            x-agp34c1h6oo30c1q60pj6e9m:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres (art. 39.3 LIS). Bizkaia
+            x-agp34c1h6oo30c1q60pj6e9n:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres (art. 39.3 LIS). Navarra
+            x-agp34c1h6oo30c1q60pj6e9o:
+              label: Repartiment entre Administracions forals. Abonament de deduccions
+                per produccions cinematografiques estrangeres (art. 39.3 LIS). Total
+                de territoris forals
+            x-agp34c1h6oo30c9q60p32dpj:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucio
+                acordada o compensada. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32dpk:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucio
+                acordada o compensada. Bizkaia'
+            x-agp34c1h6oo30c9q60p32dpl:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucio
+                acordada o compensada. Navarra'
+            x-agp34c1h6oo30c9q60p32dpm:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: abonament. Araba'
+            x-agp34c1h6oo30c9q60p32dpn:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: abonament. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32dpo:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: abonament. Bizkaia'
+            x-agp34c1h6oo30c9q60p32dpp:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: abonament. Navarra'
+            x-agp34c1h6oo30c9q60p32e1g:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: compensacio. Araba'
+            x-agp34c1h6oo30c9q60p32e1h:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: compensacio. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32e1i:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: compensacio. Bizkaia'
+            x-agp34c1h6oo30c9q60p32e1j:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: compensacio. Navarra'
+            x-agp34c1h6oo30c9q60p32e1k:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: a ingressar. Araba'
+            x-agp34c1h6oo30c9q60p32e1l:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: a ingressar. Gipuzkoa'
+            x-agp34c1h6oo30c9q60p32e1m:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: a ingressar. Bizkaia'
+            x-agp34c1h6oo30c9q60p32e1n:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: a ingressar. Navarra'
+            x-agp34c1h6oo30c9q60p3gc1k:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucio
+                acordada o compensada. Total de territoris forals'
+            x-agp34c1h6oo30c9q60p3gc1n:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: abonament. Total de territoris forals'
+            x-agp34c1h6oo30c9q60p3gc9g:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: compensacio. Total de territoris
+                forals'
+            x-agp34c1h6oo30c9q60p3gc9j:
+              label: 'Repartiment entre Administracions forals. Resultat de conversio
+                d''AID despres de regularitzacio: a ingressar. Total de territoris
+                forals'
+            x-agp34c1h6oo30c9q60pj6chl:
+              label: 'Repartiment entre Administracions forals. Complementaria: devolucio
+                acordada o compensada. Araba'
+            x-agp34c1h6oo30c9q60pj6dhi:
+              label: Repartiment entre Administracions forals. Abonament per conversio
+                d'actius per impost diferit. Total de territoris forals
+            x-agp34c1h6oo30c9q60pj6dhk:
+              label: Repartiment entre Administracions forals. Compensacio per conversio
+                d'actius per impost diferit. Total de territoris forals
+            x-agp34c1h6oo30c9q60pj6dpj:
+              label: Repartiment entre Administracions forals. Abonament per conversio
+                d'actius per impost diferit. Araba
+            x-agp34c1h6oo30c9q60pj6dpk:
+              label: Repartiment entre Administracions forals. Abonament per conversio
+                d'actius per impost diferit. Gipuzkoa
+            x-agp34c1h6oo30c9q60pj6dpl:
+              label: Repartiment entre Administracions forals. Abonament per conversio
+                d'actius per impost diferit. Bizkaia
+            x-agp34c1h6oo30c9q60pj6dpm:
+              label: Repartiment entre Administracions forals. Abonament per conversio
+                d'actius per impost diferit. Navarra
+            x-agp34c1h6oo30c9q60pj6dpn:
+              label: Repartiment entre Administracions forals. Compensacio per conversio
+                d'actius per impost diferit. Araba
+            x-agp34c1h6oo30c9q60pj6dpo:
+              label: Repartiment entre Administracions forals. Compensacio per conversio
+                d'actius per impost diferit. Gipuzkoa
+            x-agp34c1h6oo30c9q60pj6dpp:
+              label: Repartiment entre Administracions forals. Compensacio per conversio
+                d'actius per impost diferit. Bizkaia
+            x-agp34c1h6oo30c9q60pj6e1g:
+              label: Repartiment entre Administracions forals. Compensacio per conversio
+                d'actius per impost diferit. Navarra
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
               label: Activitats del grup. Epigraf CNAE de l'activitat 1
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:

@@ -1069,8 +1069,8 @@ application:
         modellhez; előbb töltse ki ezeket a profiladatokat: %{missing}.'
       profile_readiness_profile_missing: Nincs perzisztált aktív profil ehhez a modell
         munkához; folytatás előtt hozza létre vagy javítsa a profilt.
-      profile_readiness_setup_incomplete: A profil beállítása nincs befejezve; fejezd
-        be a beállítási folyamatot, mielőtt modelókkal dolgoznál.
+      profile_readiness_setup_incomplete: A profil beállítását még nem nyilvánították befejezettnek;
+        a modellekkel végzett munka előtt futtasd az `aeat config profile complete-setup` parancsot.
       profile_readiness_setup_incomplete_missing: 'A profil beállítása nincs befejezve;
         fejezd be a beállítási folyamatot, mielőtt modelókkal dolgoznál. Hiányzó mezők:
         %{missing}.'

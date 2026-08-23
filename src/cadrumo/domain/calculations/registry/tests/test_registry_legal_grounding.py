@@ -200,6 +200,34 @@ def _direct_string_literals(node: ast.AST) -> tuple[tuple[str, int], ...]:
     return ()
 
 
+
+#: A name that HOLDS registry source references, as opposed to one that merely
+#: begins with the same letters. The token must end after ``SOURCE_REF`` or
+#: ``SOURCE_REFS`` -- at the end of the name or before an underscore -- so
+#: ``source_refs``, ``source_ref``, ``source_ref_ids`` and
+#: ``revision_source_refs`` all match while ``source_reference`` does not.
+#:
+#: The substring test this replaces flagged `SourceConnectivityGroundingLocatorKind
+#: .SOURCE_REFERENCE = "source_reference"`, an enum member of a closed
+#: locator-kind family, and reported its VALUE as a registry source ref missing
+#: from the catalogue. `source_reference` on the attachments models is the same
+#: shape: a document locator, not a registry source id.
+#:
+#: Measured before narrowing, so it is known to discard only those two families:
+#: of the production names containing ``SOURCE_REF``, this keeps
+#: ``source_ref``, ``source_refs``, ``source_ref_ids``,
+#: ``record_design_source_ref``, ``reduction_source_refs``,
+#: ``registry_source_refs``, ``revision_source_refs``, ``source_refs_by_key``,
+#: ``target_binding_source_refs`` and ``xsd_source_refs``, and drops only
+#: ``source_reference`` and ``source_reference_count``.
+_SOURCE_REF_HOLDER_NAME = re.compile(r"SOURCE_REFS?(?:_|$)")
+
+
+def _is_source_ref_holder(name: str) -> bool:
+    """Whether an assignment target name holds registry source references."""
+    return _SOURCE_REF_HOLDER_NAME.search(name.upper()) is not None
+
+
 def _production_source_ref_literals() -> dict[str, tuple[str, ...]]:
     refs: dict[str, list[str]] = {}
     for path in scan_directory(_PRODUCTION_PACKAGE_ROOT, pattern="*.py", recursive=True, prune_directories=("tests",)):
@@ -208,10 +236,10 @@ def _production_source_ref_literals() -> dict[str, tuple[str, ...]]:
             value_node: ast.AST | None = None
             if isinstance(node, ast.Assign):
                 names = [target.id for target in node.targets if isinstance(target, ast.Name)]
-                if any("SOURCE_REF" in name.upper() or name == "source_refs" for name in names):
+                if any(_is_source_ref_holder(name) for name in names):
                     value_node = node.value
             elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-                target_is_source_ref = "SOURCE_REF" in node.target.id.upper() or node.target.id == "source_refs"
+                target_is_source_ref = _is_source_ref_holder(node.target.id)
                 if node.value is not None and target_is_source_ref:
                     value_node = node.value
             elif isinstance(node, ast.keyword) and node.arg == "source_refs":

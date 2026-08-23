@@ -1,0 +1,38 @@
+# M210 IRNR pension tariff (TRLIRNR Art 25.1.b).
+#
+# This is a real progressive cuota schedule, not a flat `tipo_gravamen`.
+# The runtime resolves an effective rate for the computed `base_imponible`
+# so the existing `cuota_integra = base_imponible * tipo_gravamen`
+# calculation path produces the same cuota as this bracket table.
+
+[[revisions."2026-y-siguientes".parameters]]
+id = "m210-pension-tarifa-2025"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.b"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["tipo de gravamen", "no residentes"]
+
+[[revisions."2026-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12000"
+fixed_addition = "0"
+marginal_rate = "0.08"
+valid_from = 2025-01-01
+
+[[revisions."2026-y-siguientes".parameters.brackets]]
+lower_bound = "12000"
+upper_bound = "18700"
+fixed_addition = "960"
+marginal_rate = "0.30"
+valid_from = 2025-01-01
+
+[[revisions."2026-y-siguientes".parameters.brackets]]
+lower_bound = "18700"
+fixed_addition = "2970"
+marginal_rate = "0.40"
+valid_from = 2025-01-01

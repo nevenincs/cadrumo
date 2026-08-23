@@ -1,0 +1,23 @@
+# M210 IRNR ganancias-patrimoniales base (official casilla [17]).
+#
+# Official diseño-de-registro rule (record T21001, field 100):
+#   [17] Base imponible (210 H) = [12] + [16]
+# i.e. the ganancia from the adquisición chain ([12]) plus the ganancia from
+# the mejora / 2ª adquisición chain ([16]). Grounded in TRLIRNR Art 24 (base)
+# and Art 25.1.f (ganancias patrimoniales). A ganancia box may be negative
+# (pérdida patrimonial), so no sign clamp is applied.
+
+[[revisions."2026-y-siguientes".formulas]]
+id = "m210-base-ganancias-h-2025"
+target_casilla_id = "base_imponible_ganancias_h"
+expression = { op = "add", args = [
+    { casilla_id = "ganancia_importe" },
+    { casilla_id = "mejora_ganancia" },
+] }
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["ganancias patrimoniales", "base imponible"]

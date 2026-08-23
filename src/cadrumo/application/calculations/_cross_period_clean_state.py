@@ -45,6 +45,7 @@ from ...domain.modelos import (
     VerificationReportCatalogue,
     VerificationReportCatalogueRepositoryProtocol,
     is_justificante_backed_external_evidence,
+    is_receipt_bound_external_evidence,
 )
 from ._cross_period_models import (
     CrossPeriodCleanStateBlocker,
@@ -972,9 +973,22 @@ def _filing_external_evidence_blockers(
         blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE)
         if not is_official_aeat_observation_source(observation_source_kind or ""):
             blockers.append(CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE)
+    elif filing.external_evidence.kind is ExternalEvidenceKind.AEAT_CSV_REGISTER:
+        metadata_reference = _clean_metadata_value(
+            (observation_source_metadata or {}).get("external_evidence_reference_id"),
+        )
+        metadata_filing_id = _clean_metadata_value(
+            (observation_source_metadata or {}).get("filing_record_id"),
+        )
+        if (
+            observation_source_kind != ObservationSourceKind.AEAT_CSV_REGISTER.value
+            or metadata_reference != filing.external_evidence.reference_id
+            or metadata_filing_id != filing.filing_record_id
+        ):
+            blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
     elif not is_justificante_backed_external_evidence(filing.external_evidence.kind):
         blockers.append(CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION)
-    else:
+    elif is_receipt_bound_external_evidence(filing.external_evidence.kind):
         justificante = justificante_repository.load(filing.external_evidence.reference_id)
         if justificante is None:
             blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD)

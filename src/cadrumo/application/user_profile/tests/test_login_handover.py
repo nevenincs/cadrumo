@@ -1268,7 +1268,21 @@ def test_crash_at_each_durable_handover_phase_recovers_selected_b(
             # terminal one crashed after retirement had already run.
             crashed = _probe_resumable_session(storage_root, profile_a)
             if phase is _HandoverPhase.A_RETIRED:
+                # `resumed is False` alone is satisfied by ANY refusal, including
+                # one that has nothing to do with retirement: on a host whose
+                # credential store is unreachable no receipt can be minted, so
+                # nothing is resumable and this branch holds for the wrong
+                # reason. Naming the refusal is what separates "retirement ran"
+                # from "there was never anything to resume", which is the whole
+                # claim this phase makes. `_assert_no_resumable_material` already
+                # discriminates this way; this guard did not.
                 assert crashed["resumed"] is False
+                assert crashed["dek_length"] == 0
+                assert crashed["refusal"] == ProfileSessionRefusalReason.ABSENT.value, (
+                    "the retired profile refused for a reason other than absence "
+                    f"({crashed['refusal']!r}); this phase proves retirement ran, and any "
+                    "other refusal means the probe never had a receipt to lose"
+                )
             else:
                 assert crashed["resumed"] is True
                 assert crashed["dek_length"] == 32

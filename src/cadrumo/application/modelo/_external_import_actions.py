@@ -27,8 +27,9 @@ See Also:
         Consumes the imported current :class:`ModeloRecord`
         as an amendment baseline.
     :mod:`~cadrumo.domain.justificante`:
-        Receipt metadata store required by justificante-PDF, CSV-register, and
-        live-capture evidence kinds.
+        Receipt metadata store required by justificante-PDF and live-capture evidence
+        kinds. CSV/XLSX register imports bind the source reference directly to
+        the target work-unit coordinates instead of masquerading as a receipt.
     :func:`~cadrumo.application.modelo._registry_helpers.reject_unknown_import_casillas`:
         Resolves the registry snapshot and refuses noncanonical or undeclared
         imported casilla ids.
@@ -53,7 +54,7 @@ from ...core.decimal import normalize_decimal_separators
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
-from ...domain.calculations.registry import BindingId, RelationId
+from ...domain.calculations.registry import BindingId, RegistryModeloObservation, RelationId
 from ...domain.justificante import Justificante
 from ...domain.modelos import (
     CalculationRevision,
@@ -71,10 +72,12 @@ from ...domain.modelos import (
     WorkUnitState,
     derive_calculation_revision_id,
     derive_filing_record_id,
+    is_receipt_bound_external_evidence,
     upsert_calculation_revision,
     upsert_filing_record,
     upsert_work_unit,
 )
+from ..calculations import CalculationObservationRepository, ObservationSourceKind
 from ._action_errors import ExternalModeloImportError
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
@@ -83,14 +86,6 @@ from ._revision_persistence import modelo_bucket_event_write as _bucket_event_wr
 from ._revision_persistence import supersede_prior_current_filing as _supersede_prior_current_filing
 from ._work_addressing import resolve_registry_revision_for_work_target
 from ._work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit
-
-_JUSTIFICANTE_BOUND_EVIDENCE_KINDS = frozenset(
-    {
-        ExternalEvidenceKind.AEAT_CSV_REGISTER,
-        ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-        ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-    },
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,6 +112,7 @@ def import_external_filing_source(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     justificante_repository: JustificanteRepository | None = None,
+    observation_repository: CalculationObservationRepository | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
     """Resolve or create the target work unit and persist an amendable baseline.
@@ -246,6 +242,7 @@ def import_external_filing_source(
         filing_repository=filing_repository,
         bucket_event_repository=bucket_event_repository,
         justificante_repository=justificante_repository,
+        observation_repository=observation_repository,
         expected_tax_id=source.tax_id,
         clock=clock,
     )
@@ -328,6 +325,7 @@ def import_external_filing_evidence[CasillaKey](
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     justificante_repository: JustificanteRepository | None = None,
+    observation_repository: CalculationObservationRepository | None = None,
     expected_tax_id: str | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
@@ -337,7 +335,10 @@ def import_external_filing_evidence[CasillaKey](
     modelo, filing year, period, and registry revision used to validate imported
     casilla ids. Justificante-bound evidence kinds require a stored
     :class:`Justificante` whose modelo, year, period,
-    and taxpayer id match the target.
+    and taxpayer id match the target. CSV-register evidence is the imported
+    file itself: its reference is bound to the validated target coordinates in
+    the atomically committed filing record and does not require fabricated
+    Justificante metadata.
 
     The service writes a ``PRESENTADO``
     :class:`CalculationRevision` containing the imported
@@ -363,6 +364,7 @@ def import_external_filing_evidence[CasillaKey](
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    observation_repo = observation_repository or CalculationObservationRepository()
 
     work_units, work_unit, snapshot, canonical_values, cleaned_reference = _load_external_import_target(
         work_unit_id=work_unit_id,
@@ -499,6 +501,24 @@ def import_external_filing_evidence[CasillaKey](
             "casilla_count": str(len(outputs)),
         },
     )
+    observation_payload = observation_repo.prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+            observations=revision.observations,
+        ),
+        source_kind=ObservationSourceKind.AEAT_CSV_REGISTER,
+        captured_at=now,
+        stamped_revision_id=work_unit.revision_id,
+        source_metadata={
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": cleaned_reference,
+            "authenticated_identity": (expected_tax_id or "").strip(),
+            "external_evidence_reference_id": cleaned_reference,
+            "filing_record_id": new_filing_id,
+        },
+    ) if evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER else None
 
     # One unit of work: the imported revision, the filing catalogue, the advanced
     # work-unit pointers, and the ``modelo.filing.imported`` event commit
@@ -507,11 +527,12 @@ def import_external_filing_evidence[CasillaKey](
     # pointer that no history entry accounted for.
     fr_repo.save_with_secure_object_writes(
         updated_filing_catalogue,
-        (
+        tuple(write for write in (
             cr_repo.to_secure_object_write(revisions, expected_revision_id=revisions_revision_id),
             wu_repo.to_secure_object_write(advanced_work_units),
             _bucket_event_write(bv_repo, (imported_event,)),
-        ),
+            observation_repo.to_secure_object_write(observation_payload) if observation_payload is not None else None,
+        ) if write is not None),
         expected_revision_id=filing_revision_id,
     )
 
@@ -598,12 +619,12 @@ def _require_bound_justificante_artifact(
 ) -> None:
     """Require matching stored :class:`Justificante` metadata.
 
-    CSV-register, justificante-PDF, and live-capture imports are treated as
-    receipt-bound baselines: the evidence reference must resolve to stored
+    Justificante-PDF and live-capture imports are treated as receipt-bound
+    baselines: the evidence reference must resolve to stored
     justificante metadata for the same taxpayer, modelo, filing year, and
     period. The taxpayer comparison is case-insensitive after stripping.
     """
-    if evidence_kind not in _JUSTIFICANTE_BOUND_EVIDENCE_KINDS:
+    if not is_receipt_bound_external_evidence(evidence_kind):
         return
     cleaned_expected_tax_id = (expected_tax_id or "").strip()
     if not cleaned_expected_tax_id:

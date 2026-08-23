@@ -105,6 +105,16 @@ def is_justificante_backed_external_evidence(kind: ExternalEvidenceKind) -> bool
     )
 
 
+def is_receipt_bound_external_evidence(kind: ExternalEvidenceKind) -> bool:
+    """Return whether ``kind`` requires persisted Justificante metadata."""
+    return kind in frozenset(
+        {
+            ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+        },
+    )
+
+
 _EvidenceReference = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
@@ -476,4 +486,5 @@ __all__ = [
     "ModeloRecordStatus",
     "derive_filing_record_id",
     "is_justificante_backed_external_evidence",
+    "is_receipt_bound_external_evidence",
 ]

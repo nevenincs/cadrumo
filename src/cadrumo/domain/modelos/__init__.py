@@ -139,6 +139,7 @@ from ._filing_record import (
     ModeloRecordStatus,
     derive_filing_record_id,
     is_justificante_backed_external_evidence,
+    is_receipt_bound_external_evidence,
 )
 from ._filing_repository import ModeloRecordPersistenceError, upsert_filing_record
 from ._iae_exemption import (
@@ -305,6 +306,7 @@ __all__ = (
     "diff_ledger_fingerprints",
     "dt12_regime_window_eligibility",
     "is_justificante_backed_external_evidence",
+    "is_receipt_bound_external_evidence",
     "m232_related_party_row_casilla_values",
     "m303_rectificativa_motive_is_applicable",
     "m303_rectificativa_record_design_from_snapshot",

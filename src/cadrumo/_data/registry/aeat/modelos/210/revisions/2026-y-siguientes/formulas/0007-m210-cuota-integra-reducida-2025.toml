@@ -1,0 +1,30 @@
+# M210 IRNR cuota íntegra reducida (official casilla [28]).
+#
+# Official diseño-de-registro rule (record T21001, field 114):
+#   [28] Cuota íntegra reducida = [24] - [27]   with   [27] = [24] - [26]
+# so when a convenio limit [26] applies, [28] = [26] (the treaty-capped cuota).
+# The registry models the convenio reduction conditionally on the presence of a
+# declared límite convenio [26], clamped so the reduced cuota never exceeds the
+# domestic cuota Ley IRNR [24]:
+#   [28] = if [26] > 0 then min([24], [26]) else [24]
+# This is faithful to the form's declared arithmetic in range ([26] <= [24] gives
+# [27] = [24] - [26] and [28] = [26]) and correct at the edge (a límite above the
+# cuota yields no reduction rather than a negative [27]). When no convenio limit
+# is declared, [28] collapses to [24], preserving the no-convenio liquidación
+# path. Grounded in TRLIRNR Art 24 (the convenio prevalence and cuota framework).
+
+[[revisions."2026-y-siguientes".formulas]]
+id = "m210-cuota-integra-reducida-2025"
+target_casilla_id = "cuota_integra_reducida"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla_id = "limite_convenio" }, { literal = "0" }] },
+    { op = "min", args = [{ casilla_id = "cuota_ley_irnr" }, { casilla_id = "limite_convenio" }] },
+    { casilla_id = "cuota_ley_irnr" },
+] }
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["convenio", "cuota"]

@@ -1,0 +1,29 @@
+# M210 IRNR resultado de la autoliquidación (official casilla [31]).
+#
+# Official diseño-de-registro rule (record T21001, field 117):
+#   [31] Resultado de la autoliquidación = [28] - [29] ± [30]
+# where [28] is the cuota íntegra reducida (post-convenio), [29] the
+# retenciones/ingresos a cuenta, and [30] the ingreso/devolución anterior
+# (signed, exclusively for autoliquidación complementaria). Grounded in
+# TRLIRNR Art 24. When no convenio, no donativos and no complementaria
+# prior-result apply, [28] collapses to [22] (cuota íntegra) and [30]=0, so
+# this reduces to the pre-slice-C `cuota_integra - retencion_practicada`
+# behaviour (see the completeness-preserving chain in casillas [24]/[27]/[28]).
+
+[[revisions."2026-y-siguientes".formulas]]
+id = "m210-cuota-diferencial-2025"
+target_casilla_id = "cuota_diferencial"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [
+        { casilla_id = "cuota_integra_reducida" },
+        { casilla_id = "retencion_practicada" },
+    ] },
+    { casilla_id = "ingreso_devolucion_anterior" },
+] }
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["retención", "pagos a cuenta"]

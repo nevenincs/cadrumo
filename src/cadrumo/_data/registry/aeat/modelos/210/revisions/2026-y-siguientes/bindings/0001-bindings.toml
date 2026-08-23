@@ -1,0 +1,48 @@
+# M210 IRNR profile-axis bindings.
+#
+# Exposes the operator profile's country_of_fiscal_residence field
+# to the formula runtime so the m210_resolve_rate op (S400) can read
+# the treaty country at evaluation time via ctx.enum_binding_values.
+# Mirrors the M100 CCAA precedent at
+# bindings/0008-renta-2025-profile-tax-residence-ccaa.toml.
+#
+# country_of_fiscal_residence is a free-form ISO 3166-1 alpha-2 string
+# on TaxpayerProfile, not a closed enum class — typed_enum is omitted.
+# The cross-cutting ConvenioAuthority (registry/aeat/treaties/) resolves the
+# BOE treaty reference from this same field; the retired TaxpayerProfile
+# convenio_aplicable static-lookup property has been deleted in favour of
+# this resolution path.
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "m210-2025-profile-country-of-fiscal-residence"
+source = "profile"
+selector = { profile_model = "taxpayer", field = "country_of_fiscal_residence" }
+aggregation = { op = "copy" }
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-2",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["no residentes", "país de residencia"]
+
+# Modelo 210 source-scoped gross-income binding.  Art. 13.1 is the territorial
+# gateway: only a persisted, explicit M210 classification on a Spanish-source
+# incoming ledger row may reach [5].  Art. 24 then governs the gross-income base
+# fact.  Rate provisions (including art. 25.1) are deliberately not used as the
+# source-scope authority.
+[[revisions."2026-y-siguientes".bindings]]
+id = "m210-2025-ledger-irnr-rendimientos-integros"
+source = "ledger_irnr_income_aggregation"
+selector = { modelo = "210", target_casilla_id = "rendimientos_integros", fact = "gross_income_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["Modelo 210"]

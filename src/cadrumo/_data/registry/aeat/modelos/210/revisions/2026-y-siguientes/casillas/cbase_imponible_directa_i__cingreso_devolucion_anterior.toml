@@ -1,0 +1,303 @@
+# Modelo 210 official diseño-de-registro numbered liquidación casillas [4]-[31].
+#
+# Grounded in the bundled AEAT layout authority `aeat-dr-210-2026`, the diseño
+# governing devengos from 01/06/2022, section "Determinación de la base
+# imponible" (210 I/R/H/G) and "Liquidación". These casillas were originally
+# authored from the 2011 diseño (record identifier T21001, version 1.1,
+# 15/02/2012), whose applicability window closed on 2017-12-31 -- nine years
+# before this revision opens -- so citing it here made the revision cite a
+# superseded source. Every one of the 21 casillas re-grounded is addressed by
+# the export tree this revision renders from the 2022 diseño, which is what
+# establishes that the later design carries them. The five existing base/rate/cuota casillas already carry their
+# official numbers (rendimientos_integros=[5], gastos_deducibles=[7],
+# base_imponible=[8], tipo_gravamen=[21], cuota_integra=[22],
+# retencion_practicada=[29], cuota_diferencial=[31]); this fragment adds the
+# remaining official boxes.
+#
+# Modelling notes (grounded, non-fabricating):
+#  - The engine keeps ONE branching base_imponible ([8]) (one casilla schema,
+#    code-keyed branches). The alternate type-I direct base [4] and type-G
+#    direct base [18] are declared
+#    as operator-input boxes for the paths the branching engine does not compute.
+#  - Signed money boxes (ganancias, ingreso/devolución anterior) carry no
+#    non_negative constraint: a ganancia patrimonial may be a loss, and the
+#    complementaria prior-result [30] is signed (±) per the official [31] rule.
+#  - The dividend-exención [6] is declared as the official field; wiring its
+#    subtraction into the type-R base op is deferred (dividends currently route
+#    through the Art. 25.1.f 19% branch, not the rendimientos-R deduction path).
+
+# --- Determinación de la base imponible: 210 I (direct) ---
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "base_imponible_directa_i"
+number = "4"
+section = ["determinacion_base_imponible"]
+data_type = "money"
+semantic_role = "irnr_base_imponible_directa_i"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Official 210 I direct-base slot with no sibling casilla; the branching base_imponible [8] serves the modelled rendimientos/inmobiliaria/ganancia paths."
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f082"]
+
+# --- Determinación de la base imponible: 210 R (rendimientos) ---
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "exencion_dividendos"
+number = "6"
+section = ["determinacion_base_imponible"]
+data_type = "money"
+semantic_role = "irnr_exencion_dividendos"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f084"]
+constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2026"] }
+
+# --- Determinación de la base imponible: 210 H (ganancias patrimoniales) ---
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "ganancia_valor_transmision"
+number = "9"
+section = ["determinacion_base_imponible"]
+data_type = "money"
+semantic_role = "irnr_ganancia_valor_transmision"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f092"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "ganancia_valor_adquisicion"
+number = "10"
+section = ["determinacion_base_imponible"]
+data_type = "money"
+semantic_role = "irnr_ganancia_valor_adquisicion"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f093"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "ganancia_diferencia"
+number = "11"
+section = ["determinacion_base_imponible"]
+data_type = "money"
+semantic_role = "irnr_ganancia_diferencia"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f094"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "ganancia_importe"
+number = "12"
+section = ["determinacion_base_imponible"]
+data_type = "money"
+semantic_role = "irnr_ganancia_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f095"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "mejora_valor_transmision"
+number = "13"
+section = ["determinacion_base_imponible"]
+data_type = "money"
+semantic_role = "irnr_mejora_valor_transmision"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f096"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "mejora_valor_adquisicion"
+number = "14"
+section = ["determinacion_base_imponible"]
+data_type = "money"
+semantic_role = "irnr_mejora_valor_adquisicion"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f097"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "mejora_diferencia"
+number = "15"
+section = ["determinacion_base_imponible"]
+data_type = "money"
+semantic_role = "irnr_mejora_diferencia"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f098"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "mejora_ganancia"
+number = "16"
+section = ["determinacion_base_imponible"]
+data_type = "money"
+semantic_role = "irnr_mejora_ganancia"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f099"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "base_imponible_ganancias_h"
+number = "17"
+section = ["determinacion_base_imponible"]
+data_type = "money"
+semantic_role = "irnr_base_imponible_ganancias_h"
+required = false
+input_kind = "computed"
+formula = "m210-base-ganancias-h-2025"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f100"]
+
+# --- Determinación de la base imponible: 210 G (direct) ---
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "base_imponible_directa_g"
+number = "18"
+section = ["determinacion_base_imponible"]
+data_type = "money"
+semantic_role = "irnr_base_imponible_directa_g"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Official 210 G direct-base slot with no sibling casilla; the branching base_imponible [8] serves the modelled rendimientos/inmobiliaria/ganancia paths."
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f104"]
+
+# --- Liquidación ---
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "exenciones_ley_irnr_indicador"
+number = "19"
+section = ["liquidacion"]
+data_type = "integer"
+semantic_role = "irnr_exenciones_ley_irnr_indicador"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f105"]
+constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2026"] }
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "convenio_indicador"
+number = "20"
+section = ["liquidacion"]
+data_type = "integer"
+semantic_role = "irnr_convenio_indicador"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f106"]
+constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2026"] }
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "deduccion_donativos"
+number = "23"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "irnr_deduccion_donativos"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f109"]
+constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2026"] }
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "cuota_ley_irnr"
+number = "24"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "irnr_cuota_ley_irnr"
+required = false
+input_kind = "computed"
+formula = "m210-cuota-ley-irnr-2025"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f110"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "porcentaje_convenio"
+number = "25"
+section = ["liquidacion"]
+data_type = "ratio"
+semantic_role = "irnr_porcentaje_convenio"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f111"]
+constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2026"] }
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "limite_convenio"
+number = "26"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "irnr_limite_convenio"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f112"]
+constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2026"] }
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "reduccion_convenio"
+number = "27"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "irnr_reduccion_convenio"
+required = false
+input_kind = "computed"
+formula = "m210-reduccion-convenio-2025"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f113"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "cuota_integra_reducida"
+number = "28"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "irnr_cuota_integra_reducida"
+required = false
+input_kind = "computed"
+formula = "m210-cuota-integra-reducida-2025"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f114"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "ingreso_devolucion_anterior"
+number = "30"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "irnr_ingreso_devolucion_anterior"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+export_refs = ["m210-2026.pagina01.f116"]

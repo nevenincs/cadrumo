@@ -1,0 +1,80 @@
+# M210 IRNR verification predicates.
+#
+# Representante-fiscal gate per TRLIRNR Art 10: non-EU (broader: non-
+# UE/EEE) IRNR filers
+# must designate a fiscal representative in Spain. EEA-resident IRNR
+# filers are exempt because of the bilateral mutual-assistance regime.
+# The applicability filter "non_resident_irnr_non_eea" encodes the
+# gate condition; the predicate fires a BLOCKING_RULE finding when
+# applicability is True but profile.representante_fiscal_nif is None
+# or empty.
+
+[[revisions."2026-y-siguientes".verification_predicates]]
+predicate_id = "m210-representante-fiscal-required"
+expression = 'profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
+
+# Silent-under-declaration guard per no-silent-under-declaration: the general /
+# UE-EEE branch's base_imponible (manual rendimientos_integros, optionally
+# reduced by gastos_deducibles per art 24.6) is computed from
+# rendimientos_integros via m210-base-imponible-2025
+# (src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/formulas/0001-m210-base-imponible-2025.toml).
+# A positive rendimientos_integros with a zero base_imponible is unexpected for
+# this branch (a registry/formula regression, not a routine operator choice),
+# so the guard is ADVISORY: the consequent IS formula-derived, but a
+# legitimately zero base across every tipo_renta branch (e.g. a full
+# art 24.6 expense offset against a small UE/EEE-resident gross amount)
+# is not fully ruled out, mirroring the M131 01->02 and M200 00500->00501
+# precedent. The inmobiliaria branch (tipo_renta == "inmobiliaria") was
+# explicitly out of scope when this guard first landed -- its silent-zero
+# risk needed a categorical-equality predicate operator the DSL did not yet
+# support. It is now closed by the casilla_equals_implies_nonzero guard
+# below.
+[[revisions."2026-y-siguientes".verification_predicates]]
+predicate_id = "modelo-210-2025-rendimientos-integros-implica-base-imponible"
+expression = 'implies_nonzero(["rendimientos_integros", "base_imponible"])'
+finding_kind = "ADVISORY"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+
+# Silent-under-declaration guard, inmobiliaria branch. The most common
+# M210 filing scenario -- a non-resident who owns
+# Spanish real estate with no rental income -- still owes imputed-rent IRNR
+# (TRLIRNR art 13.1.h, routed through LIRPF art 85 imputation mechanics).
+# Every inmobiliaria-branch input casilla (valor_catastral,
+# coeficiente_imputacion_inmobiliaria, dias_imputacion, valor_adquisicion,
+# valor_comprobado_administracion) is `required = false`
+# (casillas/0001-casillas.toml), so an operator who selects
+# tipo_renta = "inmobiliaria" is never forced to populate them; the
+# m210_resolve_base_imponible custom op (_formula_runtime.py) raises when
+# BOTH valor_catastral and the acquisition/administrative substitute are
+# absent, but a blank dias_imputacion with a valid valor_catastral and
+# coeficiente_imputacion_inmobiliaria computes a silent, formula-valid zero
+# base_imponible (catastral_value * coefficient * 0 days-fraction) with no
+# validation error. The categorical antecedent (tipo_renta) cannot be
+# expressed by implies_nonzero, which requires a Decimal antecedent; this
+# guard uses the casilla_equals_implies_nonzero operator instead, reading
+# the operator-entered raw text value of tipo_renta. ADVISORY: a
+# legitimately zero base_imponible for an inmobiliaria filer (e.g. zero
+# days of imputation in the filing window) is not ruled out.
+[[revisions."2026-y-siguientes".verification_predicates]]
+predicate_id = "modelo-210-2025-inmobiliaria-implica-base-imponible"
+expression = 'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
+finding_kind = "ADVISORY"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24"]
+
+# Residence-cross-check guard. TRLIRNR art 25.1.a
+# reserves the reduced 19% tipo_renta="ue_residente" rate for taxpayers
+# resident in another EU/EEA member state; the general 24% rate applies
+# otherwise. The tipo_renta casilla is an operator-entered free-text
+# category with no registry-level cross-check against the declared
+# country_of_fiscal_residence, so a filer could self-elect the reduced
+# rate without actually being an EU/EEE resident. ADVISORY (not
+# BLOCKING_RULE): country_of_fiscal_residence coverage / classification
+# could itself be stale or under review, so the guard prompts
+# confirmation of eligibility rather than refusing the filing outright.
+[[revisions."2026-y-siguientes".verification_predicates]]
+predicate_id = "modelo-210-2025-ue-residente-requiere-residencia-ue-eee"
+expression = 'casilla_equals_implies_profile_flag(["tipo_renta", "ue_residente", "ue_eee_status"])'
+finding_kind = "ADVISORY"
+legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.a"]

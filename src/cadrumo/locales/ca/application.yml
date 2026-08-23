@@ -1128,8 +1128,8 @@ application:
         %{period}; completa abans aquestes dades de perfil: %{missing}.'
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
-      profile_readiness_setup_incomplete: La configuració del perfil està incompleta;
-        acaba l'assistent de configuració abans de treballar amb models.
+      profile_readiness_setup_incomplete: La configuració del perfil encara no s'ha declarat completa;
+        executa `aeat config profile complete-setup` abans de treballar amb models.
       profile_readiness_setup_incomplete_missing: 'La configuració del perfil està
         incompleta; acaba l''assistent de configuració abans de treballar amb models.
         Camps pendents: %{missing}.'

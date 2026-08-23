@@ -123,7 +123,7 @@ def test_import_justificante_taxpayer_match_is_case_insensitive(repos: _Repos) -
     assert filing.external_evidence.reference_id == "JUST-CASE-TAXPAYER"
 
 
-def test_import_csv_register_refuses_without_enrolled_justificante(repos: _Repos) -> None:
+def test_import_justificante_pdf_refuses_without_enrolled_justificante(repos: _Repos) -> None:
     wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
 
@@ -131,8 +131,8 @@ def test_import_csv_register_refuses_without_enrolled_justificante(repos: _Repos
         _import_external_filing(
             repos,
             work_unit,
-            evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
-            evidence_reference_id="CSV-MISSING-JUSTIFICANTE",
+            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_reference_id="PDF-MISSING-JUSTIFICANTE",
             expected_tax_id=_TAX_ID,
             clock=_T1,
         )
