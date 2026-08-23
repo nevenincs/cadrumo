@@ -4393,3 +4393,57 @@ inside A01, the fifth is this.
 ### Scale
 
 **10309 of 11570 slots remain** across 107 numbered records; 1261 modelled, zero orphaned.
+
+## 2026-08-23 — T22003A00, the consolidated balance-sheet activo
+
+### What landed
+
+Record **T22003A00** — the *balance consolidado, activo* in the general PGC shape: activo no
+corriente through the long-term investments, activo corriente through the short-term ones,
+closing on TOTAL ACTIVO. **37 casillas**, revision 1427 → **1464**, twenty-seven of 137
+records.
+
+Suite: **identical FAILED list, zero regressions.**
+
+### The generator is generalised, not copied a third time
+
+Heading derived as the common prefix; ligature repair grounded in a vocabulary counted twice
+so the damage cannot attest itself; separator inserted only after an attested standalone
+line; completeness complement and type coverage asserted. Three records have now gone
+through it, and **the shared machinery is what makes their claims comparable** — each
+fragment's header states the same checks because the same code ran them.
+
+### Two boxes left flat, for the reason established last iteration
+
+`00701` (derechos de emisión de gases de efecto invernadero) and `00761` (otros) carry **no
+parent name**, though they sit between Existencias and Deudores comerciales and read on the
+printed modelo as breakdowns of Existencias. The design doesn't say so, so nothing here says
+so — the same refusal that kept T22005A01 flat, applied to two boxes instead of nineteen.
+
+That's the pattern generalising properly: **the rule is not "this record is nested" or "this
+one isn't" but "each line is nested only where its own text says so."**
+
+### AEAT's separator, again — and why deriving beat ruling
+
+`ACTIVO. Inmovilizado intangible` with a space, `ACTIVO.Activos por impuesto diferido`
+without. Deriving the heading as a common prefix and stripping the remainder lands both on
+the same heading, so **no rule about AEAT's punctuation was needed at all** — which is the
+cleanest resolution yet of the class that produced `DT 24. 5 LIS` and `N. I. F.`.
+
+### The ligature measurement holds on a third family
+
+Seven of this record's 37 lines carry the real U+FB01 codepoint, unsplit, in `Inversiones
+financieras` and `Periodificaciones`. Design-wide count now **309**. A plain-text search of
+this workbook for a Spanish word still silently misses them.
+
+### A trap for whoever continues this family
+
+**The sheet suffix is not a reliable guide to which side of the balance a record covers.**
+`T22003B02` opens `ACTIVO. Inmovilizado intangible` despite the B — it continues an ACTIVO
+page rather than starting a PASIVO one. Read the descriptions, not the sheet names.
+
+### Scale
+
+**10272 of 11570 slots remain** across 106 numbered records; 1298 modelled, zero orphaned.
+Nothing here sums a group into its head or checks activo against patrimonio neto plus
+pasivo: the balance sheet does not balance.
