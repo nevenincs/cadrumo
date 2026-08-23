@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:15c40236c2870d2489b95afee2df6788ba17a2281bc3ea1709753192b757b35c'
+body_hash: 'sha256:ee8996719cfdb6591b9b0a008587c55658aea44f9ef93748c9d6392ed0d461e5'
 related:
   - '[[2026-08-23-issue-620-external-pdf-signal-S01]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S02]]'
@@ -21,8 +21,10 @@ related:
   - '[[2026-08-23-issue-620-external-pdf-signal-S11]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S12]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S13]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-S14]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-adr]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-final-review-audit]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-research]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-inventory-review-audit]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-plan]]'
@@ -42,6 +44,7 @@ Auto-generated index of all documents tagged with `#issue-620-external-pdf-signa
 
 ### audit
 
+- `2026-08-23-issue-620-external-pdf-signal-authority-adjudication-final-review-audit` - `issue-620-external-pdf-signal` audit: `authority adjudication final review`
 - `2026-08-23-issue-620-external-pdf-signal-inventory-review-audit` - `issue-620-external-pdf-signal` audit: `inventory review`
 
 ### exec
@@ -59,6 +62,7 @@ Auto-generated index of all documents tagged with `#issue-620-external-pdf-signa
 - `2026-08-23-issue-620-external-pdf-signal-S11` - Define the three-axis authority-adjudication contract and offline official-source evidence schema
 - `2026-08-23-issue-620-external-pdf-signal-S12` - Adjudicate all ten candidates against pinned official bases and registry applicability
 - `2026-08-23-issue-620-external-pdf-signal-S13` - Correct cross-model outcomes to select applicable revisions or refuse current-form alignment
+- `2026-08-23-issue-620-external-pdf-signal-S14` - Verify authority adjudication through only the affected registry and parser unit modules
 
 ### plan
 

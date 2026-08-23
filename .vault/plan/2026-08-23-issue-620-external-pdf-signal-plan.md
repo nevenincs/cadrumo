@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#issue-620-external-pdf-signal'
 date: '2026-08-23'
-modified: '2026-08-23'
-body_hash: 'sha256:947ef4f56e100639a25f54b3fe1923c221d4b2e47662541f8c9b1f30e27d9d14'
 tier: L1
 related:
   - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
@@ -12,6 +10,8 @@ related:
   - '[[2026-07-26-declaracion-real-render-verification-adr]]'
   - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-adr]]'
+modified: '2026-08-23'
+body_hash: 'sha256:0e91cb77bd96b2e3149123f8b11b6338a19b39384f66ae8025de79e4298fd003'
 ---
 
 # `issue-620-external-pdf-signal` plan
@@ -37,7 +37,7 @@ The accepted real-render verification decision requires render-dependent claims 
 - [x] `S11` - Define the three-axis authority-adjudication contract and offline official-source evidence schema; `src/cadrumo/tests/fixtures/external_layout_candidates/__init__.py; src/cadrumo/tests/fixtures/external_layout_candidates/tests/test_candidate_contract.py`.
 - [x] `S12` - Adjudicate all ten candidates against pinned official bases and registry applicability; `src/cadrumo/tests/fixtures/external_layout_candidates/{036,130,131,303,349}/*.json`.
 - [x] `S13` - Correct cross-model outcomes to select applicable revisions or refuse current-form alignment; `src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py`.
-- [ ] `S14` - Verify authority adjudication through only the affected registry and parser unit modules; `src/cadrumo/tests/fixtures/external_layout_candidates/tests/; src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py`.
+- [x] `S14` - Verify authority adjudication through only the affected registry and parser unit modules; `src/cadrumo/tests/fixtures/external_layout_candidates/tests/; src/cadrumo/adapters/inbound/declaracion/tests/test_external_layout_candidate_matrix.py`.
 - [ ] `S15` - Run fresh review, feature-surface gates, and close issue 620 with the candidate verdict matrix; `.vault/audit/; .vault/exec/; GitHub issue #620`.
 
 ## Parallelization

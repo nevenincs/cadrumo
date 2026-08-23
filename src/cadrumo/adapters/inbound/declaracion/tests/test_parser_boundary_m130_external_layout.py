@@ -1,12 +1,15 @@
-"""Modelo 130 blank-box safety on unverified external layout candidates.
+"""Modelo 130 blank-box safety on adjudicated external layout candidates.
 
 The two PDFs exercised here are third-party-hosted layout candidates, not
-authenticated AEAT evidence.  Their useful signal is physical: both expose all
-19 configured M130 box-number anchors while leaving every value position blank.
-The first assertion prevents an all-missing result from passing vacuously because
-the form was unreadable; the second proves the production extraction primitives
-classify those discovered blank boxes as missing without fabricating an amount or
-degrading the document into malformed or ambiguous outcomes.
+authenticated AEAT evidence.  Both are verified official-base derivatives whose
+layout applies to registry revision ``2019-y-siguientes``, while their artifact
+authenticity remains explicitly third-party and non-enrolled.  Their useful parser
+signal is physical: both expose all 19 configured M130 box-number anchors while
+leaving every value position blank.  The first assertion prevents an all-missing
+result from passing vacuously because the form was unreadable; the second proves
+the production extraction primitives classify those discovered blank boxes as
+missing without fabricating an amount or degrading the document into malformed
+or ambiguous outcomes.
 """
 
 from __future__ import annotations
@@ -19,7 +22,10 @@ import pytest
 from .....core.resources import resources
 from .....domain.calculations.registry import ExtractionProfileDefinition
 from .....tests import FIXTURES_DIR
-from .....tests.fixtures.external_layout_candidates import load_external_layout_candidate
+from .....tests.fixtures.external_layout_candidates import (
+    external_layout_source_class_is_non_authoritative,
+    load_external_layout_candidate,
+)
 from .._parser import (
     _classify_target,
     _extract_pages_words,
@@ -68,7 +74,12 @@ def test_m130_external_blank_layout_discovers_every_box_without_fabricating_valu
     """All 19 physical boxes are present and classify only as missing."""
     candidate = load_external_layout_candidate(sidecar_path)
     assert candidate.modelo == "130"
-    assert candidate.source_chain.authority_status == "unverified"
+    adjudication = candidate.authority_adjudication
+    assert adjudication.artifact_authenticity.verdict == "third_party_sample"
+    assert adjudication.official_base_derivation.verdict == "verified_official_base_derivative"
+    assert adjudication.registry_applicability.verdict == "current_authored_revision"
+    assert adjudication.registry_applicability.revision_id == "2019-y-siguientes"
+    assert external_layout_source_class_is_non_authoritative()
 
     pdf_path = sidecar_path.with_suffix(".pdf")
     assert pdf_path.is_file(), f"{pdf_path} is missing, so the external-layout regression proves nothing"
