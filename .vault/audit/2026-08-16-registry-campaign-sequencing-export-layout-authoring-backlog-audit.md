@@ -20100,3 +20100,102 @@ id, ordered on `applies_from` rather than on a filename.
 Modelo 200's split and the 104 casilla labels, both translation-blocked. Modelo
 347's earlier revisions, per-field reading. The locale CLI work is with its own
 agent and has not reported yet.
+
+## Tick: the seventh signal enrolled, and a gate that had been failing for bookkeeping starts reporting its real finding
+
+### A signal this campaign added was never classified
+
+`_signal_label` classifies each evidence string by which signal produced it and
+RAISES on anything it does not recognise -- deliberately, so a new signal added
+without updating it fails loudly. It did exactly that, and the omission was this
+campaign's own: `_straddle_evidence` was added to `_compare_design_pair` as a
+SEVENTH signal earlier in this work and never enrolled here, so every straddle
+string hit the raise.
+
+The consequence was worse than a red test. `test_every_modelo_revision_span_is_corpus_proven`
+aborted inside the classifier before reaching its verdict, so a gate that exists
+to report unproven revision spans was reporting a bookkeeping error instead.
+
+Enrolled as `straddle`, with the count in the failure message corrected from six
+to seven and the docstring recording WHY the function raises rather than
+returning "unknown" -- this omission is the worked example.
+
+### What the gate says now that it can speak
+
+It names **78 revisions** whose declared span is not corpus-proven: modelo 036's
+`2025-02-03-y-siguientes` and modelo 038's `2002-y-siguientes` have zero
+comparable bundled design years inside their claimed spans, and modelo 100's
+`2020` and `2021` have no design bundled for their own filing year at all. Every
+one asks for the same thing -- bundle AEAT's published record design for the
+missing year -- and the gate is explicit that a split must NOT be invented on
+today's evidence to make it quiet.
+
+That is a corpus-acquisition backlog, operator-side, and it was invisible while
+the classifier was raising.
+
+### Verified
+
+* the span module: 21 passed, 3 failed -- unchanged in count, but
+  `test_every_modelo_revision_span_is_corpus_proven` now fails on its real
+  finding rather than on an unclassified string.
+* `_signal_label` proved from outside the repo: straddle classifies as
+  `straddle`, the six existing phrasings still classify unchanged, and an
+  unknown phrasing still raises.
+* registry package: the run reported 13 failed and 6 errors, but every failure
+  outside the standing set passes in ISOLATION -- a peer is mid-edit in
+  `domain/contribuyente/inventory`, and the errors are that work being read
+  half-written. The standing set measured on a quiet tree remains 8.
+
+### Still open
+
+The 78 unproven spans need designs bundled -- operator-side acquisition, and now
+visible. Modelo 200's split and the 104 casilla labels stay translation-blocked;
+modelo 347's earlier revisions need a per-field reading. The locale CLI agent has
+not reported.
+
+## Tick: the locale CLI gap closed, verified independently rather than on the agent's word
+
+The dedicated agent's work landed (swept into a peer commit). It was checked
+against the campaign's own posture -- swarm output is inventory, not gospel --
+by re-deriving each claim here rather than reading its report.
+
+### What shipped
+
+New modules `dev/locales/_subtree_move.py` and `_revision_drift.py`, two verbs
+`move` and `move-revision`, and three test modules. `move-revision` takes
+`{modelo} {source_revision} {destination_revisions}...` -- variadic, so the SPLIT
+case is expressible: one old revision feeding two new ids.
+
+### Verified here, not taken on trust
+
+* **The parity gate bites in BOTH directions.** Driving `classify_revision_parity`
+  directly: the live tree reports 0 stale and 0 absent; withholding the registry
+  side of `347/2011-2024` reports it stale; deleting the catalogue keys for
+  `322/2008-2022` reports it absent.
+* **The drift report names a rename as ONE move.** Reproducing the exact drift my
+  347 narrowing left behind -- catalogue still keyed on `2008-2024` -- the
+  classifier returns a single candidate, `2008-2024 -> ('2011-2024',)`, 80 keys,
+  and prints `python -m dev.locales move-revision 347 2008-2024 2011-2024`. That
+  is the reading that was missing when the same drift had to be repaired by
+  hand-building a JSON manifest.
+* **The new tests pass in isolation: 30 passed.**
+
+### The nine other dev/locales failures are NOT this work
+
+`dev/locales` reports 9 failures, and attribution was checked rather than
+assumed: they cite `aggregation.oss_ioss.errors.*` catalogue drift and a
+`CADRUMO_SECRET_PASSPHRASE` help document -- peers' in-flight `tr()` and CLI
+work, not the new verbs. The agent's own three modules are green.
+
+### What this changes for the campaign
+
+The split procedure now has a verb for its locale step, and a gate that fails the
+moment a revision is renamed without it. Three splits landed that drift unnoticed
+because the report could only describe it as unrelated missing and extra keys
+among thousands; that reading is now explicit.
+
+### Still open
+
+Modelo 200's split and the 104 casilla labels, translation-blocked. Modelo 347's
+earlier revisions, per-field reading. The 78 unproven revision spans, operator-
+side corpus acquisition.
