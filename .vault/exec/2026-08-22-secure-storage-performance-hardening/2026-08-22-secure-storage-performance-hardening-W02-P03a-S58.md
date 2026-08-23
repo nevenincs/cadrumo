@@ -52,10 +52,22 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Seal installed CommandSpec identity, locale value, policy, schema, target, import, and absence projections.
+- Bind the attestation to the Git archive, commit, wheel, sdist, member inventory, and complete envelope.
+- Route release consumers through canonical cohort validation without rebuilding command authority.
+- Prove installed help imports against exact path-specific module budgets and behavior-handler absence.
+- Replace legacy synthetic attestations with authentic strict cohort fixtures and planted failures.
 
 ## Outcome
 
+The release cohort is one immutable build product. Its attestation is build output only and absent from production
+source. Downstream lanes validate the same retained cohort. Installed projections fail closed on provenance, target,
+locale, policy, schema, import-budget, member-inventory, and forbidden-artifact drift.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+Implementation landed partly through concurrent commits `19841feade`, `bc19cd7096`, and `ea79b01737b`; unrelated
+`pyproject.toml` content in `ea79b01737b` is concurrent work, not S58 evidence. A final Scoop rerun passed cohort
+construction, installed attestation, and first generation, then exceeded the timeout during its second deterministic
+generation while the shared host carried 932 processes and 163 Python processes. This external resource red did not
+report an attestation or contract failure.

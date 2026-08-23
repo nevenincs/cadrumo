@@ -34,21 +34,43 @@ related:
 
 ## Scope
 
-<!-- What was audited and why -->
+Audited the effective S58 release-cohort change against the accepted command-spec authority decision: installed
+projection, provenance, deferred targets, localization, selected-path imports, downstream consumers, forbidden
+artifacts, and the build-output-only boundary.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### s58-sealed-command-spec-cohort-review | high | attestation replay was not bound to source and artifacts
 
-       ### s58 sealed command spec cohort review | {level} | {summary}
+Remediated by binding the lowercase Git commit, exact Git-archive digest, root wheel and sdist digests, normalized
+member projection, and complete envelope. The loader independently rehashes and refuses every mismatch.
 
-     followed by a paragraph carrying the detail. s58 sealed command spec cohort review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### s58-sealed-command-spec-cohort-review | high | deferred targets lacked executable role proof
+
+Remediated by recursively resolving public targets and validating schema subclasses, callables, annotations, models,
+Click types, and unknown-role refusal. Missing, private, wrong-kind, and unknown-role plantings fail.
+
+### s58-sealed-command-spec-cohort-review | high | locale projection omitted localized values
+
+Remediated by hashing stable serialized localized values for every graph translation field and locale. A same-key
+changed-value planting changes the digest.
+
+### s58-sealed-command-spec-cohort-review | high | downstream enrollment was hand-maintained and bypassable
+
+Remediated by canonical verification in Scoop host and container routes, canonical loading in readiness, dynamic
+Python consumer discovery, import and assignment alias propagation, and a planted alias bypass detector.
+
+### s58-sealed-command-spec-cohort-review | medium | selected-path budgets did not execute installed help
+
+Remediated with separate isolated `python -S` processes for projection and each selected installed help path. Exact
+named module deltas, declared performance classes, the root assembler baseline, and zero foreign handlers are sealed.
+
+### s58-sealed-command-spec-cohort-review | medium | forbidden artifacts omitted the source distribution
+
+Remediated by inventorying and binding normalized wheel and sdist members and refusing both former JSON authorities
+and deleted generator names. A clean-wheel and dirty-sdist planting proves the sdist detector.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+Retain the strict schema without compatibility parsing. Keep the attestation exclusively as untracked release/build
+output. Require new release consumers and deferred target roles to enroll dynamically or fail closed.

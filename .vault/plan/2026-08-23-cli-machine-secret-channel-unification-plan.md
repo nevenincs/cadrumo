@@ -3,12 +3,12 @@ tags:
   - '#plan'
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
+modified: '2026-08-23'
+body_hash: 'sha256:570a129c9a418d8b51edaba8c4b8b04c36e6c70e254b0c4e8b87eb00c053dee3'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-global-machine-secret-contract-research]]'
-modified: '2026-08-23'
-body_hash: 'sha256:570a129c9a418d8b51edaba8c4b8b04c36e6c70e254b0c4e8b87eb00c053dee3'
 ---
 
 <!-- RETIRED: P10 -->
