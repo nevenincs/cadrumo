@@ -1,14 +1,16 @@
-"""Measured parser outcomes for every unverified external layout candidate.
+"""Measured parser outcomes for every adjudicated external layout candidate.
 
-The candidates are independent parser-adversarial bytes, not authenticated AEAT
-evidence.  This matrix records only what the production extraction primitives do
-with each blank layout and keeps unsupported routes visible.
+The candidates are third-party samples derived from official form layouts, not
+authenticated AEAT evidence.  Registry-aligned rows select the exact revision the
+sidecar declares.  Historical layouts without an authored revision remain explicit
+out-of-revision parser exercises and never count as current-form verification.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import Path
 
 import pytest
 
@@ -16,7 +18,9 @@ from .....core import Modelo, RegistryAuthorityGrade
 from .....core.resources import resources
 from .....tests import FIXTURES_DIR
 from .....tests.fixtures.external_layout_candidates import (
+    ExternalLayoutCandidate,
     ExternalLayoutCandidateKind,
+    ExternalLayoutRegistryApplicabilityVerdict,
     load_external_layout_candidate,
 )
 from ...pdf import ExtractedCasilla
@@ -54,18 +58,38 @@ class _MeasuredOutcome:
 
 
 @dataclass(frozen=True)
-class _CandidateCase:
-    """One explicit modelo/variant route and its exact expected buckets."""
+class _RegistryAlignedCandidateCase:
+    """One candidate whose sidecar names the exact registry revision under test."""
 
     modelo: Modelo
     candidate_kind: ExternalLayoutCandidateKind
     filing_year: int
     period: str
+    revision_id: str
+    applicability_verdict: ExternalLayoutRegistryApplicabilityVerdict
     expected: _MeasuredOutcome
 
     @property
     def label(self) -> str:
         return f"{self.modelo.value}-{self.candidate_kind}"
+
+
+@dataclass(frozen=True)
+class _OutOfRevisionParserExercise:
+    """A historical layout used only to challenge current parser primitives."""
+
+    modelo: Modelo
+    candidate_kind: ExternalLayoutCandidateKind
+    parser_exercise_filing_year: int
+    parser_exercise_period: str
+    expected: _MeasuredOutcome
+
+    @property
+    def label(self) -> str:
+        return f"{self.modelo.value}-{self.candidate_kind}-out-of-revision-parser-exercise"
+
+
+type _CandidateCase = _RegistryAlignedCandidateCase | _OutOfRevisionParserExercise
 
 
 _M130_MISSING = tuple(f"{number:02d}" for number in range(1, 20))
@@ -92,18 +116,41 @@ _M349_MISSING = (
 )
 
 
-def _cases_for_both_variants(
+def _registry_aligned_cases_for_both_variants(
     modelo: Modelo,
     *,
+    filing_year: int,
     period: str,
+    revision_id: str,
+    applicability_verdict: ExternalLayoutRegistryApplicabilityVerdict,
     expected: _MeasuredOutcome,
-) -> tuple[_CandidateCase, _CandidateCase]:
+) -> tuple[_RegistryAlignedCandidateCase, _RegistryAlignedCandidateCase]:
     return tuple(
-        _CandidateCase(
+        _RegistryAlignedCandidateCase(
             modelo=modelo,
             candidate_kind=candidate_kind,
-            filing_year=2026,
+            filing_year=filing_year,
             period=period,
+            revision_id=revision_id,
+            applicability_verdict=applicability_verdict,
+            expected=expected,
+        )
+        for candidate_kind in ("plain", "fillable")
+    )
+
+
+def _out_of_revision_exercises_for_both_variants(
+    modelo: Modelo,
+    *,
+    parser_exercise_period: str,
+    expected: _MeasuredOutcome,
+) -> tuple[_OutOfRevisionParserExercise, _OutOfRevisionParserExercise]:
+    return tuple(
+        _OutOfRevisionParserExercise(
+            modelo=modelo,
+            candidate_kind=candidate_kind,
+            parser_exercise_filing_year=2026,
+            parser_exercise_period=parser_exercise_period,
             expected=expected,
         )
         for candidate_kind in ("plain", "fillable")
@@ -111,52 +158,79 @@ def _cases_for_both_variants(
 
 
 _MATRIX = (
-    *_cases_for_both_variants(
+    *_registry_aligned_cases_for_both_variants(
         Modelo.M130,
+        filing_year=2026,
         period="1T",
+        revision_id="2019-y-siguientes",
+        applicability_verdict="current_authored_revision",
         expected=_MeasuredOutcome(kind=_OutcomeKind.BLANK_NO_VALUES, missing=_M130_MISSING),
     ),
-    *_cases_for_both_variants(
+    *_registry_aligned_cases_for_both_variants(
         Modelo.M131,
+        filing_year=2026,
         period="1T",
+        revision_id="2026",
+        applicability_verdict="current_authored_revision",
         expected=_MeasuredOutcome(
             kind=_OutcomeKind.UNSUPPORTED_LAYOUT,
             malformed=_M131_MALFORMED,
             ambiguous=("03", "05"),
         ),
     ),
-    *_cases_for_both_variants(
+    *_registry_aligned_cases_for_both_variants(
         Modelo.M303,
+        filing_year=2025,
         period="1T",
+        revision_id="2025",
+        applicability_verdict="historical_authored_revision",
         expected=_MeasuredOutcome(kind=_OutcomeKind.BLANK_NO_VALUES, missing=_M303_MISSING),
     ),
-    *_cases_for_both_variants(
+    *_out_of_revision_exercises_for_both_variants(
         Modelo.M036,
-        period="alta",
+        parser_exercise_period="alta",
         expected=_MeasuredOutcome(kind=_OutcomeKind.BLANK_NO_VALUES, missing=("decl.event-kind",)),
     ),
-    *_cases_for_both_variants(
+    *_out_of_revision_exercises_for_both_variants(
         Modelo.M349,
-        period="01",
+        parser_exercise_period="01",
         expected=_MeasuredOutcome(kind=_OutcomeKind.BLANK_NO_VALUES, missing=_M349_MISSING),
     ),
 )
 
 
-def _measure(case: _CandidateCase) -> _MeasuredOutcome:
+def _load_candidate(case: _CandidateCase) -> tuple[ExternalLayoutCandidate, Path]:
     modelo = case.modelo.value
     candidate_path = _CANDIDATE_ROOT / modelo / f"{case.candidate_kind}.pdf"
     sidecar_path = candidate_path.with_suffix(".json")
     candidate = load_external_layout_candidate(sidecar_path)
     assert candidate.modelo == modelo
     assert candidate.candidate_kind == case.candidate_kind
+    return candidate, candidate_path
 
-    snapshot = resources().modelos.authority.snapshot(
-        modelo,
-        filing_year=case.filing_year,
-        period=case.period,
-        grade=RegistryAuthorityGrade.APPLICABILITY,
-    )
+
+def _measure(case: _CandidateCase) -> _MeasuredOutcome:
+    _candidate, candidate_path = _load_candidate(case)
+
+    if isinstance(case, _RegistryAlignedCandidateCase):
+        snapshot = resources().modelos.authority.snapshot(
+            case.modelo.value,
+            filing_year=case.filing_year,
+            period=case.period,
+            revision_id=case.revision_id,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
+        )
+        assert str(snapshot.revision.id) == case.revision_id
+    else:
+        # This deliberately uses current parser anchors only as an adversarial
+        # safety exercise.  The candidate sidecar declares no applicable authored
+        # revision, and the separate applicability test below refuses alignment.
+        snapshot = resources().modelos.authority.snapshot(
+            case.modelo.value,
+            filing_year=case.parser_exercise_filing_year,
+            period=case.parser_exercise_period,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
+        )
 
     profile = _select_extraction_profile(snapshot, extraction_profile_id=None)
     pages = extract_pages_text(candidate_path)
@@ -171,11 +245,7 @@ def _measure(case: _CandidateCase) -> _MeasuredOutcome:
         )
         for target in profile.target_casillas
     )
-    kind = (
-        _OutcomeKind.UNSUPPORTED_LAYOUT
-        if outcomes.malformed or outcomes.ambiguous
-        else _OutcomeKind.BLANK_NO_VALUES
-    )
+    kind = _OutcomeKind.UNSUPPORTED_LAYOUT if outcomes.malformed or outcomes.ambiguous else _OutcomeKind.BLANK_NO_VALUES
     return _MeasuredOutcome(
         kind=kind,
         values=tuple(outcomes.values),
@@ -183,6 +253,30 @@ def _measure(case: _CandidateCase) -> _MeasuredOutcome:
         malformed=tuple(str(casilla_id) for casilla_id in outcomes.malformed),
         ambiguous=tuple(str(casilla_id) for casilla_id in outcomes.ambiguous),
     )
+
+
+@pytest.mark.parametrize("case", _MATRIX, ids=lambda case: case.label)
+def test_external_layout_candidate_registry_applicability_is_exact(case: _CandidateCase) -> None:
+    """Sidecars agree with a selected revision or explicitly refuse alignment."""
+    candidate, _candidate_path = _load_candidate(case)
+    adjudication = candidate.authority_adjudication
+    assert adjudication is not None
+    applicability = adjudication.registry_applicability
+
+    if isinstance(case, _RegistryAlignedCandidateCase):
+        assert applicability.verdict == case.applicability_verdict
+        assert applicability.revision_id == case.revision_id
+        snapshot = resources().modelos.authority.snapshot(
+            case.modelo.value,
+            filing_year=case.filing_year,
+            period=case.period,
+            revision_id=case.revision_id,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
+        )
+        assert str(snapshot.revision.id) == applicability.revision_id
+    else:
+        assert applicability.verdict == "historical_layout_without_authored_revision"
+        assert applicability.revision_id is None
 
 
 @pytest.mark.parametrize("case", _MATRIX, ids=lambda case: case.label)

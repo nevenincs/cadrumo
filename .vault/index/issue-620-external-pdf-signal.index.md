@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:61debcfe8aa1254db4a9d20cdb4c015ff3aa798ccc621fd64edb3a665ae98ed3'
+body_hash: 'sha256:15c40236c2870d2489b95afee2df6788ba17a2281bc3ea1709753192b757b35c'
 related:
   - '[[2026-08-23-issue-620-external-pdf-signal-S01]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S02]]'
@@ -18,7 +18,12 @@ related:
   - '[[2026-08-23-issue-620-external-pdf-signal-S08]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S09]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-S10]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-S11]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-S12]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-S13]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-adr]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-research]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-inventory-review-audit]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-plan]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-research]]'
@@ -32,7 +37,8 @@ Auto-generated index of all documents tagged with `#issue-620-external-pdf-signa
 
 ### adr
 
-- `2026-08-23-issue-620-external-pdf-signal-adr` - `issue-620-external-pdf-signal` adr: `third-party-hosted PDFs as adversarial external layout evidence` | (**status:** `accepted`)
+- `2026-08-23-issue-620-external-pdf-signal-adr` - `issue-620-external-pdf-signal` adr: `third-party-hosted PDFs as adversarial external layout evidence` | (**status:** `superseded`)
+- `2026-08-23-issue-620-external-pdf-signal-authority-adjudication-adr` - `issue-620-external-pdf-signal` adr: `authority adjudication` | (**status:** `accepted`)
 
 ### audit
 
@@ -50,6 +56,9 @@ Auto-generated index of all documents tagged with `#issue-620-external-pdf-signa
 - `2026-08-23-issue-620-external-pdf-signal-S08` - Add the cross-model external-layout outcome matrix with explicit unsupported and unavailable results
 - `2026-08-23-issue-620-external-pdf-signal-S09` - Correct Modelo 130 extraction-profile evidence claims and lock the operator advisory
 - `2026-08-23-issue-620-external-pdf-signal-S10` - Resolve final review findings for the M036 route, exact candidate topology, and synthetic-corpus terminology
+- `2026-08-23-issue-620-external-pdf-signal-S11` - Define the three-axis authority-adjudication contract and offline official-source evidence schema
+- `2026-08-23-issue-620-external-pdf-signal-S12` - Adjudicate all ten candidates against pinned official bases and registry applicability
+- `2026-08-23-issue-620-external-pdf-signal-S13` - Correct cross-model outcomes to select applicable revisions or refuse current-form alignment
 
 ### plan
 
@@ -57,4 +66,5 @@ Auto-generated index of all documents tagged with `#issue-620-external-pdf-signa
 
 ### research
 
+- `2026-08-23-issue-620-external-pdf-signal-authority-adjudication-research` - `issue-620-external-pdf-signal` research: `authority adjudication`
 - `2026-08-23-issue-620-external-pdf-signal-research` - `issue-620-external-pdf-signal` research: `external PDF evidence boundary`
