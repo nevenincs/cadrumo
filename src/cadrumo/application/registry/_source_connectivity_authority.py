@@ -300,6 +300,16 @@ class LiveSourceConnectivityProofAuthority:
         revision = catalogue.revisions.get(connection.calculation_revision_id)
         if revision is None or revision.calculation_revision_id != connection.calculation_revision_id:
             return False
+        primary_ref_counts: dict[str, int] = {}
+        for row in revision.source_provenance:
+            if row.lineage_role is CalculationSourceLineageRole.PRIMARY:
+                primary_ref_counts[row.source_ref] = primary_ref_counts.get(row.source_ref, 0) + 1
+        if any(
+            row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
+            and (row.parent_source_ref is None or primary_ref_counts.get(row.parent_source_ref) != 1)
+            for row in revision.source_provenance
+        ):
+            return False
         source_identity_rows = tuple(
             row
             for row in revision.source_provenance

@@ -459,7 +459,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
             )
             assert ambient_invoice_repo.exists() is False
             assert any(
-                ref.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
+                ref.resolved_binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
                 for ref in result.revision.source_provenance
             ), result.revision.source_provenance
             assert result.revision.source_issues == ()

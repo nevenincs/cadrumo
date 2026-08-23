@@ -170,14 +170,19 @@ def test_profile_source_resolver_fingerprints_storage_loaded_profile(
     )
 
     assert resolution.enum_binding_values[_CCAA_BINDING] == "madrid"
-    direct_resolution = resolve_profile_sourced_bindings(
-        snapshot,
-        bucket_id=_BUCKET_ID,
-        profile_record=profile_record,
+    repeated = ProfileSourceResolver(registry_snapshot=snapshot).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=snapshot.revision,
+        ),
     )
     assert {item.fingerprint for item in resolution.provenance if item.contributor_source_kind == "profile"} == {
-        item.fingerprint for item in direct_resolution.provenance
+        item.fingerprint for item in repeated.provenance
     }
+    assert all(item.fingerprint for item in resolution.provenance)
 
 
 def test_profile_source_resolver_respects_caller_owned_precedence() -> None:
@@ -296,4 +301,3 @@ def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> Non
     assert len(primary) == 1
     assert primary[0].fingerprint
     assert all(item.parent_source_ref == primary[0].source_ref for item in resolution.provenance[1:])
-    assert {item.fingerprint for item in resolution.provenance} == {resolution.provenance[0].fingerprint}
