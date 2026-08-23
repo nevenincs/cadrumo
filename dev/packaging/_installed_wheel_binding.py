@@ -43,13 +43,13 @@ def installed_python_for_cli(cli: Path) -> Path:
     return Path(interpreter).resolve(strict=True)
 
 
-def installed_wheel_payload_sha256(cli: Path) -> str:
-    """Hash the installed ``cadrumo`` payload through the CLI-owning interpreter."""
+def installed_distribution_payload_sha256(cli: Path, distribution: str) -> str:
+    """Hash one installed distribution through the executable-owning interpreter."""
     python = installed_python_for_cli(cli)
     script = r'''
 import hashlib, importlib.metadata, json
 generated = {"INSTALLER", "RECORD", "direct_url.json", "REQUESTED"}
-dist = importlib.metadata.distribution("cadrumo")
+dist = importlib.metadata.distribution(__import__("sys").argv[1])
 rows = []
 for item in dist.files or ():
     path = item.as_posix()
@@ -62,7 +62,7 @@ payload = json.dumps(sorted(rows), ensure_ascii=False, separators=(",", ":")).en
 print(hashlib.sha256(payload).hexdigest())
 '''
     completed = subprocess.run(  # noqa: S603 - interpreter is resolved from the installed CLI.
-        [str(python), "-I", "-c", script],
+        [str(python), "-I", "-c", script, distribution],
         check=False,
         capture_output=True,
         text=True,
@@ -75,3 +75,8 @@ print(hashlib.sha256(payload).hexdigest())
     if len(digest) != 64:
         raise RuntimeError(f"installed payload returned invalid digest: {digest!r}")
     return digest
+
+
+def installed_wheel_payload_sha256(cli: Path) -> str:
+    """Hash the installed ``cadrumo`` payload through the CLI-owning interpreter."""
+    return installed_distribution_payload_sha256(cli, "cadrumo")

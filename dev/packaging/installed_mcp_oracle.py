@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import os
 import re
@@ -30,6 +31,7 @@ from pydantic import AnyUrl
 from cadrumo.core import scan_directory
 from dev._paths import UTF_8
 
+from ._installed_wheel_binding import installed_distribution_payload_sha256
 from .installed_tax_oracle import (
     BINDINGS,
     CASILLAS,
@@ -103,6 +105,14 @@ class InstalledMcpEvidence:
     calls: tuple[McpCallEvidence, ...]
     invoked_cli_sha256: str
     invoked_cli_sha256_by_command: dict[str, str]
+    cohort_source_commit: str
+    cohort_manifest_sha256: str
+    cohort_root_wheel_sha256: str
+    cohort_harness_wheel_sha256: str
+    server_executable_sha256: str
+    runtime_server_executable: str
+    installed_cli_payload_sha256: str
+    installed_harness_payload_sha256: str
     checkout_imports_removed: bool
     ambient_product_executables_removed: bool
 
@@ -476,6 +486,14 @@ async def _run_protocol(
         calls=tuple(calls),
         invoked_cli_sha256="",
         invoked_cli_sha256_by_command={},
+        cohort_source_commit="",
+        cohort_manifest_sha256="",
+        cohort_root_wheel_sha256="",
+        cohort_harness_wheel_sha256="",
+        server_executable_sha256="",
+        runtime_server_executable="",
+        installed_cli_payload_sha256="",
+        installed_harness_payload_sha256="",
         checkout_imports_removed=imports_removed,
         ambient_product_executables_removed=product_executables_removed,
     )
@@ -526,6 +544,10 @@ def run_installed_mcp_oracle(
     environment_overrides: Mapping[str, str] | None = None,
     storage_root: Path,
     work_dir: Path,
+    cohort_source_commit: str,
+    cohort_manifest_sha256: str,
+    cohort_root_wheel_sha256: str,
+    cohort_harness_wheel_sha256: str,
     timeout_seconds: float = 180.0,
 ) -> InstalledMcpEvidence:
     """Execute the complete installed MCP oracle and return retained evidence."""
@@ -546,10 +568,32 @@ def run_installed_mcp_oracle(
         ),
     )
     invoked_cli_sha256, invoked_cli_sha256_by_command = _observed_cli_attestation(storage_root)
+    runtime_server = resolved_server
+    if resolved_server.stem.lower() != "cadrumo-mcp":
+        try:
+            project_index = tuple(server_args).index("--project") + 1
+            project = Path(server_args[project_index]).resolve(strict=True)
+        except (ValueError, IndexError) as exc:
+            raise InstalledMcpOracleError(
+                "wrapped MCP launch must declare its exact runtime project with --project",
+            ) from exc
+        scripts = project / ".venv" / ("Scripts" if os.name == "nt" else "bin")
+        runtime_server = (scripts / ("cadrumo-mcp.exe" if os.name == "nt" else "cadrumo-mcp")).resolve(strict=True)
+    sibling_cli = runtime_server.with_name("aeat.exe" if runtime_server.suffix.lower() == ".exe" else "aeat")
     return replace(
         evidence,
         invoked_cli_sha256=invoked_cli_sha256,
         invoked_cli_sha256_by_command=invoked_cli_sha256_by_command,
+        cohort_source_commit=cohort_source_commit,
+        cohort_manifest_sha256=cohort_manifest_sha256,
+        cohort_root_wheel_sha256=cohort_root_wheel_sha256,
+        cohort_harness_wheel_sha256=cohort_harness_wheel_sha256,
+        server_executable_sha256=hashlib.sha256(runtime_server.read_bytes()).hexdigest(),
+        runtime_server_executable=str(runtime_server),
+        installed_cli_payload_sha256=installed_distribution_payload_sha256(sibling_cli, "cadrumo"),
+        installed_harness_payload_sha256=installed_distribution_payload_sha256(
+            runtime_server, "cadrumo-harness"
+        ),
     )
 
 
@@ -574,6 +618,10 @@ def _parser() -> argparse.ArgumentParser:
         help="Execution cwd outside the source checkout.",
     )
     parser.add_argument("--timeout-seconds", type=float, default=180.0)
+    parser.add_argument("--cohort-source-commit", required=True)
+    parser.add_argument("--cohort-manifest-sha256", required=True)
+    parser.add_argument("--cohort-root-wheel-sha256", required=True)
+    parser.add_argument("--cohort-harness-wheel-sha256", required=True)
     parser.add_argument("--output", type=Path, help="Optional JSON evidence destination.")
     return parser
 
@@ -585,6 +633,10 @@ def main() -> int:
         args.server,
         storage_root=args.storage_root,
         work_dir=args.work_dir,
+        cohort_source_commit=args.cohort_source_commit,
+        cohort_manifest_sha256=args.cohort_manifest_sha256,
+        cohort_root_wheel_sha256=args.cohort_root_wheel_sha256,
+        cohort_harness_wheel_sha256=args.cohort_harness_wheel_sha256,
         timeout_seconds=args.timeout_seconds,
     )
     rendered = json.dumps(evidence.to_jsonable(), ensure_ascii=False, indent=2, sort_keys=True)

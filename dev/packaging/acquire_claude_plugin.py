@@ -35,6 +35,7 @@ from ._acquire_common import (  # noqa: E402
     require_command_succeeded,
 )
 from ._command import CommandResult, run_command  # noqa: E402
+from ._hashing import sha256_path  # noqa: E402
 from .cohort_manifest import load_release_cohort  # noqa: E402
 from .distribution_evidence_emit import SDK_CLIENT_NAME, emit_client_evidence  # noqa: E402
 from .evidence import (  # noqa: E402
@@ -199,6 +200,10 @@ def run_claude_plugin_acquisition(
         environment_overrides=server_environment,
         storage_root=run_root / "storage",
         work_dir=run_root / "external-work",
+        cohort_source_commit=cohort.source_commit,
+        cohort_manifest_sha256=sha256_path(cohort.manifest),
+        cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
+        cohort_harness_wheel_sha256=cohort.sha256["cadrumo-harness"],
         timeout_seconds=timeout_seconds,
     )
     if mcp_evidence.target_value != "23000.00":

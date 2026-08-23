@@ -447,6 +447,10 @@ def _prove_installed_plugin(
         environment_overrides=server_environment,
         storage_root=run_root / "storage",
         work_dir=run_root / "external-work",
+        cohort_source_commit=cohort.source_commit,
+        cohort_manifest_sha256=sha256_path(cohort.manifest),
+        cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
+        cohort_harness_wheel_sha256=cohort.sha256["cadrumo-harness"],
         timeout_seconds=args.timeout_seconds,
     )
     client_session = (
