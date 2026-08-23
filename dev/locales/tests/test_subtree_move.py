@@ -66,9 +66,7 @@ def _read_leaves(manager: LocaleManager, locales_dir: Path, locale: str) -> dict
 
 def _digests(locales_dir: Path) -> dict[Path, str]:
     """Fingerprint every catalogue file, so an unwritten tree is provable."""
-    return {
-        path: hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(locales_dir.rglob("*.yml"))
-    }
+    return {path: hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(locales_dir.rglob("*.yml"))}
 
 
 @pytest.fixture

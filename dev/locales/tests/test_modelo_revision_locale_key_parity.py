@@ -80,9 +80,7 @@ def _rename_revision(keys: frozenset[str], modelo: str, old: str, new: str) -> f
     """Return ``keys`` with one revision segment rewritten, as a registry rename does."""
     old_prefix = f"modelo.schema.{modelo}.revision.{old}."
     new_prefix = f"modelo.schema.{modelo}.revision.{new}."
-    return frozenset(
-        f"{new_prefix}{key[len(old_prefix) :]}" if key.startswith(old_prefix) else key for key in keys
-    )
+    return frozenset(f"{new_prefix}{key[len(old_prefix) :]}" if key.startswith(old_prefix) else key for key in keys)
 
 
 def test_an_unmoved_rename_is_reported_in_both_directions(

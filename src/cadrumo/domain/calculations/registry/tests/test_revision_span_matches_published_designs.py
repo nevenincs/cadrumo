@@ -2514,12 +2514,17 @@ def _distinct_orden_documents(modelo: ModeloDefinition) -> set[str]:
 
 
 def _signal_label(evidence_item: str) -> str:
-    """Classify one evidence string by which of the six signals produced it.
+    """Classify one evidence string by which of the seven signals produced it.
 
     LIGHTWEIGHT SUBSTRING CLASSIFICATION, matching this module's own established
     convention -- the ``_DESCRIPTION_ONLY`` marking already classifies evidence
     the same way -- rather than a structural refactor of every signal function's
-    return shape to carry a label. Six signals, six distinguishable phrasings.
+    return shape to carry a label. Seven signals, seven distinguishable phrasings.
+
+    The seventh, ``straddle``, is why this function raises rather than returning
+    'unknown': it was added to :func:`_compare_design_pair` without being added
+    here, and the loud failure is what surfaced the omission instead of letting a
+    live signal classify as nothing.
 
     Raises rather than falling through to "unknown", deliberately: a seventh
     signal added later without updating this function must fail LOUDLY here,
@@ -2538,8 +2543,10 @@ def _signal_label(evidence_item: str) -> str:
         return "position-SET"
     if "unnumbered slot(s) re-described" in evidence_item:
         return "description-flip"
+    if "straddle the other design's boundaries" in evidence_item:
+        return "straddle"
     raise AssertionError(
-        f"evidence string matches none of the six known signal phrasings -- either a new signal "
+        f"evidence string matches none of the seven known signal phrasings -- either a new signal "
         f"was added without updating _signal_label, or an existing one's wording changed under it: "
         f"{evidence_item!r}"
     )

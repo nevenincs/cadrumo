@@ -1,0 +1,671 @@
+# Modelo 220 RECORD T22007000 -- BASE IMPONIBLE Y CUOTA INTEGRA DEL GRUPO: the suma de bases imponibles
+# individuales, the corrections for diferimiento de resultados internos and
+# the otras correcciones that pages 7C to 7H detail, then the base imponible
+# del grupo, the reservas de capitalizacion y nivelacion, the compensacion de
+# bases imponibles negativas, and the cooperativas track down to the cuota
+# integra del grupo.
+#
+# 50 casillas describe all 60 design fields -- 50 authored and
+# 10 excluded, each excluded field asserted to be envelope, reservado or fin de
+# registro BY ITS OWN TEXT rather than by position. Every box carries AEAT's own five-digit
+# number, so not one number here is minted.
+#
+# CHILDREN CARRY THEIR PARENT'S NAME INLINE, so every label is distinct on AEAT's own text
+# and no nesting is inferred from position. Where a design does NOT do this the record is
+# authored flat instead -- T22005A01 is the worked example, and the difference between the
+# two treatments is in the data, never in the preference.
+#
+# FOUR FIELDS HERE CARRY NO NUMBER AT ALL and are authored anyway: @786 and @808
+# "Tramo base imponible" 1 and 2, @803 and @825 "Tramo de tipo de gravamen" 1
+# and 2. They are taxpayer values, not envelope mechanics, so treating
+# "unnumbered" as "excludable" would have dropped four real filing fields. They
+# take modelo 181's sheet-qualified byte span, which names a field the design
+# declares at exactly that offset and length and mints nothing.
+#
+# THIS RECORD IS THE HEAD THAT THE 7C TO 7H DETAIL PAGES FEED. Its own text says
+# so -- "(Pag. 7D)", "(Pag. 7E)", "(Pag. 7G)", "(Pag. 7H)" -- and four of those
+# detail records are already authored in this revision as T22007D00, E00, G00 and
+# H00. THE REFERENCES ARE PROSE IN A LABEL: nothing carries a value from a detail
+# total into the box that cites it, and no construct relates them.
+#
+# [00562] CUOTA INTEGRA DEL GRUPO IS DECLARED HERE FOR THE THIRD TIME in this
+# revision, after T22009000 and T220DID00. One AEAT box, three records, three
+# casillas under the segmento convention. A layout MUST bind them to the same
+# value rather than collect them three times, and nothing enforces that.
+#
+# TWO LINES OPEN WITH A STRAY ":-" -- [00553] and [00554] read ":- Grupos de
+# Cooperativas: ...". Transcribed as printed.
+#
+# AEAT IS INCONSISTENT ABOUT THE SEPARATOR AFTER THE HEADING: "ACTIVO. Inmovilizado
+# intangible" with a space, "ACTIVO.Activos por impuesto diferido" without. The heading is
+# derived as the common prefix of every numbered line and the remainder is stripped, so
+# both spellings land on the same heading. 0 parent-child separator
+# repair(s)
+# applied: none needed.
+#
+# THE LIGATURE REPAIR IS GROUNDED IN THE WORKBOOK'S OWN VOCABULARY, and the vocabulary is
+# counted twice so the damage cannot attest itself: once over every token, and once over
+# only those tokens seen where they CANNOT be the left half of a split. 1
+# rejoin(s) applied:
+#   'fi scal' -> 'fiscal', attested 657 time(s) elsewhere in the design
+
+#
+# Grounded in aeat-dr-220-2024, whose applies_from and applies_to are 2024-01-01 and
+# 2024-12-31 -- exactly the single ejercicio this revision claims. T22007000 tiles
+# 1..991 exactly once with NO gap and NO PARTIAL OVERLAP, both checked.
+#
+# AEAT DECLARES THIS RECORD'S IDENTITY IN ITS ENVELOPE, as literal constants:
+# pagina 07, letra 0, hoja 00. Sibling sector pages of this
+# family share every heading AEAT prints in the BODY -- two records both head their
+# lines "ACTIVO" and both declare a "Total activo" -- so the envelope is the ONLY
+# non-inferential way to tell them apart. The operator label carries it for exactly
+# that reason; it claims no sector, which the design does not state.
+#
+# NOT MODELLED, deliberately: @1..@15, the modelo/pagina identifier envelope and the
+# pagina-complementaria mechanics; @830+150 RESERVADO PARA LA ADMINISTRACION; and
+# @980+12 Fin de registro.
+#
+# NOT CLAIMED: THIS BALANCE SHEET DOES NOT BALANCE HERE. Every subtotal and the TOTAL are
+# DECLARED, not computed: no formula, construct or binding sums a group into its head or
+# the heads into the total, and nothing checks activo against patrimonio neto plus pasivo.
+# Every box is a manual input.
+
+# @16+17 N. Suma de BI individuales de las entidades del grupo fiscal (excl. BI en estimación objetiva por régimen entidades navieras) (Pág. 7A) [00043]
+[[revisions."2024".casillas]]
+id = "T22007000:00043"
+number = "00043"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @33+17 N. Grupos de Cooperativas: Suma de B.I. individuales por resultados cooperativos. (Pag. 7A) [00047]
+[[revisions."2024".casillas]]
+id = "T22007000:00047"
+number = "00047"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @50+17 N. Grupos de Cooperativas: Suma de B.I. individuales por resultados extracooperativos. (Pag. 7A) [00048]
+[[revisions."2024".casillas]]
+id = "T22007000:00048"
+number = "00048"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @67+17 N. Grupos con entidades navieras en régimen especial: Suma de BI en función del tonelaje, determinadas en estimación objetiva (Pág. 7A)(*) [00049]
+[[revisions."2024".casillas]]
+id = "T22007000:00049"
+number = "00049"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @84+17 N. Suma del 50% de las bases imponibles negativas individuales del período, no integradas DA19ª LIS. Régimen General (Pág. 7A) [01263]
+[[revisions."2024".casillas]]
+id = "T22007000:01263"
+number = "01263"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @101+17 N. Suma del 50% de las bases imponibles negativas individuales del período, no integradas DA19ª LIS. Régimen especial de buques y empresas navieras en Canarias (Pág. 7A) [01264]
+[[revisions."2024".casillas]]
+id = "T22007000:01264"
+number = "01264"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @118+17 N. Suma de bases imponibles negativas individuales de períodos anteriores integradas DA19ª LIS. Régimen General (Pág. 7A bis) [01021]
+[[revisions."2024".casillas]]
+id = "T22007000:01021"
+number = "01021"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @135+17 N. Suma de bases imponibles negativas de períodos anteriores integradas DA19ª LIS. Régimen especial de buques y empresas navieras en Canarias (Pág. 7A bis) [01935]
+[[revisions."2024".casillas]]
+id = "T22007000:01935"
+number = "01935"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @152+17 N. Correcciones a la suma de bases imponibles por diferimiento de resultados internos:(**). Total eliminación de resultados por operaciones internas. (Pág. 7C) [03241]
+[[revisions."2024".casillas]]
+id = "T22007000:03241"
+number = "03241"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @169+17 N. Correcciones a la suma de bases imponibles por diferimiento de resultados internos:(**). Total incorporación de resultados por operaciones internas. (Pág. 7C) [03242]
+[[revisions."2024".casillas]]
+id = "T22007000:03242"
+number = "03242"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @186+17 N. Total correcciones a la suma de bases imponibles por diferimiento de resultados internos [00079]
+[[revisions."2024".casillas]]
+id = "T22007000:00079"
+number = "00079"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @203+17 N. Otras correcciones a la suma de bases imponibles:(**). Eliminación de dividendos internos del grupo fi scal (Pág. 7D) [00080]
+[[revisions."2024".casillas]]
+id = "T22007000:00080"
+number = "00080"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @220+17 N. Otras correcciones a la suma de bases imponibles:(**). Incorporación de deterioros de valor de participaciones en fondos propios de entidades del grupo fiscal, eliminados en períodos anteriores (Pág. 7E) [00082]
+[[revisions."2024".casillas]]
+id = "T22007000:00082"
+number = "00082"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @237+17 N. Otras correcciones a la suma de bases imponibles:(**). Grupos de Cooperativas: Eliminaciones de "retornos intragrupo", "ayudas económicas intragrupo" y "resultados distribuidos por la entidad cabeza del grupo" (RD 1345/1992) (Pág. 7G) [00083]
+[[revisions."2024".casillas]]
+id = "T22007000:00083"
+number = "00083"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @254+17 N. Otras correcciones a la suma de bases imponibles:(**). Otras correcciones a la suma de bases imponibles individuales o a la base imponible del grupo fiscal (Pág. 7H) [00085]
+[[revisions."2024".casillas]]
+id = "T22007000:00085"
+number = "00085"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @271+17 N. Otras correcciones a la suma de bases imponibles:(**). Total otras correcciones a la suma de bases imponibles [00086]
+[[revisions."2024".casillas]]
+id = "T22007000:00086"
+number = "00086"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @288+17 N. Base imponible previa del grupo [00225]
+[[revisions."2024".casillas]]
+id = "T22007000:00225"
+number = "00225"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @305+17 Num. Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 LIS y dotaciones de la DT 33ª.1 LIS. Aumento [02542]
+[[revisions."2024".casillas]]
+id = "T22007000:02542"
+number = "02542"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @322+17 Num. Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 LIS. Disminución [02543]
+[[revisions."2024".casillas]]
+id = "T22007000:02543"
+number = "02543"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @339+17 Num. Aplicación del límite del art. 11.12 LIS (art. 62.1 e) LIS). Aumento [02544]
+[[revisions."2024".casillas]]
+id = "T22007000:02544"
+number = "02544"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @356+17 Num. Aplicación del límite del art. 11.12 LIS (art. 62.1 e) LIS). Disminución [00291]
+[[revisions."2024".casillas]]
+id = "T22007000:00291"
+number = "00291"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @373+17 Num. Dotaciones a que hace referencia el art. 11.12 LIS de períodos anteriores a la incorporación al grupo (art. 67 d) y 74.3 d) LIS)(***) [00398]
+[[revisions."2024".casillas]]
+id = "T22007000:00398"
+number = "00398"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @390+17 N. Base imponible del grupo, previa a la aplicación de las reservas de capitalización y a la compensación de bases imponibles negativas de períodos anteriores [00550]
+[[revisions."2024".casillas]]
+id = "T22007000:00550"
+number = "00550"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @407+17 Num. Reserva de capitalización(***) [02963]
+[[revisions."2024".casillas]]
+id = "T22007000:02963"
+number = "02963"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @424+17 Num. Reserva de capitalización de entidades de períodos anteriores a la incorporación al grupo aplicadas (art. 67 c) y y 74.3 c) LIS)(***) [03140]
+[[revisions."2024".casillas]]
+id = "T22007000:03140"
+number = "03140"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @441+17 Num. Base imponible y cuota íntegra del grupo: - Compensación de bases imponibles negativas del grupo de períodos anteriores (Pág. 7K)(***) [00362]
+[[revisions."2024".casillas]]
+id = "T22007000:00362"
+number = "00362"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @458+17 Num. Base imponible y cuota íntegra del grupo: - Compensación de bases imponibles negativas de entidades de períodos anteriores a la incorporación al grupo (art. 67 e) y 74.3 e) LIS) (Pág. 7L)(***) [00547]
+[[revisions."2024".casillas]]
+id = "T22007000:00547"
+number = "00547"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @475+17 N. Base imponible y cuota íntegra del grupo: Base imponible del grupo [00552]
+[[revisions."2024".casillas]]
+id = "T22007000:00552"
+number = "00552"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @492+17 Num. Reserva de nivelación. Aumento [02545]
+[[revisions."2024".casillas]]
+id = "T22007000:02545"
+number = "02545"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @509+17 Num. Reserva de nivelación. Disminución [02546]
+[[revisions."2024".casillas]]
+id = "T22007000:02546"
+number = "02546"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @526+17 Num. Reserva de nivelación de entidades de períodos anteriores a la incorporación al grupo (art. 67 f) y y 74.3 f) LIS) [02547]
+[[revisions."2024".casillas]]
+id = "T22007000:02547"
+number = "02547"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @543+17 N. :- Grupos de Cooperativas: Suma de BI individuales menos eliminaciones por resultados cooperativos [00553]
+[[revisions."2024".casillas]]
+id = "T22007000:00553"
+number = "00553"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @560+17 N. :- Grupos de Cooperativas: Suma de BI individuales menos eliminaciones por resultados extracooperativos [00554]
+[[revisions."2024".casillas]]
+id = "T22007000:00554"
+number = "00554"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @577+5 Num. Tipo de gravamen (%) [00558]
+[[revisions."2024".casillas]]
+id = "T22007000:00558"
+number = "00558"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @582+17 N. Suma de cuotas íntegras de las cooperativas del grupo [00560]
+[[revisions."2024".casillas]]
+id = "T22007000:00560"
+number = "00560"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @599+17 Num. Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS a los que se refiere el art. 11.12 LIS). Aumento [02548]
+[[revisions."2024".casillas]]
+id = "T22007000:02548"
+number = "02548"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @616+17 Num. Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS a los que se refiere el art. 11.12 LIS). Disminución [02549]
+[[revisions."2024".casillas]]
+id = "T22007000:02549"
+number = "02549"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @633+17 Num. Aplicación límite art. 11.12 LIS y DA 7ª Ley 20/90. Aumento [02890]
+[[revisions."2024".casillas]]
+id = "T22007000:02890"
+number = "02890"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @650+17 Num. Aplicación límite art. 11.12 LIS y DA 7ª Ley 20/90. Disminución [00540]
+[[revisions."2024".casillas]]
+id = "T22007000:00540"
+number = "00540"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @667+17 Num. Dotaciones a que hace referencia el art. 11.12 LIS y DA 7ª Ley 20/90, de períodos anteriores a que la entidad se incorporara al grupo(***) [00541]
+[[revisions."2024".casillas]]
+id = "T22007000:00541"
+number = "00541"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @684+17 Num. Grupos de Cooperativas: Compensación de cuotas negativas del grupo de períodos anteriores (Pág. 7K bis)(***) [00363]
+[[revisions."2024".casillas]]
+id = "T22007000:00363"
+number = "00363"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @701+17 Num. Grupos de Cooperativas: Compensación de cuotas negativas de entidades de períodos anteriores a la incorporación al grupo (Pág. 7L bis)(***) [00561]
+[[revisions."2024".casillas]]
+id = "T22007000:00561"
+number = "00561"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @718+17 Num. Reserva de nivelación. Aumento [02891]
+[[revisions."2024".casillas]]
+id = "T22007000:02891"
+number = "02891"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @735+17 Num. Reserva de nivelación. Disminución [02892]
+[[revisions."2024".casillas]]
+id = "T22007000:02892"
+number = "02892"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @752+17 Num. Reserva de nivelación de entidades de períodos anteriores a la incorporación al grupo. [02893]
+[[revisions."2024".casillas]]
+id = "T22007000:02893"
+number = "02893"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @769+17 N. Cuota íntegra del grupo [00562]
+[[revisions."2024".casillas]]
+id = "T22007000:00562"
+number = "00562"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @786+17 N. Tramo base imponible 1
+[[revisions."2024".casillas]]
+id = "T22007000:t22007000.786-802"
+number = "t22007000.786-802"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @803+5 N. Tramo de tipo de gravamen 1 (tres enteros, dos decimales)
+[[revisions."2024".casillas]]
+id = "T22007000:t22007000.803-807"
+number = "t22007000.803-807"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @808+17 N. Tramo base imponible 2
+[[revisions."2024".casillas]]
+id = "T22007000:t22007000.808-824"
+number = "t22007000.808-824"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
+
+# @825+5 N. Tramo de tipo de gravamen 2 (tres enteros, dos decimales)
+[[revisions."2024".casillas]]
+id = "T22007000:t22007000.825-829"
+number = "t22007000.825-829"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-220-2024"]
