@@ -146,6 +146,8 @@ def test_profile_authentication_metadata_is_public_bounded_and_value_free() -> N
     assert contract.same_scope_exclusive is True
     assert contract.stdin_exclusive_across_scopes is True
     assert contract.descriptors_must_differ_across_scopes is True
+    assert contract.duplicate_keys_forbidden is True
+    assert contract.extra_fields_forbidden is True
     assert "passphrase" not in repr(contract).replace("profile_passphrase", "")
 
 

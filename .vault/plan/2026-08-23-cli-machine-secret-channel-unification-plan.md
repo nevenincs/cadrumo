@@ -4,7 +4,7 @@ tags:
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
 modified: '2026-08-23'
-body_hash: 'sha256:5c2c241940f43b92fef4e1bdee09179ce6404ffa6679fa59a502305d297d060d'
+body_hash: 'sha256:c7ae69ef8b3fc09781687b9aa65885671d85e2ac5d7fc9086155f44094d295ee'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
@@ -90,7 +90,7 @@ Exercise both transport channels and refusal behavior through actual processes.
 
 Regenerate machine metadata and document the uniform contract.
 
-- [ ] `W03.P07.S15` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and project and regenerate safe conditional leaf machine-secret metadata and root profile_authentication posture across registration metadata, command schemas, CLI tree artifacts, and their tests; `dev/quality/generate_command_registration_metadata.py and generated CLI metadata artifacts`.
+- [x] `W03.P07.S15` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and project and regenerate safe conditional leaf machine-secret metadata and root profile_authentication posture across registration metadata, command schemas, CLI tree artifacts, and their tests; `dev/quality/generate_command_registration_metadata.py and generated CLI metadata artifacts`.
 - [ ] `W03.P07.S16` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and update operator documentation and sequence sources through canonical generators to describe both leaf channels, the distinct root profile-authentication pair, cross-scope collision rules, caller-owned descriptors, Windows HANDLE bootstrap, repeated keychain-free Argon2 work, bounded-lifetime cleanup, and removed CLI environment fallback; `docs/how-to and docs/reference CLI secret-input documentation and sequences`.
 
 ## Wave `W04` - Closure

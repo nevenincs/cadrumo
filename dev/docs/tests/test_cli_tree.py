@@ -137,6 +137,40 @@ def test_option_names_carry_flag_spellings(cli_tree: CliTree) -> None:
     assert any(name.startswith("--") for p in options for name in p.names)
 
 
+def test_machine_secret_and_profile_authentication_metadata_matches_live_projection(
+    cli_tree: CliTree,
+) -> None:
+    """The generated discovery tree carries the same value-free graph contracts."""
+    from cadrumo.entrypoints.cli.command_api import command_registration_projection
+
+    registration = command_registration_projection()
+    rows = {("aeat", *(row.cli_path or ())): row for row in registration.commands}
+    secret_paths = set()
+    for path, row in rows.items():
+        node = resolve_command_path(cli_tree, path)
+        assert node.machine_secret_payloads == row.machine_secret_payloads
+        assert node.profile_authentication == row.profile_authentication
+        if node.machine_secret_payloads:
+            secret_paths.add(path)
+    assert secret_paths == {
+        ("aeat", "config", "login"),
+        ("aeat", "config", "passphrase", "change"),
+        ("aeat", "config", "profile", "create"),
+        ("aeat", "config", "profile", "restore"),
+        ("aeat", "config", "auth", "certificate", "secret", "set"),
+    }
+
+    root = resolve_command_path(cli_tree, "aeat")
+    assert root.profile_authentication_contract == registration.profile_authentication_contract
+    assert all(
+        node.profile_authentication_contract is None
+        for key, node in cli_tree.root.items()
+        if key != "aeat"
+    )
+    rendered = serialise_cli_tree(cli_tree).lower()
+    assert all(token not in rendered for token in ('"value"', '"example"', "secretstr"))
+
+
 def test_round_trip_through_serialised_form(cli_tree: CliTree, tmp_path: Path) -> None:
     """Serialise → load reconstructs an equal projection."""
     path = tmp_path / "cli-tree.json"

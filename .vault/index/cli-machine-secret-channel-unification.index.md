@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-08-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:34af7b9f2896f3d7d3f06be498bf8cbd578c0d0fb776d949b43810390eaf2123'
+body_hash: 'sha256:b3c4e5c9ac54b8e3e4320666bd2ee2406514c45058cd04316e0d10e2afd9ddf9'
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-W01-P01-S01]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W01-P01-S02]]'
@@ -23,6 +23,8 @@ related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-W02-P11-S19]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W02-P11-S20]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-W02-P11-S21]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-W02-P11-S22]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-W03-P07-S15]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-foundation-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-global-machine-secret-contract-research]]'
@@ -35,7 +37,9 @@ related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-s10-certificate-machine-secret-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s11-locale-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s12-obsolete-code-purge-audit]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-s15-metadata-projection-review-audit]]'
   - '[[2026-08-23-cli-machine-secret-channel-unification-s19-passphrase-rotation-review-audit]]'
+  - '[[2026-08-23-cli-machine-secret-channel-unification-s22-root-profile-authentication-audit]]'
 ---
 
 # `cli-machine-secret-channel-unification` feature index
@@ -58,7 +62,9 @@ Auto-generated index of all documents tagged with `#cli-machine-secret-channel-u
 - `2026-08-23-cli-machine-secret-channel-unification-s10-certificate-machine-secret-audit` - `cli-machine-secret-channel-unification` audit: `s10 certificate machine secret`
 - `2026-08-23-cli-machine-secret-channel-unification-s11-locale-review-audit` - `cli-machine-secret-channel-unification` audit: `S11 locale alignment review`
 - `2026-08-23-cli-machine-secret-channel-unification-s12-obsolete-code-purge-audit` - `cli-machine-secret-channel-unification` audit: `S12 obsolete-code purge`
+- `2026-08-23-cli-machine-secret-channel-unification-s15-metadata-projection-review-audit` - `cli-machine-secret-channel-unification` audit: `S15 metadata projection review`
 - `2026-08-23-cli-machine-secret-channel-unification-s19-passphrase-rotation-review-audit` - `cli-machine-secret-channel-unification` audit: `s19 passphrase rotation review`
+- `2026-08-23-cli-machine-secret-channel-unification-s22-root-profile-authentication-audit` - `cli-machine-secret-channel-unification` audit: `s22 root profile authentication`
 
 ### exec
 
@@ -77,6 +83,8 @@ Auto-generated index of all documents tagged with `#cli-machine-secret-channel-u
 - `2026-08-23-cli-machine-secret-channel-unification-W02-P11-S19` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and restore config passphrase change as the sole three-field rotation verb with canonical leaf transport, public metadata, tests, and an explicit self-authenticating root-gate exemption
 - `2026-08-23-cli-machine-secret-channel-unification-W02-P11-S20` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and define the distinct root profile-authentication option pair, strict profile_passphrase payload, typed command-graph posture, value-free metadata, and universal non-adopter invariants
 - `2026-08-23-cli-machine-secret-channel-unification-W02-P11-S21` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and implement parsed-dispatch root and leaf source preflight, exact-target login fallback, show validate and history gate convergence, unused-source refusal, target assertions, bounded cleanup, and non-secret persistence warning
+- `2026-08-23-cli-machine-secret-channel-unification-W02-P11-S22` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and align all four locales and focused behavior tests for root applicability, parse precedence, session refusal reasons, collisions, self-authenticating exemptions, cleanup, leakage, and Windows descriptor bootstrap semantics
+- `2026-08-23-cli-machine-secret-channel-unification-W03-P07-S15` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and project and regenerate safe conditional leaf machine-secret metadata and root profile_authentication posture across registration metadata, command schemas, CLI tree artifacts, and their tests
 
 ### plan
 

@@ -4,11 +4,17 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Any, Final, cast
+from typing import Any, Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._command_schema import CommandRegistrationMetadata, MachineSecretPayloadMetadata, command_registration_metadata
+from ._command_schema import (
+    CommandRegistrationMetadata,
+    MachineSecretPayloadMetadata,
+    ProfileAuthenticationContractMetadata,
+    command_registration_metadata,
+    command_registration_projection,
+)
 
 _FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -78,6 +84,8 @@ class VerbInputSchema(BaseModel):
     cli_path: tuple[str, ...]
     parameters: tuple[VerbParameter, ...] = ()
     machine_secret_payloads: tuple[MachineSecretPayloadMetadata, ...] = ()
+    profile_authentication: Literal["not-applicable", "resume-fallback", "self-authenticating"]
+    profile_authentication_contract: ProfileAuthenticationContractMetadata
     help: str = ""
 
     @property
@@ -138,6 +146,7 @@ def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, .
 
 def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInputSchema]:
     rows = _rows()
+    profile_contract = command_registration_projection().profile_authentication_contract
     schemas: dict[str, VerbInputSchema] = {}
     failures: list[VerbLeafResolutionFailure] = []
     for key in command_keys:
@@ -170,6 +179,8 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
                 for p in parameters
             ),
             machine_secret_payloads=row.machine_secret_payloads,
+            profile_authentication=row.profile_authentication,
+            profile_authentication_contract=profile_contract,
             help=next((value for _, value in row.help_by_language), ""),
         )
     assert_schema_coverage(tuple(failures))
