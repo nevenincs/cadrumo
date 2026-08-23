@@ -109,17 +109,39 @@ def test_the_derived_sets_are_populated() -> None:
     Disjointness is trivially satisfied when either side is empty, so a revision
     that yielded no operands or no rate-asserting casillas would pass the real
     assertion while measuring nothing. This fails loudly instead.
+
+    SCOPED TO REVISIONS THAT DECLARE A FORMULA, because the failure this guards
+    is a WALKER that silently returns nothing -- and a walker can only fail on a
+    revision that has something to walk. Modelo 390's 2021 revision declares no
+    formulas at all: it is `authority_grade = "applicability"`, carrying ten
+    casillas and an extraction profile so a filed prior-year return can be
+    PARSED, and its own review note says "filing layout authority is not
+    claimed". It has no bindings, no export layout and no formulas, so an empty
+    operand set there is the correct reading of the data rather than a walker
+    that broke.
+
+    The exemption is keyed on the revision declaring zero formulas, never on its
+    id, so a calculation-bearing revision whose operands come back empty still
+    fails. The converse is asserted too: a formula-less revision must also yield
+    no operands, since operands appearing from nowhere would be its own defect.
     """
-    seen = False
+    measured = 0
     for revision_id, revision in _revisions():
-        seen = True
         operands = _formula_operand_ids(revision)
+        if not revision.formulas:
+            assert not operands, (
+                f"{revision_id}: declares no formulas yet {len(operands)} operand(s) were extracted"
+            )
+            continue
         asserting = _rate_asserting_casilla_ids(revision)
         assert operands, f"{revision_id}: no formula operands were extracted at all"
         assert asserting, (
             f"{revision_id}: no rate-asserting casilla was found, so the invariant below would hold vacuously"
         )
-    assert seen, "modelo 390 declared no revisions; the gate iterated nothing"
+        measured += 1
+    assert measured, (
+        "no modelo 390 revision declares a formula, so this module measured nothing at all"
+    )
 
 
 def test_no_rate_asserting_casilla_is_a_total_operand() -> None:

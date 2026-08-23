@@ -6,6 +6,7 @@
 [[revisions."2021".casillas]]
 id = "iva.anual.repercutido.super-reducido"
 number = "02"
+continuidad_id = "iva-cuota-repercutida-super-reducido"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 input_kind = "informational"
@@ -15,6 +16,7 @@ source_refs = ["aeat-dr-390-2021"]
 [[revisions."2021".casillas]]
 id = "iva.anual.repercutido.reducido"
 number = "04"
+continuidad_id = "iva-cuota-repercutida-reducido"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 input_kind = "informational"
@@ -24,6 +26,7 @@ source_refs = ["aeat-dr-390-2021"]
 [[revisions."2021".casillas]]
 id = "iva.anual.repercutido.general"
 number = "06"
+continuidad_id = "iva-cuota-repercutida-general"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 input_kind = "informational"
@@ -33,6 +36,7 @@ source_refs = ["aeat-dr-390-2021"]
 [[revisions."2021".casillas]]
 id = "iva.anual.aic.bienes.tipo-21.cuota"
 number = "26"
+continuidad_id = "iva-aic-bienes-tipo-21-cuota"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 input_kind = "informational"
@@ -42,6 +46,7 @@ source_refs = ["aeat-dr-390-2021"]
 [[revisions."2021".casillas]]
 id = "iva.anual.soportado.interiores"
 number = "49"
+continuidad_id = "iva-cuota-soportada-interiores"
 section = ["iva", "anual", "deducible"]
 data_type = "money"
 input_kind = "informational"
@@ -51,6 +56,7 @@ source_refs = ["aeat-dr-390-2021"]
 [[revisions."2021".casillas]]
 id = "iva.anual.cuota-devengada-total"
 number = "47"
+continuidad_id = "iva-anual-cuota-devengada-total"
 section = ["iva", "anual", "resumen"]
 data_type = "money"
 input_kind = "informational"
@@ -60,6 +66,7 @@ source_refs = ["aeat-dr-390-2021"]
 [[revisions."2021".casillas]]
 id = "iva.anual.cuota-deducible-total"
 number = "64"
+continuidad_id = "iva-anual-cuota-deducible-total"
 section = ["iva", "anual", "resumen"]
 data_type = "money"
 input_kind = "informational"
@@ -69,6 +76,7 @@ source_refs = ["aeat-dr-390-2021"]
 [[revisions."2021".casillas]]
 id = "iva.anual.resultado-regimen-general"
 number = "65"
+continuidad_id = "iva-anual-resultado-regimen-general"
 section = ["iva", "anual", "resumen"]
 data_type = "money"
 input_kind = "informational"
@@ -78,6 +86,7 @@ source_refs = ["aeat-dr-390-2021"]
 [[revisions."2021".casillas]]
 id = "iva.anual.compensacion-ultimo-periodo-97"
 number = "97"
+continuidad_id = "iva-anual-compensacion-ultimo-periodo"
 section = ["iva", "anual", "compensacion"]
 data_type = "money"
 input_kind = "informational"
@@ -87,6 +96,7 @@ source_refs = ["aeat-dr-390-2021"]
 [[revisions."2021".casillas]]
 id = "iva.anual.compensacion-generada-ejercicio-no-97"
 number = "compensacion-generada-ejercicio"
+continuidad_id = "iva-anual-compensacion-generada-ejercicio"
 section = ["iva", "anual", "compensacion"]
 data_type = "money"
 input_kind = "informational"
