@@ -19985,3 +19985,67 @@ the span sets and the dependent test modules.
 Modelo 200's split, blocked on ~1,110 translation leaves. The 104 residual
 labels, blocked the same way. Modelo 347's earlier revisions, blocked on a
 per-field reading.
+
+## Tick: the locale-drift defect handed to a dedicated agent, and the span module's shrinking population
+
+### The locale CLI gap, established before commissioning it
+
+The previous tick fixed 377 orphaned locale leaves by hand-building a JSON
+manifest and applying it with `set-batch`. That is the hand-rolled step the
+`aeat-locales-cli` rule exists to prevent, so the question was whether the CLI is
+actually missing a capability or whether the split procedure simply skipped one.
+Measured rather than assumed:
+
+* `scaffold --check` DOES see the drift -- stale revision keys appear as
+  `extra modelo.schema.347.revision.2008-2024.casilla...`. The CLI is not blind.
+* But it reports a RENAME as unrelated `extra` + `missing`, and `scaffold`
+  applies that reading: it would DELETE the old keys, discarding real `es/en/ca/hu`
+  values, and insert self-referencing placeholders for the new ones, which a
+  shipped honesty gate then refuses. So scaffold cannot be used to fix a rename,
+  and no other verb moves a subtree.
+* Standing drift on this tree is `missing=4340 extra=4976` across four locales,
+  most of it other agents' in-flight `tr()` work.
+
+That is a real production defect and it is now with a dedicated agent: a
+subtree-move verb (including the split case, one old revision feeding two new
+ids), a drift report that names a rename as a MOVE rather than as add+remove,
+and a gate asserting no locale key references a revision id the registry does not
+declare. That last check is what would have caught all three splits the moment
+they landed.
+
+### The span module's population is drying up as the campaign succeeds
+
+Its anti-vacuity tests measure signal liveness over design pairs formed by
+REVISIONS that cite more than one design. That population is now **2** across the
+whole tree -- modelo 193's `2024` and modelo 200's `2024-y-siguientes` -- and 200
+is the last split pending. Completing it leaves one. This is why
+`test_a_box_added_or_removed_without_movement_reaches_the_verdict` reports "no
+bundled design pair differs ONLY in which boxes it declares": not because the
+corpus changed, but because the revisions did.
+
+The obvious fix -- draw the anti-vacuity examples from CORPUS pairs, which do not
+depend on how revisions are carved -- was attempted and the attempt was
+DISCARDED as unsound. A scan reported 8 membership-only pairs, and the control
+showed why that number cannot be trusted: `_design_sources` returns both the
+`.xls` and the `.xlsx` rendering of the SAME design, so adjacent entries are
+frequently one design against its own format twin, and the ordering is by
+filename -- AEAT numbers newest-first -- so "consecutive" is not chronological
+either. A sound version needs format-variant deduplication and era ordering
+before any pair is compared.
+
+Recorded rather than shipped, because a corrected anti-vacuity source that is
+itself wrong would make the module claim coverage it does not have.
+
+### Verified
+
+* authority loads CLEAN.
+* unresolved Spanish casilla labels: 104, unchanged from the previous tick;
+  every one lacks a label in EVERY revision of its modelo -- checked against all
+  sibling revisions -- so none can be sourced by copying and all need authoring
+  in four locales.
+
+### Still open
+
+Modelo 200's split (translation-blocked), the 104 labels (same), modelo 347's
+earlier revisions (per-field reading), and now the span module's anti-vacuity
+sources, which need a sound corpus-pair enumerator.
