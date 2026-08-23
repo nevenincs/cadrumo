@@ -21,6 +21,7 @@ from ...packaging.cohort_manifest import ArtifactKind
 from ..download_matrix import (
     _ZONE_BEGIN,
     _ZONE_END,
+    ChannelTier,
     DownloadDescriptor,
     build_download_latest,
     download_page_path,
@@ -76,7 +77,15 @@ def test_runtime_wheelhouse_belongs_to_the_base_python_channel() -> None:
         if ArtifactKind.PYTHON_WHEELHOUSE in channel.artifact_kinds
     ]
     assert owners == ["python"]
-    assert descriptor.matrix.extends_host_application is False
+    # The claim is about WHERE the wheelhouse lives, not about whether this
+    # product extends a host application at all. This once asserted the latter
+    # was false, which was true for the hour between the commit retiring the
+    # Claude plugin and mcpb lanes and the commit restoring them; the restore
+    # set the flag back and did not revisit the test. Both host-extension
+    # channels ship today, so the honest check is that the wheelhouse's owner
+    # is the language registry rather than one of them.
+    owner = next(channel for channel in descriptor.channel if channel.id == "python")
+    assert owner.tier is ChannelTier.REGISTRY
 
 
 def test_generated_zone_present_in_download_page() -> None:
