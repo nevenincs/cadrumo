@@ -177,8 +177,8 @@ def _import_report(result: LedgerSourceImportResult, *, verbose: bool, verify: b
 
 def ledger_import(
     ctx: typer.Context,
-    file: Path = ...,
-    provider: LedgerProviderID = ...,
+    file: Path,
+    provider: LedgerProviderID,
     dry_run: bool = False,
     verify: bool = False,
     verify_source: Path | None = None,

@@ -42,20 +42,12 @@ from .._app_live import (
     _process_command_inventory,
     _reap_new_playwright_profile_processes,
     _run_live_iva_evidence_pull_command,
-    borrador_100_app,
-    borrador_app,
-    expedientes_app,
-    filed_app,
-    iva_wallet_app,
-    justificante_app,
-    notifications_app,
-    portals_app,
-    verify_app,
-)
-from .._app_live import (
-    app as live_app,
 )
 from .._app_live_auth_preflight import _live_auth_preflight_lines
+from .._app_live_command_specs import LIVE_COMMAND_SPECS
+from .._command_runtime import build_command_subtree
+from .._command_spec import CommandSpecGraph
+from .._root_command_specs import ROOT_COMMAND_SPECS
 from ._live_read_profile_fixture import _ACTIVE_TEST_BUCKET_ID, _isolated_backend
 
 __all__ = ["_isolated_backend"]
@@ -77,6 +69,18 @@ _COLD_CLI_IMPORT_ALLOWANCE_SECONDS = 60
 #: binding the budget to the production constant keeps the two in step if it
 #: moves. ``timeout = 300`` in pyproject.toml remains the outer per-test ceiling.
 _WATCHDOG_SUBPROCESS_TIMEOUT_SECONDS = _COLD_CLI_IMPORT_ALLOWANCE_SECONDS + 2 * _PROCESS_INVENTORY_TIMEOUT_SECONDS + 20
+
+_LIVE_GRAPH = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
+live_app = build_command_subtree(_LIVE_GRAPH, "app_live")
+filed_app = build_command_subtree(_LIVE_GRAPH, "app_live_filed")
+iva_wallet_app = build_command_subtree(_LIVE_GRAPH, "app_live_iva_wallet")
+notifications_app = build_command_subtree(_LIVE_GRAPH, "app_live_notifications")
+portals_app = build_command_subtree(_LIVE_GRAPH, "app_live_portals")
+expedientes_app = build_command_subtree(_LIVE_GRAPH, "app_live_expedientes")
+justificante_app = build_command_subtree(_LIVE_GRAPH, "app_live_justificante")
+verify_app = build_command_subtree(_LIVE_GRAPH, "app_live_verify")
+borrador_app = build_command_subtree(_LIVE_GRAPH, "app_live_borrador")
+borrador_100_app = build_command_subtree(_LIVE_GRAPH, "app_live_borrador_100")
 
 _FORBIDDEN_LIVE_MUTATION_VERBS = frozenset(
     {

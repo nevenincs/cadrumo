@@ -1768,7 +1768,7 @@ LIVE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="state",
                 declarations=("--state",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
+                value=ValueContract(DeferredTarget("cadrumo.application.live", "SnapshotStateFilter")),
                 default=ParameterDefault.value("active"),
                 help_key=_key("cli.app.live.borrador.state_help"),
                 multiple=False,
@@ -1842,7 +1842,7 @@ LIVE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="filing_year",
                 declarations=("--filing-year",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
+                value=ValueContract(DeferredTarget("builtins", "int")),
                 default=ParameterDefault.required(),
                 help_key=_key("cli.app.live.borrador.filing_year_help"),
                 multiple=False,

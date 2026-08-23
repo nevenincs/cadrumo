@@ -140,8 +140,8 @@ def ratios_list(
 
 def ratios_set(
     ctx: typer.Context,
-    category: SpendingCategory = ...,
-    ratio: str = ...,
+    category: SpendingCategory,
+    ratio: str,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Set or replace one per-category usage-ratio override on the active bucket."""
@@ -184,7 +184,7 @@ def ratios_set(
 
 def ratios_unset(
     ctx: typer.Context,
-    category: SpendingCategory = ...,
+    category: SpendingCategory,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Clear one per-category usage-ratio override from the active bucket."""
@@ -302,4 +302,4 @@ def ratios_validate(
     )
 
 
-__all__ = ["ratios_app", "register_ratios_commands"]
+__all__ = ["ratios_eligible", "ratios_list", "ratios_set", "ratios_unset", "ratios_validate"]

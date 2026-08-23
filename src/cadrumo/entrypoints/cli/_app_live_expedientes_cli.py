@@ -1,4 +1,4 @@
-"""Typer registration for read-only live expedientes snapshot commands.
+"""Behavior handlers for read-only live expedientes snapshot commands.
 
 The pull/list/view/latest verbs route AEAT declaration-register captures through
 :func:`capture_expedientes`, :func:`capture_expedientes_bulk`, and
@@ -10,46 +10,18 @@ The pull/list/view/latest verbs route AEAT declaration-register captures through
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import datetime as _datetime
-from typing import Annotated, Protocol, TypedDict
+from typing import Protocol, TypedDict
 
 import typer
 
 from ...application.live import capture_expedientes_bulk
-from ...core.i18n import tr
-from ._app_execution_policies import ENCRYPTED_READ, LIVE_PROFILE_WRITE, declare_metadata_group
-from ._app_live_auth_preflight import _metric_line, resolve_active_bucket, run_auth_preflight
-from ._command_policy import command_execution_policy
-from ._common import _emit_envelope, resolve_pull_year_range
-
-_active_bucket_id: Callable[[], str] | None = None
-_auth_preflight: Callable[[], None] | None = None
-
-expedientes_app = typer.Typer(
-    name="expedientes",
-    help=tr("cli.app.live.expedientes.app_help", default="AEAT expedientes snapshots (read-only)."),
-    no_args_is_help=True,
-    add_completion=False,
-)
-declare_metadata_group(expedientes_app)
-
-
-def register_expedientes_commands(
-    app: typer.Typer,
-    *,
-    active_bucket_id: Callable[[], str],
-    auth_preflight: Callable[[], None],
-) -> None:
-    """Mount live expedientes commands on the live app."""
-    global _active_bucket_id, _auth_preflight
-    _active_bucket_id = active_bucket_id
-    _auth_preflight = auth_preflight
-    app.add_typer(expedientes_app, name="expedientes")
+from ._app_live_auth_preflight import _emit_live_auth_preflight, _metric_line
+from ._common import _emit_envelope, active_bucket_id_or_refuse, resolve_pull_year_range
 
 
 def _bucket_id() -> str:
-    return resolve_active_bucket(_active_bucket_id, family="expedientes")
+    return active_bucket_id_or_refuse()
 
 
 class _ExpedientesRowDict(TypedDict):
@@ -76,37 +48,12 @@ def _expedientes_row(snapshot: _SnapshotWithCapturedAt) -> _ExpedientesRowDict:
     }
 
 
-@expedientes_app.command(
-    "pull",
-    help=tr(
-        "cli.app.live.expedientes.pull_help",
-        default="Pull the AEAT declaration register and persist bucket-scoped snapshot evidence.",
-    ),
-)
 def expedientes_pull(
     ctx: typer.Context,
-    modelos: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--modelo",
-            help=tr(
-                "cli.app.live.expedientes.pull_modelo_help",
-                default="Modelo code to include. Repeat or omit with --from-year/--to-year for a bulk pull.",
-            ),
-        ),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help", default="Filing year.")),
-    ] = None,
-    year_from: Annotated[
-        int | None,
-        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
-    ] = None,
-    year_to: Annotated[
-        int | None,
-        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
-    ] = None,
+    modelos: list[str] | None = None,
+    year: int | None = None,
+    year_from: int | None = None,
+    year_to: int | None = None,
 ) -> None:
     """Live-walk the AEAT declaration register and persist snapshots.
 
@@ -120,7 +67,7 @@ def expedientes_pull(
     from ._app_live_payloads import ExpedientesCaptureFailurePayload, ExpedientesCaptureResult
 
     bucket_id = _bucket_id()
-    run_auth_preflight(_auth_preflight, family="expedientes")
+    _emit_live_auth_preflight()
     selected_modelos = tuple(modelos or ())
     if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
         persisted = asyncio.run(capture_expedientes(bucket_id=bucket_id, modelo=selected_modelos[0], year=year))
@@ -191,13 +138,6 @@ def expedientes_pull(
     _emit_envelope(ctx, command="app.live.expedientes.pull", result=result, lines=lines)
 
 
-@expedientes_app.command(
-    "list",
-    help=tr(
-        "cli.app.live.expedientes.list_help",
-        default="List persisted expedientes snapshots in the active profile.",
-    ),
-)
 def expedientes_list(ctx: typer.Context) -> None:
     """List persisted expedientes snapshots for the active bucket.
 
@@ -221,24 +161,9 @@ def expedientes_list(ctx: typer.Context) -> None:
     _emit_envelope(ctx, command="app.live.expedientes.list", result=result, lines=lines)
 
 
-@expedientes_app.command(
-    "view",
-    help=tr(
-        "cli.app.live.expedientes.view_help",
-        default="View one expedientes snapshot.",
-    ),
-)
 def expedientes_show(
     ctx: typer.Context,
-    snapshot_id: Annotated[
-        str,
-        typer.Argument(
-            help=tr(
-                "cli.app.live.expedientes.snapshot_id_help",
-                default="Snapshot id (or unambiguous prefix).",
-            ),
-        ),
-    ],
+    snapshot_id: str,
 ) -> None:
     """Show one expedientes snapshot with all its declaration rows.
 
@@ -294,13 +219,6 @@ def expedientes_show(
     _emit_envelope(ctx, command="app.live.expedientes.view", result=result, lines=lines)
 
 
-@expedientes_app.command(
-    "latest",
-    help=tr(
-        "cli.app.live.expedientes.latest_help",
-        default="Show the most recent expedientes snapshot in the active profile.",
-    ),
-)
 def expedientes_latest(ctx: typer.Context) -> None:
     """Show the most recent expedientes snapshot, or report none.
 
@@ -338,6 +256,4 @@ def expedientes_latest(ctx: typer.Context) -> None:
     _emit_envelope(ctx, command="app.live.expedientes.latest", result=result, lines=lines)
 
 
-command_execution_policy(LIVE_PROFILE_WRITE)(expedientes_pull)
-for _callback in (expedientes_list, expedientes_show, expedientes_latest):
-    command_execution_policy(ENCRYPTED_READ)(_callback)
+__all__ = ["expedientes_latest", "expedientes_list", "expedientes_pull", "expedientes_show"]

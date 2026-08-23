@@ -40,16 +40,13 @@ references only; the registry stays the copy authority.
 """
 
 from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
-
 import typer
 from pydantic import BaseModel
-
 from ...adapters.inbound.tui import select_flow_frontend
 from ...application.flows import (
     CopyRef,
@@ -92,25 +89,12 @@ from ...domain.modelos import (
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
-from ._command_policy import command_execution_policy
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
-from ._modelo_execution_policies import INTERACTIVE_MODEL_WRITE
 from ._modelo_rendering import filing_record_lines
-from ._modelo_work_options import (
-    _ActorOpt,
-    _BucketIdOpt,
-    _ModeloOpt,
-    _PeriodOpt,
-    _RevisionOpt,
-    _WizardOutputLanguageOpt,
-    _WorkUnitIdArg,
-    _YearOpt,
-)
 
 if TYPE_CHECKING:
     from ...domain.modelos import CalculationRevision, ModeloRecord, WorkUnit
-
-__all__ = ["register_amend_wizard_commands"]
+__all__ = ["work_amend_wizard"]
 
 
 class _AmendWizardAnswers(BaseModel):
@@ -120,23 +104,8 @@ class _AmendWizardAnswers(BaseModel):
 
 
 _COPY_NAMESPACE = "modelo-amend"
-
 _ACTIVE_RUNS: dict[str, dict[str, str]] = {}
-"""Per-run registry-derived copy tables, keyed by an opaque run token.
-
-Each wizard invocation owns one table for its whole lifetime — both the
-selection round and the values/kind/reason round append into the same
-table. Every reference embeds its run token
-(``modelo-amend:<run-token>:<slot>``), so the registered resolver reads
-only the addressed run's table: two interleaved runs in one process (the
-``cadrumo-mcp`` host is exactly such a host) never clear each other's
-entries, and each table is dropped at its own run end rather than
-accumulating for the process lifetime. Values are the registry snapshot's
-localized labels and help plus the baseline casilla figures; the resolver
-returns ``None`` outside the namespace so other domains' schema-field
-resolvers get their turn.
-"""
-
+"Per-run registry-derived copy tables, keyed by an opaque run token.\n\nEach wizard invocation owns one table for its whole lifetime — both the\nselection round and the values/kind/reason round append into the same\ntable. Every reference embeds its run token\n(``modelo-amend:<run-token>:<slot>``), so the registered resolver reads\nonly the addressed run's table: two interleaved runs in one process (the\n``cadrumo-mcp`` host is exactly such a host) never clear each other's\nentries, and each table is dropped at its own run end rather than\naccumulating for the process lifetime. Values are the registry snapshot's\nlocalized labels and help plus the baseline casilla figures; the resolver\nreturns ``None`` outside the namespace so other domains' schema-field\nresolvers get their turn.\n"
 _SELECTION_PAGE_ID = "selection"
 _KIND_PAGE_ID = "amendment-kind"
 _MOTIVE_PAGE_ID = "m303-rectificativa-motive"
@@ -172,66 +141,6 @@ class _AmendWizardDeps:
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
 
 
-# KWARGS-ANY-RATIONALE-cli: resolve_work_unit_for_cli is a CLI resolver callback injected by the command registrar
-def register_amend_wizard_commands(
-    work_app: typer.Typer,
-    *,
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
-    require_active_profile: Callable[[], None],
-    resolve_work_unit_for_cli: Callable[
-        ..., Any
-    ],  # KWARGS-ANY-RATIONALE-cli-callback: work-unit resolver callback injected by the command registrar
-    resolve_default_actor: Callable[[], str],
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
-) -> None:
-    """Register the guided ``work amend-wizard`` command on the modelo work app."""
-    deps = _AmendWizardDeps(
-        activate_output_language=activate_output_language,
-        require_active_profile=require_active_profile,
-        resolve_work_unit_for_cli=resolve_work_unit_for_cli,
-        resolve_default_actor=resolve_default_actor,
-        bad_parameter_from_error=bad_parameter_from_error,
-    )
-
-    @work_app.command("amend-wizard", help=tr("cli.app.modelo.work.amend_wizard_help"))
-    @command_execution_policy(INTERACTIVE_MODEL_WRITE)
-    def work_amend_wizard(
-        ctx: typer.Context,
-        work_unit_id: _WorkUnitIdArg = None,
-        modelo: _ModeloOpt = None,
-        year: _YearOpt = None,
-        period: _PeriodOpt = None,
-        revision: _RevisionOpt = None,
-        bucket_id: _BucketIdOpt = None,
-        actor: _ActorOpt = None,
-        output_language_opt: _WizardOutputLanguageOpt = None,
-    ) -> None:
-        """Walk the resolved work unit's current AEAT-attested filing through a guided amendment.
-
-        Resolves (or reuses) a work unit exactly as ``work create`` /
-        ``work wizard`` do, loads its current filing record (the same
-        :class:`~domain.modelos.ModeloRecord` ``work amend``
-        requires — it must carry
-        :class:`~domain.modelos.ExternalEvidence`), shows every
-        baseline casilla value, prompts which casillas changed and their
-        corrected values, confirms the amendment kind and reason, then
-        calls :func:`~application.modelo.amend_modelo_revision`
-        through the identical inputs ``work amend`` builds.
-        """
-        run_modelo_work_amend_wizard(
-            deps=deps,
-            ctx=ctx,
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            revision=revision,
-            bucket_id=bucket_id,
-            actor=actor,
-            output_language_opt=output_language_opt,
-        )
-
-
 def run_modelo_work_amend_wizard(
     *,
     deps: _AmendWizardDeps,
@@ -245,24 +154,17 @@ def run_modelo_work_amend_wizard(
     actor: str | None,
     output_language_opt: OutputLanguage | None,
 ) -> None:
-
     deps.activate_output_language(ctx, output_language_opt)
     deps.require_active_profile()
     unit = deps.resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
+        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
     )
-
     if unit.current_filing_record_id is None:
         raise deps.bad_parameter_from_error(
             ModeloRecordNotFoundError(
                 translated_message="cli.app.modelo.work.amend_wizard_no_current_filing",
                 context={"work_unit_id": unit.work_unit_id},
-            ),
+            )
         )
     try:
         baseline = get_filing_record(unit.current_filing_record_id)
@@ -271,18 +173,13 @@ def run_modelo_work_amend_wizard(
     if baseline.external_evidence is None:
         raise deps.bad_parameter_from_error(
             AmendmentEvidenceMissingError(
-                f"filing record {baseline.filing_record_id!r} has no external_evidence; "
-                f"the amendment wizard requires an imported AEAT-attested baseline "
-                f"(`aeat app modelo filing-record import`). Locally-filed returns are "
-                f"corrected through the standard re-file path (calculate -> verify -> file).",
-            ),
+                f"filing record {baseline.filing_record_id!r} has no external_evidence; the amendment wizard requires an imported AEAT-attested baseline (`aeat app modelo filing-record import`). Locally-filed returns are corrected through the standard re-file path (calculate -> verify -> file)."
+            )
         ) from None
-
     try:
         casilla_rows = _baseline_casilla_rows(unit)
     except RegistrySnapshotError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
-
     baseline_revision: CalculationRevision = get_calculation_revision(baseline.calculation_revision_id)
     amendable = _amendable_rows(casilla_rows, baseline_revision)
     if not amendable:
@@ -290,24 +187,20 @@ def run_modelo_work_amend_wizard(
             tr(
                 "cli.app.modelo.work.amend_wizard_no_corrections",
                 default="No casilla was corrected; the amendment wizard needs at least one changed value.",
-            ),
+            )
         )
-
     run_token = uuid4().hex
     _ACTIVE_RUNS[run_token] = {}
     try:
         selected = _prompt_selection(
-            amendable=amendable,
-            baseline_revision=baseline_revision,
-            unit=unit,
-            run_token=run_token,
+            amendable=amendable, baseline_revision=baseline_revision, unit=unit, run_token=run_token
         )
         if not selected:
             raise typer.BadParameter(
                 tr(
                     "cli.app.modelo.work.amend_wizard_no_corrections",
                     default="No casilla was corrected; the amendment wizard needs at least one changed value.",
-                ),
+                )
             )
         corrections, amendment_kind, motive, reason = _prompt_values_kind_reason(
             selected=selected,
@@ -318,7 +211,6 @@ def run_modelo_work_amend_wizard(
         )
     finally:
         _ACTIVE_RUNS.pop(run_token, None)
-
     overrides = {row.casilla_id: value for row, _previous, value in corrections}
     try:
         from ...adapters.persistence.profile.justificante import JustificanteRepository
@@ -346,7 +238,6 @@ def run_modelo_work_amend_wizard(
         WorkUnitNotFoundError,
     ) as exc:
         raise deps.bad_parameter_from_error(exc) from exc
-
     _emit_amend_wizard_result(
         ctx,
         record=record,
@@ -361,18 +252,12 @@ def run_modelo_work_amend_wizard(
 def _baseline_casilla_rows(unit: WorkUnit) -> tuple[Any, ...]:
     """Return every casilla the registry declares for the unit's revision, for display."""
     report = registry_casillas_for_registry_scope(
-        str(unit.modelo),
-        filing_year=unit.filing_year,
-        period=unit.period.registry_token,
+        str(unit.modelo), filing_year=unit.filing_year, period=unit.period.registry_token
     )
     return tuple(report.rows)
 
 
-# KWARGS-ANY-RATIONALE-cli: casilla registry rows carry a heterogeneous casilla-id element
-def _amendable_rows(
-    casilla_rows: tuple[Any, ...],  # KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
-    baseline_revision: CalculationRevision,
-) -> tuple[Any, ...]:
+def _amendable_rows(casilla_rows: tuple[Any, ...], baseline_revision: CalculationRevision) -> tuple[Any, ...]:
     """Return the registry rows that carry a baseline value, in casilla-number order.
 
     These are exactly the casillas the operator may amend: every casilla the
@@ -381,9 +266,11 @@ def _amendable_rows(
     read top-to-bottom like the printed return.
     """
     return tuple(
-        row
-        for row in sorted(casilla_rows, key=lambda r: r.number)
-        if row.casilla_id in baseline_revision.casilla_values
+        (
+            row
+            for row in sorted(casilla_rows, key=lambda r: r.number)
+            if row.casilla_id in baseline_revision.casilla_values
+        )
     )
 
 
@@ -398,33 +285,20 @@ def _run_flow(definition: FlowDefinition) -> FlowState:
     with the substrate's typed unsupported-console error, which propagates
     to the operator as the translated refusal rather than a raw traceback.
     """
-    frontend = select_flow_frontend(
-        definition,
-        mode=FlowMode.CREATE,
-        capability=detect_frontend_capability(),
-    )
+    frontend = select_flow_frontend(definition, mode=FlowMode.CREATE, capability=detect_frontend_capability())
     if isinstance(frontend, LineFlowFrontend):
         state, _projection = frontend.run(mode=FlowMode.CREATE)
         return state
     frontend.run()
     if frontend.final_state is None:
-        # Textual returned without a submit or save-and-exit: the operator
-        # abandoned the run. Refuse with the typed abandonment rather than
-        # filing a partially-answered amendment.
         raise FlowRunAbandonedError(
-            translated_message="errors.refused.refused_flow_run_abandoned",
-            context={"flow_id": definition.id},
+            translated_message="errors.refused.refused_flow_run_abandoned", context={"flow_id": definition.id}
         )
     return frontend.final_state
 
 
-# KWARGS-ANY-RATIONALE-cli: amendable rows carry a heterogeneous casilla-id element
 def _prompt_selection(
-    *,
-    amendable: tuple[Any, ...],  # KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
-    baseline_revision: CalculationRevision,
-    unit: WorkUnit,
-    run_token: str,
+    *, amendable: tuple[Any, ...], baseline_revision: CalculationRevision, unit: WorkUnit, run_token: str
 ) -> tuple[Any, ...]:
     """Ask which casillas changed through a single CHECKBOX page.
 
@@ -435,28 +309,22 @@ def _prompt_selection(
     empty answer did — the caller turns that into the no-corrections refusal.
     """
     definition = _selection_definition(
-        amendable=amendable,
-        baseline_revision=baseline_revision,
-        unit=unit,
-        run_token=run_token,
+        amendable=amendable, baseline_revision=baseline_revision, unit=unit, run_token=run_token
     )
     state = _run_flow(definition)
     return _selected_rows(amendable=amendable, unit=unit, state=state)
 
 
-# KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
 def _selection_definition(
-    *,
-    amendable: tuple[Any, ...],
-    baseline_revision: CalculationRevision,
-    unit: WorkUnit,
-    run_token: str,
+    *, amendable: tuple[Any, ...], baseline_revision: CalculationRevision, unit: WorkUnit, run_token: str
 ) -> FlowDefinition:
     """Project the amendable casillas into a one-page CHECKBOX selection flow."""
     table = _ACTIVE_RUNS[run_token]
     summary_lines = "\n".join(
-        f"  {row.number}\t{row.label}\t{baseline_revision.casilla_values.get(row.casilla_id, Decimal('0'))}"
-        for row in amendable
+        (
+            f"  {row.number}\t{row.label}\t{baseline_revision.casilla_values.get(row.casilla_id, Decimal('0'))}"
+            for row in amendable
+        )
     )
     prompt_ref = _copy_ref(run_token, "sel:prompt")
     table[prompt_ref] = tr(
@@ -465,19 +333,14 @@ def _selection_definition(
         year=unit.filing_year,
         period=unit.period.registry_token,
         summary=summary_lines,
-        default=(
-            "Filed {modelo} {year} {period} — current values:\n{summary}\n"
-            "Which casillas changed? (select the ones to correct, none to abort)"
-        ),
+        default="Filed {modelo} {year} {period} — current values:\n{summary}\nWhich casillas changed? (select the ones to correct, none to abort)",
     )
     choices: list[FlowChoice] = []
     for row in amendable:
         previous = baseline_revision.casilla_values.get(row.casilla_id, Decimal("0"))
         label_ref = _copy_ref(run_token, f"sel:choice:{row.casilla_id}")
         table[label_ref] = f"{row.number} ({row.label}): {previous}"
-        choices.append(
-            FlowChoice(value=row.casilla_id, label=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=label_ref)),
-        )
+        choices.append(FlowChoice(value=row.casilla_id, label=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=label_ref)))
     page = FlowPage(
         id=_SELECTION_PAGE_ID,
         widget=FlowWidgetKind.CHECKBOX,
@@ -500,13 +363,7 @@ def _selection_definition(
     )
 
 
-# KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
-def _selected_rows(
-    *,
-    amendable: tuple[Any, ...],
-    unit: WorkUnit,
-    state: FlowState,
-) -> tuple[Any, ...]:
+def _selected_rows(*, amendable: tuple[Any, ...], unit: WorkUnit, state: FlowState) -> tuple[Any, ...]:
     """Map the CHECKBOX answer back to the selected registry rows, in flow order."""
     raw = state.answers.get(_SELECTION_PAGE_ID, "")
     selected_ids = [token for token in raw.split(",") if token]
@@ -515,9 +372,6 @@ def _selected_rows(
     for casilla_id in selected_ids:
         row = rows_by_id.get(casilla_id)
         if row is None:
-            # The checkbox choice set is closed to the amendable ids, so an
-            # unknown token cannot arise from the interactive frontend; this
-            # is the defence-in-depth backstop against a corrupted answer set.
             raise typer.BadParameter(
                 tr(
                     "cli.app.modelo.work.amend_wizard_unknown_casilla",
@@ -525,11 +379,8 @@ def _selected_rows(
                     modelo=str(unit.modelo),
                     year=unit.filing_year,
                     period=unit.period.registry_token,
-                    default=(
-                        "Casilla {token!r} is not part of the filed {modelo} "
-                        "{year} {period} return; choose from the listed casilla numbers."
-                    ),
-                ),
+                    default="Casilla {token!r} is not part of the filed {modelo} {year} {period} return; choose from the listed casilla numbers.",
+                )
             )
         selected.append(row)
     return tuple(selected)
@@ -552,19 +403,10 @@ def _wizard_corrected_amount(state: FlowState, casilla_id: str) -> Decimal:
     return parsed
 
 
-# KWARGS-ANY-RATIONALE-cli: selected rows carry a heterogeneous casilla-id element
 def _prompt_values_kind_reason(
-    *,
-    selected: tuple[Any, ...],  # KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
-    baseline_revision: CalculationRevision,
-    modelo: str,
-    period: Period,
-    run_token: str,
+    *, selected: tuple[Any, ...], baseline_revision: CalculationRevision, modelo: str, period: Period, run_token: str
 ) -> tuple[
-    tuple[tuple[Any, Decimal, Decimal], ...],
-    CalculationRevisionAmendmentKind,
-    M303RectificativaMotive | None,
-    str,
+    tuple[tuple[Any, Decimal, Decimal], ...], CalculationRevisionAmendmentKind, M303RectificativaMotive | None, str
 ]:
     """Ask the corrected value per selected casilla, the amendment kind, and the reason.
 
@@ -577,36 +419,24 @@ def _prompt_values_kind_reason(
     one the period permits.
     """
     definition = _values_kind_reason_definition(
-        selected=selected,
-        baseline_revision=baseline_revision,
-        modelo=modelo,
-        period=period,
-        run_token=run_token,
+        selected=selected, baseline_revision=baseline_revision, modelo=modelo, period=period, run_token=run_token
     )
     state = _run_flow(definition)
-
     corrections: list[tuple[Any, Decimal, Decimal]] = []
     for row in selected:
         previous = baseline_revision.casilla_values.get(row.casilla_id, Decimal("0"))
         corrections.append((row, previous, _wizard_corrected_amount(state, row.casilla_id)))
-
     amendment_kind = CalculationRevisionAmendmentKind((state.answers.get(_KIND_PAGE_ID) or "").strip())
     raw_motive = (state.answers.get(_MOTIVE_PAGE_ID) or "").strip()
     motive = M303RectificativaMotive(raw_motive) if raw_motive else None
     reason = (state.answers.get(_REASON_PAGE_ID) or "").strip()
     if not reason:
         raise typer.BadParameter(tr("cli.app.modelo.work.amend_wizard_reason_required"))
-    return tuple(corrections), amendment_kind, motive, reason
+    return (tuple(corrections), amendment_kind, motive, reason)
 
 
-# KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
 def _values_kind_reason_definition(
-    *,
-    selected: tuple[Any, ...],
-    baseline_revision: CalculationRevision,
-    modelo: str,
-    period: Period,
-    run_token: str,
+    *, selected: tuple[Any, ...], baseline_revision: CalculationRevision, modelo: str, period: Period, run_token: str
 ) -> FlowDefinition:
     """Project the corrected-value, amendment-kind, and reason questions into one flow.
 
@@ -620,17 +450,11 @@ def _values_kind_reason_definition(
     """
     table = _ACTIVE_RUNS[run_token]
     pages = _correction_value_pages(
-        selected=selected,
-        baseline_revision=baseline_revision,
-        run_token=run_token,
-        table=table,
+        selected=selected, baseline_revision=baseline_revision, run_token=run_token, table=table
     )
     pages.append(_amendment_kind_page(modelo=modelo, period=period, run_token=run_token, table=table))
     motive_page = _m303_motive_page(
-        modelo=modelo,
-        baseline_revision=baseline_revision,
-        run_token=run_token,
-        table=table,
+        modelo=modelo, baseline_revision=baseline_revision, run_token=run_token, table=table
     )
     if motive_page is not None:
         pages.append(motive_page)
@@ -638,13 +462,8 @@ def _values_kind_reason_definition(
     return _amendment_correction_definition(pages)
 
 
-# KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
 def _correction_value_pages(
-    *,
-    selected: tuple[Any, ...],
-    baseline_revision: CalculationRevision,
-    run_token: str,
-    table: dict[str, str],
+    *, selected: tuple[Any, ...], baseline_revision: CalculationRevision, run_token: str, table: dict[str, str]
 ) -> list[FlowPage]:
     pages: list[FlowPage] = []
     for row in selected:
@@ -666,12 +485,11 @@ def _correction_value_pages(
                 help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=help_ref) if help_ref else None,
                 required=True,
                 answer_type=str,
-            ),
+            )
         )
     return pages
 
 
-# KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry row
 def _value_help_ref(*, row: Any, run_token: str, table: dict[str, str]) -> str | None:
     if not row.help_text:
         return None
@@ -680,33 +498,22 @@ def _value_help_ref(*, row: Any, run_token: str, table: dict[str, str]) -> str |
     return help_ref
 
 
-def _amendment_kind_page(
-    *,
-    modelo: str,
-    period: Period,
-    run_token: str,
-    table: dict[str, str],
-) -> FlowPage:
+def _amendment_kind_page(*, modelo: str, period: Period, run_token: str, table: dict[str, str]) -> FlowPage:
     permitted = permitted_amendment_kind_values(modelo, period)
-    permitted_kinds = tuple(kind for kind in CalculationRevisionAmendmentKind if kind.value in permitted)
+    permitted_kinds = tuple((kind for kind in CalculationRevisionAmendmentKind if kind.value in permitted))
     kind_choices = tuple(
-        _amendment_kind_choice(kind=kind, run_token=run_token, table=table) for kind in permitted_kinds
+        (_amendment_kind_choice(kind=kind, run_token=run_token, table=table) for kind in permitted_kinds)
     )
     kind_prompt_ref = _copy_ref(run_token, "kind:prompt")
     table[kind_prompt_ref] = tr(
         "cli.app.modelo.work.amend_wizard_kind_prompt",
-        choices=", ".join(repr(kind.value) for kind in permitted_kinds),
+        choices=", ".join((repr(kind.value) for kind in permitted_kinds)),
         default="Amendment kind ({choices})",
     )
     kind_help_ref = _copy_ref(run_token, "kind:help")
     table[kind_help_ref] = tr(
         "cli.app.modelo.work.amend_wizard_kind_help",
-        default=(
-            "complementaria adds to the prior tax due; sustitutiva fully replaces the prior "
-            "filing; rectificativa is the unified correction mechanism for modelos whose "
-            "orden implements it (e.g. Modelo 303 from filing year 2023). Only the kinds "
-            "legally available for this filing's period are accepted."
-        ),
+        default="complementaria adds to the prior tax due; sustitutiva fully replaces the prior filing; rectificativa is the unified correction mechanism for modelos whose orden implements it (e.g. Modelo 303 from filing year 2023). Only the kinds legally available for this filing's period are accepted.",
     )
     return FlowPage(
         id=_KIND_PAGE_ID,
@@ -720,23 +527,15 @@ def _amendment_kind_page(
 
 
 def _amendment_kind_choice(
-    *,
-    kind: CalculationRevisionAmendmentKind,
-    run_token: str,
-    table: dict[str, str],
+    *, kind: CalculationRevisionAmendmentKind, run_token: str, table: dict[str, str]
 ) -> FlowChoice:
     kind_label_ref = _copy_ref(run_token, f"kind:choice:{kind.value}")
     table[kind_label_ref] = kind.value
     return FlowChoice(value=kind.value, label=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=kind_label_ref))
 
 
-# KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
 def _m303_motive_page(
-    *,
-    modelo: str,
-    baseline_revision: CalculationRevision,
-    run_token: str,
-    table: dict[str, str],
+    *, modelo: str, baseline_revision: CalculationRevision, run_token: str, table: dict[str, str]
 ) -> FlowPage | None:
     if modelo != Modelo.M303:
         return None
@@ -745,17 +544,16 @@ def _m303_motive_page(
         return None
     regimen_snapshot = filing_evidence.m303.regimen_simplificado.regimen_snapshot
     if not m303_rectificativa_motive_is_applicable(
-        registry_revision_id=regimen_snapshot.registry_revision_id,
-        record_design=regimen_snapshot.record_design,
+        registry_revision_id=regimen_snapshot.registry_revision_id, record_design=regimen_snapshot.record_design
     ):
         return None
     motive_choices = tuple(
-        _m303_motive_choice(motive=motive, run_token=run_token, table=table) for motive in M303RectificativaMotive
+        (_m303_motive_choice(motive=motive, run_token=run_token, table=table) for motive in M303RectificativaMotive)
     )
     motive_prompt_ref = _copy_ref(run_token, "motive:prompt")
     table[motive_prompt_ref] = tr(
         "cli.app.modelo.work.amend_wizard_m303_rectificativa_motive_prompt",
-        choices=", ".join(repr(motive.value) for motive in M303RectificativaMotive),
+        choices=", ".join((repr(motive.value) for motive in M303RectificativaMotive)),
     )
     motive_help_ref = _copy_ref(run_token, "motive:help")
     table[motive_help_ref] = tr("cli.app.modelo.work.m303_rectificativa_motive_help")
@@ -766,10 +564,7 @@ def _m303_motive_page(
         help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=motive_help_ref),
         choices=motive_choices,
         required=True,
-        visible_when=FlowCondition(
-            page_id=_KIND_PAGE_ID,
-            equals=CalculationRevisionAmendmentKind.RECTIFICATIVA.value,
-        ),
+        visible_when=FlowCondition(page_id=_KIND_PAGE_ID, equals=CalculationRevisionAmendmentKind.RECTIFICATIVA.value),
         answer_type=str,
     )
 
@@ -783,8 +578,7 @@ def _m303_motive_choice(*, motive: M303RectificativaMotive, run_token: str, tabl
 def _amendment_reason_page(*, run_token: str, table: dict[str, str]) -> FlowPage:
     reason_prompt_ref = _copy_ref(run_token, "reason:prompt")
     table[reason_prompt_ref] = tr(
-        "cli.app.modelo.work.amend_wizard_reason_prompt",
-        default="Reason for this amendment (kept in the audit trail)",
+        "cli.app.modelo.work.amend_wizard_reason_prompt", default="Reason for this amendment (kept in the audit trail)"
     )
     return FlowPage(
         id=_REASON_PAGE_ID,
@@ -810,7 +604,6 @@ def _amendment_correction_definition(pages: list[FlowPage]) -> FlowDefinition:
     )
 
 
-# KWARGS-ANY-RATIONALE-cli: correction tuples carry a heterogeneous casilla-id element
 def _emit_amend_wizard_result(
     ctx: typer.Context,
     *,
@@ -819,9 +612,7 @@ def _emit_amend_wizard_result(
     amendment_kind: CalculationRevisionAmendmentKind,
     m303_rectificativa_motive: M303RectificativaMotive | None,
     reason: str,
-    corrections: tuple[
-        tuple[Any, Decimal, Decimal], ...
-    ],  # KWARGS-ANY-RATIONALE-prompt-row: correction tuples carry a heterogeneous casilla-id element
+    corrections: tuple[tuple[Any, Decimal, Decimal], ...],
 ) -> None:
     from ._common import _emit_envelope
     from ._modelo_rendering import filing_record_payload
@@ -829,22 +620,21 @@ def _emit_amend_wizard_result(
     export_next_action = tr(
         "cli.app.modelo.work.amend_wizard_export_next_action",
         work_unit_id=unit.work_unit_id,
-        default=(
-            "Amendment filed as a draft internal record. Export the AEAT-importable "
-            "fichero-BOE with `aeat app modelo export {work_unit_id} --output PATH`."
-        ),
+        default="Amendment filed as a draft internal record. Export the AEAT-importable fichero-BOE with `aeat app modelo export {work_unit_id} --output PATH`.",
     )
     corrected_payload = tuple(
-        AmendWizardCorrectedCasillaPayload(
-            casilla_id=row.casilla_id,
-            number=row.number,
-            label=row.label,
-            previous_value=str(previous_value),
-            corrected_value=str(corrected_value),
-            legal_refs=tuple(row.legal_refs),
-            source_refs=tuple(row.source_refs),
+        (
+            AmendWizardCorrectedCasillaPayload(
+                casilla_id=row.casilla_id,
+                number=row.number,
+                label=row.label,
+                previous_value=str(previous_value),
+                corrected_value=str(corrected_value),
+                legal_refs=tuple(row.legal_refs),
+                source_refs=tuple(row.source_refs),
+            )
+            for row, previous_value, corrected_value in corrections
         )
-        for row, previous_value, corrected_value in corrections
     )
     filing_payload = filing_record_payload(record).model_dump(mode="python")
     result = WorkAmendWizardResult.model_validate(
@@ -855,12 +645,12 @@ def _emit_amend_wizard_result(
             "amendment_reason": reason,
             "corrected_casillas": corrected_payload,
             "export_next_action": export_next_action,
-        },
+        }
     )
     lines = [
         "operation\tmodelo.work.amend_wizard",
         f"amendment_kind\t{amendment_kind.value}",
-        (f"m303_rectificativa_motive\t{m303_rectificativa_motive.value if m303_rectificativa_motive else ''}"),
+        f"m303_rectificativa_motive\t{(m303_rectificativa_motive.value if m303_rectificativa_motive else '')}",
         *filing_record_lines(record),
         *(
             f"corrected\t{row.number}\t{previous_value}\t{corrected_value}"
@@ -869,3 +659,40 @@ def _emit_amend_wizard_result(
         export_next_action,
     ]
     _emit_envelope(ctx, command="modelo.work.amend_wizard", result=result, lines=lines)
+
+
+def work_amend_wizard(
+    ctx: typer.Context,
+    work_unit_id: _WorkUnitIdArg = None,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    revision: str | None = None,
+    bucket_id: str | None = None,
+    actor: str | None = None,
+    output_language_opt: OutputLanguage | None = None,
+) -> None:
+    """Walk the resolved work unit's current AEAT-attested filing through a guided amendment.
+
+    Resolves (or reuses) a work unit exactly as ``work create`` /
+    ``work wizard`` do, loads its current filing record (the same
+    :class:`~domain.modelos.ModeloRecord` ``work amend``
+    requires — it must carry
+    :class:`~domain.modelos.ExternalEvidence`), shows every
+    baseline casilla value, prompts which casillas changed and their
+    corrected values, confirms the amendment kind and reason, then
+    calls :func:`~application.modelo.amend_modelo_revision`
+    through the identical inputs ``work amend`` builds.
+    """
+    run_modelo_work_amend_wizard(
+        deps=deps,
+        ctx=ctx,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+        actor=actor,
+        output_language_opt=output_language_opt,
+    )

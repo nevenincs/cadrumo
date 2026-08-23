@@ -22,8 +22,6 @@ is authoritative profile-scoped taxpayer state, not an AEAT filing surface.
 
 from __future__ import annotations
 
-from typing import Annotated
-
 import typer
 from pydantic import ValidationError
 
@@ -76,79 +74,6 @@ _REFERENCED_PROVENANCES = frozenset(
 # and ``--help`` renders identically for both verbs. ``--percentage`` is kept
 # per-verb: its help key and copy diverge (especial cites art. 106.Uno regla 3.ª,
 # general cites art. 104.Uno + 105.Uno).
-_EjercicioOpt = Annotated[
-    int,
-    typer.Option(
-        "--ejercicio",
-        help=tr("cli.app.ledger.prorrata.ejercicio_help", default="Filing year the election covers."),
-    ),
-]
-_ProvenanceOpt = Annotated[
-    ProrrataProvisionalProvenance,
-    typer.Option(
-        "--provenance",
-        help=tr(
-            "cli.app.ledger.prorrata.provenance_help",
-            default="LIVA art. 105 source of the provisional percentage.",
-        ),
-    ),
-]
-_ReferenceOpt = Annotated[
-    str | None,
-    typer.Option(
-        "--reference",
-        help=tr(
-            "cli.app.ledger.prorrata.reference_help",
-            default="AEAT authorisation (art. 105.Dos) or inicio proposal (art. 105.Tres) reference.",
-        ),
-    ),
-]
-_SectorOpt = Annotated[
-    str | None,
-    typer.Option(
-        "--sector",
-        help=tr(
-            "cli.app.ledger.prorrata.sector_help",
-            default="Differentiated-sector id this entry covers; omit for the whole-entity entry.",
-        ),
-    ),
-]
-_EvidenceReferenceOpt = Annotated[
-    str,
-    typer.Option(
-        "--evidence-reference",
-        help=tr(
-            "cli.app.ledger.prorrata.evidence_reference_help",
-            default="Evidence reference for the current-period prorrata-especial option or revocation.",
-        ),
-    ),
-]
-_OptionalEvidenceReferenceOpt = Annotated[
-    str | None,
-    typer.Option(
-        "--evidence-reference",
-        help=tr(
-            "cli.app.ledger.prorrata.optional_evidence_reference_help",
-            default=(
-                "Operator-held evidence for an option exercised in this ejercicio; "
-                "omit to record an explicit continuation of the regime already in force."
-            ),
-        ),
-    ),
-]
-
-
-prorrata_app = typer.Typer(
-    name="prorrata",
-    help=tr(
-        "cli.app.ledger.prorrata.group_help",
-        default=(
-            "Cross-period IVA prorrata register: elect the regime (general / especial) and "
-            "declare differentiated sectors (LIVA arts. 101 / 103 / 105 / 106)."
-        ),
-    ),
-    no_args_is_help=True,
-)
 
 
 def _entry_payload(entry: ProrrataRegisterEntry) -> ProrrataEntryPayload:
@@ -271,7 +196,7 @@ def _elect(
 def prorrata_elect_especial(
     ctx: typer.Context,
     ejercicio: int,
-    percentage: str = ...,
+    percentage: str,
     evidence_reference: str | None = None,
     provenance: ProrrataProvisionalProvenance = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
     reference: str | None = None,
@@ -302,7 +227,7 @@ def prorrata_elect_especial(
 def prorrata_elect_general(
     ctx: typer.Context,
     ejercicio: int,
-    percentage: str = ...,
+    percentage: str,
     provenance: ProrrataProvisionalProvenance = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
     reference: str | None = None,
     sector: str | None = None,
@@ -331,7 +256,7 @@ def prorrata_revoke_especial(
     ctx: typer.Context,
     ejercicio: int,
     evidence_reference: str,
-    percentage: str = ...,
+    percentage: str,
     provenance: ProrrataProvisionalProvenance = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
     reference: str | None = None,
     sector: str | None = None,
@@ -356,8 +281,8 @@ def prorrata_revoke_especial(
 
 def prorrata_declare_sector(
     ctx: typer.Context,
-    sector_id: str = ...,
-    letra: SectorDiferenciadoLetra = ...,
+    sector_id: str,
+    letra: SectorDiferenciadoLetra,
     activity_code: tuple[str, ...] = (),
 ) -> None:
     """Persist one :class:`SectorDefinition` onto the register partition."""

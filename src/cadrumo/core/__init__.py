@@ -136,13 +136,13 @@ if TYPE_CHECKING:
         INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE,
         ConceptoIngreso,
     )
-    from ._config_support import LLMProvider
     from ._config_state_root import (
         FormerProductStateError,
         StateRootInputs,
         live_state_root_inputs,
         platform_user_data_root,
     )
+    from ._config_support import LLMProvider
     from ._confirmation_gate import (
         OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON,
         ConfirmationBlockReason,

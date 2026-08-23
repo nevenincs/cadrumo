@@ -11,9 +11,7 @@ transaction.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Annotated
 
-import typer
 from pydantic import ValidationError
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -22,34 +20,6 @@ from ...core.i18n import tr
 from ...domain.transactions import M210IncomeClassification, TransactionDirection, TransactionValidationError
 from ._common import _bad
 from ._ledger_support import _ledger_transaction_validation_no_recovery, _ledger_validation_bad, _parse_decimal
-
-M210TipoRentaCodeOpt = Annotated[
-    str | None,
-    typer.Option("--m210-tipo-renta-code", help=tr("cli.ledger.classify.m210_tipo_renta_code_help")),
-]
-M210GrossIncomeAmountOpt = Annotated[
-    str | None,
-    typer.Option(
-        "--m210-gross-income-amount",
-        help=tr("cli.ledger.classify.m210_gross_income_amount_help"),
-    ),
-]
-M210ApplicableRateOpt = Annotated[
-    str | None,
-    typer.Option("--m210-applicable-rate", help=tr("cli.ledger.classify.m210_applicable_rate_help")),
-]
-M210PayerModeOpt = Annotated[
-    M210PayerMode | None,
-    typer.Option("--m210-payer-mode", help=tr("cli.ledger.classify.m210_payer_mode_help")),
-]
-M210PayerIdOpt = Annotated[
-    str | None,
-    typer.Option("--m210-payer-id", help=tr("cli.ledger.classify.m210_payer_id_help")),
-]
-M210AssetOrRightIdOpt = Annotated[
-    str | None,
-    typer.Option("--m210-asset-or-right-id", help=tr("cli.ledger.classify.m210_asset_or_right_id_help")),
-]
 
 
 @dataclass(frozen=True, slots=True)
@@ -175,11 +145,5 @@ class M210LedgerClassifyOptions:
 
 
 __all__ = [
-    "M210ApplicableRateOpt",
-    "M210AssetOrRightIdOpt",
-    "M210GrossIncomeAmountOpt",
     "M210LedgerClassifyOptions",
-    "M210PayerIdOpt",
-    "M210PayerModeOpt",
-    "M210TipoRentaCodeOpt",
 ]

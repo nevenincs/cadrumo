@@ -100,7 +100,7 @@ def counterparty_confirm(
     # The subject is a POSITIONAL argument, not an option: the verb addresses one
     # counterparty and the flags configure the operation, which is the shape
     # every single-subject ledger verb takes.
-    tax_identifier: str = ...,
+    tax_identifier: str,
     # Declared as the enum so click renders the accepted set on a parse failure,
     # rather than the operator meeting a late refusal that names no alternatives.
     scope: IvaTerritorialScope | None = None,
@@ -185,7 +185,7 @@ def counterparty_confirm(
 
 def counterparty_withdraw(
     ctx: typer.Context,
-    tax_identifier: str = ...,
+    tax_identifier: str,
     country_code: str | None = None,
 ) -> None:
     """Remove a confirmed fact so a corrected one can be confirmed."""
@@ -228,7 +228,7 @@ def counterparty_withdraw(
 
 def counterparty_show(
     ctx: typer.Context,
-    tax_identifier: str = ...,
+    tax_identifier: str,
     country_code: str | None = None,
     evidenced_scope: IvaTerritorialScope | None = None,
 ) -> None:

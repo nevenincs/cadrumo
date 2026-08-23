@@ -1,4 +1,4 @@
-"""Typer registration for live notification snapshot commands.
+"""Behavior handlers for live notification snapshot commands.
 
 The pull command delegates the live DEHú read to :func:`capture_notifications`;
 the list, view, and latest commands read bucket-local
@@ -22,9 +22,9 @@ reads the encrypted local record and contacts AEAT not at all.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, Annotated, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 import typer
 
@@ -49,8 +49,7 @@ from ...application.live import (
 from ...core.config import Settings, load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ._app_execution_policies import ENCRYPTED_READ, LIVE_PROFILE_WRITE, declare_metadata_group
-from ._app_live_auth_preflight import resolve_active_bucket, run_auth_preflight
+from ._app_live_auth_preflight import _emit_live_auth_preflight
 from ._app_live_payloads import (
     NotificationDocumentHistoryEntry,
     NotificationDocumentHistoryResult,
@@ -64,31 +63,14 @@ from ._app_live_payloads import (
     NotificationsViewResult,
     SancionReadingPayload,
 )
-from ._command_policy import command_execution_policy
-from ._common import _emit_envelope, notice_lines
+from ._common import _emit_envelope, active_bucket_id_or_refuse, notice_lines
 
 if TYPE_CHECKING:
     from ...domain.notifications import SancionLiquidacion
 
-_active_bucket_id: Callable[[], str] | None = None
-_auth_preflight: Callable[[], None] | None = None
-
-
-def register_notifications_commands(
-    app: typer.Typer,
-    *,
-    active_bucket_id: Callable[[], str],
-    auth_preflight: Callable[[], None],
-) -> None:
-    """Mount live notification commands on the live app."""
-    global _active_bucket_id, _auth_preflight
-    _active_bucket_id = active_bucket_id
-    _auth_preflight = auth_preflight
-    app.add_typer(notifications_app, name="notifications")
-
 
 def _bucket_id() -> str:
-    return resolve_active_bucket(_active_bucket_id, family="notifications")
+    return active_bucket_id_or_refuse()
 
 
 def _notification_document_service(settings: Settings) -> NotificationDocumentService:
@@ -123,22 +105,6 @@ def _notification_document_service(settings: Settings) -> NotificationDocumentSe
     )
 
 
-notifications_app = typer.Typer(
-    name="notifications",
-    help=tr("cli.app.live.notifications.app_help", default="DEHu notification snapshots (read-only)."),
-    no_args_is_help=True,
-    add_completion=False,
-)
-declare_metadata_group(notifications_app)
-
-
-@notifications_app.command(
-    "pull",
-    help=tr(
-        "cli.app.live.notifications.pull_help",
-        default="Pull DEHu notifications and persist a bucket-scoped snapshot.",
-    ),
-)
 def notifications_pull(ctx: typer.Context) -> None:
     """Drive the live DEHu fetch and persist flow.
 
@@ -147,7 +113,7 @@ def notifications_pull(ctx: typer.Context) -> None:
     :class:`NotificationsCaptureResult`.
     """
     bucket_id = _bucket_id()
-    run_auth_preflight(_auth_preflight, family="notifications")
+    _emit_live_auth_preflight()
     persisted = asyncio.run(capture_notifications(bucket_id=bucket_id))
     result = NotificationsCaptureResult(
         bucket_id=bucket_id,
@@ -167,13 +133,6 @@ def notifications_pull(ctx: typer.Context) -> None:
     _emit_envelope(ctx, command="app.live.notifications.pull", result=result, lines=lines)
 
 
-@notifications_app.command(
-    "list",
-    help=tr(
-        "cli.app.live.notifications.list_help",
-        default="List persisted DEHu notification snapshots in the active profile.",
-    ),
-)
 def notifications_list(ctx: typer.Context) -> None:
     """List persisted DEHu notification snapshots without contacting AEAT.
 
@@ -201,18 +160,9 @@ def notifications_list(ctx: typer.Context) -> None:
     _emit_envelope(ctx, command="app.live.notifications.list", result=result, lines=lines)
 
 
-@notifications_app.command(
-    "view",
-    help=tr("cli.app.live.notifications.view_help", default="View one DEHu notification snapshot."),
-)
 def notifications_show(
     ctx: typer.Context,
-    snapshot_id: Annotated[
-        str,
-        typer.Argument(
-            help=tr("cli.app.live.notifications.snapshot_id_help", default="Snapshot id (or unambiguous prefix)."),
-        ),
-    ],
+    snapshot_id: str,
 ) -> None:
     """Show one persisted DEHu notification snapshot by id prefix.
 
@@ -259,13 +209,6 @@ def notifications_show(
     _emit_envelope(ctx, command="app.live.notifications.view", result=result, lines=lines)
 
 
-@notifications_app.command(
-    "latest",
-    help=tr(
-        "cli.app.live.notifications.latest_help",
-        default="Show the most recent DEHu notification snapshot in the active profile.",
-    ),
-)
 def notifications_latest(ctx: typer.Context) -> None:
     """Show the most recent DEHu notification snapshot, or report none.
 
@@ -298,19 +241,6 @@ def notifications_latest(ctx: typer.Context) -> None:
         f"row_count\t{len(record.rows)}",
     ]
     _emit_envelope(ctx, command="app.live.notifications.latest", result=result, lines=lines)
-
-
-document_app = typer.Typer(
-    name="document",
-    help=tr(
-        "cli.app.live.notifications.document.app_help",
-        default="Fetch and read back the document AEAT served behind one notification.",
-    ),
-    no_args_is_help=True,
-    add_completion=False,
-)
-declare_metadata_group(document_app)
-notifications_app.add_typer(document_app, name="document")
 
 
 def _sancion_payload(sancion: SancionLiquidacion) -> SancionReadingPayload:
@@ -478,24 +408,9 @@ def _document_notices(record: NotificationDocumentRecord, *, notices: Sequence[N
     return collected
 
 
-@document_app.command(
-    "pull",
-    help=tr(
-        "cli.app.live.notifications.document.pull_help",
-        default="Fetch one already-read notification's document into encrypted custody.",
-    ),
-)
 def notifications_document_pull(
     ctx: typer.Context,
-    certificado_id: Annotated[
-        str,
-        typer.Argument(
-            help=tr(
-                "cli.app.live.notifications.document.certificado_id_help",
-                default="AEAT numero de certificado of the notification.",
-            ),
-        ),
-    ],
+    certificado_id: str,
 ) -> None:
     """Fetch and take custody of one already-read notification's document.
 
@@ -505,7 +420,7 @@ def notifications_document_pull(
     refused before any request crosses the wire.
     """
     bucket_id = _bucket_id()
-    run_auth_preflight(_auth_preflight, family="notifications")
+    _emit_live_auth_preflight()
     service = _notification_document_service(load_settings())
     custody = asyncio.run(
         pull_notification_document(
@@ -537,24 +452,9 @@ def notifications_document_pull(
     )
 
 
-@document_app.command(
-    "view",
-    help=tr(
-        "cli.app.live.notifications.document.view_help",
-        default="Show one stored notification document and its reading, without contacting AEAT.",
-    ),
-)
 def notifications_document_view(
     ctx: typer.Context,
-    certificado_id: Annotated[
-        str,
-        typer.Argument(
-            help=tr(
-                "cli.app.live.notifications.document.certificado_id_help",
-                default="AEAT numero de certificado of the notification.",
-            ),
-        ),
-    ],
+    certificado_id: str,
 ) -> None:
     """Read back one stored notification document from bucket-local custody.
 
@@ -596,13 +496,6 @@ def _history_notice(*, count: int) -> Notice:
     )
 
 
-@document_app.command(
-    "history",
-    help=tr(
-        "cli.app.live.notifications.document.history_help",
-        default="List each stored notification document's reported figures, without computing a total.",
-    ),
-)
 def notifications_document_history(ctx: typer.Context) -> None:
     """List parsed documents in encrypted custody without asserting a balance."""
     bucket_id = _bucket_id()
@@ -651,16 +544,12 @@ def notifications_document_history(ctx: typer.Context) -> None:
     )
 
 
-for _callback in (
-    notifications_pull,
-    notifications_document_pull,
-):
-    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)
-for _callback in (
-    notifications_list,
-    notifications_show,
-    notifications_latest,
-    notifications_document_view,
-    notifications_document_history,
-):
-    command_execution_policy(ENCRYPTED_READ)(_callback)
+__all__ = [
+    "notifications_document_history",
+    "notifications_document_pull",
+    "notifications_document_view",
+    "notifications_latest",
+    "notifications_list",
+    "notifications_pull",
+    "notifications_show",
+]

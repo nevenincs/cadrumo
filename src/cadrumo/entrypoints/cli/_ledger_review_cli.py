@@ -32,7 +32,7 @@ def ledger_review(
     ctx: typer.Context, filters: tuple[str, ...] = (), record_id: str | None = None, verbose: bool = False
 ) -> None:
     """Render rows or a single row using the typed filter spec."""
-    spec = _ledger_review_filter_spec(filters)
+    spec = _ledger_review_filter_spec(list(filters))
     transaction_repository = _tx_repo(_state())
     result = query_ledger_review_rows(
         _ledger_review_query(
@@ -150,4 +150,4 @@ def _emit_ledger_review_result(
     )
 
 
-__all__ = ["register_ledger_review_command"]
+__all__ = ["ledger_review"]

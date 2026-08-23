@@ -40,12 +40,12 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistryValidationError
-from ._command_policy import command_execution_policy
 from ._common import _emit_envelope
 from ._errors import CliOutboundPayloadBoundaryError
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
-from ._modelo_cli_support import OutputLanguageOpt
-from ._modelo_execution_policies import CALCULATION_WRITE
+from ._modelo_cli_support import (
+    OutputLanguageOpt,
+)
 from ._modelo_payloads import WorkCalculateResult
 from ._modelo_rendering import (
     advisory_notice,
@@ -295,98 +295,6 @@ _AutoconsumoPromotorOpt = Annotated[
 # KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_work_unit_for_cli and
 # calculate_input_bundle_from_cli are injected resolver callables whose concrete
 # return type varies by call site; Callable[..., Any] is the DI composition seam.
-def register_work_calculate_commands(
-    work_app: typer.Typer,
-    *,
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
-    require_active_profile: Callable[[], None],
-    resolve_work_unit_for_cli: Callable[..., Any],
-    resolve_actor_option: Callable[[str | None], str],
-    calculate_input_bundle_from_cli: Callable[..., Any],
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
-    missing_binding_guidance: Callable[[RegistryValidationError, str], str],
-) -> None:
-    """Register work calculation commands on the modelo work app.
-
-    The registered command owns CLI parsing and output formatting only; work-unit
-    resolution, input-bundle construction, calculation persistence, and registry
-    validation remain delegated to application services.
-    """
-    deps = _CalculateDeps(
-        activate_output_language=activate_output_language,
-        require_active_profile=require_active_profile,
-        resolve_work_unit_for_cli=resolve_work_unit_for_cli,
-        resolve_actor_option=resolve_actor_option,
-        calculate_input_bundle_from_cli=calculate_input_bundle_from_cli,
-        bad_parameter_from_error=bad_parameter_from_error,
-        missing_binding_guidance=missing_binding_guidance,
-    )
-
-    @work_app.command("calculate", help=tr("cli.app.modelo.work.calculate_help"))
-    @command_execution_policy(CALCULATION_WRITE)
-    def work_calculate(
-        ctx: typer.Context,
-        work_unit_id: _WorkUnitIdArg = None,
-        modelo: _ModeloOpt = None,
-        year: _YearOpt = None,
-        period: _PeriodOpt = None,
-        revision: _RevisionOpt = None,
-        bucket_id: _BucketIdOpt = None,
-        casilla: _CasillaOpt = None,
-        binding: _BindingOpt = None,
-        borrador_snapshot_id: _BorradorSnapshotOpt = None,
-        m210_gross_income_source: _M210GrossIncomeSourceOpt = M210GrossIncomeSourceMode.MANUAL,
-        actor: _ActorOpt = None,
-        relation: _RelationOpt = None,
-        row: _RowOpt = None,
-        prestacion_inss_exenta: _PrestacionInssExentaOpt = None,
-        rescate_plan_pensiones_capital: _RescateCapitalOpt = None,
-        rescate_plan_pensiones_aportaciones_pre_2007: _RescatePre2007Opt = None,
-        rescate_plan_pensiones_aportaciones_totales: _RescateTotalesOpt = None,
-        rescate_type: _RescateTipoOpt = None,
-        contingencia_year: _ContingenciaYearOpt = None,
-        rescate_year: _RescateYearOpt = None,
-        sal_beneficio_neto: _SalBeneficioOpt = None,
-        sal_reserva_dotada: _SalReservaOpt = None,
-        sal_capital_social: _SalCapitalOpt = None,
-        autoconsumo_promotor_base: _AutoconsumoPromotorOpt = None,
-        m303_filing_evidence: Annotated[
-            Path | None,
-            typer.Option("--m303-filing-evidence", help=tr("cli.app.modelo.work.m303_filing_evidence_help")),
-        ] = None,
-        output_language: OutputLanguageOpt = None,
-    ) -> None:
-        """Persist a new draft :class:`CalculationRevision` for the resolved work unit."""
-        _run_work_calculate(
-            deps=deps,
-            ctx=ctx,
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            revision=revision,
-            bucket_id=bucket_id,
-            casilla=casilla,
-            binding=binding,
-            borrador_snapshot_id=borrador_snapshot_id,
-            m210_gross_income_source=m210_gross_income_source,
-            actor=actor,
-            relation=relation,
-            row=row,
-            prestacion_inss_exenta=prestacion_inss_exenta,
-            rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
-            rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
-            rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
-            rescate_type=rescate_type,
-            contingencia_year=contingencia_year,
-            rescate_year=rescate_year,
-            sal_beneficio_neto=sal_beneficio_neto,
-            sal_reserva_dotada=sal_reserva_dotada,
-            sal_capital_social=sal_capital_social,
-            autoconsumo_promotor_base=autoconsumo_promotor_base,
-            m303_filing_evidence=m303_filing_evidence,
-            output_language=output_language,
-        )
 
 
 def _run_work_calculate(
@@ -655,3 +563,65 @@ def _work_calculate_source_advisory_output(
 
 
 __all__ = ["register_work_calculate_commands"]
+
+
+def work_calculate(
+    ctx: typer.Context,
+    work_unit_id: _WorkUnitIdArg = None,
+    modelo: _ModeloOpt = None,
+    year: _YearOpt = None,
+    period: _PeriodOpt = None,
+    revision: _RevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
+    casilla: _CasillaOpt = None,
+    binding: _BindingOpt = None,
+    borrador_snapshot_id: _BorradorSnapshotOpt = None,
+    m210_gross_income_source: _M210GrossIncomeSourceOpt = M210GrossIncomeSourceMode.MANUAL,
+    actor: _ActorOpt = None,
+    relation: _RelationOpt = None,
+    row: _RowOpt = None,
+    prestacion_inss_exenta: _PrestacionInssExentaOpt = None,
+    rescate_plan_pensiones_capital: _RescateCapitalOpt = None,
+    rescate_plan_pensiones_aportaciones_pre_2007: _RescatePre2007Opt = None,
+    rescate_plan_pensiones_aportaciones_totales: _RescateTotalesOpt = None,
+    rescate_type: _RescateTipoOpt = None,
+    contingencia_year: _ContingenciaYearOpt = None,
+    rescate_year: _RescateYearOpt = None,
+    sal_beneficio_neto: _SalBeneficioOpt = None,
+    sal_reserva_dotada: _SalReservaOpt = None,
+    sal_capital_social: _SalCapitalOpt = None,
+    autoconsumo_promotor_base: _AutoconsumoPromotorOpt = None,
+    m303_filing_evidence: Path | None = None,
+    output_language: OutputLanguageOpt = None,
+) -> None:
+    """Persist a new draft :class:`CalculationRevision` for the resolved work unit."""
+    _run_work_calculate(
+        deps=deps,
+        ctx=ctx,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+        casilla=casilla,
+        binding=binding,
+        borrador_snapshot_id=borrador_snapshot_id,
+        m210_gross_income_source=m210_gross_income_source,
+        actor=actor,
+        relation=relation,
+        row=row,
+        prestacion_inss_exenta=prestacion_inss_exenta,
+        rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
+        rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
+        rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
+        rescate_type=rescate_type,
+        contingencia_year=contingencia_year,
+        rescate_year=rescate_year,
+        sal_beneficio_neto=sal_beneficio_neto,
+        sal_reserva_dotada=sal_reserva_dotada,
+        sal_capital_social=sal_capital_social,
+        autoconsumo_promotor_base=autoconsumo_promotor_base,
+        m303_filing_evidence=m303_filing_evidence,
+        output_language=output_language,
+    )

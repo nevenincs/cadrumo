@@ -2,11 +2,19 @@
 
 from __future__ import annotations
 
+import ast
 from importlib import import_module
+from pathlib import Path
+
+import pytest
+from typer.main import get_command
 
 from .._app_live_command_specs import LIVE_COMMAND_SPECS
+from .._command_runtime import build_command_subtree
 from .._command_spec import BindingState, CommandSpecGraph, LazyBinding
 from .._root_command_specs import ROOT_COMMAND_SPECS
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 EXPECTED_LIVE_PATHS = {
@@ -72,7 +80,8 @@ def _resolve(binding: LazyBinding) -> object:
 
 def test_live_specs_are_the_exact_complete_current_surface() -> None:
     graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
-    actual = {" ".join(graph.path_for(spec.key)[1:]) for spec in LIVE_COMMAND_SPECS}
+    live_keys = {spec.key for spec in LIVE_COMMAND_SPECS}
+    actual = {" ".join(node.path[1:]) for node in graph.nodes() if node.spec.key in live_keys}
     assert len(LIVE_COMMAND_SPECS) == 48
     assert actual == EXPECTED_LIVE_PATHS
 
@@ -99,3 +108,30 @@ def test_live_specs_own_policy_schema_and_localised_parameter_contracts() -> Non
             assert spec.result_schema.identity.startswith("app.live.")
         for parameter in spec.parameters:
             assert parameter.help_key is None or parameter.help_key.value.startswith("cli.app.live.")
+
+
+def test_every_live_subtree_compiles_from_specs_without_legacy_structure() -> None:
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
+    for spec in LIVE_COMMAND_SPECS:
+        app = build_command_subtree(graph, spec.key)
+        assert get_command(app) is not None
+
+
+def test_live_behavior_and_payload_modules_contain_no_structural_authority() -> None:
+    cli_root = Path(__file__).parents[1]
+    paths = [cli_root / "_app_live.py", cli_root / "_app_live_payloads.py"]
+    paths.extend(sorted(cli_root.glob("_app_live_*_cli.py")))
+    forbidden_names = {"command_execution_policy", "declare_metadata_group", "register_schema"}
+    for path in paths:
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        assert "Typer(" not in source
+        assert not any(
+            isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("register_")
+            for node in ast.walk(tree)
+        )
+        assert not any(isinstance(node, ast.Name) and node.id in forbidden_names for node in ast.walk(tree))
+        assert not any(
+            isinstance(node, ast.Attribute) and node.attr in {"command", "callback", "add_typer"}
+            for node in ast.walk(tree)
+        )

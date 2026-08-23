@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated
 
 import typer
 
@@ -38,10 +37,24 @@ from ...core.json_contract import (
 from ...domain.calculations.registry import RegistrySnapshotError, RevisionId
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
-from ._command_policy import command_execution_policy
-from ._common import _emit_envelope, active_profile_label, resolve_lifecycle_continuation_notice
-from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
-from ._modelo_execution_policies import MODEL_DESTRUCTIVE, MODEL_READ, MODEL_WRITE, REGISTRY_MODEL_WRITE
+from ._common import (
+    _emit_envelope,
+    activate_subcommand_output_language,
+    active_profile_label,
+    resolve_lifecycle_continuation_notice,
+)
+from ._modelo_behavior_support import (
+    guard_foral_profile_ccaa,
+    require_active_profile,
+    resolve_work_unit_for_cli,
+    resolve_year_period,
+)
+from ._modelo_cli_support import (
+    bad_parameter_from_error,
+    resolve_default_actor,
+    resolve_explicit_or_active_bucket_id,
+    selector_bad_parameter,
+)
 from ._modelo_payloads import (
     WorkCreateResult,
     WorkDiscardResult,
@@ -80,36 +93,6 @@ class _LifecycleDeps:
     resolve_default_actor: Callable[[], str]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
     selector_bad_parameter: Callable[[BaseException], typer.BadParameter]
-
-
-def register_work_lifecycle_commands(
-    work_app: typer.Typer,
-    *,
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
-    require_active_profile: Callable[[], None],
-    guard_foral_profile_ccaa: Callable[[], None],
-    resolve_year_period: Callable[..., Period],
-    resolve_work_unit_for_cli: Callable[..., WorkUnit],
-    resolve_default_actor: Callable[[], str],
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
-    selector_bad_parameter: Callable[[BaseException], typer.BadParameter],
-) -> None:
-    """Register work lifecycle commands on the modelo work app."""
-    deps = _LifecycleDeps(
-        activate_output_language=activate_output_language,
-        require_active_profile=require_active_profile,
-        guard_foral_profile_ccaa=guard_foral_profile_ccaa,
-        resolve_year_period=resolve_year_period,
-        resolve_work_unit_for_cli=resolve_work_unit_for_cli,
-        resolve_default_actor=resolve_default_actor,
-        bad_parameter_from_error=bad_parameter_from_error,
-        selector_bad_parameter=selector_bad_parameter,
-    )
-    _register_work_create_command(work_app, deps)
-    _register_work_list_command(work_app, deps)
-    _register_work_status_command(work_app, deps)
-    _register_work_rename_command(work_app, deps)
-    _register_work_discard_command(work_app, deps)
 
 
 def _validate_filing_year(year: int) -> None:
@@ -151,129 +134,6 @@ def guard_unsupported_work_modelo(modelo: str) -> None:
         return
 
     raise CliRefusedBoundaryError(translated_message=locale_key, context={"modelo": modelo_code})
-
-
-def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
-    @work_app.command("create", help=tr("cli.app.modelo.work.create_help"))
-    @command_execution_policy(REGISTRY_MODEL_WRITE)
-    def work_create(
-        ctx: typer.Context,
-        modelo: Annotated[
-            str,
-            typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-        ],
-        year: Annotated[
-            int,
-            typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-        ],
-        period: Annotated[
-            str,
-            typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-        ],
-        revision: _RevisionOpt = None,
-        bucket_id: _BucketIdOpt = None,
-        name: _NameOpt = None,
-        actor: _ActorOpt = None,
-        allow_not_applicable: Annotated[
-            bool,
-            typer.Option(
-                "--allow-not-applicable",
-                help=tr("cli.app.modelo.work.allow_not_applicable_help"),
-            ),
-        ] = False,
-        quiet: Annotated[
-            bool,
-            typer.Option(
-                "--quiet",
-                help=tr("cli.app.modelo.work.create_quiet_help"),
-            ),
-        ] = False,
-        causante_ccaa_raw: Annotated[
-            str | None,
-            typer.Option(
-                "--causante-ccaa",
-                help=tr("cli.app.modelo.work.causante_ccaa_help"),
-            ),
-        ] = None,
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """Create or load a modelo work unit. Idempotent on the four-axis key."""
-        deps.activate_output_language(ctx, output_language)
-        _validate_filing_year(year)
-        requested_revision = revision.strip() if revision is not None else None
-        causante_ccaa = parse_tax_region(causante_ccaa_raw) if causante_ccaa_raw is not None else None
-        guard_unsupported_work_modelo(modelo)
-        resolved_period = deps.resolve_year_period(year, period, modelo=modelo)
-        resolved_year = resolved_period.filing_year
-        _validate_registry_target_before_profile_if_needed(
-            modelo=modelo,
-            filing_year=resolved_year,
-            period=resolved_period,
-            registry_revision_id=requested_revision,
-        )
-        deps.require_active_profile()
-        deps.guard_foral_profile_ccaa()
-        _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable)
-        resolved_bucket = resolve_explicit_or_active_bucket_id(bucket_id)
-        resolved_actor = actor or deps.resolve_default_actor()
-        require_existing_profile_baseline_ready_for_modelo_work(
-            bucket_id=resolved_bucket,
-            modelo=modelo,
-            filing_year=resolved_year,
-            period=resolved_period,
-            enforce_applicability=not allow_not_applicable,
-        )
-        resolved_revision_id = resolve_registry_revision_for_work_target(
-            modelo=modelo,
-            filing_year=resolved_year,
-            period=resolved_period,
-            registry_revision_id=requested_revision,
-        )
-        require_profile_ready_for_modelo_work(
-            bucket_id=resolved_bucket,
-            modelo=modelo,
-            revision_id=resolved_revision_id,
-            filing_year=resolved_year,
-            period=resolved_period,
-            enforce_applicability=not allow_not_applicable,
-        )
-
-        try:
-            ensure_result = ensure_modelo_work_unit_for_active_target(
-                bucket_id=resolved_bucket,
-                modelo=modelo,
-                filing_year=resolved_year,
-                period=resolved_period,
-                registry_revision_id=requested_revision,
-                name=name,
-                actor=resolved_actor,
-                causante_ccaa=causante_ccaa,
-                enforce_applicability=not allow_not_applicable,
-            )
-        except (ModeloWorkRegistryYearMismatchError, RegistrySnapshotError) as exc:
-            raise typer.BadParameter(str(exc)) from exc
-        except (
-            ModeloWorkSelectorContradictionError,
-            ModeloWorkUnitNotFoundError,
-            ModeloWorkVisibleTargetAmbiguousError,
-            ModeloWorkRevisionConflictError,
-        ) as exc:
-            raise deps.selector_bad_parameter(exc) from exc
-
-        _emit_work_create_result(
-            ctx,
-            unit=ensure_result.work_unit,
-            reused=ensure_result.reused,
-            name=name,
-            name_applied=ensure_result.name_applied,
-            allow_not_applicable=allow_not_applicable,
-            quiet=quiet,
-        )
 
 
 def _validate_registry_target_before_profile_if_needed(
@@ -393,170 +253,202 @@ def _modelo_100_obligation_advisory_output(unit) -> tuple[list[Notice], list[str
     return notices, messages
 
 
-def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
-    @work_app.command("list", help=tr("cli.app.modelo.work.list_help"))
-    @command_execution_policy(MODEL_READ)
-    def work_list(
-        ctx: typer.Context,
-        bucket_id: _BucketIdOpt = None,
-        include_discarded: Annotated[
-            bool,
-            typer.Option(
-                "--include-discarded",
-                help=tr("cli.app.modelo.work.include_discarded_help"),
-            ),
-        ] = False,
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """List modelo work units. Discarded units are excluded unless asked."""
-        deps.activate_output_language(ctx, output_language)
-        deps.require_active_profile()
-        units = list_work_units(bucket_id=bucket_id, include_discarded=include_discarded)
-        result = WorkListResult.model_validate(
-            {
-                "bucket_id_filter": bucket_id,
-                "include_discarded": include_discarded,
-                "work_unit_count": len(units),
-                "work_units": [work_unit_payload(unit) for unit in units],
-            },
-        )
-        lines = [
-            f"active_profile\t{active_profile_label() or ''}",
-            *work_unit_list_lines(units, include_discarded=include_discarded),
-        ]
-        follow_up = resolve_lifecycle_continuation_notice(lifecycle_continuation_for_work_list(units))
-        _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[follow_up])
-
-
-def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
-    @work_app.command("status", help=tr("cli.app.modelo.work.status_help"))
-    @command_execution_policy(MODEL_READ)
-    def work_status(
-        ctx: typer.Context,
-        work_unit_id: _WorkUnitIdArg = None,
-        modelo: _ModeloOpt = None,
-        year: _YearOpt = None,
-        period: _PeriodOpt = None,
-        revision: _RevisionOpt = None,
-        bucket_id: _BucketIdOpt = None,
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """View one work unit's metadata."""
-        deps.activate_output_language(ctx, output_language)
-        deps.require_active_profile()
-        unit = deps.resolve_work_unit_for_cli(
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            revision=revision,
-            bucket_id=bucket_id,
-        )
-        result = WorkStatusResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
-        lines = [
-            f"active_profile\t{active_profile_label() or ''}",
-            "operation\tmodelo.work.status",
-            *work_unit_lines(unit, include_bucket_id=False),
-        ]
-        next_step = resolve_lifecycle_continuation_notice(lifecycle_continuation_for_work_status(unit))
-        _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_step])
-
-
-def _register_work_rename_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
-    @work_app.command("rename", help=tr("cli.app.modelo.work.rename_help"))
-    @command_execution_policy(MODEL_WRITE)
-    def work_rename(
-        ctx: typer.Context,
-        work_unit_id: _WorkUnitIdArg = None,
-        modelo: _ModeloOpt = None,
-        year: _YearOpt = None,
-        period: _PeriodOpt = None,
-        revision: _RevisionOpt = None,
-        bucket_id: _BucketIdOpt = None,
-        name: _NameOpt = None,
-        actor: _ActorOpt = None,
-    ) -> None:
-        """Update one work unit's display name."""
-        deps.require_active_profile()
-        if name is None or not name.strip():
-            raise typer.BadParameter(tr("cli.app.modelo.work.name_required"))
-        unit = deps.resolve_work_unit_for_cli(
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            revision=revision,
-            bucket_id=bucket_id,
-        )
-        try:
-            unit = rename_work_unit(unit.work_unit_id, name, actor=actor or deps.resolve_default_actor())
-        except WorkUnitMutationRefusedError:
-            raise
-        except WorkUnitNotFoundError as exc:
-            raise deps.bad_parameter_from_error(exc) from exc
-        result = WorkRenameResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
-        lines = ["operation\tmodelo.work.rename", *work_unit_lines(unit)]
-        _emit_envelope(ctx, command="modelo.work.rename", result=result, lines=lines)
-
-
-def _register_work_discard_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
-    @work_app.command("discard", help=tr("cli.app.modelo.work.discard_help"))
-    @command_execution_policy(MODEL_DESTRUCTIVE)
-    def work_discard(
-        ctx: typer.Context,
-        work_unit_id: _WorkUnitIdArg = None,
-        modelo: _ModeloOpt = None,
-        year: _YearOpt = None,
-        period: _PeriodOpt = None,
-        revision: _RevisionOpt = None,
-        bucket_id: _BucketIdOpt = None,
-        actor: _ActorOpt = None,
-        reason: Annotated[
-            str | None,
-            typer.Option("--reason", help=tr("cli.app.modelo.work.reason_help")),
-        ] = None,
-        confirmed: Annotated[
-            bool,
-            typer.Option("--yes", help=tr("cli.app.modelo.work.discard_yes_help")),
-        ] = False,
-    ) -> None:
-        """Transition a work unit to discarded state."""
-        target_label = work_unit_id or f"{modelo or '?'} {year or '?'} {period or '?'}"
-        if not confirmed:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.work.discard_requires_yes",
-                    work_unit_id=target_label,
-                ),
-            )
-        deps.require_active_profile()
-        unit = deps.resolve_work_unit_for_cli(
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            revision=revision,
-            bucket_id=bucket_id,
-        )
-        try:
-            unit = discard_work_unit(unit.work_unit_id, actor=actor or deps.resolve_default_actor(), reason=reason)
-        except WorkUnitAlreadyDiscardedError:
-            raise
-        except WorkUnitNotFoundError as exc:
-            raise deps.bad_parameter_from_error(exc) from exc
-        result = WorkDiscardResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
-        lines = ["operation\tmodelo.work.discard", *work_unit_lines(unit)]
-        _emit_envelope(ctx, command="modelo.work.discard", result=result, lines=lines)
-
-
 __all__ = ["guard_unsupported_work_modelo", "register_work_lifecycle_commands"]
+
+
+def work_create(
+    ctx: typer.Context,
+    modelo: str,
+    year: int,
+    period: str,
+    revision: _RevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
+    name: _NameOpt = None,
+    actor: _ActorOpt = None,
+    allow_not_applicable: bool = False,
+    quiet: bool = False,
+    causante_ccaa_raw: str | None = None,
+    output_language: OutputLanguage | None = typer.Option(
+        None, "--output-language", "--language", help=tr("cli.config.auth.output_language_help")
+    ),
+) -> None:
+    """Create or load a modelo work unit. Idempotent on the four-axis key."""
+    activate_subcommand_output_language(ctx, output_language)
+    _validate_filing_year(year)
+    requested_revision = revision.strip() if revision is not None else None
+    causante_ccaa = parse_tax_region(causante_ccaa_raw) if causante_ccaa_raw is not None else None
+    guard_unsupported_work_modelo(modelo)
+    resolved_period = resolve_year_period(year, period, modelo=modelo)
+    resolved_year = resolved_period.filing_year
+    _validate_registry_target_before_profile_if_needed(
+        modelo=modelo, filing_year=resolved_year, period=resolved_period, registry_revision_id=requested_revision
+    )
+    require_active_profile()
+    guard_foral_profile_ccaa()
+    _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable)
+    resolved_bucket = resolve_explicit_or_active_bucket_id(bucket_id)
+    resolved_actor = actor or resolve_default_actor()
+    require_existing_profile_baseline_ready_for_modelo_work(
+        bucket_id=resolved_bucket,
+        modelo=modelo,
+        filing_year=resolved_year,
+        period=resolved_period,
+        enforce_applicability=not allow_not_applicable,
+    )
+    resolved_revision_id = resolve_registry_revision_for_work_target(
+        modelo=modelo, filing_year=resolved_year, period=resolved_period, registry_revision_id=requested_revision
+    )
+    require_profile_ready_for_modelo_work(
+        bucket_id=resolved_bucket,
+        modelo=modelo,
+        revision_id=resolved_revision_id,
+        filing_year=resolved_year,
+        period=resolved_period,
+        enforce_applicability=not allow_not_applicable,
+    )
+    try:
+        ensure_result = ensure_modelo_work_unit_for_active_target(
+            bucket_id=resolved_bucket,
+            modelo=modelo,
+            filing_year=resolved_year,
+            period=resolved_period,
+            registry_revision_id=requested_revision,
+            name=name,
+            actor=resolved_actor,
+            causante_ccaa=causante_ccaa,
+            enforce_applicability=not allow_not_applicable,
+        )
+    except (ModeloWorkRegistryYearMismatchError, RegistrySnapshotError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    except (
+        ModeloWorkSelectorContradictionError,
+        ModeloWorkUnitNotFoundError,
+        ModeloWorkVisibleTargetAmbiguousError,
+        ModeloWorkRevisionConflictError,
+    ) as exc:
+        raise selector_bad_parameter(exc) from exc
+    _emit_work_create_result(
+        ctx,
+        unit=ensure_result.work_unit,
+        reused=ensure_result.reused,
+        name=name,
+        name_applied=ensure_result.name_applied,
+        allow_not_applicable=allow_not_applicable,
+        quiet=quiet,
+    )
+
+
+def work_list(
+    ctx: typer.Context,
+    bucket_id: _BucketIdOpt = None,
+    include_discarded: bool = False,
+    output_language: OutputLanguage | None = typer.Option(
+        None, "--output-language", "--language", help=tr("cli.config.auth.output_language_help")
+    ),
+) -> None:
+    """List modelo work units. Discarded units are excluded unless asked."""
+    activate_subcommand_output_language(ctx, output_language)
+    require_active_profile()
+    units = list_work_units(bucket_id=bucket_id, include_discarded=include_discarded)
+    result = WorkListResult.model_validate(
+        {
+            "bucket_id_filter": bucket_id,
+            "include_discarded": include_discarded,
+            "work_unit_count": len(units),
+            "work_units": [work_unit_payload(unit) for unit in units],
+        }
+    )
+    lines = [
+        f"active_profile\t{active_profile_label() or ''}",
+        *work_unit_list_lines(units, include_discarded=include_discarded),
+    ]
+    follow_up = resolve_lifecycle_continuation_notice(lifecycle_continuation_for_work_list(units))
+    _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[follow_up])
+
+
+def work_status(
+    ctx: typer.Context,
+    work_unit_id: _WorkUnitIdArg = None,
+    modelo: _ModeloOpt = None,
+    year: _YearOpt = None,
+    period: _PeriodOpt = None,
+    revision: _RevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
+    output_language: OutputLanguage | None = typer.Option(
+        None, "--output-language", "--language", help=tr("cli.config.auth.output_language_help")
+    ),
+) -> None:
+    """View one work unit's metadata."""
+    activate_subcommand_output_language(ctx, output_language)
+    require_active_profile()
+    unit = resolve_work_unit_for_cli(
+        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
+    )
+    result = WorkStatusResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
+    lines = [
+        f"active_profile\t{active_profile_label() or ''}",
+        "operation\tmodelo.work.status",
+        *work_unit_lines(unit, include_bucket_id=False),
+    ]
+    next_step = resolve_lifecycle_continuation_notice(lifecycle_continuation_for_work_status(unit))
+    _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_step])
+
+
+def work_rename(
+    ctx: typer.Context,
+    work_unit_id: _WorkUnitIdArg = None,
+    modelo: _ModeloOpt = None,
+    year: _YearOpt = None,
+    period: _PeriodOpt = None,
+    revision: _RevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
+    name: _NameOpt = None,
+    actor: _ActorOpt = None,
+) -> None:
+    """Update one work unit's display name."""
+    require_active_profile()
+    if name is None or not name.strip():
+        raise typer.BadParameter(tr("cli.app.modelo.work.name_required"))
+    unit = resolve_work_unit_for_cli(
+        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
+    )
+    try:
+        unit = rename_work_unit(unit.work_unit_id, name, actor=actor or resolve_default_actor())
+    except WorkUnitMutationRefusedError:
+        raise
+    except WorkUnitNotFoundError as exc:
+        raise bad_parameter_from_error(exc) from exc
+    result = WorkRenameResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
+    lines = ["operation\tmodelo.work.rename", *work_unit_lines(unit)]
+    _emit_envelope(ctx, command="modelo.work.rename", result=result, lines=lines)
+
+
+def work_discard(
+    ctx: typer.Context,
+    work_unit_id: _WorkUnitIdArg = None,
+    modelo: _ModeloOpt = None,
+    year: _YearOpt = None,
+    period: _PeriodOpt = None,
+    revision: _RevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
+    actor: _ActorOpt = None,
+    reason: str | None = None,
+    confirmed: bool = False,
+) -> None:
+    """Transition a work unit to discarded state."""
+    target_label = work_unit_id or f"{modelo or '?'} {year or '?'} {period or '?'}"
+    if not confirmed:
+        raise typer.BadParameter(tr("cli.app.modelo.work.discard_requires_yes", work_unit_id=target_label))
+    require_active_profile()
+    unit = resolve_work_unit_for_cli(
+        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
+    )
+    try:
+        unit = discard_work_unit(unit.work_unit_id, actor=actor or resolve_default_actor(), reason=reason)
+    except WorkUnitAlreadyDiscardedError:
+        raise
+    except WorkUnitNotFoundError as exc:
+        raise bad_parameter_from_error(exc) from exc
+    result = WorkDiscardResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
+    lines = ["operation\tmodelo.work.discard", *work_unit_lines(unit)]
+    _emit_envelope(ctx, command="modelo.work.discard", result=result, lines=lines)

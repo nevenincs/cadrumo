@@ -201,6 +201,29 @@ def _child_env(root: Path) -> dict[str, str]:
     return env
 
 
+def _run_fresh_resume_allowing_failure(
+    root: Path,
+    operation_id: str,
+) -> subprocess.CompletedProcess[str]:
+    """Resume without asserting success, for cases that must FAIL.
+
+    The ordinary runner refuses on a non-zero child so a broken resume cannot
+    pass unnoticed. A case asserting the refusal itself needs the process back
+    instead.
+    """
+    return subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned harness
+        [sys.executable, "-c", _RESUME_HARNESS, str(root), operation_id, _OVERRIDE_REASON],
+        cwd=Path.cwd(),
+        env=_child_env(root),
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=90,
+    )
+
+
 def _refuse_with_child_stderr(
     result: subprocess.CompletedProcess[str],
     *,
@@ -382,3 +405,58 @@ def test_resume_refuses_malformed_journal_identity_before_target_lock(
 
         assert raised.value.context == {"operation_id": interrupted.operation_id, "journal_corrupt": True}
         assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.is_dir()
+
+
+def test_a_deletion_marker_cannot_attest_an_erase_that_is_not_its_own(tmp_path: Path) -> None:
+    """The marker that authorises "my erase already landed" is unforgeable.
+
+    A resume advances a target whose capsule is already gone, on the strength of
+    the deletion marker this operation wrote immediately before erasing it.
+    Absence looks identical whether the reset destroyed the capsule or something
+    else did, so that marker is the whole difference between reporting work this
+    reset performed and laying claim to somebody else's destruction.
+
+    Both dimensions of the claim are refused at the journal boundary rather than
+    at the point of use, which is the stronger place for them: a disowned marker
+    cannot be persisted or loaded at all, so no code path downstream has to
+    remember to check.
+    """
+    from pydantic import ValidationError
+
+    from ...adapters.persistence.storage.bucket import bucket_paths
+    from ...adapters.persistence.storage.sql import dispose_engine
+    from .._config_reset_models import ConfigResetOperation
+    from .._config_reset_repository import ConfigResetJournalRepository
+
+    with _isolated_reset_root(tmp_path) as root:
+        _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
+        dispose_engine()
+
+        crashed = _run_crashing_start(root, "deleting_after_effect")
+        assert crashed.returncode == _CRASH_EXIT_CODE, (crashed.stdout, crashed.stderr)
+
+        repository = ConfigResetJournalRepository()
+        interrupted = repository.latest()
+        assert interrupted is not None
+        target = interrupted.targets[0]
+        assert target.deletion_marker is not None
+        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
+
+        def _rebuilt_with(marker_update: dict[str, str]) -> None:
+            ConfigResetOperation.model_validate_json(
+                interrupted.model_copy(
+                    update={
+                        "targets": (
+                            target.model_copy(
+                                update={"deletion_marker": target.deletion_marker.model_copy(update=marker_update)},
+                            ),
+                        ),
+                    },
+                ).model_dump_json(),
+            )
+
+        with pytest.raises(ValidationError, match="operation id does not match its journal"):
+            _rebuilt_with({"operation_id": "b" * 64})
+
+        with pytest.raises(ValidationError, match="bucket id does not match its reset target"):
+            _rebuilt_with({"bucket_id": "99999999-9999-4999-8999-999999999999"})

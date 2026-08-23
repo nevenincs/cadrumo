@@ -1,4 +1,4 @@
-"""Typer registration for live NIF verification commands.
+"""Behavior handlers for live NIF verification commands.
 
 The ``list`` / ``view`` / ``latest`` commands read bucket-local
 :class:`VerifyObservation` rows persisted by :class:`VerifyService`. The
@@ -9,8 +9,7 @@ submits, registers, or mutates AEAT state.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Annotated, TypedDict
+from typing import TypedDict
 
 import typer
 
@@ -18,13 +17,7 @@ from ...application.live import VerifySurface, VerifyVerdict
 from ...core.i18n import tr
 from ...core.identity import tax_id_identity_token
 from ...core.time import now
-from ._app_execution_policies import ENCRYPTED_READ, LIVE_PROFILE_WRITE, declare_metadata_group
-from ._app_live_auth_preflight import resolve_active_bucket
-from ._command_policy import command_execution_policy
-from ._common import _emit_envelope
-
-_active_bucket_id: Callable[[], str] | None = None
-_verify_expected: Callable[[str | None], VerifyVerdict | None] | None = None
+from ._common import _emit_envelope, active_bucket_id_or_refuse
 
 
 class _VerifyRow(TypedDict):
@@ -37,38 +30,14 @@ class _VerifyRow(TypedDict):
     checked_at: str
 
 
-verify_app = typer.Typer(
-    name="verify",
-    help=tr("cli.app.live.verify.app_help", default="NIF verify audit log (read-only)."),
-    no_args_is_help=True,
-    add_completion=False,
-)
-declare_metadata_group(verify_app)
-
-
-def register_verify_commands(
-    app: typer.Typer,
-    *,
-    active_bucket_id: Callable[[], str],
-    verify_expected: Callable[[str | None], VerifyVerdict | None],
-) -> None:
-    """Mount live verify commands on the live app."""
-    global _active_bucket_id
-    global _verify_expected
-
-    _active_bucket_id = active_bucket_id
-    _verify_expected = verify_expected
-    app.add_typer(verify_app, name="verify")
-
-
 def _bucket_id() -> str:
-    return resolve_active_bucket(_active_bucket_id, family="verify")
+    return active_bucket_id_or_refuse()
 
 
 def _expected(value: str | None) -> VerifyVerdict | None:
-    if _verify_expected is None:
-        raise RuntimeError("live verify commands were not registered")
-    return _verify_expected(value)
+    if value in (None, "valid", "invalid", "unknown"):
+        return value
+    raise typer.BadParameter(tr("cli.app.live.verify.expected_values_error"))
 
 
 def _verify_row(observation) -> _VerifyRow:
@@ -84,29 +53,10 @@ def _verify_row(observation) -> _VerifyRow:
     )
 
 
-@verify_app.command(
-    "list",
-    help=tr(
-        "cli.app.live.verify.list_help",
-        default="List persisted verify observations (optionally filter by surface or NIF).",
-    ),
-)
 def verify_list(
     ctx: typer.Context,
-    surface: Annotated[
-        VerifySurface | None,
-        typer.Option(
-            "--surface",
-            help=tr(
-                "cli.app.live.verify.surface_help",
-                default="Filter to one surface: nif_iva or tgvi.",
-            ),
-        ),
-    ] = None,
-    nif: Annotated[
-        str | None,
-        typer.Option("--nif", help=tr("cli.app.live.verify.nif_help", default="Filter to one NIF.")),
-    ] = None,
+    surface: VerifySurface | None = None,
+    nif: str | None = None,
 ) -> None:
     """List persisted NIF verification observations.
 
@@ -134,21 +84,9 @@ def verify_list(
     _emit_envelope(ctx, command="app.live.verify.list", result=result, lines=lines)
 
 
-@verify_app.command(
-    "view",
-    help=tr("cli.app.live.verify.view_help", default="View one persisted verify observation."),
-)
 def verify_show(
     ctx: typer.Context,
-    observation_id: Annotated[
-        str,
-        typer.Argument(
-            help=tr(
-                "cli.app.live.verify.observation_id_help",
-                default="Observation id (or unambiguous prefix).",
-            ),
-        ),
-    ],
+    observation_id: str,
 ) -> None:
     """Show one persisted NIF verification observation by id prefix.
 
@@ -166,29 +104,10 @@ def verify_show(
     _emit_envelope(ctx, command="app.live.verify.view", result=result, lines=lines)
 
 
-@verify_app.command(
-    "latest",
-    help=tr(
-        "cli.app.live.verify.latest_help",
-        default="Show the most recent observation for a (surface, NIF) pair.",
-    ),
-)
 def verify_latest(
     ctx: typer.Context,
-    surface: Annotated[
-        VerifySurface,
-        typer.Option(
-            "--surface",
-            help=tr(
-                "cli.app.live.verify.latest_surface_help",
-                default="Verify surface: nif_iva or tgvi.",
-            ),
-        ),
-    ],
-    nif: Annotated[
-        str,
-        typer.Option("--nif", help=tr("cli.app.live.verify.latest_nif_help", default="NIF to look up.")),
-    ],
+    surface: VerifySurface,
+    nif: str,
 ) -> None:
     """Show the most recent verify observation for a surface/NIF pair.
 
@@ -230,26 +149,10 @@ def verify_latest(
     _emit_envelope(ctx, command="app.live.verify.latest", result=result, lines=lines)
 
 
-@verify_app.command(
-    "nif-iva",
-    help=tr(
-        "cli.app.live.verify.nif_iva_help",
-        default="Live-check one intra-community NIF-IVA via AEAT IXVI and persist the observation.",
-    ),
-)
 def verify_nif_iva(
     ctx: typer.Context,
-    nif: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.live.verify.nif_iva_arg_help", default="NIF-IVA value (e.g. ESB12345678).")),
-    ],
-    expected: Annotated[
-        str | None,
-        typer.Option(
-            "--expected",
-            help=tr("cli.app.live.verify.expected_help", default="Optional expected verdict (valid|invalid|unknown)."),
-        ),
-    ] = None,
+    nif: str,
+    expected: str | None = None,
 ) -> None:
     """Live-check one intra-community NIF-IVA and persist the observation.
 
@@ -287,26 +190,10 @@ def verify_nif_iva(
     _emit_envelope(ctx, command="app.live.verify.nif_iva", result=result, lines=lines)
 
 
-@verify_app.command(
-    "tgvi",
-    help=tr(
-        "cli.app.live.verify.tgvi_help",
-        default="Live-check one Spanish NIF's ROI/VIES (GROI) registration and persist the observation.",
-    ),
-)
 def verify_tgvi(
     ctx: typer.Context,
-    nif: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.live.verify.tgvi_arg_help", default="Spanish NIF/NIE to check.")),
-    ],
-    expected: Annotated[
-        str | None,
-        typer.Option(
-            "--expected",
-            help=tr("cli.app.live.verify.expected_help", default="Optional expected verdict (valid|invalid|unknown)."),
-        ),
-    ] = None,
+    nif: str,
+    expected: str | None = None,
 ) -> None:
     """Live-check one Spanish NIF's ROI/VIES registration and persist it.
 
@@ -344,10 +231,4 @@ def verify_tgvi(
     _emit_envelope(ctx, command="app.live.verify.tgvi", result=result, lines=lines)
 
 
-for _callback in (verify_list, verify_show, verify_latest):
-    command_execution_policy(ENCRYPTED_READ)(_callback)
-for _callback in (verify_nif_iva, verify_tgvi):
-    command_execution_policy(LIVE_PROFILE_WRITE)(_callback)
-
-
-__all__ = ["register_verify_commands", "verify_app"]
+__all__ = ["verify_latest", "verify_list", "verify_nif_iva", "verify_show", "verify_tgvi"]

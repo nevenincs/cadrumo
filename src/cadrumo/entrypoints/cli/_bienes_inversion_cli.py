@@ -28,15 +28,6 @@ from ._bienes_inversion_payloads import (
 from ._common import _bad, _emit_envelope, parse_decimal_amount
 from ._common import active_bucket_id_or_refuse as _register_bucket_id
 
-bienes_inversion_app = typer.Typer(
-    name="bienes-inversion",
-    help=tr(
-        "cli.app.ledger.bienes_inversion.group_help",
-        default="Capital-goods IVA deduction regularización register (LIVA arts. 107-110).",
-    ),
-    no_args_is_help=True,
-)
-
 
 def _parse_kind(raw: BienInversionKind) -> BienInversionKind:
     return raw
@@ -65,13 +56,13 @@ def _record_payload(record: BienInversionIvaRecord) -> BienInversionRecordPayloa
 
 def bienes_inversion_declare(
     ctx: typer.Context,
-    identifier: str = ...,
-    description: str = ...,
-    acquisition_year: int = ...,
-    acquisition_ledger_id: str = ...,
-    cuota_soportada: str = ...,
-    prorrata_inicial_pct: str = ...,
-    kind: BienInversionKind = ...,
+    identifier: str,
+    description: str,
+    acquisition_year: int,
+    acquisition_ledger_id: str,
+    cuota_soportada: str,
+    prorrata_inicial_pct: str,
+    kind: BienInversionKind,
     art108_elegible: bool = True,
     asset_record_ref: str | None = None,
     prorrata_sector_id: str | None = None,

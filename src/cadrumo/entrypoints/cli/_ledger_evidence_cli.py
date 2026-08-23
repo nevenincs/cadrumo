@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TypedDict
+from collections.abc import Iterable
+from typing import Protocol, TypedDict, cast
 
 import typer
 
@@ -67,11 +68,12 @@ def _attachment_store(bucket_id: str):
     return AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, load_settings()))
 
 
-def _attachment_review_payload(item: object) -> dict[str, object]:
-    payload = item.model_dump(mode="json")
-    if not isinstance(payload, dict):
-        raise TypeError("attachment review payload must be a mapping")
-    return payload
+class _JsonModel(Protocol):
+    def model_dump(self, *, mode: str) -> dict[str, object]: ...
+
+
+def _attachment_review_payload(item: _JsonModel) -> dict[str, object]:
+    return item.model_dump(mode="json")
 
 
 def _attachment_review_lines(payload: dict[str, object]) -> list[str]:
@@ -84,7 +86,7 @@ def _attachment_review_lines(payload: dict[str, object]) -> list[str]:
         f"provider_locator\t{payload['provider_locator']}",
         f"captured_at\t{payload['captured_at']}",
         f"pending_review\t{payload['pending_review']}",
-        f"linked_invoice_ids\t{','.join(payload['linked_invoice_ids'])}",
+        f"linked_invoice_ids\t{','.join(cast(Iterable[str], payload['linked_invoice_ids']))}",
     ]
 
 
@@ -103,7 +105,7 @@ def attachment_queue(ctx: typer.Context) -> None:
     )
 
 
-def attachment_view(ctx: typer.Context, attachment_id: str = ...) -> None:
+def attachment_view(ctx: typer.Context, attachment_id: str) -> None:
     """Inspect non-secret metadata and provenance for one attachment."""
     bucket_id = _tx_repo(_state()).bucket_id
     item = get_attachment_review_item(_attachment_store(bucket_id), attachment_id)
@@ -118,7 +120,7 @@ def attachment_view(ctx: typer.Context, attachment_id: str = ...) -> None:
 
 def evidence_add(
     ctx: typer.Context,
-    source_path: str = ...,
+    source_path: str,
     supplier: str | None = None,
     invoice_number: str | None = None,
     invoice_date: str | None = None,
@@ -147,7 +149,7 @@ def evidence_add(
     _emit_envelope(ctx, command="ledger.evidence.add", result=EvidenceAddResult.model_validate(payload), lines=lines)
 
 
-def evidence_view(ctx: typer.Context, evidence_id: str = ...) -> None:
+def evidence_view(ctx: typer.Context, evidence_id: str) -> None:
     """Show one purchase invoice evidence record by id."""
     transaction_repository = _tx_repo(_state())
     record = _evidence_service().view(bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id)
@@ -172,14 +174,17 @@ def evidence_list(ctx: typer.Context) -> None:
     for record in records:
         data = _evidence_payload(record)
         lines.append(
-            f"{data['evidence_id']}\t{data['media_kind']}\t{data.get('supplier') or '-'}\t{data.get('invoice_number') or '-'}\t{data.get('invoice_date') or '-'}\t{data.get('taxable_base') or '-'}\t{data.get('notes') or '-'}"
+            f"{data['evidence_id']}\t{data['media_kind']}\t"
+            f"{data.get('supplier') or '-'}\t{data.get('invoice_number') or '-'}\t"
+            f"{data.get('invoice_date') or '-'}\t{data.get('taxable_base') or '-'}\t"
+            f"{data.get('notes') or '-'}"
         )
     _emit_envelope(ctx, command="ledger.evidence.list", result=EvidenceListResult.model_validate(payload), lines=lines)
 
 
 def evidence_update(
     ctx: typer.Context,
-    evidence_id: str = ...,
+    evidence_id: str,
     supplier: str | None = None,
     invoice_number: str | None = None,
     invoice_date: str | None = None,
@@ -211,7 +216,7 @@ def evidence_update(
     )
 
 
-def evidence_remove(ctx: typer.Context, evidence_id: str = ..., yes: bool = False) -> None:
+def evidence_remove(ctx: typer.Context, evidence_id: str, yes: bool = False) -> None:
     """Delete one purchase invoice evidence record."""
     if not yes:
         raise _bad(tr("cli.app.ledger.evidence.yes_required"))
@@ -397,7 +402,8 @@ def evidence_extract(
 
 def evidence_confirm(
     ctx: typer.Context,
-    kind: InvoiceKind = ...,
+    *,
+    kind: InvoiceKind,
     evidence_id: str | None = None,
     attachment_id: str | None = None,
     counterparty_nif: str | None = None,
@@ -406,7 +412,7 @@ def evidence_confirm(
     invoice_date: str | None = None,
     taxable_base: str | None = None,
     iva_rate: str | None = None,
-    country_code: str = ...,
+    country_code: str,
     currency: str | None = None,
     operation_type: IntracomOperationType | None = None,
     supply_nature: SupplyNature | None = None,
@@ -444,7 +450,7 @@ def evidence_confirm(
         rectifies=rectifies,
         series=series,
         notes=notes,
-        resolve=resolve,
+        resolve=list(resolve),
     )
 
 
@@ -679,4 +685,14 @@ def _evidence_text_lines(record: PurchaseInvoiceEvidence) -> list[str]:
     ]
 
 
-__all__ = ["evidence_app", "register_evidence_commands"]
+__all__ = [
+    "attachment_queue",
+    "attachment_view",
+    "evidence_add",
+    "evidence_confirm",
+    "evidence_extract",
+    "evidence_list",
+    "evidence_remove",
+    "evidence_update",
+    "evidence_view",
+]

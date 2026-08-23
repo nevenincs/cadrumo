@@ -1,14 +1,10 @@
 """Typer registration for modelo registry discovery commands."""
 
 from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
-from typing import Annotated
-
 import typer
-
 from ...application.modelo import (
     DataInventoryCasilla,
     DataInventoryChecklist,
@@ -33,19 +29,9 @@ from ...application.modelo import (
 )
 from ...application.operator_actions import ActionReference
 from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
-from ...core import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    Period,
-    TaxDomain,
-    resolve_active_bucket_id,
-)
+from ...core import ActionArgumentSource, ActionArgumentStatus, Period, TaxDomain, resolve_active_bucket_id
 from ...core.i18n import tr
-from ...core.json_contract import (
-    Notice,
-    NoticeSeverity,
-    ResolvedActionArgument,
-)
+from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
 from ...domain.calculations.registry import (
     InputKind,
     ModeloEntry,
@@ -54,9 +40,7 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
 )
 from ...domain.user_profile import ProfileNotFoundError
-from ._command_policy import command_execution_policy
-from ._common import MODELO_CODE_CHOICE, _emit_envelope, _parse_iso_date, resolve_notice_action
-from ._modelo_execution_policies import REGISTRY_MODEL_READ, REGISTRY_READ, declare_metadata_group
+from ._common import _emit_envelope, _parse_iso_date, resolve_notice_action
 from ._modelo_payloads import (
     BindingListRowPayload,
     BindingPreviewRowPayload,
@@ -94,40 +78,6 @@ class _RegistryDiscoveryScope:
     period: str
 
 
-def register_discovery_commands(
-    app: typer.Typer,
-    *,
-    resolve_year_period: Callable[..., Period],
-    bare_period_error: Callable[..., str],
-    parse_binding_override: Callable[[str], tuple[str, str]],
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
-) -> None:
-    """Register modelo registry discovery commands."""
-    deps = _DiscoveryDeps(
-        resolve_year_period=resolve_year_period,
-        bare_period_error=bare_period_error,
-        parse_binding_override=parse_binding_override,
-        bad_parameter_from_error=bad_parameter_from_error,
-    )
-    bindings_app = typer.Typer(
-        name="bindings",
-        help=tr("cli.app.modelo.bindings.app_help"),
-        no_args_is_help=True,
-        add_completion=False,
-    )
-    declare_metadata_group(bindings_app)
-    app.add_typer(bindings_app, name="bindings")
-    _register_list_command(app, deps)
-    _register_describe_command(app, deps)
-    _register_casillas_command(app, deps)
-    _register_casilla_command(app, deps)
-    _register_requires_command(app, deps)
-    _register_bindings_list_command(bindings_app, deps)
-    _register_bindings_resolve_command(bindings_app, deps)
-    _register_formulas_command(app, deps)
-    _register_support_matrix_command(app)
-
-
 def _as_of(raw: str | None) -> date | None:
     if raw is None:
         return None
@@ -150,7 +100,6 @@ def guard_ceded_autonomic_modelo(modelo: str) -> None:
     locale_key = ceded_autonomic_modelo_locale_key(modelo_code)
     if locale_key is None:
         return
-
     raise CliRefusedBoundaryError(translated_message=locale_key, context={"modelo": modelo_code})
 
 
@@ -167,11 +116,7 @@ def _require_period_with_year(*, year: int | None, period: str | None) -> None:
 
 
 def _resolve_discovery_year_period(
-    *,
-    modelo: str,
-    year: int | None,
-    period: str | None,
-    deps: _DiscoveryDeps,
+    *, modelo: str, year: int | None, period: str | None, deps: _DiscoveryDeps
 ) -> _RegistryDiscoveryScope | None:
     _require_period_with_year(year=year, period=period)
     if year is None:
@@ -179,310 +124,6 @@ def _resolve_discovery_year_period(
     assert period is not None
     resolved = deps.resolve_year_period(year, period, modelo=modelo)
     return _RegistryDiscoveryScope(filing_year=resolved.filing_year, period=resolved.registry_token)
-
-
-def _register_list_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    def _modelo_row_payload(row: ModeloListRow) -> ModeloRowPayload:
-        locale_key = modelo_work_create_refusal_locale_key(row.code)
-        local_work_supported = locale_key is None
-        return ModeloRowPayload(
-            code=row.code,
-            title=row.title,
-            cadence=row.cadence,
-            tax_domain=row.tax_domain,
-            revision_count=row.revision_count,
-            local_work_supported=local_work_supported,
-            local_work_status="supported-model-level" if local_work_supported else "unsupported-local-work",
-            local_work_guidance=None if locale_key is None else tr(locale_key, modelo=row.code),
-        )
-
-    @app.command("list", help=tr("cli.app.modelo.list.help"))
-    @command_execution_policy(REGISTRY_READ)
-    def list_modelos(
-        ctx: typer.Context,
-        year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
-        domain: Annotated[
-            TaxDomain | None,
-            typer.Option("--domain", help=tr("cli.app.modelo.list.domain_help")),
-        ] = None,
-    ) -> None:
-        report = _run_query(
-            lambda: registry_list_modelos(year=year, domain=domain),
-            bad_parameter_from_error=deps.bad_parameter_from_error,
-        )
-        modelos = [_modelo_row_payload(row) for row in report.modelos]
-        result = ModeloListResult(
-            year_filter=year,
-            domain_filter=domain.value if domain is not None else None,
-            modelo_count=len(report.modelos),
-            modelos=modelos,
-        )
-        lines = [
-            "code\ttitle\tcadence\tdomain\trevisions\tlocal_work\tlocal_work_guidance",
-            *[
-                (
-                    f"{row.code}\t{row.title}\t{row.cadence}\t{row.tax_domain}\t"
-                    f"{row.revision_count}\t{row.local_work_status}\t{row.local_work_guidance or '-'}"
-                )
-                for row in modelos
-            ],
-        ]
-        _emit_envelope(ctx, command="modelo.list", result=result, lines=lines)
-
-
-def _register_describe_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @app.command("describe", help=tr("cli.app.modelo.describe.help"))
-    @command_execution_policy(REGISTRY_READ)
-    def describe_modelo(
-        ctx: typer.Context,
-        modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.describe.modelo_help"))],
-        year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
-        period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.describe.period_help"))] = None,
-        as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.describe.as_of_help"))] = None,
-    ) -> None:
-        guard_ceded_autonomic_modelo(modelo)
-        try:
-            resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
-            if resolved_scope is not None:
-                report = registry_describe_modelo_for_registry_scope(
-                    modelo,
-                    filing_year=resolved_scope.filing_year,
-                    period=resolved_scope.period,
-                    as_of=_as_of(as_of),
-                )
-            else:
-                report = registry_describe_modelo(modelo, period=period, as_of=_as_of(as_of))
-        except (ValueError, RegistrySnapshotError) as exc:
-            message = str(exc)
-            if period is not None and "period" in message.lower():
-                raise typer.BadParameter(deps.bare_period_error(modelo, period, fallback=message)) from exc
-            raise typer.BadParameter(tr("cli.app.modelo.describe.period_error", message=message)) from exc
-
-        result = ModeloDescribeResult.from_report(report)
-        lines = [
-            f"{tr('cli.app.modelo.describe.label_modelo')}\t{report.code}",
-            f"{tr('cli.app.modelo.describe.label_title')}\t{report.title}",
-            f"{tr('cli.app.modelo.describe.label_official_name')}\t{report.official_name}",
-            f"{tr('cli.app.modelo.describe.label_tax_domain')}\t{report.tax_domain}",
-            f"{tr('cli.app.modelo.describe.label_cadence')}\t{report.cadence}",
-            f"{tr('cli.app.modelo.describe.label_revision')}\t{report.revision}",
-            f"{tr('cli.app.modelo.describe.label_revision_ids')}\t{', '.join(report.revision_ids)}",
-            f"{tr('cli.app.modelo.describe.label_periods')}\t{', '.join(report.periods)}",
-            f"{tr('cli.app.modelo.describe.label_casillas')}\t{report.casilla_count}",
-            f"{tr('cli.app.modelo.describe.label_bindings')}\t{report.binding_count}",
-            f"{tr('cli.app.modelo.describe.label_formulas')}\t{report.formula_count}",
-        ]
-        _emit_envelope(ctx, command="modelo.describe", result=result, lines=lines)
-
-
-def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @app.command("casillas", help=tr("cli.app.modelo.casillas.help"))
-    @command_execution_policy(REGISTRY_READ)
-    def casillas(
-        ctx: typer.Context,
-        modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.casillas.modelo_help"))],
-        year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
-        period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.casillas.period_help"))] = None,
-        as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.casillas.as_of_help"))] = None,
-        input_kind: Annotated[
-            InputKind | None,
-            typer.Option("--input-kind", help=tr("cli.app.modelo.casillas.input_kind_help")),
-        ] = None,
-        required: Annotated[
-            bool,
-            typer.Option("--required", help=tr("cli.app.modelo.casillas.required_help")),
-        ] = False,
-        form_number: Annotated[
-            str | None,
-            typer.Option("--form-number", help=tr("cli.app.modelo.casillas.form_number_help")),
-        ] = None,
-        casilla_number: Annotated[
-            str | None,
-            typer.Option(
-                "--number",
-                help=tr(
-                    "cli.app.modelo.casillas.number_help",
-                    default="Filter casillas by the printed casilla number or canonical id (e.g. 0596).",
-                ),
-            ),
-        ] = None,
-        explain: Annotated[
-            bool,
-            typer.Option(
-                "--explain",
-                help=tr(
-                    "cli.app.modelo.casillas.explain_help",
-                    default="Include localized help text in the text output.",
-                ),
-            ),
-        ] = False,
-    ) -> None:
-        guard_ceded_autonomic_modelo(modelo)
-
-        def _query():
-            resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
-            if resolved_scope is not None:
-                return registry_casillas_for_registry_scope(
-                    modelo,
-                    filing_year=resolved_scope.filing_year,
-                    period=resolved_scope.period,
-                    as_of=_as_of(as_of),
-                    input_kind=input_kind,
-                    required=True if required else None,
-                    form_number=form_number,
-                )
-            return registry_casillas(
-                modelo,
-                period=period,
-                as_of=_as_of(as_of),
-                input_kind=input_kind,
-                required=True if required else None,
-                form_number=form_number,
-            )
-
-        report = _run_query(
-            _query,
-            bad_parameter_from_error=deps.bad_parameter_from_error,
-        )
-        number_filter = casilla_number.strip() if casilla_number is not None else None
-        if number_filter:
-            report = report.model_copy(
-                update={
-                    "rows": tuple(
-                        row for row in report.rows if row.number == number_filter or row.casilla_id == number_filter
-                    ),
-                },
-            )
-        result = ModeloCasillasResult(
-            modelo=report.code,
-            revision=report.revision,
-            casilla_count=len(report.rows),
-            rows=[
-                CasillaRowPayload(
-                    casilla_id=row.casilla_id,
-                    number=row.number,
-                    input_kind=row.input_kind,
-                    required=bool(row.required),
-                    label=row.label,
-                    help_text=row.help_text,
-                    legal_refs=tuple(row.legal_refs),
-                    source_refs=tuple(row.source_refs),
-                )
-                for row in report.rows
-            ],
-        )
-        if explain:
-            lines = [
-                "casilla_id\tnumber\tinput\trequired\tlabel\thelp\tlegal_refs\tsource_refs",
-                *[
-                    (
-                        f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t"
-                        f"{str(row.required).lower()}\t{row.label}\t"
-                        f"{row.help_text or '-'}\t"
-                        f"{', '.join(row.legal_refs)}\t"
-                        f"{', '.join(row.source_refs)}"
-                    )
-                    for row in report.rows
-                ],
-            ]
-        else:
-            lines = [
-                "casilla_id\tnumber\tinput\trequired\tlabel",
-                *[
-                    (f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.label}")
-                    for row in report.rows
-                ],
-            ]
-        _emit_envelope(ctx, command="modelo.casillas", result=result, lines=lines)
-
-
-def _register_casilla_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @app.command(
-        "casilla",
-        help=tr(
-            "cli.app.modelo.casilla.help",
-            default=(
-                "Show the label, legal grounding, input kind, and formula for one "
-                "casilla on the resolved registry snapshot."
-            ),
-        ),
-    )
-    @command_execution_policy(REGISTRY_READ)
-    def casilla(
-        ctx: typer.Context,
-        modelo: Annotated[
-            str,
-            typer.Argument(help=tr("cli.app.modelo.casillas.modelo_help")),
-        ],
-        casilla_id: Annotated[
-            str,
-            typer.Argument(
-                help=tr(
-                    "cli.app.modelo.casilla.casilla_help",
-                    default="Casilla id or printed casilla number to describe (e.g. 0596).",
-                ),
-            ),
-        ],
-        year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
-        period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.casillas.period_help"))] = None,
-        as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.casillas.as_of_help"))] = None,
-    ) -> None:
-        guard_ceded_autonomic_modelo(modelo)
-
-        def _query():
-            resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
-            if resolved_scope is not None:
-                return registry_casilla_for_registry_scope(
-                    modelo,
-                    casilla_id,
-                    filing_year=resolved_scope.filing_year,
-                    period=resolved_scope.period,
-                    as_of=_as_of(as_of),
-                )
-            return registry_casilla(modelo, casilla_id, period=period, as_of=_as_of(as_of))
-
-        report = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
-        label = report.label
-        result = ModeloCasillaResult(
-            modelo=report.code,
-            revision=report.revision,
-            filing_year=report.filing_year,
-            period=report.period,
-            casilla_id=report.casilla_id,
-            number=report.number,
-            label=label,
-            help_text=report.help_text,
-            section=tuple(report.section),
-            data_type=report.data_type,
-            input_kind=str(report.input_kind),
-            required=bool(report.required),
-            legal_refs=tuple(report.legal_refs),
-            source_refs=tuple(report.source_refs),
-            binding=report.binding,
-            formula_id=report.formula_id,
-            formula_expression=dict(report.formula_expression) if report.formula_expression is not None else None,
-        )
-        lines = [
-            f"modelo\t{report.code}",
-            f"revision\t{report.revision}",
-            f"casilla_id\t{report.casilla_id}",
-            f"number\t{report.number}",
-            f"input_kind\t{report.input_kind}",
-            f"required\t{str(bool(report.required)).lower()}",
-            f"data_type\t{report.data_type}",
-            f"label\t{label}",
-            f"section\t{' > '.join(report.section)}",
-            f"legal_refs\t{', '.join(report.legal_refs)}",
-            f"source_refs\t{', '.join(report.source_refs)}",
-            f"binding\t{report.binding or '-'}",
-            f"formula_id\t{report.formula_id or '-'}",
-        ]
-        help_text = report.help_text
-        if help_text:
-            lines.append(f"help\t{help_text}")
-        if report.formula_expression is not None:
-            lines.append(f"formula_expression\t{report.formula_expression}")
-        _emit_envelope(ctx, command="modelo.casilla", result=result, lines=lines)
 
 
 def _data_inventory_casilla_payload(entry: DataInventoryCasilla) -> DataInventoryCasillaPayload:
@@ -508,104 +149,10 @@ def _data_inventory_section_lines(title: str, rows: tuple[DataInventoryCasilla, 
     return lines
 
 
-def _register_requires_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @app.command(
-        "requires",
-        help=tr(
-            "cli.app.modelo.requires.help",
-            default=(
-                "Show the data-inventory checklist for one modelo and period: which "
-                "casillas must be hand-entered, which are optional, which are populated "
-                "automatically from the ledger, and which come from the active profile."
-            ),
-        ),
-    )
-    @command_execution_policy(REGISTRY_MODEL_READ)
-    def requires(
-        ctx: typer.Context,
-        modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.requires.modelo_help"))],
-        year: Annotated[int, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))],
-        period: Annotated[str, typer.Option("--period", help=tr("cli.app.modelo.requires.period_help"))],
-    ) -> None:
-        guard_ceded_autonomic_modelo(modelo)
-        typed_period = deps.resolve_year_period(year, period, modelo=modelo)
-
-        def _query():
-            return data_inventory_checklist(
-                modelo=modelo,
-                filing_year=typed_period.filing_year,
-                period=typed_period,
-                bucket_id=resolve_active_bucket_id(),
-            )
-
-        checklist = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
-        result = ModeloRequiresResult(
-            modelo=checklist.modelo,
-            revision=checklist.revision_id,
-            filing_year=checklist.filing_year,
-            period=checklist.period,
-            required_manual=[_data_inventory_casilla_payload(entry) for entry in checklist.required_manual],
-            optional_manual=[_data_inventory_casilla_payload(entry) for entry in checklist.optional_manual],
-            ledger_derivable=[_data_inventory_casilla_payload(entry) for entry in checklist.ledger_derivable],
-            profile_derivable=[_data_inventory_casilla_payload(entry) for entry in checklist.profile_derivable],
-            previous_filing=[_data_inventory_casilla_payload(entry) for entry in checklist.previous_filing],
-            relation_prefill=[_data_inventory_casilla_payload(entry) for entry in checklist.relation_prefill],
-            live_observation=[_data_inventory_casilla_payload(entry) for entry in checklist.live_observation],
-            unbucketed_sources=[_data_inventory_casilla_payload(entry) for entry in checklist.unbucketed_sources],
-            unresolved_profile_bindings=list(checklist.unresolved_profile_bindings),
-            unresolved_profile_keys=list(checklist.unresolved_profile_keys),
-            profile_checked=checklist.profile_checked,
-        )
-        lines = [
-            f"modelo\t{checklist.modelo}",
-            f"revision\t{checklist.revision_id}",
-            f"filing_year\t{checklist.filing_year}",
-            f"period\t{checklist.period}",
-            *_data_inventory_section_lines(
-                tr("cli.app.modelo.requires.section_required", default="required_manual"),
-                checklist.required_manual,
-            ),
-            *_data_inventory_section_lines(
-                tr("cli.app.modelo.requires.section_optional", default="optional_manual"),
-                checklist.optional_manual,
-            ),
-            *_data_inventory_section_lines(
-                tr("cli.app.modelo.requires.section_ledger", default="ledger_derivable"),
-                checklist.ledger_derivable,
-            ),
-            *_data_inventory_section_lines(
-                tr("cli.app.modelo.requires.section_profile", default="profile_derivable"),
-                checklist.profile_derivable,
-            ),
-            *_data_inventory_section_lines(
-                "previous_filing",
-                checklist.previous_filing,
-            ),
-            *_data_inventory_section_lines(
-                "relation_prefill",
-                checklist.relation_prefill,
-            ),
-            *_data_inventory_section_lines(
-                "live_observation",
-                checklist.live_observation,
-            ),
-            *_data_inventory_section_lines(
-                "unbucketed_sources",
-                checklist.unbucketed_sources,
-            ),
-        ]
-        notices = _requires_notices(checklist)
-        lines.extend(_notice_text_lines(notices))
-        _emit_envelope(ctx, command="modelo.requires", result=result, lines=lines, notices=notices)
-
-
 def _requires_notices(checklist: DataInventoryChecklist) -> tuple[Notice, ...]:
     notices = [
         notice
-        for notice in (
-            _profile_requirement_notice(checklist),
-            _unbucketed_source_notice(checklist),
-        )
+        for notice in (_profile_requirement_notice(checklist), _unbucketed_source_notice(checklist))
         if notice is not None
     ]
     return tuple(notices)
@@ -618,16 +165,13 @@ def _profile_requirement_notice(checklist: DataInventoryChecklist) -> Notice | N
             code="modelo.requires.no_active_profile",
             message=tr(
                 "cli.app.modelo.requires.no_active_profile",
-                default=(
-                    "No active profile is set, so profile-dependent coefficients "
-                    "(e.g. home-office usage ratio) could not be checked for gaps."
-                ),
+                default="No active profile is set, so profile-dependent coefficients (e.g. home-office usage ratio) could not be checked for gaps.",
             ),
             context={"modelo": str(checklist.modelo)},
         )
     if not checklist.unresolved_profile_bindings:
         return None
-    binding_ids = ", ".join(sorted(str(binding_id) for binding_id in checklist.unresolved_profile_bindings))
+    binding_ids = ", ".join(sorted((str(binding_id) for binding_id in checklist.unresolved_profile_bindings)))
     missing = _unresolved_profile_requirements(checklist) or binding_ids
     return Notice(
         severity=NoticeSeverity.WARNING,
@@ -637,9 +181,6 @@ def _profile_requirement_notice(checklist: DataInventoryChecklist) -> Notice | N
             default="The active profile has not set the following coefficient(s) needed for this modelo: {missing}.",
             missing=missing,
         ),
-        # The binding ids stay on the notice context: they are the
-        # registry-side identifiers a support channel needs, while the
-        # message carries the profile facts the operator must supply.
         context={"modelo": str(checklist.modelo), "missing_bindings": binding_ids},
     )
 
@@ -649,7 +190,7 @@ def _unbucketed_source_notice(checklist: DataInventoryChecklist) -> Notice | Non
         return None
     source_kinds = ", ".join(sorted({entry.binding_source or "" for entry in checklist.unbucketed_sources}))
     binding_ids = ", ".join(
-        sorted(str(entry.binding_id) for entry in checklist.unbucketed_sources if entry.binding_id is not None),
+        sorted((str(entry.binding_id) for entry in checklist.unbucketed_sources if entry.binding_id is not None))
     )
     casilla_ids = ", ".join(sorted({str(entry.casilla_id) for entry in checklist.unbucketed_sources}))
     return Notice(
@@ -687,7 +228,7 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
             checklist.unresolved_profile_keys,
             schema=resources().user_profile_schema.singleton,
             grounding_index=build_profile_grounding_index(resources().modelos.authority),
-        ),
+        )
     )
 
 
@@ -702,19 +243,15 @@ def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
     its ``target_binding``), so this guidance generalises to any modelo
     instead of enumerating a per-form channel table.
     """
-    relation_fed = tuple(row for row in rows if row.relation_inputs)
+    relation_fed = tuple((row for row in rows if row.relation_inputs))
     if not relation_fed:
         return ()
     lines = [
         "relation_guidance\t"
         + tr(
             "cli.app.modelo.bindings.relation_input_guidance",
-            default=(
-                "Some bindings below are fed by registry relations (cross-modelo or "
-                "cross-period fold-ins), not direct --binding values. Supply each with "
-                "--relation RELATION_ID=VALUE before calculating."
-            ),
-        ),
+            default="Some bindings below are fed by registry relations (cross-modelo or cross-period fold-ins), not direct --binding values. Supply each with --relation RELATION_ID=VALUE before calculating.",
+        )
     ]
     for row in relation_fed:
         for relation_id in row.relation_inputs:
@@ -725,7 +262,7 @@ def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
                     default="{binding_id}\tfed by relation {relation_id}\tuse --relation {relation_id}=VALUE",
                     binding_id=str(row.binding_id),
                     relation_id=str(relation_id),
-                ),
+                )
             )
     return tuple(lines)
 
@@ -746,7 +283,7 @@ def _profile_resolved_binding_ids(report, *, as_of: date | None) -> frozenset[st
                 period=getattr(report, "filing_period", None),
                 as_of=as_of,
                 revision_id=str(report.revision),
-            ),
+            )
         )
     except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
         return frozenset[str]()
@@ -765,30 +302,17 @@ def _text_frozenset(value: object) -> frozenset[str]:
 
 
 def _bindings_report_for_target(
-    target: str,
-    *,
-    year: int | None,
-    period: str | None,
-    as_of: date | None,
-    deps: _DiscoveryDeps,
+    target: str, *, year: int | None, period: str | None, as_of: date | None, deps: _DiscoveryDeps
 ):
     if year is not None and period is not None:
         typed_period = deps.resolve_year_period(year, period, modelo=target)
         return _run_query(
-            lambda: registry_bindings_for_scope(
-                target,
-                period=typed_period,
-                as_of=as_of,
-            ),
+            lambda: registry_bindings_for_scope(target, period=typed_period, as_of=as_of),
             bad_parameter_from_error=deps.bad_parameter_from_error,
         )
     if year is not None:
         return _run_query(
-            lambda: registry_bindings_for_year(
-                target,
-                filing_year=year,
-                as_of=as_of,
-            ),
+            lambda: registry_bindings_for_year(target, filing_year=year, as_of=as_of),
             bad_parameter_from_error=deps.bad_parameter_from_error,
         )
     return _run_query(
@@ -798,20 +322,18 @@ def _bindings_report_for_target(
 
 
 def _binding_list_rows_for_report(
-    report,
-    *,
-    missing: bool,
-    as_of: date | None,
+    report, *, missing: bool, as_of: date | None
 ) -> tuple[list[BindingListRowPayload], list[str]]:
     rows = report.rows
     if missing:
         profile_resolved = _profile_resolved_binding_ids(report, as_of=as_of)
         rows = tuple(
-            row
-            for row in rows
-            if row.binding_id not in profile_resolved and getattr(row, "operator_input_required", True)
+            (
+                row
+                for row in rows
+                if row.binding_id not in profile_resolved and getattr(row, "operator_input_required", True)
+            )
         )
-
     merged_rows: list[BindingListRowPayload] = []
     text_rows: list[str] = []
     for row in rows:
@@ -833,134 +355,48 @@ def _binding_list_rows_for_report(
                 source_refs=row.source_refs,
                 relation_inputs=row.relation_inputs,
                 encoded_options=encoded_options,
-            ),
+            )
         )
         text_rows.append(
-            f"{report.code}\t{report.revision}\t{report.period or '-'}\t"
-            f"{row.binding_id}\t{row.source}\t{readiness}\t{row.typed_enum or '-'}\t"
-            f"{row.input_channel}\t{row.borrador_capable}",
+            f"{report.code}\t{report.revision}\t{report.period or '-'}\t{row.binding_id}\t{row.source}\t{readiness}\t{row.typed_enum or '-'}\t{row.input_channel}\t{row.borrador_capable}"
         )
         text_rows.extend(binding_encoded_option_lines(row.binding_id, encoded_options))
     if missing:
         text_rows.extend(_relation_input_guidance_lines(rows))
-    return merged_rows, text_rows
-
-
-def _register_bindings_list_command(bindings_app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
-    @command_execution_policy(REGISTRY_MODEL_READ)
-    def bindings_list(
-        ctx: typer.Context,
-        modelo: Annotated[
-            str | None,
-            typer.Option("--modelo", click_type=MODELO_CODE_CHOICE, help=tr("cli.app.modelo.bindings.modelo_help")),
-        ] = None,
-        year: Annotated[
-            int | None,
-            typer.Option("--year", help=tr("cli.app.modelo.bindings.year_help")),
-        ] = None,
-        period: Annotated[
-            str | None,
-            typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help")),
-        ] = None,
-        missing: Annotated[
-            bool,
-            typer.Option("--missing", help=tr("cli.app.modelo.bindings.missing_help")),
-        ] = False,
-        as_of: Annotated[
-            str | None,
-            typer.Option("--as-of", help=tr("cli.app.modelo.bindings.as_of_help")),
-        ] = None,
-    ) -> None:
-        """List bindings across modelos. All filters are optional refinements."""
-        resolved_as_of = _as_of(as_of)
-        targets = registry_modelo_codes() if modelo is None else (modelo,)
-        per_modelo_reports = []
-        for target in targets:
-            try:
-                report = _bindings_report_for_target(
-                    target,
-                    year=year,
-                    period=period,
-                    as_of=resolved_as_of,
-                    deps=deps,
-                )
-            except Exception:
-                if modelo is not None:
-                    raise
-                continue
-            per_modelo_reports.append(report)
-        merged_rows: list[BindingListRowPayload] = []
-        text_rows: list[str] = []
-        for report in per_modelo_reports:
-            report_rows, report_text_rows = _binding_list_rows_for_report(
-                report,
-                missing=missing,
-                as_of=resolved_as_of,
-            )
-            merged_rows.extend(report_rows)
-            text_rows.extend(report_text_rows)
-        result = ModeloBindingsListResult(
-            modelo_filter=modelo,
-            year_filter=year,
-            period_filter=period,
-            missing_filter=missing,
-            binding_count=len(merged_rows),
-            bindings=tuple(merged_rows),
-        )
-        lines = [
-            "operation\tregistry.modelo.bindings.list",
-            f"modelo_filter\t{modelo or '-'}",
-            f"year_filter\t{year if year is not None else '-'}",
-            f"period_filter\t{period or '-'}",
-            f"missing_filter\t{missing}",
-            f"binding_count\t{len(merged_rows)}",
-            "modelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable",
-        ]
-        notices = _bindings_list_scope_notices(modelo=modelo, year=year, period=period)
-        lines.extend(_notice_text_lines(notices))
-        lines.extend(text_rows)
-        _emit_envelope(ctx, command="modelo.bindings.list", result=result, lines=lines, notices=notices)
+    return (merged_rows, text_rows)
 
 
 def _binding_scope_missing_filters(*, year: int | None, period: str | None) -> tuple[str, ...]:
     return tuple(
-        option
-        for option, value in (("--year", year), ("--period", period))
-        if value is None or (isinstance(value, str) and not value.strip())
+        (
+            option
+            for option, value in (("--year", year), ("--period", period))
+            if value is None or (isinstance(value, str) and (not value.strip()))
+        )
     )
 
 
 def _binding_scope_action_bindings(
-    *,
-    modelo: str | None,
-    year: int | None,
-    period: str | None,
+    *, modelo: str | None, year: int | None, period: str | None
 ) -> tuple[ResolvedActionArgument, ...]:
-    argument_values: tuple[tuple[str, str | int | None], ...] = (
-        ("modelo", modelo),
-        ("year", year),
-        ("period", period),
-    )
+    argument_values: tuple[tuple[str, str | int | None], ...] = (("modelo", modelo), ("year", year), ("period", period))
     return tuple(
-        ResolvedActionArgument(
-            argument_name=argument_name,
-            status=ActionArgumentStatus.RESOLVED,
-            value=value,
-            source=ActionArgumentSource.VERDICT_CONTEXT,
-            source_key=argument_name,
+        (
+            ResolvedActionArgument(
+                argument_name=argument_name,
+                status=ActionArgumentStatus.RESOLVED,
+                value=value,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key=argument_name,
+            )
+            for argument_name, value in argument_values
+            if value is not None and (not isinstance(value, str) or value.strip())
         )
-        for argument_name, value in argument_values
-        if value is not None and (not isinstance(value, str) or value.strip())
     )
 
 
 def _binding_scope_notice_context(
-    *,
-    modelo: str | None,
-    year: int | None,
-    period: str | None,
-    missing_filters: tuple[str, ...],
+    *, modelo: str | None, year: int | None, period: str | None, missing_filters: tuple[str, ...]
 ) -> dict[str, str]:
     return {
         "modelo_filter": modelo or "",
@@ -986,10 +422,7 @@ def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period
                 argument_bindings=_binding_scope_action_bindings(modelo=modelo, year=year, period=period),
             ),
             context=_binding_scope_notice_context(
-                modelo=modelo,
-                year=year,
-                period=period,
-                missing_filters=missing_filters,
+                modelo=modelo, year=year, period=period, missing_filters=missing_filters
             ),
         ),
     )
@@ -1002,13 +435,12 @@ def _notice_text_lines(notices: tuple[Notice, ...]) -> list[str]:
         action_reference = notice_action.action if notice_action is not None else None
         target = action_reference.target_command_key if action_reference is not None else "-"
         bindings = (
-            ",".join(f"{binding.argument_name}={binding.value}" for binding in notice_action.argument_bindings)
+            ",".join((f"{binding.argument_name}={binding.value}" for binding in notice_action.argument_bindings))
             if notice_action is not None
             else "-"
         )
         lines.append(
-            f"notice\t{notice.severity.value}\t{notice.code}\t{notice.message}\t"
-            f"action_target={target}\taction_bindings={bindings or '-'}",
+            f"notice\t{notice.severity.value}\t{notice.code}\t{notice.message}\taction_target={target}\taction_bindings={bindings or '-'}"
         )
     return lines
 
@@ -1017,185 +449,10 @@ def _require_binding_scope(*, modelo: str | None, year: int | None, period: str 
     missing = [
         option
         for option, value in (("--modelo", modelo), ("--year", year), ("--period", period))
-        if value is None or (isinstance(value, str) and not value.strip())
+        if value is None or (isinstance(value, str) and (not value.strip()))
     ]
     if missing:
         raise typer.BadParameter(tr("cli.app.modelo.bindings.missing_required_options", options=", ".join(missing)))
-
-
-def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @bindings_app.command("resolve", help=tr("cli.app.modelo.bindings.resolve_help"))
-    @command_execution_policy(REGISTRY_MODEL_READ)
-    def bindings_resolve(
-        ctx: typer.Context,
-        modelo: Annotated[
-            str | None,
-            typer.Option("--modelo", click_type=MODELO_CODE_CHOICE, help=tr("cli.app.modelo.bindings.modelo_help")),
-        ] = None,
-        year: Annotated[
-            int | None,
-            typer.Option("--year", help=tr("cli.app.modelo.bindings.year_help")),
-        ] = None,
-        period: Annotated[
-            str | None,
-            typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help")),
-        ] = None,
-        binding: Annotated[
-            list[str] | None,
-            typer.Option(
-                "--binding",
-                help=tr("cli.app.modelo.bindings.override_help"),
-            ),
-        ] = None,
-        as_of: Annotated[
-            str | None,
-            typer.Option("--as-of", help=tr("cli.app.modelo.bindings.as_of_help")),
-        ] = None,
-    ) -> None:
-        """Resolve temporary ``--binding`` overrides without mutating state."""
-        _require_binding_scope(modelo=modelo, year=year, period=period)
-        assert modelo is not None
-        assert year is not None
-        assert period is not None
-        overrides = dict(deps.parse_binding_override(spec) for spec in (binding or ()))
-        typed_period = deps.resolve_year_period(year, period, modelo=modelo)
-        report = _run_query(
-            lambda: registry_bindings_for_scope(
-                modelo,
-                period=typed_period,
-                as_of=_as_of(as_of),
-            ),
-            bad_parameter_from_error=deps.bad_parameter_from_error,
-        )
-        known_ids = {row.binding_id for row in report.rows}
-        unknown_keys = sorted(set(overrides) - known_ids)
-        if unknown_keys:
-            suggestion = ", ".join(sorted(known_ids))
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.bindings.unknown_keys",
-                    keys=unknown_keys,
-                    code=report.code,
-                    revision=report.revision,
-                    period=report.period,
-                    suggestion=suggestion,
-                ),
-            )
-        result = ModeloBindingsPreviewResult(
-            modelo=report.code,
-            revision=report.revision,
-            filing_year=report.filing_year,
-            period=report.period,
-            override_count=len(overrides),
-            binding_count=len(report.rows),
-            bindings=[
-                BindingPreviewRowPayload(
-                    binding_id=row.binding_id,
-                    source=row.source,
-                    readiness=tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source]),
-                    typed_enum=row.typed_enum,
-                    override=overrides.get(row.binding_id),
-                    legal_refs=row.legal_refs,
-                    source_refs=row.source_refs,
-                    relation_inputs=row.relation_inputs,
-                    encoded_options=binding_encoded_option_payloads(row.encoded_options),
-                )
-                for row in report.rows
-            ],
-        )
-        lines = [
-            "operation\tregistry.modelo.bindings.resolve",
-            f"modelo\t{report.code}",
-            f"revision\t{report.revision}",
-            f"filing_year\t{report.filing_year}",
-            f"period\t{report.period}",
-            f"override_count\t{len(overrides)}",
-            f"binding_count\t{len(report.rows)}",
-            "binding_id\tsource\treadiness\toverride",
-        ]
-        for row in report.rows:
-            lines.append(
-                "\t".join(
-                    (
-                        row.binding_id,
-                        row.source,
-                        tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source]),
-                        overrides.get(row.binding_id) or "-",
-                    ),
-                ),
-            )
-            lines.extend(
-                binding_encoded_option_lines(
-                    row.binding_id,
-                    binding_encoded_option_payloads(row.encoded_options),
-                ),
-            )
-        _emit_envelope(ctx, command="modelo.bindings.resolve", result=result, lines=lines)
-
-
-def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @app.command("formulas", help=tr("cli.app.modelo.formulas.help"))
-    @command_execution_policy(REGISTRY_READ)
-    def formulas(
-        ctx: typer.Context,
-        modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.formulas.modelo_help"))],
-        year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
-        period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.formulas.period_help"))] = None,
-        as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.formulas.as_of_help"))] = None,
-        explain: Annotated[
-            bool,
-            typer.Option(
-                "--explain",
-                help=tr(
-                    "cli.app.modelo.formulas.explain_help",
-                    default=(
-                        "Include the legal_refs and source_refs that ground each formula "
-                        "in the text output. The JSON payload always carries them."
-                    ),
-                ),
-            ),
-        ] = False,
-    ) -> None:
-        guard_ceded_autonomic_modelo(modelo)
-
-        def _query():
-            resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
-            if resolved_scope is not None:
-                return registry_formulas_for_registry_scope(
-                    modelo,
-                    filing_year=resolved_scope.filing_year,
-                    period=resolved_scope.period,
-                    as_of=_as_of(as_of),
-                )
-            return registry_formulas(modelo, period=period, as_of=_as_of(as_of))
-
-        report = _run_query(
-            _query,
-            bad_parameter_from_error=deps.bad_parameter_from_error,
-        )
-        lines = _formula_lines(report, explain=explain)
-        result = FormulasResult(
-            code=report.code,
-            revision=report.revision,
-            filing_year=report.filing_year,
-            period=report.period,
-            formula_count=len(report.rows),
-            rows=tuple(
-                FormulaPayload(
-                    formula_id=row.formula_id,
-                    target_casilla_id=row.target_casilla_id,
-                    input_casilla_ids=tuple(row.input_casilla_ids),
-                    input_bindings=tuple(row.input_bindings),
-                    input_parameters=tuple(row.input_parameters),
-                    input_relations=tuple(row.input_relations),
-                    expression=dict(row.expression) if hasattr(row, "expression") else {},
-                    legal_refs=tuple(row.legal_refs),
-                    source_refs=tuple(row.source_refs),
-                )
-                for row in report.rows
-            ),
-        )
-        _emit_envelope(ctx, command="modelo.formulas", result=result, lines=lines)
 
 
 def _formula_lines(report, *, explain: bool) -> list[str]:
@@ -1203,18 +460,14 @@ def _formula_lines(report, *, explain: bool) -> list[str]:
         return [
             "formula_id\ttarget_casilla_id\tinputs\tlegal_refs\tsource_refs",
             *[
-                f"{row.formula_id}\t{row.target_casilla_id}\t"
-                f"{', '.join((*row.input_casilla_ids, *row.input_bindings, *row.input_parameters))}\t"
-                f"{', '.join(row.legal_refs)}\t"
-                f"{', '.join(row.source_refs)}"
+                f"{row.formula_id}\t{row.target_casilla_id}\t{', '.join((*row.input_casilla_ids, *row.input_bindings, *row.input_parameters))}\t{', '.join(row.legal_refs)}\t{', '.join(row.source_refs)}"
                 for row in report.rows
             ],
         ]
     return [
         "formula_id\ttarget_casilla_id\tinputs",
         *[
-            f"{row.formula_id}\t{row.target_casilla_id}\t"
-            f"{', '.join((*row.input_casilla_ids, *row.input_bindings, *row.input_parameters))}"
+            f"{row.formula_id}\t{row.target_casilla_id}\t{', '.join((*row.input_casilla_ids, *row.input_bindings, *row.input_parameters))}"
             for row in report.rows
         ],
     ]
@@ -1249,45 +502,484 @@ def _support_matrix_entry_payload(entry: ModeloEntry) -> ModeloSupportMatrixEntr
             for rename in entry.renames
         ],
         portal_compatibility_refs=[
-            ModeloPortalCompatibilityRefPayload(
-                id=ref.id,
-                surface=ref.surface,
-                evidence_tier=ref.evidence_tier,
-            )
+            ModeloPortalCompatibilityRefPayload(id=ref.id, surface=ref.surface, evidence_tier=ref.evidence_tier)
             for ref in entry.portal_compatibility_refs
         ],
     )
 
 
-def _register_support_matrix_command(app: typer.Typer) -> None:
-    @app.command(
-        "support-matrix",
-        help=tr(
-            "cli.app.modelo.support_matrix.help",
-            default=(
-                "Show the registry-wide per-modelo support matrix: calc-grade, "
-                "completeness manifest, export formats, extractor coverage, declared "
-                "casilla renames, and AEAT-portal cross-references."
-            ),
+__all__ = [
+    "bindings_list",
+    "bindings_resolve",
+    "casilla",
+    "casillas",
+    "describe_modelo",
+    "formulas",
+    "list_modelos",
+    "requires",
+    "support_matrix",
+]
+
+
+def _modelo_row_payload(row: ModeloListRow) -> ModeloRowPayload:
+    locale_key = modelo_work_create_refusal_locale_key(row.code)
+    local_work_supported = locale_key is None
+    return ModeloRowPayload(
+        code=row.code,
+        title=row.title,
+        cadence=row.cadence,
+        tax_domain=row.tax_domain,
+        revision_count=row.revision_count,
+        local_work_supported=local_work_supported,
+        local_work_status="supported-model-level" if local_work_supported else "unsupported-local-work",
+        local_work_guidance=None if locale_key is None else tr(locale_key, modelo=row.code),
+    )
+
+
+def list_modelos(ctx: typer.Context, year: int | None = None, domain: TaxDomain | None = None) -> None:
+    report = _run_query(
+        lambda: registry_list_modelos(year=year, domain=domain), bad_parameter_from_error=deps.bad_parameter_from_error
+    )
+    modelos = [_modelo_row_payload(row) for row in report.modelos]
+    result = ModeloListResult(
+        year_filter=year,
+        domain_filter=domain.value if domain is not None else None,
+        modelo_count=len(report.modelos),
+        modelos=modelos,
+    )
+    lines = [
+        "code\ttitle\tcadence\tdomain\trevisions\tlocal_work\tlocal_work_guidance",
+        *[
+            f"{row.code}\t{row.title}\t{row.cadence}\t{row.tax_domain}\t{row.revision_count}\t{row.local_work_status}\t{row.local_work_guidance or '-'}"
+            for row in modelos
+        ],
+    ]
+    _emit_envelope(ctx, command="modelo.list", result=result, lines=lines)
+
+
+def describe_modelo(
+    ctx: typer.Context, modelo: str, year: int | None = None, period: str | None = None, as_of: str | None = None
+) -> None:
+    guard_ceded_autonomic_modelo(modelo)
+    try:
+        resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
+        if resolved_scope is not None:
+            report = registry_describe_modelo_for_registry_scope(
+                modelo, filing_year=resolved_scope.filing_year, period=resolved_scope.period, as_of=_as_of(as_of)
+            )
+        else:
+            report = registry_describe_modelo(modelo, period=period, as_of=_as_of(as_of))
+    except (ValueError, RegistrySnapshotError) as exc:
+        message = str(exc)
+        if period is not None and "period" in message.lower():
+            raise typer.BadParameter(deps.bare_period_error(modelo, period, fallback=message)) from exc
+        raise typer.BadParameter(tr("cli.app.modelo.describe.period_error", message=message)) from exc
+    result = ModeloDescribeResult.from_report(report)
+    lines = [
+        f"{tr('cli.app.modelo.describe.label_modelo')}\t{report.code}",
+        f"{tr('cli.app.modelo.describe.label_title')}\t{report.title}",
+        f"{tr('cli.app.modelo.describe.label_official_name')}\t{report.official_name}",
+        f"{tr('cli.app.modelo.describe.label_tax_domain')}\t{report.tax_domain}",
+        f"{tr('cli.app.modelo.describe.label_cadence')}\t{report.cadence}",
+        f"{tr('cli.app.modelo.describe.label_revision')}\t{report.revision}",
+        f"{tr('cli.app.modelo.describe.label_revision_ids')}\t{', '.join(report.revision_ids)}",
+        f"{tr('cli.app.modelo.describe.label_periods')}\t{', '.join(report.periods)}",
+        f"{tr('cli.app.modelo.describe.label_casillas')}\t{report.casilla_count}",
+        f"{tr('cli.app.modelo.describe.label_bindings')}\t{report.binding_count}",
+        f"{tr('cli.app.modelo.describe.label_formulas')}\t{report.formula_count}",
+    ]
+    _emit_envelope(ctx, command="modelo.describe", result=result, lines=lines)
+
+
+def casillas(
+    ctx: typer.Context,
+    modelo: str,
+    year: int | None = None,
+    period: str | None = None,
+    as_of: str | None = None,
+    input_kind: InputKind | None = None,
+    required: bool = False,
+    form_number: str | None = None,
+    casilla_number: str | None = None,
+    explain: bool = False,
+) -> None:
+    guard_ceded_autonomic_modelo(modelo)
+
+    def _query():
+        resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
+        if resolved_scope is not None:
+            return registry_casillas_for_registry_scope(
+                modelo,
+                filing_year=resolved_scope.filing_year,
+                period=resolved_scope.period,
+                as_of=_as_of(as_of),
+                input_kind=input_kind,
+                required=True if required else None,
+                form_number=form_number,
+            )
+        return registry_casillas(
+            modelo,
+            period=period,
+            as_of=_as_of(as_of),
+            input_kind=input_kind,
+            required=True if required else None,
+            form_number=form_number,
+        )
+
+    report = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
+    number_filter = casilla_number.strip() if casilla_number is not None else None
+    if number_filter:
+        report = report.model_copy(
+            update={
+                "rows": tuple(
+                    (row for row in report.rows if row.number == number_filter or row.casilla_id == number_filter)
+                )
+            }
+        )
+    result = ModeloCasillasResult(
+        modelo=report.code,
+        revision=report.revision,
+        casilla_count=len(report.rows),
+        rows=[
+            CasillaRowPayload(
+                casilla_id=row.casilla_id,
+                number=row.number,
+                input_kind=row.input_kind,
+                required=bool(row.required),
+                label=row.label,
+                help_text=row.help_text,
+                legal_refs=tuple(row.legal_refs),
+                source_refs=tuple(row.source_refs),
+            )
+            for row in report.rows
+        ],
+    )
+    if explain:
+        lines = [
+            "casilla_id\tnumber\tinput\trequired\tlabel\thelp\tlegal_refs\tsource_refs",
+            *[
+                f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.label}\t{row.help_text or '-'}\t{', '.join(row.legal_refs)}\t{', '.join(row.source_refs)}"
+                for row in report.rows
+            ],
+        ]
+    else:
+        lines = [
+            "casilla_id\tnumber\tinput\trequired\tlabel",
+            *[
+                f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.label}"
+                for row in report.rows
+            ],
+        ]
+    _emit_envelope(ctx, command="modelo.casillas", result=result, lines=lines)
+
+
+def casilla(
+    ctx: typer.Context,
+    modelo: str,
+    casilla_id: str,
+    year: int | None = None,
+    period: str | None = None,
+    as_of: str | None = None,
+) -> None:
+    guard_ceded_autonomic_modelo(modelo)
+
+    def _query():
+        resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
+        if resolved_scope is not None:
+            return registry_casilla_for_registry_scope(
+                modelo,
+                casilla_id,
+                filing_year=resolved_scope.filing_year,
+                period=resolved_scope.period,
+                as_of=_as_of(as_of),
+            )
+        return registry_casilla(modelo, casilla_id, period=period, as_of=_as_of(as_of))
+
+    report = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
+    label = report.label
+    result = ModeloCasillaResult(
+        modelo=report.code,
+        revision=report.revision,
+        filing_year=report.filing_year,
+        period=report.period,
+        casilla_id=report.casilla_id,
+        number=report.number,
+        label=label,
+        help_text=report.help_text,
+        section=tuple(report.section),
+        data_type=report.data_type,
+        input_kind=str(report.input_kind),
+        required=bool(report.required),
+        legal_refs=tuple(report.legal_refs),
+        source_refs=tuple(report.source_refs),
+        binding=report.binding,
+        formula_id=report.formula_id,
+        formula_expression=dict(report.formula_expression) if report.formula_expression is not None else None,
+    )
+    lines = [
+        f"modelo\t{report.code}",
+        f"revision\t{report.revision}",
+        f"casilla_id\t{report.casilla_id}",
+        f"number\t{report.number}",
+        f"input_kind\t{report.input_kind}",
+        f"required\t{str(bool(report.required)).lower()}",
+        f"data_type\t{report.data_type}",
+        f"label\t{label}",
+        f"section\t{' > '.join(report.section)}",
+        f"legal_refs\t{', '.join(report.legal_refs)}",
+        f"source_refs\t{', '.join(report.source_refs)}",
+        f"binding\t{report.binding or '-'}",
+        f"formula_id\t{report.formula_id or '-'}",
+    ]
+    help_text = report.help_text
+    if help_text:
+        lines.append(f"help\t{help_text}")
+    if report.formula_expression is not None:
+        lines.append(f"formula_expression\t{report.formula_expression}")
+    _emit_envelope(ctx, command="modelo.casilla", result=result, lines=lines)
+
+
+def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
+    guard_ceded_autonomic_modelo(modelo)
+    typed_period = deps.resolve_year_period(year, period, modelo=modelo)
+
+    def _query():
+        return data_inventory_checklist(
+            modelo=modelo,
+            filing_year=typed_period.filing_year,
+            period=typed_period,
+            bucket_id=resolve_active_bucket_id(),
+        )
+
+    checklist = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
+    result = ModeloRequiresResult(
+        modelo=checklist.modelo,
+        revision=checklist.revision_id,
+        filing_year=checklist.filing_year,
+        period=checklist.period,
+        required_manual=[_data_inventory_casilla_payload(entry) for entry in checklist.required_manual],
+        optional_manual=[_data_inventory_casilla_payload(entry) for entry in checklist.optional_manual],
+        ledger_derivable=[_data_inventory_casilla_payload(entry) for entry in checklist.ledger_derivable],
+        profile_derivable=[_data_inventory_casilla_payload(entry) for entry in checklist.profile_derivable],
+        previous_filing=[_data_inventory_casilla_payload(entry) for entry in checklist.previous_filing],
+        relation_prefill=[_data_inventory_casilla_payload(entry) for entry in checklist.relation_prefill],
+        live_observation=[_data_inventory_casilla_payload(entry) for entry in checklist.live_observation],
+        unbucketed_sources=[_data_inventory_casilla_payload(entry) for entry in checklist.unbucketed_sources],
+        unresolved_profile_bindings=list(checklist.unresolved_profile_bindings),
+        unresolved_profile_keys=list(checklist.unresolved_profile_keys),
+        profile_checked=checklist.profile_checked,
+    )
+    lines = [
+        f"modelo\t{checklist.modelo}",
+        f"revision\t{checklist.revision_id}",
+        f"filing_year\t{checklist.filing_year}",
+        f"period\t{checklist.period}",
+        *_data_inventory_section_lines(
+            tr("cli.app.modelo.requires.section_required", default="required_manual"), checklist.required_manual
+        ),
+        *_data_inventory_section_lines(
+            tr("cli.app.modelo.requires.section_optional", default="optional_manual"), checklist.optional_manual
+        ),
+        *_data_inventory_section_lines(
+            tr("cli.app.modelo.requires.section_ledger", default="ledger_derivable"), checklist.ledger_derivable
+        ),
+        *_data_inventory_section_lines(
+            tr("cli.app.modelo.requires.section_profile", default="profile_derivable"), checklist.profile_derivable
+        ),
+        *_data_inventory_section_lines("previous_filing", checklist.previous_filing),
+        *_data_inventory_section_lines("relation_prefill", checklist.relation_prefill),
+        *_data_inventory_section_lines("live_observation", checklist.live_observation),
+        *_data_inventory_section_lines("unbucketed_sources", checklist.unbucketed_sources),
+    ]
+    notices = _requires_notices(checklist)
+    lines.extend(_notice_text_lines(notices))
+    _emit_envelope(ctx, command="modelo.requires", result=result, lines=lines, notices=notices)
+
+
+def bindings_list(
+    ctx: typer.Context,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    missing: bool = False,
+    as_of: str | None = None,
+) -> None:
+    """List bindings across modelos. All filters are optional refinements."""
+    resolved_as_of = _as_of(as_of)
+    targets = registry_modelo_codes() if modelo is None else (modelo,)
+    per_modelo_reports = []
+    for target in targets:
+        try:
+            report = _bindings_report_for_target(target, year=year, period=period, as_of=resolved_as_of, deps=deps)
+        except Exception:
+            if modelo is not None:
+                raise
+            continue
+        per_modelo_reports.append(report)
+    merged_rows: list[BindingListRowPayload] = []
+    text_rows: list[str] = []
+    for report in per_modelo_reports:
+        report_rows, report_text_rows = _binding_list_rows_for_report(report, missing=missing, as_of=resolved_as_of)
+        merged_rows.extend(report_rows)
+        text_rows.extend(report_text_rows)
+    result = ModeloBindingsListResult(
+        modelo_filter=modelo,
+        year_filter=year,
+        period_filter=period,
+        missing_filter=missing,
+        binding_count=len(merged_rows),
+        bindings=tuple(merged_rows),
+    )
+    lines = [
+        "operation\tregistry.modelo.bindings.list",
+        f"modelo_filter\t{modelo or '-'}",
+        f"year_filter\t{(year if year is not None else '-')}",
+        f"period_filter\t{period or '-'}",
+        f"missing_filter\t{missing}",
+        f"binding_count\t{len(merged_rows)}",
+        "modelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable",
+    ]
+    notices = _bindings_list_scope_notices(modelo=modelo, year=year, period=period)
+    lines.extend(_notice_text_lines(notices))
+    lines.extend(text_rows)
+    _emit_envelope(ctx, command="modelo.bindings.list", result=result, lines=lines, notices=notices)
+
+
+def bindings_resolve(
+    ctx: typer.Context,
+    modelo: str | None = None,
+    year: int | None = None,
+    period: str | None = None,
+    binding: list[str] | None = None,
+    as_of: str | None = None,
+) -> None:
+    """Resolve temporary ``--binding`` overrides without mutating state."""
+    _require_binding_scope(modelo=modelo, year=year, period=period)
+    assert modelo is not None
+    assert year is not None
+    assert period is not None
+    overrides = dict((deps.parse_binding_override(spec) for spec in binding or ()))
+    typed_period = deps.resolve_year_period(year, period, modelo=modelo)
+    report = _run_query(
+        lambda: registry_bindings_for_scope(modelo, period=typed_period, as_of=_as_of(as_of)),
+        bad_parameter_from_error=deps.bad_parameter_from_error,
+    )
+    known_ids = {row.binding_id for row in report.rows}
+    unknown_keys = sorted(set(overrides) - known_ids)
+    if unknown_keys:
+        suggestion = ", ".join(sorted(known_ids))
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.bindings.unknown_keys",
+                keys=unknown_keys,
+                code=report.code,
+                revision=report.revision,
+                period=report.period,
+                suggestion=suggestion,
+            )
+        )
+    result = ModeloBindingsPreviewResult(
+        modelo=report.code,
+        revision=report.revision,
+        filing_year=report.filing_year,
+        period=report.period,
+        override_count=len(overrides),
+        binding_count=len(report.rows),
+        bindings=[
+            BindingPreviewRowPayload(
+                binding_id=row.binding_id,
+                source=row.source,
+                readiness=tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source]),
+                typed_enum=row.typed_enum,
+                override=overrides.get(row.binding_id),
+                legal_refs=row.legal_refs,
+                source_refs=row.source_refs,
+                relation_inputs=row.relation_inputs,
+                encoded_options=binding_encoded_option_payloads(row.encoded_options),
+            )
+            for row in report.rows
+        ],
+    )
+    lines = [
+        "operation\tregistry.modelo.bindings.resolve",
+        f"modelo\t{report.code}",
+        f"revision\t{report.revision}",
+        f"filing_year\t{report.filing_year}",
+        f"period\t{report.period}",
+        f"override_count\t{len(overrides)}",
+        f"binding_count\t{len(report.rows)}",
+        "binding_id\tsource\treadiness\toverride",
+    ]
+    for row in report.rows:
+        lines.append(
+            "\t".join(
+                (
+                    row.binding_id,
+                    row.source,
+                    tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source]),
+                    overrides.get(row.binding_id) or "-",
+                )
+            )
+        )
+        lines.extend(binding_encoded_option_lines(row.binding_id, binding_encoded_option_payloads(row.encoded_options)))
+    _emit_envelope(ctx, command="modelo.bindings.resolve", result=result, lines=lines)
+
+
+def formulas(
+    ctx: typer.Context,
+    modelo: str,
+    year: int | None = None,
+    period: str | None = None,
+    as_of: str | None = None,
+    explain: bool = False,
+) -> None:
+    guard_ceded_autonomic_modelo(modelo)
+
+    def _query():
+        resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
+        if resolved_scope is not None:
+            return registry_formulas_for_registry_scope(
+                modelo, filing_year=resolved_scope.filing_year, period=resolved_scope.period, as_of=_as_of(as_of)
+            )
+        return registry_formulas(modelo, period=period, as_of=_as_of(as_of))
+
+    report = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
+    lines = _formula_lines(report, explain=explain)
+    result = FormulasResult(
+        code=report.code,
+        revision=report.revision,
+        filing_year=report.filing_year,
+        period=report.period,
+        formula_count=len(report.rows),
+        rows=tuple(
+            (
+                FormulaPayload(
+                    formula_id=row.formula_id,
+                    target_casilla_id=row.target_casilla_id,
+                    input_casilla_ids=tuple(row.input_casilla_ids),
+                    input_bindings=tuple(row.input_bindings),
+                    input_parameters=tuple(row.input_parameters),
+                    input_relations=tuple(row.input_relations),
+                    expression=dict(row.expression) if hasattr(row, "expression") else {},
+                    legal_refs=tuple(row.legal_refs),
+                    source_refs=tuple(row.source_refs),
+                )
+                for row in report.rows
+            )
         ),
     )
-    @command_execution_policy(REGISTRY_READ)
-    def support_matrix(ctx: typer.Context) -> None:
-        report = registry_support_matrix()
-        entries = [_support_matrix_entry_payload(entry) for entry in report.entries]
-        result = ModeloSupportMatrixResult(modelo_count=len(entries), entries=entries)
-        lines = [
-            f"{'modelo':>6}  {'revs':>4}  {'latest':<12}  {'calc':>4}  {'manifest':>8}  "
-            f"{'boe':>3}  {'xml':>3}  {'extractor':>9}  {'renames':>7}",
-        ]
-        for entry in entries:
-            lines.append(
-                f"{entry.modelo_id:>6}  {entry.revision_count:>4}  {entry.latest_revision_id:<12}  "
-                f"{_mark(entry.calc_grade):>4}  {_mark(entry.has_completeness_manifest):>8}  "
-                f"{_mark(entry.has_fixed_width_export):>3}  {_mark(entry.has_xml_dictionary_export):>3}  "
-                f"{_mark(entry.has_extractor):>9}  {len(entry.renames):>7}",
-            )
-        _emit_envelope(ctx, command="modelo.support_matrix", result=result, lines=lines)
+    _emit_envelope(ctx, command="modelo.formulas", result=result, lines=lines)
 
 
-__all__ = ["register_discovery_commands"]
+def support_matrix(ctx: typer.Context) -> None:
+    report = registry_support_matrix()
+    entries = [_support_matrix_entry_payload(entry) for entry in report.entries]
+    result = ModeloSupportMatrixResult(modelo_count=len(entries), entries=entries)
+    lines = [
+        f"{'modelo':>6}  {'revs':>4}  {'latest':<12}  {'calc':>4}  {'manifest':>8}  {'boe':>3}  {'xml':>3}  {'extractor':>9}  {'renames':>7}"
+    ]
+    for entry in entries:
+        lines.append(
+            f"{entry.modelo_id:>6}  {entry.revision_count:>4}  {entry.latest_revision_id:<12}  {_mark(entry.calc_grade):>4}  {_mark(entry.has_completeness_manifest):>8}  {_mark(entry.has_fixed_width_export):>3}  {_mark(entry.has_xml_dictionary_export):>3}  {_mark(entry.has_extractor):>9}  {len(entry.renames):>7}"
+        )
+    _emit_envelope(ctx, command="modelo.support_matrix", result=result, lines=lines)

@@ -53,7 +53,7 @@ if TYPE_CHECKING:
 
 def ledger_detach(
     ctx: typer.Context,
-    transaction_id: str = ...,
+    transaction_id: str,
     attachment_ids: tuple[str, ...] = (),
     actor: str | None = None,
 ) -> None:
@@ -86,7 +86,7 @@ def ledger_detach(
 
 def ledger_attach(
     ctx: typer.Context,
-    transaction_id: str = ...,
+    transaction_id: str,
     purchase_invoice_evidence_id: str | None = None,
     attachment_ids: tuple[str, ...] = (),
     actor: str | None = None,
@@ -187,9 +187,9 @@ def _sniff_document_mime_type(reference: str, data: bytes) -> str:
 
 def ledger_doclink(
     ctx: typer.Context,
-    transaction_id: str = ...,
-    source: DocumentLinkSource = ...,
-    reference: str = ...,
+    transaction_id: str,
+    source: DocumentLinkSource,
+    reference: str,
     note: str = "",
     actor: str | None = None,
 ) -> None:
@@ -286,7 +286,7 @@ def _parse_drive_folder_reference(reference: str) -> str:
 
 def ledger_pull_folder(
     ctx: typer.Context,
-    folder: str = ...,
+    folder: str,
     note: str = "",
 ) -> None:
     """Bulk-fetch every PDF/image child of a Drive folder into encrypted evidence.
@@ -421,7 +421,7 @@ def ledger_pull_folder(
 
 def ledger_archive(
     ctx: typer.Context,
-    transaction_id: str = ...,
+    transaction_id: str,
     reason: str = "",
     yes: bool = False,
     actor: str | None = None,
@@ -454,7 +454,7 @@ def ledger_archive(
 
 def ledger_stash(
     ctx: typer.Context,
-    transaction_id: str = ...,
+    transaction_id: str,
     reason: str = "",
     yes: bool = False,
     actor: str | None = None,
@@ -487,7 +487,7 @@ def ledger_stash(
 
 def ledger_exclude(
     ctx: typer.Context,
-    transaction_id: str = ...,
+    transaction_id: str,
     reason: str = "",
     yes: bool = False,
     actor: str | None = None,
@@ -520,7 +520,7 @@ def ledger_exclude(
 
 def ledger_restore(
     ctx: typer.Context,
-    transaction_id: str = ...,
+    transaction_id: str,
     reason: str = "",
     yes: bool = False,
     actor: str | None = None,
@@ -553,7 +553,7 @@ def ledger_restore(
 
 def ledger_remove(
     ctx: typer.Context,
-    transaction_id: str = ...,
+    transaction_id: str,
     reason: str = "",
     dry_run: bool = False,
     yes: bool = False,
@@ -626,7 +626,7 @@ def ledger_reset(
 
 def ledger_split(
     ctx: typer.Context,
-    transaction_id: str = ...,
+    transaction_id: str,
     child_amount: tuple[str, ...] = (),
     child_description: tuple[str, ...] = (),
     llm: bool = False,
@@ -642,8 +642,8 @@ def ledger_split(
         _ledger_split_llm(
             ctx,
             transaction_id=transaction_id,
-            child_amount=child_amount,
-            child_description=child_description,
+            child_amount=list(child_amount),
+            child_description=list(child_description),
             apply=apply,
             read_evidence=read_evidence,
             vision_model=vision_model,
@@ -1013,5 +1013,4 @@ __all__ = [
     "ledger_restore",
     "ledger_split",
     "ledger_stash",
-    "register_lifecycle_commands",
 ]

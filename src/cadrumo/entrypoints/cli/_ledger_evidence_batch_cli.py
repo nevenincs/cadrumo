@@ -58,11 +58,15 @@ if TYPE_CHECKING:
     from ...application.ledger import BatchItemResult, BatchRunResult, UnresolvedBatchSource
     from ...application.operator_actions import PreconditionVerdict
 
-__all__ = ["register_evidence_batch_command"]
+__all__ = ["evidence_batch"]
 
 
 def evidence_batch(
-    ctx: typer.Context, directory: str | None = None, kind: InvoiceKind = ..., file: tuple[str, ...] = ()
+    ctx: typer.Context,
+    *,
+    directory: str | None = None,
+    kind: InvoiceKind,
+    file: tuple[str, ...] = (),
 ) -> None:
     """Run the ingestion pipeline over every source, one typed row per document.
 

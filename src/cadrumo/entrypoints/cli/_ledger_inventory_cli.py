@@ -60,9 +60,9 @@ def inventory_list(ctx: typer.Context) -> None:
 
 def inventory_create(
     ctx: typer.Context,
-    actividad_id: str = ...,
-    year: int = ...,
-    valuation_method: str = ...,
+    actividad_id: str,
+    year: int,
+    valuation_method: str,
     opening_stock: str = "0",
 ) -> None:
     """Create a ledger via :meth:`InventoryService.create`."""
@@ -94,12 +94,12 @@ def inventory_create(
 
 def inventory_movement_add(
     ctx: typer.Context,
-    actividad_id: str = ...,
-    year: int = ...,
-    movement_id: str = ...,
-    movement_date: str = ...,
-    kind: MovementKind = ...,
-    quantity: str = ...,
+    actividad_id: str,
+    year: int,
+    movement_id: str,
+    movement_date: str,
+    kind: MovementKind,
+    quantity: str,
     unit_cost: str | None = None,
     taxable_base: str | None = None,
     iva_rate: str = str(DEFAULT_IVA_GENERAL_RATE_PCT),
@@ -140,8 +140,8 @@ def inventory_movement_add(
 
 def inventory_valuation_preview(
     ctx: typer.Context,
-    actividad_id: str = ...,
-    year: int = ...,
+    actividad_id: str,
+    year: int,
 ) -> None:
     """Preview valuation via :meth:`InventoryService.valuation_preview`."""
     bucket_id = _inventory_bucket_id()

@@ -16,7 +16,6 @@ with the registered ledger payload contracts.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Annotated
 
 import typer
 from pydantic import ValidationError
@@ -32,6 +31,7 @@ from ...application.ledger import (
 from ...core import (
     Art104TresExclusion,
     IvaDeductionFactKind,
+    M210PayerMode,
     ProrrataRegisterRegime,
     resolve_active_bucket_id,
 )
@@ -77,15 +77,7 @@ from ._ledger_llm_cli import (
     ledger_operator_iva_derive,
     ledger_saturate_llm,
 )
-from ._ledger_m210_classify_cli import (
-    M210ApplicableRateOpt,
-    M210AssetOrRightIdOpt,
-    M210GrossIncomeAmountOpt,
-    M210LedgerClassifyOptions,
-    M210PayerIdOpt,
-    M210PayerModeOpt,
-    M210TipoRentaCodeOpt,
-)
+from ._ledger_m210_classify_cli import M210LedgerClassifyOptions
 from ._ledger_support import (
     _emit_update_result,
     _invoice_link_error_bad_parameter,
@@ -238,10 +230,10 @@ def _prorrata_sector_unmatched_notice(
 
 def ledger_add(
     ctx: typer.Context,
-    booked_date: str = ...,
-    amount: str = ...,
-    direction: TransactionDirection = ...,
-    description: str = ...,
+    booked_date: str,
+    amount: str,
+    direction: TransactionDirection,
+    description: str,
     value_date: str | None = None,
     currency: str = DEFAULT_CURRENCY,
     counterparty: str | None = None,
@@ -412,7 +404,7 @@ def ledger_add(
 
 def ledger_update(
     ctx: typer.Context,
-    transaction_id: str = ...,
+    transaction_id: str,
     booked_date: str | None = None,
     value_date: str | None = None,
     amount: str | None = None,
@@ -473,34 +465,6 @@ def ledger_update(
     )
 
 
-_IvaCategoryOpt = Annotated[
-    IvaCategory | None,
-    typer.Option("--iva-category", help=tr("cli.ledger.classify.iva_category_help")),
-]
-_DeductionFactKindOpt = Annotated[
-    IvaDeductionFactKind | None,
-    typer.Option("--deduction-kind", help=tr("cli.ledger.classify.deduction_fact_kind_help")),
-]
-_CounterpartyCountryOpt = Annotated[
-    str | None,
-    typer.Option("--counterparty-country", help=tr("cli.ledger.classify.counterparty_country_help")),
-]
-_CounterpartyIdentificationStateOpt = Annotated[
-    EUMemberState | None,
-    typer.Option(
-        "--counterparty-identification-state",
-        help=tr("cli.ledger.classify.counterparty_identification_state_help"),
-    ),
-]
-_FileOpt = Annotated[
-    str | None,
-    typer.Option(
-        "--file",
-        help=tr("cli.ledger.classify.file_help"),
-    ),
-]
-
-
 def ledger_classify(
     ctx: typer.Context,
     transaction_id: str | None = None,
@@ -512,12 +476,12 @@ def ledger_classify(
     iva_rate: str | None = None,
     iva_amount: str | None = None,
     irpf_category: str | None = None,
-    m210_tipo_renta_code: M210TipoRentaCodeOpt = None,
-    m210_gross_income_amount: M210GrossIncomeAmountOpt = None,
-    m210_applicable_rate: M210ApplicableRateOpt = None,
-    m210_payer_mode: M210PayerModeOpt = None,
-    m210_payer_id: M210PayerIdOpt = None,
-    m210_asset_or_right_id: M210AssetOrRightIdOpt = None,
+    m210_tipo_renta_code: str | None = None,
+    m210_gross_income_amount: str | None = None,
+    m210_applicable_rate: str | None = None,
+    m210_payer_mode: M210PayerMode | None = None,
+    m210_payer_id: str | None = None,
+    m210_asset_or_right_id: str | None = None,
     iva_category: IvaCategory | None = None,
     deduction_fact_kind: IvaDeductionFactKind | None = None,
     counterparty_country: str | None = None,
@@ -677,8 +641,8 @@ def ledger_classify(
 
 def ledger_allocate(
     ctx: typer.Context,
-    transaction_id: str = ...,
-    business_pct: str = ...,
+    transaction_id: str,
+    business_pct: str,
     category_id: str | None = None,
     usage_ratio_id: str | None = None,
     prorrata_reference: str | None = None,
@@ -735,8 +699,8 @@ def ledger_allocate(
 
 def ledger_link(
     ctx: typer.Context,
-    transaction_id: str = ...,
-    invoice_id: str = ...,
+    transaction_id: str,
+    invoice_id: str,
     actor: str | None = None,
 ) -> None:
     """Bind a transaction to one reconciliation-catalogue invoice, atomically."""

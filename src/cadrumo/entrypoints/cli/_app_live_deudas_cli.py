@@ -1,4 +1,4 @@
-"""Typer registration for read-only live deudas snapshot commands.
+"""Behavior handlers for read-only live deudas snapshot commands.
 
 The list/view/latest verbs read persisted AEAT debts snapshots through
 :class:`DeudasService` and emit :class:`DeudasListResult`,
@@ -18,55 +18,15 @@ downstream of the taxpayer's tax position for a period rather than part of it.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Annotated
-
 import typer
 
-from ...core.i18n import tr
-from ._app_execution_policies import ENCRYPTED_READ, declare_metadata_group
-from ._app_live_auth_preflight import resolve_active_bucket
-from ._command_policy import command_execution_policy
-from ._common import _emit_envelope
-
-_active_bucket_id: Callable[[], str] | None = None
-
-deudas_app = typer.Typer(
-    name="deudas",
-    help=tr("cli.app.live.deudas.app_help", default="AEAT deudas snapshots (read-only)."),
-    no_args_is_help=True,
-    add_completion=False,
-)
-declare_metadata_group(deudas_app)
-
-
-def register_deudas_commands(
-    app: typer.Typer,
-    *,
-    active_bucket_id: Callable[[], str],
-) -> None:
-    """Mount live deudas commands on the live app.
-
-    Takes no ``auth_preflight``: every verb in this family reads persisted
-    bucket storage and none contacts AEAT, so there is no live session to
-    preflight.
-    """
-    global _active_bucket_id
-    _active_bucket_id = active_bucket_id
-    app.add_typer(deudas_app, name="deudas")
+from ._common import _emit_envelope, active_bucket_id_or_refuse
 
 
 def _bucket_id() -> str:
-    return resolve_active_bucket(_active_bucket_id, family="deudas")
+    return active_bucket_id_or_refuse()
 
 
-@deudas_app.command(
-    "list",
-    help=tr(
-        "cli.app.live.deudas.list_help",
-        default="List persisted deudas snapshots in the active profile.",
-    ),
-)
 def deudas_list(ctx: typer.Context) -> None:
     """List persisted deudas snapshots for the active bucket.
 
@@ -97,24 +57,9 @@ def deudas_list(ctx: typer.Context) -> None:
     _emit_envelope(ctx, command="app.live.deudas.list", result=result, lines=lines)
 
 
-@deudas_app.command(
-    "view",
-    help=tr(
-        "cli.app.live.deudas.view_help",
-        default="View one deudas snapshot.",
-    ),
-)
 def deudas_view(
     ctx: typer.Context,
-    snapshot_id: Annotated[
-        str,
-        typer.Argument(
-            help=tr(
-                "cli.app.live.deudas.snapshot_id_help",
-                default="Snapshot id (or unambiguous prefix).",
-            ),
-        ),
-    ],
+    snapshot_id: str,
 ) -> None:
     """Show one deudas snapshot with every AEAT-reported liability it holds.
 
@@ -165,13 +110,6 @@ def deudas_view(
     _emit_envelope(ctx, command="app.live.deudas.view", result=result, lines=lines)
 
 
-@deudas_app.command(
-    "latest",
-    help=tr(
-        "cli.app.live.deudas.latest_help",
-        default="Show the most recent deudas snapshot in the active profile.",
-    ),
-)
 def deudas_latest(ctx: typer.Context) -> None:
     """Show the most recent deudas snapshot, or report none.
 
@@ -209,5 +147,4 @@ def deudas_latest(ctx: typer.Context) -> None:
     _emit_envelope(ctx, command="app.live.deudas.latest", result=result, lines=lines)
 
 
-for _callback in (deudas_list, deudas_view, deudas_latest):
-    command_execution_policy(ENCRYPTED_READ)(_callback)
+__all__ = ["deudas_latest", "deudas_list", "deudas_view"]

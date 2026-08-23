@@ -109,7 +109,7 @@ class InventoryLedgerPayload(OutputSchema):
     closing_stock: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     period_movements: list[InventoryMovementPayload] = []
     schema_version: _InventorySchemaVersion
-bucket_event_ids: list[str] = []
+    bucket_event_ids: list[str] = []
 
 
 class InventoryListRowPayload(InventoryLedgerPayload):

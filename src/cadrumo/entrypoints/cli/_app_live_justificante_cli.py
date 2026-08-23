@@ -1,4 +1,4 @@
-"""Typer registration for live :class:`JustificanteCaptureSnapshot` commands.
+"""Behavior handlers for live :class:`JustificanteCaptureSnapshot` commands.
 
 The pull command delegates to :func:`capture_justificante_snapshot_outcome`;
 the list and view commands read :class:`JustificanteCaptureSnapshotService`
@@ -9,48 +9,16 @@ storage. The emitted payloads are :class:`JustificanteCaptureResult`,
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
-from typing import Annotated
 
 import typer
 
 from ...core import Modelo, Period, PeriodError
-from ...core.i18n import tr
-from ._app_execution_policies import ENCRYPTED_READ, LIVE_PROFILE_WRITE, declare_metadata_group
-from ._app_live_auth_preflight import resolve_active_bucket, run_auth_preflight
-from ._command_policy import command_execution_policy
-from ._common import _emit_envelope
-
-_active_bucket_id: Callable[[], str] | None = None
-_auth_preflight: Callable[[], None] | None = None
-
-justificante_app = typer.Typer(
-    name="justificante",
-    help=tr(
-        "cli.app.live.justificante.app_help",
-        default="AEAT justificante captures (read-only): pull a filed receipt and reconcile against it.",
-    ),
-    no_args_is_help=True,
-    add_completion=False,
-)
-declare_metadata_group(justificante_app)
-
-
-def register_justificante_commands(
-    app: typer.Typer,
-    *,
-    active_bucket_id: Callable[[], str],
-    auth_preflight: Callable[[], None],
-) -> None:
-    """Mount the bucket-scoped justificante snapshot commands on the live app."""
-    global _active_bucket_id, _auth_preflight
-    _active_bucket_id = active_bucket_id
-    _auth_preflight = auth_preflight
-    app.add_typer(justificante_app, name="justificante")
+from ._app_live_auth_preflight import _emit_live_auth_preflight
+from ._common import _emit_envelope, active_bucket_id_or_refuse
 
 
 def _bucket_id() -> str:
-    return resolve_active_bucket(_active_bucket_id, family="justificante")
+    return active_bucket_id_or_refuse()
 
 
 def _period_option(period: str, *, year: int) -> Period:
@@ -60,24 +28,11 @@ def _period_option(period: str, *, year: int) -> Period:
         raise typer.BadParameter(f"invalid AEAT period {period!r} for year {year}") from exc
 
 
-@justificante_app.command(
-    "pull",
-    help=tr(
-        "cli.app.live.justificante.pull_help",
-        default="Pull the AEAT justificante for a filed period and persist it as official evidence.",
-    ),
-)
 def justificante_pull(
     ctx: typer.Context,
-    modelo: Annotated[
-        str,
-        typer.Option("--modelo", help=tr("cli.app.live.modelo_help", default="Modelo code (e.g. 130).")),
-    ],
-    year: Annotated[
-        int,
-        typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help", default="Filing year.")),
-    ],
-    period: Annotated[str, typer.Option("--period", help=tr("cli.app.live.period_help", default="Period (e.g. 1T)."))],
+    modelo: str,
+    year: int,
+    period: str,
 ) -> None:
     """Pull one signed AEAT receipt into a persisted :class:`JustificanteCaptureSnapshot`.
 
@@ -90,7 +45,7 @@ def justificante_pull(
     from ._app_live_payloads import JustificanteCaptureResult
 
     bucket_id = _bucket_id()
-    run_auth_preflight(_auth_preflight, family="justificante")
+    _emit_live_auth_preflight()
     outcome = asyncio.run(
         capture_justificante_snapshot_outcome(
             bucket_id=bucket_id,
@@ -144,13 +99,6 @@ def justificante_pull(
     _emit_envelope(ctx, command="app.live.justificante.pull", result=result, lines=lines)
 
 
-@justificante_app.command(
-    "list",
-    help=tr(
-        "cli.app.live.justificante.list_help",
-        default="List persisted justificante captures in the active profile.",
-    ),
-)
 def justificante_list(ctx: typer.Context) -> None:
     """List active captures from :class:`JustificanteCaptureSnapshotService`.
 
@@ -187,24 +135,9 @@ def justificante_list(ctx: typer.Context) -> None:
     _emit_envelope(ctx, command="app.live.justificante.list", result=result, lines=lines)
 
 
-@justificante_app.command(
-    "view",
-    help=tr(
-        "cli.app.live.justificante.view_help",
-        default="View one justificante capture.",
-    ),
-)
 def justificante_view(
     ctx: typer.Context,
-    snapshot_id: Annotated[
-        str,
-        typer.Argument(
-            help=tr(
-                "cli.app.live.justificante.snapshot_id_help",
-                default="Snapshot id (or unambiguous prefix).",
-            ),
-        ),
-    ],
+    snapshot_id: str,
 ) -> None:
     """Show one :class:`JustificanteCaptureSnapshot` provenance record.
 
@@ -244,6 +177,4 @@ def justificante_view(
     _emit_envelope(ctx, command="app.live.justificante.view", result=result, lines=lines)
 
 
-command_execution_policy(LIVE_PROFILE_WRITE)(justificante_pull)
-for _callback in (justificante_list, justificante_view):
-    command_execution_policy(ENCRYPTED_READ)(_callback)
+__all__ = ["justificante_list", "justificante_pull", "justificante_view"]
