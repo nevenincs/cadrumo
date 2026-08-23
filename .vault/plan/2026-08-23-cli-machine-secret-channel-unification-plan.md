@@ -4,7 +4,7 @@ tags:
   - '#cli-machine-secret-channel-unification'
 date: '2026-08-23'
 modified: '2026-08-23'
-body_hash: 'sha256:c0d987c6e4e25b8caa2c0bf69005ee4e36bc4989a8e927449bcdd0468ede7efe'
+body_hash: 'sha256:da2e76f16ccfe94f086b71afdb766d02bd8668816af09562f6440f7183615978'
 tier: L3
 related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
@@ -84,7 +84,7 @@ Prove real machine operation and align generated and user-facing surfaces.
 Exercise both transport channels and refusal behavior through actual processes.
 
 - [x] `W03.P06.S13` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and add real subprocess success coverage for stdin and inherited descriptors across all five leaf commands and both restore doors plus keychain-free root profile authentication on representative read and write commands, certificate dual-source combinations, fd0, closure, prompt absence, Windows HANDLE bootstrap, and leak checks; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
-- [ ] `W03.P06.S14` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and extend the real subprocess matrix with same-scope and cross-scope conflict before read and mutation, invalid descriptor and payload cases, size bounds, old-field refusal, hostile-environment non-interference, valid-session non-consumption, wrong or absent target refusal, self-authenticating exemptions, prompt-only TTY behavior, and four-locale snapshots; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
+- [x] `W03.P06.S14` - Run vaultspec-rag semantic code and ADR discovery, confirm exact symbols with rg, then re-read current HEAD, status, and scoped diff, and extend the real subprocess matrix with same-scope and cross-scope conflict before read and mutation, invalid descriptor and payload cases, size bounds, old-field refusal, hostile-environment non-interference, valid-session non-consumption, wrong or absent target refusal, self-authenticating exemptions, prompt-only TTY behavior, and four-locale snapshots; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 
 ### Phase `W03.P07` - Generated surfaces and operator documentation
 
