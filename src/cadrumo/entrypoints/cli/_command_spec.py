@@ -266,10 +266,13 @@ class ValueContract:
     parser: DeferredTarget | None = None
     completion: DeferredTarget | None = None
     callback: DeferredTarget | None = None
+    choices: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.click_type is not None and self.parser is not None:
             raise ValueError("value contract cannot declare both a Click type and parser")
+        if len(self.choices) != len(set(self.choices)) or any(not choice for choice in self.choices):
+            raise ValueError("value contract choices must be unique non-empty strings")
 
 
 @dataclass(frozen=True, slots=True)

@@ -10,8 +10,6 @@ fact through the single-writer profile path.
 
 from __future__ import annotations
 
-from enum import StrEnum
-
 import typer
 
 from ....core import ServiceCapability, resolve_active_bucket_id
@@ -20,13 +18,6 @@ from .._common import bad, emit_envelope
 
 # on the CLI build path, keeping every capability leaf in the JSON-contract registry.
 from ._capabilities_payloads import CapabilitiesShowResult, CapabilitySetResult
-
-
-class Toggle(StrEnum):
-    """On/off argument for ``capabilities set``."""
-
-    ON = "on"
-    OFF = "off"
 
 
 def capabilities_show(ctx: typer.Context) -> None:
@@ -56,7 +47,7 @@ def capabilities_show(ctx: typer.Context) -> None:
     emit_envelope(ctx, command="config.profile.capabilities.show", result=result, lines=lines)
 
 
-def capabilities_set(ctx: typer.Context, capability: ServiceCapability, state: Toggle) -> None:
+def capabilities_set(ctx: typer.Context, capability: ServiceCapability, state: str) -> None:
     """Opt the active profile in or out of one service capability."""
     from ....application.user_profile import ProfileFactWriteDoor, apply_profile_fact_changes
     from ....domain.user_profile import UserProfileFact
@@ -68,7 +59,7 @@ def capabilities_set(ctx: typer.Context, capability: ServiceCapability, state: T
                 "cli.config.profile.capabilities.no_active_profile",
             ),
         )
-    enabled = state is Toggle.ON
+    enabled = state == "on"
     apply_profile_fact_changes(
         profile_id=profile_id,
         changes=(UserProfileFact(path=capability.schema_path, value=enabled),),
@@ -79,9 +70,9 @@ def capabilities_set(ctx: typer.Context, capability: ServiceCapability, state: T
     )
     lines = [
         f"{tr('cli.config.profile.capabilities.capability_label')}\t{capability.value}",
-        f"{tr('cli.config.profile.capabilities.state_label')}\t{state.value}",
+        f"{tr('cli.config.profile.capabilities.state_label')}\t{state}",
     ]
     emit_envelope(ctx, command="config.profile.capabilities.set", result=result, lines=lines)
 
 
-__all__ = ["Toggle", "capabilities_set", "capabilities_show"]
+__all__ = ["capabilities_set", "capabilities_show"]

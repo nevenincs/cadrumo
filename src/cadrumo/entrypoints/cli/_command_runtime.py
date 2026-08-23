@@ -16,6 +16,7 @@ from types import GenericAlias
 from typing import Any, cast
 
 import typer
+from click import Choice
 
 from ...core.i18n import tr
 from ._command_spec import (
@@ -94,7 +95,11 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
     if isinstance(spec, OptionSpec) and spec.multiple:
         annotation = GenericAlias(list, (annotation,))
     parser = None if spec.value.parser is None else resolve_deferred_target(spec.value.parser)
-    click_type = None if spec.value.click_type is None else resolve_deferred_target(spec.value.click_type)
+    click_type = (
+        Choice(spec.value.choices, case_sensitive=spec.constraint.case_sensitive)
+        if spec.value.choices
+        else None if spec.value.click_type is None else resolve_deferred_target(spec.value.click_type)
+    )
     if isinstance(click_type, type):
         click_type = click_type()
     if isinstance(spec, ArgumentSpec):
