@@ -1,0 +1,26 @@
+# Golden scenario: cese de actividad (ceasing an activity, WHEN layer).
+#
+# Asserts the activity-end itinerary's own driven app-surface: confirm the
+# active profile, read the surviving obligation tail from the agenda and the
+# bounded calendar, and confirm one doubtful survivor explicitly. The final
+# quarter's filings are covered by the owning per-modelo scenarios; the censo
+# baja steps are config-root verbs the skill cites. The 303 final quarter
+# (2024 4T) anchors the registry dimensions: the runner asserts the skill
+# playbook cites each verb, the revision's casillas carry registry legal
+# grounding, and the revision declares an AEAT-grounded verification contract
+# containing `expected_computed_casillas`.
+
+name = "cese-actividad-obligation-tail"
+modelo = "303"
+filing_year = 2024
+period = "4T"
+skill_name = "cadrumo-cese-actividad"
+provenance_required = true
+expected_computed_casillas = ["64", "66"]
+
+expected_trajectory = [
+  "overview.status",
+  "overview.agenda",
+  "overview.calendar",
+  "overview.explain",
+]

@@ -1,0 +1,17 @@
+cadrumo (aeat)
+Copyright 2026 Neve Nincs (https://neve.md) and the cadrumo contributors.
+
+This product is developed as part of the Cadrumo project
+(https://cadrumo.neve.md, https://github.com/nevenincs/cadrumo) and is
+distributed under the Apache License, Version 2.0 (see LICENSE).
+
+Cadrumo is an independent open-source project. It is NOT affiliated with,
+endorsed by, sponsored by, or approved by the Agencia Estatal de
+Administración Tributaria (AEAT) or any other public administration.
+References to "AEAT", to modelo numbers, and to casillas are purely
+descriptive: they name the official public forms and rules the software
+computes against. All official names and marks remain the property of their
+respective holders. The software never files taxes on anyone's behalf.
+
+Attribution notices for bundled third-party components are recorded in
+THIRD_PARTY_NOTICES.md.
