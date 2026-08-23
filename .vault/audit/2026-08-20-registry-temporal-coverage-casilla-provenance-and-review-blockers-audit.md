@@ -3964,3 +3964,69 @@ records carry numbers at all.
 
 **10453 of 11570 slots remain** across 118 numbered records; 1117 modelled. T22009001,
 T22012A00 and T22012A10 stay held back.
+
+## 2026-08-23 — T220DID00, and two things the design says that the design contradicts
+
+### What landed
+
+Record **T220DID00** — the *documento de ingreso o devolución*, the payment slip of the
+consolidated declaration: devengo, identificación, three liquidación figures, the
+devolución block with its account details, the ingreso block, the abono/compensación of
+activos por impuesto diferido (art. 130 LIS), and the cuota cero mark. **31 casillas**,
+revision 1227 → **1258**, sixteen of 137 records.
+
+Suite: **9 failures, zero caused by me** — one cleared (a peer fixed their
+`_record_design` test), nothing new.
+
+### AEAT's apartado numbering disagrees with itself
+
+The design numbers the apartados (1)–(7) inside the field descriptions. The bank country
+code at @419 is printed as **"Devolución (5)"** — but the devolución block is (4) and (5)
+is Ingreso. **Routing on the digit would have filed a devolución field under ingreso.**
+
+Deriving the apartado from its **name** is immune to that, and the generator now asserts
+name↔number consistency in *both* directions and prints every disagreement. It also
+**refuses to run if the disagreement ever disappears**, so a corrected workbook cannot
+leave a stale claim standing in the fragment.
+
+### The bracket is not always last
+
+Box 00562 prints as `Cuota íntegra del grupo [00562]. {DID_liq_CI}` — the design's own
+variable name comes *after* the bracket. An end-anchored search **silently minted a
+byte-span number for a box AEAT numbers.**
+
+Found by **reading the generated output against the design**, not by an assertion. An
+assertion now refuses any description carrying an unread bracket.
+
+That is three iterations running where the defect surfaced only because output was read
+back, and the fix has the same shape every time: **turn the reading into a check.** The
+list so far — key text retyped from truncation, a table key renamed without its value, an
+end-anchored match on a non-terminal token — are different bugs with one cause: a step
+that was verified by eye once instead of by code every time.
+
+### Four boxes carry a letter, not a number
+
+`[D]` importe a devolver, `[I]` importe a ingresar, `[A]` abono, `[C]` compensación. Each
+was counted across **all 137 sheets** and appears **exactly once**, in this record only —
+the shape of a per-record box identifier, not a column marker. Taken as AEAT's own number,
+as modelo 604's alphabetic casillas already are, and recorded as a judgement.
+
+### One AEAT box, several casillas — a limitation of the convention
+
+Box **00562 is now declared twice** in this revision (`T22009000:00562` and
+`T220DID00:00562`), and the design prints it in **seven** records. The `(segmento, number)`
+convention — modelo 200's, adopted here — gives each record its own casilla.
+
+**A layout must bind these to the same value rather than collect them twice, and nothing
+enforces that today.** Worth a gate before any m220 layout is authored: every casilla
+sharing a `number` across segmentos must resolve to one value.
+
+### Two fields read identically until the apartado is added
+
+Both `Código IBAN - Bloque`, one under devolución and one under ingreso. The within-record
+duplicate-label assertion caught it; the apartado is now part of the label, not decoration.
+
+### Scale
+
+**10447 of 11570 slots remain** across 117 numbered records; 1123 modelled, zero orphaned.
+T22009001, T22012A00 and T22012A10 stay held back.
