@@ -18849,3 +18849,96 @@ span failures and are unchanged. 17 designs remain unattributed, each needing an
 external source that states its era rather than an inference from its orden --
 the module's docstring measures that inference wrong by seven years on modelo
 180, so it stays refused. Backlog otherwise unchanged.
+
+## Tick: the modelo 322 split measured end to end, and the box it silently drops
+
+Took the smallest of the three relayout splits. The split was NOT landed; what
+was established is the whole of its input, plus one live filing-grade finding.
+
+### The defect, stated precisely
+
+Revision `2008-2023` cites `aeat-dr-322-2023` -- a design AEAT published for
+ejercicio 2023 alone -- and uses it for the whole span. `aeat-dr-322-2022`
+exists in the catalogue and is cited by NO revision. So a 2022 filing is written
+at 2023 offsets. The year-coverage gate already reports 15 years outside the
+cited design's era, so the split is a strict improvement rather than a trade.
+
+### What a 2022 map would cost, measured rather than guessed
+
+Both designs read whole, five sheets each, and the 2023 map carries exactly one
+entry per 2023 design field (99/27/40/65), so entry-to-field correspondence is
+1:1 and an alignment is meaningful.
+
+Aligning 2022 to 2023 on `(length, description)`:
+
+* `DR32200` and `DR32204` are IDENTICAL -- re-anchorable 1:1.
+* `DR32203` has identical offsets and lengths throughout; only six labels were
+  refined.
+* `DR32201` is 2022 plus inserted blocks (2023 adds "Resto de operaciones en
+  regimen general" and a "Recargo de Equivalencia" base), and `DR32202` differs
+  by one deletion.
+
+207 of 217 fields align outright. Of the remaining ten, nine are equal-size
+`replace` pairs inspected individually and all legitimate -- the same "Total
+cuota devengada" box with a widened formula, two `Reservado` fillers whose
+length changed, and the six label refinements. **Exactly one field is genuinely
+2022-only.**
+
+### The finding: a box the registry cannot represent
+
+That field is `DR32202 @205+17`, box **[73]** -- "Operaciones no sujetas o con
+inversion del sujeto pasivo que originan el derecho a deduccion (hasta 30 de
+junio, resto a 0)".
+
+Verified with its control, which is what makes it conclusive: box 73 is the ONLY
+box 2022 declares and 2023 does not, the revision covering 2022 declares NO
+casilla for it, and the fifteen boxes that are 2023-only ALL have casillas. The
+revision is authored wholly to the 2023 design, so a 2022 modelo 322 filing
+omits that figure silently -- a `no-silent-under-declaration` instance found
+while measuring something else.
+
+It was NOT fixed by adding casilla 73 to the current revision, and the reason is
+structural rather than effort: every numbered box in this revision carries
+`export_refs`, and the 2023-based layout has no field at that position, so the
+casilla would be the only numbered box with nowhere to be written. That converts
+a visible gap into a declared-but-unemittable box. Its home is the `2008-2022`
+revision the split creates.
+
+### Why the split was not landed this tick
+
+The remaining work is the full modelo 210 recipe -- new revision directory, 212
+casillas re-pointed from `m322-2023.*` to `m322-2022.*`, a new semantic map and
+render profile, then render, validate and publish. That recipe consumed an
+entire tick with many failed iterations in the EASY case, where the designs
+corresponded 1:1. Starting it on a third of a tick would have risked a third
+half-landed registry mutation. The inputs above are now measured, so the
+remaining work is mechanical rather than exploratory.
+
+### What landed
+
+`test_modelo_322_designs_are_not_box_compatible.py` pins the premise the split
+rests on: each design numbers a box the other does not, asserted in BOTH
+directions and as set inequality rather than a count, so it survives AEAT
+renumbering. The 2022-only direction is the one the registry cannot see -- it
+was authored to 2023, so "does every declared box exist in the design?" finds
+nothing wrong, and only the reverse question surfaces [73].
+
+It deliberately asserts NOTHING about the registry's casilla set. The asymmetry
+is a live defect, and encoding it in a green test would make it the contract.
+
+### Verified
+
+* the new module: 3 passed, ruff clean; all three assertions proved to bite from
+  outside the repo, including the case where both designs declare identical
+  boxes. `_numbered_boxes` refuses a partly-read design, so an absent box can
+  never mean an unread sheet.
+* registry package: 9 failed, 5340 passed -- the standing declared inventories,
+  unchanged. Authority loads CLEAN.
+
+### Still open
+
+The 322 split itself, now fully specified: create `2008-2022` on
+`aeat-dr-322-2022`, carry the 207 aligned entries and the nine reviewed replace
+pairs, author box [73]'s casilla and map entry, leave `2023` on the existing
+2023-authored content. Modelo 200 and 347 splits unchanged, 347 still needing
+three revisions. Backlog otherwise unchanged.
