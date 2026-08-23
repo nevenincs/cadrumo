@@ -27,8 +27,9 @@ See Also:
         Consumes the imported current :class:`ModeloRecord`
         as an amendment baseline.
     :mod:`~cadrumo.domain.justificante`:
-        Receipt metadata store required by justificante-PDF, CSV-register, and
-        live-capture evidence kinds.
+        Receipt metadata store required by justificante-PDF and live-capture evidence
+        kinds. CSV/XLSX register imports bind the source reference directly to
+        the target work-unit coordinates instead of masquerading as a receipt.
     :func:`~cadrumo.application.modelo._registry_helpers.reject_unknown_import_casillas`:
         Resolves the registry snapshot and refuses noncanonical or undeclared
         imported casilla ids.
@@ -86,7 +87,6 @@ from ._work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active
 
 _JUSTIFICANTE_BOUND_EVIDENCE_KINDS = frozenset(
     {
-        ExternalEvidenceKind.AEAT_CSV_REGISTER,
         ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
         ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
     },
@@ -337,7 +337,10 @@ def import_external_filing_evidence[CasillaKey](
     modelo, filing year, period, and registry revision used to validate imported
     casilla ids. Justificante-bound evidence kinds require a stored
     :class:`Justificante` whose modelo, year, period,
-    and taxpayer id match the target.
+    and taxpayer id match the target. CSV-register evidence is the imported
+    file itself: its reference is bound to the validated target coordinates in
+    the atomically committed filing record and does not require fabricated
+    Justificante metadata.
 
     The service writes a ``PRESENTADO``
     :class:`CalculationRevision` containing the imported
@@ -598,8 +601,8 @@ def _require_bound_justificante_artifact(
 ) -> None:
     """Require matching stored :class:`Justificante` metadata.
 
-    CSV-register, justificante-PDF, and live-capture imports are treated as
-    receipt-bound baselines: the evidence reference must resolve to stored
+    Justificante-PDF and live-capture imports are treated as receipt-bound
+    baselines: the evidence reference must resolve to stored
     justificante metadata for the same taxpayer, modelo, filing year, and
     period. The taxpayer comparison is case-insensitive after stripping.
     """

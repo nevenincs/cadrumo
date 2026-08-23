@@ -27,7 +27,6 @@ from ._import_flow_support import (
     _Repos,
     repos,
 )
-from .justificante_metadata import persist_justificante_metadata
 
 __all__ = ["repos"]
 
@@ -59,15 +58,6 @@ def test_source_payload_import_creates_exact_amendable_baseline(
     """The CSV-register source's complete casilla map reaches one durable baseline."""
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     reference_id = "SOURCECSV0001"
-    persist_justificante_metadata(
-        reference_id,
-        modelo="130",
-        filing_year=2026,
-        period="1T",
-        captured_at=_T1,
-        tax_id=_TAX_ID,
-    )
-
     filing = import_external_filing_source(
         ExternalFilingBaselineSource(
             modelo="130",
@@ -120,14 +110,6 @@ def test_source_payload_import_creates_exact_amendable_baseline(
 
 def test_public_source_import_refuses_partial_required_manifest_without_writes(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    persist_justificante_metadata(
-        "PARTIALCSV01",
-        modelo="130",
-        filing_year=2026,
-        period="1T",
-        captured_at=_T1,
-        tax_id=_TAX_ID,
-    )
     with pytest.raises(ExternalModeloImportError):
         import_external_filing_source(
             ExternalFilingBaselineSource(
@@ -153,7 +135,7 @@ def test_public_source_import_refuses_partial_required_manifest_without_writes(r
     )
 
 
-def test_failed_source_evidence_validation_leaves_no_work_unit_or_event(repos: _Repos) -> None:
+def test_failed_receipt_evidence_validation_leaves_no_work_unit_or_event(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     with pytest.raises(ExternalModeloImportError):
         import_external_filing_source(
@@ -161,8 +143,8 @@ def test_failed_source_evidence_validation_leaves_no_work_unit_or_event(repos: _
                 modelo="130",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
-                evidence_reference_id="MISSINGCSV01",
+                evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                evidence_reference_id="MISSINGPDF01",
                 tax_id=_TAX_ID,
                 casilla_lexicals={
                     _IMPORT_INCOME_CASILLA: "1500",

@@ -195,3 +195,89 @@ This prerequisite has no safe local CLI creation path. `app live justificante` e
 **Concrete product-surface blocker:** provide a local, fail-closed CLI composition that persists an imported AEAT CSV-register/justificante evidence artifact and returns its stable evidence id for `filing-record import`, or let `filing-record import --file` atomically persist and bind that source artifact after validating its source manifest. Without that door, a safe source-only fixture cannot create clean M100-2025 or M130-2026-1T external filing lineage; therefore M130-2026-2T cannot reach approval/export without a live pull or bypassing verification.
 
 No AEAT call was made, no production code changed, and `.journey2/` was removed after the attempt. **Disposition remains keep #113 open.**
+
+## CSV-register provenance correction — 2026-08-23
+
+The blocker above was an evidence-kind contract error. `filing-record import
+--file` already parses the operator-selected CSV/XLSX, validates its casilla ids
+against the authoritative target registry, refuses an incomplete required-id
+manifest before work-unit creation, preserves exact source lexicals, and
+co-commits the calculation revision, filing record, work-unit pointers, and
+bucket event. Despite that, `aeat_csv_register` was grouped with receipt-bound
+sources and required unrelated persisted `Justificante` metadata. No public
+local command could create that metadata without a live pull.
+
+The corrected policy treats the CSV/XLSX register file as its own evidence
+source. Its operator reference is bound in `ExternalEvidence` on the atomically
+committed filing record, whose work-unit coordinates retain bucket/profile,
+modelo, year, and period identity. `aeat_justificante_pdf` and
+`aeat_live_capture` remain receipt-bound and still require matching stored
+Justificante metadata including taxpayer identity.
+
+The real CLI regression begins with credential-backed profile registration and
+then uses only public commands for setup completion, work creation, and source
+import. It proves the complete M130 CSV becomes a filing baseline with exact
+lexicals (`" 001500.00 "`, `"300,0"`). Its negative twin imports a partial
+required manifest and proves `filing-record list` remains empty and both the
+work unit's current calculation and filing pointers remain null.
+
+```text
+uv run pytest -m integration -n 0 \
+  src/cadrumo/entrypoints/cli/tests/test_modelo_external_source_file_cli.py -q
+# 2 passed in 42.94s
+
+uv run pytest -n 0 \
+  src/cadrumo/application/modelo/tests/test_external_source_import.py \
+  src/cadrumo/application/modelo/tests/test_import_flow_justificante.py \
+  -k "source or csv_register or refuses_without_enrolled" -q
+# 6 passed, 5 deselected in 35.80s
+
+uv run ruff check \
+  src/cadrumo/application/modelo/_external_import_actions.py \
+  src/cadrumo/application/modelo/tests/test_external_source_import.py \
+  src/cadrumo/application/modelo/tests/test_import_flow_justificante.py \
+  src/cadrumo/entrypoints/cli/tests/test_modelo_external_source_file_cli.py
+# All checks passed
+```
+
+An unfiltered adjacent run additionally reported 7 passes and four failures
+before application execution because legacy Justificante test identifiers
+contain hyphens while the current domain schema requires `^[A-Z0-9]{8,32}$`.
+That fixture drift predates and is independent of this CSV correction; it was
+not hidden by weakening the identifier contract.
+
+### Fresh operator rerun with real prior-filing imports
+
+A fresh disposable `.journey3/` run used the bundled synthetic M100 declaration
+values rather than invented expectations. Profile creation included activity
+start `2025-01-01`; setup completion succeeded. Public commands created M100
+2025-0A and M130 2026-1T work units and imported complete CSV baselines. The
+M100 file contained the exact 21 casilla/value rows printed by the committed
+`100/2025-0A.pdf` fixture generator; M130 1T contained the complete required
+01/02 zero manifest. Both imports succeeded and produced current, AEAT-accepted
+external filing records.
+
+The Q2 operator path then imported the bundled two-row ledger fixture,
+classified income and software expense, registered encrypted purchase evidence
+through `ledger evidence add`, attached it to the expense, and created the M130
+2026-2T work unit. Calculation required an explicit
+`modelo-130-pagos-fraccionados-anteriores=0` binding even though the clean 1T
+filing existed; with the authoritative 1T zero value supplied, calculation and
+review succeeded as revision `23b06b…c95499e` (01=`1020.30`, 02=`41.31`,
+03=`978.99`, 04=`195.80`).
+
+Verification remained blocked, so approval and export were correctly not
+attempted. The exact blockers for both M100 2025-0A and M130 2026-1T are
+`missing_observation|missing_external_evidence_record`. This is a second,
+distinct integration gap: CSV import now creates the durable external filing
+and its calculation observations, but the cross-period verifier reads a
+separate `CalculationObservationRepository` and still treats every external
+evidence kind as receipt-backed when looking for its evidence record. It
+therefore neither projects the imported filing into its observation store nor
+accepts the CSV-bound filing evidence that the import path just committed.
+
+**Journey verdict:** the local CSV evidence-registration blocker is fixed, but
+#113 remains open. The next product correction must compose imported filing
+baselines into the cross-period observation/read model and distinguish
+CSV-bound evidence from receipt-bound PDF/live evidence in clean-state
+evaluation. No verifier gate was weakened and no AEAT call was made.
