@@ -4326,3 +4326,70 @@ never by a general rule, kept as printed in the comment.
 **10346 of 11570 slots remain** across 108 numbered records; 1224 modelled, zero orphaned.
 The nesting of this record is **not modelled at all**; if a layout or UI ever needs the tree
 it must come from a source that carries it.
+
+## 2026-08-23 — T22005A02, and a vocabulary that attested its own damage
+
+### What landed
+
+Record **T22005A02** — the second *estado de ingresos y gastos reconocidos consolidado*:
+otros ingresos y gastos reconocidos broken down by concept with the valuation, transfer and
+reclassification lines of each. **37 casillas**, revision 1390 → **1427**, twenty-six of 137
+records.
+
+Suite: **identical FAILED list, zero regressions.**
+
+### The same family, two treatments, and the reason is in the data
+
+**This record prints its own hierarchy** — every child line carries its parent's name inline
+(`Cobertura de los flujos de efectivo. Ganancias y pérdidas por valoración`), so all 37
+labels are distinct on AEAT's own text.
+
+Its sibling T22005A01 was authored **flat** last iteration for exactly the opposite reason:
+nineteen boxes share their printed text, the design carries no indentation, and a positional
+derivation was tried and refused. Read together, the pair is the point: **one family
+produced a nested record and a flat one, and the difference is evidenced in each design
+rather than chosen.**
+
+### An attestation vocabulary drawn from the corpus being repaired attests the damage
+
+Last iteration's ligature repair rejoins a split only when the joined token is attested
+elsewhere in the design. Here AEAT breaks `reclasificaciones` as `reclasifi caciones` **in
+several sheets** — so a naive word count records `reclasifi` as a word eleven times over,
+the left-side guard concluded it was already a word, and **the repair silently did nothing**.
+
+Two counts are now kept: every token, and only those tokens seen in a position that *cannot*
+be the left half of a split. The general form: **when you build evidence from a corpus you
+are correcting, the corpus votes for its own errors** — count only the occurrences that
+could not themselves be damaged.
+
+The rejoin also had to stop anchoring on a token boundary. T22005A00's split was
+`instrumentos ﬁ nancieros`, where the fragment *begins* at the ligature; this record's sits
+**mid-word**. A boundary-anchored rule finds the first and silently misses the second.
+
+### AEAT's separator is inconsistent three ways inside one group
+
+A period and space in most lines, a **bare space** at @84 and @101, and **nothing at all** at
+@67 — `…para la ventaGanancias y pérdidas por valoración`. A separator is inserted only where
+the prefix is an **attested standalone line of the same record** (box 00384 prints it alone),
+so the split point is evidence, not a judgement about where the phrase ends.
+
+### The sector attribution is inferred, and now says so
+
+AEAT prints the **same heading** on A01 and A02 and names no sector on either. The section
+slugs say `credito` and `aseguradoras` because of each record's vocabulary — insurance
+accounting plan on one, credit-institution on the other. That reading is *not stated by the
+design*, so the fragment marks it as inferred and the operator-facing labels claim no sector.
+
+### The cross-record hazard has surfaced in the labels
+
+Box **00500** is declared in both records, and because AEAT gives both the same heading the
+two casillas carry an **identical operator label**. That is correct — one declared value on
+two alternative pages — and it is the clearest demonstration yet of the hazard every stamp
+has recorded: a layout must bind such casillas to one value, and nothing enforces that.
+
+The revision now carries 5 duplicated label texts over 21 casillas: 4 are AEAT's own repeats
+inside A01, the fifth is this.
+
+### Scale
+
+**10309 of 11570 slots remain** across 107 numbered records; 1261 modelled, zero orphaned.
