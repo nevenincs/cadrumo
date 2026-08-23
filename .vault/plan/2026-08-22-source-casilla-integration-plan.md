@@ -13,7 +13,7 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
 modified: '2026-08-23'
-body_hash: 'sha256:866c849ab9bae4790e10244ea0f6e87ca642f8b8723eb200b8ddfa6be327250e'
+body_hash: 'sha256:cda45d250de7835efbb25feb9f3323fd807dcbb811aa60cfaa28c5d40c7ba081'
 ---
 
 # `source-casilla-integration` plan
@@ -142,7 +142,7 @@ Add inventory to the canonical taxonomy and resolution mesh without bypassing se
 - [x] `W02.P07.S36` - add the inventory source kind to the canonical taxonomy; `src/cadrumo/core/aggregation.py`.
 - [x] `W02.P07.S37` - define and validate the typed inventory selector contract; `src/cadrumo/domain/calculations/registry/_inventory_bindings.py`.
 - [x] `W02.P07.S38` - enroll inventory selector validation in registry binding construction; `src/cadrumo/domain/calculations/registry/_bindings.py`.
-- [ ] `W02.P07.S163` - define validated complete inventory acquisition-cost facts including attributable costs, non-recoverable IVA, and evidence completeness; `src/cadrumo/domain/contribuyente/inventory`.
+- [x] `W02.P07.S163` - define validated complete inventory acquisition-cost facts including attributable costs, non-recoverable IVA, and evidence completeness; `src/cadrumo/domain/contribuyente/inventory`.
 - [ ] `W02.P07.S164` - propagate complete acquisition-cost facts through inventory application and operator ingress; `src/cadrumo/application/inventory; src/cadrumo/entrypoints/cli`.
 - [ ] `W02.P07.S165` - prove complete acquisition-cost fields survive the encrypted inventory repository round trip; `src/cadrumo/adapters/persistence/profile/tests/test_inventory_roundtrip.py`.
 - [ ] `W02.P07.S166` - replace bare closing-stock authority with a provenance-bearing physical-closing observation and prior-closing continuity contract; `src/cadrumo/domain/contribuyente/inventory`.

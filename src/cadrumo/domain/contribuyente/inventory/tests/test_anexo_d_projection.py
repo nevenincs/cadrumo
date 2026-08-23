@@ -9,6 +9,10 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.contribuyente.inventory import (
+    InventoryAcquisitionCompleteness,
+    InventoryAcquisitionCost,
+    InventoryAcquisitionEvidence,
+    InventoryAcquisitionEvidenceKind,
     InventoryAnexoDResult,
     InventoryLedger,
     InventoryLedgerError,
@@ -18,8 +22,48 @@ from cadrumo.domain.contribuyente.inventory import (
     ValuationMethod,
     compute_inventory_anexo_d_projection,
 )
+from cadrumo.domain.filing_evidence import FilingEvidenceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _purchase_cost(value: str) -> InventoryAcquisitionCost:
+    reference = FilingEvidenceReference(reference="purchase-evidence")
+    cost_review = FilingEvidenceReference(reference="cost-review-evidence")
+    iva_review = FilingEvidenceReference(reference="iva-review-evidence")
+    iva = Decimal(value) * Decimal("0.21")
+    return InventoryAcquisitionCost(
+        consideration_excluding_iva=Decimal(value),
+        consideration_iva_amount=iva,
+        consideration_deductible_iva_ratio=Decimal("1"),
+        attributable_cost_components=(),
+        evidence=(
+            InventoryAcquisitionEvidence(
+                reference=reference,
+                evidence_kind=InventoryAcquisitionEvidenceKind.PURCHASE_INVOICE,
+                content_digest="a" * 64,
+            ),
+            InventoryAcquisitionEvidence(
+                reference=cost_review,
+                evidence_kind=InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW,
+                content_digest="b" * 64,
+            ),
+            InventoryAcquisitionEvidence(
+                reference=iva_review,
+                evidence_kind=InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW,
+                content_digest="c" * 64,
+            ),
+        ),
+        completeness=InventoryAcquisitionCompleteness(
+            consideration_evidence=reference,
+            attributable_cost_review_evidence=cost_review,
+            iva_recoverability_review_evidence=iva_review,
+        ),
+        directly_attributable_cost_total=Decimal("0.00"),
+        nonrecoverable_iva_included=Decimal("0.00"),
+        recoverable_iva_excluded=iva,
+        total_acquisition_cost=Decimal(value),
+    )
 
 
 def _ledger(*, opening: str, purchase: str | None = None, closing: str | None = None) -> InventoryLedger:
@@ -32,6 +76,7 @@ def _ledger(*, opening: str, purchase: str | None = None, closing: str | None = 
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("1"),
                 unit_cost=Decimal(purchase),
+                acquisition_cost=_purchase_cost(purchase),
             ),
         )
     return InventoryLedger(

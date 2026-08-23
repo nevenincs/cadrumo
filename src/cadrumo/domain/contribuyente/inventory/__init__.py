@@ -31,6 +31,7 @@ from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT
 from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity import ContentDigest
 from ....core.money import round_to_cents as _quantize
+from ..._identifiers import canonical_decimal_string as _canonical_decimal_string
 from ...filing_evidence import FilingEvidenceReference
 
 
@@ -109,6 +110,8 @@ class InventoryAcquisitionEvidenceKind(StrEnum):
     CUSTOMS_DECLARATION = "customs_declaration"
     CONTRACT = "contract"
     OTHER_ACQUISITION_EVIDENCE = "other_acquisition_evidence"
+    ATTRIBUTABLE_COST_REVIEW = "attributable_cost_review"
+    IVA_RECOVERABILITY_REVIEW = "iva_recoverability_review"
 
 
 class InventoryAttributableCostKind(StrEnum):
@@ -161,7 +164,7 @@ class InventoryAttributableCostComponent(BaseModel):
     @field_validator("taxable_base", "iva_amount")
     @classmethod
     def _monetary_fields_are_cents(cls, value: Decimal, info: ValidationInfo) -> Decimal:
-        return _require_cents(value, field_name=info.field_name)
+        return _require_cents(value, field_name=info.field_name or "amount")
 
     @field_validator("evidence_references")
     @classmethod
@@ -221,7 +224,7 @@ class InventoryAcquisitionCost(BaseModel):
     )
     @classmethod
     def _monetary_fields_are_cents(cls, value: Decimal, info: ValidationInfo) -> Decimal:
-        return _require_cents(value, field_name=info.field_name)
+        return _require_cents(value, field_name=info.field_name or "amount")
 
     @model_validator(mode="after")
     def _validate_complete_decomposition(self) -> InventoryAcquisitionCost:
@@ -244,6 +247,23 @@ class InventoryAcquisitionCost(BaseModel):
         missing = sorted(declared_refs - set(evidence_ids))
         if missing:
             raise InventoryValidationError(f"inventory acquisition evidence references are unresolved: {missing!r}")
+        evidence_by_reference = {item.reference.reference: item.evidence_kind for item in self.evidence}
+        if (
+            evidence_by_reference[self.completeness.attributable_cost_review_evidence.reference]
+            is not InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW
+        ):
+            raise InventoryValidationError("attributable-cost completeness requires attributable-cost review evidence")
+        if (
+            evidence_by_reference[self.completeness.iva_recoverability_review_evidence.reference]
+            is not InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW
+        ):
+            raise InventoryValidationError("IVA completeness requires IVA-recoverability review evidence")
+        consideration_kind = evidence_by_reference[self.completeness.consideration_evidence.reference]
+        if consideration_kind in {
+            InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW,
+            InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW,
+        }:
+            raise InventoryValidationError("purchase consideration requires acquisition evidence, not review evidence")
 
         attributable = sum((item.taxable_base for item in self.attributable_cost_components), _ZERO)
         recoverable = _quantize(
@@ -292,7 +312,7 @@ class MovementRecord(BaseModel):
             ``taxable_base * iva_rate / 100``.
         deductible_iva_ratio: Fraction of input IVA the contribuyente
             may deduct (0-1).
-        schema_version: Forward-compatible schema version. ``"1"``.
+        schema_version: Forward-compatible schema version. ``"2"``.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -413,7 +433,7 @@ class InventoryLedger(BaseModel):
             ``None`` it is derived from movements at compute time.
         period_movements: Tuple of :class:`MovementRecord` rows
             covering the period.
-        schema_version: Forward-compatible schema version. ``"1"``.
+        schema_version: Forward-compatible schema version. ``"2"``.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -456,7 +476,7 @@ class InventoryLedgerDocument(BaseModel):
     every reader still assumed one.
 
     Attributes:
-        schema_version: Forward-compatible schema version. ``"1"``.
+        schema_version: Forward-compatible schema version. ``"2"``.
         ledgers: Tuple of :class:`InventoryLedger` rows, each with a distinct
             ``(actividad_id, year)`` pair.
     """
@@ -767,7 +787,7 @@ def _weighted_average_layers(
         StockLayer(
             sku=sku,
             quantity=quantity,
-            unit_cost=_quantize(_ZERO if quantity == _ZERO else value / quantity),
+            unit_cost=_ZERO if quantity == _ZERO else value / quantity,
             source_movement_id=f"{ledger.actividad_id}-{ledger.year}-{sku}-weighted-average",
         )
         for sku, (quantity, value) in sorted(pools.items())
@@ -853,17 +873,19 @@ def inventory_acquisition_fingerprint(movement: MovementRecord) -> ContentDigest
         "movement_date": movement.movement_date.isoformat(),
         "kind": movement.kind.value,
         "sku": movement.sku,
-        "quantity": format(movement.quantity, "f"),
-        "consideration_excluding_iva": format(acquisition.consideration_excluding_iva, "f"),
-        "consideration_iva_amount": format(acquisition.consideration_iva_amount, "f"),
-        "consideration_deductible_iva_ratio": format(acquisition.consideration_deductible_iva_ratio, "f"),
+        "quantity": _canonical_decimal_string(movement.quantity),
+        "consideration_excluding_iva": _canonical_decimal_string(acquisition.consideration_excluding_iva),
+        "consideration_iva_amount": _canonical_decimal_string(acquisition.consideration_iva_amount),
+        "consideration_deductible_iva_ratio": _canonical_decimal_string(
+            acquisition.consideration_deductible_iva_ratio,
+        ),
         "components": [
             {
                 "component_id": item.component_id,
                 "kind": item.kind.value,
-                "taxable_base": format(item.taxable_base, "f"),
-                "iva_amount": format(item.iva_amount, "f"),
-                "deductible_iva_ratio": format(item.deductible_iva_ratio, "f"),
+                "taxable_base": _canonical_decimal_string(item.taxable_base),
+                "iva_amount": _canonical_decimal_string(item.iva_amount),
+                "deductible_iva_ratio": _canonical_decimal_string(item.deductible_iva_ratio),
                 "evidence_references": sorted(ref.reference for ref in item.evidence_references),
             }
             for item in sorted(acquisition.attributable_cost_components, key=lambda value: value.component_id)
@@ -878,10 +900,12 @@ def inventory_acquisition_fingerprint(movement: MovementRecord) -> ContentDigest
         ],
         "completeness": acquisition.completeness.model_dump(mode="json"),
         "totals": {
-            "directly_attributable_cost_total": format(acquisition.directly_attributable_cost_total, "f"),
-            "nonrecoverable_iva_included": format(acquisition.nonrecoverable_iva_included, "f"),
-            "recoverable_iva_excluded": format(acquisition.recoverable_iva_excluded, "f"),
-            "total_acquisition_cost": format(acquisition.total_acquisition_cost, "f"),
+            "directly_attributable_cost_total": _canonical_decimal_string(
+                acquisition.directly_attributable_cost_total,
+            ),
+            "nonrecoverable_iva_included": _canonical_decimal_string(acquisition.nonrecoverable_iva_included),
+            "recoverable_iva_excluded": _canonical_decimal_string(acquisition.recoverable_iva_excluded),
+            "total_acquisition_cost": _canonical_decimal_string(acquisition.total_acquisition_cost),
         },
     }
     return _content_hash_hex(payload)
