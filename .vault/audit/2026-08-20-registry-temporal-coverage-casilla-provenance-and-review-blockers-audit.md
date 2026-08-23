@@ -4780,3 +4780,69 @@ is exactly the sentence a reader will shorten to "the balance sheet balances."
 
 **10070 of 11570 slots remain** across 101 numbered records; 1500 modelled, zero orphaned.
 The general-PGC balance is complete; the crédito one — A01, A11, B01, C01 — is not.
+
+## 2026-08-23 — the crédito activo, and a stamp made without a usable suite run
+
+### What landed
+
+Records **T22003A01** and **T22003A11** — the *balance consolidado activo* in the entidades
+de crédito shape, closing on `00152` TOTAL ACTIVO. **66 casillas**, revision 1666 →
+**1732**, thirty-four of 137 records.
+
+### The suite could not be diffed, and the stamp says so first
+
+The registry suite returned **604 failures and 96 errors** against a clean baseline of 9.
+Cause: a peer's in-flight modelo 200 work leaves the whole authority failing validation —
+**3596 validation failures, zero naming modelo 220**, stable across three consecutive load
+attempts. Every test that loads the authority fails regardless of this work.
+
+The FAILED-list diff is the gate this campaign leans on hardest, and it was unavailable. The
+record-level checks *did* run, before the breakage and against a loaded authority.
+
+**The stamp leads with that gap rather than burying it**, and states plainly that the
+revision's suite state is unknown: *"it was green at the previous stamp and nothing here
+touches production code, but that is an argument, not a measurement."* The next iteration
+must re-run once m200 clears.
+
+Choosing to stamp at all was the close call. Not stamping would have left the previous stamp
+standing at 32 records / 1666 casillas — an out-of-date claim is its own small dishonesty,
+and a disclosed gap beats a stale number.
+
+### Thirty-three of fifty-four boxes share a label, and that is the honest cost
+
+T22003A01 is a **portfolio × instrument matrix**: AEAT prints the portfolio head on its own
+row and the instrument rows beneath it *without* the portfolio name. Five boxes read
+`Valores representativos de deuda`, five `Préstamos y anticipos`, five the same Pro memoria
+line.
+
+A numbering-block rule was considered and refused as **partial**: the `00615`, `00623`,
+`00631` runs are contiguous, but the `00102` and `00110` runs have gaps and their Pro memoria
+lines carry out-of-run numbers `00750`/`00751`. **Right for three blocks and not two** is
+precisely the case already refused on T22005A01.
+
+Stated plainly on the fragment: an operator surface showing labels without numbers will
+present five identical rows on this page. A real cost, recorded rather than traded for an
+unverifiable tree.
+
+### The duplicate assertion had to change to admit the record
+
+The generator asserted **no duplicate labels**. That would have refused T22003A01 outright
+and forced a distinction AEAT does not make. It now asserts **the duplicated set equals the
+design's** — the form the T22005A01 *locale* generator already used, now also in the
+fragment generator.
+
+Third time this campaign a check has fired on AEAT's own structure rather than a defect.
+The pattern is stable enough to name: **a check encodes an assumption about the data; when
+it fires on a new record, ask which of the two is wrong before fixing either.**
+
+### A record that spells its own heading two ways
+
+T22003A11 prints both `ACTIVO (cont.).` and `ACTIVO (cont).`. A common-prefix derivation
+stops mid-word at `ACTIVO (cont` and finds *no* heading, which would have left the prefix on
+all twelve labels. The sheet now declares a heading **pattern**; every line is asserted to
+match and the spellings found are reported.
+
+### Scale
+
+**10004 of 11570 slots remain** across 99 numbered records; 1566 modelled, zero orphaned —
+measured by reading the committed TOML directly, because the authority would not load.
