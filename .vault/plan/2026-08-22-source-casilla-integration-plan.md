@@ -10,7 +10,7 @@ related:
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
 modified: '2026-08-23'
 body_schema: body-v1
-body_hash: 'sha256:abec4da2f2c79b1eb299f283cac3bf438da74bf4336e46a73630960ea7ac0889'
+body_hash: 'sha256:97de5c0d41f203f707ae3f42391bddd3bcc3d299e3134b656fccbd37ee62e65c'
 ---
 
 # `source-casilla-integration` plan
@@ -75,7 +75,7 @@ Produce deterministic records for every validated manual casilla, binding, relat
 
 Enumerate typed secure domains, repositories, ingress, assemblers, helpers, and readiness declarations without treating a name match as authority.
 
-- [ ] `W01.P03.S11` - enumerate secure typed repositories and their aggregate grains; `dev/source_connectivity/discovery.py`.
+- [x] `W01.P03.S11` - enumerate secure typed repositories and their aggregate grains; `dev/source_connectivity/discovery.py`.
 - [ ] `W01.P03.S12` - enumerate supported CLI and worksheet ingress surfaces; `dev/source_connectivity/discovery.py`.
 - [ ] `W01.P03.S13` - enumerate exported calculation helpers and explicit readiness declarations; `dev/source_connectivity/discovery.py`.
 - [ ] `W01.P03.S14` - enumerate typed row assemblers and declared source-disposition ownership; `dev/source_connectivity/discovery.py`.
