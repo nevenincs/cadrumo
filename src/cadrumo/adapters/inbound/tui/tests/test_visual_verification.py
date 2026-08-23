@@ -642,11 +642,17 @@ async def test_a_focused_button_is_painted_differently_from_an_unfocused_one(
             target, other = buttons[0], buttons[1]
             app.screen.set_focus(other)
             await pilot.pause()
-            unfocused = app.screen.get_style_at(target.region.x + 1, target.region.y + 1)
+            # Sample INSIDE the button. Buttons are one cell tall in this theme, so a
+            # y + 1 probe reads the row BELOW the widget, which is unaffected by focus
+            # and therefore identical in both states -- the assertion below would then
+            # fail no matter how visible focus actually is.
+            probe_x = target.region.x + min(1, max(target.region.width - 1, 0))
+            probe_y = target.region.y + target.region.height // 2
+            unfocused = app.screen.get_style_at(probe_x, probe_y)
 
             app.screen.set_focus(target)
             await pilot.pause()
-            focused = app.screen.get_style_at(target.region.x + 1, target.region.y + 1)
+            focused = app.screen.get_style_at(probe_x, probe_y)
 
             assert (focused.bgcolor, focused.color, focused.bold) != (
                 unfocused.bgcolor,
