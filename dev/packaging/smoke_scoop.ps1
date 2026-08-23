@@ -94,7 +94,7 @@ function Stop-ProcessesUnderPath {
         [string]$Root
     )
 
-    # A child of the exercised venv (a lingering python/MCP subprocess, or a
+    # A child of the exercised venv (a lingering Python subprocess, or a
     # scanner holding an open handle through it) can outlive the oracle and
     # block `scoop uninstall` with "it may be in use". Reap every process
     # whose image path is rooted under the staged app before uninstalling.
@@ -581,7 +581,6 @@ function Invoke-HostSmoke {
             uninstall_preserved_persistence = $true
             reinstall_preserved_persistence = $true
             tax_evidence = $oracleEvidence.tax_evidence
-            mcp_evidence = $null
         }
     }
     finally {

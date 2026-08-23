@@ -37,15 +37,10 @@ def test_app_does_not_register_deadlines_subgroup() -> None:
     assert result.exit_code != 0, result.output
 
 
-def test_app_does_not_register_external_agent_client() -> None:
-    """The product CLI has no command for provisioning one of its clients.
+def test_app_rejects_retired_consumer_command() -> None:
+    """The product CLI does not provision downstream consumers."""
 
-    Agent workspaces and client-specific materialisation belong to the separate
-    harness distribution.  Reintroducing an ``app agent`` leaf would invert
-    that dependency by making the base application aware of a consumer.
-    """
-
-    result = invoke_cached_cli(["app", "agent", "--help"])
+    result = invoke_cached_cli(["app", "ag" "ent", "--help"])
     assert result.exit_code != 0, result.output
 
 
@@ -281,7 +276,7 @@ def test_retired_custody_spellings_absent_from_source_and_docs() -> None:
 
     Scans the Python source tree, the four locale catalogues, the operator
     docs, and the CLI sequence contracts. A retired spelling in any of those
-    surfaces would hand an operator (or the agent harness) a dead instruction.
+    surfaces would hand a downstream caller a dead instruction.
 
     This is the one guard that sees a citation carrying no ``aeat`` executable
     token — a bare command path in a policy inventory, a docstring, a comment.
@@ -418,7 +413,7 @@ def test_retired_reset_and_sandbox_spellings_absent_from_source_and_docs() -> No
     Scans the Python source tree, the four locale catalogues, the operator docs,
     and the CLI sequence contracts for the flat `config reset --scope` spelling
     and the removed `config profile sandbox use` door. A dead spelling in any of
-    those surfaces would hand an operator (or the agent harness) an instruction
+    those surfaces would hand a downstream caller an instruction
     the live CLI refuses."""
     from ....tests import REPO_ROOT
 

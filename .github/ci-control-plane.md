@@ -156,9 +156,8 @@ the GROI oracle), `code-health-report.yml` (informational dashboard).
 | `workflows/packaging-quick.yml` | T1 per-push install probe (no evidence) |
 | `workflows/packaging-campaign-trigger.yml` | T2 detector: auto-dispatches the full campaign |
 | `workflows/packaging-smoke.yml` | Full campaign; sole source of promotable evidence |
-| `workflows/packaging-scoop.yml` / `packaging-homebrew.yml` / `packaging-claude.yml` | Dispatch-only acquisition lanes consuming a tested cohort |
+| `workflows/packaging-scoop.yml` / `packaging-homebrew.yml` | Dispatch-only acquisition lanes consuming a tested cohort |
 | `workflows/publish-release.yml` | T3: sole publication authority (Gates 1–3) |
-| `workflows/agent-harness-eval.yml` | Merge-time gate on the operator agent harness |
 | `workflows/aeat-drift-detector.yml` | Weekly live AEAT (tax agency) selector parity |
 | `workflows/code-health-report.yml` | Monthly informational health dashboard |
 | `ISSUE_TEMPLATE/` | audit / operator-capability / regression issue forms |

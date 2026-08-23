@@ -3,9 +3,8 @@
 The release builder is the sole networked producer. It derives the exact
 third-party runtime closure from the tested ``uv.lock``, selects one compatible
 wheel for every supported platform, downloads and verifies the lock-recorded
-bytes, then writes one deterministic archive. Downstream plugin and MCPB lanes
-consume that archive only; they never resolve a product or dependency from an
-index.
+bytes, then writes one deterministic archive. Downstream artifact lanes consume
+that archive without resolving dependencies again.
 """
 
 from __future__ import annotations

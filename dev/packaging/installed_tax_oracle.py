@@ -131,15 +131,8 @@ def checkout_imports_removed(environment: Mapping[str, str]) -> bool:
 
 
 def ambient_product_executables_removed(environment: Mapping[str, str]) -> bool:
-    """True when no ambient ``cadrumo-mcp`` could fake an MCP-leg claim.
-
-    The oracle drives an absolute installed ``aeat``, so the only product
-    executable that could sneak an MCP-leg claim into a CLI-only lane's
-    environment is a ``cadrumo-mcp`` already on PATH. This reads the fact back
-    off the real captured environment, so the emitted evidence records what
-    isolation actually held rather than asserting it unconditionally.
-    """
-    return shutil.which("cadrumo-mcp", path=environment.get("PATH", "")) is None
+    """True when no ambient product CLI can shadow the absolute tested CLI."""
+    return shutil.which("aeat", path=environment.get("PATH", "")) is None
 
 
 def isolated_product_environment(storage_root: Path) -> dict[str, str]:

@@ -56,9 +56,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.tty import stdin_is_tty
 
-_CliRefusedBoundaryError = import_module(
-    "cadrumo.entrypoints.cli._errors"
-).CliRefusedBoundaryError
+_CliRefusedBoundaryError = import_module("cadrumo.entrypoints.cli._errors").CliRefusedBoundaryError
 
 MACHINE_SECRET_MAX_BYTES = 8192
 _MAX_SECRETS_BYTES = MACHINE_SECRET_MAX_BYTES
@@ -133,8 +131,8 @@ class ProfileSecretSelection:
             raise ValueError("fd profile-secret selection requires a descriptor")
 
 
-_STAGED_MACHINE_SECRET_PAYLOADS: ContextVar[dict[type[MachineSecretPayload], MachineSecretPayload] | None] = (
-    ContextVar("cadrumo_staged_machine_secret_payloads", default=None)
+_STAGED_MACHINE_SECRET_PAYLOADS: ContextVar[dict[type[MachineSecretPayload], MachineSecretPayload] | None] = ContextVar(
+    "cadrumo_staged_machine_secret_payloads", default=None
 )
 
 

@@ -334,7 +334,6 @@ function Invoke-HostAcquisition {
         verified_artifact_digests = $verifiedDigests
         installed_prefix = $prefix
         installed_tax_oracle = (Get-Content -LiteralPath $oracle.tax_evidence -Raw | ConvertFrom-Json)
-        installed_mcp_oracle = $null
     }
     $evidence | ConvertTo-Json -Depth 20 |
         Set-Content -LiteralPath (Join-Path $resolvedEvidence "acquire-scoop-evidence.json") -Encoding UTF8

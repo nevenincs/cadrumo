@@ -267,8 +267,7 @@ jobs:
         # handbook curation (7), the variable-envelope generation gate (5, which
         # includes a registry loader-cache race that reports as "registry
         # directory changed during cache fingerprinting" and is a property of
-        # concurrent writes rather than of the code) and the agent-evaluation
-        # goldens (19 across five modules, a live campaign's own surface).
+        # concurrent writes rather than of the code).
         #
         # Re-measure before acting rather than trusting these figures: at least
         # one population moves under peer commits.
@@ -291,15 +290,6 @@ jobs:
         # through the recipe so this path/marker selection has one declaration
         # site instead of living only in this workflow line.
         run: just test-channel-artifacts
-
-      - name: Serving-path performance gate
-        # perf-marked, excluded from every per-push lane (a shared machine
-        # steals wall-clock from co-resident jobs): the hard assert is PROCESS
-        # CPU-TIME (load-immune either way); the wall numbers this prints (-s)
-        # are advisory and meaningful because this lane runs on manual
-        # dispatch, typically on a quiet machine. Serial (-n0): the benchmark
-        # measures a warm in-process runtime.
-        run: uv run --no-sync pytest -q -s -n0 -m perf dev/packaging/tests/test_serving_path_benchmark.py
 
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,

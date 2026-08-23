@@ -950,16 +950,14 @@ stale branding and corrupted tax-authority semantics.
   inside the authority payload stored there.
 - **Good:** keep `adapters.outbound.aeat`, official AEAT URLs, legal provenance
   and the `registry/aeat` taxonomy under the CADRUMO package root; invoke the
-  human CLI as `aeat`, import the package as `cadrumo`, launch the MCP
-  executable as `cadrumo-mcp`.
+  human CLI as `aeat` and import the package as `cadrumo`.
 - **Bad:** a new `_census.py` re-exporting `CensoSnapshot` as `CensusSnapshot`
   for "compatibility", or authoring a new ADR or plan in English when the AEAT
   surface uses a Spanish noun.
 - **Bad:** globally replacing every `AEAT` token with `CADRUMO`, changing the
   name of the authority or of byte-exact official evidence.
-- **Bad:** retaining `aeat` for a product import, environment prefix, storage
-  owner, plugin or MCP namespace, or exposing `cadrumo` as a second human
-  executable.
+- **Bad:** retaining `aeat` for a product import, environment prefix, or storage
+  owner, or exposing `cadrumo` as a second human executable.
 
 Source: ADR `2026-07-12-cadrumo-cli-executable-adr`; audit
 `2026-07-12-cadrumo-product-rename-audit`; ADR

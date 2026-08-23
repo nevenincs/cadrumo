@@ -397,8 +397,5 @@ def test_scoop_script_declares_public_acquisition_contract() -> None:
     assert '[string]$Mode = "Container"' in script
     assert "Assert-InstalledCohortDigests" in script
     assert "dev.packaging.installed_tax_oracle" in script
-    # The Scoop lane is CLI-only by scope: the retired MCP oracle must not
-    # reappear in the acquisition script.
-    assert "dev.packaging.installed_mcp_oracle" not in script
     assert "public reacquisition" in script
     assert "public reacquisition digest mismatch" in script

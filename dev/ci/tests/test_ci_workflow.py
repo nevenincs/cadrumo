@@ -320,17 +320,16 @@ def test_the_per_push_integration_gates_recipe_carries_the_substance_the_workflo
         (
             line
             for line in _JUSTFILE.read_text(encoding="utf-8").splitlines()
-            if "test_rule_surface_conformance.py" in line
+            if "test_suggestion_command_conformance.py" in line
         ),
         None,
     )
     assert body is not None, "no justfile line carries the recipe body; the delegated lane has no home"
     assert "not serial and not perf and not external_tool and not os_keychain and not resident_service" in body
     for target in (
-        "src/cadrumo-harness/src/cadrumo_harness/tests/test_rule_surface_conformance.py",
         "src/cadrumo/entrypoints/cli/_config/tests/test_status_frontend_gate.py",
         "src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py",
-        "src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py",
+        "dev/tests/test_suggestion_command_conformance.py",
     ):
         assert target in body, f"the delegated lane no longer names {target}"
 

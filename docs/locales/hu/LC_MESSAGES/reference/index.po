@@ -42,13 +42,12 @@ msgstr ""
 #: ../../reference/index.md:10
 msgid ""
 "The Agencia Estatal de Administración Tributaria (AEAT) is the external "
-"tax authority. The command-line interface (CLI), Model Context Protocol "
-"(MCP), and application programming interface (API) are Cadrumo product "
-"surfaces."
+"tax authority. The command-line interface (CLI) and application programming "
+"interface (API) are Cadrumo product surfaces."
 msgstr ""
 "Az Agencia Estatal de Administración Tributaria (AEAT) a külső "
-"adóhatóság. A parancssori felület (CLI), a Model Context Protocol (MCP) "
-"és az alkalmazásprogramozási felület (API) Cadrumo termékfelületek."
+"adóhatóság. A parancssori felület (CLI) és az alkalmazásprogramozási felület "
+"(API) a Cadrumo termékfelületei."
 
 #: ../../reference/index.md:14
 msgid "Lookup map"
@@ -132,4 +131,3 @@ msgstr ""
 "szabályzatot](https://github.com/nevenincs/cadrumo/blob/main/SECURITY.md)"
 " a privát biztonsági bejelentéshez, valamint annak tartalékát, ha a "
 "privát bejelentés nem elérhető."
-

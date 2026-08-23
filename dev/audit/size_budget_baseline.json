@@ -12,7 +12,7 @@
     "src/cadrumo/application/ledger/_actions_manual.py": "Split direction: extract the manual-command helpers.",
     "src/cadrumo/application/user_profile/_custody_carry.py::_natural_key_resolvers": "A resolver dispatch table; the length is table rows rather than branching.",
     "src/cadrumo/application/workflow/_engine.py": "The workflow decomposition extracted the engine's stage helpers into named private callables.",
-    "src/cadrumo/core/config.py": "The split-by-mixin direction is proven rather than theoretical: extracting the LLM and MCP-serving settings into mixins already took a substantial slice off this module. Split direction: continue that mixin extraction.",
+    "src/cadrumo/core/config.py": "The split-by-mixin direction is proven rather than theoretical: extracting cohesive settings into mixins already took a substantial slice off this module. Split direction: continue that mixin extraction.",
     "src/cadrumo/domain/calculations/registry/_formula_runtime.py": "The IRNR/M210 formula-op evaluator family was extracted to _formula_runtime_irnr.py and the shared error types plus numeric accessor to _formula_runtime_ops.py (aeat-architecture-boundaries). Split direction: further formula-op families remain extractable the same way.",
     "src/cadrumo/domain/calculations/registry/_loader.py": "Load-bearing registry compiler; the locale-translation load/merge/inject pipeline was already extracted to _loader_locales.py. Split direction: owner pass rather than a same-pass extraction.",
     "src/cadrumo/domain/calculations/registry/_record_design.py": "Not acquired complexity: the ruff 0.15.22 -> 0.16.0 formatter reflow joined comprehensions and call chains the old formatter split. A split would be the wrong remedy here.",

@@ -391,45 +391,28 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 First public release cohort of **Cadrumo** — the product's first distribution
 under its product name (renamed from the internal `aeat` working name) — built
 once into one immutable, hash-bound cross-platform cohort and promoted without
-rebuild to every channel, so PyPI, the GitHub release, Scoop, Homebrew, and
-Claude all serve identical bytes. No `v0.2.0` distribution was ever published;
+rebuild to every channel, so PyPI, the GitHub release, Scoop, and Homebrew all
+serve identical bytes. No `v0.2.0` distribution was ever published;
 the `v0.2.0` tag predates the work below.
 
 ### Added
 
 - **Distribution channels:** Cadrumo installs from PyPI
   (`cadrumo`, `cadrumo-data-manuals`, `cadrumo-data-official` via Trusted
-  Publishing), the GitHub release, a Scoop bucket, a Homebrew tap, the Claude
-  plugin marketplace, and a Claude Desktop MCPB bundle. Every artefact is
+  Publishing), the GitHub release, a Scoop bucket, and a Homebrew tap. Every artefact is
   digest-verified against the one tested cohort; each channel's installed
   behaviour is proven by a grounded tax-work oracle before release.
-- **Warm MCP serving:** local read and mutate MCP tools run in-process against
-  a warm runtime — steady-state latency is roughly 0.09 s for reads, 0.28 s for
-  simple writes, and 1.7 s for the heaviest Modelo 200 calculation — replacing
-  the previous per-call subprocess spawn.
-- **Bilingual client-display copy:** the Claude plugin, marketplace, and MCPB
-  product descriptions carry English and Spanish summaries.
 
 ### Changed
 
-- **Product identity:** the agent harness (personas, skills, operator rules) is
-  namespaced under the `cadrumo-` prefix, and the MCP server, tools, and
-  resource URIs use the `cadrumo` / `cadrumo://` identity. The Python package
-  imports as `cadrumo`, the human CLI executable is `aeat`, and the MCP server
-  executable is `cadrumo-mcp`.
-- **Config safety:** state-destroying config operations (`config reset`,
-  `config repair`) now require explicit human confirmation on the MCP surface.
+- **Product identity:** the Python package imports as `cadrumo`, while the human
+  CLI executable is `aeat`.
 - **User documentation:** the installation surfaces address end users
   installing a released package; developer-checkout setup moved to
-  `CONTRIBUTING.md`. The documented MCP command is `cadrumo-mcp`.
+  `CONTRIBUTING.md`.
 
 ### Fixed
 
-- **MCP robustness:** the MCP server now starts and answers the protocol on a
-  machine carrying retired prior-product state instead of crashing before its
-  first response; the `execute` meta-tool no longer blocks the event loop
-  (removing multi-second and Cowork-client hangs); a wedged warm call degrades
-  to the supervised subprocess transport with a visible warning.
 - **Packaging:** `click` is now a declared direct dependency; `typer>=0.26`
   stopped pulling it in, so a clean wheel install crashed on import
   (`ModuleNotFoundError: click`). Caught by the split-install packaging
@@ -463,9 +446,6 @@ so there is no upgrade path to document (see `no-legacy-compatibility`).
 - **CLI surface:** typed `--json` output contract with a shared envelope
   spine, `ErrorCode` registry, exit-code table, and a uniform `Notice`
   diagnostics channel replacing ad hoc advisory fields.
-- **Agent harness:** an operator-facing agent-skills and agent-harness
-  surface (`aeat.agent`) with per-modelo applicability skills, conformance
-  gates tying harness documents to the live CLI surface.
 - **Ledger hardening:** absolute-magnitude transaction amounts with
   direction as the sole flow authority, idempotent-guarded single-subject
   mutations, evidence-bundled ledger-derived calculation revisions, and a

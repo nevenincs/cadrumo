@@ -178,9 +178,10 @@ classifications you already set by hand.
 
 ## Use an LLM suggestion
 
-Cadrumo can use an AI assistant to suggest how to classify each transaction. The
-suggestion is a starting point. You must confirm or correct it. It does not
-fill in tax amounts such as taxable base, IVA rate, or IRPF category.
+Cadrumo can use a configured language model to suggest how to classify each
+transaction. The suggestion is a starting point. You must confirm or correct
+it. It does not fill in tax amounts such as taxable base, IVA rate, or IRPF
+category.
 
 Use [Classify transactions with an LLM](classify-with-llm.md) for the full
 provider, preview, apply, and override flow.

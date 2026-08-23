@@ -13,7 +13,6 @@ import pytest
 from ...packaging._hashing import sha256_path
 from ...packaging.evidence import (
     AcquisitionIdentity,
-    ClientIdentity,
     CommandTranscript,
     DestinationIdentity,
     EvidenceStatus,
@@ -90,13 +89,12 @@ def _record(
     status: EvidenceStatus = EvidenceStatus.PASSED,
     row_id: str = _ROW,
     runtime: RuntimeIdentity | None = None,
-    client: ClientIdentity | None = None,
 ):
     return create_distribution_evidence(
         row_id=row_id,
         cohort=cohort,
         runtime=runtime if runtime is not None else current_runtime_identity(),
-        client=client,
+        client=None,
         isolation=ExecutionIsolation(
             checkout_imports_removed=True,
             ambient_product_executables_removed=True,
@@ -230,23 +228,12 @@ def test_skipped_or_ambient_evidence_document_blocks(
     assert "invalid or mismatched evidence" in check.detail
 
 
-def test_client_required_row_without_client_identity_blocks(tmp_path: Path) -> None:
-    """A client claim cannot pass through a record that identifies no real client."""
-    repo, cohort, evidence = _ready_tree(tmp_path)
-    write_distribution_evidence(evidence, _record(repo, cohort, row_id="claude-code-plugin"))
-
-    check = check_distribution_evidence_set(repo, required_rows=("claude-code-plugin",))
-
-    assert check.passed is False
-    assert "lack real client identity" in check.detail
-
-
 def test_two_consistent_passing_captures_of_one_row_still_pass(tmp_path: Path) -> None:
     """A legitimate re-run writing a second immutable passing capture does not block.
 
     The two records differ in evidence_id, observed_at, and command
     transcript (an inherent re-run difference) but agree on runtime,
-    client, and destination kind -- the identity axes that matter.
+    and destination kind -- the identity axes that matter.
     """
     repo, cohort, evidence = _ready_tree(tmp_path)
     first = _record(repo, cohort)
@@ -283,23 +270,3 @@ def test_two_conflicting_passing_captures_of_one_row_block(tmp_path: Path) -> No
     assert check.passed is False
     assert "conflicting passing evidence" in check.detail
     assert _ROW in check.detail
-
-
-def test_two_conflicting_client_identities_for_one_row_block(tmp_path: Path) -> None:
-    """Two passing captures of a client row naming different clients block."""
-    repo, cohort, evidence = _ready_tree(tmp_path)
-    claude_client = ClientIdentity(name="claude-code", version="1.0.0", executable="claude")
-    codex_client = ClientIdentity(name="codex-cli", version="1.0.0", executable="codex")
-    write_distribution_evidence(
-        evidence,
-        _record(repo, cohort, row_id="claude-code-plugin", client=claude_client),
-    )
-    write_distribution_evidence(
-        evidence,
-        _record(repo, cohort, row_id="claude-code-plugin", client=codex_client),
-    )
-
-    check = check_distribution_evidence_set(repo, required_rows=("claude-code-plugin",))
-
-    assert check.passed is False
-    assert "conflicting passing evidence" in check.detail

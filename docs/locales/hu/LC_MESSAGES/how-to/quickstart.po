@@ -82,12 +82,11 @@ msgstr ""
 #: ../../how-to/quickstart.md:29
 msgid ""
 "If it is not, [Install Cadrumo](../workstation-setup.md) covers the full "
-"setup: the package download, the optional integrations, and the AI-"
-"assistant (MCP) surface."
+"setup, including the package download and optional integrations."
 msgstr ""
 "Ha nem, [A Cadrumo telepítése](../workstation-setup.md) tárgyalja a "
-"teljes beállítást: a csomag letöltését, az opcionális integrációkat és az"
-" AI-asszisztens (MCP) felületet."
+"teljes beállítást, beleértve a csomag letöltését és az opcionális "
+"integrációkat."
 
 #: ../../how-to/quickstart.md:33
 msgid "The master-key passphrase"
@@ -550,4 +549,3 @@ msgstr ""
 #~ "a [Modelo 303 IVA-benyújtás "
 #~ "előkészítése](modelo-303.md) végponttól végpontig "
 #~ "végigvezet a bizonyíték-munkafolyamaton."
-

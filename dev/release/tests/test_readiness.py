@@ -580,20 +580,3 @@ def test_real_repo_root_resolves_and_version_surfaces_currently_agree() -> None:
     project_names = readiness.check_project_names_are_canonical(root)
     assert project_names.passed is True, project_names.detail
 
-
-def test_harness_distribution_is_excluded_from_the_release_cohort() -> None:
-    """The severed harness distribution is never a cohort authority or pin.
-
-    It ships in the release through its own PyPI distribution, versioned
-    independently; the cohort's single-version parity must neither enumerate
-    it as a project path nor pin it as a companion. Enrolling it would break
-    the parity lock against its own version line, so this pin is the guard
-    against an accidental enrolment.
-    """
-    from dev.packaging._acquire_common import PYTHON_COHORT_WHEEL_NAMES
-    from dev.release import readiness
-
-    names = {name for _path, name in readiness._PROJECT_NAME_PATHS}
-    assert "cadrumo-harness" not in names
-    assert "cadrumo-harness" not in readiness.PRODUCT_IDENTITY.companion_distributions
-    assert "cadrumo-harness" not in PYTHON_COHORT_WHEEL_NAMES

@@ -250,17 +250,13 @@ def _build_cli_tree_loaded() -> CliTree:
 
     registration = command_registration_projection()
     metadata_by_path = {
-        ("aeat", *(row.cli_path or ())): row
-        for row in registration.commands
-        if row.cli_path is not None
+        ("aeat", *(row.cli_path or ())): row for row in registration.commands if row.cli_path is not None
     }
     projection: dict[str, CliCommandNode] = {}
     for node in command_spec_nodes():
         params = tuple(
             CliParam(
-                names=(parameter.name,)
-                if isinstance(parameter, ArgumentSpec)
-                else parameter.declarations,
+                names=(parameter.name,) if isinstance(parameter, ArgumentSpec) else parameter.declarations,
                 kind=ParamKind.ARGUMENT if isinstance(parameter, ArgumentSpec) else ParamKind.OPTION,
                 required=parameter.default.kind is DefaultKind.REQUIRED,
                 help="" if parameter.help_key is None else tr(parameter.help_key.value),
@@ -280,9 +276,7 @@ def _build_cli_tree_loaded() -> CliTree:
             usage=usage,
             params=params,
             machine_secret_payloads=() if metadata is None else metadata.machine_secret_payloads,
-            profile_authentication=(
-                "not-applicable" if metadata is None else metadata.profile_authentication
-            ),
+            profile_authentication=("not-applicable" if metadata is None else metadata.profile_authentication),
             profile_authentication_contract=(
                 registration.profile_authentication_contract if node.spec.kind == "root" else None
             ),

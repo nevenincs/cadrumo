@@ -18,6 +18,9 @@ _BASE_RELEASE_SURFACES = (
     Path("dev/packaging/cohort_manifest.py"),
     Path("dev/packaging/oracle_emit_cohort.py"),
     Path("dev/packaging/acquire_pypi.py"),
+    Path("dev/packaging/_acquire_common.py"),
+    Path("dev/packaging/_smoke_common.py"),
+    Path("dev/packaging/smoke_scoop.ps1"),
     Path("dev/packaging/publication_inputs.py"),
     Path("dev/release/readiness.py"),
     Path("dev/release/version_bump.py"),
@@ -25,6 +28,7 @@ _BASE_RELEASE_SURFACES = (
     Path("dev/release/seal_candidate.py"),
     Path("dev/release/soak_promoter.py"),
     Path(".github/workflows/packaging-smoke.yml"),
+    Path(".github/workflows/packaging-homebrew.yml"),
     Path(".github/workflows/release-orchestrator.yml"),
     Path(".github/workflows/publish-release.yml"),
     Path(".github/workflows/ci-full.yml"),
@@ -43,6 +47,12 @@ _EXTERNAL_CLIENT_MARKERS = (
     "packaging-claude",
     "claude_evidence",
     "smoke_desktop_client",
+    "mcp_evidence",
+    "mcp-evidence",
+    "installed_mcp",
+    "owned_server_launch",
+    '"agent" extra',
+    "`agent` extra",
 )
 
 

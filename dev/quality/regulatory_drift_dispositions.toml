@@ -293,16 +293,6 @@ an evidence-coverage claim living outside the registry.
 # -- Allowlist: not regulatory data. Keyed by file and enclosing symbol. ------
 
 [[decision]]
-path = "dev/agent_eval/_models.py"
-enclosing_symbol = "GoldenScenario"
-disposition = "not_regulatory"
-rationale = """
-Filing-year field bounds on an evaluation-harness scenario model, mirroring the
-production bounds so a malformed golden scenario is refused at load. A harness
-fixture constraint, not a value any filing reads.
-"""
-
-[[decision]]
 path = "dev/audit/legal_excerpt_vintage_screen.py"
 enclosing_symbol = "<module>"
 disposition = "not_regulatory"
@@ -381,22 +371,6 @@ path = "dev/ingest_harness/_runner.py"
 enclosing_symbol = "_outcome_line"
 disposition = "not_regulatory"
 rationale = "The same harness scoring band, applied when rendering an outcome line."
-
-[[decision]]
-path = "dev/packaging/desktop_capture.py"
-enclosing_symbol = "_await_assistant_reply"
-disposition = "not_regulatory"
-rationale = """
-A 2000 millisecond poll interval. A duration that happens to fall inside the
-filing-year span, which is why the census reports it and why a person has to read
-it rather than a pattern decide it.
-"""
-
-[[decision]]
-path = "dev/packaging/smoke_desktop_client.py"
-enclosing_symbol = "_perform"
-disposition = "not_regulatory"
-rationale = "The same 2000 millisecond wait in the desktop smoke client."
 
 [[decision]]
 path = "dev/packaging/installed_tax_oracle.py"

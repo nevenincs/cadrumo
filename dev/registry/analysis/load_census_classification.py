@@ -638,7 +638,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
     ),
     ClassificationRule(
         classification="conditionally_reachable",
-        trigger="capability gating on the CLI and MCP surfaces",
+        trigger="capability gating on CLI surfaces",
         reason="Gates a capability-bound operator surface; nothing in a registry load is gated.",
         prefixes=("cadrumo.core.access_gate",),
     ),

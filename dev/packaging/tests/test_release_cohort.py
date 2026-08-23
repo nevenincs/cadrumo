@@ -17,13 +17,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def test_deterministic_zip_preserves_real_tree_bytes(tmp_path: Path) -> None:
     """Repeated packaging changes neither archive bytes nor member payloads."""
-    source = tmp_path / "plugin"
-    (source / ".claude-plugin").mkdir(parents=True)
-    (source / "skills" / "cadrumo-calculate").mkdir(parents=True)
+    source = tmp_path / "payload"
+    (source / "metadata").mkdir(parents=True)
+    (source / "wheels").mkdir(parents=True)
     manifest = b'{"name":"cadrumo","version":"0.2.1"}\n'
-    skill = b"---\nname: cadrumo-calculate\n---\n\n# Calculate\n"
-    (source / ".claude-plugin" / "plugin.json").write_bytes(manifest)
-    (source / "skills" / "cadrumo-calculate" / "SKILL.md").write_bytes(skill)
+    wheel = b"wheel-bytes\n"
+    (source / "metadata" / "manifest.json").write_bytes(manifest)
+    (source / "wheels" / "cadrumo.whl").write_bytes(wheel)
 
     first = deterministic_zip_tree(source, tmp_path / "first.zip")
     second = deterministic_zip_tree(source, tmp_path / "second.zip")
@@ -31,11 +31,11 @@ def test_deterministic_zip_preserves_real_tree_bytes(tmp_path: Path) -> None:
     assert first.read_bytes() == second.read_bytes()
     with zipfile.ZipFile(first) as archive:
         assert archive.namelist() == [
-            ".claude-plugin/plugin.json",
-            "skills/cadrumo-calculate/SKILL.md",
+            "metadata/manifest.json",
+            "wheels/cadrumo.whl",
         ]
-        assert archive.read(".claude-plugin/plugin.json") == manifest
-        assert archive.read("skills/cadrumo-calculate/SKILL.md") == skill
+        assert archive.read("metadata/manifest.json") == manifest
+        assert archive.read("wheels/cadrumo.whl") == wheel
         assert {info.date_time for info in archive.infolist()} == {(1980, 1, 1, 0, 0, 0)}
 
 

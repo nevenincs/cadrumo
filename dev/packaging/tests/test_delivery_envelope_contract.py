@@ -1,9 +1,4 @@
-"""Shared delivery-oracle envelope contract coverage.
-
-The installed CLI and MCP oracles acquire an envelope over different transports
-and then assert the same spine. These cover the one shared assertion helper both
-now route through, including that each oracle keeps raising its own error type.
-"""
+"""Installed CLI delivery-envelope contract coverage."""
 
 from __future__ import annotations
 
@@ -11,7 +6,6 @@ from typing import Any
 
 import pytest
 
-from ..installed_mcp_oracle import InstalledMcpOracleError
 from ..installed_tax_oracle import (
     PROFILE_LABEL,
     InstalledTaxOracleError,
@@ -72,20 +66,6 @@ def test_each_spine_violation_is_refused(overrides: dict[str, Any], fragment: st
         )
 
     assert fragment in str(excinfo.value)
-
-
-def test_caller_selected_error_type_is_raised() -> None:
-    """The MCP oracle keeps reporting failures in its own error type.
-
-    Sharing the assertion must not merge the two oracles' failure taxonomies:
-    the delivery lane distinguishes a CLI refusal from an MCP one.
-    """
-    with pytest.raises(InstalledMcpOracleError):
-        assert_envelope_contract(
-            _envelope(status="error"),
-            command=_COMMAND,
-            error=InstalledMcpOracleError,
-        )
 
 
 def test_warning_status_passes_the_spine_but_fails_the_clean_notice_gate() -> None:

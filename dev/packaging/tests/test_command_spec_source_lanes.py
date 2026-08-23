@@ -41,11 +41,8 @@ from cadrumo.entrypoints.cli.command_api import (
     command_schema_types,
     command_spec_nodes,
 )
-from cadrumo.application.operator_surface import build_operator_surface_manifest
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
-from cadrumo.entrypoints.cli._command_spec import BindingState, SchemaState
-from cadrumo_harness.mcp import ConfirmationPolicy, build_tool_descriptors, confirmation_for_tool
-import cadrumo_harness
+from cadrumo.entrypoints.cli._command_spec import SchemaState
 
 nodes = command_spec_nodes()
 specs = {node.spec.key: node.spec for node in nodes}
@@ -54,23 +51,9 @@ expected_results = {
     for node in nodes
     if node.spec.result_schema.state is SchemaState.TARGET
 }
-expected_exposable = {
-    node.spec.result_schema.identity
-    for node in nodes
-    if node.spec.result_schema.state is SchemaState.TARGET
-    and node.spec.parent_key not in {None, "root"}
-    and node.spec.handler is not None
-    and node.spec.handler.state is BindingState.TARGET
-    and (node.spec.kind == "leaf" or node.spec.invocation.invoke_without_command)
-}
 schemas = command_schema_refs()
 inputs = build_verb_input_schemas(tuple(sorted(expected_results)))
 schema_types = command_schema_types()
-operator = build_operator_surface_manifest(
-    envelope_schema_version=ENVELOPE_SCHEMA_VERSION,
-    command_schemas=schemas,
-)
-descriptors = build_tool_descriptors()
 help_result = CliRunner().invoke(get_command(cli.app), ["--help"])
 completion_result = CliRunner().invoke(get_command(cli.app), ["--show-completion", "bash"])
 payload = {
@@ -83,20 +66,14 @@ payload = {
     "schemas": len(schemas),
     "inputs": len(inputs),
     "schema_types": len(schema_types),
-    "descriptors": len(descriptors),
     "refs_exact": {ref.command for ref in schemas} == expected_results,
     "inputs_exact": set(inputs) == expected_results,
     "types_exact": set(schema_types) == expected_results,
-    "operator_exact": {ref.command for ref in operator.command_schemas} == expected_results,
-    "mcp_exact": {item.command_key for item in descriptors} == expected_exposable,
-    "hitl_read": confirmation_for_tool(command_key="registry.inspect") is ConfirmationPolicy.AUTO_APPROVE,
-    "hitl_write": confirmation_for_tool(command_key="modelo.export") is ConfirmationPolicy.CONFIRM,
     "write_route": specs["config_profile_create"].policy.write_route,
     "dev_imports": sorted(name for name in sys.modules if name == "dev" or name.startswith("dev.")),
     "origins": [
         str(Path(cadrumo.__file__).resolve()),
         str(Path(cli.__file__).resolve()),
-        str(Path(cadrumo_harness.__file__).resolve()),
     ],
 }
 print(json.dumps(payload, sort_keys=True))
@@ -149,14 +126,9 @@ def _assert_complete_projection(payload: dict[str, object], *, checkout: Path) -
     assert payload["completion_exit"] == 0
     assert payload["completion_content"] is True
     assert payload["schemas"] == payload["inputs"] == payload["schema_types"]
-    assert isinstance(payload["descriptors"], int) and payload["descriptors"] > 0
     assert payload["refs_exact"] is True
     assert payload["inputs_exact"] is True
     assert payload["types_exact"] is True
-    assert payload["operator_exact"] is True
-    assert payload["mcp_exact"] is True
-    assert payload["hitl_read"] is True
-    assert payload["hitl_write"] is True
     assert payload["write_route"] == "bootstrap-root"
     assert payload["dev_imports"] == []
     assert all(Path(origin).is_relative_to(checkout) for origin in cast("list[str]", payload["origins"]))
@@ -170,7 +142,7 @@ def test_clean_tracked_checkout_direct_source_and_editable_install(tmp_path: Pat
         for path in checkout.rglob("*.json")
     )
 
-    source_paths = (checkout / "src", checkout / "src/cadrumo-harness/src")
+    source_paths = (checkout / "src",)
     _assert_complete_projection(
         _run_probe(python=Path(sys.executable), pythonpath=source_paths, cwd=checkout), checkout=checkout
     )
@@ -185,7 +157,7 @@ def test_clean_tracked_checkout_direct_source_and_editable_install(tmp_path: Pat
     _assert_complete_projection(
         _run_probe(
             python=Path(sys.executable),
-            pythonpath=(checkout / "src/cadrumo-harness/src",),
+            pythonpath=(),
             cwd=checkout,
             editable_site=editable_target,
         ),

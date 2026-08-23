@@ -912,29 +912,6 @@ def test_documented_commands_conform(surface: Path) -> None:
     )
 
 
-def test_product_docs_have_no_external_client_awareness() -> None:
-    """Product docs must never advertise or identify an external client.
-
-    External consumers do not belong to the base application's command model.
-    No user page or sequence contract may teach an ``app agent`` path or name a
-    client-specific distribution, executable, artifact, or guide.
-    """
-    forbidden = re.compile(
-        r"\bapp\s+agent\b",
-        re.IGNORECASE,
-    )
-    violations: list[str] = []
-    for surface in _command_surfaces():
-        text = surface.read_text(encoding="utf-8")
-        if match := forbidden.search(text):
-            line = text.count("\n", 0, match.start()) + 1
-            violations.append(f"{surface.relative_to(REPO_ROOT)}:{line}")
-    assert not violations, (
-        "the base application documentation must have no external-client "
-        "awareness; found forbidden marker(s): " + ", ".join(violations)
-    )
-
-
 # ---------------------------------------------------------------------------
 # cli-sequence grammar and enrolled-page tier
 # ---------------------------------------------------------------------------

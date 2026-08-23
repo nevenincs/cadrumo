@@ -564,16 +564,9 @@ def test_a_call_reached_through_attribute_access_is_not_guessed_as_a_wrapper(tmp
 #: moment a site here stops existing or stops aliasing anything, so a fix
 #: that resolves an entry cannot leave a dead exemption behind unnoticed.
 #:
-#: Empty today: B18's `declared_live_write` was first merged to two of its
-#: three sites this session (the `dev/agent_eval/tests/` copy kept separate,
-#: believed blocked by the dev/src import boundary), then a peer consolidation
-#: found the real boundary is narrower than assumed -- `cadrumo.tests.*` is a
-#: sanctioned submodule-direct reach point even for `dev/` tooling, so all
-#: three sites now import one canonical `cadrumo.tests.declared_command_risk`.
-#: No exemption is needed while that holds; a future genuinely-forced
-#: duplicate (a different helper, a different boundary) is declared here the
-#: same way, never by weakening `test_canonical_homes_carry_no_unallowlisted_
-#: duplicate` itself.
+#: Empty today. A future genuinely-forced duplicate (a different helper, a
+#: different boundary) is declared here, never by weakening
+#: `test_canonical_homes_carry_no_unallowlisted_duplicate` itself.
 _ALLOWED_DUPLICATE_SITES: Final[dict[tuple[str, str], str]] = {}
 
 #: Every (path, qualname) the B16/B18/B24/B25 burndown consolidated to one

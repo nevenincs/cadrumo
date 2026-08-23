@@ -221,8 +221,8 @@ def test_localization_changes_only_the_three_cohort_acquisition_urls(tmp_path: P
             f'    url "{base}/{filenames[2]}"',
             f'    sha256 "{digests[filenames[2]]}"',
             "  end",
-            '  resource "mcp" do',
-            '    url "https://files.pythonhosted.org/packages/mcp.tar.gz"',
+            '  resource "unrelated-dependency" do',
+            '    url "https://files.pythonhosted.org/packages/unrelated-dependency.tar.gz"',
             "  end",
             "end",
             "",
@@ -236,7 +236,7 @@ def test_localization_changes_only_the_three_cohort_acquisition_urls(tmp_path: P
     )
 
     assert len(replacements) == 3
-    assert "https://files.pythonhosted.org/packages/mcp.tar.gz" in localized
+    assert "https://files.pythonhosted.org/packages/unrelated-dependency.tar.gz" in localized
     restored = localized
     for original, replacement in replacements.items():
         assert replacement in localized
@@ -310,11 +310,6 @@ def test_localization_rejects_a_cohort_archive_not_matching_the_formula_digest(
 
 
 def test_oracle_evidence_refuses_a_keg_whose_cli_misses_the_expected_figure() -> None:
-    """The installed CLI must reproduce the oracle figure, not merely run.
-
-    The MCP leg this assertion once also carried is gone: Homebrew installs the
-    ``cadrumo`` distribution alone, and ``cadrumo-mcp`` ships in the sibling
-    ``cadrumo-harness`` distribution the formula does not carry.
-    """
+    """The installed CLI must reproduce the oracle figure, not merely run."""
     with pytest.raises(SystemExit, match="installed CLI oracle returned unexpected evidence"):
         _assert_oracle_evidence(tax_document={"target_value": "22999.99"})

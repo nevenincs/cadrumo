@@ -633,7 +633,6 @@ def test_workflow_row_prose_names_only_base_channels() -> None:
     text = _WORKFLOW.read_text(encoding="utf-8")
     assert "claude" not in text.lower()
     assert "marketplace" not in text.lower()
-    assert "mcpb" not in text.lower()
 
 
 def test_required_rows_derive_from_claimed_channels_and_never_collapse_to_nothing() -> None:

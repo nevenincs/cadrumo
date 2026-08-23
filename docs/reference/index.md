@@ -8,8 +8,8 @@ the [installation guide](../workstation-setup.md) and
 [how imports, exports, and evidence differ](import-export-and-evidence.md).
 
 The Agencia Estatal de Administración Tributaria (AEAT) is the external tax
-authority. The command-line interface (CLI), Model Context Protocol (MCP), and
-application programming interface (API) are Cadrumo product surfaces.
+authority. The command-line interface (CLI) and application programming
+interface (API) are Cadrumo product surfaces.
 
 ## Lookup map
 

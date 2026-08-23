@@ -426,15 +426,15 @@ msgstr "LLM-javaslat használata"
 
 #: ../../how-to/classify-transactions.md:181
 msgid ""
-"Cadrumo can use an AI assistant to suggest how to classify each "
-"transaction. The suggestion is a starting point. You must confirm or "
-"correct it. It does not fill in tax amounts such as taxable base, IVA "
-"rate, or IRPF category."
+"Cadrumo can use a configured language model to suggest how to classify each "
+"transaction. The suggestion is a starting point. You must confirm or correct "
+"it. It does not fill in tax amounts such as taxable base, IVA rate, or IRPF "
+"category."
 msgstr ""
-"A Cadrumo egy MI-asszisztenst használhat annak javaslására, hogyan "
-"osztályozza az egyes tranzakciókat. A javaslat kiindulópont. Meg kell "
-"erősítenie vagy javítania kell. Nem tölti ki az adóösszegeket, például az"
-" adóalapot, az IVA-kulcsot vagy az IRPF-kategóriát."
+"A Cadrumo egy beállított nyelvi modellt használhat az egyes tranzakciók "
+"osztályozásának javaslatához. A javaslat kiindulópont. Meg kell erősítenie "
+"vagy javítania kell. Nem tölti ki az adóösszegeket, például az adóalapot, "
+"az IVA-kulcsot vagy az IRPF-kategóriát."
 
 #: ../../how-to/classify-transactions.md:185
 msgid ""
@@ -591,4 +591,3 @@ msgstr ""
 #: ../../how-to/classify-transactions.md:256
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"
-

@@ -59,12 +59,8 @@ _REPO_ROOT = REPO_ROOT
 #: inventory had a hole the other only partly filled, so a ``dev`` module could
 #: carry no module-level execution marker and no check would say so.
 #:
-#: ``packaging`` was the same hole one tree over, and it stood longer. The tree
-#: holds real test modules -- the MCPB client-install and Scoop suites -- and
-#: none of them was reachable by any check here, so campaign metadata sat in
-#: `packaging/mcpb/tests/test_client_install.py` indefinitely while the gate
-#: hunting exactly that pattern reported clean. A gate that cannot SEE part of
-#: the tree is not passing on it; it is silent about it, and the two are
+#: ``packaging`` was the same hole one tree over. A gate that cannot see part
+#: of the tree is not passing on it; it is silent about it, and the two are
 #: indistinguishable from the outside.
 _TEST_MODULE_ROOTS = (
     _SRC_CADRUMO,

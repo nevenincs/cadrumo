@@ -11,7 +11,6 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLa
 from cadrumo.tests.cli_runner import invoke_typer_app
 from dev.locales import (
     DOCS_SRC_DIR,
-    HARNESS_SRC_DIR,
     LocaleError,
     LocaleManager,
     LocaleNode,
@@ -65,8 +64,7 @@ _IDENTITY_TOKEN_PATTERNS: dict[str, re.Pattern[str]] = {
     # Sentence prose: the product as a subject or possessive.
     "Cadrumo": re.compile(r"\bCadrumo\b"),
     # Machine names, which stay lower case and are not product prose.
-    "cadrumo-mcp": re.compile(r"\bcadrumo-mcp\b"),
-    "cadrumo": re.compile(r"\bcadrumo\b(?!-mcp)(?!://)"),
+    "cadrumo": re.compile(r"\bcadrumo\b(?!://)"),
     # The tax authority, which is never renamed to the product.
     "AEAT": re.compile(r"\bAEAT\b"),
     # The sole human executable token.
@@ -209,11 +207,10 @@ def _assert_catalogue_strings_for_state(
 
 @pytest.fixture(scope="module")
 def manager():
-    # The documentation generators and the MCP harness both live outside the
-    # package but render operator-facing prose from this same catalogue, so
-    # the gate must see their keys or it reports every one as an extra key
-    # with no codebase site.
-    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
+    # Documentation generators live outside the package but render
+    # operator-facing prose from this same catalogue, so the gate must see
+    # their keys or it reports every one as an extra key with no codebase site.
+    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR,))
 
 
 def _committed_catalogues(manager) -> dict[str, Path]:
@@ -296,11 +293,6 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "Cadrumo profile name override (default = active profile on workflow state)"
     )
 
-    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
-        "'{command}' needs a human confirmation, and this client does not support elicitation. "
-        "Run it from a client that can ask you questions, or run the equivalent Cadrumo CLI (`aeat`) command "
-        "directly in a terminal."
-    )
     # Identity contract only, not the prose. These two strings are live operator
     # copy this test does not own; pinning the sentence made every reword fail
     # here, and re-pinning it to whatever the catalogue now says only resets the
@@ -347,15 +339,6 @@ def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings
     # sentence made every unrelated copy edit (an accent repair, a reword) fail here,
     # and re-pinning it to whatever the catalogue now says only proves the two strings
     # were copied from each other.
-    timeout_copy = _leaf(data, "mcp", "call", "timeout")
-    assert "aeat" in timeout_copy
-    assert all(token in timeout_copy for token in ("{command}", "{tier}", "{seconds}"))
-    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
-        "'{command}' requiere confirmación humana y este cliente no admite la función de preguntas (elicitation). "
-        "Ejecútalo desde un cliente que pueda hacerte preguntas, o ejecuta el comando equivalente de Cadrumo CLI "
-        "(`aeat`) "
-        "directamente en un terminal."
-    )
     # Identity contract only — see the English counterpart for why the prose is not pinned.
     _assert_identity_contract(
         data,
@@ -431,14 +414,6 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "Tria'n una: BUSINESS, PERSONAL, MIXED."
     )
     # Naming contract only — see the Spanish counterpart for why the prose is not pinned.
-    timeout_copy = _leaf(data, "mcp", "call", "timeout")
-    assert "aeat" in timeout_copy
-    assert all(token in timeout_copy for token in ("{command}", "{tier}", "{seconds}"))
-    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
-        "'{command}' requereix confirmació humana i aquest client no admet la funció de preguntes (elicitation). "
-        "Executa'l des d'un client que pugui fer-te preguntes, o executa l'ordre equivalent de Cadrumo CLI "
-        "(`aeat`) directament en un terminal."
-    )
     # Identity contract only — see the English counterpart for why the prose is not pinned.
     _assert_identity_contract(
         data,
@@ -477,11 +452,6 @@ def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headin
     assert _leaf(data, "cli", "ledger", "classify", "system_state_not_assignable") == (
         "A(z) '%{value}' besorolást a Cadrumo automatikusan állítja be, kézzel nem adható meg. "
         "Válassz egyet: BUSINESS, PERSONAL, MIXED."
-    )
-    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
-        "A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem támogatja a kérdezés "
-        "(elicitation) funkciót. Futtasd olyan kliensből, amely tud kérdezni, vagy futtasd a megfelelő "
-        "Cadrumo CLI (`aeat`) parancsot közvetlenül a terminálban."
     )
     # Identity contract only — see the English counterpart for why the prose is not pinned.
     _assert_identity_contract(
@@ -525,8 +495,7 @@ def test_identity_token_extractor_discriminates_product_spellings() -> None:
 
     assert _identity_tokens("CADRUMO - workflow with the Spanish Tax Agency (AEAT)") == {"CADRUMO", "AEAT"}
     assert _identity_tokens("Cadrumo prepares the draft.") == {"Cadrumo"}
-    assert _identity_tokens("Install cadrumo; launch cadrumo-mcp.") == {"cadrumo", "cadrumo-mcp"}
-    assert _identity_tokens("launch cadrumo-mcp only") == {"cadrumo-mcp"}
+    assert _identity_tokens("Install cadrumo.") == {"cadrumo"}
     assert _identity_tokens("read cadrumo://status") == set()
     assert _identity_tokens("Run `aeat config profile status`.") == {"aeat"}
     assert _identity_tokens("nothing to see here") == set()
@@ -761,7 +730,7 @@ def test_canonicalize_product_identity_references_handles_folded_help_copy(tmp_p
             "      Cadrumo prepares tax forms for AEAT. Run cadrumo\n"
             "      app modelo work calculate or cadrumo manual fetch.\n"
             "product:\n"
-            "  machine_names: Install cadrumo; launch cadrumo-mcp; read cadrumo://status.\n",
+            "  machine_names: Install cadrumo; read cadrumo://status.\n",
             encoding="utf-8",
         )
 
@@ -775,7 +744,7 @@ def test_canonicalize_product_identity_references_handles_folded_help_copy(tmp_p
             "Cadrumo prepares tax forms for AEAT. Run aeat app modelo work calculate or aeat manual fetch."
         )
         assert _leaf(data, "product", "machine_names") == (
-            "Install cadrumo; launch cadrumo-mcp; read cadrumo://status."
+            "Install cadrumo; read cadrumo://status."
         )
 
 

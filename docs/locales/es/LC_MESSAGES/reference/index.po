@@ -42,14 +42,12 @@ msgstr ""
 #: ../../reference/index.md:10
 msgid ""
 "The Agencia Estatal de Administración Tributaria (AEAT) is the external "
-"tax authority. The command-line interface (CLI), Model Context Protocol "
-"(MCP), and application programming interface (API) are Cadrumo product "
-"surfaces."
+"tax authority. The command-line interface (CLI) and application programming "
+"interface (API) are Cadrumo product surfaces."
 msgstr ""
 "La Agencia Estatal de Administración Tributaria (AEAT) es la autoridad "
-"tributaria externa. La interfaz de línea de comandos (CLI), el Model Context "
-"Protocol (MCP) y la interfaz de programación de aplicaciones (API) son "
-"superficies del producto Cadrumo."
+"tributaria externa. La interfaz de línea de comandos (CLI) y la interfaz de "
+"programación de aplicaciones (API) son superficies del producto Cadrumo."
 
 #: ../../reference/index.md:14
 msgid "Lookup map"

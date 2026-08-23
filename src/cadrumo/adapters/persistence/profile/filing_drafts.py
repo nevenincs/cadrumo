@@ -34,7 +34,7 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING, ClassVar, override
 
 from ....domain.filing import FilingValidationError, ModeloDraft, compute_modelo_draft_id
-from ..storage import FILING_DRAFTS_NAMESPACE, SecureBoundRepository, SensitivityClass
+from ..storage import FILING_DRAFTS_NAMESPACE, SecureBoundRepository, SecureObjectWrite, SensitivityClass
 from ._filing_runtime import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -110,6 +110,22 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
             FilingValidationError: ``draft_id`` is not the content address the
                 canonical helper derives for this draft.
         """
+        self._validate_durable_content_address(payload)
+        identifier, envelope = self._identified_envelope(payload)
+        self._objects.save(
+            namespace=self.namespace,
+            object_key=identifier,
+            classification=self.sensitivity,
+            schema_version=self.schema_version,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json(
+                context={"secure_modelo_binding_value": True},
+            ).encode("utf-8"),
+        )
+
+    @staticmethod
+    def _validate_durable_content_address(payload: ModeloDraft) -> None:
+        """Refuse a draft whose durable identifier is not its content address."""
         derived = compute_modelo_draft_id(
             modelo=payload.modelo,
             period=payload.period,
@@ -126,7 +142,28 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
                 f"snapshot_ref={payload.snapshot_ref.revision_id!r}, {len(payload.values)} values, "
                 f"{len(payload.binding_values)} binding values)",
             )
-        super().save(payload)
+
+    @override
+    def to_secure_object_write(
+        self,
+        payload: ModeloDraft,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Prepare the same identity-preserving encrypted payload as :meth:`save`."""
+        self._validate_durable_content_address(payload)
+        identifier, envelope = self._identified_envelope(payload)
+        return SecureObjectWrite(
+            namespace=self.namespace,
+            object_key=identifier,
+            classification=self.sensitivity,
+            schema_version=self.schema_version,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json(
+                context={"secure_modelo_binding_value": True},
+            ).encode("utf-8"),
+            expected_revision_id=expected_revision_id,
+        )
 
     def list_draft_ids(self) -> tuple[str, ...]:
         """Return every draft id persisted in this repository, in lexicographic order."""

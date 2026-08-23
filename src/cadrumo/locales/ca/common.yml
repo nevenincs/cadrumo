@@ -628,62 +628,6 @@ llm:
         per a aquesta invocació.'
       mint_refused: 'Rebutjat: la lectura externa de documents del contribuent no
         està permesa per a aquesta invocació.'
-mcp:
-  call:
-    timeout: '''{command}'' ha superat el límit de temps del nivell {tier} ({seconds}s)
-      i s''ha cancel.lat. Torna-ho a provar o executa l''ordre aeat equivalent en
-      un terminal.'
-    timeout_may_complete: '''{command}'' ha superat el seu límit de temps; és possible
-      que l''operació encara s''estigui completant en segon pla. Torna a executar-la
-      amb la mateixa clau d''idempotència per comprovar-ho: la garantia d''idempotència
-      fa que el reintent sigui segur i mai duplica l''escriptura.'
-  elicitation:
-    confirm:
-      consequence_handoff: Això genera el document de presentació que el contribuent
-        presentarà davant l'AEAT pel seu compte. Confirmar no envia res enlloc.
-      consequence_local: Això modifica dades locals del perfil de contribuent actiu.
-      declined: '''{command}'' no ha estat confirmat per l''usuari ({outcome}); no
-        s''ha executat res.'
-      field_description: Executar '{command}' ara?
-      message: Confirma l'execució de '{command}'. {consequence} Respon sí per continuar
-        o no per aturar.
-    refusal:
-      blocked: '''{command}'' està bloquejat permanentment: la presentació en línia
-        davant l''AEAT està prohibida per disseny. Exporta localment; el contribuent
-        presenta pel seu compte.'
-      no_channel: '''{command}'' requereix confirmació humana i aquest client no admet
-        la funció de preguntes (elicitation). Executa''l des d''un client que pugui
-        fer-te preguntes, o executa l''ordre equivalent de Cadrumo CLI (`aeat`) directament
-        en un terminal.'
-  faithfulness:
-    advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]
-      que cap resultat d''eina d''aquesta sessió ha produït. Verifica la xifra amb
-      una lectura de calculate/revision abans de confiar-hi.'
-  harness:
-    off_host_consent: 'Avís de privadesa - llegiu-lo abans de continuar. Aquesta consola
-      la controla un assistent d''IA que s''executa en el proveïdor de LLM que trieu.
-      Les vostres paraules, i les xifres amb què treballa l''assistent (imports, valors
-      de casella, obligacions), s''envien a aquest proveïdor per operar la consola.
-      Els vostres DOCUMENTS D''ORIGEN - factures, extractes bancaris i qualsevol byte
-      d''evidència - MAI no surten del vostre equip: romanen en emmagatzematge local
-      xifrat i mai no es transmeten. Si actueu per compte d''un tercer (un gestor
-      o professional), confirmeu que això és acceptable abans de continuar.'
-  identity_gate:
-    elicitation_echo: 'Actuant com el perfil del contribuent: %{label}.'
-    first_mutation_refused: 'Rebutjat: confirma el contribuent actiu abans del primer
-      canvi d''aquesta sessió. Una presentació o edició mai no s''ha d''executar sota
-      la identitat equivocada. Executa whoami (o ''config profile status'' / ''overview
-      status'') per veure quin contribuent està actiu i torna-ho a provar; una sola
-      lectura d''identitat ho desbloqueja durant la sessió fins que canviis de perfil.'
-  persona:
-    handoff_denied: '''{command}'' és la frontera irreversible de lliurament de la
-      presentació, propietat de la persona ''{owner}''; la persona ''{persona}'' la
-      té denegada estructuralment. Lliura la unitat de treball verificada a la sessió
-      del verificador per produir l''exportació o el marcador de registre.'
-  serving:
-    warm_degraded: '''{command}'' s''ha ates pel transport de subprocés perquè el
-      runtime en calent estava {reason}; el resultat és idèntic, només més lent. El
-      servei en calent es reprèn quan s''allibera la crida lenta.'
 overview:
   no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
   no_aeat_history_sociedades: Aquest perfil no té cap presentació confirmada per l'AEAT.

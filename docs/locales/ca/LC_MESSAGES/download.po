@@ -266,13 +266,6 @@ msgid ""
 "Take the shortest path from an empty profile to an exported modelo file."
 msgstr "Fes el camí més curt d'un perfil buit a un fitxer de modelo exportat."
 
-#: ../../download.md:146
-msgid ""
-"Let an AI assistant such as Claude drive Cadrumo with you, on your machine."
-msgstr ""
-"Deixa que un assistent d'IA com ara Claude faci servir Cadrumo amb tu, a la "
-"teva màquina."
-
 #~ msgid ""
 #~ "The install is identical on every operating system once Git and uv are "
 #~ "present. Run, in a terminal:"
